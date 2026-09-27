@@ -1,0 +1,56 @@
+{
+  "resource": "RES",
+  "facade_start": "Facade.START",
+  "facade_complete": "Facade.COMPLETE",
+  "facade_error": "Facade.ERROR",
+  "call": {"fb_type": "example::P_Call", "enter": "EI", "complete": "EO", "error": "ERR", "selector": "SKILL_ID"},
+  "library": {
+    "build_id": "illustrative-only-not-a-FORTE-build",
+    "types": {
+      "example::P_Call": {
+        "name": "example::P_Call", "type_hash": "cafe0001",
+        "ports": {
+          "EI": {"kind": "event", "direction": "input"},
+          "EO": {"kind": "event", "direction": "output"},
+          "ERR": {"kind": "event", "direction": "output"},
+          "REQ": {"kind": "event", "direction": "output"},
+          "CNF": {"kind": "event", "direction": "input"},
+          "SKILL_ID": {"kind": "data", "direction": "input", "data_type": "UINT", "writable": true},
+          "P1": {"kind": "data", "direction": "input", "data_type": "LREAL", "writable": true},
+          "ID_OUT": {"kind": "data", "direction": "output", "data_type": "UINT"},
+          "V_OUT": {"kind": "data", "direction": "output", "data_type": "LREAL"}
+        }
+      },
+      "example::SK_Dose": {"name": "example::SK_Dose", "type_hash": "cafe0002", "ports": {}}
+    },
+    "boundary_ports": {
+      "Facade.START": {"kind": "event", "direction": "output"},
+      "Facade.COMPLETE": {"kind": "event", "direction": "input"},
+      "Facade.ERROR": {"kind": "event", "direction": "input"},
+      "Unit.CH0_REQ": {"kind": "event", "direction": "input"},
+      "Unit.CH0_CNF": {"kind": "event", "direction": "output"},
+      "Unit.CH0_ID": {"kind": "data", "direction": "input", "data_type": "UINT"},
+      "Unit.CH0_V": {"kind": "data", "direction": "input", "data_type": "LREAL"}
+    }
+  },
+  "skills": {
+    "urn:example:skill:dose": {
+      "id": "urn:example:skill:dose",
+      "parameters": {"volume": {"type": "LREAL", "unit": "mL", "minimum": 0.1, "maximum": 2.0}},
+      "occupies": ["urn:example:equipment:pump"]
+    }
+  },
+  "runtime_bindings": {
+    "urn:example:skill:dose": {
+      "fixed_instance": "Unit.Dose", "fb_type": "example::SK_Dose", "type_hash": "cafe0002",
+      "selector": {"type": "UINT", "value": 1},
+      "parameter_ports": {"volume": "P1"},
+      "wires": [
+        {"source": "{instance}.REQ", "destination": "Unit.CH0_REQ"},
+        {"source": "Unit.CH0_CNF", "destination": "{instance}.CNF"},
+        {"source": "{instance}.ID_OUT", "destination": "Unit.CH0_ID", "kind": "data"},
+        {"source": "{instance}.V_OUT", "destination": "Unit.CH0_V", "kind": "data"}
+      ]
+    }
+  }
+}
