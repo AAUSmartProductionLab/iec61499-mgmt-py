@@ -1,0 +1,57 @@
+[
+  {
+    "request": {
+      "op": "query_type",
+      "resource": "RES",
+      "type": "iec61499::events::E_SPLIT"
+    },
+    "response": "<Response ID=\"2\">\n  <FBType Name=\"iec61499::events::E_SPLIT#\"/>\n</Response>"
+  },
+  {
+    "request": {
+      "op": "query_fbs",
+      "resource": "RES"
+    },
+    "response": "<Response ID=\"22\">\n  <FBList>\n    <FB Name=\"Clock\" Type=\"iec61499::events::E_CYCLE\" Status=\"RUNNING\"/>\n<FB Name=\"Count\" Type=\"iec61499::events::E_CTU\" Status=\"RUNNING\"/>\n<FB Name=\"Heartbeat\" Type=\"iec61499::events::E_CTU\" Status=\"RUNNING\"/>\n<FB Name=\"PROC.Parameter\" Type=\"iec61499::events::E_CTU\" Status=\"RUNNING\"/>\n<FB Name=\"PROC.Split\" Type=\"iec61499::events::E_SPLIT\" Status=\"RUNNING\"/>\n<FB Name=\"START\" Type=\"iec61499::events::E_RESTART\" Status=\"RUNNING\"/>\n\n  </FBList>\n</Response>"
+  },
+  {
+    "request": {
+      "op": "query_connections",
+      "resource": "RES"
+    },
+    "response": "<Response ID=\"23\">\n  <EndpointList>\n    <Connection Source=\"Clock.EO\" Destination=\"Heartbeat.CU\"/>\n<Connection Source=\"Clock.EO\" Destination=\"PROC.Split.EI\"/>\n<Connection Source=\"PROC.Split.EO1\" Destination=\"Count.CU\"/>\n<Connection Source=\"START.COLD\" Destination=\"Clock.START\"/>\n<Connection Source=\"START.WARM\" Destination=\"Clock.START\"/>\n\n  </EndpointList>\n</Response>"
+  },
+  {
+    "request": {
+      "op": "read",
+      "resource": "RES",
+      "source": "PROC.Parameter.PV"
+    },
+    "response": "<Response ID=\"24\">\n  <Connection Source=\"PROC.Parameter.PV.PV\" Destination=\"1000\" />\n</Response>"
+  },
+  {
+    "request": {
+      "op": "delete_fb",
+      "resource": "RES",
+      "name": "PROC.Split"
+    },
+    "response": "<Response ID=\"27\" Reason=\"INVALID_STATE\" />"
+  },
+  {
+    "request": {
+      "op": "create_fb",
+      "resource": "RES",
+      "name": "PROC.BadHash",
+      "type": "iec61499::events::E_SPLIT#deadbeef"
+    },
+    "response": "<Response ID=\"28\" Reason=\"UNSUPPORTED_TYPE\">\n  \n</Response>"
+  },
+  {
+    "request": {
+      "op": "delete_fb",
+      "resource": "RES",
+      "name": "PROC.Split"
+    },
+    "response": "<Response ID=\"30\" Reason=\"INVALID_STATE\" />"
+  }
+]
