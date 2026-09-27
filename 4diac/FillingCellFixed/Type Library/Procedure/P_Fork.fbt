@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="P_Fork" Comment="Parallel gateway split: EI starts up to four branches at once">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="EI" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="EO1" Type="Event" />
+      <Event Name="EO2" Type="Event" />
+      <Event Name="EO3" Type="Event" />
+      <Event Name="EO4" Type="Event" />
+    </EventOutputs>
+    <InputVars />
+    <OutputVars />
+  </InterfaceList>
+  <BasicFB>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Fork" x="570" y="100">
+        <ECAction Output="EO1" />
+        <ECAction Output="EO2" />
+        <ECAction Output="EO3" />
+        <ECAction Output="EO4" />
+      </ECState>
+      <ECTransition Source="START" Destination="Fork" Condition="EI" x="0" y="0" />
+      <ECTransition Source="Fork" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+  </BasicFB>
+</FBType>

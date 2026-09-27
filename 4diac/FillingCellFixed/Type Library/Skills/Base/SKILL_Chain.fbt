@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_Chain" Comment="Status chain link: aggregates Busy/Held/Running along the skills of an equipment module">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="REQ" Type="Event">
+        <With Var="BusyIn" />
+        <With Var="HeldIn" />
+        <With Var="RunIn" />
+        <With Var="State" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="CNF" Type="Event">
+        <With Var="BusyOut" />
+        <With Var="HeldOut" />
+        <With Var="RunOut" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="BusyIn" Type="BOOL" />
+      <VarDeclaration Name="HeldIn" Type="BOOL" InitialValue="TRUE" />
+      <VarDeclaration Name="RunIn" Type="BOOL" InitialValue="TRUE" />
+      <VarDeclaration Name="State" Type="USINT" InitialValue="4" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="BusyOut" Type="BOOL" />
+      <VarDeclaration Name="HeldOut" Type="BOOL" />
+      <VarDeclaration Name="RunOut" Type="BOOL" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <InternalVars>
+      <VarDeclaration Name="MyBusy" Type="BOOL" />
+    </InternalVars>
+    <ECState Name="REQ">
+      <ECAction Algorithm="REQ" Output="CNF" />
+    </ECState>
+    <Algorithm Name="REQ">
+      <ST Text="MyBusy := NOT ((State = 4) OR (State = 17) OR (State = 2) OR (State = 9));&#10;BusyOut := BusyIn OR MyBusy;&#10;HeldOut := HeldIn AND ((NOT MyBusy) OR (State = 11));&#10;RunOut := RunIn AND ((NOT MyBusy) OR (State = 6));" />
+    </Algorithm>
+  </SimpleFB>
+</FBType>

@@ -1,0 +1,2540 @@
+<?xml version='1.0' encoding='utf-8'?>
+<System Name="FillingCellFixed" Comment="FillingCell (production, OPC UA driven), FillingCellDemo (self-running), SkillBench and PatternDemo run on one FORTE_PC device; PiIoConfig is for a Raspberry Pi">
+  <Identification Standard="61499-2" />
+  <Application Name="FillingCell" Comment="Production cell driven over OPC UA (/Objects/FillingCell/Filler). IoBackend 0 = simulated (force Observer.Sim_*), 1 = GPIO (add PiIoConfig), 2 = Modbus (4diac/tools/cell_sim.py)">
+    <SubAppNetwork>
+      <FB Name="Boot" Type="iec61499::events::E_RESTART" x="100" y="100" />
+      <FB Name="Observer" Type="fillingcell::UNIT_Observer" x="100" y="1400">
+        <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler&quot;" />
+        <Parameter Name="UaEnable" Value="TRUE" />
+        <Parameter Name="IoBackend" Value="0" />
+        <Parameter Name="NeedleUp_Gpio" Value="'FC_NeedleUp'" />
+        <Parameter Name="NeedleUp_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d0:]&quot;" />
+        <Parameter Name="NeedleDown_Gpio" Value="'FC_NeedleDown'" />
+        <Parameter Name="NeedleDown_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d1:]&quot;" />
+        <Parameter Name="VialPresent_Gpio" Value="'FC_VialPresent'" />
+        <Parameter Name="VialPresent_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d2:]&quot;" />
+        <Parameter Name="Stoppered_Gpio" Value="'FC_Stoppered'" />
+        <Parameter Name="Stoppered_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d3:]&quot;" />
+        <Parameter Name="Checked_Gpio" Value="'FC_Checked'" />
+        <Parameter Name="Checked_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d4:]&quot;" />
+        <Parameter Name="DoorClosed_Gpio" Value="'FC_DoorClosed'" />
+        <Parameter Name="DoorClosed_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d5:]&quot;" />
+        <Parameter Name="FilledMl_Gpio" Value="''" />
+        <Parameter Name="FilledMl_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:i0:]&quot;" />
+        <Parameter Name="Sim_NeedleUp" Value="TRUE" />
+        <Parameter Name="Sim_VialPresent" Value="TRUE" />
+        <Parameter Name="Sim_DoorClosed" Value="TRUE" />
+      </FB>
+      <FB Name="UaFacade" Type="fillingcell::UNIT_Facade" x="100" y="500">
+        <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler&quot;" />
+        <Parameter Name="UaEnable" Value="TRUE" />
+      </FB>
+      <FB Name="Occupation" Type="fillingcell::FC_Occupation" x="1500" y="100" />
+      <FB Name="Unit" Type="fillingcell::FC_Unit" x="1500" y="700" />
+      <FB Name="Facade" Type="fillingcell::FC_ProcedureFacade" x="2600" y="100" />
+      <SubApp Name="EM_Filler" x="3600" y="700" Comment="Equipment module: one composite per skill, chained for status; instances and chain may be changed online while the unit is quiescent">
+        <InterfaceList>
+          <EventInputs>
+            <Event Name="INIT" Type="Event" />
+            <Event Name="UNIT_CTL" Type="Event">
+              <With Var="ControlCode" />
+            </Event>
+            <Event Name="UNIT_STAT" Type="Event">
+              <With Var="UnitRunning" />
+              <With Var="UnitQuiescent" />
+              <With Var="UnitState" />
+              <With Var="Mode" />
+              <With Var="Owner" />
+              <With Var="RemoteAllowed" />
+            </Event>
+            <Event Name="SAMPLE" Type="Event">
+              <With Var="Cell" />
+            </Event>
+            <Event Name="CALL_MoveDown" Type="Event">
+              <With Var="P1_MoveDown" />
+              <With Var="P2_MoveDown" />
+              <With Var="P3_MoveDown" />
+              <With Var="P4_MoveDown" />
+            </Event>
+            <Event Name="CALL_Dose" Type="Event">
+              <With Var="P1_Dose" />
+              <With Var="P2_Dose" />
+              <With Var="P3_Dose" />
+              <With Var="P4_Dose" />
+            </Event>
+            <Event Name="CALL_MoveUp" Type="Event">
+              <With Var="P1_MoveUp" />
+              <With Var="P2_MoveUp" />
+              <With Var="P3_MoveUp" />
+              <With Var="P4_MoveUp" />
+            </Event>
+            <Event Name="CALL_Stopper" Type="Event">
+              <With Var="P1_Stopper" />
+              <With Var="P2_Stopper" />
+              <With Var="P3_Stopper" />
+              <With Var="P4_Stopper" />
+            </Event>
+            <Event Name="CALL_Inspect" Type="Event">
+              <With Var="P1_Inspect" />
+              <With Var="P2_Inspect" />
+              <With Var="P3_Inspect" />
+              <With Var="P4_Inspect" />
+            </Event>
+          </EventInputs>
+          <EventOutputs>
+            <Event Name="INITO" Type="Event" />
+            <Event Name="STAT_OUT" Type="Event">
+              <With Var="Busy" />
+              <With Var="HeldAll" />
+              <With Var="RunAll" />
+            </Event>
+            <Event Name="DONE_MoveDown" Type="Event" />
+            <Event Name="DONE_Dose" Type="Event" />
+            <Event Name="DONE_MoveUp" Type="Event" />
+            <Event Name="DONE_Stopper" Type="Event" />
+            <Event Name="DONE_Inspect" Type="Event" />
+            <Event Name="FAILED_MoveDown" Type="Event">
+              <With Var="CallError_MoveDown" />
+            </Event>
+            <Event Name="FAILED_Dose" Type="Event">
+              <With Var="CallError_Dose" />
+            </Event>
+            <Event Name="FAILED_MoveUp" Type="Event">
+              <With Var="CallError_MoveUp" />
+            </Event>
+            <Event Name="FAILED_Stopper" Type="Event">
+              <With Var="CallError_Stopper" />
+            </Event>
+            <Event Name="FAILED_Inspect" Type="Event">
+              <With Var="CallError_Inspect" />
+            </Event>
+          </EventOutputs>
+          <InputVars>
+            <VarDeclaration Name="ControlCode" Type="USINT" />
+            <VarDeclaration Name="UnitRunning" Type="BOOL" />
+            <VarDeclaration Name="UnitQuiescent" Type="BOOL" />
+            <VarDeclaration Name="UnitState" Type="USINT" />
+            <VarDeclaration Name="Mode" Type="USINT" />
+            <VarDeclaration Name="Owner" Type="UDINT" />
+            <VarDeclaration Name="RemoteAllowed" Type="BOOL" />
+            <VarDeclaration Name="Cell" Type="fillingcell::ST_CellState" />
+            <VarDeclaration Name="P1_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P2_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P3_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P4_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P1_Dose" Type="LREAL" />
+            <VarDeclaration Name="P2_Dose" Type="LREAL" />
+            <VarDeclaration Name="P3_Dose" Type="LREAL" />
+            <VarDeclaration Name="P4_Dose" Type="LREAL" />
+            <VarDeclaration Name="P1_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P2_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P3_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P4_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P1_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P2_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P3_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P4_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P1_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P2_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P3_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P4_Inspect" Type="LREAL" />
+          </InputVars>
+          <OutputVars>
+            <VarDeclaration Name="Busy" Type="BOOL" />
+            <VarDeclaration Name="HeldAll" Type="BOOL" />
+            <VarDeclaration Name="RunAll" Type="BOOL" />
+            <VarDeclaration Name="CallError_MoveDown" Type="UINT" />
+            <VarDeclaration Name="CallError_Dose" Type="UINT" />
+            <VarDeclaration Name="CallError_MoveUp" Type="UINT" />
+            <VarDeclaration Name="CallError_Stopper" Type="UINT" />
+            <VarDeclaration Name="CallError_Inspect" Type="UINT" />
+            <VarDeclaration Name="Drive_MoveDown" Type="BOOL" />
+            <VarDeclaration Name="Drive_Dose" Type="BOOL" />
+            <VarDeclaration Name="Drive_MoveUp" Type="BOOL" />
+            <VarDeclaration Name="Drive_Stopper" Type="BOOL" />
+            <VarDeclaration Name="Drive_Inspect" Type="BOOL" />
+          </OutputVars>
+        </InterfaceList>
+        <SubAppNetwork>
+          <FB Name="MoveDown" Type="fillingcell::SK_MoveDown" x="300" y="300">
+            <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler/Skills/MoveDown&quot;" />
+            <Parameter Name="UaEnable" Value="TRUE" />
+            <Parameter Name="IoBackend" Value="0" />
+            <Parameter Name="DoGpio" Value="'FC_MoveDown'" />
+            <Parameter Name="DoModbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c0]&quot;" />
+          </FB>
+          <FB Name="Dose" Type="fillingcell::SK_Dose" x="1800" y="300">
+            <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler/Skills/Dose&quot;" />
+            <Parameter Name="UaEnable" Value="TRUE" />
+            <Parameter Name="IoBackend" Value="0" />
+            <Parameter Name="DoGpio" Value="'FC_Dose'" />
+            <Parameter Name="DoModbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c1]&quot;" />
+          </FB>
+          <FB Name="MoveUp" Type="fillingcell::SK_MoveUp" x="3300" y="300">
+            <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler/Skills/MoveUp&quot;" />
+            <Parameter Name="UaEnable" Value="TRUE" />
+            <Parameter Name="IoBackend" Value="0" />
+            <Parameter Name="DoGpio" Value="'FC_MoveUp'" />
+            <Parameter Name="DoModbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c2]&quot;" />
+          </FB>
+          <FB Name="Stopper" Type="fillingcell::SK_Stopper" x="4800" y="300">
+            <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler/Skills/Stopper&quot;" />
+            <Parameter Name="UaEnable" Value="TRUE" />
+            <Parameter Name="IoBackend" Value="0" />
+            <Parameter Name="DoGpio" Value="'FC_Stopper'" />
+            <Parameter Name="DoModbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c3]&quot;" />
+          </FB>
+          <FB Name="Inspect" Type="fillingcell::SK_Inspect" x="6300" y="300">
+            <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler/Skills/Inspect&quot;" />
+            <Parameter Name="UaEnable" Value="TRUE" />
+            <Parameter Name="IoBackend" Value="0" />
+            <Parameter Name="DoGpio" Value="'FC_Inspect'" />
+            <Parameter Name="DoModbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c4]&quot;" />
+          </FB>
+          <EventConnections>
+            <Connection Source="INIT" Destination="MoveDown.INIT" />
+            <Connection Source="MoveDown.INITO" Destination="Dose.INIT" />
+            <Connection Source="MoveDown.STAT_OUT" Destination="Dose.STAT_IN" />
+            <Connection Source="Dose.INITO" Destination="MoveUp.INIT" />
+            <Connection Source="Dose.STAT_OUT" Destination="MoveUp.STAT_IN" />
+            <Connection Source="MoveUp.INITO" Destination="Stopper.INIT" />
+            <Connection Source="MoveUp.STAT_OUT" Destination="Stopper.STAT_IN" />
+            <Connection Source="Stopper.INITO" Destination="Inspect.INIT" />
+            <Connection Source="Stopper.STAT_OUT" Destination="Inspect.STAT_IN" />
+            <Connection Source="Inspect.INITO" Destination="INITO" />
+            <Connection Source="Inspect.STAT_OUT" Destination="STAT_OUT" />
+            <Connection Source="UNIT_CTL" Destination="MoveDown.UNIT_CTL" />
+            <Connection Source="UNIT_STAT" Destination="MoveDown.UNIT_STAT" />
+            <Connection Source="SAMPLE" Destination="MoveDown.SAMPLE" />
+            <Connection Source="CALL_MoveDown" Destination="MoveDown.CALL" />
+            <Connection Source="MoveDown.DONE" Destination="DONE_MoveDown" />
+            <Connection Source="MoveDown.FAILED" Destination="FAILED_MoveDown" />
+            <Connection Source="UNIT_CTL" Destination="Dose.UNIT_CTL" />
+            <Connection Source="UNIT_STAT" Destination="Dose.UNIT_STAT" />
+            <Connection Source="SAMPLE" Destination="Dose.SAMPLE" />
+            <Connection Source="CALL_Dose" Destination="Dose.CALL" />
+            <Connection Source="Dose.DONE" Destination="DONE_Dose" />
+            <Connection Source="Dose.FAILED" Destination="FAILED_Dose" />
+            <Connection Source="UNIT_CTL" Destination="MoveUp.UNIT_CTL" />
+            <Connection Source="UNIT_STAT" Destination="MoveUp.UNIT_STAT" />
+            <Connection Source="SAMPLE" Destination="MoveUp.SAMPLE" />
+            <Connection Source="CALL_MoveUp" Destination="MoveUp.CALL" />
+            <Connection Source="MoveUp.DONE" Destination="DONE_MoveUp" />
+            <Connection Source="MoveUp.FAILED" Destination="FAILED_MoveUp" />
+            <Connection Source="UNIT_CTL" Destination="Stopper.UNIT_CTL" />
+            <Connection Source="UNIT_STAT" Destination="Stopper.UNIT_STAT" />
+            <Connection Source="SAMPLE" Destination="Stopper.SAMPLE" />
+            <Connection Source="CALL_Stopper" Destination="Stopper.CALL" />
+            <Connection Source="Stopper.DONE" Destination="DONE_Stopper" />
+            <Connection Source="Stopper.FAILED" Destination="FAILED_Stopper" />
+            <Connection Source="UNIT_CTL" Destination="Inspect.UNIT_CTL" />
+            <Connection Source="UNIT_STAT" Destination="Inspect.UNIT_STAT" />
+            <Connection Source="SAMPLE" Destination="Inspect.SAMPLE" />
+            <Connection Source="CALL_Inspect" Destination="Inspect.CALL" />
+            <Connection Source="Inspect.DONE" Destination="DONE_Inspect" />
+            <Connection Source="Inspect.FAILED" Destination="FAILED_Inspect" />
+          </EventConnections>
+          <DataConnections>
+            <Connection Source="MoveDown.BusyOut" Destination="Dose.BusyIn" />
+            <Connection Source="MoveDown.HeldOut" Destination="Dose.HeldIn" />
+            <Connection Source="MoveDown.RunOut" Destination="Dose.RunIn" />
+            <Connection Source="Dose.BusyOut" Destination="MoveUp.BusyIn" />
+            <Connection Source="Dose.HeldOut" Destination="MoveUp.HeldIn" />
+            <Connection Source="Dose.RunOut" Destination="MoveUp.RunIn" />
+            <Connection Source="MoveUp.BusyOut" Destination="Stopper.BusyIn" />
+            <Connection Source="MoveUp.HeldOut" Destination="Stopper.HeldIn" />
+            <Connection Source="MoveUp.RunOut" Destination="Stopper.RunIn" />
+            <Connection Source="Stopper.BusyOut" Destination="Inspect.BusyIn" />
+            <Connection Source="Stopper.HeldOut" Destination="Inspect.HeldIn" />
+            <Connection Source="Stopper.RunOut" Destination="Inspect.RunIn" />
+            <Connection Source="Inspect.BusyOut" Destination="Busy" />
+            <Connection Source="Inspect.HeldOut" Destination="HeldAll" />
+            <Connection Source="Inspect.RunOut" Destination="RunAll" />
+            <Connection Source="ControlCode" Destination="MoveDown.ControlCode" />
+            <Connection Source="Cell" Destination="MoveDown.Cell" />
+            <Connection Source="MoveDown.CallError" Destination="CallError_MoveDown" />
+            <Connection Source="MoveDown.Drive" Destination="Drive_MoveDown" />
+            <Connection Source="UnitRunning" Destination="MoveDown.UnitRunning" />
+            <Connection Source="UnitQuiescent" Destination="MoveDown.UnitQuiescent" />
+            <Connection Source="UnitState" Destination="MoveDown.UnitState" />
+            <Connection Source="Mode" Destination="MoveDown.Mode" />
+            <Connection Source="Owner" Destination="MoveDown.Owner" />
+            <Connection Source="RemoteAllowed" Destination="MoveDown.RemoteAllowed" />
+            <Connection Source="P1_MoveDown" Destination="MoveDown.P1" />
+            <Connection Source="P2_MoveDown" Destination="MoveDown.P2" />
+            <Connection Source="P3_MoveDown" Destination="MoveDown.P3" />
+            <Connection Source="P4_MoveDown" Destination="MoveDown.P4" />
+            <Connection Source="ControlCode" Destination="Dose.ControlCode" />
+            <Connection Source="Cell" Destination="Dose.Cell" />
+            <Connection Source="Dose.CallError" Destination="CallError_Dose" />
+            <Connection Source="Dose.Drive" Destination="Drive_Dose" />
+            <Connection Source="UnitRunning" Destination="Dose.UnitRunning" />
+            <Connection Source="UnitQuiescent" Destination="Dose.UnitQuiescent" />
+            <Connection Source="UnitState" Destination="Dose.UnitState" />
+            <Connection Source="Mode" Destination="Dose.Mode" />
+            <Connection Source="Owner" Destination="Dose.Owner" />
+            <Connection Source="RemoteAllowed" Destination="Dose.RemoteAllowed" />
+            <Connection Source="P1_Dose" Destination="Dose.P1" />
+            <Connection Source="P2_Dose" Destination="Dose.P2" />
+            <Connection Source="P3_Dose" Destination="Dose.P3" />
+            <Connection Source="P4_Dose" Destination="Dose.P4" />
+            <Connection Source="ControlCode" Destination="MoveUp.ControlCode" />
+            <Connection Source="Cell" Destination="MoveUp.Cell" />
+            <Connection Source="MoveUp.CallError" Destination="CallError_MoveUp" />
+            <Connection Source="MoveUp.Drive" Destination="Drive_MoveUp" />
+            <Connection Source="UnitRunning" Destination="MoveUp.UnitRunning" />
+            <Connection Source="UnitQuiescent" Destination="MoveUp.UnitQuiescent" />
+            <Connection Source="UnitState" Destination="MoveUp.UnitState" />
+            <Connection Source="Mode" Destination="MoveUp.Mode" />
+            <Connection Source="Owner" Destination="MoveUp.Owner" />
+            <Connection Source="RemoteAllowed" Destination="MoveUp.RemoteAllowed" />
+            <Connection Source="P1_MoveUp" Destination="MoveUp.P1" />
+            <Connection Source="P2_MoveUp" Destination="MoveUp.P2" />
+            <Connection Source="P3_MoveUp" Destination="MoveUp.P3" />
+            <Connection Source="P4_MoveUp" Destination="MoveUp.P4" />
+            <Connection Source="ControlCode" Destination="Stopper.ControlCode" />
+            <Connection Source="Cell" Destination="Stopper.Cell" />
+            <Connection Source="Stopper.CallError" Destination="CallError_Stopper" />
+            <Connection Source="Stopper.Drive" Destination="Drive_Stopper" />
+            <Connection Source="UnitRunning" Destination="Stopper.UnitRunning" />
+            <Connection Source="UnitQuiescent" Destination="Stopper.UnitQuiescent" />
+            <Connection Source="UnitState" Destination="Stopper.UnitState" />
+            <Connection Source="Mode" Destination="Stopper.Mode" />
+            <Connection Source="Owner" Destination="Stopper.Owner" />
+            <Connection Source="RemoteAllowed" Destination="Stopper.RemoteAllowed" />
+            <Connection Source="P1_Stopper" Destination="Stopper.P1" />
+            <Connection Source="P2_Stopper" Destination="Stopper.P2" />
+            <Connection Source="P3_Stopper" Destination="Stopper.P3" />
+            <Connection Source="P4_Stopper" Destination="Stopper.P4" />
+            <Connection Source="ControlCode" Destination="Inspect.ControlCode" />
+            <Connection Source="Cell" Destination="Inspect.Cell" />
+            <Connection Source="Inspect.CallError" Destination="CallError_Inspect" />
+            <Connection Source="Inspect.Drive" Destination="Drive_Inspect" />
+            <Connection Source="UnitRunning" Destination="Inspect.UnitRunning" />
+            <Connection Source="UnitQuiescent" Destination="Inspect.UnitQuiescent" />
+            <Connection Source="UnitState" Destination="Inspect.UnitState" />
+            <Connection Source="Mode" Destination="Inspect.Mode" />
+            <Connection Source="Owner" Destination="Inspect.Owner" />
+            <Connection Source="RemoteAllowed" Destination="Inspect.RemoteAllowed" />
+            <Connection Source="P1_Inspect" Destination="Inspect.P1" />
+            <Connection Source="P2_Inspect" Destination="Inspect.P2" />
+            <Connection Source="P3_Inspect" Destination="Inspect.P3" />
+            <Connection Source="P4_Inspect" Destination="Inspect.P4" />
+          </DataConnections>
+        </SubAppNetwork>
+      </SubApp>
+      <SubApp Name="PROC" x="2600" y="1400" Comment="INTENTIONALLY EMPTY: generated procedure (P_* pattern instances) calls skills via CALL_*/DONE_*/FAILED_*">
+        <InterfaceList>
+          <EventInputs>
+            <Event Name="START" Type="Event" />
+            <Event Name="RESET" Type="Event" />
+            <Event Name="CMD" Type="Event">
+              <With Var="Command" />
+            </Event>
+            <Event Name="DONE_MoveDown" Type="Event" />
+            <Event Name="DONE_Dose" Type="Event" />
+            <Event Name="DONE_MoveUp" Type="Event" />
+            <Event Name="DONE_Stopper" Type="Event" />
+            <Event Name="DONE_Inspect" Type="Event" />
+            <Event Name="FAILED_MoveDown" Type="Event">
+              <With Var="CallError_MoveDown" />
+            </Event>
+            <Event Name="FAILED_Dose" Type="Event">
+              <With Var="CallError_Dose" />
+            </Event>
+            <Event Name="FAILED_MoveUp" Type="Event">
+              <With Var="CallError_MoveUp" />
+            </Event>
+            <Event Name="FAILED_Stopper" Type="Event">
+              <With Var="CallError_Stopper" />
+            </Event>
+            <Event Name="FAILED_Inspect" Type="Event">
+              <With Var="CallError_Inspect" />
+            </Event>
+          </EventInputs>
+          <EventOutputs>
+            <Event Name="FINISHED" Type="Event" />
+            <Event Name="FAILED" Type="Event" />
+            <Event Name="CALL_MoveDown" Type="Event">
+              <With Var="P1_MoveDown" />
+              <With Var="P2_MoveDown" />
+              <With Var="P3_MoveDown" />
+              <With Var="P4_MoveDown" />
+            </Event>
+            <Event Name="CALL_Dose" Type="Event">
+              <With Var="P1_Dose" />
+              <With Var="P2_Dose" />
+              <With Var="P3_Dose" />
+              <With Var="P4_Dose" />
+            </Event>
+            <Event Name="CALL_MoveUp" Type="Event">
+              <With Var="P1_MoveUp" />
+              <With Var="P2_MoveUp" />
+              <With Var="P3_MoveUp" />
+              <With Var="P4_MoveUp" />
+            </Event>
+            <Event Name="CALL_Stopper" Type="Event">
+              <With Var="P1_Stopper" />
+              <With Var="P2_Stopper" />
+              <With Var="P3_Stopper" />
+              <With Var="P4_Stopper" />
+            </Event>
+            <Event Name="CALL_Inspect" Type="Event">
+              <With Var="P1_Inspect" />
+              <With Var="P2_Inspect" />
+              <With Var="P3_Inspect" />
+              <With Var="P4_Inspect" />
+            </Event>
+          </EventOutputs>
+          <InputVars>
+            <VarDeclaration Name="Command" Type="USINT" />
+            <VarDeclaration Name="CallError_MoveDown" Type="UINT" />
+            <VarDeclaration Name="CallError_Dose" Type="UINT" />
+            <VarDeclaration Name="CallError_MoveUp" Type="UINT" />
+            <VarDeclaration Name="CallError_Stopper" Type="UINT" />
+            <VarDeclaration Name="CallError_Inspect" Type="UINT" />
+          </InputVars>
+          <OutputVars>
+            <VarDeclaration Name="P1_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P2_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P3_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P4_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P1_Dose" Type="LREAL" />
+            <VarDeclaration Name="P2_Dose" Type="LREAL" />
+            <VarDeclaration Name="P3_Dose" Type="LREAL" />
+            <VarDeclaration Name="P4_Dose" Type="LREAL" />
+            <VarDeclaration Name="P1_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P2_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P3_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P4_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P1_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P2_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P3_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P4_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P1_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P2_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P3_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P4_Inspect" Type="LREAL" />
+          </OutputVars>
+        </InterfaceList>
+        <SubAppNetwork />
+      </SubApp>
+      <EventConnections>
+        <Connection Source="Boot.COLD" Destination="Observer.INIT" />
+        <Connection Source="Boot.WARM" Destination="Observer.INIT" />
+        <Connection Source="Unit.CNF" Destination="EM_Filler.UNIT_STAT" />
+        <Connection Source="Occupation.CNF" Destination="EM_Filler.UNIT_STAT" />
+        <Connection Source="Unit.CONTROL" Destination="EM_Filler.UNIT_CTL" />
+        <Connection Source="EM_Filler.STAT_OUT" Destination="Unit.STATUS" />
+        <Connection Source="Observer.SAMPLE" Destination="EM_Filler.SAMPLE" />
+        <Connection Source="Observer.UNSAFE" Destination="Unit.UNSAFE" />
+        <Connection Source="Unit.PROC_CMD" Destination="Facade.CMD" />
+        <Connection Source="Facade.EXEC" Destination="PROC.CMD" />
+        <Connection Source="Facade.START" Destination="PROC.START" />
+        <Connection Source="Facade.RESET" Destination="PROC.RESET" />
+        <Connection Source="PROC.FINISHED" Destination="Facade.FINISHED" />
+        <Connection Source="PROC.FAILED" Destination="Facade.FAILED" />
+        <Connection Source="Facade.DONE" Destination="Unit.PROC_DONE" />
+        <Connection Source="Facade.FAULT" Destination="Unit.FAULT" />
+        <Connection Source="PROC.CALL_MoveDown" Destination="EM_Filler.CALL_MoveDown" />
+        <Connection Source="EM_Filler.DONE_MoveDown" Destination="PROC.DONE_MoveDown" />
+        <Connection Source="EM_Filler.FAILED_MoveDown" Destination="PROC.FAILED_MoveDown" />
+        <Connection Source="PROC.CALL_Dose" Destination="EM_Filler.CALL_Dose" />
+        <Connection Source="EM_Filler.DONE_Dose" Destination="PROC.DONE_Dose" />
+        <Connection Source="EM_Filler.FAILED_Dose" Destination="PROC.FAILED_Dose" />
+        <Connection Source="PROC.CALL_MoveUp" Destination="EM_Filler.CALL_MoveUp" />
+        <Connection Source="EM_Filler.DONE_MoveUp" Destination="PROC.DONE_MoveUp" />
+        <Connection Source="EM_Filler.FAILED_MoveUp" Destination="PROC.FAILED_MoveUp" />
+        <Connection Source="PROC.CALL_Stopper" Destination="EM_Filler.CALL_Stopper" />
+        <Connection Source="EM_Filler.DONE_Stopper" Destination="PROC.DONE_Stopper" />
+        <Connection Source="EM_Filler.FAILED_Stopper" Destination="PROC.FAILED_Stopper" />
+        <Connection Source="PROC.CALL_Inspect" Destination="EM_Filler.CALL_Inspect" />
+        <Connection Source="EM_Filler.DONE_Inspect" Destination="PROC.DONE_Inspect" />
+        <Connection Source="EM_Filler.FAILED_Inspect" Destination="PROC.FAILED_Inspect" />
+        <Connection Source="Observer.INITO" Destination="UaFacade.INIT" />
+        <Connection Source="UaFacade.INITO" Destination="EM_Filler.INIT" />
+        <Connection Source="UaFacade.U_CMD" Destination="Unit.CMD" />
+        <Connection Source="UaFacade.O_CMD" Destination="Occupation.CMD" />
+        <Connection Source="Unit.CMD_ACK" Destination="UaFacade.U_ACK" />
+        <Connection Source="Unit.CMD_REJ" Destination="UaFacade.U_REJ" />
+        <Connection Source="Occupation.CNF" Destination="UaFacade.O_ACK" />
+        <Connection Source="Occupation.REJECTED" Destination="UaFacade.O_REJ" />
+        <Connection Source="Unit.CNF" Destination="UaFacade.PUB" />
+        <Connection Source="Occupation.CNF" Destination="UaFacade.PUB" />
+      </EventConnections>
+      <DataConnections>
+        <Connection Source="Occupation.Owner" Destination="Unit.Owner" />
+        <Connection Source="Occupation.RemoteAllowed" Destination="Unit.RemoteAllowed" />
+        <Connection Source="Occupation.Owner" Destination="EM_Filler.Owner" />
+        <Connection Source="Occupation.RemoteAllowed" Destination="EM_Filler.RemoteAllowed" />
+        <Connection Source="Unit.Running" Destination="EM_Filler.UnitRunning" />
+        <Connection Source="Unit.Quiescent" Destination="EM_Filler.UnitQuiescent" />
+        <Connection Source="Unit.State" Destination="EM_Filler.UnitState" />
+        <Connection Source="Unit.Mode" Destination="EM_Filler.Mode" />
+        <Connection Source="Unit.ControlCode" Destination="EM_Filler.ControlCode" />
+        <Connection Source="Unit.Quiescent" Destination="Occupation.Quiescent" />
+        <Connection Source="Unit.Quiescent" Destination="Facade.Quiescent" />
+        <Connection Source="EM_Filler.Busy" Destination="Unit.Busy" />
+        <Connection Source="EM_Filler.HeldAll" Destination="Unit.HeldAll" />
+        <Connection Source="EM_Filler.RunAll" Destination="Unit.RunAll" />
+        <Connection Source="Observer.Cell" Destination="EM_Filler.Cell" />
+        <Connection Source="Observer.Safe" Destination="Unit.Safe" />
+        <Connection Source="Unit.ProcedureCommand" Destination="Facade.Command" />
+        <Connection Source="Facade.CommandOut" Destination="PROC.Command" />
+        <Connection Source="Facade.Ready" Destination="Unit.ProcedureReady" />
+        <Connection Source="PROC.P1_MoveDown" Destination="EM_Filler.P1_MoveDown" />
+        <Connection Source="PROC.P2_MoveDown" Destination="EM_Filler.P2_MoveDown" />
+        <Connection Source="PROC.P3_MoveDown" Destination="EM_Filler.P3_MoveDown" />
+        <Connection Source="PROC.P4_MoveDown" Destination="EM_Filler.P4_MoveDown" />
+        <Connection Source="EM_Filler.CallError_MoveDown" Destination="PROC.CallError_MoveDown" />
+        <Connection Source="PROC.P1_Dose" Destination="EM_Filler.P1_Dose" />
+        <Connection Source="PROC.P2_Dose" Destination="EM_Filler.P2_Dose" />
+        <Connection Source="PROC.P3_Dose" Destination="EM_Filler.P3_Dose" />
+        <Connection Source="PROC.P4_Dose" Destination="EM_Filler.P4_Dose" />
+        <Connection Source="EM_Filler.CallError_Dose" Destination="PROC.CallError_Dose" />
+        <Connection Source="PROC.P1_MoveUp" Destination="EM_Filler.P1_MoveUp" />
+        <Connection Source="PROC.P2_MoveUp" Destination="EM_Filler.P2_MoveUp" />
+        <Connection Source="PROC.P3_MoveUp" Destination="EM_Filler.P3_MoveUp" />
+        <Connection Source="PROC.P4_MoveUp" Destination="EM_Filler.P4_MoveUp" />
+        <Connection Source="EM_Filler.CallError_MoveUp" Destination="PROC.CallError_MoveUp" />
+        <Connection Source="PROC.P1_Stopper" Destination="EM_Filler.P1_Stopper" />
+        <Connection Source="PROC.P2_Stopper" Destination="EM_Filler.P2_Stopper" />
+        <Connection Source="PROC.P3_Stopper" Destination="EM_Filler.P3_Stopper" />
+        <Connection Source="PROC.P4_Stopper" Destination="EM_Filler.P4_Stopper" />
+        <Connection Source="EM_Filler.CallError_Stopper" Destination="PROC.CallError_Stopper" />
+        <Connection Source="PROC.P1_Inspect" Destination="EM_Filler.P1_Inspect" />
+        <Connection Source="PROC.P2_Inspect" Destination="EM_Filler.P2_Inspect" />
+        <Connection Source="PROC.P3_Inspect" Destination="EM_Filler.P3_Inspect" />
+        <Connection Source="PROC.P4_Inspect" Destination="EM_Filler.P4_Inspect" />
+        <Connection Source="EM_Filler.CallError_Inspect" Destination="PROC.CallError_Inspect" />
+        <Connection Source="UaFacade.Requester" Destination="Unit.Requester" />
+        <Connection Source="UaFacade.Requester" Destination="Occupation.Requester" />
+        <Connection Source="UaFacade.U_Code" Destination="Unit.Command" />
+        <Connection Source="UaFacade.U_Mode" Destination="Unit.RequestedMode" />
+        <Connection Source="UaFacade.O_Code" Destination="Occupation.Command" />
+        <Connection Source="Unit.State" Destination="UaFacade.UnitState" />
+        <Connection Source="Unit.Mode" Destination="UaFacade.UnitMode" />
+        <Connection Source="Occupation.State" Destination="UaFacade.OccState" />
+        <Connection Source="Occupation.Owner" Destination="UaFacade.Owner" />
+      </DataConnections>
+    </SubAppNetwork>
+  </Application>
+  <Application Name="FillingCellDemo" Comment="Self-running demo: plant model and automatic operator cycle the whole cell through the PROC procedure; watch Operator.Cycles, Unit.State, Plant.* in the IDE monitoring (no OPC UA: FORTE 3.3 serves OPC UA for one resource only, used by FillingCell)">
+    <SubAppNetwork>
+      <FB Name="Boot" Type="iec61499::events::E_RESTART" x="100" y="100" />
+      <FB Name="Observer" Type="fillingcell::UNIT_Observer" x="100" y="1400">
+        <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler&quot;" />
+        <Parameter Name="UaEnable" Value="FALSE" />
+        <Parameter Name="IoBackend" Value="0" />
+        <Parameter Name="CycleTime" Value="T#50ms" />
+      </FB>
+      <FB Name="Occupation" Type="fillingcell::FC_Occupation" x="1500" y="100" />
+      <FB Name="Unit" Type="fillingcell::FC_Unit" x="1500" y="700" />
+      <FB Name="Facade" Type="fillingcell::FC_ProcedureFacade" x="2600" y="100">
+        <Parameter Name="Installed" Value="TRUE" />
+      </FB>
+      <SubApp Name="EM_Filler" x="3600" y="700" Comment="Equipment module: one composite per skill, chained for status; instances and chain may be changed online while the unit is quiescent">
+        <InterfaceList>
+          <EventInputs>
+            <Event Name="INIT" Type="Event" />
+            <Event Name="UNIT_CTL" Type="Event">
+              <With Var="ControlCode" />
+            </Event>
+            <Event Name="UNIT_STAT" Type="Event">
+              <With Var="UnitRunning" />
+              <With Var="UnitQuiescent" />
+              <With Var="UnitState" />
+              <With Var="Mode" />
+              <With Var="Owner" />
+              <With Var="RemoteAllowed" />
+            </Event>
+            <Event Name="SAMPLE" Type="Event">
+              <With Var="Cell" />
+            </Event>
+            <Event Name="CALL_MoveDown" Type="Event">
+              <With Var="P1_MoveDown" />
+              <With Var="P2_MoveDown" />
+              <With Var="P3_MoveDown" />
+              <With Var="P4_MoveDown" />
+            </Event>
+            <Event Name="CALL_Dose" Type="Event">
+              <With Var="P1_Dose" />
+              <With Var="P2_Dose" />
+              <With Var="P3_Dose" />
+              <With Var="P4_Dose" />
+            </Event>
+            <Event Name="CALL_MoveUp" Type="Event">
+              <With Var="P1_MoveUp" />
+              <With Var="P2_MoveUp" />
+              <With Var="P3_MoveUp" />
+              <With Var="P4_MoveUp" />
+            </Event>
+            <Event Name="CALL_Stopper" Type="Event">
+              <With Var="P1_Stopper" />
+              <With Var="P2_Stopper" />
+              <With Var="P3_Stopper" />
+              <With Var="P4_Stopper" />
+            </Event>
+            <Event Name="CALL_Inspect" Type="Event">
+              <With Var="P1_Inspect" />
+              <With Var="P2_Inspect" />
+              <With Var="P3_Inspect" />
+              <With Var="P4_Inspect" />
+            </Event>
+          </EventInputs>
+          <EventOutputs>
+            <Event Name="INITO" Type="Event" />
+            <Event Name="STAT_OUT" Type="Event">
+              <With Var="Busy" />
+              <With Var="HeldAll" />
+              <With Var="RunAll" />
+            </Event>
+            <Event Name="DONE_MoveDown" Type="Event" />
+            <Event Name="DONE_Dose" Type="Event" />
+            <Event Name="DONE_MoveUp" Type="Event" />
+            <Event Name="DONE_Stopper" Type="Event" />
+            <Event Name="DONE_Inspect" Type="Event" />
+            <Event Name="FAILED_MoveDown" Type="Event">
+              <With Var="CallError_MoveDown" />
+            </Event>
+            <Event Name="FAILED_Dose" Type="Event">
+              <With Var="CallError_Dose" />
+            </Event>
+            <Event Name="FAILED_MoveUp" Type="Event">
+              <With Var="CallError_MoveUp" />
+            </Event>
+            <Event Name="FAILED_Stopper" Type="Event">
+              <With Var="CallError_Stopper" />
+            </Event>
+            <Event Name="FAILED_Inspect" Type="Event">
+              <With Var="CallError_Inspect" />
+            </Event>
+          </EventOutputs>
+          <InputVars>
+            <VarDeclaration Name="ControlCode" Type="USINT" />
+            <VarDeclaration Name="UnitRunning" Type="BOOL" />
+            <VarDeclaration Name="UnitQuiescent" Type="BOOL" />
+            <VarDeclaration Name="UnitState" Type="USINT" />
+            <VarDeclaration Name="Mode" Type="USINT" />
+            <VarDeclaration Name="Owner" Type="UDINT" />
+            <VarDeclaration Name="RemoteAllowed" Type="BOOL" />
+            <VarDeclaration Name="Cell" Type="fillingcell::ST_CellState" />
+            <VarDeclaration Name="P1_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P2_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P3_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P4_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P1_Dose" Type="LREAL" />
+            <VarDeclaration Name="P2_Dose" Type="LREAL" />
+            <VarDeclaration Name="P3_Dose" Type="LREAL" />
+            <VarDeclaration Name="P4_Dose" Type="LREAL" />
+            <VarDeclaration Name="P1_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P2_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P3_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P4_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P1_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P2_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P3_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P4_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P1_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P2_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P3_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P4_Inspect" Type="LREAL" />
+          </InputVars>
+          <OutputVars>
+            <VarDeclaration Name="Busy" Type="BOOL" />
+            <VarDeclaration Name="HeldAll" Type="BOOL" />
+            <VarDeclaration Name="RunAll" Type="BOOL" />
+            <VarDeclaration Name="CallError_MoveDown" Type="UINT" />
+            <VarDeclaration Name="CallError_Dose" Type="UINT" />
+            <VarDeclaration Name="CallError_MoveUp" Type="UINT" />
+            <VarDeclaration Name="CallError_Stopper" Type="UINT" />
+            <VarDeclaration Name="CallError_Inspect" Type="UINT" />
+            <VarDeclaration Name="Drive_MoveDown" Type="BOOL" />
+            <VarDeclaration Name="Drive_Dose" Type="BOOL" />
+            <VarDeclaration Name="Drive_MoveUp" Type="BOOL" />
+            <VarDeclaration Name="Drive_Stopper" Type="BOOL" />
+            <VarDeclaration Name="Drive_Inspect" Type="BOOL" />
+          </OutputVars>
+        </InterfaceList>
+        <SubAppNetwork>
+          <FB Name="MoveDown" Type="fillingcell::SK_MoveDown" x="300" y="300">
+            <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler/Skills/MoveDown&quot;" />
+            <Parameter Name="UaEnable" Value="FALSE" />
+            <Parameter Name="IoBackend" Value="0" />
+          </FB>
+          <FB Name="Dose" Type="fillingcell::SK_Dose" x="1800" y="300">
+            <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler/Skills/Dose&quot;" />
+            <Parameter Name="UaEnable" Value="FALSE" />
+            <Parameter Name="IoBackend" Value="0" />
+          </FB>
+          <FB Name="MoveUp" Type="fillingcell::SK_MoveUp" x="3300" y="300">
+            <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler/Skills/MoveUp&quot;" />
+            <Parameter Name="UaEnable" Value="FALSE" />
+            <Parameter Name="IoBackend" Value="0" />
+          </FB>
+          <FB Name="Stopper" Type="fillingcell::SK_Stopper" x="4800" y="300">
+            <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler/Skills/Stopper&quot;" />
+            <Parameter Name="UaEnable" Value="FALSE" />
+            <Parameter Name="IoBackend" Value="0" />
+          </FB>
+          <FB Name="Inspect" Type="fillingcell::SK_Inspect" x="6300" y="300">
+            <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler/Skills/Inspect&quot;" />
+            <Parameter Name="UaEnable" Value="FALSE" />
+            <Parameter Name="IoBackend" Value="0" />
+          </FB>
+          <EventConnections>
+            <Connection Source="INIT" Destination="MoveDown.INIT" />
+            <Connection Source="MoveDown.INITO" Destination="Dose.INIT" />
+            <Connection Source="MoveDown.STAT_OUT" Destination="Dose.STAT_IN" />
+            <Connection Source="Dose.INITO" Destination="MoveUp.INIT" />
+            <Connection Source="Dose.STAT_OUT" Destination="MoveUp.STAT_IN" />
+            <Connection Source="MoveUp.INITO" Destination="Stopper.INIT" />
+            <Connection Source="MoveUp.STAT_OUT" Destination="Stopper.STAT_IN" />
+            <Connection Source="Stopper.INITO" Destination="Inspect.INIT" />
+            <Connection Source="Stopper.STAT_OUT" Destination="Inspect.STAT_IN" />
+            <Connection Source="Inspect.INITO" Destination="INITO" />
+            <Connection Source="Inspect.STAT_OUT" Destination="STAT_OUT" />
+            <Connection Source="UNIT_CTL" Destination="MoveDown.UNIT_CTL" />
+            <Connection Source="UNIT_STAT" Destination="MoveDown.UNIT_STAT" />
+            <Connection Source="SAMPLE" Destination="MoveDown.SAMPLE" />
+            <Connection Source="CALL_MoveDown" Destination="MoveDown.CALL" />
+            <Connection Source="MoveDown.DONE" Destination="DONE_MoveDown" />
+            <Connection Source="MoveDown.FAILED" Destination="FAILED_MoveDown" />
+            <Connection Source="UNIT_CTL" Destination="Dose.UNIT_CTL" />
+            <Connection Source="UNIT_STAT" Destination="Dose.UNIT_STAT" />
+            <Connection Source="SAMPLE" Destination="Dose.SAMPLE" />
+            <Connection Source="CALL_Dose" Destination="Dose.CALL" />
+            <Connection Source="Dose.DONE" Destination="DONE_Dose" />
+            <Connection Source="Dose.FAILED" Destination="FAILED_Dose" />
+            <Connection Source="UNIT_CTL" Destination="MoveUp.UNIT_CTL" />
+            <Connection Source="UNIT_STAT" Destination="MoveUp.UNIT_STAT" />
+            <Connection Source="SAMPLE" Destination="MoveUp.SAMPLE" />
+            <Connection Source="CALL_MoveUp" Destination="MoveUp.CALL" />
+            <Connection Source="MoveUp.DONE" Destination="DONE_MoveUp" />
+            <Connection Source="MoveUp.FAILED" Destination="FAILED_MoveUp" />
+            <Connection Source="UNIT_CTL" Destination="Stopper.UNIT_CTL" />
+            <Connection Source="UNIT_STAT" Destination="Stopper.UNIT_STAT" />
+            <Connection Source="SAMPLE" Destination="Stopper.SAMPLE" />
+            <Connection Source="CALL_Stopper" Destination="Stopper.CALL" />
+            <Connection Source="Stopper.DONE" Destination="DONE_Stopper" />
+            <Connection Source="Stopper.FAILED" Destination="FAILED_Stopper" />
+            <Connection Source="UNIT_CTL" Destination="Inspect.UNIT_CTL" />
+            <Connection Source="UNIT_STAT" Destination="Inspect.UNIT_STAT" />
+            <Connection Source="SAMPLE" Destination="Inspect.SAMPLE" />
+            <Connection Source="CALL_Inspect" Destination="Inspect.CALL" />
+            <Connection Source="Inspect.DONE" Destination="DONE_Inspect" />
+            <Connection Source="Inspect.FAILED" Destination="FAILED_Inspect" />
+          </EventConnections>
+          <DataConnections>
+            <Connection Source="MoveDown.BusyOut" Destination="Dose.BusyIn" />
+            <Connection Source="MoveDown.HeldOut" Destination="Dose.HeldIn" />
+            <Connection Source="MoveDown.RunOut" Destination="Dose.RunIn" />
+            <Connection Source="Dose.BusyOut" Destination="MoveUp.BusyIn" />
+            <Connection Source="Dose.HeldOut" Destination="MoveUp.HeldIn" />
+            <Connection Source="Dose.RunOut" Destination="MoveUp.RunIn" />
+            <Connection Source="MoveUp.BusyOut" Destination="Stopper.BusyIn" />
+            <Connection Source="MoveUp.HeldOut" Destination="Stopper.HeldIn" />
+            <Connection Source="MoveUp.RunOut" Destination="Stopper.RunIn" />
+            <Connection Source="Stopper.BusyOut" Destination="Inspect.BusyIn" />
+            <Connection Source="Stopper.HeldOut" Destination="Inspect.HeldIn" />
+            <Connection Source="Stopper.RunOut" Destination="Inspect.RunIn" />
+            <Connection Source="Inspect.BusyOut" Destination="Busy" />
+            <Connection Source="Inspect.HeldOut" Destination="HeldAll" />
+            <Connection Source="Inspect.RunOut" Destination="RunAll" />
+            <Connection Source="ControlCode" Destination="MoveDown.ControlCode" />
+            <Connection Source="Cell" Destination="MoveDown.Cell" />
+            <Connection Source="MoveDown.CallError" Destination="CallError_MoveDown" />
+            <Connection Source="MoveDown.Drive" Destination="Drive_MoveDown" />
+            <Connection Source="UnitRunning" Destination="MoveDown.UnitRunning" />
+            <Connection Source="UnitQuiescent" Destination="MoveDown.UnitQuiescent" />
+            <Connection Source="UnitState" Destination="MoveDown.UnitState" />
+            <Connection Source="Mode" Destination="MoveDown.Mode" />
+            <Connection Source="Owner" Destination="MoveDown.Owner" />
+            <Connection Source="RemoteAllowed" Destination="MoveDown.RemoteAllowed" />
+            <Connection Source="P1_MoveDown" Destination="MoveDown.P1" />
+            <Connection Source="P2_MoveDown" Destination="MoveDown.P2" />
+            <Connection Source="P3_MoveDown" Destination="MoveDown.P3" />
+            <Connection Source="P4_MoveDown" Destination="MoveDown.P4" />
+            <Connection Source="ControlCode" Destination="Dose.ControlCode" />
+            <Connection Source="Cell" Destination="Dose.Cell" />
+            <Connection Source="Dose.CallError" Destination="CallError_Dose" />
+            <Connection Source="Dose.Drive" Destination="Drive_Dose" />
+            <Connection Source="UnitRunning" Destination="Dose.UnitRunning" />
+            <Connection Source="UnitQuiescent" Destination="Dose.UnitQuiescent" />
+            <Connection Source="UnitState" Destination="Dose.UnitState" />
+            <Connection Source="Mode" Destination="Dose.Mode" />
+            <Connection Source="Owner" Destination="Dose.Owner" />
+            <Connection Source="RemoteAllowed" Destination="Dose.RemoteAllowed" />
+            <Connection Source="P1_Dose" Destination="Dose.P1" />
+            <Connection Source="P2_Dose" Destination="Dose.P2" />
+            <Connection Source="P3_Dose" Destination="Dose.P3" />
+            <Connection Source="P4_Dose" Destination="Dose.P4" />
+            <Connection Source="ControlCode" Destination="MoveUp.ControlCode" />
+            <Connection Source="Cell" Destination="MoveUp.Cell" />
+            <Connection Source="MoveUp.CallError" Destination="CallError_MoveUp" />
+            <Connection Source="MoveUp.Drive" Destination="Drive_MoveUp" />
+            <Connection Source="UnitRunning" Destination="MoveUp.UnitRunning" />
+            <Connection Source="UnitQuiescent" Destination="MoveUp.UnitQuiescent" />
+            <Connection Source="UnitState" Destination="MoveUp.UnitState" />
+            <Connection Source="Mode" Destination="MoveUp.Mode" />
+            <Connection Source="Owner" Destination="MoveUp.Owner" />
+            <Connection Source="RemoteAllowed" Destination="MoveUp.RemoteAllowed" />
+            <Connection Source="P1_MoveUp" Destination="MoveUp.P1" />
+            <Connection Source="P2_MoveUp" Destination="MoveUp.P2" />
+            <Connection Source="P3_MoveUp" Destination="MoveUp.P3" />
+            <Connection Source="P4_MoveUp" Destination="MoveUp.P4" />
+            <Connection Source="ControlCode" Destination="Stopper.ControlCode" />
+            <Connection Source="Cell" Destination="Stopper.Cell" />
+            <Connection Source="Stopper.CallError" Destination="CallError_Stopper" />
+            <Connection Source="Stopper.Drive" Destination="Drive_Stopper" />
+            <Connection Source="UnitRunning" Destination="Stopper.UnitRunning" />
+            <Connection Source="UnitQuiescent" Destination="Stopper.UnitQuiescent" />
+            <Connection Source="UnitState" Destination="Stopper.UnitState" />
+            <Connection Source="Mode" Destination="Stopper.Mode" />
+            <Connection Source="Owner" Destination="Stopper.Owner" />
+            <Connection Source="RemoteAllowed" Destination="Stopper.RemoteAllowed" />
+            <Connection Source="P1_Stopper" Destination="Stopper.P1" />
+            <Connection Source="P2_Stopper" Destination="Stopper.P2" />
+            <Connection Source="P3_Stopper" Destination="Stopper.P3" />
+            <Connection Source="P4_Stopper" Destination="Stopper.P4" />
+            <Connection Source="ControlCode" Destination="Inspect.ControlCode" />
+            <Connection Source="Cell" Destination="Inspect.Cell" />
+            <Connection Source="Inspect.CallError" Destination="CallError_Inspect" />
+            <Connection Source="Inspect.Drive" Destination="Drive_Inspect" />
+            <Connection Source="UnitRunning" Destination="Inspect.UnitRunning" />
+            <Connection Source="UnitQuiescent" Destination="Inspect.UnitQuiescent" />
+            <Connection Source="UnitState" Destination="Inspect.UnitState" />
+            <Connection Source="Mode" Destination="Inspect.Mode" />
+            <Connection Source="Owner" Destination="Inspect.Owner" />
+            <Connection Source="RemoteAllowed" Destination="Inspect.RemoteAllowed" />
+            <Connection Source="P1_Inspect" Destination="Inspect.P1" />
+            <Connection Source="P2_Inspect" Destination="Inspect.P2" />
+            <Connection Source="P3_Inspect" Destination="Inspect.P3" />
+            <Connection Source="P4_Inspect" Destination="Inspect.P4" />
+          </DataConnections>
+        </SubAppNetwork>
+      </SubApp>
+      <SubApp Name="PROC" x="2600" y="1400" Comment="Demo procedure: MoveDown, Dose x2 (P_Loop), MoveUp, Stopper, Inspect">
+        <InterfaceList>
+          <EventInputs>
+            <Event Name="START" Type="Event" />
+            <Event Name="RESET" Type="Event" />
+            <Event Name="CMD" Type="Event">
+              <With Var="Command" />
+            </Event>
+            <Event Name="DONE_MoveDown" Type="Event" />
+            <Event Name="DONE_Dose" Type="Event" />
+            <Event Name="DONE_MoveUp" Type="Event" />
+            <Event Name="DONE_Stopper" Type="Event" />
+            <Event Name="DONE_Inspect" Type="Event" />
+            <Event Name="FAILED_MoveDown" Type="Event">
+              <With Var="CallError_MoveDown" />
+            </Event>
+            <Event Name="FAILED_Dose" Type="Event">
+              <With Var="CallError_Dose" />
+            </Event>
+            <Event Name="FAILED_MoveUp" Type="Event">
+              <With Var="CallError_MoveUp" />
+            </Event>
+            <Event Name="FAILED_Stopper" Type="Event">
+              <With Var="CallError_Stopper" />
+            </Event>
+            <Event Name="FAILED_Inspect" Type="Event">
+              <With Var="CallError_Inspect" />
+            </Event>
+          </EventInputs>
+          <EventOutputs>
+            <Event Name="FINISHED" Type="Event" />
+            <Event Name="FAILED" Type="Event" />
+            <Event Name="CALL_MoveDown" Type="Event">
+              <With Var="P1_MoveDown" />
+              <With Var="P2_MoveDown" />
+              <With Var="P3_MoveDown" />
+              <With Var="P4_MoveDown" />
+            </Event>
+            <Event Name="CALL_Dose" Type="Event">
+              <With Var="P1_Dose" />
+              <With Var="P2_Dose" />
+              <With Var="P3_Dose" />
+              <With Var="P4_Dose" />
+            </Event>
+            <Event Name="CALL_MoveUp" Type="Event">
+              <With Var="P1_MoveUp" />
+              <With Var="P2_MoveUp" />
+              <With Var="P3_MoveUp" />
+              <With Var="P4_MoveUp" />
+            </Event>
+            <Event Name="CALL_Stopper" Type="Event">
+              <With Var="P1_Stopper" />
+              <With Var="P2_Stopper" />
+              <With Var="P3_Stopper" />
+              <With Var="P4_Stopper" />
+            </Event>
+            <Event Name="CALL_Inspect" Type="Event">
+              <With Var="P1_Inspect" />
+              <With Var="P2_Inspect" />
+              <With Var="P3_Inspect" />
+              <With Var="P4_Inspect" />
+            </Event>
+          </EventOutputs>
+          <InputVars>
+            <VarDeclaration Name="Command" Type="USINT" />
+            <VarDeclaration Name="CallError_MoveDown" Type="UINT" />
+            <VarDeclaration Name="CallError_Dose" Type="UINT" />
+            <VarDeclaration Name="CallError_MoveUp" Type="UINT" />
+            <VarDeclaration Name="CallError_Stopper" Type="UINT" />
+            <VarDeclaration Name="CallError_Inspect" Type="UINT" />
+          </InputVars>
+          <OutputVars>
+            <VarDeclaration Name="P1_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P2_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P3_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P4_MoveDown" Type="LREAL" />
+            <VarDeclaration Name="P1_Dose" Type="LREAL" />
+            <VarDeclaration Name="P2_Dose" Type="LREAL" />
+            <VarDeclaration Name="P3_Dose" Type="LREAL" />
+            <VarDeclaration Name="P4_Dose" Type="LREAL" />
+            <VarDeclaration Name="P1_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P2_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P3_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P4_MoveUp" Type="LREAL" />
+            <VarDeclaration Name="P1_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P2_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P3_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P4_Stopper" Type="LREAL" />
+            <VarDeclaration Name="P1_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P2_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P3_Inspect" Type="LREAL" />
+            <VarDeclaration Name="P4_Inspect" Type="LREAL" />
+          </OutputVars>
+        </InterfaceList>
+        <SubAppNetwork>
+          <FB Name="MoveDown" Type="fillingcell::P_Call" x="400" y="300" />
+          <FB Name="Dose" Type="fillingcell::P_Call" x="2000" y="300">
+            <Parameter Name="P1" Value="0.3" />
+          </FB>
+          <FB Name="MoveUp" Type="fillingcell::P_Call" x="3600" y="300" />
+          <FB Name="Stopper" Type="fillingcell::P_Call" x="5200" y="300" />
+          <FB Name="Inspect" Type="fillingcell::P_Call" x="6800" y="300" />
+          <FB Name="DoseLoop" Type="fillingcell::P_Loop" x="2000" y="1400">
+            <Parameter Name="Count" Value="2" />
+          </FB>
+          <EventConnections>
+            <Connection Source="START" Destination="MoveDown.EI" />
+            <Connection Source="MoveDown.EO" Destination="DoseLoop.EI" />
+            <Connection Source="DoseLoop.BODY" Destination="Dose.EI" />
+            <Connection Source="Dose.EO" Destination="DoseLoop.NEXT" />
+            <Connection Source="DoseLoop.EO" Destination="MoveUp.EI" />
+            <Connection Source="MoveUp.EO" Destination="Stopper.EI" />
+            <Connection Source="Stopper.EO" Destination="Inspect.EI" />
+            <Connection Source="Inspect.EO" Destination="FINISHED" />
+            <Connection Source="RESET" Destination="DoseLoop.RESET" />
+            <Connection Source="MoveDown.CALL" Destination="CALL_MoveDown" />
+            <Connection Source="DONE_MoveDown" Destination="MoveDown.DONE" />
+            <Connection Source="FAILED_MoveDown" Destination="MoveDown.FAILED" />
+            <Connection Source="MoveDown.ERR" Destination="FAILED" />
+            <Connection Source="RESET" Destination="MoveDown.RESET" />
+            <Connection Source="Dose.CALL" Destination="CALL_Dose" />
+            <Connection Source="DONE_Dose" Destination="Dose.DONE" />
+            <Connection Source="FAILED_Dose" Destination="Dose.FAILED" />
+            <Connection Source="Dose.ERR" Destination="FAILED" />
+            <Connection Source="RESET" Destination="Dose.RESET" />
+            <Connection Source="MoveUp.CALL" Destination="CALL_MoveUp" />
+            <Connection Source="DONE_MoveUp" Destination="MoveUp.DONE" />
+            <Connection Source="FAILED_MoveUp" Destination="MoveUp.FAILED" />
+            <Connection Source="MoveUp.ERR" Destination="FAILED" />
+            <Connection Source="RESET" Destination="MoveUp.RESET" />
+            <Connection Source="Stopper.CALL" Destination="CALL_Stopper" />
+            <Connection Source="DONE_Stopper" Destination="Stopper.DONE" />
+            <Connection Source="FAILED_Stopper" Destination="Stopper.FAILED" />
+            <Connection Source="Stopper.ERR" Destination="FAILED" />
+            <Connection Source="RESET" Destination="Stopper.RESET" />
+            <Connection Source="Inspect.CALL" Destination="CALL_Inspect" />
+            <Connection Source="DONE_Inspect" Destination="Inspect.DONE" />
+            <Connection Source="FAILED_Inspect" Destination="Inspect.FAILED" />
+            <Connection Source="Inspect.ERR" Destination="FAILED" />
+            <Connection Source="RESET" Destination="Inspect.RESET" />
+          </EventConnections>
+          <DataConnections>
+            <Connection Source="Dose.CP1" Destination="P1_Dose" />
+            <Connection Source="CallError_MoveDown" Destination="MoveDown.CallError" />
+            <Connection Source="CallError_Dose" Destination="Dose.CallError" />
+            <Connection Source="CallError_MoveUp" Destination="MoveUp.CallError" />
+            <Connection Source="CallError_Stopper" Destination="Stopper.CallError" />
+            <Connection Source="CallError_Inspect" Destination="Inspect.CallError" />
+          </DataConnections>
+        </SubAppNetwork>
+      </SubApp>
+      <FB Name="Plant" Type="fillingcell::DEMO_Plant" x="100" y="2600" />
+      <FB Name="PlantClock" Type="iec61499::events::E_CYCLE" x="100" y="3400">
+        <Parameter Name="DT" Value="T#20ms" />
+      </FB>
+      <FB Name="Operator" Type="fillingcell::DEMO_Operator" x="4800" y="100" />
+      <FB Name="OpDelay" Type="iec61499::events::E_DELAY" x="4800" y="900" />
+      <EventConnections>
+        <Connection Source="Boot.COLD" Destination="Observer.INIT" />
+        <Connection Source="Boot.WARM" Destination="Observer.INIT" />
+        <Connection Source="Unit.CNF" Destination="EM_Filler.UNIT_STAT" />
+        <Connection Source="Occupation.CNF" Destination="EM_Filler.UNIT_STAT" />
+        <Connection Source="Unit.CONTROL" Destination="EM_Filler.UNIT_CTL" />
+        <Connection Source="EM_Filler.STAT_OUT" Destination="Unit.STATUS" />
+        <Connection Source="Observer.SAMPLE" Destination="EM_Filler.SAMPLE" />
+        <Connection Source="Observer.UNSAFE" Destination="Unit.UNSAFE" />
+        <Connection Source="Unit.PROC_CMD" Destination="Facade.CMD" />
+        <Connection Source="Facade.EXEC" Destination="PROC.CMD" />
+        <Connection Source="Facade.START" Destination="PROC.START" />
+        <Connection Source="Facade.RESET" Destination="PROC.RESET" />
+        <Connection Source="PROC.FINISHED" Destination="Facade.FINISHED" />
+        <Connection Source="PROC.FAILED" Destination="Facade.FAILED" />
+        <Connection Source="Facade.DONE" Destination="Unit.PROC_DONE" />
+        <Connection Source="Facade.FAULT" Destination="Unit.FAULT" />
+        <Connection Source="PROC.CALL_MoveDown" Destination="EM_Filler.CALL_MoveDown" />
+        <Connection Source="EM_Filler.DONE_MoveDown" Destination="PROC.DONE_MoveDown" />
+        <Connection Source="EM_Filler.FAILED_MoveDown" Destination="PROC.FAILED_MoveDown" />
+        <Connection Source="PROC.CALL_Dose" Destination="EM_Filler.CALL_Dose" />
+        <Connection Source="EM_Filler.DONE_Dose" Destination="PROC.DONE_Dose" />
+        <Connection Source="EM_Filler.FAILED_Dose" Destination="PROC.FAILED_Dose" />
+        <Connection Source="PROC.CALL_MoveUp" Destination="EM_Filler.CALL_MoveUp" />
+        <Connection Source="EM_Filler.DONE_MoveUp" Destination="PROC.DONE_MoveUp" />
+        <Connection Source="EM_Filler.FAILED_MoveUp" Destination="PROC.FAILED_MoveUp" />
+        <Connection Source="PROC.CALL_Stopper" Destination="EM_Filler.CALL_Stopper" />
+        <Connection Source="EM_Filler.DONE_Stopper" Destination="PROC.DONE_Stopper" />
+        <Connection Source="EM_Filler.FAILED_Stopper" Destination="PROC.FAILED_Stopper" />
+        <Connection Source="PROC.CALL_Inspect" Destination="EM_Filler.CALL_Inspect" />
+        <Connection Source="EM_Filler.DONE_Inspect" Destination="PROC.DONE_Inspect" />
+        <Connection Source="EM_Filler.FAILED_Inspect" Destination="PROC.FAILED_Inspect" />
+        <Connection Source="Boot.COLD" Destination="Plant.INIT" />
+        <Connection Source="Boot.WARM" Destination="Plant.INIT" />
+        <Connection Source="Boot.COLD" Destination="PlantClock.START" />
+        <Connection Source="Boot.WARM" Destination="PlantClock.START" />
+        <Connection Source="PlantClock.EO" Destination="Plant.TICK" />
+        <Connection Source="Plant.CNF" Destination="Observer.SIM" />
+        <Connection Source="Observer.INITO" Destination="EM_Filler.INIT" />
+        <Connection Source="EM_Filler.INITO" Destination="Facade.CONFIG" />
+        <Connection Source="Facade.CNF" Destination="Operator.START" />
+        <Connection Source="Operator.O_CMD" Destination="Occupation.CMD" />
+        <Connection Source="Operator.U_CMD" Destination="Unit.CMD" />
+        <Connection Source="Operator.NEW_VIAL" Destination="Plant.NEW_VIAL" />
+        <Connection Source="Operator.WAIT" Destination="OpDelay.START" />
+        <Connection Source="OpDelay.EO" Destination="Operator.TIMER" />
+        <Connection Source="Unit.CNF" Destination="Operator.UNIT" />
+        <Connection Source="Unit.CMD_REJ" Destination="Operator.REJ" />
+      </EventConnections>
+      <DataConnections>
+        <Connection Source="Occupation.Owner" Destination="Unit.Owner" />
+        <Connection Source="Occupation.RemoteAllowed" Destination="Unit.RemoteAllowed" />
+        <Connection Source="Occupation.Owner" Destination="EM_Filler.Owner" />
+        <Connection Source="Occupation.RemoteAllowed" Destination="EM_Filler.RemoteAllowed" />
+        <Connection Source="Unit.Running" Destination="EM_Filler.UnitRunning" />
+        <Connection Source="Unit.Quiescent" Destination="EM_Filler.UnitQuiescent" />
+        <Connection Source="Unit.State" Destination="EM_Filler.UnitState" />
+        <Connection Source="Unit.Mode" Destination="EM_Filler.Mode" />
+        <Connection Source="Unit.ControlCode" Destination="EM_Filler.ControlCode" />
+        <Connection Source="Unit.Quiescent" Destination="Occupation.Quiescent" />
+        <Connection Source="Unit.Quiescent" Destination="Facade.Quiescent" />
+        <Connection Source="EM_Filler.Busy" Destination="Unit.Busy" />
+        <Connection Source="EM_Filler.HeldAll" Destination="Unit.HeldAll" />
+        <Connection Source="EM_Filler.RunAll" Destination="Unit.RunAll" />
+        <Connection Source="Observer.Cell" Destination="EM_Filler.Cell" />
+        <Connection Source="Observer.Safe" Destination="Unit.Safe" />
+        <Connection Source="Unit.ProcedureCommand" Destination="Facade.Command" />
+        <Connection Source="Facade.CommandOut" Destination="PROC.Command" />
+        <Connection Source="Facade.Ready" Destination="Unit.ProcedureReady" />
+        <Connection Source="PROC.P1_MoveDown" Destination="EM_Filler.P1_MoveDown" />
+        <Connection Source="PROC.P2_MoveDown" Destination="EM_Filler.P2_MoveDown" />
+        <Connection Source="PROC.P3_MoveDown" Destination="EM_Filler.P3_MoveDown" />
+        <Connection Source="PROC.P4_MoveDown" Destination="EM_Filler.P4_MoveDown" />
+        <Connection Source="EM_Filler.CallError_MoveDown" Destination="PROC.CallError_MoveDown" />
+        <Connection Source="PROC.P1_Dose" Destination="EM_Filler.P1_Dose" />
+        <Connection Source="PROC.P2_Dose" Destination="EM_Filler.P2_Dose" />
+        <Connection Source="PROC.P3_Dose" Destination="EM_Filler.P3_Dose" />
+        <Connection Source="PROC.P4_Dose" Destination="EM_Filler.P4_Dose" />
+        <Connection Source="EM_Filler.CallError_Dose" Destination="PROC.CallError_Dose" />
+        <Connection Source="PROC.P1_MoveUp" Destination="EM_Filler.P1_MoveUp" />
+        <Connection Source="PROC.P2_MoveUp" Destination="EM_Filler.P2_MoveUp" />
+        <Connection Source="PROC.P3_MoveUp" Destination="EM_Filler.P3_MoveUp" />
+        <Connection Source="PROC.P4_MoveUp" Destination="EM_Filler.P4_MoveUp" />
+        <Connection Source="EM_Filler.CallError_MoveUp" Destination="PROC.CallError_MoveUp" />
+        <Connection Source="PROC.P1_Stopper" Destination="EM_Filler.P1_Stopper" />
+        <Connection Source="PROC.P2_Stopper" Destination="EM_Filler.P2_Stopper" />
+        <Connection Source="PROC.P3_Stopper" Destination="EM_Filler.P3_Stopper" />
+        <Connection Source="PROC.P4_Stopper" Destination="EM_Filler.P4_Stopper" />
+        <Connection Source="EM_Filler.CallError_Stopper" Destination="PROC.CallError_Stopper" />
+        <Connection Source="PROC.P1_Inspect" Destination="EM_Filler.P1_Inspect" />
+        <Connection Source="PROC.P2_Inspect" Destination="EM_Filler.P2_Inspect" />
+        <Connection Source="PROC.P3_Inspect" Destination="EM_Filler.P3_Inspect" />
+        <Connection Source="PROC.P4_Inspect" Destination="EM_Filler.P4_Inspect" />
+        <Connection Source="EM_Filler.CallError_Inspect" Destination="PROC.CallError_Inspect" />
+        <Connection Source="Operator.Requester" Destination="Unit.Requester" />
+        <Connection Source="Operator.Requester" Destination="Occupation.Requester" />
+        <Connection Source="Operator.U_Code" Destination="Unit.Command" />
+        <Connection Source="Operator.U_Mode" Destination="Unit.RequestedMode" />
+        <Connection Source="Operator.O_Code" Destination="Occupation.Command" />
+        <Connection Source="Unit.State" Destination="Operator.UnitState" />
+        <Connection Source="Operator.Delay" Destination="OpDelay.DT" />
+        <Connection Source="Plant.NeedleUp" Destination="Observer.Sim_NeedleUp" />
+        <Connection Source="Plant.NeedleDown" Destination="Observer.Sim_NeedleDown" />
+        <Connection Source="Plant.VialPresent" Destination="Observer.Sim_VialPresent" />
+        <Connection Source="Plant.FilledMl" Destination="Observer.Sim_FilledMl" />
+        <Connection Source="Plant.Stoppered" Destination="Observer.Sim_Stoppered" />
+        <Connection Source="Plant.Checked" Destination="Observer.Sim_Checked" />
+        <Connection Source="Plant.DoorClosed" Destination="Observer.Sim_DoorClosed" />
+        <Connection Source="EM_Filler.Drive_MoveDown" Destination="Plant.DriveMoveDown" />
+        <Connection Source="EM_Filler.Drive_Dose" Destination="Plant.DriveDose" />
+        <Connection Source="EM_Filler.Drive_MoveUp" Destination="Plant.DriveMoveUp" />
+        <Connection Source="EM_Filler.Drive_Stopper" Destination="Plant.DriveStopper" />
+        <Connection Source="EM_Filler.Drive_Inspect" Destination="Plant.DriveInspect" />
+      </DataConnections>
+    </SubAppNetwork>
+  </Application>
+  <Application Name="SkillBench" Comment="Demo: SK_Dose is called periodically with P1 = 0.3 mL; watch Dose.State, Plant.FilledMl, Done.CV and Failed.CV in the IDE monitoring">
+    <SubAppNetwork>
+      <FB Name="Boot" Type="iec61499::events::E_RESTART" x="100" y="100" />
+      <FB Name="Plant" Type="fillingcell::DEMO_Plant" x="100" y="900">
+        <Parameter Name="StartDown" Value="TRUE" />
+      </FB>
+      <FB Name="PlantClock" Type="iec61499::events::E_CYCLE" x="100" y="1700">
+        <Parameter Name="DT" Value="T#20ms" />
+      </FB>
+      <FB Name="Observer" Type="fillingcell::UNIT_Observer" x="1400" y="900">
+        <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Bench&quot;" />
+        <Parameter Name="UaEnable" Value="FALSE" />
+        <Parameter Name="IoBackend" Value="0" />
+        <Parameter Name="CycleTime" Value="T#50ms" />
+      </FB>
+      <FB Name="Dose" Type="fillingcell::SK_Dose" x="2800" y="500">
+        <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Bench/Dose&quot;" />
+        <Parameter Name="UaEnable" Value="FALSE" />
+        <Parameter Name="IoBackend" Value="0" />
+        <Parameter Name="Timeout" Value="T#5s" />
+        <Parameter Name="UnitRunning" Value="TRUE" />
+        <Parameter Name="P1" Value="0.3" />
+      </FB>
+      <FB Name="Caller" Type="iec61499::events::E_CYCLE" x="1400" y="100">
+        <Parameter Name="DT" Value="T#2s" />
+      </FB>
+      <FB Name="Done" Type="iec61499::events::E_CTU" x="4200" y="300" />
+      <FB Name="Failed" Type="iec61499::events::E_CTU" x="4200" y="900" />
+      <EventConnections>
+        <Connection Source="Boot.COLD" Destination="Plant.INIT" />
+        <Connection Source="Boot.WARM" Destination="Plant.INIT" />
+        <Connection Source="Boot.COLD" Destination="PlantClock.START" />
+        <Connection Source="Boot.WARM" Destination="PlantClock.START" />
+        <Connection Source="Boot.COLD" Destination="Observer.INIT" />
+        <Connection Source="Boot.WARM" Destination="Observer.INIT" />
+        <Connection Source="PlantClock.EO" Destination="Plant.TICK" />
+        <Connection Source="Plant.CNF" Destination="Observer.SIM" />
+        <Connection Source="Observer.INITO" Destination="Dose.INIT" />
+        <Connection Source="Dose.INITO" Destination="Dose.UNIT_STAT" />
+        <Connection Source="Dose.INITO" Destination="Caller.START" />
+        <Connection Source="Observer.SAMPLE" Destination="Dose.SAMPLE" />
+        <Connection Source="Caller.EO" Destination="Dose.CALL" />
+        <Connection Source="Dose.DONE" Destination="Done.CU" />
+        <Connection Source="Dose.DONE" Destination="Plant.NEW_VIAL" />
+        <Connection Source="Dose.FAILED" Destination="Failed.CU" />
+      </EventConnections>
+      <DataConnections>
+        <Connection Source="Plant.NeedleUp" Destination="Observer.Sim_NeedleUp" />
+        <Connection Source="Plant.NeedleDown" Destination="Observer.Sim_NeedleDown" />
+        <Connection Source="Plant.VialPresent" Destination="Observer.Sim_VialPresent" />
+        <Connection Source="Plant.FilledMl" Destination="Observer.Sim_FilledMl" />
+        <Connection Source="Plant.Stoppered" Destination="Observer.Sim_Stoppered" />
+        <Connection Source="Plant.Checked" Destination="Observer.Sim_Checked" />
+        <Connection Source="Plant.DoorClosed" Destination="Observer.Sim_DoorClosed" />
+        <Connection Source="Observer.Cell" Destination="Dose.Cell" />
+        <Connection Source="Dose.Drive" Destination="Plant.DriveDose" />
+      </DataConnections>
+    </SubAppNetwork>
+  </Application>
+  <Application Name="PatternDemo" Comment="Demo of the procedure patterns: every 3 s a fork waits 0.3 s and 0.8 s, the join starts a 3-iteration loop, then a choice alternates; watch the Ctu* counters">
+    <SubAppNetwork>
+      <FB Name="Boot" Type="iec61499::events::E_RESTART" x="100" y="100" />
+      <FB Name="Clock" Type="iec61499::events::E_CYCLE" x="100" y="700">
+        <Parameter Name="DT" Value="T#3s" />
+      </FB>
+      <FB Name="Fork" Type="fillingcell::P_Fork" x="1200" y="700" />
+      <FB Name="WaitA" Type="fillingcell::P_Wait" x="2300" y="300">
+        <Parameter Name="DT" Value="T#300ms" />
+      </FB>
+      <FB Name="WaitB" Type="fillingcell::P_Wait" x="2300" y="1100">
+        <Parameter Name="DT" Value="T#800ms" />
+      </FB>
+      <FB Name="Join" Type="fillingcell::P_Join" x="3400" y="700">
+        <Parameter Name="N" Value="2" />
+      </FB>
+      <FB Name="Loop" Type="fillingcell::P_Loop" x="4500" y="700">
+        <Parameter Name="Count" Value="3" />
+      </FB>
+      <FB Name="WaitC" Type="fillingcell::P_Wait" x="4500" y="1600">
+        <Parameter Name="DT" Value="T#200ms" />
+      </FB>
+      <FB Name="Toggle" Type="iec61499::events::E_T_FF" x="5600" y="700" />
+      <FB Name="Choice" Type="fillingcell::P_Choice" x="6700" y="700" />
+      <FB Name="CtuJoin" Type="iec61499::events::E_CTU" x="7800" y="300" />
+      <FB Name="CtuBody" Type="iec61499::events::E_CTU" x="7800" y="1000" />
+      <FB Name="CtuTrue" Type="iec61499::events::E_CTU" x="7800" y="1700" />
+      <FB Name="CtuFalse" Type="iec61499::events::E_CTU" x="7800" y="2400" />
+      <EventConnections>
+        <Connection Source="Boot.COLD" Destination="Clock.START" />
+        <Connection Source="Boot.WARM" Destination="Clock.START" />
+        <Connection Source="Clock.EO" Destination="Fork.EI" />
+        <Connection Source="Fork.EO1" Destination="WaitA.EI" />
+        <Connection Source="Fork.EO2" Destination="WaitB.EI" />
+        <Connection Source="WaitA.EO" Destination="Join.EI1" />
+        <Connection Source="WaitB.EO" Destination="Join.EI2" />
+        <Connection Source="Join.EO" Destination="CtuJoin.CU" />
+        <Connection Source="Join.EO" Destination="Loop.EI" />
+        <Connection Source="Loop.BODY" Destination="WaitC.EI" />
+        <Connection Source="Loop.BODY" Destination="CtuBody.CU" />
+        <Connection Source="WaitC.EO" Destination="Loop.NEXT" />
+        <Connection Source="Loop.EO" Destination="Toggle.CLK" />
+        <Connection Source="Toggle.EO" Destination="Choice.EI" />
+        <Connection Source="Choice.EO_TRUE" Destination="CtuTrue.CU" />
+        <Connection Source="Choice.EO_FALSE" Destination="CtuFalse.CU" />
+      </EventConnections>
+      <DataConnections>
+        <Connection Source="Toggle.Q" Destination="Choice.Cond" />
+      </DataConnections>
+    </SubAppNetwork>
+  </Application>
+  <Application Name="PiIoConfig" Comment="GPIOChip line configuration for a Raspberry Pi; handle names match IX/QX PARAMS in FillingCell. Map it together with FillingCell (IoBackend = 1) onto a Pi device">
+    <SubAppNetwork>
+      <FB Name="Boot" Type="iec61499::events::E_RESTART" x="100" y="100" />
+      <FB Name="FC_NeedleUp" Type="eclipse4diac::io::gpiochip::GPIOChip" x="600" y="100">
+        <Parameter Name="QI" Value="TRUE" />
+        <Parameter Name="VALUE" Value="&quot;FC_NeedleUp&quot;" />
+        <Parameter Name="ChipNumber" Value="0" />
+        <Parameter Name="LineNumber" Value="17" />
+        <Parameter Name="ReadWriteMode" Value="0" />
+      </FB>
+      <FB Name="FC_NeedleDown" Type="eclipse4diac::io::gpiochip::GPIOChip" x="1500" y="100">
+        <Parameter Name="QI" Value="TRUE" />
+        <Parameter Name="VALUE" Value="&quot;FC_NeedleDown&quot;" />
+        <Parameter Name="ChipNumber" Value="0" />
+        <Parameter Name="LineNumber" Value="27" />
+        <Parameter Name="ReadWriteMode" Value="0" />
+      </FB>
+      <FB Name="FC_VialPresent" Type="eclipse4diac::io::gpiochip::GPIOChip" x="2400" y="100">
+        <Parameter Name="QI" Value="TRUE" />
+        <Parameter Name="VALUE" Value="&quot;FC_VialPresent&quot;" />
+        <Parameter Name="ChipNumber" Value="0" />
+        <Parameter Name="LineNumber" Value="22" />
+        <Parameter Name="ReadWriteMode" Value="0" />
+      </FB>
+      <FB Name="FC_Stoppered" Type="eclipse4diac::io::gpiochip::GPIOChip" x="3300" y="100">
+        <Parameter Name="QI" Value="TRUE" />
+        <Parameter Name="VALUE" Value="&quot;FC_Stoppered&quot;" />
+        <Parameter Name="ChipNumber" Value="0" />
+        <Parameter Name="LineNumber" Value="23" />
+        <Parameter Name="ReadWriteMode" Value="0" />
+      </FB>
+      <FB Name="FC_Checked" Type="eclipse4diac::io::gpiochip::GPIOChip" x="600" y="800">
+        <Parameter Name="QI" Value="TRUE" />
+        <Parameter Name="VALUE" Value="&quot;FC_Checked&quot;" />
+        <Parameter Name="ChipNumber" Value="0" />
+        <Parameter Name="LineNumber" Value="24" />
+        <Parameter Name="ReadWriteMode" Value="0" />
+      </FB>
+      <FB Name="FC_DoorClosed" Type="eclipse4diac::io::gpiochip::GPIOChip" x="1500" y="800">
+        <Parameter Name="QI" Value="TRUE" />
+        <Parameter Name="VALUE" Value="&quot;FC_DoorClosed&quot;" />
+        <Parameter Name="ChipNumber" Value="0" />
+        <Parameter Name="LineNumber" Value="25" />
+        <Parameter Name="ReadWriteMode" Value="0" />
+      </FB>
+      <FB Name="FC_MoveDown" Type="eclipse4diac::io::gpiochip::GPIOChip" x="2400" y="800">
+        <Parameter Name="QI" Value="TRUE" />
+        <Parameter Name="VALUE" Value="&quot;FC_MoveDown&quot;" />
+        <Parameter Name="ChipNumber" Value="0" />
+        <Parameter Name="LineNumber" Value="5" />
+        <Parameter Name="ReadWriteMode" Value="1" />
+      </FB>
+      <FB Name="FC_Dose" Type="eclipse4diac::io::gpiochip::GPIOChip" x="3300" y="800">
+        <Parameter Name="QI" Value="TRUE" />
+        <Parameter Name="VALUE" Value="&quot;FC_Dose&quot;" />
+        <Parameter Name="ChipNumber" Value="0" />
+        <Parameter Name="LineNumber" Value="13" />
+        <Parameter Name="ReadWriteMode" Value="1" />
+      </FB>
+      <FB Name="FC_MoveUp" Type="eclipse4diac::io::gpiochip::GPIOChip" x="600" y="1500">
+        <Parameter Name="QI" Value="TRUE" />
+        <Parameter Name="VALUE" Value="&quot;FC_MoveUp&quot;" />
+        <Parameter Name="ChipNumber" Value="0" />
+        <Parameter Name="LineNumber" Value="6" />
+        <Parameter Name="ReadWriteMode" Value="1" />
+      </FB>
+      <FB Name="FC_Stopper" Type="eclipse4diac::io::gpiochip::GPIOChip" x="1500" y="1500">
+        <Parameter Name="QI" Value="TRUE" />
+        <Parameter Name="VALUE" Value="&quot;FC_Stopper&quot;" />
+        <Parameter Name="ChipNumber" Value="0" />
+        <Parameter Name="LineNumber" Value="19" />
+        <Parameter Name="ReadWriteMode" Value="1" />
+      </FB>
+      <FB Name="FC_Inspect" Type="eclipse4diac::io::gpiochip::GPIOChip" x="2400" y="1500">
+        <Parameter Name="QI" Value="TRUE" />
+        <Parameter Name="VALUE" Value="&quot;FC_Inspect&quot;" />
+        <Parameter Name="ChipNumber" Value="0" />
+        <Parameter Name="LineNumber" Value="26" />
+        <Parameter Name="ReadWriteMode" Value="1" />
+      </FB>
+      <EventConnections>
+        <Connection Source="Boot.COLD" Destination="FC_NeedleUp.INIT" />
+        <Connection Source="Boot.WARM" Destination="FC_NeedleUp.INIT" />
+        <Connection Source="FC_NeedleUp.INITO" Destination="FC_NeedleDown.INIT" />
+        <Connection Source="FC_NeedleDown.INITO" Destination="FC_VialPresent.INIT" />
+        <Connection Source="FC_VialPresent.INITO" Destination="FC_Stoppered.INIT" />
+        <Connection Source="FC_Stoppered.INITO" Destination="FC_Checked.INIT" />
+        <Connection Source="FC_Checked.INITO" Destination="FC_DoorClosed.INIT" />
+        <Connection Source="FC_DoorClosed.INITO" Destination="FC_MoveDown.INIT" />
+        <Connection Source="FC_MoveDown.INITO" Destination="FC_Dose.INIT" />
+        <Connection Source="FC_Dose.INITO" Destination="FC_MoveUp.INIT" />
+        <Connection Source="FC_MoveUp.INITO" Destination="FC_Stopper.INIT" />
+        <Connection Source="FC_Stopper.INITO" Destination="FC_Inspect.INIT" />
+      </EventConnections>
+      <DataConnections />
+    </SubAppNetwork>
+  </Application>
+  <Device Name="FORTE_PC" Type="iec61499::system::FORTE_PC" x="1000" y="1000">
+    <Parameter Name="MGR_ID" Value="&quot;localhost:61499&quot;" />
+    <Attribute Name="Profile" Type="STRING" Value="HOLOBLOC" Comment="device profile" />
+    <Resource Name="RES" Type="iec61499::system::EMB_RES" x="0" y="0">
+      <FBNetwork>
+        <FB Name="Boot" Type="iec61499::events::E_RESTART" x="100" y="100" />
+        <FB Name="Observer" Type="fillingcell::UNIT_Observer" x="100" y="1400">
+          <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler&quot;" />
+          <Parameter Name="UaEnable" Value="TRUE" />
+          <Parameter Name="IoBackend" Value="0" />
+          <Parameter Name="NeedleUp_Gpio" Value="'FC_NeedleUp'" />
+          <Parameter Name="NeedleUp_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d0:]&quot;" />
+          <Parameter Name="NeedleDown_Gpio" Value="'FC_NeedleDown'" />
+          <Parameter Name="NeedleDown_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d1:]&quot;" />
+          <Parameter Name="VialPresent_Gpio" Value="'FC_VialPresent'" />
+          <Parameter Name="VialPresent_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d2:]&quot;" />
+          <Parameter Name="Stoppered_Gpio" Value="'FC_Stoppered'" />
+          <Parameter Name="Stoppered_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d3:]&quot;" />
+          <Parameter Name="Checked_Gpio" Value="'FC_Checked'" />
+          <Parameter Name="Checked_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d4:]&quot;" />
+          <Parameter Name="DoorClosed_Gpio" Value="'FC_DoorClosed'" />
+          <Parameter Name="DoorClosed_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:d5:]&quot;" />
+          <Parameter Name="FilledMl_Gpio" Value="''" />
+          <Parameter Name="FilledMl_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:50:i0:]&quot;" />
+          <Parameter Name="Sim_NeedleUp" Value="TRUE" />
+          <Parameter Name="Sim_VialPresent" Value="TRUE" />
+          <Parameter Name="Sim_DoorClosed" Value="TRUE" />
+        </FB>
+        <FB Name="UaFacade" Type="fillingcell::UNIT_Facade" x="100" y="500">
+          <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler&quot;" />
+          <Parameter Name="UaEnable" Value="TRUE" />
+        </FB>
+        <FB Name="Occupation" Type="fillingcell::FC_Occupation" x="1500" y="100" />
+        <FB Name="Unit" Type="fillingcell::FC_Unit" x="1500" y="700" />
+        <FB Name="Facade" Type="fillingcell::FC_ProcedureFacade" x="2600" y="100" />
+        <SubApp Name="EM_Filler" x="3600" y="700" Comment="Equipment module: one composite per skill, chained for status; instances and chain may be changed online while the unit is quiescent">
+          <InterfaceList>
+            <EventInputs>
+              <Event Name="INIT" Type="Event" />
+              <Event Name="UNIT_CTL" Type="Event">
+                <With Var="ControlCode" />
+              </Event>
+              <Event Name="UNIT_STAT" Type="Event">
+                <With Var="UnitRunning" />
+                <With Var="UnitQuiescent" />
+                <With Var="UnitState" />
+                <With Var="Mode" />
+                <With Var="Owner" />
+                <With Var="RemoteAllowed" />
+              </Event>
+              <Event Name="SAMPLE" Type="Event">
+                <With Var="Cell" />
+              </Event>
+              <Event Name="CALL_MoveDown" Type="Event">
+                <With Var="P1_MoveDown" />
+                <With Var="P2_MoveDown" />
+                <With Var="P3_MoveDown" />
+                <With Var="P4_MoveDown" />
+              </Event>
+              <Event Name="CALL_Dose" Type="Event">
+                <With Var="P1_Dose" />
+                <With Var="P2_Dose" />
+                <With Var="P3_Dose" />
+                <With Var="P4_Dose" />
+              </Event>
+              <Event Name="CALL_MoveUp" Type="Event">
+                <With Var="P1_MoveUp" />
+                <With Var="P2_MoveUp" />
+                <With Var="P3_MoveUp" />
+                <With Var="P4_MoveUp" />
+              </Event>
+              <Event Name="CALL_Stopper" Type="Event">
+                <With Var="P1_Stopper" />
+                <With Var="P2_Stopper" />
+                <With Var="P3_Stopper" />
+                <With Var="P4_Stopper" />
+              </Event>
+              <Event Name="CALL_Inspect" Type="Event">
+                <With Var="P1_Inspect" />
+                <With Var="P2_Inspect" />
+                <With Var="P3_Inspect" />
+                <With Var="P4_Inspect" />
+              </Event>
+            </EventInputs>
+            <EventOutputs>
+              <Event Name="INITO" Type="Event" />
+              <Event Name="STAT_OUT" Type="Event">
+                <With Var="Busy" />
+                <With Var="HeldAll" />
+                <With Var="RunAll" />
+              </Event>
+              <Event Name="DONE_MoveDown" Type="Event" />
+              <Event Name="DONE_Dose" Type="Event" />
+              <Event Name="DONE_MoveUp" Type="Event" />
+              <Event Name="DONE_Stopper" Type="Event" />
+              <Event Name="DONE_Inspect" Type="Event" />
+              <Event Name="FAILED_MoveDown" Type="Event">
+                <With Var="CallError_MoveDown" />
+              </Event>
+              <Event Name="FAILED_Dose" Type="Event">
+                <With Var="CallError_Dose" />
+              </Event>
+              <Event Name="FAILED_MoveUp" Type="Event">
+                <With Var="CallError_MoveUp" />
+              </Event>
+              <Event Name="FAILED_Stopper" Type="Event">
+                <With Var="CallError_Stopper" />
+              </Event>
+              <Event Name="FAILED_Inspect" Type="Event">
+                <With Var="CallError_Inspect" />
+              </Event>
+            </EventOutputs>
+            <InputVars>
+              <VarDeclaration Name="ControlCode" Type="USINT" />
+              <VarDeclaration Name="UnitRunning" Type="BOOL" />
+              <VarDeclaration Name="UnitQuiescent" Type="BOOL" />
+              <VarDeclaration Name="UnitState" Type="USINT" />
+              <VarDeclaration Name="Mode" Type="USINT" />
+              <VarDeclaration Name="Owner" Type="UDINT" />
+              <VarDeclaration Name="RemoteAllowed" Type="BOOL" />
+              <VarDeclaration Name="Cell" Type="fillingcell::ST_CellState" />
+              <VarDeclaration Name="P1_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P2_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P3_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P4_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P1_Dose" Type="LREAL" />
+              <VarDeclaration Name="P2_Dose" Type="LREAL" />
+              <VarDeclaration Name="P3_Dose" Type="LREAL" />
+              <VarDeclaration Name="P4_Dose" Type="LREAL" />
+              <VarDeclaration Name="P1_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P2_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P3_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P4_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P1_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P2_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P3_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P4_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P1_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P2_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P3_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P4_Inspect" Type="LREAL" />
+            </InputVars>
+            <OutputVars>
+              <VarDeclaration Name="Busy" Type="BOOL" />
+              <VarDeclaration Name="HeldAll" Type="BOOL" />
+              <VarDeclaration Name="RunAll" Type="BOOL" />
+              <VarDeclaration Name="CallError_MoveDown" Type="UINT" />
+              <VarDeclaration Name="CallError_Dose" Type="UINT" />
+              <VarDeclaration Name="CallError_MoveUp" Type="UINT" />
+              <VarDeclaration Name="CallError_Stopper" Type="UINT" />
+              <VarDeclaration Name="CallError_Inspect" Type="UINT" />
+              <VarDeclaration Name="Drive_MoveDown" Type="BOOL" />
+              <VarDeclaration Name="Drive_Dose" Type="BOOL" />
+              <VarDeclaration Name="Drive_MoveUp" Type="BOOL" />
+              <VarDeclaration Name="Drive_Stopper" Type="BOOL" />
+              <VarDeclaration Name="Drive_Inspect" Type="BOOL" />
+            </OutputVars>
+          </InterfaceList>
+          <SubAppNetwork>
+            <FB Name="MoveDown" Type="fillingcell::SK_MoveDown" x="300" y="300">
+              <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler/Skills/MoveDown&quot;" />
+              <Parameter Name="UaEnable" Value="TRUE" />
+              <Parameter Name="IoBackend" Value="0" />
+              <Parameter Name="DoGpio" Value="'FC_MoveDown'" />
+              <Parameter Name="DoModbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c0]&quot;" />
+            </FB>
+            <FB Name="Dose" Type="fillingcell::SK_Dose" x="1800" y="300">
+              <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler/Skills/Dose&quot;" />
+              <Parameter Name="UaEnable" Value="TRUE" />
+              <Parameter Name="IoBackend" Value="0" />
+              <Parameter Name="DoGpio" Value="'FC_Dose'" />
+              <Parameter Name="DoModbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c1]&quot;" />
+            </FB>
+            <FB Name="MoveUp" Type="fillingcell::SK_MoveUp" x="3300" y="300">
+              <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler/Skills/MoveUp&quot;" />
+              <Parameter Name="UaEnable" Value="TRUE" />
+              <Parameter Name="IoBackend" Value="0" />
+              <Parameter Name="DoGpio" Value="'FC_MoveUp'" />
+              <Parameter Name="DoModbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c2]&quot;" />
+            </FB>
+            <FB Name="Stopper" Type="fillingcell::SK_Stopper" x="4800" y="300">
+              <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler/Skills/Stopper&quot;" />
+              <Parameter Name="UaEnable" Value="TRUE" />
+              <Parameter Name="IoBackend" Value="0" />
+              <Parameter Name="DoGpio" Value="'FC_Stopper'" />
+              <Parameter Name="DoModbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c3]&quot;" />
+            </FB>
+            <FB Name="Inspect" Type="fillingcell::SK_Inspect" x="6300" y="300">
+              <Parameter Name="UaRoot" Value="&quot;/Objects/FillingCell/Filler/Skills/Inspect&quot;" />
+              <Parameter Name="UaEnable" Value="TRUE" />
+              <Parameter Name="IoBackend" Value="0" />
+              <Parameter Name="DoGpio" Value="'FC_Inspect'" />
+              <Parameter Name="DoModbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c4]&quot;" />
+            </FB>
+            <EventConnections>
+              <Connection Source="INIT" Destination="MoveDown.INIT" />
+              <Connection Source="MoveDown.INITO" Destination="Dose.INIT" />
+              <Connection Source="MoveDown.STAT_OUT" Destination="Dose.STAT_IN" />
+              <Connection Source="Dose.INITO" Destination="MoveUp.INIT" />
+              <Connection Source="Dose.STAT_OUT" Destination="MoveUp.STAT_IN" />
+              <Connection Source="MoveUp.INITO" Destination="Stopper.INIT" />
+              <Connection Source="MoveUp.STAT_OUT" Destination="Stopper.STAT_IN" />
+              <Connection Source="Stopper.INITO" Destination="Inspect.INIT" />
+              <Connection Source="Stopper.STAT_OUT" Destination="Inspect.STAT_IN" />
+              <Connection Source="Inspect.INITO" Destination="INITO" />
+              <Connection Source="Inspect.STAT_OUT" Destination="STAT_OUT" />
+              <Connection Source="UNIT_CTL" Destination="MoveDown.UNIT_CTL" />
+              <Connection Source="UNIT_STAT" Destination="MoveDown.UNIT_STAT" />
+              <Connection Source="SAMPLE" Destination="MoveDown.SAMPLE" />
+              <Connection Source="CALL_MoveDown" Destination="MoveDown.CALL" />
+              <Connection Source="MoveDown.DONE" Destination="DONE_MoveDown" />
+              <Connection Source="MoveDown.FAILED" Destination="FAILED_MoveDown" />
+              <Connection Source="UNIT_CTL" Destination="Dose.UNIT_CTL" />
+              <Connection Source="UNIT_STAT" Destination="Dose.UNIT_STAT" />
+              <Connection Source="SAMPLE" Destination="Dose.SAMPLE" />
+              <Connection Source="CALL_Dose" Destination="Dose.CALL" />
+              <Connection Source="Dose.DONE" Destination="DONE_Dose" />
+              <Connection Source="Dose.FAILED" Destination="FAILED_Dose" />
+              <Connection Source="UNIT_CTL" Destination="MoveUp.UNIT_CTL" />
+              <Connection Source="UNIT_STAT" Destination="MoveUp.UNIT_STAT" />
+              <Connection Source="SAMPLE" Destination="MoveUp.SAMPLE" />
+              <Connection Source="CALL_MoveUp" Destination="MoveUp.CALL" />
+              <Connection Source="MoveUp.DONE" Destination="DONE_MoveUp" />
+              <Connection Source="MoveUp.FAILED" Destination="FAILED_MoveUp" />
+              <Connection Source="UNIT_CTL" Destination="Stopper.UNIT_CTL" />
+              <Connection Source="UNIT_STAT" Destination="Stopper.UNIT_STAT" />
+              <Connection Source="SAMPLE" Destination="Stopper.SAMPLE" />
+              <Connection Source="CALL_Stopper" Destination="Stopper.CALL" />
+              <Connection Source="Stopper.DONE" Destination="DONE_Stopper" />
+              <Connection Source="Stopper.FAILED" Destination="FAILED_Stopper" />
+              <Connection Source="UNIT_CTL" Destination="Inspect.UNIT_CTL" />
+              <Connection Source="UNIT_STAT" Destination="Inspect.UNIT_STAT" />
+              <Connection Source="SAMPLE" Destination="Inspect.SAMPLE" />
+              <Connection Source="CALL_Inspect" Destination="Inspect.CALL" />
+              <Connection Source="Inspect.DONE" Destination="DONE_Inspect" />
+              <Connection Source="Inspect.FAILED" Destination="FAILED_Inspect" />
+            </EventConnections>
+            <DataConnections>
+              <Connection Source="MoveDown.BusyOut" Destination="Dose.BusyIn" />
+              <Connection Source="MoveDown.HeldOut" Destination="Dose.HeldIn" />
+              <Connection Source="MoveDown.RunOut" Destination="Dose.RunIn" />
+              <Connection Source="Dose.BusyOut" Destination="MoveUp.BusyIn" />
+              <Connection Source="Dose.HeldOut" Destination="MoveUp.HeldIn" />
+              <Connection Source="Dose.RunOut" Destination="MoveUp.RunIn" />
+              <Connection Source="MoveUp.BusyOut" Destination="Stopper.BusyIn" />
+              <Connection Source="MoveUp.HeldOut" Destination="Stopper.HeldIn" />
+              <Connection Source="MoveUp.RunOut" Destination="Stopper.RunIn" />
+              <Connection Source="Stopper.BusyOut" Destination="Inspect.BusyIn" />
+              <Connection Source="Stopper.HeldOut" Destination="Inspect.HeldIn" />
+              <Connection Source="Stopper.RunOut" Destination="Inspect.RunIn" />
+              <Connection Source="Inspect.BusyOut" Destination="Busy" />
+              <Connection Source="Inspect.HeldOut" Destination="HeldAll" />
+              <Connection Source="Inspect.RunOut" Destination="RunAll" />
+              <Connection Source="ControlCode" Destination="MoveDown.ControlCode" />
+              <Connection Source="Cell" Destination="MoveDown.Cell" />
+              <Connection Source="MoveDown.CallError" Destination="CallError_MoveDown" />
+              <Connection Source="MoveDown.Drive" Destination="Drive_MoveDown" />
+              <Connection Source="UnitRunning" Destination="MoveDown.UnitRunning" />
+              <Connection Source="UnitQuiescent" Destination="MoveDown.UnitQuiescent" />
+              <Connection Source="UnitState" Destination="MoveDown.UnitState" />
+              <Connection Source="Mode" Destination="MoveDown.Mode" />
+              <Connection Source="Owner" Destination="MoveDown.Owner" />
+              <Connection Source="RemoteAllowed" Destination="MoveDown.RemoteAllowed" />
+              <Connection Source="P1_MoveDown" Destination="MoveDown.P1" />
+              <Connection Source="P2_MoveDown" Destination="MoveDown.P2" />
+              <Connection Source="P3_MoveDown" Destination="MoveDown.P3" />
+              <Connection Source="P4_MoveDown" Destination="MoveDown.P4" />
+              <Connection Source="ControlCode" Destination="Dose.ControlCode" />
+              <Connection Source="Cell" Destination="Dose.Cell" />
+              <Connection Source="Dose.CallError" Destination="CallError_Dose" />
+              <Connection Source="Dose.Drive" Destination="Drive_Dose" />
+              <Connection Source="UnitRunning" Destination="Dose.UnitRunning" />
+              <Connection Source="UnitQuiescent" Destination="Dose.UnitQuiescent" />
+              <Connection Source="UnitState" Destination="Dose.UnitState" />
+              <Connection Source="Mode" Destination="Dose.Mode" />
+              <Connection Source="Owner" Destination="Dose.Owner" />
+              <Connection Source="RemoteAllowed" Destination="Dose.RemoteAllowed" />
+              <Connection Source="P1_Dose" Destination="Dose.P1" />
+              <Connection Source="P2_Dose" Destination="Dose.P2" />
+              <Connection Source="P3_Dose" Destination="Dose.P3" />
+              <Connection Source="P4_Dose" Destination="Dose.P4" />
+              <Connection Source="ControlCode" Destination="MoveUp.ControlCode" />
+              <Connection Source="Cell" Destination="MoveUp.Cell" />
+              <Connection Source="MoveUp.CallError" Destination="CallError_MoveUp" />
+              <Connection Source="MoveUp.Drive" Destination="Drive_MoveUp" />
+              <Connection Source="UnitRunning" Destination="MoveUp.UnitRunning" />
+              <Connection Source="UnitQuiescent" Destination="MoveUp.UnitQuiescent" />
+              <Connection Source="UnitState" Destination="MoveUp.UnitState" />
+              <Connection Source="Mode" Destination="MoveUp.Mode" />
+              <Connection Source="Owner" Destination="MoveUp.Owner" />
+              <Connection Source="RemoteAllowed" Destination="MoveUp.RemoteAllowed" />
+              <Connection Source="P1_MoveUp" Destination="MoveUp.P1" />
+              <Connection Source="P2_MoveUp" Destination="MoveUp.P2" />
+              <Connection Source="P3_MoveUp" Destination="MoveUp.P3" />
+              <Connection Source="P4_MoveUp" Destination="MoveUp.P4" />
+              <Connection Source="ControlCode" Destination="Stopper.ControlCode" />
+              <Connection Source="Cell" Destination="Stopper.Cell" />
+              <Connection Source="Stopper.CallError" Destination="CallError_Stopper" />
+              <Connection Source="Stopper.Drive" Destination="Drive_Stopper" />
+              <Connection Source="UnitRunning" Destination="Stopper.UnitRunning" />
+              <Connection Source="UnitQuiescent" Destination="Stopper.UnitQuiescent" />
+              <Connection Source="UnitState" Destination="Stopper.UnitState" />
+              <Connection Source="Mode" Destination="Stopper.Mode" />
+              <Connection Source="Owner" Destination="Stopper.Owner" />
+              <Connection Source="RemoteAllowed" Destination="Stopper.RemoteAllowed" />
+              <Connection Source="P1_Stopper" Destination="Stopper.P1" />
+              <Connection Source="P2_Stopper" Destination="Stopper.P2" />
+              <Connection Source="P3_Stopper" Destination="Stopper.P3" />
+              <Connection Source="P4_Stopper" Destination="Stopper.P4" />
+              <Connection Source="ControlCode" Destination="Inspect.ControlCode" />
+              <Connection Source="Cell" Destination="Inspect.Cell" />
+              <Connection Source="Inspect.CallError" Destination="CallError_Inspect" />
+              <Connection Source="Inspect.Drive" Destination="Drive_Inspect" />
+              <Connection Source="UnitRunning" Destination="Inspect.UnitRunning" />
+              <Connection Source="UnitQuiescent" Destination="Inspect.UnitQuiescent" />
+              <Connection Source="UnitState" Destination="Inspect.UnitState" />
+              <Connection Source="Mode" Destination="Inspect.Mode" />
+              <Connection Source="Owner" Destination="Inspect.Owner" />
+              <Connection Source="RemoteAllowed" Destination="Inspect.RemoteAllowed" />
+              <Connection Source="P1_Inspect" Destination="Inspect.P1" />
+              <Connection Source="P2_Inspect" Destination="Inspect.P2" />
+              <Connection Source="P3_Inspect" Destination="Inspect.P3" />
+              <Connection Source="P4_Inspect" Destination="Inspect.P4" />
+            </DataConnections>
+          </SubAppNetwork>
+        </SubApp>
+        <SubApp Name="PROC" x="2600" y="1400" Comment="INTENTIONALLY EMPTY: generated procedure (P_* pattern instances) calls skills via CALL_*/DONE_*/FAILED_*">
+          <InterfaceList>
+            <EventInputs>
+              <Event Name="START" Type="Event" />
+              <Event Name="RESET" Type="Event" />
+              <Event Name="CMD" Type="Event">
+                <With Var="Command" />
+              </Event>
+              <Event Name="DONE_MoveDown" Type="Event" />
+              <Event Name="DONE_Dose" Type="Event" />
+              <Event Name="DONE_MoveUp" Type="Event" />
+              <Event Name="DONE_Stopper" Type="Event" />
+              <Event Name="DONE_Inspect" Type="Event" />
+              <Event Name="FAILED_MoveDown" Type="Event">
+                <With Var="CallError_MoveDown" />
+              </Event>
+              <Event Name="FAILED_Dose" Type="Event">
+                <With Var="CallError_Dose" />
+              </Event>
+              <Event Name="FAILED_MoveUp" Type="Event">
+                <With Var="CallError_MoveUp" />
+              </Event>
+              <Event Name="FAILED_Stopper" Type="Event">
+                <With Var="CallError_Stopper" />
+              </Event>
+              <Event Name="FAILED_Inspect" Type="Event">
+                <With Var="CallError_Inspect" />
+              </Event>
+            </EventInputs>
+            <EventOutputs>
+              <Event Name="FINISHED" Type="Event" />
+              <Event Name="FAILED" Type="Event" />
+              <Event Name="CALL_MoveDown" Type="Event">
+                <With Var="P1_MoveDown" />
+                <With Var="P2_MoveDown" />
+                <With Var="P3_MoveDown" />
+                <With Var="P4_MoveDown" />
+              </Event>
+              <Event Name="CALL_Dose" Type="Event">
+                <With Var="P1_Dose" />
+                <With Var="P2_Dose" />
+                <With Var="P3_Dose" />
+                <With Var="P4_Dose" />
+              </Event>
+              <Event Name="CALL_MoveUp" Type="Event">
+                <With Var="P1_MoveUp" />
+                <With Var="P2_MoveUp" />
+                <With Var="P3_MoveUp" />
+                <With Var="P4_MoveUp" />
+              </Event>
+              <Event Name="CALL_Stopper" Type="Event">
+                <With Var="P1_Stopper" />
+                <With Var="P2_Stopper" />
+                <With Var="P3_Stopper" />
+                <With Var="P4_Stopper" />
+              </Event>
+              <Event Name="CALL_Inspect" Type="Event">
+                <With Var="P1_Inspect" />
+                <With Var="P2_Inspect" />
+                <With Var="P3_Inspect" />
+                <With Var="P4_Inspect" />
+              </Event>
+            </EventOutputs>
+            <InputVars>
+              <VarDeclaration Name="Command" Type="USINT" />
+              <VarDeclaration Name="CallError_MoveDown" Type="UINT" />
+              <VarDeclaration Name="CallError_Dose" Type="UINT" />
+              <VarDeclaration Name="CallError_MoveUp" Type="UINT" />
+              <VarDeclaration Name="CallError_Stopper" Type="UINT" />
+              <VarDeclaration Name="CallError_Inspect" Type="UINT" />
+            </InputVars>
+            <OutputVars>
+              <VarDeclaration Name="P1_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P2_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P3_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P4_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P1_Dose" Type="LREAL" />
+              <VarDeclaration Name="P2_Dose" Type="LREAL" />
+              <VarDeclaration Name="P3_Dose" Type="LREAL" />
+              <VarDeclaration Name="P4_Dose" Type="LREAL" />
+              <VarDeclaration Name="P1_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P2_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P3_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P4_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P1_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P2_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P3_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P4_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P1_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P2_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P3_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P4_Inspect" Type="LREAL" />
+            </OutputVars>
+          </InterfaceList>
+          <SubAppNetwork />
+        </SubApp>
+        <EventConnections>
+          <Connection Source="Boot.COLD" Destination="Observer.INIT" />
+          <Connection Source="Boot.WARM" Destination="Observer.INIT" />
+          <Connection Source="Unit.CNF" Destination="EM_Filler.UNIT_STAT" />
+          <Connection Source="Occupation.CNF" Destination="EM_Filler.UNIT_STAT" />
+          <Connection Source="Unit.CONTROL" Destination="EM_Filler.UNIT_CTL" />
+          <Connection Source="EM_Filler.STAT_OUT" Destination="Unit.STATUS" />
+          <Connection Source="Observer.SAMPLE" Destination="EM_Filler.SAMPLE" />
+          <Connection Source="Observer.UNSAFE" Destination="Unit.UNSAFE" />
+          <Connection Source="Unit.PROC_CMD" Destination="Facade.CMD" />
+          <Connection Source="Facade.EXEC" Destination="PROC.CMD" />
+          <Connection Source="Facade.START" Destination="PROC.START" />
+          <Connection Source="Facade.RESET" Destination="PROC.RESET" />
+          <Connection Source="PROC.FINISHED" Destination="Facade.FINISHED" />
+          <Connection Source="PROC.FAILED" Destination="Facade.FAILED" />
+          <Connection Source="Facade.DONE" Destination="Unit.PROC_DONE" />
+          <Connection Source="Facade.FAULT" Destination="Unit.FAULT" />
+          <Connection Source="PROC.CALL_MoveDown" Destination="EM_Filler.CALL_MoveDown" />
+          <Connection Source="EM_Filler.DONE_MoveDown" Destination="PROC.DONE_MoveDown" />
+          <Connection Source="EM_Filler.FAILED_MoveDown" Destination="PROC.FAILED_MoveDown" />
+          <Connection Source="PROC.CALL_Dose" Destination="EM_Filler.CALL_Dose" />
+          <Connection Source="EM_Filler.DONE_Dose" Destination="PROC.DONE_Dose" />
+          <Connection Source="EM_Filler.FAILED_Dose" Destination="PROC.FAILED_Dose" />
+          <Connection Source="PROC.CALL_MoveUp" Destination="EM_Filler.CALL_MoveUp" />
+          <Connection Source="EM_Filler.DONE_MoveUp" Destination="PROC.DONE_MoveUp" />
+          <Connection Source="EM_Filler.FAILED_MoveUp" Destination="PROC.FAILED_MoveUp" />
+          <Connection Source="PROC.CALL_Stopper" Destination="EM_Filler.CALL_Stopper" />
+          <Connection Source="EM_Filler.DONE_Stopper" Destination="PROC.DONE_Stopper" />
+          <Connection Source="EM_Filler.FAILED_Stopper" Destination="PROC.FAILED_Stopper" />
+          <Connection Source="PROC.CALL_Inspect" Destination="EM_Filler.CALL_Inspect" />
+          <Connection Source="EM_Filler.DONE_Inspect" Destination="PROC.DONE_Inspect" />
+          <Connection Source="EM_Filler.FAILED_Inspect" Destination="PROC.FAILED_Inspect" />
+          <Connection Source="Observer.INITO" Destination="UaFacade.INIT" />
+          <Connection Source="UaFacade.INITO" Destination="EM_Filler.INIT" />
+          <Connection Source="UaFacade.U_CMD" Destination="Unit.CMD" />
+          <Connection Source="UaFacade.O_CMD" Destination="Occupation.CMD" />
+          <Connection Source="Unit.CMD_ACK" Destination="UaFacade.U_ACK" />
+          <Connection Source="Unit.CMD_REJ" Destination="UaFacade.U_REJ" />
+          <Connection Source="Occupation.CNF" Destination="UaFacade.O_ACK" />
+          <Connection Source="Occupation.REJECTED" Destination="UaFacade.O_REJ" />
+          <Connection Source="Unit.CNF" Destination="UaFacade.PUB" />
+          <Connection Source="Occupation.CNF" Destination="UaFacade.PUB" />
+        </EventConnections>
+        <DataConnections>
+          <Connection Source="Occupation.Owner" Destination="Unit.Owner" />
+          <Connection Source="Occupation.RemoteAllowed" Destination="Unit.RemoteAllowed" />
+          <Connection Source="Occupation.Owner" Destination="EM_Filler.Owner" />
+          <Connection Source="Occupation.RemoteAllowed" Destination="EM_Filler.RemoteAllowed" />
+          <Connection Source="Unit.Running" Destination="EM_Filler.UnitRunning" />
+          <Connection Source="Unit.Quiescent" Destination="EM_Filler.UnitQuiescent" />
+          <Connection Source="Unit.State" Destination="EM_Filler.UnitState" />
+          <Connection Source="Unit.Mode" Destination="EM_Filler.Mode" />
+          <Connection Source="Unit.ControlCode" Destination="EM_Filler.ControlCode" />
+          <Connection Source="Unit.Quiescent" Destination="Occupation.Quiescent" />
+          <Connection Source="Unit.Quiescent" Destination="Facade.Quiescent" />
+          <Connection Source="EM_Filler.Busy" Destination="Unit.Busy" />
+          <Connection Source="EM_Filler.HeldAll" Destination="Unit.HeldAll" />
+          <Connection Source="EM_Filler.RunAll" Destination="Unit.RunAll" />
+          <Connection Source="Observer.Cell" Destination="EM_Filler.Cell" />
+          <Connection Source="Observer.Safe" Destination="Unit.Safe" />
+          <Connection Source="Unit.ProcedureCommand" Destination="Facade.Command" />
+          <Connection Source="Facade.CommandOut" Destination="PROC.Command" />
+          <Connection Source="Facade.Ready" Destination="Unit.ProcedureReady" />
+          <Connection Source="PROC.P1_MoveDown" Destination="EM_Filler.P1_MoveDown" />
+          <Connection Source="PROC.P2_MoveDown" Destination="EM_Filler.P2_MoveDown" />
+          <Connection Source="PROC.P3_MoveDown" Destination="EM_Filler.P3_MoveDown" />
+          <Connection Source="PROC.P4_MoveDown" Destination="EM_Filler.P4_MoveDown" />
+          <Connection Source="EM_Filler.CallError_MoveDown" Destination="PROC.CallError_MoveDown" />
+          <Connection Source="PROC.P1_Dose" Destination="EM_Filler.P1_Dose" />
+          <Connection Source="PROC.P2_Dose" Destination="EM_Filler.P2_Dose" />
+          <Connection Source="PROC.P3_Dose" Destination="EM_Filler.P3_Dose" />
+          <Connection Source="PROC.P4_Dose" Destination="EM_Filler.P4_Dose" />
+          <Connection Source="EM_Filler.CallError_Dose" Destination="PROC.CallError_Dose" />
+          <Connection Source="PROC.P1_MoveUp" Destination="EM_Filler.P1_MoveUp" />
+          <Connection Source="PROC.P2_MoveUp" Destination="EM_Filler.P2_MoveUp" />
+          <Connection Source="PROC.P3_MoveUp" Destination="EM_Filler.P3_MoveUp" />
+          <Connection Source="PROC.P4_MoveUp" Destination="EM_Filler.P4_MoveUp" />
+          <Connection Source="EM_Filler.CallError_MoveUp" Destination="PROC.CallError_MoveUp" />
+          <Connection Source="PROC.P1_Stopper" Destination="EM_Filler.P1_Stopper" />
+          <Connection Source="PROC.P2_Stopper" Destination="EM_Filler.P2_Stopper" />
+          <Connection Source="PROC.P3_Stopper" Destination="EM_Filler.P3_Stopper" />
+          <Connection Source="PROC.P4_Stopper" Destination="EM_Filler.P4_Stopper" />
+          <Connection Source="EM_Filler.CallError_Stopper" Destination="PROC.CallError_Stopper" />
+          <Connection Source="PROC.P1_Inspect" Destination="EM_Filler.P1_Inspect" />
+          <Connection Source="PROC.P2_Inspect" Destination="EM_Filler.P2_Inspect" />
+          <Connection Source="PROC.P3_Inspect" Destination="EM_Filler.P3_Inspect" />
+          <Connection Source="PROC.P4_Inspect" Destination="EM_Filler.P4_Inspect" />
+          <Connection Source="EM_Filler.CallError_Inspect" Destination="PROC.CallError_Inspect" />
+          <Connection Source="UaFacade.Requester" Destination="Unit.Requester" />
+          <Connection Source="UaFacade.Requester" Destination="Occupation.Requester" />
+          <Connection Source="UaFacade.U_Code" Destination="Unit.Command" />
+          <Connection Source="UaFacade.U_Mode" Destination="Unit.RequestedMode" />
+          <Connection Source="UaFacade.O_Code" Destination="Occupation.Command" />
+          <Connection Source="Unit.State" Destination="UaFacade.UnitState" />
+          <Connection Source="Unit.Mode" Destination="UaFacade.UnitMode" />
+          <Connection Source="Occupation.State" Destination="UaFacade.OccState" />
+          <Connection Source="Occupation.Owner" Destination="UaFacade.Owner" />
+        </DataConnections>
+      </FBNetwork>
+    </Resource>
+    <Resource Name="DEMO" Type="iec61499::system::EMB_RES" x="0" y="0">
+      <FBNetwork>
+        <FB Name="Boot" Type="iec61499::events::E_RESTART" x="100" y="100" />
+        <FB Name="Observer" Type="fillingcell::UNIT_Observer" x="100" y="1400">
+          <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler&quot;" />
+          <Parameter Name="UaEnable" Value="FALSE" />
+          <Parameter Name="IoBackend" Value="0" />
+          <Parameter Name="CycleTime" Value="T#50ms" />
+        </FB>
+        <FB Name="Occupation" Type="fillingcell::FC_Occupation" x="1500" y="100" />
+        <FB Name="Unit" Type="fillingcell::FC_Unit" x="1500" y="700" />
+        <FB Name="Facade" Type="fillingcell::FC_ProcedureFacade" x="2600" y="100">
+          <Parameter Name="Installed" Value="TRUE" />
+        </FB>
+        <SubApp Name="EM_Filler" x="3600" y="700" Comment="Equipment module: one composite per skill, chained for status; instances and chain may be changed online while the unit is quiescent">
+          <InterfaceList>
+            <EventInputs>
+              <Event Name="INIT" Type="Event" />
+              <Event Name="UNIT_CTL" Type="Event">
+                <With Var="ControlCode" />
+              </Event>
+              <Event Name="UNIT_STAT" Type="Event">
+                <With Var="UnitRunning" />
+                <With Var="UnitQuiescent" />
+                <With Var="UnitState" />
+                <With Var="Mode" />
+                <With Var="Owner" />
+                <With Var="RemoteAllowed" />
+              </Event>
+              <Event Name="SAMPLE" Type="Event">
+                <With Var="Cell" />
+              </Event>
+              <Event Name="CALL_MoveDown" Type="Event">
+                <With Var="P1_MoveDown" />
+                <With Var="P2_MoveDown" />
+                <With Var="P3_MoveDown" />
+                <With Var="P4_MoveDown" />
+              </Event>
+              <Event Name="CALL_Dose" Type="Event">
+                <With Var="P1_Dose" />
+                <With Var="P2_Dose" />
+                <With Var="P3_Dose" />
+                <With Var="P4_Dose" />
+              </Event>
+              <Event Name="CALL_MoveUp" Type="Event">
+                <With Var="P1_MoveUp" />
+                <With Var="P2_MoveUp" />
+                <With Var="P3_MoveUp" />
+                <With Var="P4_MoveUp" />
+              </Event>
+              <Event Name="CALL_Stopper" Type="Event">
+                <With Var="P1_Stopper" />
+                <With Var="P2_Stopper" />
+                <With Var="P3_Stopper" />
+                <With Var="P4_Stopper" />
+              </Event>
+              <Event Name="CALL_Inspect" Type="Event">
+                <With Var="P1_Inspect" />
+                <With Var="P2_Inspect" />
+                <With Var="P3_Inspect" />
+                <With Var="P4_Inspect" />
+              </Event>
+            </EventInputs>
+            <EventOutputs>
+              <Event Name="INITO" Type="Event" />
+              <Event Name="STAT_OUT" Type="Event">
+                <With Var="Busy" />
+                <With Var="HeldAll" />
+                <With Var="RunAll" />
+              </Event>
+              <Event Name="DONE_MoveDown" Type="Event" />
+              <Event Name="DONE_Dose" Type="Event" />
+              <Event Name="DONE_MoveUp" Type="Event" />
+              <Event Name="DONE_Stopper" Type="Event" />
+              <Event Name="DONE_Inspect" Type="Event" />
+              <Event Name="FAILED_MoveDown" Type="Event">
+                <With Var="CallError_MoveDown" />
+              </Event>
+              <Event Name="FAILED_Dose" Type="Event">
+                <With Var="CallError_Dose" />
+              </Event>
+              <Event Name="FAILED_MoveUp" Type="Event">
+                <With Var="CallError_MoveUp" />
+              </Event>
+              <Event Name="FAILED_Stopper" Type="Event">
+                <With Var="CallError_Stopper" />
+              </Event>
+              <Event Name="FAILED_Inspect" Type="Event">
+                <With Var="CallError_Inspect" />
+              </Event>
+            </EventOutputs>
+            <InputVars>
+              <VarDeclaration Name="ControlCode" Type="USINT" />
+              <VarDeclaration Name="UnitRunning" Type="BOOL" />
+              <VarDeclaration Name="UnitQuiescent" Type="BOOL" />
+              <VarDeclaration Name="UnitState" Type="USINT" />
+              <VarDeclaration Name="Mode" Type="USINT" />
+              <VarDeclaration Name="Owner" Type="UDINT" />
+              <VarDeclaration Name="RemoteAllowed" Type="BOOL" />
+              <VarDeclaration Name="Cell" Type="fillingcell::ST_CellState" />
+              <VarDeclaration Name="P1_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P2_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P3_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P4_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P1_Dose" Type="LREAL" />
+              <VarDeclaration Name="P2_Dose" Type="LREAL" />
+              <VarDeclaration Name="P3_Dose" Type="LREAL" />
+              <VarDeclaration Name="P4_Dose" Type="LREAL" />
+              <VarDeclaration Name="P1_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P2_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P3_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P4_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P1_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P2_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P3_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P4_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P1_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P2_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P3_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P4_Inspect" Type="LREAL" />
+            </InputVars>
+            <OutputVars>
+              <VarDeclaration Name="Busy" Type="BOOL" />
+              <VarDeclaration Name="HeldAll" Type="BOOL" />
+              <VarDeclaration Name="RunAll" Type="BOOL" />
+              <VarDeclaration Name="CallError_MoveDown" Type="UINT" />
+              <VarDeclaration Name="CallError_Dose" Type="UINT" />
+              <VarDeclaration Name="CallError_MoveUp" Type="UINT" />
+              <VarDeclaration Name="CallError_Stopper" Type="UINT" />
+              <VarDeclaration Name="CallError_Inspect" Type="UINT" />
+              <VarDeclaration Name="Drive_MoveDown" Type="BOOL" />
+              <VarDeclaration Name="Drive_Dose" Type="BOOL" />
+              <VarDeclaration Name="Drive_MoveUp" Type="BOOL" />
+              <VarDeclaration Name="Drive_Stopper" Type="BOOL" />
+              <VarDeclaration Name="Drive_Inspect" Type="BOOL" />
+            </OutputVars>
+          </InterfaceList>
+          <SubAppNetwork>
+            <FB Name="MoveDown" Type="fillingcell::SK_MoveDown" x="300" y="300">
+              <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler/Skills/MoveDown&quot;" />
+              <Parameter Name="UaEnable" Value="FALSE" />
+              <Parameter Name="IoBackend" Value="0" />
+            </FB>
+            <FB Name="Dose" Type="fillingcell::SK_Dose" x="1800" y="300">
+              <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler/Skills/Dose&quot;" />
+              <Parameter Name="UaEnable" Value="FALSE" />
+              <Parameter Name="IoBackend" Value="0" />
+            </FB>
+            <FB Name="MoveUp" Type="fillingcell::SK_MoveUp" x="3300" y="300">
+              <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler/Skills/MoveUp&quot;" />
+              <Parameter Name="UaEnable" Value="FALSE" />
+              <Parameter Name="IoBackend" Value="0" />
+            </FB>
+            <FB Name="Stopper" Type="fillingcell::SK_Stopper" x="4800" y="300">
+              <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler/Skills/Stopper&quot;" />
+              <Parameter Name="UaEnable" Value="FALSE" />
+              <Parameter Name="IoBackend" Value="0" />
+            </FB>
+            <FB Name="Inspect" Type="fillingcell::SK_Inspect" x="6300" y="300">
+              <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Filler/Skills/Inspect&quot;" />
+              <Parameter Name="UaEnable" Value="FALSE" />
+              <Parameter Name="IoBackend" Value="0" />
+            </FB>
+            <EventConnections>
+              <Connection Source="INIT" Destination="MoveDown.INIT" />
+              <Connection Source="MoveDown.INITO" Destination="Dose.INIT" />
+              <Connection Source="MoveDown.STAT_OUT" Destination="Dose.STAT_IN" />
+              <Connection Source="Dose.INITO" Destination="MoveUp.INIT" />
+              <Connection Source="Dose.STAT_OUT" Destination="MoveUp.STAT_IN" />
+              <Connection Source="MoveUp.INITO" Destination="Stopper.INIT" />
+              <Connection Source="MoveUp.STAT_OUT" Destination="Stopper.STAT_IN" />
+              <Connection Source="Stopper.INITO" Destination="Inspect.INIT" />
+              <Connection Source="Stopper.STAT_OUT" Destination="Inspect.STAT_IN" />
+              <Connection Source="Inspect.INITO" Destination="INITO" />
+              <Connection Source="Inspect.STAT_OUT" Destination="STAT_OUT" />
+              <Connection Source="UNIT_CTL" Destination="MoveDown.UNIT_CTL" />
+              <Connection Source="UNIT_STAT" Destination="MoveDown.UNIT_STAT" />
+              <Connection Source="SAMPLE" Destination="MoveDown.SAMPLE" />
+              <Connection Source="CALL_MoveDown" Destination="MoveDown.CALL" />
+              <Connection Source="MoveDown.DONE" Destination="DONE_MoveDown" />
+              <Connection Source="MoveDown.FAILED" Destination="FAILED_MoveDown" />
+              <Connection Source="UNIT_CTL" Destination="Dose.UNIT_CTL" />
+              <Connection Source="UNIT_STAT" Destination="Dose.UNIT_STAT" />
+              <Connection Source="SAMPLE" Destination="Dose.SAMPLE" />
+              <Connection Source="CALL_Dose" Destination="Dose.CALL" />
+              <Connection Source="Dose.DONE" Destination="DONE_Dose" />
+              <Connection Source="Dose.FAILED" Destination="FAILED_Dose" />
+              <Connection Source="UNIT_CTL" Destination="MoveUp.UNIT_CTL" />
+              <Connection Source="UNIT_STAT" Destination="MoveUp.UNIT_STAT" />
+              <Connection Source="SAMPLE" Destination="MoveUp.SAMPLE" />
+              <Connection Source="CALL_MoveUp" Destination="MoveUp.CALL" />
+              <Connection Source="MoveUp.DONE" Destination="DONE_MoveUp" />
+              <Connection Source="MoveUp.FAILED" Destination="FAILED_MoveUp" />
+              <Connection Source="UNIT_CTL" Destination="Stopper.UNIT_CTL" />
+              <Connection Source="UNIT_STAT" Destination="Stopper.UNIT_STAT" />
+              <Connection Source="SAMPLE" Destination="Stopper.SAMPLE" />
+              <Connection Source="CALL_Stopper" Destination="Stopper.CALL" />
+              <Connection Source="Stopper.DONE" Destination="DONE_Stopper" />
+              <Connection Source="Stopper.FAILED" Destination="FAILED_Stopper" />
+              <Connection Source="UNIT_CTL" Destination="Inspect.UNIT_CTL" />
+              <Connection Source="UNIT_STAT" Destination="Inspect.UNIT_STAT" />
+              <Connection Source="SAMPLE" Destination="Inspect.SAMPLE" />
+              <Connection Source="CALL_Inspect" Destination="Inspect.CALL" />
+              <Connection Source="Inspect.DONE" Destination="DONE_Inspect" />
+              <Connection Source="Inspect.FAILED" Destination="FAILED_Inspect" />
+            </EventConnections>
+            <DataConnections>
+              <Connection Source="MoveDown.BusyOut" Destination="Dose.BusyIn" />
+              <Connection Source="MoveDown.HeldOut" Destination="Dose.HeldIn" />
+              <Connection Source="MoveDown.RunOut" Destination="Dose.RunIn" />
+              <Connection Source="Dose.BusyOut" Destination="MoveUp.BusyIn" />
+              <Connection Source="Dose.HeldOut" Destination="MoveUp.HeldIn" />
+              <Connection Source="Dose.RunOut" Destination="MoveUp.RunIn" />
+              <Connection Source="MoveUp.BusyOut" Destination="Stopper.BusyIn" />
+              <Connection Source="MoveUp.HeldOut" Destination="Stopper.HeldIn" />
+              <Connection Source="MoveUp.RunOut" Destination="Stopper.RunIn" />
+              <Connection Source="Stopper.BusyOut" Destination="Inspect.BusyIn" />
+              <Connection Source="Stopper.HeldOut" Destination="Inspect.HeldIn" />
+              <Connection Source="Stopper.RunOut" Destination="Inspect.RunIn" />
+              <Connection Source="Inspect.BusyOut" Destination="Busy" />
+              <Connection Source="Inspect.HeldOut" Destination="HeldAll" />
+              <Connection Source="Inspect.RunOut" Destination="RunAll" />
+              <Connection Source="ControlCode" Destination="MoveDown.ControlCode" />
+              <Connection Source="Cell" Destination="MoveDown.Cell" />
+              <Connection Source="MoveDown.CallError" Destination="CallError_MoveDown" />
+              <Connection Source="MoveDown.Drive" Destination="Drive_MoveDown" />
+              <Connection Source="UnitRunning" Destination="MoveDown.UnitRunning" />
+              <Connection Source="UnitQuiescent" Destination="MoveDown.UnitQuiescent" />
+              <Connection Source="UnitState" Destination="MoveDown.UnitState" />
+              <Connection Source="Mode" Destination="MoveDown.Mode" />
+              <Connection Source="Owner" Destination="MoveDown.Owner" />
+              <Connection Source="RemoteAllowed" Destination="MoveDown.RemoteAllowed" />
+              <Connection Source="P1_MoveDown" Destination="MoveDown.P1" />
+              <Connection Source="P2_MoveDown" Destination="MoveDown.P2" />
+              <Connection Source="P3_MoveDown" Destination="MoveDown.P3" />
+              <Connection Source="P4_MoveDown" Destination="MoveDown.P4" />
+              <Connection Source="ControlCode" Destination="Dose.ControlCode" />
+              <Connection Source="Cell" Destination="Dose.Cell" />
+              <Connection Source="Dose.CallError" Destination="CallError_Dose" />
+              <Connection Source="Dose.Drive" Destination="Drive_Dose" />
+              <Connection Source="UnitRunning" Destination="Dose.UnitRunning" />
+              <Connection Source="UnitQuiescent" Destination="Dose.UnitQuiescent" />
+              <Connection Source="UnitState" Destination="Dose.UnitState" />
+              <Connection Source="Mode" Destination="Dose.Mode" />
+              <Connection Source="Owner" Destination="Dose.Owner" />
+              <Connection Source="RemoteAllowed" Destination="Dose.RemoteAllowed" />
+              <Connection Source="P1_Dose" Destination="Dose.P1" />
+              <Connection Source="P2_Dose" Destination="Dose.P2" />
+              <Connection Source="P3_Dose" Destination="Dose.P3" />
+              <Connection Source="P4_Dose" Destination="Dose.P4" />
+              <Connection Source="ControlCode" Destination="MoveUp.ControlCode" />
+              <Connection Source="Cell" Destination="MoveUp.Cell" />
+              <Connection Source="MoveUp.CallError" Destination="CallError_MoveUp" />
+              <Connection Source="MoveUp.Drive" Destination="Drive_MoveUp" />
+              <Connection Source="UnitRunning" Destination="MoveUp.UnitRunning" />
+              <Connection Source="UnitQuiescent" Destination="MoveUp.UnitQuiescent" />
+              <Connection Source="UnitState" Destination="MoveUp.UnitState" />
+              <Connection Source="Mode" Destination="MoveUp.Mode" />
+              <Connection Source="Owner" Destination="MoveUp.Owner" />
+              <Connection Source="RemoteAllowed" Destination="MoveUp.RemoteAllowed" />
+              <Connection Source="P1_MoveUp" Destination="MoveUp.P1" />
+              <Connection Source="P2_MoveUp" Destination="MoveUp.P2" />
+              <Connection Source="P3_MoveUp" Destination="MoveUp.P3" />
+              <Connection Source="P4_MoveUp" Destination="MoveUp.P4" />
+              <Connection Source="ControlCode" Destination="Stopper.ControlCode" />
+              <Connection Source="Cell" Destination="Stopper.Cell" />
+              <Connection Source="Stopper.CallError" Destination="CallError_Stopper" />
+              <Connection Source="Stopper.Drive" Destination="Drive_Stopper" />
+              <Connection Source="UnitRunning" Destination="Stopper.UnitRunning" />
+              <Connection Source="UnitQuiescent" Destination="Stopper.UnitQuiescent" />
+              <Connection Source="UnitState" Destination="Stopper.UnitState" />
+              <Connection Source="Mode" Destination="Stopper.Mode" />
+              <Connection Source="Owner" Destination="Stopper.Owner" />
+              <Connection Source="RemoteAllowed" Destination="Stopper.RemoteAllowed" />
+              <Connection Source="P1_Stopper" Destination="Stopper.P1" />
+              <Connection Source="P2_Stopper" Destination="Stopper.P2" />
+              <Connection Source="P3_Stopper" Destination="Stopper.P3" />
+              <Connection Source="P4_Stopper" Destination="Stopper.P4" />
+              <Connection Source="ControlCode" Destination="Inspect.ControlCode" />
+              <Connection Source="Cell" Destination="Inspect.Cell" />
+              <Connection Source="Inspect.CallError" Destination="CallError_Inspect" />
+              <Connection Source="Inspect.Drive" Destination="Drive_Inspect" />
+              <Connection Source="UnitRunning" Destination="Inspect.UnitRunning" />
+              <Connection Source="UnitQuiescent" Destination="Inspect.UnitQuiescent" />
+              <Connection Source="UnitState" Destination="Inspect.UnitState" />
+              <Connection Source="Mode" Destination="Inspect.Mode" />
+              <Connection Source="Owner" Destination="Inspect.Owner" />
+              <Connection Source="RemoteAllowed" Destination="Inspect.RemoteAllowed" />
+              <Connection Source="P1_Inspect" Destination="Inspect.P1" />
+              <Connection Source="P2_Inspect" Destination="Inspect.P2" />
+              <Connection Source="P3_Inspect" Destination="Inspect.P3" />
+              <Connection Source="P4_Inspect" Destination="Inspect.P4" />
+            </DataConnections>
+          </SubAppNetwork>
+        </SubApp>
+        <SubApp Name="PROC" x="2600" y="1400" Comment="Demo procedure: MoveDown, Dose x2 (P_Loop), MoveUp, Stopper, Inspect">
+          <InterfaceList>
+            <EventInputs>
+              <Event Name="START" Type="Event" />
+              <Event Name="RESET" Type="Event" />
+              <Event Name="CMD" Type="Event">
+                <With Var="Command" />
+              </Event>
+              <Event Name="DONE_MoveDown" Type="Event" />
+              <Event Name="DONE_Dose" Type="Event" />
+              <Event Name="DONE_MoveUp" Type="Event" />
+              <Event Name="DONE_Stopper" Type="Event" />
+              <Event Name="DONE_Inspect" Type="Event" />
+              <Event Name="FAILED_MoveDown" Type="Event">
+                <With Var="CallError_MoveDown" />
+              </Event>
+              <Event Name="FAILED_Dose" Type="Event">
+                <With Var="CallError_Dose" />
+              </Event>
+              <Event Name="FAILED_MoveUp" Type="Event">
+                <With Var="CallError_MoveUp" />
+              </Event>
+              <Event Name="FAILED_Stopper" Type="Event">
+                <With Var="CallError_Stopper" />
+              </Event>
+              <Event Name="FAILED_Inspect" Type="Event">
+                <With Var="CallError_Inspect" />
+              </Event>
+            </EventInputs>
+            <EventOutputs>
+              <Event Name="FINISHED" Type="Event" />
+              <Event Name="FAILED" Type="Event" />
+              <Event Name="CALL_MoveDown" Type="Event">
+                <With Var="P1_MoveDown" />
+                <With Var="P2_MoveDown" />
+                <With Var="P3_MoveDown" />
+                <With Var="P4_MoveDown" />
+              </Event>
+              <Event Name="CALL_Dose" Type="Event">
+                <With Var="P1_Dose" />
+                <With Var="P2_Dose" />
+                <With Var="P3_Dose" />
+                <With Var="P4_Dose" />
+              </Event>
+              <Event Name="CALL_MoveUp" Type="Event">
+                <With Var="P1_MoveUp" />
+                <With Var="P2_MoveUp" />
+                <With Var="P3_MoveUp" />
+                <With Var="P4_MoveUp" />
+              </Event>
+              <Event Name="CALL_Stopper" Type="Event">
+                <With Var="P1_Stopper" />
+                <With Var="P2_Stopper" />
+                <With Var="P3_Stopper" />
+                <With Var="P4_Stopper" />
+              </Event>
+              <Event Name="CALL_Inspect" Type="Event">
+                <With Var="P1_Inspect" />
+                <With Var="P2_Inspect" />
+                <With Var="P3_Inspect" />
+                <With Var="P4_Inspect" />
+              </Event>
+            </EventOutputs>
+            <InputVars>
+              <VarDeclaration Name="Command" Type="USINT" />
+              <VarDeclaration Name="CallError_MoveDown" Type="UINT" />
+              <VarDeclaration Name="CallError_Dose" Type="UINT" />
+              <VarDeclaration Name="CallError_MoveUp" Type="UINT" />
+              <VarDeclaration Name="CallError_Stopper" Type="UINT" />
+              <VarDeclaration Name="CallError_Inspect" Type="UINT" />
+            </InputVars>
+            <OutputVars>
+              <VarDeclaration Name="P1_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P2_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P3_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P4_MoveDown" Type="LREAL" />
+              <VarDeclaration Name="P1_Dose" Type="LREAL" />
+              <VarDeclaration Name="P2_Dose" Type="LREAL" />
+              <VarDeclaration Name="P3_Dose" Type="LREAL" />
+              <VarDeclaration Name="P4_Dose" Type="LREAL" />
+              <VarDeclaration Name="P1_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P2_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P3_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P4_MoveUp" Type="LREAL" />
+              <VarDeclaration Name="P1_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P2_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P3_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P4_Stopper" Type="LREAL" />
+              <VarDeclaration Name="P1_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P2_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P3_Inspect" Type="LREAL" />
+              <VarDeclaration Name="P4_Inspect" Type="LREAL" />
+            </OutputVars>
+          </InterfaceList>
+          <SubAppNetwork>
+            <FB Name="MoveDown" Type="fillingcell::P_Call" x="400" y="300" />
+            <FB Name="Dose" Type="fillingcell::P_Call" x="2000" y="300">
+              <Parameter Name="P1" Value="0.3" />
+            </FB>
+            <FB Name="MoveUp" Type="fillingcell::P_Call" x="3600" y="300" />
+            <FB Name="Stopper" Type="fillingcell::P_Call" x="5200" y="300" />
+            <FB Name="Inspect" Type="fillingcell::P_Call" x="6800" y="300" />
+            <FB Name="DoseLoop" Type="fillingcell::P_Loop" x="2000" y="1400">
+              <Parameter Name="Count" Value="2" />
+            </FB>
+            <EventConnections>
+              <Connection Source="START" Destination="MoveDown.EI" />
+              <Connection Source="MoveDown.EO" Destination="DoseLoop.EI" />
+              <Connection Source="DoseLoop.BODY" Destination="Dose.EI" />
+              <Connection Source="Dose.EO" Destination="DoseLoop.NEXT" />
+              <Connection Source="DoseLoop.EO" Destination="MoveUp.EI" />
+              <Connection Source="MoveUp.EO" Destination="Stopper.EI" />
+              <Connection Source="Stopper.EO" Destination="Inspect.EI" />
+              <Connection Source="Inspect.EO" Destination="FINISHED" />
+              <Connection Source="RESET" Destination="DoseLoop.RESET" />
+              <Connection Source="MoveDown.CALL" Destination="CALL_MoveDown" />
+              <Connection Source="DONE_MoveDown" Destination="MoveDown.DONE" />
+              <Connection Source="FAILED_MoveDown" Destination="MoveDown.FAILED" />
+              <Connection Source="MoveDown.ERR" Destination="FAILED" />
+              <Connection Source="RESET" Destination="MoveDown.RESET" />
+              <Connection Source="Dose.CALL" Destination="CALL_Dose" />
+              <Connection Source="DONE_Dose" Destination="Dose.DONE" />
+              <Connection Source="FAILED_Dose" Destination="Dose.FAILED" />
+              <Connection Source="Dose.ERR" Destination="FAILED" />
+              <Connection Source="RESET" Destination="Dose.RESET" />
+              <Connection Source="MoveUp.CALL" Destination="CALL_MoveUp" />
+              <Connection Source="DONE_MoveUp" Destination="MoveUp.DONE" />
+              <Connection Source="FAILED_MoveUp" Destination="MoveUp.FAILED" />
+              <Connection Source="MoveUp.ERR" Destination="FAILED" />
+              <Connection Source="RESET" Destination="MoveUp.RESET" />
+              <Connection Source="Stopper.CALL" Destination="CALL_Stopper" />
+              <Connection Source="DONE_Stopper" Destination="Stopper.DONE" />
+              <Connection Source="FAILED_Stopper" Destination="Stopper.FAILED" />
+              <Connection Source="Stopper.ERR" Destination="FAILED" />
+              <Connection Source="RESET" Destination="Stopper.RESET" />
+              <Connection Source="Inspect.CALL" Destination="CALL_Inspect" />
+              <Connection Source="DONE_Inspect" Destination="Inspect.DONE" />
+              <Connection Source="FAILED_Inspect" Destination="Inspect.FAILED" />
+              <Connection Source="Inspect.ERR" Destination="FAILED" />
+              <Connection Source="RESET" Destination="Inspect.RESET" />
+            </EventConnections>
+            <DataConnections>
+              <Connection Source="Dose.CP1" Destination="P1_Dose" />
+              <Connection Source="CallError_MoveDown" Destination="MoveDown.CallError" />
+              <Connection Source="CallError_Dose" Destination="Dose.CallError" />
+              <Connection Source="CallError_MoveUp" Destination="MoveUp.CallError" />
+              <Connection Source="CallError_Stopper" Destination="Stopper.CallError" />
+              <Connection Source="CallError_Inspect" Destination="Inspect.CallError" />
+            </DataConnections>
+          </SubAppNetwork>
+        </SubApp>
+        <FB Name="Plant" Type="fillingcell::DEMO_Plant" x="100" y="2600" />
+        <FB Name="PlantClock" Type="iec61499::events::E_CYCLE" x="100" y="3400">
+          <Parameter Name="DT" Value="T#20ms" />
+        </FB>
+        <FB Name="Operator" Type="fillingcell::DEMO_Operator" x="4800" y="100" />
+        <FB Name="OpDelay" Type="iec61499::events::E_DELAY" x="4800" y="900" />
+        <EventConnections>
+          <Connection Source="Boot.COLD" Destination="Observer.INIT" />
+          <Connection Source="Boot.WARM" Destination="Observer.INIT" />
+          <Connection Source="Unit.CNF" Destination="EM_Filler.UNIT_STAT" />
+          <Connection Source="Occupation.CNF" Destination="EM_Filler.UNIT_STAT" />
+          <Connection Source="Unit.CONTROL" Destination="EM_Filler.UNIT_CTL" />
+          <Connection Source="EM_Filler.STAT_OUT" Destination="Unit.STATUS" />
+          <Connection Source="Observer.SAMPLE" Destination="EM_Filler.SAMPLE" />
+          <Connection Source="Observer.UNSAFE" Destination="Unit.UNSAFE" />
+          <Connection Source="Unit.PROC_CMD" Destination="Facade.CMD" />
+          <Connection Source="Facade.EXEC" Destination="PROC.CMD" />
+          <Connection Source="Facade.START" Destination="PROC.START" />
+          <Connection Source="Facade.RESET" Destination="PROC.RESET" />
+          <Connection Source="PROC.FINISHED" Destination="Facade.FINISHED" />
+          <Connection Source="PROC.FAILED" Destination="Facade.FAILED" />
+          <Connection Source="Facade.DONE" Destination="Unit.PROC_DONE" />
+          <Connection Source="Facade.FAULT" Destination="Unit.FAULT" />
+          <Connection Source="PROC.CALL_MoveDown" Destination="EM_Filler.CALL_MoveDown" />
+          <Connection Source="EM_Filler.DONE_MoveDown" Destination="PROC.DONE_MoveDown" />
+          <Connection Source="EM_Filler.FAILED_MoveDown" Destination="PROC.FAILED_MoveDown" />
+          <Connection Source="PROC.CALL_Dose" Destination="EM_Filler.CALL_Dose" />
+          <Connection Source="EM_Filler.DONE_Dose" Destination="PROC.DONE_Dose" />
+          <Connection Source="EM_Filler.FAILED_Dose" Destination="PROC.FAILED_Dose" />
+          <Connection Source="PROC.CALL_MoveUp" Destination="EM_Filler.CALL_MoveUp" />
+          <Connection Source="EM_Filler.DONE_MoveUp" Destination="PROC.DONE_MoveUp" />
+          <Connection Source="EM_Filler.FAILED_MoveUp" Destination="PROC.FAILED_MoveUp" />
+          <Connection Source="PROC.CALL_Stopper" Destination="EM_Filler.CALL_Stopper" />
+          <Connection Source="EM_Filler.DONE_Stopper" Destination="PROC.DONE_Stopper" />
+          <Connection Source="EM_Filler.FAILED_Stopper" Destination="PROC.FAILED_Stopper" />
+          <Connection Source="PROC.CALL_Inspect" Destination="EM_Filler.CALL_Inspect" />
+          <Connection Source="EM_Filler.DONE_Inspect" Destination="PROC.DONE_Inspect" />
+          <Connection Source="EM_Filler.FAILED_Inspect" Destination="PROC.FAILED_Inspect" />
+          <Connection Source="Boot.COLD" Destination="Plant.INIT" />
+          <Connection Source="Boot.WARM" Destination="Plant.INIT" />
+          <Connection Source="Boot.COLD" Destination="PlantClock.START" />
+          <Connection Source="Boot.WARM" Destination="PlantClock.START" />
+          <Connection Source="PlantClock.EO" Destination="Plant.TICK" />
+          <Connection Source="Plant.CNF" Destination="Observer.SIM" />
+          <Connection Source="Observer.INITO" Destination="EM_Filler.INIT" />
+          <Connection Source="EM_Filler.INITO" Destination="Facade.CONFIG" />
+          <Connection Source="Facade.CNF" Destination="Operator.START" />
+          <Connection Source="Operator.O_CMD" Destination="Occupation.CMD" />
+          <Connection Source="Operator.U_CMD" Destination="Unit.CMD" />
+          <Connection Source="Operator.NEW_VIAL" Destination="Plant.NEW_VIAL" />
+          <Connection Source="Operator.WAIT" Destination="OpDelay.START" />
+          <Connection Source="OpDelay.EO" Destination="Operator.TIMER" />
+          <Connection Source="Unit.CNF" Destination="Operator.UNIT" />
+          <Connection Source="Unit.CMD_REJ" Destination="Operator.REJ" />
+        </EventConnections>
+        <DataConnections>
+          <Connection Source="Occupation.Owner" Destination="Unit.Owner" />
+          <Connection Source="Occupation.RemoteAllowed" Destination="Unit.RemoteAllowed" />
+          <Connection Source="Occupation.Owner" Destination="EM_Filler.Owner" />
+          <Connection Source="Occupation.RemoteAllowed" Destination="EM_Filler.RemoteAllowed" />
+          <Connection Source="Unit.Running" Destination="EM_Filler.UnitRunning" />
+          <Connection Source="Unit.Quiescent" Destination="EM_Filler.UnitQuiescent" />
+          <Connection Source="Unit.State" Destination="EM_Filler.UnitState" />
+          <Connection Source="Unit.Mode" Destination="EM_Filler.Mode" />
+          <Connection Source="Unit.ControlCode" Destination="EM_Filler.ControlCode" />
+          <Connection Source="Unit.Quiescent" Destination="Occupation.Quiescent" />
+          <Connection Source="Unit.Quiescent" Destination="Facade.Quiescent" />
+          <Connection Source="EM_Filler.Busy" Destination="Unit.Busy" />
+          <Connection Source="EM_Filler.HeldAll" Destination="Unit.HeldAll" />
+          <Connection Source="EM_Filler.RunAll" Destination="Unit.RunAll" />
+          <Connection Source="Observer.Cell" Destination="EM_Filler.Cell" />
+          <Connection Source="Observer.Safe" Destination="Unit.Safe" />
+          <Connection Source="Unit.ProcedureCommand" Destination="Facade.Command" />
+          <Connection Source="Facade.CommandOut" Destination="PROC.Command" />
+          <Connection Source="Facade.Ready" Destination="Unit.ProcedureReady" />
+          <Connection Source="PROC.P1_MoveDown" Destination="EM_Filler.P1_MoveDown" />
+          <Connection Source="PROC.P2_MoveDown" Destination="EM_Filler.P2_MoveDown" />
+          <Connection Source="PROC.P3_MoveDown" Destination="EM_Filler.P3_MoveDown" />
+          <Connection Source="PROC.P4_MoveDown" Destination="EM_Filler.P4_MoveDown" />
+          <Connection Source="EM_Filler.CallError_MoveDown" Destination="PROC.CallError_MoveDown" />
+          <Connection Source="PROC.P1_Dose" Destination="EM_Filler.P1_Dose" />
+          <Connection Source="PROC.P2_Dose" Destination="EM_Filler.P2_Dose" />
+          <Connection Source="PROC.P3_Dose" Destination="EM_Filler.P3_Dose" />
+          <Connection Source="PROC.P4_Dose" Destination="EM_Filler.P4_Dose" />
+          <Connection Source="EM_Filler.CallError_Dose" Destination="PROC.CallError_Dose" />
+          <Connection Source="PROC.P1_MoveUp" Destination="EM_Filler.P1_MoveUp" />
+          <Connection Source="PROC.P2_MoveUp" Destination="EM_Filler.P2_MoveUp" />
+          <Connection Source="PROC.P3_MoveUp" Destination="EM_Filler.P3_MoveUp" />
+          <Connection Source="PROC.P4_MoveUp" Destination="EM_Filler.P4_MoveUp" />
+          <Connection Source="EM_Filler.CallError_MoveUp" Destination="PROC.CallError_MoveUp" />
+          <Connection Source="PROC.P1_Stopper" Destination="EM_Filler.P1_Stopper" />
+          <Connection Source="PROC.P2_Stopper" Destination="EM_Filler.P2_Stopper" />
+          <Connection Source="PROC.P3_Stopper" Destination="EM_Filler.P3_Stopper" />
+          <Connection Source="PROC.P4_Stopper" Destination="EM_Filler.P4_Stopper" />
+          <Connection Source="EM_Filler.CallError_Stopper" Destination="PROC.CallError_Stopper" />
+          <Connection Source="PROC.P1_Inspect" Destination="EM_Filler.P1_Inspect" />
+          <Connection Source="PROC.P2_Inspect" Destination="EM_Filler.P2_Inspect" />
+          <Connection Source="PROC.P3_Inspect" Destination="EM_Filler.P3_Inspect" />
+          <Connection Source="PROC.P4_Inspect" Destination="EM_Filler.P4_Inspect" />
+          <Connection Source="EM_Filler.CallError_Inspect" Destination="PROC.CallError_Inspect" />
+          <Connection Source="Operator.Requester" Destination="Unit.Requester" />
+          <Connection Source="Operator.Requester" Destination="Occupation.Requester" />
+          <Connection Source="Operator.U_Code" Destination="Unit.Command" />
+          <Connection Source="Operator.U_Mode" Destination="Unit.RequestedMode" />
+          <Connection Source="Operator.O_Code" Destination="Occupation.Command" />
+          <Connection Source="Unit.State" Destination="Operator.UnitState" />
+          <Connection Source="Operator.Delay" Destination="OpDelay.DT" />
+          <Connection Source="Plant.NeedleUp" Destination="Observer.Sim_NeedleUp" />
+          <Connection Source="Plant.NeedleDown" Destination="Observer.Sim_NeedleDown" />
+          <Connection Source="Plant.VialPresent" Destination="Observer.Sim_VialPresent" />
+          <Connection Source="Plant.FilledMl" Destination="Observer.Sim_FilledMl" />
+          <Connection Source="Plant.Stoppered" Destination="Observer.Sim_Stoppered" />
+          <Connection Source="Plant.Checked" Destination="Observer.Sim_Checked" />
+          <Connection Source="Plant.DoorClosed" Destination="Observer.Sim_DoorClosed" />
+          <Connection Source="EM_Filler.Drive_MoveDown" Destination="Plant.DriveMoveDown" />
+          <Connection Source="EM_Filler.Drive_Dose" Destination="Plant.DriveDose" />
+          <Connection Source="EM_Filler.Drive_MoveUp" Destination="Plant.DriveMoveUp" />
+          <Connection Source="EM_Filler.Drive_Stopper" Destination="Plant.DriveStopper" />
+          <Connection Source="EM_Filler.Drive_Inspect" Destination="Plant.DriveInspect" />
+        </DataConnections>
+      </FBNetwork>
+    </Resource>
+    <Resource Name="BENCH" Type="iec61499::system::EMB_RES" x="0" y="0">
+      <FBNetwork>
+        <FB Name="Boot" Type="iec61499::events::E_RESTART" x="100" y="100" />
+        <FB Name="Plant" Type="fillingcell::DEMO_Plant" x="100" y="900">
+          <Parameter Name="StartDown" Value="TRUE" />
+        </FB>
+        <FB Name="PlantClock" Type="iec61499::events::E_CYCLE" x="100" y="1700">
+          <Parameter Name="DT" Value="T#20ms" />
+        </FB>
+        <FB Name="Observer" Type="fillingcell::UNIT_Observer" x="1400" y="900">
+          <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Bench&quot;" />
+          <Parameter Name="UaEnable" Value="FALSE" />
+          <Parameter Name="IoBackend" Value="0" />
+          <Parameter Name="CycleTime" Value="T#50ms" />
+        </FB>
+        <FB Name="Dose" Type="fillingcell::SK_Dose" x="2800" y="500">
+          <Parameter Name="UaRoot" Value="&quot;/Objects/Demo/Bench/Dose&quot;" />
+          <Parameter Name="UaEnable" Value="FALSE" />
+          <Parameter Name="IoBackend" Value="0" />
+          <Parameter Name="Timeout" Value="T#5s" />
+          <Parameter Name="UnitRunning" Value="TRUE" />
+          <Parameter Name="P1" Value="0.3" />
+        </FB>
+        <FB Name="Caller" Type="iec61499::events::E_CYCLE" x="1400" y="100">
+          <Parameter Name="DT" Value="T#2s" />
+        </FB>
+        <FB Name="Done" Type="iec61499::events::E_CTU" x="4200" y="300" />
+        <FB Name="Failed" Type="iec61499::events::E_CTU" x="4200" y="900" />
+        <EventConnections>
+          <Connection Source="Boot.COLD" Destination="Plant.INIT" />
+          <Connection Source="Boot.WARM" Destination="Plant.INIT" />
+          <Connection Source="Boot.COLD" Destination="PlantClock.START" />
+          <Connection Source="Boot.WARM" Destination="PlantClock.START" />
+          <Connection Source="Boot.COLD" Destination="Observer.INIT" />
+          <Connection Source="Boot.WARM" Destination="Observer.INIT" />
+          <Connection Source="PlantClock.EO" Destination="Plant.TICK" />
+          <Connection Source="Plant.CNF" Destination="Observer.SIM" />
+          <Connection Source="Observer.INITO" Destination="Dose.INIT" />
+          <Connection Source="Dose.INITO" Destination="Dose.UNIT_STAT" />
+          <Connection Source="Dose.INITO" Destination="Caller.START" />
+          <Connection Source="Observer.SAMPLE" Destination="Dose.SAMPLE" />
+          <Connection Source="Caller.EO" Destination="Dose.CALL" />
+          <Connection Source="Dose.DONE" Destination="Done.CU" />
+          <Connection Source="Dose.DONE" Destination="Plant.NEW_VIAL" />
+          <Connection Source="Dose.FAILED" Destination="Failed.CU" />
+        </EventConnections>
+        <DataConnections>
+          <Connection Source="Plant.NeedleUp" Destination="Observer.Sim_NeedleUp" />
+          <Connection Source="Plant.NeedleDown" Destination="Observer.Sim_NeedleDown" />
+          <Connection Source="Plant.VialPresent" Destination="Observer.Sim_VialPresent" />
+          <Connection Source="Plant.FilledMl" Destination="Observer.Sim_FilledMl" />
+          <Connection Source="Plant.Stoppered" Destination="Observer.Sim_Stoppered" />
+          <Connection Source="Plant.Checked" Destination="Observer.Sim_Checked" />
+          <Connection Source="Plant.DoorClosed" Destination="Observer.Sim_DoorClosed" />
+          <Connection Source="Observer.Cell" Destination="Dose.Cell" />
+          <Connection Source="Dose.Drive" Destination="Plant.DriveDose" />
+        </DataConnections>
+      </FBNetwork>
+    </Resource>
+    <Resource Name="PATTERNS" Type="iec61499::system::EMB_RES" x="0" y="0">
+      <FBNetwork>
+        <FB Name="Boot" Type="iec61499::events::E_RESTART" x="100" y="100" />
+        <FB Name="Clock" Type="iec61499::events::E_CYCLE" x="100" y="700">
+          <Parameter Name="DT" Value="T#3s" />
+        </FB>
+        <FB Name="Fork" Type="fillingcell::P_Fork" x="1200" y="700" />
+        <FB Name="WaitA" Type="fillingcell::P_Wait" x="2300" y="300">
+          <Parameter Name="DT" Value="T#300ms" />
+        </FB>
+        <FB Name="WaitB" Type="fillingcell::P_Wait" x="2300" y="1100">
+          <Parameter Name="DT" Value="T#800ms" />
+        </FB>
+        <FB Name="Join" Type="fillingcell::P_Join" x="3400" y="700">
+          <Parameter Name="N" Value="2" />
+        </FB>
+        <FB Name="Loop" Type="fillingcell::P_Loop" x="4500" y="700">
+          <Parameter Name="Count" Value="3" />
+        </FB>
+        <FB Name="WaitC" Type="fillingcell::P_Wait" x="4500" y="1600">
+          <Parameter Name="DT" Value="T#200ms" />
+        </FB>
+        <FB Name="Toggle" Type="iec61499::events::E_T_FF" x="5600" y="700" />
+        <FB Name="Choice" Type="fillingcell::P_Choice" x="6700" y="700" />
+        <FB Name="CtuJoin" Type="iec61499::events::E_CTU" x="7800" y="300" />
+        <FB Name="CtuBody" Type="iec61499::events::E_CTU" x="7800" y="1000" />
+        <FB Name="CtuTrue" Type="iec61499::events::E_CTU" x="7800" y="1700" />
+        <FB Name="CtuFalse" Type="iec61499::events::E_CTU" x="7800" y="2400" />
+        <EventConnections>
+          <Connection Source="Boot.COLD" Destination="Clock.START" />
+          <Connection Source="Boot.WARM" Destination="Clock.START" />
+          <Connection Source="Clock.EO" Destination="Fork.EI" />
+          <Connection Source="Fork.EO1" Destination="WaitA.EI" />
+          <Connection Source="Fork.EO2" Destination="WaitB.EI" />
+          <Connection Source="WaitA.EO" Destination="Join.EI1" />
+          <Connection Source="WaitB.EO" Destination="Join.EI2" />
+          <Connection Source="Join.EO" Destination="CtuJoin.CU" />
+          <Connection Source="Join.EO" Destination="Loop.EI" />
+          <Connection Source="Loop.BODY" Destination="WaitC.EI" />
+          <Connection Source="Loop.BODY" Destination="CtuBody.CU" />
+          <Connection Source="WaitC.EO" Destination="Loop.NEXT" />
+          <Connection Source="Loop.EO" Destination="Toggle.CLK" />
+          <Connection Source="Toggle.EO" Destination="Choice.EI" />
+          <Connection Source="Choice.EO_TRUE" Destination="CtuTrue.CU" />
+          <Connection Source="Choice.EO_FALSE" Destination="CtuFalse.CU" />
+        </EventConnections>
+        <DataConnections>
+          <Connection Source="Toggle.Q" Destination="Choice.Cond" />
+        </DataConnections>
+      </FBNetwork>
+    </Resource>
+  </Device>
+  <Mapping From="FillingCell.Boot" To="FORTE_PC.RES.Boot" />
+  <Mapping From="FillingCell.Observer" To="FORTE_PC.RES.Observer" />
+  <Mapping From="FillingCell.UaFacade" To="FORTE_PC.RES.UaFacade" />
+  <Mapping From="FillingCell.Occupation" To="FORTE_PC.RES.Occupation" />
+  <Mapping From="FillingCell.Unit" To="FORTE_PC.RES.Unit" />
+  <Mapping From="FillingCell.Facade" To="FORTE_PC.RES.Facade" />
+  <Mapping From="FillingCell.EM_Filler" To="FORTE_PC.RES.EM_Filler" />
+  <Mapping From="FillingCell.PROC" To="FORTE_PC.RES.PROC" />
+  <Mapping From="FillingCellDemo.Boot" To="FORTE_PC.DEMO.Boot" />
+  <Mapping From="FillingCellDemo.Observer" To="FORTE_PC.DEMO.Observer" />
+  <Mapping From="FillingCellDemo.Occupation" To="FORTE_PC.DEMO.Occupation" />
+  <Mapping From="FillingCellDemo.Unit" To="FORTE_PC.DEMO.Unit" />
+  <Mapping From="FillingCellDemo.Facade" To="FORTE_PC.DEMO.Facade" />
+  <Mapping From="FillingCellDemo.EM_Filler" To="FORTE_PC.DEMO.EM_Filler" />
+  <Mapping From="FillingCellDemo.PROC" To="FORTE_PC.DEMO.PROC" />
+  <Mapping From="FillingCellDemo.Plant" To="FORTE_PC.DEMO.Plant" />
+  <Mapping From="FillingCellDemo.PlantClock" To="FORTE_PC.DEMO.PlantClock" />
+  <Mapping From="FillingCellDemo.Operator" To="FORTE_PC.DEMO.Operator" />
+  <Mapping From="FillingCellDemo.OpDelay" To="FORTE_PC.DEMO.OpDelay" />
+  <Mapping From="SkillBench.Boot" To="FORTE_PC.BENCH.Boot" />
+  <Mapping From="SkillBench.Plant" To="FORTE_PC.BENCH.Plant" />
+  <Mapping From="SkillBench.PlantClock" To="FORTE_PC.BENCH.PlantClock" />
+  <Mapping From="SkillBench.Observer" To="FORTE_PC.BENCH.Observer" />
+  <Mapping From="SkillBench.Dose" To="FORTE_PC.BENCH.Dose" />
+  <Mapping From="SkillBench.Caller" To="FORTE_PC.BENCH.Caller" />
+  <Mapping From="SkillBench.Done" To="FORTE_PC.BENCH.Done" />
+  <Mapping From="SkillBench.Failed" To="FORTE_PC.BENCH.Failed" />
+  <Mapping From="PatternDemo.Boot" To="FORTE_PC.PATTERNS.Boot" />
+  <Mapping From="PatternDemo.Clock" To="FORTE_PC.PATTERNS.Clock" />
+  <Mapping From="PatternDemo.Fork" To="FORTE_PC.PATTERNS.Fork" />
+  <Mapping From="PatternDemo.WaitA" To="FORTE_PC.PATTERNS.WaitA" />
+  <Mapping From="PatternDemo.WaitB" To="FORTE_PC.PATTERNS.WaitB" />
+  <Mapping From="PatternDemo.Join" To="FORTE_PC.PATTERNS.Join" />
+  <Mapping From="PatternDemo.Loop" To="FORTE_PC.PATTERNS.Loop" />
+  <Mapping From="PatternDemo.WaitC" To="FORTE_PC.PATTERNS.WaitC" />
+  <Mapping From="PatternDemo.Toggle" To="FORTE_PC.PATTERNS.Toggle" />
+  <Mapping From="PatternDemo.Choice" To="FORTE_PC.PATTERNS.Choice" />
+  <Mapping From="PatternDemo.CtuJoin" To="FORTE_PC.PATTERNS.CtuJoin" />
+  <Mapping From="PatternDemo.CtuBody" To="FORTE_PC.PATTERNS.CtuBody" />
+  <Mapping From="PatternDemo.CtuTrue" To="FORTE_PC.PATTERNS.CtuTrue" />
+  <Mapping From="PatternDemo.CtuFalse" To="FORTE_PC.PATTERNS.CtuFalse" />
+</System>

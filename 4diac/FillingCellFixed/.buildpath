@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
+<buildpath:buildpath xmlns:buildpath="http://www.eclipse.org/4diac/xml/buildpath.xsd">
+  <sourceFolder name="Type Library" />
+</buildpath:buildpath>

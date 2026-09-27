@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SL_MoveDown" Comment="MoveDown contract: Requires NeedleUp AND NOT NeedleDown AND VialPresent; Ensures NeedleDown AND NOT NeedleUp; Invariant VialPresent">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="CHECK" Type="Event">
+        <With Var="Cell" />
+        <With Var="P1" />
+        <With Var="P2" />
+        <With Var="P3" />
+        <With Var="P4" />
+      </Event>
+      <Event Name="LATCH" Type="Event">
+        <With Var="Cell" />
+        <With Var="P1" />
+        <With Var="P2" />
+        <With Var="P3" />
+        <With Var="P4" />
+      </Event>
+      <Event Name="EVAL" Type="Event">
+        <With Var="Cell" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="CHECKED" Type="Event">
+        <With Var="RequiresOK" />
+      </Event>
+      <Event Name="LATCHED" Type="Event">
+        <With Var="P1L" />
+        <With Var="P2L" />
+        <With Var="P3L" />
+        <With Var="P4L" />
+      </Event>
+      <Event Name="COND" Type="Event">
+        <With Var="EnsuresOK" />
+        <With Var="InvariantOK" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Cell" Type="fillingcell::ST_CellState" />
+      <VarDeclaration Name="P1" Type="LREAL" />
+      <VarDeclaration Name="P2" Type="LREAL" />
+      <VarDeclaration Name="P3" Type="LREAL" />
+      <VarDeclaration Name="P4" Type="LREAL" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="RequiresOK" Type="BOOL" />
+      <VarDeclaration Name="EnsuresOK" Type="BOOL" />
+      <VarDeclaration Name="InvariantOK" Type="BOOL" />
+      <VarDeclaration Name="P1L" Type="LREAL" />
+      <VarDeclaration Name="P2L" Type="LREAL" />
+      <VarDeclaration Name="P3L" Type="LREAL" />
+      <VarDeclaration Name="P4L" Type="LREAL" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="CHECK">
+      <ECAction Algorithm="CHECK" Output="CHECKED" />
+    </ECState>
+    <ECState Name="LATCH">
+      <ECAction Algorithm="LATCH" Output="LATCHED" />
+    </ECState>
+    <ECState Name="EVAL">
+      <ECAction Algorithm="EVAL" Output="COND" />
+    </ECState>
+    <Algorithm Name="CHECK">
+      <ST Text="RequiresOK := Cell.Valid AND Cell.Safe AND (Cell.NeedleUp AND NOT Cell.NeedleDown AND Cell.VialPresent);" />
+    </Algorithm>
+    <Algorithm Name="LATCH">
+      <ST Text="P1L := P1;&#10;P2L := P2;&#10;P3L := P3;&#10;P4L := P4;" />
+    </Algorithm>
+    <Algorithm Name="EVAL">
+      <ST Text="EnsuresOK := Cell.NeedleDown AND NOT Cell.NeedleUp;&#10;InvariantOK := Cell.Valid AND Cell.Safe AND (Cell.VialPresent);" />
+    </Algorithm>
+  </SimpleFB>
+</FBType>
