@@ -1,0 +1,118 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="IO_RouteDO" Comment="Backend router for IO_DO: 0 simulated, 1 GPIO, 2 Modbus">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="Event">
+        <With Var="Backend" />
+      </Event>
+      <Event Name="IO_READY" Type="Event">
+        <With Var="QO_G" />
+        <With Var="QO_M" />
+      </Event>
+      <Event Name="CNF_G" Type="Event">
+        <With Var="QO_G" />
+      </Event>
+      <Event Name="CNF_M" Type="Event">
+        <With Var="QO_M" />
+      </Event>
+      <Event Name="REQ" Type="Event">
+        <With Var="OUT" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INIT_IO" Type="Event">
+        <With Var="GQI" />
+        <With Var="MQI" />
+      </Event>
+      <Event Name="INITO" Type="Event">
+        <With Var="QO" />
+      </Event>
+      <Event Name="REQ_G" Type="Event">
+        <With Var="Value" />
+      </Event>
+      <Event Name="REQ_M" Type="Event">
+        <With Var="Value" />
+      </Event>
+      <Event Name="CNF" Type="Event">
+        <With Var="QO" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Backend" Type="USINT" />
+      <VarDeclaration Name="QO_G" Type="BOOL" />
+      <VarDeclaration Name="QO_M" Type="BOOL" />
+      <VarDeclaration Name="OUT" Type="BOOL" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="GQI" Type="BOOL" />
+      <VarDeclaration Name="MQI" Type="BOOL" />
+      <VarDeclaration Name="QO" Type="BOOL" />
+      <VarDeclaration Name="Value" Type="BOOL" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Init" x="570" y="100">
+        <ECAction Algorithm="Alg_Init" Output="INIT_IO" />
+      </ECState>
+      <ECState Name="Ready" x="990" y="100">
+        <ECAction Algorithm="Alg_Ready" Output="INITO" />
+      </ECState>
+      <ECState Name="Req" x="1410" y="100">
+        <ECAction Algorithm="Alg_Req" />
+      </ECState>
+      <ECState Name="ReqG" x="150" y="330">
+        <ECAction Output="REQ_G" />
+      </ECState>
+      <ECState Name="ReqM" x="570" y="330">
+        <ECAction Output="REQ_M" />
+      </ECState>
+      <ECState Name="Sim" x="990" y="330">
+        <ECAction Algorithm="Alg_Sim" Output="CNF" />
+      </ECState>
+      <ECState Name="DoneG" x="1410" y="330">
+        <ECAction Algorithm="Alg_DoneG" Output="CNF" />
+      </ECState>
+      <ECState Name="DoneM" x="150" y="560">
+        <ECAction Algorithm="Alg_DoneM" Output="CNF" />
+      </ECState>
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
+      <ECTransition Source="Init" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Ready" Condition="IO_READY" x="0" y="0" />
+      <ECTransition Source="Ready" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Req" Condition="REQ" x="0" y="0" />
+      <ECTransition Source="Req" Destination="ReqG" Condition="Backend = 1" x="0" y="0" />
+      <ECTransition Source="Req" Destination="ReqM" Condition="Backend = 2" x="0" y="0" />
+      <ECTransition Source="Req" Destination="Sim" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="DoneG" Condition="CNF_G" x="0" y="0" />
+      <ECTransition Source="START" Destination="DoneM" Condition="CNF_M" x="0" y="0" />
+      <ECTransition Source="ReqG" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="ReqM" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Sim" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="DoneG" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="DoneM" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Init">
+      <ST Text="GQI := Backend = 1;&#10;MQI := Backend = 2;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Ready">
+      <ST Text="QO := (Backend = 0) OR ((Backend = 1) AND QO_G) OR ((Backend = 2) AND QO_M);" />
+    </Algorithm>
+    <Algorithm Name="Alg_Req">
+      <ST Text="Value := OUT;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Sim">
+      <ST Text="QO := TRUE;" />
+    </Algorithm>
+    <Algorithm Name="Alg_DoneG">
+      <ST Text="QO := QO_G;" />
+    </Algorithm>
+    <Algorithm Name="Alg_DoneM">
+      <ST Text="QO := QO_M;" />
+    </Algorithm>
+  </BasicFB>
+</FBType>

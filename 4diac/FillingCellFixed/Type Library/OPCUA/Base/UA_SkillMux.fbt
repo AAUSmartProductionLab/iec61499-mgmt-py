@@ -1,0 +1,244 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="UA_SkillMux" Comment="Serialises OPC UA method calls onto command events and routes the accept/reject answer back to the calling method's RSP">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="IND_Reset" Type="Event">
+        <With Var="Req_Reset" />
+      </Event>
+      <Event Name="IND_Start" Type="Event">
+        <With Var="Req_Start" />
+        <With Var="Start_P1" />
+        <With Var="Start_P2" />
+        <With Var="Start_P3" />
+        <With Var="Start_P4" />
+      </Event>
+      <Event Name="IND_Hold" Type="Event">
+        <With Var="Req_Hold" />
+      </Event>
+      <Event Name="IND_Unhold" Type="Event">
+        <With Var="Req_Unhold" />
+      </Event>
+      <Event Name="IND_Stop" Type="Event">
+        <With Var="Req_Stop" />
+      </Event>
+      <Event Name="IND_Abort" Type="Event">
+        <With Var="Req_Abort" />
+      </Event>
+      <Event Name="IND_Clear" Type="Event">
+        <With Var="Req_Clear" />
+      </Event>
+      <Event Name="S_ACK" Type="Event" />
+      <Event Name="S_REJ" Type="Event">
+        <With Var="S_Err" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="RSP_Reset" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="RSP_Start" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="RSP_Hold" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="RSP_Unhold" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="RSP_Stop" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="RSP_Abort" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="RSP_Clear" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="S_CMD" Type="Event">
+        <With Var="Requester" />
+        <With Var="S_Code" />
+        <With Var="S_P1" />
+        <With Var="S_P2" />
+        <With Var="S_P3" />
+        <With Var="S_P4" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Req_Reset" Type="UDINT" />
+      <VarDeclaration Name="Req_Start" Type="UDINT" />
+      <VarDeclaration Name="Start_P1" Type="LREAL" />
+      <VarDeclaration Name="Start_P2" Type="LREAL" />
+      <VarDeclaration Name="Start_P3" Type="LREAL" />
+      <VarDeclaration Name="Start_P4" Type="LREAL" />
+      <VarDeclaration Name="Req_Hold" Type="UDINT" />
+      <VarDeclaration Name="Req_Unhold" Type="UDINT" />
+      <VarDeclaration Name="Req_Stop" Type="UDINT" />
+      <VarDeclaration Name="Req_Abort" Type="UDINT" />
+      <VarDeclaration Name="Req_Clear" Type="UDINT" />
+      <VarDeclaration Name="S_Err" Type="UINT" InitialValue="5" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Requester" Type="UDINT" />
+      <VarDeclaration Name="Accepted" Type="BOOL" />
+      <VarDeclaration Name="ErrorID" Type="UINT" />
+      <VarDeclaration Name="S_Code" Type="USINT" />
+      <VarDeclaration Name="S_P1" Type="LREAL" />
+      <VarDeclaration Name="S_P2" Type="LREAL" />
+      <VarDeclaration Name="S_P3" Type="LREAL" />
+      <VarDeclaration Name="S_P4" Type="LREAL" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Pending" Type="USINT" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Call_Reset" x="570" y="100">
+        <ECAction Algorithm="Alg_Call_Reset" Output="S_CMD" />
+      </ECState>
+      <ECState Name="Call_Start" x="990" y="100">
+        <ECAction Algorithm="Alg_Call_Start" Output="S_CMD" />
+      </ECState>
+      <ECState Name="Call_Hold" x="1410" y="100">
+        <ECAction Algorithm="Alg_Call_Hold" Output="S_CMD" />
+      </ECState>
+      <ECState Name="Call_Unhold" x="150" y="330">
+        <ECAction Algorithm="Alg_Call_Unhold" Output="S_CMD" />
+      </ECState>
+      <ECState Name="Call_Stop" x="570" y="330">
+        <ECAction Algorithm="Alg_Call_Stop" Output="S_CMD" />
+      </ECState>
+      <ECState Name="Call_Abort" x="990" y="330">
+        <ECAction Algorithm="Alg_Call_Abort" Output="S_CMD" />
+      </ECState>
+      <ECState Name="Call_Clear" x="1410" y="330">
+        <ECAction Algorithm="Alg_Call_Clear" Output="S_CMD" />
+      </ECState>
+      <ECState Name="Ack_S" x="150" y="560">
+        <ECAction Algorithm="Alg_Ack_S" />
+      </ECState>
+      <ECState Name="Rej_S" x="570" y="560">
+        <ECAction Algorithm="Alg_Rej_S" />
+      </ECState>
+      <ECState Name="Rsp_Reset" x="990" y="560">
+        <ECAction Algorithm="Alg_Rsp_Reset" Output="RSP_Reset" />
+      </ECState>
+      <ECState Name="Rsp_Start" x="1410" y="560">
+        <ECAction Algorithm="Alg_Rsp_Start" Output="RSP_Start" />
+      </ECState>
+      <ECState Name="Rsp_Hold" x="150" y="790">
+        <ECAction Algorithm="Alg_Rsp_Hold" Output="RSP_Hold" />
+      </ECState>
+      <ECState Name="Rsp_Unhold" x="570" y="790">
+        <ECAction Algorithm="Alg_Rsp_Unhold" Output="RSP_Unhold" />
+      </ECState>
+      <ECState Name="Rsp_Stop" x="990" y="790">
+        <ECAction Algorithm="Alg_Rsp_Stop" Output="RSP_Stop" />
+      </ECState>
+      <ECState Name="Rsp_Abort" x="1410" y="790">
+        <ECAction Algorithm="Alg_Rsp_Abort" Output="RSP_Abort" />
+      </ECState>
+      <ECState Name="Rsp_Clear" x="150" y="1020">
+        <ECAction Algorithm="Alg_Rsp_Clear" Output="RSP_Clear" />
+      </ECState>
+      <ECTransition Source="START" Destination="Call_Reset" Condition="IND_Reset" x="0" y="0" />
+      <ECTransition Source="Call_Reset" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Call_Start" Condition="IND_Start" x="0" y="0" />
+      <ECTransition Source="Call_Start" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Call_Hold" Condition="IND_Hold" x="0" y="0" />
+      <ECTransition Source="Call_Hold" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Call_Unhold" Condition="IND_Unhold" x="0" y="0" />
+      <ECTransition Source="Call_Unhold" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Call_Stop" Condition="IND_Stop" x="0" y="0" />
+      <ECTransition Source="Call_Stop" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Call_Abort" Condition="IND_Abort" x="0" y="0" />
+      <ECTransition Source="Call_Abort" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Call_Clear" Condition="IND_Clear" x="0" y="0" />
+      <ECTransition Source="Call_Clear" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Ack_S" Condition="S_ACK[Pending &lt;&gt; 0]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Rej_S" Condition="S_REJ[Pending &lt;&gt; 0]" x="0" y="0" />
+      <ECTransition Source="Ack_S" Destination="Rsp_Reset" Condition="Pending = 1" x="0" y="0" />
+      <ECTransition Source="Rej_S" Destination="Rsp_Reset" Condition="Pending = 1" x="0" y="0" />
+      <ECTransition Source="Rsp_Reset" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Ack_S" Destination="Rsp_Start" Condition="Pending = 2" x="0" y="0" />
+      <ECTransition Source="Rej_S" Destination="Rsp_Start" Condition="Pending = 2" x="0" y="0" />
+      <ECTransition Source="Rsp_Start" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Ack_S" Destination="Rsp_Hold" Condition="Pending = 3" x="0" y="0" />
+      <ECTransition Source="Rej_S" Destination="Rsp_Hold" Condition="Pending = 3" x="0" y="0" />
+      <ECTransition Source="Rsp_Hold" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Ack_S" Destination="Rsp_Unhold" Condition="Pending = 4" x="0" y="0" />
+      <ECTransition Source="Rej_S" Destination="Rsp_Unhold" Condition="Pending = 4" x="0" y="0" />
+      <ECTransition Source="Rsp_Unhold" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Ack_S" Destination="Rsp_Stop" Condition="Pending = 5" x="0" y="0" />
+      <ECTransition Source="Rej_S" Destination="Rsp_Stop" Condition="Pending = 5" x="0" y="0" />
+      <ECTransition Source="Rsp_Stop" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Ack_S" Destination="Rsp_Abort" Condition="Pending = 6" x="0" y="0" />
+      <ECTransition Source="Rej_S" Destination="Rsp_Abort" Condition="Pending = 6" x="0" y="0" />
+      <ECTransition Source="Rsp_Abort" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Ack_S" Destination="Rsp_Clear" Condition="Pending = 7" x="0" y="0" />
+      <ECTransition Source="Rej_S" Destination="Rsp_Clear" Condition="Pending = 7" x="0" y="0" />
+      <ECTransition Source="Rsp_Clear" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Ack_S" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Rej_S" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Call_Reset">
+      <ST Text="Requester := Req_Reset;&#10;S_Code := 1;&#10;Pending := 1;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Call_Start">
+      <ST Text="Requester := Req_Start;&#10;S_Code := 2;&#10;S_P1 := Start_P1;&#10;S_P2 := Start_P2;&#10;S_P3 := Start_P3;&#10;S_P4 := Start_P4;&#10;Pending := 2;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Call_Hold">
+      <ST Text="Requester := Req_Hold;&#10;S_Code := 3;&#10;Pending := 3;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Call_Unhold">
+      <ST Text="Requester := Req_Unhold;&#10;S_Code := 4;&#10;Pending := 4;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Call_Stop">
+      <ST Text="Requester := Req_Stop;&#10;S_Code := 5;&#10;Pending := 5;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Call_Abort">
+      <ST Text="Requester := Req_Abort;&#10;S_Code := 6;&#10;Pending := 6;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Call_Clear">
+      <ST Text="Requester := Req_Clear;&#10;S_Code := 7;&#10;Pending := 7;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Ack_S">
+      <ST Text="Accepted := TRUE;&#10;ErrorID := 0;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Rej_S">
+      <ST Text="Accepted := FALSE;&#10;ErrorID := S_Err;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Rsp_Reset">
+      <ST Text="Pending := 0;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Rsp_Start">
+      <ST Text="Pending := 0;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Rsp_Hold">
+      <ST Text="Pending := 0;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Rsp_Unhold">
+      <ST Text="Pending := 0;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Rsp_Stop">
+      <ST Text="Pending := 0;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Rsp_Abort">
+      <ST Text="Pending := 0;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Rsp_Clear">
+      <ST Text="Pending := 0;" />
+    </Algorithm>
+  </BasicFB>
+</FBType>

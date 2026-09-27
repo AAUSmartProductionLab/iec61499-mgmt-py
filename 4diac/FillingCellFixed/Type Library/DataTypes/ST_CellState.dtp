@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<DataType Name="ST_CellState" Comment="Coherent snapshot of the cell state variables (contract vocabulary)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <StructuredType>
+    <VarDeclaration Name="NeedleUp" Type="BOOL" />
+    <VarDeclaration Name="NeedleDown" Type="BOOL" />
+    <VarDeclaration Name="VialPresent" Type="BOOL" />
+    <VarDeclaration Name="FilledMl" Type="LREAL" />
+    <VarDeclaration Name="Stoppered" Type="BOOL" />
+    <VarDeclaration Name="Checked" Type="BOOL" />
+    <VarDeclaration Name="DoorClosed" Type="BOOL" />
+    <VarDeclaration Name="Valid" Type="BOOL" />
+    <VarDeclaration Name="Safe" Type="BOOL" />
+  </StructuredType>
+</DataType>

@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="UA_UnitIds" Comment="OPC UA node IDs of the unit facade, below UaRoot">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="UaRoot" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit">
+        <With Var="Id_Reset" />
+        <With Var="Id_Start" />
+        <With Var="Id_Hold" />
+        <With Var="Id_Unhold" />
+        <With Var="Id_Stop" />
+        <With Var="Id_Abort" />
+        <With Var="Id_Clear" />
+        <With Var="Id_Suspend" />
+        <With Var="Id_Unsuspend" />
+        <With Var="Id_Occupy" />
+        <With Var="Id_Release" />
+        <With Var="Id_Local" />
+        <With Var="Id_Prioritize" />
+        <With Var="Id_Remote" />
+        <With Var="IdPub" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Id_Reset" Type="WSTRING" />
+      <VarDeclaration Name="Id_Start" Type="WSTRING" />
+      <VarDeclaration Name="Id_Hold" Type="WSTRING" />
+      <VarDeclaration Name="Id_Unhold" Type="WSTRING" />
+      <VarDeclaration Name="Id_Stop" Type="WSTRING" />
+      <VarDeclaration Name="Id_Abort" Type="WSTRING" />
+      <VarDeclaration Name="Id_Clear" Type="WSTRING" />
+      <VarDeclaration Name="Id_Suspend" Type="WSTRING" />
+      <VarDeclaration Name="Id_Unsuspend" Type="WSTRING" />
+      <VarDeclaration Name="Id_Occupy" Type="WSTRING" />
+      <VarDeclaration Name="Id_Release" Type="WSTRING" />
+      <VarDeclaration Name="Id_Local" Type="WSTRING" />
+      <VarDeclaration Name="Id_Prioritize" Type="WSTRING" />
+      <VarDeclaration Name="Id_Remote" Type="WSTRING" />
+      <VarDeclaration Name="IdPub" Type="WSTRING" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="INIT">
+      <ECAction Algorithm="INIT" Output="INITO" />
+    </ECState>
+    <Algorithm Name="INIT">
+      <ST Text="Id_Reset := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Unit/Reset]&quot;);&#10;Id_Start := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Unit/Start]&quot;);&#10;Id_Hold := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Unit/Hold]&quot;);&#10;Id_Unhold := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Unit/Unhold]&quot;);&#10;Id_Stop := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Unit/Stop]&quot;);&#10;Id_Abort := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Unit/Abort]&quot;);&#10;Id_Clear := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Unit/Clear]&quot;);&#10;Id_Suspend := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Unit/Suspend]&quot;);&#10;Id_Unsuspend := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Unit/Unsuspend]&quot;);&#10;Id_Occupy := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Occupation/Occupy]&quot;);&#10;Id_Release := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Occupation/Release]&quot;);&#10;Id_Local := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Occupation/Local]&quot;);&#10;Id_Prioritize := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Occupation/Prioritize]&quot;);&#10;Id_Remote := CONCAT(CONCAT(&quot;opc_ua[CREATE_METHOD;&quot;, UaRoot), &quot;/Occupation/Remote]&quot;);&#10;IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(&quot;opc_ua[WRITE;&quot;, UaRoot), &quot;/Unit/State;&quot;), UaRoot), &quot;/Unit/Mode;&quot;), UaRoot), &quot;/Occupation/State;&quot;), UaRoot), &quot;/Occupation/Owner]&quot;);" />
+    </Algorithm>
+  </SimpleFB>
+</FBType>

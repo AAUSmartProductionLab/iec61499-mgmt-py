@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="P_Choice" Comment="Exclusive gateway: EO_TRUE if the Cond parameter is TRUE, else EO_FALSE">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="EI" Type="Event">
+        <With Var="Cond" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="EO_TRUE" Type="Event" />
+      <Event Name="EO_FALSE" Type="Event" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Cond" Type="BOOL" />
+    </InputVars>
+    <OutputVars />
+  </InterfaceList>
+  <BasicFB>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Yes" x="570" y="100">
+        <ECAction Output="EO_TRUE" />
+      </ECState>
+      <ECState Name="No" x="990" y="100">
+        <ECAction Output="EO_FALSE" />
+      </ECState>
+      <ECTransition Source="START" Destination="Yes" Condition="EI[Cond]" x="0" y="0" />
+      <ECTransition Source="START" Destination="No" Condition="EI" x="0" y="0" />
+      <ECTransition Source="Yes" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="No" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+  </BasicFB>
+</FBType>
