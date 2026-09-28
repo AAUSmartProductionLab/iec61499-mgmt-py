@@ -42,7 +42,11 @@ def canonical(path):
     (tabs, CDATA, empty elements), so XML is compared in canonical form."""
     data = path.read_bytes()
     if data.lstrip().startswith(b"<"):
-        return ET.canonicalize(data.decode("utf-8-sig"), strip_text=True)
+        root = ET.fromstring(data)
+        for connection in root.iter("Connection"):   # routing the IDE saves when a type is opened
+            for layout in ("dx1", "dx2", "dy"):
+                connection.attrib.pop(layout, None)
+        return ET.canonicalize(ET.tostring(root, encoding="unicode"), strip_text=True)
     return data.decode("utf-8-sig").strip()
 
 
