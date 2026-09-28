@@ -1,0 +1,9 @@
+{
+  "procedure_id": "urn:example:procedure:fill",
+  "tasks": {
+    "Dose": {
+      "skill": "urn:example:skill:dose",
+      "parameters": {"volume": {"source": "product", "key": "FillVolume"}}
+    }
+  }
+}

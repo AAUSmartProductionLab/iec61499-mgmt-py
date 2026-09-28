@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="FC_Occupation" Comment="Free / Occupied / Priority / Local; trusted operator boundary; release/override only when quiescent">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="CMD" Type="Event">
+        <With Var="Command" />
+        <With Var="Requester" />
+        <With Var="Quiescent" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="CNF" Type="Event">
+        <With Var="State" />
+        <With Var="Owner" />
+        <With Var="RemoteAllowed" />
+      </Event>
+      <Event Name="REJECTED" Type="Event" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Command" Type="USINT" />
+      <VarDeclaration Name="Requester" Type="UDINT" />
+      <VarDeclaration Name="Quiescent" Type="BOOL" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="State" Type="USINT" />
+      <VarDeclaration Name="Owner" Type="UDINT" />
+      <VarDeclaration Name="RemoteAllowed" Type="BOOL" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <ECC>
+      <ECState Name="Free" x="150" y="100">
+        <ECAction Algorithm="Alg_Free" Output="CNF" />
+      </ECState>
+      <ECState Name="Occupied" x="570" y="100">
+        <ECAction Algorithm="Alg_Occupied" Output="CNF" />
+      </ECState>
+      <ECState Name="PriorityMode" x="990" y="100">
+        <ECAction Algorithm="Alg_PriorityMode" Output="CNF" />
+      </ECState>
+      <ECState Name="Local" x="1410" y="100">
+        <ECAction Algorithm="Alg_Local" Output="CNF" />
+      </ECState>
+      <ECState Name="Acquire" x="150" y="330">
+        <ECAction Algorithm="Alg_Acquire" />
+      </ECState>
+      <ECState Name="CaptureOverride" x="570" y="330">
+        <ECAction Algorithm="Alg_CaptureOverride" />
+      </ECState>
+      <ECState Name="RejectFree" x="990" y="330">
+        <ECAction Output="REJECTED" />
+      </ECState>
+      <ECState Name="RejectOccupied" x="1410" y="330">
+        <ECAction Output="REJECTED" />
+      </ECState>
+      <ECState Name="RejectPriorityMode" x="150" y="560">
+        <ECAction Output="REJECTED" />
+      </ECState>
+      <ECState Name="RejectLocal" x="570" y="560">
+        <ECAction Output="REJECTED" />
+      </ECState>
+      <ECTransition Source="Free" Destination="Acquire" Condition="CMD[(Command = 1) AND (Requester &lt;&gt; 0) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="Occupied" Destination="Free" Condition="CMD[(Command = 2) AND (Requester = Owner) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="PriorityMode" Destination="Free" Condition="CMD[(Command = 2) AND (Requester = Owner) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="Local" Destination="Free" Condition="CMD[(Command = 5) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="Free" Destination="Local" Condition="CMD[(Command = 3) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="Free" Destination="CaptureOverride" Condition="CMD[(Command = 4) AND (Requester &lt;&gt; 0) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="Free" Destination="RejectFree" Condition="CMD" x="0" y="0" />
+      <ECTransition Source="RejectFree" Destination="Free" Condition="1" x="0" y="0" />
+      <ECTransition Source="Occupied" Destination="Local" Condition="CMD[(Command = 3) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="Occupied" Destination="CaptureOverride" Condition="CMD[(Command = 4) AND (Requester &lt;&gt; 0) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="Occupied" Destination="RejectOccupied" Condition="CMD" x="0" y="0" />
+      <ECTransition Source="RejectOccupied" Destination="Occupied" Condition="1" x="0" y="0" />
+      <ECTransition Source="PriorityMode" Destination="Local" Condition="CMD[(Command = 3) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="PriorityMode" Destination="CaptureOverride" Condition="CMD[(Command = 4) AND (Requester &lt;&gt; 0) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="PriorityMode" Destination="RejectPriorityMode" Condition="CMD" x="0" y="0" />
+      <ECTransition Source="RejectPriorityMode" Destination="PriorityMode" Condition="1" x="0" y="0" />
+      <ECTransition Source="Local" Destination="Local" Condition="CMD[(Command = 3) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="Local" Destination="CaptureOverride" Condition="CMD[(Command = 4) AND (Requester &lt;&gt; 0) AND Quiescent]" x="0" y="0" />
+      <ECTransition Source="Local" Destination="RejectLocal" Condition="CMD" x="0" y="0" />
+      <ECTransition Source="RejectLocal" Destination="Local" Condition="1" x="0" y="0" />
+      <ECTransition Source="Acquire" Destination="Occupied" Condition="1" x="0" y="0" />
+      <ECTransition Source="CaptureOverride" Destination="PriorityMode" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Free">
+      <ST Text="State := 0;&#10;RemoteAllowed := FALSE;&#10;Owner := 0;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Occupied">
+      <ST Text="State := 1;&#10;RemoteAllowed := TRUE;" />
+    </Algorithm>
+    <Algorithm Name="Alg_PriorityMode">
+      <ST Text="State := 2;&#10;RemoteAllowed := TRUE;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Local">
+      <ST Text="State := 3;&#10;RemoteAllowed := FALSE;&#10;Owner := 0;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Acquire">
+      <ST Text="Owner := Requester;" />
+    </Algorithm>
+    <Algorithm Name="Alg_CaptureOverride">
+      <ST Text="Owner := Requester;" />
+    </Algorithm>
+  </BasicFB>
+</FBType>

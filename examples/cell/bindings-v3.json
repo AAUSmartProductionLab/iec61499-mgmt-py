@@ -1,0 +1,62 @@
+{
+  "procedure_id": "https://smartproductionlab.aau.dk/processes/Fill/v3",
+  "tasks": {
+    "MoveDown": {
+      "skill": "https://smartproductionlab.aau.dk/skills/MoveDown"
+    },
+    "Dose": {
+      "skill": "https://smartproductionlab.aau.dk/skills/Dose",
+      "parameters": {
+        "volume": {
+          "source": "product",
+          "key": "FillVolume"
+        }
+      },
+      "repeat": {
+        "source": "product",
+        "key": "DosingCycles"
+      }
+    },
+    "MoveUp": {
+      "skill": "https://smartproductionlab.aau.dk/skills/MoveUp"
+    },
+    "Stopper": {
+      "skill": "https://smartproductionlab.aau.dk/skills/Stopper"
+    },
+    "Inspect": {
+      "skill": "https://smartproductionlab.aau.dk/skills/Inspect"
+    }
+  },
+  "assumes": [
+    {
+      "variable": "Needle",
+      "operator": "=",
+      "value": "Up"
+    },
+    {
+      "variable": "VialPresent",
+      "operator": "=",
+      "value": true
+    },
+    {
+      "variable": "Filled",
+      "operator": "=",
+      "value": 0.0
+    },
+    {
+      "variable": "Stoppered",
+      "operator": "=",
+      "value": false
+    },
+    {
+      "variable": "Checked",
+      "operator": "=",
+      "value": false
+    },
+    {
+      "variable": "DoorClosed",
+      "operator": "=",
+      "value": true
+    }
+  ]
+}

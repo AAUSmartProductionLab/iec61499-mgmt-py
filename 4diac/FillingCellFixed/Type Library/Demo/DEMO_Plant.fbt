@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="DEMO_Plant" Comment="Filling-cell plant model for demos: needle travel, dosing, stoppering and inspection driven by the skills' Drive outputs; counts MoveDown/MoveUp shoot-through">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="Event">
+        <With Var="StartDown" />
+      </Event>
+      <Event Name="TICK" Type="Event">
+        <With Var="DriveMoveDown" />
+        <With Var="DriveDose" />
+        <With Var="DriveMoveUp" />
+        <With Var="DriveStopper" />
+        <With Var="DriveInspect" />
+        <With Var="TravelTicks" />
+        <With Var="FillPerTick" />
+        <With Var="ActTicks" />
+      </Event>
+      <Event Name="NEW_VIAL" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="CNF" Type="Event">
+        <With Var="NeedleUp" />
+        <With Var="NeedleDown" />
+        <With Var="VialPresent" />
+        <With Var="FilledMl" />
+        <With Var="Stoppered" />
+        <With Var="Checked" />
+        <With Var="DoorClosed" />
+        <With Var="ShootThrough" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="DriveMoveDown" Type="BOOL" />
+      <VarDeclaration Name="DriveDose" Type="BOOL" />
+      <VarDeclaration Name="DriveMoveUp" Type="BOOL" />
+      <VarDeclaration Name="DriveStopper" Type="BOOL" />
+      <VarDeclaration Name="DriveInspect" Type="BOOL" />
+      <VarDeclaration Name="TravelTicks" Type="UINT" InitialValue="10" />
+      <VarDeclaration Name="FillPerTick" Type="LREAL" InitialValue="0.02" />
+      <VarDeclaration Name="ActTicks" Type="UINT" InitialValue="10" />
+      <VarDeclaration Name="StartDown" Type="BOOL" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="NeedleUp" Type="BOOL" />
+      <VarDeclaration Name="NeedleDown" Type="BOOL" />
+      <VarDeclaration Name="VialPresent" Type="BOOL" />
+      <VarDeclaration Name="FilledMl" Type="LREAL" />
+      <VarDeclaration Name="Stoppered" Type="BOOL" />
+      <VarDeclaration Name="Checked" Type="BOOL" />
+      <VarDeclaration Name="DoorClosed" Type="BOOL" />
+      <VarDeclaration Name="ShootThrough" Type="UINT" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Position" Type="UINT" />
+      <VarDeclaration Name="StopTicks" Type="UINT" />
+      <VarDeclaration Name="InspTicks" Type="UINT" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Init" x="570" y="100">
+        <ECAction Algorithm="Alg_Init" Output="CNF" />
+      </ECState>
+      <ECState Name="Advance" x="990" y="100">
+        <ECAction Algorithm="Alg_Advance" Output="CNF" />
+      </ECState>
+      <ECState Name="Vial" x="1410" y="100">
+        <ECAction Algorithm="Alg_Vial" Output="CNF" />
+      </ECState>
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
+      <ECTransition Source="Init" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Advance" Condition="TICK" x="0" y="0" />
+      <ECTransition Source="Advance" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Vial" Condition="NEW_VIAL" x="0" y="0" />
+      <ECTransition Source="Vial" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Init">
+      <ST Text="Position := 0;&#10;IF StartDown THEN Position := TravelTicks; END_IF;&#10;VialPresent := TRUE;&#10;DoorClosed := TRUE;&#10;FilledMl := 0.0;&#10;Stoppered := FALSE;&#10;Checked := FALSE;&#10;NeedleUp := Position = 0;&#10;NeedleDown := Position &gt;= TravelTicks;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Advance">
+      <ST Text="IF DriveMoveDown AND DriveMoveUp THEN ShootThrough := ShootThrough + 1;&#10;ELSIF DriveMoveDown AND (Position &lt; TravelTicks) THEN Position := Position + 1;&#10;ELSIF DriveMoveUp AND (Position &gt; 0) THEN Position := Position - 1;&#10;END_IF;&#10;NeedleUp := Position = 0;&#10;NeedleDown := Position &gt;= TravelTicks;&#10;IF DriveDose AND NeedleDown THEN FilledMl := FilledMl + FillPerTick; END_IF;&#10;IF DriveStopper THEN StopTicks := StopTicks + 1; ELSE StopTicks := 0; END_IF;&#10;IF StopTicks &gt;= ActTicks THEN Stoppered := TRUE; END_IF;&#10;IF DriveInspect THEN InspTicks := InspTicks + 1; ELSE InspTicks := 0; END_IF;&#10;IF InspTicks &gt;= ActTicks THEN Checked := TRUE; END_IF;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Vial">
+      <ST Text="VialPresent := TRUE;&#10;FilledMl := 0.0;&#10;Stoppered := FALSE;&#10;Checked := FALSE;" />
+    </Algorithm>
+  </BasicFB>
+</FBType>

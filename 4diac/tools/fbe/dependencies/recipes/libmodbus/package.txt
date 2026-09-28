@@ -1,0 +1,1 @@
+stephane/libmodbus@v3.1.12 -X build.cmake -H sha256:4151177f5223625c6be94230affb096aa8b1cdb0df00fe1f74ce53878a25d15d
