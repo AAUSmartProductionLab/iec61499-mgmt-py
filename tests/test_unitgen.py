@@ -43,9 +43,13 @@ def canonical(path):
     data = path.read_bytes()
     if data.lstrip().startswith(b"<"):
         root = ET.fromstring(data)
-        for connection in root.iter("Connection"):   # routing the IDE saves when a type is opened
-            for layout in ("dx1", "dx2", "dy"):
-                connection.attrib.pop(layout, None)
+        # Layout arranged in the IDE is kept by the generator and is not part of the content; the
+        # IDE also drops empty variable groups when it saves a type.
+        for node in root.iter():
+            for attr in ("x", "y", "dx1", "dx2", "dy"):
+                node.attrib.pop(attr, None)
+            for group in [g for g in node if g.tag in ("InputVars", "OutputVars") and len(g) == 0]:
+                node.remove(group)
         return ET.canonicalize(ET.tostring(root, encoding="unicode"), strip_text=True)
     return data.decode("utf-8-sig").strip()
 
@@ -104,3 +108,17 @@ def test_project_follows_the_ide_conventions():
     assert len(resource) == 0                              # mapped blocks are rebuilt by the IDE
     assert {m.get("To") for m in system.iter("Mapping")} == {"FORTE_PC.RES"}
     assert system.find("Device/Attribute[@Name='Color']") is not None
+
+
+def test_regeneration_keeps_layout_arranged_in_the_ide(tmp_path):
+    spec = load(SPEC)
+    project, manifest = tmp_path / spec.project, tmp_path / "manifest.json"
+    generate(spec, project, manifest)
+    path = project / "Type Library" / "Unit" / "UNIT_Occupation.fbt"
+    tree = ET.parse(path)
+    moved = next(fb for fb in tree.getroot().iter("FB") if fb.get("Name") == "Logic")
+    moved.set("x", "1234.5")
+    tree.write(path, encoding="utf-8", xml_declaration=True)
+    generate(spec, project, manifest)
+    again = next(fb for fb in ET.parse(path).getroot().iter("FB") if fb.get("Name") == "Logic")
+    assert again.get("x") == "1234.5"
