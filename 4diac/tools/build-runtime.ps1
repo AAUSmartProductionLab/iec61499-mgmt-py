@@ -6,10 +6,17 @@ param(
     [string]$Config = 'fillingcell-win',
     # 4diac FORTE release built against; must match the IDE that exports the types.
     [string]$ForteTag = '3.3.0',
-    [switch]$SkipValidate
+    [switch]$SkipValidate,
+    # Passed to validate.ps1: 4diac project, type manifest, export folder and CMake module.
+    [string]$Project = 'FillingCellFixed',
+    [string]$Manifest = (Join-Path $PSScriptRoot 'types-manifest.json'),
+    [string]$Export = (Join-Path $PSScriptRoot '.cache\export'),
+    [string]$Module = 'fillingcell'
 )
 $ErrorActionPreference = 'Stop'
-if (-not $SkipValidate) { & (Join-Path $PSScriptRoot 'validate.ps1') }
+if (-not $SkipValidate) {
+    & (Join-Path $PSScriptRoot 'validate.ps1') -Project $Project -Manifest $Manifest -Export $Export -Module $Module
+}
 $root = Join-Path $PSScriptRoot 'fbe'
 # The FBE builds $root/4diac-forte when it exists (instead of its own bundled FORTE).
 $forte = Join-Path $root '4diac-forte'
@@ -24,8 +31,12 @@ try {
     # Out-of-tree FBE build: configurations/ and build/ live in $root. Call the shell script
     # directly; compile.cmd pauses on errors and then exits with 0.
     if (-not (Test-Path "$Fbe\toolchains\bin\sh.exe")) { & cmd.exe /c "`"$Fbe\toolchains\etc\install.cmd`"" }
+    # See validate.ps1: native stderr must not abort Windows PowerShell 5.1.
+    $ErrorActionPreference = 'Continue'
     & "$Fbe\toolchains\bin\sh.exe" "$Fbe\scripts\compile.sh" $Config
-    if ($LASTEXITCODE -ne 0) { throw "FBE build failed; see $root\build\<config>\forte.log" }
+    $built = $LASTEXITCODE
+    $ErrorActionPreference = 'Stop'
+    if ($built -ne 0) { throw "FBE build failed; see $root\build\<config>\forte.log" }
 }
 finally { Pop-Location }
 Get-ChildItem -Path (Join-Path $root 'build') -Recurse -Include 'forte.exe', 'forte' -File |

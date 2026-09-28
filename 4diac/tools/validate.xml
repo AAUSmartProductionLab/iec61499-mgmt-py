@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="Validate filling cell" default="validate">
+<project name="Validate a 4diac project" default="validate">
   <target name="validate">
     <fordiac.importProject projectPath="${project.path}" />
     <eclipse.incrementalBuild kind="full" />
-    <fordiac.checkTypeLibrary projectName="FillingCellFixed" />
-    <fordiac.checkSystem systemPath="FillingCellFixed/FillingCellFixed.sys" />
-    <fordiac.exportProjectFBs projectName="FillingCellFixed" exportDirectory="${export.path}" exportCMakeList="true" />
+    <fordiac.checkTypeLibrary projectName="${project.name}" />
+    <fordiac.checkSystem systemPath="${project.name}/${project.name}.sys" />
+    <fordiac.exportProjectFBs projectName="${project.name}" exportDirectory="${export.path}" exportCMakeList="true" />
   </target>
 </project>
