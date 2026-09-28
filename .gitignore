@@ -220,3 +220,6 @@ __marimo__/
 
 # docs to later be published
 docs/
+
+# 4diac IDE per-type documentation folders
+*.assets/

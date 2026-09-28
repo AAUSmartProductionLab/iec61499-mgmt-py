@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="UNIT_OccupationLogic" Comment="Occupation by session ID: Occupy when free (or again by the owner), Release only by the owner">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="unitlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="OCCUPY" Type="Event">
+        <With Var="S_Occupy" />
+      </Event>
+      <Event Name="RELEASE" Type="Event">
+        <With Var="S_Release" />
+      </Event>
+      <Event Name="QUERY" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="RSP_OCCUPY" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="RSP_RELEASE" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="CHG" Type="Event">
+        <With Var="Owner" />
+        <With Var="Occupied" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="S_Occupy" Type="WSTRING" />
+      <VarDeclaration Name="S_Release" Type="WSTRING" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Accepted" Type="BOOL" />
+      <VarDeclaration Name="ErrorID" Type="UINT" />
+      <VarDeclaration Name="Owner" Type="WSTRING" />
+      <VarDeclaration Name="Occupied" Type="BOOL" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Occupy" x="570" y="100">
+        <ECAction Algorithm="Alg_Occupy" Output="RSP_OCCUPY" />
+        <ECAction Output="CHG" />
+      </ECState>
+      <ECState Name="Release" x="990" y="100">
+        <ECAction Algorithm="Alg_Release" Output="RSP_RELEASE" />
+        <ECAction Output="CHG" />
+      </ECState>
+      <ECState Name="Query" x="1410" y="100">
+        <ECAction Output="CHG" />
+      </ECState>
+      <ECTransition Source="START" Destination="Occupy" Condition="OCCUPY" x="0" y="0" />
+      <ECTransition Source="Occupy" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Release" Condition="RELEASE" x="0" y="0" />
+      <ECTransition Source="Release" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Query" Condition="QUERY" x="0" y="0" />
+      <ECTransition Source="Query" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Occupy">
+      <ST>IF (S_Occupy &lt;&gt; "") AND ((Owner = "") OR (Owner = S_Occupy)) THEN
+  Owner := S_Occupy;
+  Occupied := TRUE;
+  Accepted := TRUE;
+  ErrorID := 0;
+ELSE
+  Accepted := FALSE;
+  ErrorID := 5;
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Release">
+      <ST>IF (Owner &lt;&gt; "") AND (Owner = S_Release) THEN
+  Owner := "";
+  Occupied := FALSE;
+  Accepted := TRUE;
+  ErrorID := 0;
+ELSE
+  Accepted := FALSE;
+  ErrorID := 5;
+END_IF;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

@@ -7,7 +7,7 @@ name = "iec61499-mgmt-py"
 version = "0.1.0"
 description = "Validated FORTE network models and deterministic management plans"
 requires-python = ">=3.11"
-dependencies = ["pydantic>=2.9,<3", "defusedxml>=0.7,<1"]
+dependencies = ["pydantic>=2.9,<3", "defusedxml>=0.7,<1", "pyyaml>=6,<7"]
 
 [project.optional-dependencies]
 opcua = ["asyncua>=1.1"]
@@ -17,7 +17,7 @@ test = ["pytest>=7,<9", "asyncua>=1.1"]
 iec61499 = "iec61499_mgmt.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["iec61499_mgmt*", "skill_compiler*"]
+include = ["iec61499_mgmt*", "skill_compiler*", "unitgen*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

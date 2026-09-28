@@ -1,0 +1,203 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="UNIT_StateLogic" Comment="Reduced PackML unit state machine: Reset/Start/Clear only from the occupation owner and only in a valid state; Execute runs the procedure until it reports DONE (Complete) or FAILED (Aborted)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="unitlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="CMD_RESET" Type="Event">
+        <With Var="S_Reset" />
+      </Event>
+      <Event Name="CMD_START" Type="Event">
+        <With Var="S_Start" />
+      </Event>
+      <Event Name="CMD_CLEAR" Type="Event">
+        <With Var="S_Clear" />
+      </Event>
+      <Event Name="OWNER_CHG" Type="Event">
+        <With Var="Owner" />
+      </Event>
+      <Event Name="EXECUTE_DONE" Type="Event" />
+      <Event Name="EXECUTE_FAILED" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="RSP_RESET" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="RSP_START" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="RSP_CLEAR" Type="Event">
+        <With Var="Accepted" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="CNF" Type="Event">
+        <With Var="State" />
+      </Event>
+      <Event Name="EXECUTE" Type="Event" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="S_Reset" Type="WSTRING" />
+      <VarDeclaration Name="S_Start" Type="WSTRING" />
+      <VarDeclaration Name="S_Clear" Type="WSTRING" />
+      <VarDeclaration Name="Owner" Type="WSTRING" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="State" Type="USINT" InitialValue="2" />
+      <VarDeclaration Name="Accepted" Type="BOOL" />
+      <VarDeclaration Name="ErrorID" Type="UINT" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Owned" Type="BOOL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="Stopped" x="150" y="100">
+        <ECAction Algorithm="Alg_Stopped" Output="CNF" />
+      </ECState>
+      <ECState Name="Resetting" x="570" y="100">
+        <ECAction Algorithm="Alg_Resetting" Output="CNF" />
+      </ECState>
+      <ECState Name="Idle" x="990" y="100">
+        <ECAction Algorithm="Alg_Idle" Output="CNF" />
+      </ECState>
+      <ECState Name="Starting" x="1410" y="100">
+        <ECAction Algorithm="Alg_Starting" Output="CNF" />
+        <ECAction Output="EXECUTE" />
+      </ECState>
+      <ECState Name="Execute" x="150" y="330">
+        <ECAction Algorithm="Alg_Execute" Output="CNF" />
+      </ECState>
+      <ECState Name="Completing" x="570" y="330">
+        <ECAction Algorithm="Alg_Completing" Output="CNF" />
+      </ECState>
+      <ECState Name="Complete" x="990" y="330">
+        <ECAction Algorithm="Alg_Complete" Output="CNF" />
+      </ECState>
+      <ECState Name="Aborting" x="1410" y="330">
+        <ECAction Algorithm="Alg_Aborting" Output="CNF" />
+      </ECState>
+      <ECState Name="Aborted" x="150" y="560">
+        <ECAction Algorithm="Alg_Aborted" Output="CNF" />
+      </ECState>
+      <ECState Name="Clearing" x="570" y="560">
+        <ECAction Algorithm="Alg_Clearing" Output="CNF" />
+      </ECState>
+      <ECState Name="ChkReset" x="990" y="560">
+        <ECAction Algorithm="Alg_ChkReset" Output="RSP_RESET" />
+      </ECState>
+      <ECState Name="ChkStart" x="1410" y="560">
+        <ECAction Algorithm="Alg_ChkStart" Output="RSP_START" />
+      </ECState>
+      <ECState Name="ChkClear" x="150" y="790">
+        <ECAction Algorithm="Alg_ChkClear" Output="RSP_CLEAR" />
+      </ECState>
+      <ECTransition Source="Stopped" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="Idle" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="Execute" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="Complete" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="Aborted" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Resetting" Condition="Accepted" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Stopped" Condition="State = 2" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Idle" Condition="State = 4" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Execute" Condition="State = 6" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Complete" Condition="State = 17" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Aborted" Condition="State = 9" x="0" y="0" />
+      <ECTransition Source="Stopped" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="Idle" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="Execute" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="Complete" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="Aborted" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Starting" Condition="Accepted" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Stopped" Condition="State = 2" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Idle" Condition="State = 4" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Execute" Condition="State = 6" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Complete" Condition="State = 17" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Aborted" Condition="State = 9" x="0" y="0" />
+      <ECTransition Source="Stopped" Destination="ChkClear" Condition="CMD_CLEAR" x="0" y="0" />
+      <ECTransition Source="Idle" Destination="ChkClear" Condition="CMD_CLEAR" x="0" y="0" />
+      <ECTransition Source="Execute" Destination="ChkClear" Condition="CMD_CLEAR" x="0" y="0" />
+      <ECTransition Source="Complete" Destination="ChkClear" Condition="CMD_CLEAR" x="0" y="0" />
+      <ECTransition Source="Aborted" Destination="ChkClear" Condition="CMD_CLEAR" x="0" y="0" />
+      <ECTransition Source="ChkClear" Destination="Clearing" Condition="Accepted" x="0" y="0" />
+      <ECTransition Source="ChkClear" Destination="Stopped" Condition="State = 2" x="0" y="0" />
+      <ECTransition Source="ChkClear" Destination="Idle" Condition="State = 4" x="0" y="0" />
+      <ECTransition Source="ChkClear" Destination="Execute" Condition="State = 6" x="0" y="0" />
+      <ECTransition Source="ChkClear" Destination="Complete" Condition="State = 17" x="0" y="0" />
+      <ECTransition Source="ChkClear" Destination="Aborted" Condition="State = 9" x="0" y="0" />
+      <ECTransition Source="Resetting" Destination="Idle" Condition="1" x="0" y="0" />
+      <ECTransition Source="Starting" Destination="Execute" Condition="1" x="0" y="0" />
+      <ECTransition Source="Execute" Destination="Completing" Condition="EXECUTE_DONE" x="0" y="0" />
+      <ECTransition Source="Execute" Destination="Aborting" Condition="EXECUTE_FAILED" x="0" y="0" />
+      <ECTransition Source="Completing" Destination="Complete" Condition="1" x="0" y="0" />
+      <ECTransition Source="Aborting" Destination="Aborted" Condition="1" x="0" y="0" />
+      <ECTransition Source="Clearing" Destination="Stopped" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Stopped">
+      <ST>State := 2;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Resetting">
+      <ST>State := 15;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Idle">
+      <ST>State := 4;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Starting">
+      <ST>State := 3;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Execute">
+      <ST>State := 6;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Completing">
+      <ST>State := 16;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Complete">
+      <ST>State := 17;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Aborting">
+      <ST>State := 8;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Aborted">
+      <ST>State := 9;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Clearing">
+      <ST>State := 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ChkReset">
+      <ST>Owned := (S_Reset = Owner) AND (Owner &lt;&gt; "");
+Accepted := Owned AND ((State = 2) OR (State = 17));
+IF NOT Owned THEN
+  ErrorID := 5;
+ELSIF NOT Accepted THEN
+  ErrorID := 4;
+ELSE
+  ErrorID := 0;
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ChkStart">
+      <ST>Owned := (S_Start = Owner) AND (Owner &lt;&gt; "");
+Accepted := Owned AND ((State = 4));
+IF NOT Owned THEN
+  ErrorID := 5;
+ELSIF NOT Accepted THEN
+  ErrorID := 4;
+ELSE
+  ErrorID := 0;
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ChkClear">
+      <ST>Owned := (S_Clear = Owner) AND (Owner &lt;&gt; "");
+Accepted := Owned AND ((State = 9));
+IF NOT Owned THEN
+  ErrorID := 5;
+ELSIF NOT Accepted THEN
+  ErrorID := 4;
+ELSE
+  ErrorID := 0;
+END_IF;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

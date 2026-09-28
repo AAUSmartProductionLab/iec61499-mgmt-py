@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FBType Name="UNIT_Occupation" Comment="Unit occupation: OPC UA methods Occupy(Session) and Release(Session) answer [Accepted, ErrorID]; publishes Occupied (never the session ID) and shares the owner on a local channel">
+	<Identification Standard="61499-2">
+	</Identification>
+	<VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28">
+	</VersionInfo>
+	<CompilerInfo packageName="unitlib">
+	</CompilerInfo>
+	<InterfaceList>
+		<EventInputs>
+			<Event Name="INIT" Type="EInit">
+				<With Var="Unit"/>
+				<With Var="UaRoot"/>
+				<With Var="UaEnable"/>
+			</Event>
+		</EventInputs>
+		<EventOutputs>
+			<Event Name="INITO" Type="EInit">
+			</Event>
+		</EventOutputs>
+		<InputVars>
+			<VarDeclaration Name="Unit" Type="WSTRING"/>
+			<VarDeclaration Name="UaRoot" Type="WSTRING"/>
+			<VarDeclaration Name="UaEnable" Type="BOOL"/>
+		</InputVars>
+	</InterfaceList>
+	<FBNetwork>
+		<FB Name="Ids" Type="unitlib::UNIT_OccupationIds" x="933.33" y="2180">
+		</FB>
+		<FB Name="Occupy" Type="iec61499::net::SERVER_2_1" x="2946.67" y="646.67">
+		</FB>
+		<FB Name="Release" Type="iec61499::net::SERVER_2_1" x="4280" y="1053.33">
+		</FB>
+		<FB Name="Logic" Type="unitlib::UNIT_OccupationLogic" x="1066.67" y="853.33">
+		</FB>
+		<FB Name="PubOwner" Type="iec61499::net::PUBLISH_1" x="5620" y="1740">
+			<Parameter Name="QI" Value="TRUE"/>
+		</FB>
+		<FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="7300" y="2000">
+			<Parameter Name="QI" Value="TRUE"/>
+		</FB>
+		<FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="7000" y="2900">
+		</FB>
+		<EventConnections>
+			<Connection Source="INIT" Destination="Ids.INIT" dx1="266.67"/>
+			<Connection Source="Ids.INITO" Destination="Occupy.INIT" dx1="266.67"/>
+			<Connection Source="Occupy.INITO" Destination="Release.INIT" dx1="200"/>
+			<Connection Source="Release.INITO" Destination="PubOwner.INIT" dx1="133.33"/>
+			<Connection Source="PubOwner.INITO" Destination="SubQuery.INIT" dx1="66.67"/>
+			<Connection Source="SubQuery.INITO" Destination="PubUa.INIT" dx1="80" dx2="80" dy="446.67"/>
+			<Connection Source="PubUa.INITO" Destination="PubUa.REQ" dx1="133.33" dx2="200" dy="-226.67"/>
+			<Connection Source="PubUa.INITO" Destination="INITO" dx1="2546.67"/>
+			<Connection Source="Occupy.IND" Destination="Logic.OCCUPY" dx1="66.67" dx2="66.67" dy="-520"/>
+			<Connection Source="Logic.RSP_OCCUPY" Destination="Occupy.RSP" dx1="200"/>
+			<Connection Source="Release.IND" Destination="Logic.RELEASE" dx1="66.67" dx2="200" dy="-1140"/>
+			<Connection Source="Logic.RSP_RELEASE" Destination="Release.RSP" dx1="666.67" dx2="333.33" dy="480"/>
+			<Connection Source="SubQuery.IND" Destination="Logic.QUERY" dx1="133.33" dx2="266.67" dy="-2233.33"/>
+			<Connection Source="Logic.CHG" Destination="PubOwner.REQ" dx1="200" dx2="1340" dy="1580"/>
+			<Connection Source="Logic.CHG" Destination="PubUa.REQ" dx1="2446.67"/>
+		</EventConnections>
+		<DataConnections>
+			<Connection Source="Unit" Destination="Ids.Unit" dx1="200"/>
+			<Connection Source="UaRoot" Destination="Ids.UaRoot" dx1="133.33"/>
+			<Connection Source="UaEnable" Destination="Occupy.QI" dx1="66.67" dx2="66.67" dy="-1686.67"/>
+			<Connection Source="UaEnable" Destination="Release.QI" dx1="66.67" dx2="266.67" dy="1126.67"/>
+			<Connection Source="UaEnable" Destination="PubUa.QI" dx1="4613.33"/>
+			<Connection Source="Ids.IdOccupy" Destination="Occupy.ID" dx1="400"/>
+			<Connection Source="Ids.IdRelease" Destination="Release.ID" dx1="800" dx2="200" dy="-146.67"/>
+			<Connection Source="Ids.IdPub" Destination="PubUa.ID" dx1="2513.33"/>
+			<Connection Source="Ids.IdOwner" Destination="PubOwner.ID" dx1="666.67" dx2="1273.33" dy="133.33"/>
+			<Connection Source="Ids.IdQuery" Destination="SubQuery.ID" dx1="2660"/>
+			<Connection Source="Occupy.RD_1" Destination="Logic.S_Occupy" dx1="133.33" dx2="133.33" dy="-1086.67"/>
+			<Connection Source="Logic.Accepted" Destination="Occupy.SD_1" dx1="533.33"/>
+			<Connection Source="Logic.ErrorID" Destination="Occupy.SD_2" dx1="600"/>
+			<Connection Source="Release.RD_1" Destination="Logic.S_Release" dx1="200" dx2="333.33" dy="-1640"/>
+			<Connection Source="Logic.Accepted" Destination="Release.SD_1" dx1="533.33" dx2="133.33" dy="1166.67"/>
+			<Connection Source="Logic.ErrorID" Destination="Release.SD_2" dx1="600" dx2="66.67" dy="1146.67"/>
+			<Connection Source="Logic.Owner" Destination="PubOwner.SD_1" dx1="466.67" dx2="1206.67" dy="1440"/>
+			<Connection Source="Logic.Occupied" Destination="PubUa.SD_1" dx1="2446.67"/>
+		</DataConnections>
+	</FBNetwork>
+</FBType>
