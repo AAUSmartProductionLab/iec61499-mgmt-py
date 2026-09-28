@@ -1,0 +1,172 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="UNIT_Observer" Comment="Owns all cell sensors (shared by several skills): periodic sampling through IO primitives, state observer, published state variables (AID/Operational data)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="UaRoot" />
+        <With Var="UaEnable" />
+        <With Var="IoBackend" />
+        <With Var="CycleTime" />
+        <With Var="FilledScale" />
+        <With Var="NeedleUp_Gpio" />
+        <With Var="NeedleUp_Modbus" />
+        <With Var="NeedleDown_Gpio" />
+        <With Var="NeedleDown_Modbus" />
+        <With Var="VialPresent_Gpio" />
+        <With Var="VialPresent_Modbus" />
+        <With Var="FilledMl_Gpio" />
+        <With Var="FilledMl_Modbus" />
+        <With Var="Stoppered_Gpio" />
+        <With Var="Stoppered_Modbus" />
+        <With Var="Checked_Gpio" />
+        <With Var="Checked_Modbus" />
+        <With Var="DoorClosed_Gpio" />
+        <With Var="DoorClosed_Modbus" />
+      </Event>
+      <Event Name="SIM" Type="Event">
+        <With Var="Sim_NeedleUp" />
+        <With Var="Sim_NeedleDown" />
+        <With Var="Sim_VialPresent" />
+        <With Var="Sim_FilledMl" />
+        <With Var="Sim_Stoppered" />
+        <With Var="Sim_Checked" />
+        <With Var="Sim_DoorClosed" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" />
+      <Event Name="SAMPLE" Type="Event">
+        <With Var="Cell" />
+        <With Var="Safe" />
+      </Event>
+      <Event Name="UNSAFE" Type="Event">
+        <With Var="Safe" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" />
+      <VarDeclaration Name="IoBackend" Type="USINT" />
+      <VarDeclaration Name="CycleTime" Type="TIME" InitialValue="T#100ms" />
+      <VarDeclaration Name="FilledScale" Type="LREAL" InitialValue="0.01" />
+      <VarDeclaration Name="NeedleUp_Gpio" Type="STRING" />
+      <VarDeclaration Name="NeedleUp_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="NeedleDown_Gpio" Type="STRING" />
+      <VarDeclaration Name="NeedleDown_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="VialPresent_Gpio" Type="STRING" />
+      <VarDeclaration Name="VialPresent_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="FilledMl_Gpio" Type="STRING" />
+      <VarDeclaration Name="FilledMl_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="Stoppered_Gpio" Type="STRING" />
+      <VarDeclaration Name="Stoppered_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="Checked_Gpio" Type="STRING" />
+      <VarDeclaration Name="Checked_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="DoorClosed_Gpio" Type="STRING" />
+      <VarDeclaration Name="DoorClosed_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="Sim_NeedleUp" Type="BOOL" />
+      <VarDeclaration Name="Sim_NeedleDown" Type="BOOL" />
+      <VarDeclaration Name="Sim_VialPresent" Type="BOOL" />
+      <VarDeclaration Name="Sim_FilledMl" Type="LREAL" />
+      <VarDeclaration Name="Sim_Stoppered" Type="BOOL" />
+      <VarDeclaration Name="Sim_Checked" Type="BOOL" />
+      <VarDeclaration Name="Sim_DoorClosed" Type="BOOL" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Cell" Type="fillingcell::ST_CellState" />
+      <VarDeclaration Name="Safe" Type="BOOL" />
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="Ids" Type="fillingcell::UA_ObserverIds" x="400" y="200" />
+    <FB Name="In_NeedleUp" Type="fillingcell::IO_DI" x="3000" y="200" />
+    <FB Name="In_NeedleDown" Type="fillingcell::IO_DI" x="5600" y="200" />
+    <FB Name="In_VialPresent" Type="fillingcell::IO_DI" x="8200" y="200" />
+    <FB Name="In_FilledMl" Type="fillingcell::IO_AI" x="400" y="2000" />
+    <FB Name="In_Stoppered" Type="fillingcell::IO_DI" x="3000" y="2000" />
+    <FB Name="In_Checked" Type="fillingcell::IO_DI" x="5600" y="2000" />
+    <FB Name="In_DoorClosed" Type="fillingcell::IO_DI" x="8200" y="2000" />
+    <FB Name="Publisher" Type="iec61499::net::PUBLISH_9" x="400" y="3800" />
+    <FB Name="Obs" Type="fillingcell::FC_Observer" x="3000" y="3800" />
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="5600" y="3800" />
+    <EventConnections>
+      <Connection Source="INIT" Destination="Ids.INIT" />
+      <Connection Source="Ids.INITO" Destination="In_NeedleUp.INIT" />
+      <Connection Source="In_NeedleUp.INITO" Destination="In_NeedleDown.INIT" />
+      <Connection Source="In_NeedleDown.INITO" Destination="In_VialPresent.INIT" />
+      <Connection Source="In_VialPresent.INITO" Destination="In_FilledMl.INIT" />
+      <Connection Source="In_FilledMl.INITO" Destination="In_Stoppered.INIT" />
+      <Connection Source="In_Stoppered.INITO" Destination="In_Checked.INIT" />
+      <Connection Source="In_Checked.INITO" Destination="In_DoorClosed.INIT" />
+      <Connection Source="In_DoorClosed.INITO" Destination="Publisher.INIT" />
+      <Connection Source="Publisher.INITO" Destination="INITO" />
+      <Connection Source="Publisher.INITO" Destination="Cycle.START" />
+      <Connection Source="Cycle.EO" Destination="In_NeedleUp.REQ" />
+      <Connection Source="In_NeedleUp.CNF" Destination="In_NeedleDown.REQ" />
+      <Connection Source="In_NeedleDown.CNF" Destination="In_VialPresent.REQ" />
+      <Connection Source="In_VialPresent.CNF" Destination="In_FilledMl.REQ" />
+      <Connection Source="In_FilledMl.CNF" Destination="In_Stoppered.REQ" />
+      <Connection Source="In_Stoppered.CNF" Destination="In_Checked.REQ" />
+      <Connection Source="In_Checked.CNF" Destination="In_DoorClosed.REQ" />
+      <Connection Source="In_DoorClosed.CNF" Destination="Obs.SAMPLE" />
+      <Connection Source="Obs.CNF" Destination="SAMPLE" />
+      <Connection Source="Obs.CNF" Destination="Publisher.REQ" />
+      <Connection Source="Obs.UNSAFE" Destination="UNSAFE" />
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="IoBackend" Destination="In_NeedleUp.Backend" />
+      <Connection Source="NeedleUp_Gpio" Destination="In_NeedleUp.GpioName" />
+      <Connection Source="NeedleUp_Modbus" Destination="In_NeedleUp.ModbusId" />
+      <Connection Source="Sim_NeedleUp" Destination="In_NeedleUp.SimValue" />
+      <Connection Source="IoBackend" Destination="In_NeedleDown.Backend" />
+      <Connection Source="NeedleDown_Gpio" Destination="In_NeedleDown.GpioName" />
+      <Connection Source="NeedleDown_Modbus" Destination="In_NeedleDown.ModbusId" />
+      <Connection Source="Sim_NeedleDown" Destination="In_NeedleDown.SimValue" />
+      <Connection Source="IoBackend" Destination="In_VialPresent.Backend" />
+      <Connection Source="VialPresent_Gpio" Destination="In_VialPresent.GpioName" />
+      <Connection Source="VialPresent_Modbus" Destination="In_VialPresent.ModbusId" />
+      <Connection Source="Sim_VialPresent" Destination="In_VialPresent.SimValue" />
+      <Connection Source="IoBackend" Destination="In_FilledMl.Backend" />
+      <Connection Source="FilledMl_Gpio" Destination="In_FilledMl.GpioName" />
+      <Connection Source="FilledMl_Modbus" Destination="In_FilledMl.ModbusId" />
+      <Connection Source="Sim_FilledMl" Destination="In_FilledMl.SimValue" />
+      <Connection Source="FilledScale" Destination="In_FilledMl.Scale" />
+      <Connection Source="IoBackend" Destination="In_Stoppered.Backend" />
+      <Connection Source="Stoppered_Gpio" Destination="In_Stoppered.GpioName" />
+      <Connection Source="Stoppered_Modbus" Destination="In_Stoppered.ModbusId" />
+      <Connection Source="Sim_Stoppered" Destination="In_Stoppered.SimValue" />
+      <Connection Source="IoBackend" Destination="In_Checked.Backend" />
+      <Connection Source="Checked_Gpio" Destination="In_Checked.GpioName" />
+      <Connection Source="Checked_Modbus" Destination="In_Checked.ModbusId" />
+      <Connection Source="Sim_Checked" Destination="In_Checked.SimValue" />
+      <Connection Source="IoBackend" Destination="In_DoorClosed.Backend" />
+      <Connection Source="DoorClosed_Gpio" Destination="In_DoorClosed.GpioName" />
+      <Connection Source="DoorClosed_Modbus" Destination="In_DoorClosed.ModbusId" />
+      <Connection Source="Sim_DoorClosed" Destination="In_DoorClosed.SimValue" />
+      <Connection Source="UaRoot" Destination="Ids.UaRoot" />
+      <Connection Source="UaEnable" Destination="Publisher.QI" />
+      <Connection Source="Ids.IdPub" Destination="Publisher.ID" />
+      <Connection Source="CycleTime" Destination="Cycle.DT" />
+      <Connection Source="In_NeedleUp.IN" Destination="Obs.NeedleUp" />
+      <Connection Source="In_NeedleDown.IN" Destination="Obs.NeedleDown" />
+      <Connection Source="In_VialPresent.IN" Destination="Obs.VialPresent" />
+      <Connection Source="In_FilledMl.IN" Destination="Obs.FilledMl" />
+      <Connection Source="In_Stoppered.IN" Destination="Obs.Stoppered" />
+      <Connection Source="In_Checked.IN" Destination="Obs.Checked" />
+      <Connection Source="In_DoorClosed.IN" Destination="Obs.DoorClosed" />
+      <Connection Source="Obs.Cell" Destination="Cell" />
+      <Connection Source="Obs.Safe" Destination="Safe" />
+      <Connection Source="Obs.O_NeedleUp" Destination="Publisher.SD_1" />
+      <Connection Source="Obs.O_NeedleDown" Destination="Publisher.SD_2" />
+      <Connection Source="Obs.O_VialPresent" Destination="Publisher.SD_3" />
+      <Connection Source="Obs.O_FilledMl" Destination="Publisher.SD_4" />
+      <Connection Source="Obs.O_Stoppered" Destination="Publisher.SD_5" />
+      <Connection Source="Obs.O_Checked" Destination="Publisher.SD_6" />
+      <Connection Source="Obs.O_DoorClosed" Destination="Publisher.SD_7" />
+      <Connection Source="Obs.O_Valid" Destination="Publisher.SD_8" />
+      <Connection Source="Obs.O_Safe" Destination="Publisher.SD_9" />
+    </DataConnections>
+  </FBNetwork>
+</FBType>

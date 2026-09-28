@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="P_Call" Comment="Calls one atomic skill: latches P1..P4 on EI, continues on DONE (EO) or FAILED (ERR); ignores completions it did not request">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="fillingcell" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="EI" Type="Event">
+        <With Var="P1" />
+        <With Var="P2" />
+        <With Var="P3" />
+        <With Var="P4" />
+      </Event>
+      <Event Name="DONE" Type="Event" />
+      <Event Name="FAILED" Type="Event">
+        <With Var="CallError" />
+      </Event>
+      <Event Name="RESET" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="CALL" Type="Event">
+        <With Var="CP1" />
+        <With Var="CP2" />
+        <With Var="CP3" />
+        <With Var="CP4" />
+      </Event>
+      <Event Name="EO" Type="Event" />
+      <Event Name="ERR" Type="Event">
+        <With Var="Error" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="P1" Type="LREAL" />
+      <VarDeclaration Name="P2" Type="LREAL" />
+      <VarDeclaration Name="P3" Type="LREAL" />
+      <VarDeclaration Name="P4" Type="LREAL" />
+      <VarDeclaration Name="CallError" Type="UINT" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="CP1" Type="LREAL" />
+      <VarDeclaration Name="CP2" Type="LREAL" />
+      <VarDeclaration Name="CP3" Type="LREAL" />
+      <VarDeclaration Name="CP4" Type="LREAL" />
+      <VarDeclaration Name="Error" Type="UINT" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Busy" Type="BOOL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Call" x="570" y="100">
+        <ECAction Algorithm="Alg_Call" Output="CALL" />
+      </ECState>
+      <ECState Name="Done" x="990" y="100">
+        <ECAction Algorithm="Alg_Done" Output="EO" />
+      </ECState>
+      <ECState Name="Fail" x="1410" y="100">
+        <ECAction Algorithm="Alg_Fail" Output="ERR" />
+      </ECState>
+      <ECState Name="Reset" x="150" y="330">
+        <ECAction Algorithm="Alg_Reset" />
+      </ECState>
+      <ECTransition Source="START" Destination="Call" Condition="EI" x="0" y="0" />
+      <ECTransition Source="START" Destination="Done" Condition="DONE[Busy]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Fail" Condition="FAILED[Busy]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Reset" Condition="RESET" x="0" y="0" />
+      <ECTransition Source="Call" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Done" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Fail" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Reset" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Call">
+      <ST Text="CP1 := P1;&#10;CP2 := P2;&#10;CP3 := P3;&#10;CP4 := P4;&#10;Busy := TRUE;&#10;Error := 0;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Done">
+      <ST Text="Busy := FALSE;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Fail">
+      <ST Text="Busy := FALSE;&#10;Error := CallError;" />
+    </Algorithm>
+    <Algorithm Name="Alg_Reset">
+      <ST Text="Busy := FALSE;" />
+    </Algorithm>
+  </BasicFB>
+</FBType>

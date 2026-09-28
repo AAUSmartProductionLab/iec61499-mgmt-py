@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SERVER_2_1" Comment="OPC UA method/Server FB: 1 arguments in, 2 out (generic)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Filling cell reference model" Version="2.0" Author="Project contributors" Date="2026-09-27" />
+  <CompilerInfo packageName="iec61499::net" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="QI" />
+        <With Var="ID" />
+      </Event>
+      <Event Name="RSP" Type="Event">
+        <With Var="QI" />
+        <With Var="SD_1" />
+        <With Var="SD_2" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit">
+        <With Var="QO" />
+        <With Var="STATUS" />
+      </Event>
+      <Event Name="IND" Type="Event">
+        <With Var="QO" />
+        <With Var="STATUS" />
+        <With Var="RD_1" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="QI" Type="BOOL" />
+      <VarDeclaration Name="ID" Type="WSTRING" />
+      <VarDeclaration Name="SD_1" Type="ANY" />
+      <VarDeclaration Name="SD_2" Type="ANY" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="QO" Type="BOOL" />
+      <VarDeclaration Name="STATUS" Type="WSTRING" />
+      <VarDeclaration Name="RD_1" Type="ANY" />
+    </OutputVars>
+  </InterfaceList>
+  <Attribute Name="eclipse4diac::core::GenericClassName" Value="'GEN_SERVER'" />
+</FBType>

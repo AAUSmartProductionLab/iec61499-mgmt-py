@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+/.metadata/
+
+# docs to later be published
+docs/
