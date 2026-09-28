@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="IO_AI" Comment="Analog input primitive; Backend 0 simulated, 1 GPIO (IW + GPIOChip handle), 2 Modbus CLIENT">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="unitlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Backend" />
+        <With Var="GpioName" />
+        <With Var="ModbusId" />
+      </Event>
+      <Event Name="REQ" Type="Event">
+        <With Var="SimValue" />
+        <With Var="Scale" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit">
+        <With Var="QO" />
+      </Event>
+      <Event Name="CNF" Type="Event">
+        <With Var="QO" />
+        <With Var="IN" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Backend" Type="USINT" />
+      <VarDeclaration Name="GpioName" Type="STRING" />
+      <VarDeclaration Name="ModbusId" Type="WSTRING" />
+      <VarDeclaration Name="SimValue" Type="LREAL" />
+      <VarDeclaration Name="Scale" Type="LREAL" InitialValue="1.0" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="QO" Type="BOOL" />
+      <VarDeclaration Name="IN" Type="LREAL" />
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="Route" Type="unitlib::IO_RouteAI" x="400" y="200" />
+    <FB Name="Gpio" Type="eclipse4diac::io::IW" x="3000" y="200" />
+    <FB Name="Bus" Type="iec61499::net::CLIENT_0_1" x="5600" y="200" />
+    <EventConnections>
+      <Connection Source="INIT" Destination="Route.INIT" />
+      <Connection Source="Route.INIT_IO" Destination="Gpio.INIT" />
+      <Connection Source="Gpio.INITO" Destination="Bus.INIT" />
+      <Connection Source="Bus.INITO" Destination="Route.IO_READY" />
+      <Connection Source="Route.INITO" Destination="INITO" />
+      <Connection Source="REQ" Destination="Route.REQ" />
+      <Connection Source="Route.REQ_G" Destination="Gpio.REQ" />
+      <Connection Source="Route.REQ_M" Destination="Bus.REQ" />
+      <Connection Source="Gpio.CNF" Destination="Route.CNF_G" />
+      <Connection Source="Bus.CNF" Destination="Route.CNF_M" />
+      <Connection Source="Route.CNF" Destination="CNF" />
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Backend" Destination="Route.Backend" />
+      <Connection Source="GpioName" Destination="Gpio.PARAMS" />
+      <Connection Source="ModbusId" Destination="Bus.ID" />
+      <Connection Source="Route.GQI" Destination="Gpio.QI" />
+      <Connection Source="Route.MQI" Destination="Bus.QI" />
+      <Connection Source="Gpio.QO" Destination="Route.QO_G" />
+      <Connection Source="Bus.QO" Destination="Route.QO_M" />
+      <Connection Source="Route.QO" Destination="QO" />
+      <Connection Source="SimValue" Destination="Route.SimValue" />
+      <Connection Source="Scale" Destination="Route.Scale" />
+      <Connection Source="Gpio.IN" Destination="Route.IN_G" />
+      <Connection Source="Bus.RD_1" Destination="Route.IN_M" />
+      <Connection Source="Route.IN" Destination="IN" />
+    </DataConnections>
+  </FBNetwork>
+</FBType>

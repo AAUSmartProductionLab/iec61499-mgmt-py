@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SK_MoveNeedleDown" Comment="Lower the needle to Distance mm below the top; the default is all the way down (parameters: Distance [mm] 0.0..50.0, default 50.0). START -&gt; SUCCESS or FAILURE; OPC UA SetParameters(Session, ...) -&gt; [Accepted, ErrorID]; parameter inputs are the instance's defaults">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="filler" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Unit" />
+        <With Var="UaRoot" />
+        <With Var="UaPath" />
+        <With Var="UaEnable" />
+        <With Var="Equipment" />
+        <With Var="Timeout" />
+        <With Var="Distance" />
+      </Event>
+      <Event Name="START" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" />
+      <Event Name="SUCCESS" Type="Event" />
+      <Event Name="FAILURE" Type="Event">
+        <With Var="ErrorID" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Unit" Type="WSTRING" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+      <VarDeclaration Name="UaPath" Type="WSTRING" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" />
+      <VarDeclaration Name="Equipment" Type="WSTRING" InitialValue="&quot;NeedleAxis&quot;" />
+      <VarDeclaration Name="Timeout" Type="TIME" InitialValue="T#5s" />
+      <VarDeclaration Name="Distance" Type="LREAL" InitialValue="50.0" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="State" Type="USINT" />
+      <VarDeclaration Name="ErrorID" Type="UINT" />
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="Logic" Type="filler::SL_MoveNeedleDown" x="400" y="200" />
+    <FB Name="Owner" Type="unitlib::UNIT_OwnerView" x="3000" y="200" />
+    <FB Name="Setp" Type="iec61499::net::SERVER_2_2" x="5600" y="200" />
+    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_3" x="8200" y="200">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_1" x="10800" y="200">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <FB Name="Wd" Type="iec61499::events::E_DELAY" x="13400" y="200" />
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_3" x="16000" y="200" />
+    <EventConnections>
+      <Connection Source="INIT" Destination="Logic.INIT" />
+      <Connection Source="Logic.INITO" Destination="Owner.INIT" />
+      <Connection Source="Owner.INITO" Destination="Setp.INIT" />
+      <Connection Source="Setp.INITO" Destination="EqState.INIT" />
+      <Connection Source="EqState.INITO" Destination="EqCmd.INIT" />
+      <Connection Source="EqCmd.INITO" Destination="PubUa.INIT" />
+      <Connection Source="PubUa.INITO" Destination="PubUa.REQ" />
+      <Connection Source="PubUa.INITO" Destination="INITO" />
+      <Connection Source="Owner.CHG" Destination="Logic.OWNER_CHG" />
+      <Connection Source="Setp.IND" Destination="Logic.SETP" />
+      <Connection Source="Logic.RSP_SETP" Destination="Setp.RSP" />
+      <Connection Source="EqState.IND" Destination="Logic.SAMPLE" />
+      <Connection Source="Logic.CMD" Destination="EqCmd.REQ" />
+      <Connection Source="Logic.WD_START" Destination="Wd.START" />
+      <Connection Source="Logic.WD_STOP" Destination="Wd.STOP" />
+      <Connection Source="Wd.EO" Destination="Logic.TIMEOUT" />
+      <Connection Source="Logic.PUB" Destination="PubUa.REQ" />
+      <Connection Source="START" Destination="Logic.START" />
+      <Connection Source="Logic.SUCCESS" Destination="SUCCESS" />
+      <Connection Source="Logic.FAILURE" Destination="FAILURE" />
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Unit" Destination="Logic.Unit" />
+      <Connection Source="UaRoot" Destination="Logic.UaRoot" />
+      <Connection Source="UaPath" Destination="Logic.UaPath" />
+      <Connection Source="Equipment" Destination="Logic.Equipment" />
+      <Connection Source="Distance" Destination="Logic.D_Distance" />
+      <Connection Source="Unit" Destination="Owner.Unit" />
+      <Connection Source="Owner.Owner" Destination="Logic.Owner" />
+      <Connection Source="Logic.IdSetp" Destination="Setp.ID" />
+      <Connection Source="UaEnable" Destination="Setp.QI" />
+      <Connection Source="UaEnable" Destination="PubUa.QI" />
+      <Connection Source="Setp.RD_1" Destination="Logic.Session" />
+      <Connection Source="Setp.RD_2" Destination="Logic.S_Distance" />
+      <Connection Source="Logic.Accepted" Destination="Setp.SD_1" />
+      <Connection Source="Logic.SetpError" Destination="Setp.SD_2" />
+      <Connection Source="Logic.IdEqState" Destination="EqState.ID" />
+      <Connection Source="EqState.RD_1" Destination="Logic.AtTop" />
+      <Connection Source="EqState.RD_2" Destination="Logic.AtBottom" />
+      <Connection Source="EqState.RD_3" Destination="Logic.Position" />
+      <Connection Source="Logic.IdEqCmd" Destination="EqCmd.ID" />
+      <Connection Source="Logic.Command" Destination="EqCmd.SD_1" />
+      <Connection Source="Timeout" Destination="Wd.DT" />
+      <Connection Source="Logic.IdPub" Destination="PubUa.ID" />
+      <Connection Source="Logic.State" Destination="PubUa.SD_1" />
+      <Connection Source="Logic.State" Destination="State" />
+      <Connection Source="Logic.ErrorID" Destination="PubUa.SD_2" />
+      <Connection Source="Logic.ErrorID" Destination="ErrorID" />
+      <Connection Source="Logic.Distance" Destination="PubUa.SD_3" />
+    </DataConnections>
+  </FBNetwork>
+</FBType>

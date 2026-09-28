@@ -18,6 +18,7 @@ def pytest_addoption(parser):
     """Register the live-test command line options."""
     parser.addoption("--forte-exe", help="Launch this FORTE executable for isolated integration tests")
     parser.addoption("--forte-runtime-dir", help="Prepend this DLL directory to the FORTE child's PATH")
+    parser.addoption("--unit-forte-exe", help="FORTE built with a unitgen project (tests/test_unit_live.py)")
 
 
 def free_port():

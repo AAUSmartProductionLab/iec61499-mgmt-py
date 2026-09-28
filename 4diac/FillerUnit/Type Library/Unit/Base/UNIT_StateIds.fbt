@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="UNIT_StateIds" Comment="OPC UA IDs of the unit commands and state">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="unitlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="UaRoot" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit">
+        <With Var="IdReset" />
+        <With Var="IdStart" />
+        <With Var="IdClear" />
+        <With Var="IdPub" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="IdReset" Type="WSTRING" />
+      <VarDeclaration Name="IdStart" Type="WSTRING" />
+      <VarDeclaration Name="IdClear" Type="WSTRING" />
+      <VarDeclaration Name="IdPub" Type="WSTRING" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="INIT">
+      <ECAction Algorithm="INIT" Output="INITO" />
+    </ECState>
+    <Algorithm Name="INIT">
+      <ST>IdReset := CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, "/Unit/")), "Reset]");
+IdStart := CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, "/Unit/")), "Start]");
+IdClear := CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, "/Unit/")), "Clear]");
+IdPub := CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, "/Unit/")), "State]");</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

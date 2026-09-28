@@ -65,7 +65,9 @@ def flatten(network) -> FlatApplication:
                 flat.parameters[f"{name}.{p.get('Name')}"] = p.get("Value")
         for sub in network.findall("SubApp"):
             name = prefix + sub.get("Name")
-            for group in sub.find("InterfaceList"):
+            # The IDE writes SubAppInterfaceList; older generated files used InterfaceList.
+            iface = sub.find("SubAppInterfaceList")
+            for group in iface if iface is not None else sub.find("InterfaceList"):
                 pins.update(f"{name}.{e.get('Name')}" for e in group)
             inner = sub.find("SubAppNetwork")
             if inner is not None:

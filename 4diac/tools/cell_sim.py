@@ -2,7 +2,7 @@
 
 Register map (unit id ignored), matching generate_filling_cell.py:
   discrete inputs d0..d5: NeedleUp, NeedleDown, VialPresent, Stoppered, Checked, DoorClosed
-  input register  i0:     FilledMl * 100
+  input registers i0, i1: FilledMl * 100, needle position below the top in 0.1 mm
   coils           c0..c4: MoveDown, Dose, MoveUp, Stopper, Inspect
 
 Physics (when ``physics`` is on): the needle travels while exactly one of MoveDown/MoveUp is
@@ -26,17 +26,24 @@ COILS = ["MoveDown", "Dose", "MoveUp", "Stopper", "Inspect"]
 
 class Cell:
     """Simulated cell state and physics."""
-    def __init__(self, physics=True, travel_s=0.3, actuation_s=0.3, fill_rate=1.0):
+    def __init__(self, physics=True, travel_s=0.3, actuation_s=0.3, fill_rate=1.0, travel_mm=50.0):
         self.lock = threading.Lock()
         self.inputs = {"NeedleUp": True, "NeedleDown": False, "VialPresent": True, "Stoppered": False,
                        "Checked": False, "DoorClosed": True}
         self.filled_ml = 0.0
         self.coils = {c: False for c in COILS}
         self.physics, self.travel_s, self.actuation_s, self.fill_rate = physics, travel_s, actuation_s, fill_rate
+        self.travel_mm = travel_mm
         self.shoot_through = 0
         self.coil_trace: list[tuple[float, str, bool]] = []
         self._position = 0.0  # 0 = up, 1 = down
         self._since = {c: None for c in COILS}
+
+    @property
+    def position_mm(self):
+        """Needle position below the top in mm."""
+        with self.lock:
+            return self._position * self.travel_mm
 
     def new_vial(self):
         """Replace the vial: present, empty, not stoppered, not checked."""
@@ -81,9 +88,9 @@ class Cell:
             return [source[i] if i < len(source) else False for i in range(start, start + count)]
 
     def read_registers(self, start, count):
-        """Read input registers (i0 = FilledMl * 100)."""
+        """Read input registers (i0 = FilledMl * 100, i1 = position in 0.1 mm)."""
         with self.lock:
-            values = [min(65535, int(round(self.filled_ml * 100)))]
+            values = [min(65535, int(round(self.filled_ml * 100))), int(round(self._position * self.travel_mm * 10))]
             return [values[i] if i < len(values) else 0 for i in range(start, start + count)]
 
 
