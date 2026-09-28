@@ -294,7 +294,7 @@ Every generated FB carries its BPMN id as an attribute, so the diff and the oper
 
 ## Software architecture
 
-Five parts with a life outside this project are git submodules; everything specific to the filling cell or the experiments is a plain folder in the project repo `aas61499-reconfig`.
+Five parts with a life outside this project become git submodules; everything specific to the filling cell or the experiments is a plain folder in the project repo `iec61499-aas-reconfig`. Until the interfaces settle, the five parts live as packages in the project repo and are split out with `git filter-repo`, keeping their history, once they are stable (at the latest after submission).
 
 | Path | Kind | Contents | Language, licence |
 | --- | --- | --- | --- |

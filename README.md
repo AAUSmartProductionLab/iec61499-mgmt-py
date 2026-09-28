@@ -1,4 +1,10 @@
-# iec61499-mgmt-py
+# iec61499-aas-reconfig
+
+AAS-driven online reconfiguration of IEC 61499 devices. This repository holds all components
+for now; each will move to its own repository once its interface is stable (see
+[the build plan](AAS-driven%20online%20reconfiguration%20of%20IEC%2061499%20devices%20build%20and%20modelling%20plan.md)).
+
+## iec61499-mgmt-py
 
 Validated JSON network models and deterministic FORTE management plans, plus an
 experimental BPMN skill compiler. Read [the modelling and implementation design](docs/design.md)
