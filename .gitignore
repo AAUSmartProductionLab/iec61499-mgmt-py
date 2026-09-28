@@ -218,5 +218,5 @@ __marimo__/
 .streamlit/secrets.toml
 /.metadata/
 
-# Local status notes
+# docs to later be published
 docs/
