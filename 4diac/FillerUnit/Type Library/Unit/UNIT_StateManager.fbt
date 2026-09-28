@@ -1,93 +1,80 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <FBType Name="UNIT_StateManager" Comment="Unit state manager: OPC UA methods Reset/Start/Clear(Session) answer [Accepted, ErrorID]; publishes the PackML State; EXECUTE starts the Execute procedure">
-	<Identification Standard="61499-2">
-	</Identification>
-	<VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28">
-	</VersionInfo>
-	<CompilerInfo packageName="unitlib">
-	</CompilerInfo>
-	<InterfaceList>
-		<EventInputs>
-			<Event Name="INIT" Type="EInit">
-				<With Var="Unit"/>
-				<With Var="UaRoot"/>
-				<With Var="UaEnable"/>
-			</Event>
-			<Event Name="EXECUTE_DONE" Type="Event">
-			</Event>
-			<Event Name="EXECUTE_FAILED" Type="Event">
-			</Event>
-		</EventInputs>
-		<EventOutputs>
-			<Event Name="INITO" Type="EInit">
-			</Event>
-			<Event Name="EXECUTE" Type="Event">
-			</Event>
-		</EventOutputs>
-		<InputVars>
-			<VarDeclaration Name="Unit" Type="WSTRING"/>
-			<VarDeclaration Name="UaRoot" Type="WSTRING"/>
-			<VarDeclaration Name="UaEnable" Type="BOOL"/>
-		</InputVars>
-	</InterfaceList>
-	<FBNetwork>
-		<FB Name="Ids" Type="unitlib::UNIT_StateIds" x="6.67" y="2446.67">
-		</FB>
-		<FB Name="Owner" Type="unitlib::UNIT_OwnerView" x="1100" y="700">
-		</FB>
-		<FB Name="Reset" Type="iec61499::net::SERVER_2_1" x="2200" y="3500">
-		</FB>
-		<FB Name="Start" Type="iec61499::net::SERVER_2_1" x="3900" y="3900">
-		</FB>
-		<FB Name="Clear" Type="iec61499::net::SERVER_2_1" x="5600" y="3900">
-		</FB>
-		<FB Name="Logic" Type="unitlib::UNIT_StateLogic" x="2700" y="1400">
-		</FB>
-		<FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="7400" y="3900">
-		</FB>
-		<EventConnections>
-			<Connection Source="INIT" Destination="Ids.INIT" dx1="1180"/>
-			<Connection Source="Ids.INITO" Destination="Owner.INIT" dx1="80" dx2="80" dy="-866.67"/>
-			<Connection Source="Owner.INITO" Destination="Reset.INIT" dx1="80" dx2="80" dy="1400"/>
-			<Connection Source="Reset.INITO" Destination="Start.INIT" dx1="466.67"/>
-			<Connection Source="Start.INITO" Destination="Clear.INIT"/>
-			<Connection Source="Clear.INITO" Destination="PubUa.INIT"/>
-			<Connection Source="PubUa.INITO" Destination="PubUa.REQ" dx1="133.33" dx2="266.67" dy="-226.67"/>
-			<Connection Source="PubUa.INITO" Destination="INITO" dx1="200"/>
-			<Connection Source="Owner.CHG" Destination="Logic.OWNER_CHG" dx1="333.33"/>
-			<Connection Source="Reset.IND" Destination="Logic.CMD_RESET" dx1="200" dx2="133.33" dy="-493.33"/>
-			<Connection Source="Logic.RSP_RESET" Destination="Reset.RSP" dx1="80" dx2="80" dy="1106.67"/>
-			<Connection Source="Start.IND" Destination="Logic.CMD_START" dx1="66.67" dx2="200" dy="-1566.67"/>
-			<Connection Source="Logic.RSP_START" Destination="Start.RSP" dx1="80" dx2="80" dy="1046.67"/>
-			<Connection Source="Clear.IND" Destination="Logic.CMD_CLEAR" dx1="133.33" dx2="200" dy="-1186.67"/>
-			<Connection Source="Logic.RSP_CLEAR" Destination="Clear.RSP" dx1="1453.33"/>
-			<Connection Source="Logic.CNF" Destination="PubUa.REQ" dx1="2120"/>
-			<Connection Source="Logic.EXECUTE" Destination="EXECUTE" dx1="3006.67"/>
-			<Connection Source="EXECUTE_DONE" Destination="Logic.EXECUTE_DONE" dx1="2513.33"/>
-			<Connection Source="EXECUTE_FAILED" Destination="Logic.EXECUTE_FAILED" dx1="2513.33"/>
-		</EventConnections>
-		<DataConnections>
-			<Connection Source="UaRoot" Destination="Ids.UaRoot" dx1="1180"/>
-			<Connection Source="Unit" Destination="Owner.Unit" dx1="1720"/>
-			<Connection Source="UaEnable" Destination="Reset.QI" dx1="3333.33"/>
-			<Connection Source="UaEnable" Destination="Start.QI" dx1="3866.67"/>
-			<Connection Source="UaEnable" Destination="Clear.QI" dx1="4533.33"/>
-			<Connection Source="UaEnable" Destination="PubUa.QI" dx1="9226.67"/>
-			<Connection Source="Owner.Owner" Destination="Logic.Owner" dx1="66.67"/>
-			<Connection Source="Ids.IdReset" Destination="Reset.ID" dx1="1206.67"/>
-			<Connection Source="Reset.RD_1" Destination="Logic.S_Reset" dx1="133.33" dx2="66.67" dy="-853.33"/>
-			<Connection Source="Logic.Accepted" Destination="Reset.SD_1" dx1="80" dx2="80" dy="886.67"/>
-			<Connection Source="Logic.ErrorID" Destination="Reset.SD_2" dx1="80" dx2="80" dy="886.67"/>
-			<Connection Source="Ids.IdStart" Destination="Start.ID" dx1="2226.67"/>
-			<Connection Source="Start.RD_1" Destination="Logic.S_Start" dx1="133.33" dx2="333.33" dy="-2066.67"/>
-			<Connection Source="Logic.Accepted" Destination="Start.SD_1" dx1="80" dx2="80" dy="886.67"/>
-			<Connection Source="Logic.ErrorID" Destination="Start.SD_2" dx1="80" dx2="80" dy="886.67"/>
-			<Connection Source="Ids.IdClear" Destination="Clear.ID" dx1="2893.33"/>
-			<Connection Source="Clear.RD_1" Destination="Logic.S_Clear" dx1="66.67" dx2="400" dy="-2486.67"/>
-			<Connection Source="Logic.Accepted" Destination="Clear.SD_1" dx1="1453.33"/>
-			<Connection Source="Logic.ErrorID" Destination="Clear.SD_2" dx1="1453.33"/>
-			<Connection Source="Ids.IdPub" Destination="PubUa.ID" dx1="3560"/>
-			<Connection Source="Logic.State" Destination="PubUa.SD_1" dx1="2120"/>
-		</DataConnections>
-	</FBNetwork>
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="unitlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Unit" />
+        <With Var="UaRoot" />
+        <With Var="UaEnable" />
+      </Event>
+      <Event Name="EXECUTE_DONE" Type="Event" />
+      <Event Name="EXECUTE_FAILED" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" />
+      <Event Name="EXECUTE" Type="Event" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Unit" Type="WSTRING" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" />
+    </InputVars>
+    <OutputVars />
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="Ids" Type="unitlib::UNIT_StateIds" x="6.67" y="2446.67" />
+    <FB Name="Owner" Type="unitlib::UNIT_OwnerView" x="1100" y="700" />
+    <FB Name="Reset" Type="iec61499::net::SERVER_2_1" x="2200" y="3500" />
+    <FB Name="Start" Type="iec61499::net::SERVER_2_1" x="3900" y="3900" />
+    <FB Name="Clear" Type="iec61499::net::SERVER_2_1" x="5600" y="3900" />
+    <FB Name="Logic" Type="unitlib::UNIT_StateLogic" x="2700" y="1400" />
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="7400" y="3900" />
+    <EventConnections>
+      <Connection Source="INIT" Destination="Ids.INIT" dx1="1180" />
+      <Connection Source="Ids.INITO" Destination="Owner.INIT" dx1="80" dx2="80" dy="-866.67" />
+      <Connection Source="Owner.INITO" Destination="Reset.INIT" dx1="80" dx2="80" dy="1400" />
+      <Connection Source="Reset.INITO" Destination="Start.INIT" dx1="466.67" />
+      <Connection Source="Start.INITO" Destination="Clear.INIT" />
+      <Connection Source="Clear.INITO" Destination="PubUa.INIT" />
+      <Connection Source="PubUa.INITO" Destination="PubUa.REQ" dx1="133.33" dx2="266.67" dy="-226.67" />
+      <Connection Source="PubUa.INITO" Destination="INITO" dx1="200" />
+      <Connection Source="Owner.CHG" Destination="Logic.OWNER_CHG" dx1="333.33" />
+      <Connection Source="Reset.IND" Destination="Logic.CMD_RESET" dx1="200" dx2="133.33" dy="-493.33" />
+      <Connection Source="Logic.RSP_RESET" Destination="Reset.RSP" dx1="80" dx2="80" dy="1106.67" />
+      <Connection Source="Start.IND" Destination="Logic.CMD_START" dx1="66.67" dx2="200" dy="-1566.67" />
+      <Connection Source="Logic.RSP_START" Destination="Start.RSP" dx1="80" dx2="80" dy="1046.67" />
+      <Connection Source="Clear.IND" Destination="Logic.CMD_CLEAR" dx1="133.33" dx2="200" dy="-1186.67" />
+      <Connection Source="Logic.RSP_CLEAR" Destination="Clear.RSP" dx1="1453.33" />
+      <Connection Source="Logic.CNF" Destination="PubUa.REQ" dx1="2120" />
+      <Connection Source="Logic.EXECUTE" Destination="EXECUTE" dx1="3006.67" />
+      <Connection Source="EXECUTE_DONE" Destination="Logic.EXECUTE_DONE" dx1="2513.33" />
+      <Connection Source="EXECUTE_FAILED" Destination="Logic.EXECUTE_FAILED" dx1="2513.33" />
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="UaRoot" Destination="Ids.UaRoot" dx1="1180" />
+      <Connection Source="Unit" Destination="Owner.Unit" dx1="1720" />
+      <Connection Source="UaEnable" Destination="Reset.QI" dx1="3333.33" />
+      <Connection Source="UaEnable" Destination="Start.QI" dx1="3866.67" />
+      <Connection Source="UaEnable" Destination="Clear.QI" dx1="4533.33" />
+      <Connection Source="UaEnable" Destination="PubUa.QI" dx1="9226.67" />
+      <Connection Source="Owner.Owner" Destination="Logic.Owner" dx1="66.67" />
+      <Connection Source="Ids.IdReset" Destination="Reset.ID" dx1="1206.67" />
+      <Connection Source="Reset.RD_1" Destination="Logic.S_Reset" dx1="133.33" dx2="66.67" dy="-853.33" />
+      <Connection Source="Logic.Accepted" Destination="Reset.SD_1" dx1="80" dx2="80" dy="886.67" />
+      <Connection Source="Logic.ErrorID" Destination="Reset.SD_2" dx1="80" dx2="80" dy="886.67" />
+      <Connection Source="Ids.IdStart" Destination="Start.ID" dx1="2226.67" />
+      <Connection Source="Start.RD_1" Destination="Logic.S_Start" dx1="133.33" dx2="333.33" dy="-2066.67" />
+      <Connection Source="Logic.Accepted" Destination="Start.SD_1" dx1="80" dx2="80" dy="886.67" />
+      <Connection Source="Logic.ErrorID" Destination="Start.SD_2" dx1="80" dx2="80" dy="886.67" />
+      <Connection Source="Ids.IdClear" Destination="Clear.ID" dx1="2893.33" />
+      <Connection Source="Clear.RD_1" Destination="Logic.S_Clear" dx1="66.67" dx2="400" dy="-2486.67" />
+      <Connection Source="Logic.Accepted" Destination="Clear.SD_1" dx1="1453.33" />
+      <Connection Source="Logic.ErrorID" Destination="Clear.SD_2" dx1="1453.33" />
+      <Connection Source="Ids.IdPub" Destination="PubUa.ID" dx1="3560" />
+      <Connection Source="Logic.State" Destination="PubUa.SD_1" dx1="2120" />
+    </DataConnections>
+  </FBNetwork>
 </FBType>

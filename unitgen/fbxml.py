@@ -34,8 +34,45 @@ def elem(parent, tag, **attrs):
     return ET.SubElement(parent, tag, {k: str(v) for k, v in attrs.items()})
 
 
+LAYOUT = ("x", "y", "dx1", "dx2", "dy")
+
+
+def keep_layout(root, path):
+    """Copy positions and connection routing from the file being replaced, so a layout arranged
+    in the IDE survives regeneration. Blocks match by name path, connections by their ends."""
+    try:
+        old = ET.parse(path).getroot()
+    except (OSError, ET.ParseError):
+        return
+
+    def placed(tree):
+        found = {}
+
+        def walk(node, prefix):
+            for child in node:
+                name = child.get("Name")
+                if child.tag in ("FB", "SubApp", "ECState") and name:
+                    found[(child.tag, prefix + name)] = child
+                    walk(child, prefix + name + ".")
+                elif child.tag == "Connection":
+                    found[("Connection", prefix + child.get("Source", "") + ">" + child.get("Destination", ""))] = child
+                else:
+                    walk(child, prefix)
+        walk(tree, "")
+        return found
+
+    before = placed(old)
+    for key, node in placed(root).items():
+        if key in before:
+            for attr in LAYOUT:
+                if attr in before[key].attrib:
+                    node.set(attr, before[key].get(attr))
+
+
 def save(root, path):
-    """Indent and write an XML tree, creating folders."""
+    """Indent and write an XML tree, creating folders; keeps the layout of an existing file."""
+    if path.exists():
+        keep_layout(root, path)
     path.parent.mkdir(parents=True, exist_ok=True)
     ET.indent(root, space="  ")
     ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
