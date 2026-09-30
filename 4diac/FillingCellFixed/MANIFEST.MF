@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<Manifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="platform:/resource/org.eclipse.fordiac.ide.library.model/model/library.xsd" Scope="Project">
-  <Dependencies />
-  <Product Name="FillingCellFixed" SymbolicName="fillingcell" Comment="Filling-cell skill library">
-    <VersionInfo Version="2.0.0" Author="Project contributors" Date="2026-09-27" />
-  </Product>
-</Manifest>

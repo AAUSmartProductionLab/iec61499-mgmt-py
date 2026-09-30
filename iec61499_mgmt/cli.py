@@ -1,9 +1,9 @@
-"""Offline compilation and reviewable deployment plans; never contacts a PLC."""
+"""Offline deployment plans, type libraries and boot files; only ``types`` contacts a FORTE."""
 import argparse
 import json
 from pathlib import Path
 
-from .models import IECValue, Network, NetworkPatch, TypeLibrary
+from .models import Network, NetworkPatch, TypeLibrary
 from .planner import Plan, plan
 
 
@@ -32,31 +32,21 @@ def write_types(args):
 
 
 def main():
-    """Parse arguments and run the compile, plan or schema command."""
+    """Parse arguments and run the plan, types, boot or schema command."""
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    compile_parser = commands.add_parser("compile")
-    compile_parser.add_argument("bpmn")
-    compile_parser.add_argument("--bindings", required=True)
-    compile_parser.add_argument("--target", required=True)
-    compile_parser.add_argument("--library", help="types.json; --target is then a hash-free template")
-    compile_parser.add_argument("--product")
-    compile_parser.add_argument("--out", required=True, help="Compilation bundle JSON")
-    compile_parser.add_argument("--network-out", help="Standalone network JSON for plan")
-    plan_parser = commands.add_parser("plan")
+    plan_parser = commands.add_parser("plan", help="Ordered management commands from a current to a desired network")
     plan_parser.add_argument("--current", required=True)
     inputs = plan_parser.add_mutually_exclusive_group(required=True)
     inputs.add_argument("--desired")
     inputs.add_argument("--patch")
-    target_inputs = plan_parser.add_mutually_exclusive_group(required=True)
-    target_inputs.add_argument("--library")
-    target_inputs.add_argument("--target", help="Use the library embedded in a compiler target profile")
+    plan_parser.add_argument("--library", required=True, help="types.json")
     plan_parser.add_argument("--out", required=True)
     types_parser = commands.add_parser("types", help="Query a running FORTE and write types.json")
     types_parser.add_argument("--types-dir", required=True, help="4diac 'Type Library' folder")
     types_parser.add_argument("--prefix", default="", help="Only types whose name starts with this")
     types_parser.add_argument("--system", help=".sys file whose fixed application gives the boundary ports")
-    types_parser.add_argument("--application", default="FillingCell")
+    types_parser.add_argument("--application", help="Application in --system (required with it)")
     types_parser.add_argument("--host", default="127.0.0.1")
     types_parser.add_argument("--port", type=int, default=61499)
     types_parser.add_argument("--resource", default="RES")
@@ -64,39 +54,24 @@ def main():
     types_parser.add_argument("--out", required=True)
     boot_parser = commands.add_parser("boot", help="Write a FORTE boot file for a .sys application")
     boot_parser.add_argument("--system", required=True)
-    boot_parser.add_argument("--application", default="FillingCell")
+    boot_parser.add_argument("--application", required=True)
     boot_parser.add_argument("--resource", default="RES")
-    boot_parser.add_argument("--procedure", help="Network JSON of the active procedure")
+    boot_parser.add_argument("--procedure", help="Network JSON of a change added in the owned scope")
     boot_parser.add_argument("--library", help="types.json, required with --procedure")
     boot_parser.add_argument("--out", required=True)
     schema_parser = commands.add_parser("schema")
-    schema_parser.add_argument("model", choices=["network", "patch", "plan", "bindings", "target"])
+    schema_parser.add_argument("model", choices=["network", "patch", "plan", "library"])
     schema_parser.add_argument("--out", required=True)
     args = parser.parse_args()
-    from skill_compiler.models import RecipeBindings, TargetProfile
 
     try:
-        if args.command == "compile":
-            from skill_compiler import compile_bpmn
-            product = {} if not args.product else {
-                k: IECValue.model_validate(v) for k, v in json.loads(Path(args.product).read_text(encoding="utf-8")).items()
-            }
-            if args.library:
-                from skill_compiler.targets import bind_library
-                target = bind_library(json.loads(Path(args.target).read_text(encoding="utf-8")),
-                                      read(TypeLibrary, args.library))
-            else:
-                target = read(TargetProfile, args.target)
-            result = compile_bpmn(Path(args.bpmn).read_text(encoding="utf-8"),
-                                  read(RecipeBindings, args.bindings), target, product)
-            if args.network_out:
-                Path(args.network_out).write_text(result.network.model_dump_json(indent=2) + "\n", encoding="utf-8")
-        elif args.command == "plan":
+        if args.command == "plan":
             current = read(Network, args.current)
             desired = read(Network, args.desired) if args.desired else read(NetworkPatch, args.patch).apply(current)
-            library = read(TypeLibrary, args.library) if args.library else read(TargetProfile, args.target).library
-            result = plan(current, desired, library)
+            result = plan(current, desired, read(TypeLibrary, args.library))
         elif args.command == "types":
+            if args.system and not args.application:
+                parser.error("--application is required with --system")
             write_types(args)
             return
         elif args.command == "boot":
@@ -106,16 +81,12 @@ def main():
             library = read(TypeLibrary, args.library) if args.library else None
             commands = deployment(load_application(args.system, args.application), args.resource,
                                   procedure=procedure, library=library)
-            # LF only: FORTE ends a boot-file command at "/>
-" or "</Request>
-", so CRLF from a
+            # LF only: FORTE ends a boot-file command at "/>\n" or "</Request>\n", so CRLF from a
             # Windows text write merges all lines on Linux (Windows FORTE reads in text mode).
-            Path(args.out).write_text(boot_file(commands), encoding="utf-8", newline="
-")
+            Path(args.out).write_text(boot_file(commands), encoding="utf-8", newline="\n")
             return
         else:
-            model = {"network": Network, "patch": NetworkPatch, "plan": Plan,
-                     "bindings": RecipeBindings, "target": TargetProfile}[args.model]
+            model = {"network": Network, "patch": NetworkPatch, "plan": Plan, "library": TypeLibrary}[args.model]
             Path(args.out).write_text(json.dumps(model.model_json_schema(), indent=2) + "\n", encoding="utf-8")
             return
         Path(args.out).write_text(result.model_dump_json(indent=2, exclude_none=True) + "\n", encoding="utf-8")

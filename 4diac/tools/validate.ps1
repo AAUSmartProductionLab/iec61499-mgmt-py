@@ -4,10 +4,10 @@ param(
     [string]$Ide = 'C:\Users\marti\Downloads\4diac-ide_3.2.1-win32.win32.x86_64\4diac-ide\4diac-idec.exe',
     # 4diac project folder under 4diac/ (also its .sys name), its type manifest, the export
     # folder the FBE config builds (FBE_EXTERNAL_MODULES_DIR) and the exported CMake module.
-    [string]$Project = 'FillingCellFixed',
-    [string]$Manifest = (Join-Path $PSScriptRoot 'types-manifest.json'),
-    [string]$Export = (Join-Path $PSScriptRoot '.cache\export'),
-    [string]$Module = 'fillingcell',
+    [Parameter(Mandatory)] [string]$Project,
+    [Parameter(Mandatory)] [string]$Manifest,
+    [Parameter(Mandatory)] [string]$Export,
+    [Parameter(Mandatory)] [string]$Module,
     # CMake targets the exported module links to (e.g. forte-modlib: the library compiled once).
     [string[]]$Link = @()
 )

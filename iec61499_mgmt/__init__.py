@@ -1,4 +1,5 @@
-"""BPMN- and AAS-independent IEC 61499 deployment primitives."""
+"""IEC 61499 deployment primitives for Eclipse 4diac FORTE: management protocol, networks and
+plans, .sys flattening, boot files, type libraries and read-back verification."""
 
 from .bootfile import boot_file, deployment
 from .models import Network, NetworkPatch, TypeLibrary

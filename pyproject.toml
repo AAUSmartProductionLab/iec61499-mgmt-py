@@ -18,7 +18,7 @@ test = ["pytest>=7,<9", "asyncua>=1.1", "basyx-python-sdk>=2,<3"]
 iec61499 = "iec61499_mgmt.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["iec61499_mgmt*", "skill_compiler*", "modgen*", "modsync*"]
+include = ["iec61499_mgmt*", "modgen*", "modsync*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
