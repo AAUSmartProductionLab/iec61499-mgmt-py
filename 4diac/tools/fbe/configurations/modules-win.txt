@@ -1,0 +1,11 @@
+// 4diac FORTE on Windows (x86_64) with every generated module (modules/*.yaml): the ModLib
+// library and each module project, exported by build-modules.ps1 into .cache/modules.
+include=${FBE_MAIN}/configurations/inc/default.txt
+CMAKE_BUILD_TYPE=RelWithDebInfo
+FBE_EXTERNAL_MODULES_DIR=${FBE_ROOT}/../.cache/modules
+// See fillingcell-win.txt: open62541 single-threaded, or a PUBLISH during a method call deadlocks.
+UA_MULTITHREADING:STRING=0
+// A local channel delivers one external event per subscriber; the module state reaches every
+// skill and equipment item at once (20+), more than FORTE's default queue of 16 holds.
+FORTE_EventChainExternalEventListSize:STRING=256
+FORTE_CommunicationInterruptQueueSize:STRING=64

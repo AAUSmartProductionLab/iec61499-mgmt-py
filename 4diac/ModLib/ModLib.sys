@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<System Name="ModLib" Comment="Library only; the modules' systems use these types">
+  <Identification Standard="61499-2" />
+  <Device Name="FORTE_PC" Type="iec61499::system::FORTE_PC" x="1000" y="1000">
+    <Parameter Name="MGR_ID" Value="&quot;localhost:61499&quot;" />
+    <Attribute Name="Profile" Type="STRING" Value="HOLOBLOC" Comment="device profile" />
+    <Attribute Name="Color" Type="STRING" Value="255,190,111" />
+    <Resource Name="RES" Type="iec61499::system::EMB_RES" x="0" y="0">
+      <FBNetwork />
+    </Resource>
+  </Device>
+</System>

@@ -1,0 +1,142 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EQ_Piston" Comment="Piston, DC motor through an L298N (IN3 up, IN4 down, ENB speed) with a limit switch at the working position; equipment IO: owns its IO points; commands Stop=0, Up=1, Down=2">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="stoppering" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Module" />
+        <With Var="Name" />
+        <With Var="UaRoot" />
+        <With Var="UaEnable" />
+        <With Var="CycleTime" />
+        <With Var="AtLimit_Backend" />
+        <With Var="AtLimit_Modbus" />
+        <With Var="AtLimit_Io" />
+        <With Var="AtLimit_Sim" />
+        <With Var="Up_Backend" />
+        <With Var="Up_Modbus" />
+        <With Var="Up_Io" />
+        <With Var="Down_Backend" />
+        <With Var="Down_Modbus" />
+        <With Var="Down_Io" />
+        <With Var="Speed_Backend" />
+        <With Var="Speed_Modbus" />
+        <With Var="Speed_Io" />
+        <With Var="Speed_Gain" />
+        <With Var="Speed_Bias" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" />
+      <VarDeclaration Name="Name" Type="WSTRING" InitialValue="&quot;Piston&quot;" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" />
+      <VarDeclaration Name="CycleTime" Type="TIME" InitialValue="T#50ms" />
+      <VarDeclaration Name="AtLimit_Backend" Type="USINT" InitialValue="2" />
+      <VarDeclaration Name="AtLimit_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="AtLimit_Io" Type="STRING" />
+      <VarDeclaration Name="AtLimit_Sim" Type="BOOL" InitialValue="FALSE" />
+      <VarDeclaration Name="Up_Backend" Type="USINT" InitialValue="2" />
+      <VarDeclaration Name="Up_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="Up_Io" Type="STRING" />
+      <VarDeclaration Name="Down_Backend" Type="USINT" InitialValue="2" />
+      <VarDeclaration Name="Down_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="Down_Io" Type="STRING" />
+      <VarDeclaration Name="Speed_Backend" Type="USINT" InitialValue="2" />
+      <VarDeclaration Name="Speed_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="Speed_Io" Type="STRING" />
+      <VarDeclaration Name="Speed_Gain" Type="LREAL" InitialValue="257.0" />
+      <VarDeclaration Name="Speed_Bias" Type="LREAL" InitialValue="0.0" />
+    </InputVars>
+    <OutputVars />
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="Logic" Type="stoppering::EL_Piston" x="400" y="200" />
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="4000" y="200" />
+    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_4" x="7600" y="200">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="11200" y="200">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="14800" y="200" />
+    <FB Name="In_AtLimit" Type="modlib::IO_DI" x="18400" y="200" />
+    <FB Name="Out_Up" Type="modlib::IO_DO" x="22000" y="200" />
+    <FB Name="Out_Down" Type="modlib::IO_DO" x="25600" y="200" />
+    <FB Name="Out_Speed" Type="modlib::IO_AO" x="29200" y="200" />
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="32800" y="200" />
+    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="36400" y="200" />
+    <EventConnections>
+      <Connection Source="INIT" Destination="Logic.INIT" />
+      <Connection Source="Logic.INITO" Destination="Mode.INIT" />
+      <Connection Source="Mode.INITO" Destination="SubCmd.INIT" />
+      <Connection Source="SubCmd.INITO" Destination="PubState.INIT" />
+      <Connection Source="PubState.INITO" Destination="PubUa.INIT" />
+      <Connection Source="PubUa.INITO" Destination="In_AtLimit.INIT" />
+      <Connection Source="In_AtLimit.INITO" Destination="Out_Up.INIT" />
+      <Connection Source="Out_Up.INITO" Destination="Out_Down.INIT" />
+      <Connection Source="Out_Down.INITO" Destination="Out_Speed.INIT" />
+      <Connection Source="Out_Speed.INITO" Destination="Cycle.START" />
+      <Connection Source="Out_Speed.INITO" Destination="INITO" />
+      <Connection Source="SubCmd.IND" Destination="Logic.CMD" />
+      <Connection Source="Mode.CHG" Destination="Logic.MOD_CHG" />
+      <Connection Source="Cycle.EO" Destination="Logic.REFRESH" />
+      <Connection Source="Cycle.EO" Destination="In_AtLimit.REQ" />
+      <Connection Source="In_AtLimit.CNF" Destination="Logic.SAMPLE" />
+      <Connection Source="Logic.STATE" Destination="PubState.REQ" />
+      <Connection Source="Logic.STATE" Destination="PubUa.REQ" />
+      <Connection Source="Logic.DRIVE" Destination="Out_Up.REQ" />
+      <Connection Source="Out_Up.CNF" Destination="Out_Down.REQ" />
+      <Connection Source="Out_Down.CNF" Destination="Out_Speed.REQ" />
+      <Connection Source="Out_Speed.CNF" Destination="Logic.DRIVEN" />
+      <Connection Source="Logic.PHASE_START" Destination="PhaseT.START" />
+      <Connection Source="Logic.PHASE_STOP" Destination="PhaseT.STOP" />
+      <Connection Source="PhaseT.EO" Destination="Logic.PHASE_T" />
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Module" Destination="Logic.Module" />
+      <Connection Source="Name" Destination="Logic.Name" />
+      <Connection Source="UaRoot" Destination="Logic.UaRoot" />
+      <Connection Source="Module" Destination="Mode.Module" />
+      <Connection Source="Logic.IdCmd" Destination="SubCmd.ID" />
+      <Connection Source="Logic.IdState" Destination="PubState.ID" />
+      <Connection Source="Logic.IdPub" Destination="PubUa.ID" />
+      <Connection Source="UaEnable" Destination="PubUa.QI" />
+      <Connection Source="CycleTime" Destination="Cycle.DT" />
+      <Connection Source="SubCmd.RD_1" Destination="Logic.C_Holder" />
+      <Connection Source="SubCmd.RD_2" Destination="Logic.C_Command" />
+      <Connection Source="SubCmd.RD_3" Destination="Logic.C_Arg" />
+      <Connection Source="SubCmd.RD_4" Destination="Logic.C_Release" />
+      <Connection Source="Mode.State" Destination="Logic.ModState" />
+      <Connection Source="AtLimit_Backend" Destination="In_AtLimit.Backend" />
+      <Connection Source="AtLimit_Modbus" Destination="In_AtLimit.ModbusId" />
+      <Connection Source="AtLimit_Io" Destination="In_AtLimit.IoName" />
+      <Connection Source="AtLimit_Sim" Destination="In_AtLimit.SimValue" />
+      <Connection Source="In_AtLimit.IN" Destination="Logic.I_AtLimit" />
+      <Connection Source="Logic.AtLimit" Destination="PubState.SD_1" />
+      <Connection Source="Logic.AtLimit" Destination="PubUa.SD_1" />
+      <Connection Source="Logic.Holder" Destination="PubState.SD_2" />
+      <Connection Source="Up_Backend" Destination="Out_Up.Backend" />
+      <Connection Source="Up_Modbus" Destination="Out_Up.ModbusId" />
+      <Connection Source="Up_Io" Destination="Out_Up.IoName" />
+      <Connection Source="Logic.O_Up" Destination="Out_Up.OUT" />
+      <Connection Source="Down_Backend" Destination="Out_Down.Backend" />
+      <Connection Source="Down_Modbus" Destination="Out_Down.ModbusId" />
+      <Connection Source="Down_Io" Destination="Out_Down.IoName" />
+      <Connection Source="Logic.O_Down" Destination="Out_Down.OUT" />
+      <Connection Source="Speed_Backend" Destination="Out_Speed.Backend" />
+      <Connection Source="Speed_Modbus" Destination="Out_Speed.ModbusId" />
+      <Connection Source="Speed_Io" Destination="Out_Speed.IoName" />
+      <Connection Source="Logic.O_Speed" Destination="Out_Speed.OUT" />
+      <Connection Source="Logic.E_Speed" Destination="Out_Speed.EN" />
+      <Connection Source="Speed_Gain" Destination="Out_Speed.Gain" />
+      <Connection Source="Speed_Bias" Destination="Out_Speed.Bias" />
+      <Connection Source="Logic.PhaseDT" Destination="PhaseT.DT" />
+    </DataConnections>
+  </FBNetwork>
+</FBType>

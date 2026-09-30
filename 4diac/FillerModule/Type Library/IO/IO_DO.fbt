@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="IO_DO" Comment="Digital output; Backend 0 simulated, 1 local IO handle (QX, e.g. GPIOChip or PWM channel), 2 Modbus CLIENT">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Backend" />
+        <With Var="IoName" />
+        <With Var="ModbusId" />
+      </Event>
+      <Event Name="REQ" Type="Event">
+        <With Var="OUT" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit">
+        <With Var="QO" />
+      </Event>
+      <Event Name="CNF" Type="Event">
+        <With Var="QO" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Backend" Type="USINT" />
+      <VarDeclaration Name="IoName" Type="STRING" />
+      <VarDeclaration Name="ModbusId" Type="WSTRING" />
+      <VarDeclaration Name="OUT" Type="BOOL" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="QO" Type="BOOL" />
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="Route" Type="modlib::IO_RouteDO" x="400" y="200" />
+    <FB Name="Local" Type="eclipse4diac::io::QX" x="4000" y="200" />
+    <FB Name="Bus" Type="iec61499::net::CLIENT_1_0" x="7600" y="200" />
+    <EventConnections>
+      <Connection Source="INIT" Destination="Route.INIT" />
+      <Connection Source="Route.INIT_IO" Destination="Local.INIT" />
+      <Connection Source="Local.INITO" Destination="Bus.INIT" />
+      <Connection Source="Bus.INITO" Destination="Route.IO_READY" />
+      <Connection Source="Route.INITO" Destination="INITO" />
+      <Connection Source="REQ" Destination="Route.REQ" />
+      <Connection Source="Route.REQ_G" Destination="Local.REQ" />
+      <Connection Source="Route.REQ_M" Destination="Bus.REQ" />
+      <Connection Source="Local.CNF" Destination="Route.CNF_G" />
+      <Connection Source="Bus.CNF" Destination="Route.CNF_M" />
+      <Connection Source="Route.CNF" Destination="CNF" />
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Backend" Destination="Route.Backend" />
+      <Connection Source="IoName" Destination="Local.PARAMS" />
+      <Connection Source="ModbusId" Destination="Bus.ID" />
+      <Connection Source="Route.GQI" Destination="Local.QI" />
+      <Connection Source="Route.MQI" Destination="Bus.QI" />
+      <Connection Source="Local.QO" Destination="Route.QO_G" />
+      <Connection Source="Bus.QO" Destination="Route.QO_M" />
+      <Connection Source="Route.QO" Destination="QO" />
+      <Connection Source="OUT" Destination="Route.OUT" />
+      <Connection Source="Route.Value" Destination="Local.OUT" />
+      <Connection Source="Route.Value" Destination="Bus.SD_1" />
+    </DataConnections>
+  </FBNetwork>
+</FBType>

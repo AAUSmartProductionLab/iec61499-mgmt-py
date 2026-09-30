@@ -7,7 +7,9 @@ param(
     [string]$Project = 'FillingCellFixed',
     [string]$Manifest = (Join-Path $PSScriptRoot 'types-manifest.json'),
     [string]$Export = (Join-Path $PSScriptRoot '.cache\export'),
-    [string]$Module = 'fillingcell'
+    [string]$Module = 'fillingcell',
+    # CMake targets the exported module links to (e.g. forte-modlib: the library compiled once).
+    [string[]]$Link = @()
 )
 $ErrorActionPreference = 'Stop'
 $cache = Join-Path $PSScriptRoot '.cache'
@@ -60,6 +62,9 @@ foreach (lib forte-events forte-net)
         endif ()
 endforeach ()
 '@.Replace('__MODULE__', $Module)
+foreach ($target in $Link) {
+    Add-Content -LiteralPath (Join-Path $export 'CMakeLists.txt') -Encoding utf8 -Value "target_link_libraries(forte-$Module PUBLIC $target)"
+}
 $expected = @($typeList | Where-Object { $_.exported }).Count
 $exported = @(Get-ChildItem -Path (Join-Path $export 'src') -Recurse -Include '*_fbt.cpp', '*_dtp.cpp')
 if ($exported.Count -ne $expected) { throw "Expected $expected exported types, got $($exported.Count)" }

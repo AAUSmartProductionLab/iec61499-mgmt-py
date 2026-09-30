@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FBType Name="PWMChip" Comment="Configures one Linux PWM channel (/sys/class/pwm) as the IO handle VALUE for a QW">
+	<Identification Description="Copyright (c) 2026 Aalborg University&#10; &#10;This program and the accompanying materials are made&#10;available under the terms of the Eclipse Public License 2.0&#10;which is available at https://www.eclipse.org/legal/epl-2.0/&#10;&#10;SPDX-License-Identifier: EPL-2.0">
+	</Identification>
+	<VersionInfo Organization="Aalborg University" Version="1.0" Author="Martin Jensen" Date="2026-09-29" Remarks="FORTE module pwmsysfs (4diac/tools/forte-patches)">
+	</VersionInfo>
+	<CompilerInfo packageName="eclipse4diac::io::pwmsysfs">
+	</CompilerInfo>
+	<InterfaceList>
+		<EventInputs>
+			<Event Name="INIT" Type="Event" Comment="Service Initialization">
+				<With Var="QI"/>
+				<With Var="VALUE"/>
+				<With Var="ChipNumber"/>
+				<With Var="Channel"/>
+				<With Var="PeriodNs"/>
+				<With Var="Inversed"/>
+				<With Var="SysfsRoot"/>
+			</Event>
+		</EventInputs>
+		<EventOutputs>
+			<Event Name="INITO" Type="Event" Comment="Initialization Confirm">
+				<With Var="QO"/>
+				<With Var="STATUS"/>
+			</Event>
+			<Event Name="IND" Type="Event" Comment="Indication from Resource">
+				<With Var="QO"/>
+				<With Var="STATUS"/>
+			</Event>
+		</EventOutputs>
+		<InputVars>
+			<VarDeclaration Name="QI" Type="BOOL" Comment="Event Input Qualifier"/>
+			<VarDeclaration Name="VALUE" Type="WSTRING" Comment="Handle name the QW refers to (its PARAMS)"/>
+			<VarDeclaration Name="ChipNumber" Type="UINT" Comment="N of /sys/class/pwm/pwmchipN" InitialValue="0"/>
+			<VarDeclaration Name="Channel" Type="UINT" Comment="Channel of the chip (pwmM)" InitialValue="0"/>
+			<VarDeclaration Name="PeriodNs" Type="UDINT" Comment="Period in ns (1000000 = 1 kHz, 20000000 = 50 Hz for servos)" InitialValue="1000000"/>
+			<VarDeclaration Name="Inversed" Type="BOOL" Comment="Inversed polarity" InitialValue="FALSE"/>
+			<VarDeclaration Name="SysfsRoot" Type="WSTRING" Comment="Default /sys/class/pwm (another folder for tests)"/>
+		</InputVars>
+		<OutputVars>
+			<VarDeclaration Name="QO" Type="BOOL" Comment="Event Output Qualifier"/>
+			<VarDeclaration Name="STATUS" Type="WSTRING" Comment="Service Status"/>
+		</OutputVars>
+	</InterfaceList>
+	<Attribute Name="eclipse4diac::core::TypeHash" Value=""/>
+</FBType>

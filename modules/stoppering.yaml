@@ -1,0 +1,102 @@
+# Stoppering module, ported from arduino_cpp_examples/Physical-Stations (StopperingModule.cpp,
+# ESP32-S3). As for the filling module, only the equipment behaviour, the motions and the
+# stoppering cycle are ported; the module level is generated.
+# Regenerate: python -m modgen
+module: Stoppering
+project: StopperingModule
+package: stoppering
+opcua_root: /Objects/Stoppering
+modbus: {host: 127.0.0.1, port: 1503, unit: 1, poll_ms: 10}   # 4diac/tools/module_sim.py
+
+targets:
+  pc: {host: localhost, io: modbus}
+  pi: {host: stoppering-pi, user: iiot_gateway, io: gpio,
+       pwm_root: /hostsys/class/pwm}    # the stoppering Pi (set its address)
+
+equipment:
+  Piston:
+    description: Piston, DC motor through an L298N (IN3 up, IN4 down, ENB speed) with a limit switch at the working position
+    inputs:
+      AtLimit: {modbus: d0, gpio: {line: 23, bias: pull_up}}        # pin 16 (ESP32 pin 4, INPUT_PULLUP)
+    outputs:
+      Up:    {modbus: c0, gpio: 17}                                 # pin 11, IN3 (ESP32 pin 39)
+      Down:  {modbus: c1, gpio: 27}                                 # pin 13, IN4 (ESP32 pin 40)
+      # ENB (ESP32 pin 41, 200/255 at 1 kHz): PWM1 on GPIO19 (pin 35; dtoverlay=pwm-2chan).
+      Speed: {type: LREAL, modbus: h0, pwm: {channel: 1, period_ns: 1000000}, gain: 257.0,
+              minimum: 0, maximum: 255, unit: duty}
+    commands:
+      Stop: {}
+      Up: {Up: true, Speed: 200}
+      Down: {Down: true, Speed: 200}
+    sim: {axis: {forward: Down, backward: Up, speed: Speed, nominal: 200, travel_s: 3.0, dead_s: 0.0,
+                 start: 0.5, switches: {AtLimit: 1.0}}}
+  Plunger:
+    description: Linear actuator through an L298N (IN1 retract, IN2 extend); no sensors. ENA (200/255 on the
+      ESP32) is tied to 3.3 V on the Pi, which has only two hardware PWM channels, so it runs at full speed
+    outputs:
+      Retract: {modbus: c2, gpio: 5}                                # pin 29, IN1 (ESP32 pin 17)
+      Extend:  {modbus: c3, gpio: 6}                                # pin 31, IN2 (ESP32 pin 16)
+    commands:
+      Stop: {}
+      Extend: [Extend]
+      Retract: [Retract]
+    sim: {axis: {forward: Extend, backward: Retract, travel_s: 8.0, start: 0.0}}
+  StopperArm:
+    description: Servo that places the stopper; 0..180 degrees (outer home 120, inner 1), no feedback
+    outputs:
+      # ESP32 pin 2 (ESP32Servo, 50 Hz): PWM0 on GPIO18 (pin 12), 20 ms period; 0.5..2.5 ms pulse.
+      Angle: {type: LREAL, modbus: h1, pwm: {channel: 0, period_ns: 20000000}, gain: 36.408, bias: 1638.4,
+              minimum: 0, maximum: 180, unit: deg}
+    commands:
+      Detach: {}               # no pulses: the servo holds no torque (as the ESP32 detaches it)
+      MoveTo: {Angle: Arg}
+    sim: {servo: {output: Angle}}
+
+skills:
+  LowerPiston:
+    description: Piston down to the limit switch (working position)
+    equipment: Piston
+    command: Down
+    ensures: AtLimit
+    timeout: 10s
+  RaisePiston:
+    description: Piston up for Duration (open loop, no top sensor)
+    equipment: Piston
+    command: Up
+    parameters:
+      Duration: {unit: s, minimum: 0.0, maximum: 10.0, default: 2.0}
+    after: Duration
+  ExtendPlunger:
+    description: Plunger down for Duration (open loop)
+    equipment: Plunger
+    command: Extend
+    parameters:
+      Duration: {unit: s, minimum: 0.0, maximum: 20.0, default: 10.0}
+    after: Duration
+  RetractPlunger:
+    description: Plunger up for Duration (open loop)
+    equipment: Plunger
+    command: Retract
+    parameters:
+      Duration: {unit: s, minimum: 0.0, maximum: 20.0, default: 6.5}
+    after: Duration
+  MoveArm:
+    description: Servo to Angle and wait Settle seconds (no feedback)
+    equipment: StopperArm
+    command: MoveTo
+    arg: Angle
+    parameters:
+      Angle: {unit: deg, minimum: 0.0, maximum: 180.0, default: 120.0}
+      Settle: {unit: s, minimum: 0.0, maximum: 5.0, default: 2.0}
+    after: Settle
+
+composites:
+  Stoppering:
+    description: Piston to the working position, place the stopper with the servo, plunge, piston up (runStopperingCycle)
+    execute: [LowerPiston, {MoveArm: {Angle: 1.0}, as: ArmIn}, {MoveArm: {Angle: 121.0}, as: ArmOut},
+              ExtendPlunger, RetractPlunger, RaisePiston]
+
+procedures:
+  # initHardware: servo 90 then 120, plunger up, piston down to the switch and up for clearance.
+  Resetting: [{MoveArm: {Angle: 90.0}, as: ArmMiddle}, {MoveArm: {Angle: 120.0}, as: ArmHome}, RetractPlunger,
+              LowerPiston, {RaisePiston: {Duration: 1.5}}]

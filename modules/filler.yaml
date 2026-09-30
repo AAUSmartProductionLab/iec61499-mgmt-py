@@ -1,0 +1,67 @@
+# Test module for the generator ("baby case", iterations 1 and 2), run against the needle
+# simulator: one equipment item with a position sensor, two skill
+# primitives, one module level skill with a stop sequence, Resetting and Stopping procedures.
+# The simulator (4diac/tools/module_sim.py) moves the needle 50 mm in 2 s (25 mm/s).
+# Regenerate: python -m modgen
+module: Filler
+project: FillerModule
+package: filler
+opcua_root: /Objects/Filler
+modbus: {host: 127.0.0.1, port: 1504, unit: 1, poll_ms: 10}   # 4diac/tools/module_sim.py
+
+# Where the module runs. pc: FORTE on this machine against the Modbus simulator (run_module.py,
+# live tests). pi: FORTE on a Raspberry Pi 4 (4diac/tools/pi.py); points with a GPIO line use it,
+# the others are simulated (constant) because the Pi has no analog inputs.
+targets:
+  pc: {host: localhost, io: modbus}
+  pi: {host: 192.168.0.191, user: iiot_gateway, io: gpio}
+
+equipment:
+  NeedleAxis:
+    description: Needle lift with down/up valves, end switches and a position sensor
+    inputs:
+      # Switches to GND (closed = TRUE): pin 11 (GPIO17) and pin 13 (GPIO27).
+      AtTop:    {type: BOOL, modbus: d0, gpio: {line: 17, bias: pull_up, active_low: true}}
+      AtBottom: {type: BOOL, modbus: d1, gpio: {line: 27, bias: pull_up, active_low: true}}
+      Position: {type: LREAL, modbus: i1, scale: 0.1, unit: mm}   # mm below the top
+    outputs:
+      Down: {modbus: c0, gpio: 5}       # pin 29 (GPIO5), through a relay or driver board
+      Up:   {modbus: c2, gpio: 6}       # pin 31 (GPIO6)
+    commands:            # the first command is the safe state (all outputs off)
+      Stop: []
+      Down: [Down]
+      Up: [Up]
+    sim: {axis: {forward: Down, backward: Up, travel_s: 2.0, start: 0.0, switches: {AtTop: 0.0, AtBottom: 1.0},
+                 position: {input: Position, span: 50.0}}}
+
+skills:
+  MoveNeedleDown:
+    description: Lower the needle to Distance mm below the top; the default is all the way down
+    equipment: NeedleAxis
+    command: Down
+    parameters:
+      Distance: {type: LREAL, unit: mm, minimum: 0.0, maximum: 50.0, default: 50.0,
+                 description: Target depth below the top position}
+    requires: NOT (AtTop AND AtBottom)
+    ensures: (Position >= Distance) OR AtBottom
+    invariant: NOT (AtTop AND AtBottom)
+    timeout: 5s
+  MoveNeedleUp:
+    description: Raise the needle to the top end switch
+    equipment: NeedleAxis
+    command: Up
+    ensures: AtTop
+    invariant: NOT (AtTop AND AtBottom)
+    timeout: 5s
+
+composites:
+  Fill:
+    description: Needle down to Depth and back up; a stop lifts the needle
+    parameters:
+      Depth: {type: LREAL, unit: mm, minimum: 0.0, maximum: 50.0, default: 50.0}
+    execute: [{MoveNeedleDown: {Distance: Depth}}, MoveNeedleUp]
+    stop: [MoveNeedleUp]
+
+procedures:
+  Resetting: [MoveNeedleUp]
+  Stopping: [MoveNeedleUp]

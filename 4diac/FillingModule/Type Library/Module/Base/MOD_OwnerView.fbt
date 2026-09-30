@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="MOD_OwnerView" Comment="The module's occupation owner from its local channel; asks for the current value at INIT">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Module" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" />
+      <Event Name="CHG" Type="Event">
+        <With Var="Owner" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Owner" Type="WSTRING" />
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="Latch" Type="modlib::MOD_OwnerLatch" x="400" y="200" />
+    <FB Name="Listen" Type="iec61499::net::SUBSCRIBE_1" x="4000" y="200">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <FB Name="Query" Type="iec61499::net::PUBLISH_0" x="7600" y="200">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <EventConnections>
+      <Connection Source="INIT" Destination="Latch.INIT" />
+      <Connection Source="Latch.INITO" Destination="Listen.INIT" />
+      <Connection Source="Listen.INITO" Destination="Query.INIT" />
+      <Connection Source="Query.INITO" Destination="Query.REQ" />
+      <Connection Source="Query.INITO" Destination="INITO" />
+      <Connection Source="Listen.IND" Destination="Latch.REQ" />
+      <Connection Source="Latch.CNF" Destination="CHG" />
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Module" Destination="Latch.Module" />
+      <Connection Source="Latch.IdSub" Destination="Listen.ID" />
+      <Connection Source="Latch.IdQuery" Destination="Query.ID" />
+      <Connection Source="Listen.RD_1" Destination="Latch.Received" />
+      <Connection Source="Latch.Owner" Destination="Owner" />
+    </DataConnections>
+  </FBNetwork>
+</FBType>

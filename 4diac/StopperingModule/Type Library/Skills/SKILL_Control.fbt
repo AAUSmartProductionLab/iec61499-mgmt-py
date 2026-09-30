@@ -1,0 +1,422 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_Control" Comment="Skill state machine: Start/Stop/Abort/Reset over OPC UA (owner only, Start only in module Execute) and START/HALT/ABORT from a parent; Idle 0, Running 1, Stopping 2, Succeeded 3, Failed 4, Aborted 5">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Module" />
+        <With Var="UaRoot" />
+        <With Var="UaPath" />
+      </Event>
+      <Event Name="CMD_START" Type="Event">
+        <With Var="S_Start" />
+        <With Var="InRange" />
+        <With Var="EqFree" />
+      </Event>
+      <Event Name="CMD_STOP" Type="Event">
+        <With Var="S_Stop" />
+      </Event>
+      <Event Name="CMD_ABORT" Type="Event">
+        <With Var="S_Abort" />
+      </Event>
+      <Event Name="CMD_RESET" Type="Event">
+        <With Var="S_Reset" />
+      </Event>
+      <Event Name="OWNER_CHG" Type="Event">
+        <With Var="Owner" />
+      </Event>
+      <Event Name="MOD_CHG" Type="Event">
+        <With Var="ModState" />
+      </Event>
+      <Event Name="START" Type="Event" />
+      <Event Name="HALT" Type="Event" />
+      <Event Name="ABORT" Type="Event" />
+      <Event Name="RESET" Type="Event" />
+      <Event Name="EXEC_DONE" Type="Event" />
+      <Event Name="EXEC_FAILED" Type="Event">
+        <With Var="ExecError" />
+      </Event>
+      <Event Name="STOP_DONE" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit">
+        <With Var="IdStart" />
+        <With Var="IdStop" />
+        <With Var="IdAbort" />
+        <With Var="IdReset" />
+        <With Var="IdPub" />
+        <With Var="IdAct" />
+      </Event>
+      <Event Name="RSP_START" Type="Event">
+        <With Var="Accepted" />
+        <With Var="RspError" />
+      </Event>
+      <Event Name="RSP_STOP" Type="Event">
+        <With Var="Accepted" />
+        <With Var="RspError" />
+      </Event>
+      <Event Name="RSP_ABORT" Type="Event">
+        <With Var="Accepted" />
+        <With Var="RspError" />
+      </Event>
+      <Event Name="RSP_RESET" Type="Event">
+        <With Var="Accepted" />
+        <With Var="RspError" />
+      </Event>
+      <Event Name="PUB" Type="Event">
+        <With Var="State" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="GO_UA" Type="Event" />
+      <Event Name="GO_PARENT" Type="Event" />
+      <Event Name="HALT_O" Type="Event" />
+      <Event Name="ABORT_O" Type="Event" />
+      <Event Name="RESET_O" Type="Event" />
+      <Event Name="RUN_STOP" Type="Event" />
+      <Event Name="SUCCESS" Type="Event" />
+      <Event Name="FAILURE" Type="Event">
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="ACT" Type="Event">
+        <With Var="Delta" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+      <VarDeclaration Name="UaPath" Type="WSTRING" />
+      <VarDeclaration Name="S_Start" Type="WSTRING" />
+      <VarDeclaration Name="InRange" Type="BOOL" />
+      <VarDeclaration Name="EqFree" Type="BOOL" />
+      <VarDeclaration Name="S_Stop" Type="WSTRING" />
+      <VarDeclaration Name="S_Abort" Type="WSTRING" />
+      <VarDeclaration Name="S_Reset" Type="WSTRING" />
+      <VarDeclaration Name="Owner" Type="WSTRING" />
+      <VarDeclaration Name="ModState" Type="USINT" />
+      <VarDeclaration Name="ExecError" Type="UINT" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="IdStart" Type="WSTRING" />
+      <VarDeclaration Name="IdStop" Type="WSTRING" />
+      <VarDeclaration Name="IdAbort" Type="WSTRING" />
+      <VarDeclaration Name="IdReset" Type="WSTRING" />
+      <VarDeclaration Name="IdPub" Type="WSTRING" />
+      <VarDeclaration Name="IdAct" Type="WSTRING" />
+      <VarDeclaration Name="Accepted" Type="BOOL" />
+      <VarDeclaration Name="RspError" Type="UINT" />
+      <VarDeclaration Name="State" Type="USINT" />
+      <VarDeclaration Name="ErrorID" Type="UINT" />
+      <VarDeclaration Name="Delta" Type="INT" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Owned" Type="BOOL" />
+      <VarDeclaration Name="Here" Type="USINT" />
+      <VarDeclaration Name="Active" Type="BOOL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Init" x="570" y="100">
+        <ECAction Algorithm="Alg_Init" Output="INITO" />
+      </ECState>
+      <ECState Name="Idle" x="990" y="100">
+        <ECAction Algorithm="Alg_Idle" Output="PUB" />
+      </ECState>
+      <ECState Name="Running" x="1410" y="100">
+        <ECAction Algorithm="Alg_Running" Output="PUB" />
+      </ECState>
+      <ECState Name="Stopping" x="150" y="330">
+        <ECAction Algorithm="Alg_Stopping" Output="PUB" />
+      </ECState>
+      <ECState Name="StopProc" x="570" y="330">
+        <ECAction Algorithm="Alg_StopProc" Output="PUB" />
+      </ECState>
+      <ECState Name="Succeeded" x="990" y="330">
+        <ECAction Algorithm="Alg_Succeeded" Output="PUB" />
+      </ECState>
+      <ECState Name="Failed" x="1410" y="330">
+        <ECAction Algorithm="Alg_Failed" Output="PUB" />
+      </ECState>
+      <ECState Name="Aborted" x="150" y="560">
+        <ECAction Algorithm="Alg_Aborted" Output="PUB" />
+      </ECState>
+      <ECState Name="GoUa" x="570" y="560">
+        <ECAction Algorithm="Alg_GoUa" Output="ACT" />
+        <ECAction Output="GO_UA" />
+      </ECState>
+      <ECState Name="GoParent" x="990" y="560">
+        <ECAction Algorithm="Alg_GoParent" Output="ACT" />
+        <ECAction Output="GO_PARENT" />
+      </ECState>
+      <ECState Name="Halt" x="1410" y="560">
+        <ECAction Output="HALT_O" />
+      </ECState>
+      <ECState Name="RunStop" x="150" y="790">
+        <ECAction Output="RUN_STOP" />
+      </ECState>
+      <ECState Name="Succeed" x="570" y="790">
+        <ECAction Algorithm="Alg_Succeed" Output="ACT" />
+        <ECAction Output="SUCCESS" />
+      </ECState>
+      <ECState Name="Fail" x="990" y="790">
+        <ECAction Algorithm="Alg_Fail" Output="ACT" />
+        <ECAction Output="FAILURE" />
+      </ECState>
+      <ECState Name="Interrupted" x="1410" y="790">
+        <ECAction Algorithm="Alg_Interrupted" Output="ACT" />
+        <ECAction Output="FAILURE" />
+      </ECState>
+      <ECState Name="AbortChk" x="150" y="1020" />
+      <ECState Name="AbortActive" x="570" y="1020">
+        <ECAction Algorithm="Alg_AbortActive" Output="ABORT_O" />
+        <ECAction Output="ACT" />
+      </ECState>
+      <ECState Name="AbortIdle" x="990" y="1020">
+        <ECAction Output="ABORT_O" />
+      </ECState>
+      <ECState Name="StartRefused" x="1410" y="1020">
+        <ECAction Algorithm="Alg_StartRefused" Output="FAILURE" />
+      </ECState>
+      <ECState Name="ResetOk" x="150" y="1250">
+        <ECAction Output="RESET_O" />
+      </ECState>
+      <ECState Name="ChkStart" x="570" y="1250">
+        <ECAction Algorithm="Alg_ChkStart" Output="RSP_START" />
+      </ECState>
+      <ECState Name="ChkStop" x="990" y="1250">
+        <ECAction Algorithm="Alg_ChkStop" Output="RSP_STOP" />
+      </ECState>
+      <ECState Name="ChkAbort" x="1410" y="1250">
+        <ECAction Algorithm="Alg_ChkAbort" Output="RSP_ABORT" />
+      </ECState>
+      <ECState Name="ChkReset" x="150" y="1480">
+        <ECAction Algorithm="Alg_ChkReset" Output="RSP_RESET" />
+      </ECState>
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
+      <ECTransition Source="Init" Destination="Idle" Condition="1" x="0" y="0" />
+      <ECTransition Source="Idle" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="Idle" Destination="ChkStop" Condition="CMD_STOP" x="0" y="0" />
+      <ECTransition Source="Idle" Destination="ChkAbort" Condition="CMD_ABORT" x="0" y="0" />
+      <ECTransition Source="Idle" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="Running" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="Running" Destination="ChkStop" Condition="CMD_STOP" x="0" y="0" />
+      <ECTransition Source="Running" Destination="ChkAbort" Condition="CMD_ABORT" x="0" y="0" />
+      <ECTransition Source="Running" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="Stopping" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="Stopping" Destination="ChkStop" Condition="CMD_STOP" x="0" y="0" />
+      <ECTransition Source="Stopping" Destination="ChkAbort" Condition="CMD_ABORT" x="0" y="0" />
+      <ECTransition Source="Stopping" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="StopProc" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="StopProc" Destination="ChkStop" Condition="CMD_STOP" x="0" y="0" />
+      <ECTransition Source="StopProc" Destination="ChkAbort" Condition="CMD_ABORT" x="0" y="0" />
+      <ECTransition Source="StopProc" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="Succeeded" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="Succeeded" Destination="ChkStop" Condition="CMD_STOP" x="0" y="0" />
+      <ECTransition Source="Succeeded" Destination="ChkAbort" Condition="CMD_ABORT" x="0" y="0" />
+      <ECTransition Source="Succeeded" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="Failed" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="Failed" Destination="ChkStop" Condition="CMD_STOP" x="0" y="0" />
+      <ECTransition Source="Failed" Destination="ChkAbort" Condition="CMD_ABORT" x="0" y="0" />
+      <ECTransition Source="Failed" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="Aborted" Destination="ChkStart" Condition="CMD_START" x="0" y="0" />
+      <ECTransition Source="Aborted" Destination="ChkStop" Condition="CMD_STOP" x="0" y="0" />
+      <ECTransition Source="Aborted" Destination="ChkAbort" Condition="CMD_ABORT" x="0" y="0" />
+      <ECTransition Source="Aborted" Destination="ChkReset" Condition="CMD_RESET" x="0" y="0" />
+      <ECTransition Source="Idle" Destination="GoParent" Condition="START" x="0" y="0" />
+      <ECTransition Source="Succeeded" Destination="GoParent" Condition="START" x="0" y="0" />
+      <ECTransition Source="Failed" Destination="GoParent" Condition="START" x="0" y="0" />
+      <ECTransition Source="Aborted" Destination="StartRefused" Condition="START" x="0" y="0" />
+      <ECTransition Source="StartRefused" Destination="Aborted" Condition="1" x="0" y="0" />
+      <ECTransition Source="Running" Destination="Succeed" Condition="EXEC_DONE" x="0" y="0" />
+      <ECTransition Source="Running" Destination="Fail" Condition="EXEC_FAILED" x="0" y="0" />
+      <ECTransition Source="Running" Destination="Halt" Condition="HALT" x="0" y="0" />
+      <ECTransition Source="Running" Destination="Halt" Condition="MOD_CHG[ModState = 7]" x="0" y="0" />
+      <ECTransition Source="Stopping" Destination="RunStop" Condition="EXEC_DONE" x="0" y="0" />
+      <ECTransition Source="Stopping" Destination="RunStop" Condition="EXEC_FAILED" x="0" y="0" />
+      <ECTransition Source="StopProc" Destination="Interrupted" Condition="STOP_DONE" x="0" y="0" />
+      <ECTransition Source="Idle" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
+      <ECTransition Source="Idle" Destination="AbortChk" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="Running" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
+      <ECTransition Source="Running" Destination="AbortChk" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="Stopping" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
+      <ECTransition Source="Stopping" Destination="AbortChk" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="StopProc" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
+      <ECTransition Source="StopProc" Destination="AbortChk" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="Succeeded" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
+      <ECTransition Source="Succeeded" Destination="AbortChk" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="Failed" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
+      <ECTransition Source="Failed" Destination="AbortChk" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="Aborted" Destination="ResetOk" Condition="MOD_CHG[(ModState = 1) OR (ModState = 2)]" x="0" y="0" />
+      <ECTransition Source="Aborted" Destination="ResetOk" Condition="RESET" x="0" y="0" />
+      <ECTransition Source="ResetOk" Destination="Idle" Condition="1" x="0" y="0" />
+      <ECTransition Source="GoUa" Destination="Running" Condition="1" x="0" y="0" />
+      <ECTransition Source="GoParent" Destination="Running" Condition="1" x="0" y="0" />
+      <ECTransition Source="Halt" Destination="Stopping" Condition="1" x="0" y="0" />
+      <ECTransition Source="RunStop" Destination="StopProc" Condition="1" x="0" y="0" />
+      <ECTransition Source="Succeed" Destination="Succeeded" Condition="1" x="0" y="0" />
+      <ECTransition Source="Fail" Destination="Failed" Condition="1" x="0" y="0" />
+      <ECTransition Source="Interrupted" Destination="Failed" Condition="1" x="0" y="0" />
+      <ECTransition Source="AbortChk" Destination="AbortActive" Condition="Active" x="0" y="0" />
+      <ECTransition Source="AbortChk" Destination="AbortIdle" Condition="1" x="0" y="0" />
+      <ECTransition Source="AbortActive" Destination="Aborted" Condition="1" x="0" y="0" />
+      <ECTransition Source="AbortIdle" Destination="Aborted" Condition="1" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="GoUa" Condition="Accepted" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Idle" Condition="Here = 0" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Running" Condition="Here = 1" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Stopping" Condition="Here = 2" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="StopProc" Condition="Here = 3" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Succeeded" Condition="Here = 4" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Failed" Condition="Here = 5" x="0" y="0" />
+      <ECTransition Source="ChkStart" Destination="Aborted" Condition="Here = 6" x="0" y="0" />
+      <ECTransition Source="ChkStop" Destination="Halt" Condition="Accepted" x="0" y="0" />
+      <ECTransition Source="ChkStop" Destination="Idle" Condition="Here = 0" x="0" y="0" />
+      <ECTransition Source="ChkStop" Destination="Running" Condition="Here = 1" x="0" y="0" />
+      <ECTransition Source="ChkStop" Destination="Stopping" Condition="Here = 2" x="0" y="0" />
+      <ECTransition Source="ChkStop" Destination="StopProc" Condition="Here = 3" x="0" y="0" />
+      <ECTransition Source="ChkStop" Destination="Succeeded" Condition="Here = 4" x="0" y="0" />
+      <ECTransition Source="ChkStop" Destination="Failed" Condition="Here = 5" x="0" y="0" />
+      <ECTransition Source="ChkStop" Destination="Aborted" Condition="Here = 6" x="0" y="0" />
+      <ECTransition Source="ChkAbort" Destination="AbortChk" Condition="Accepted" x="0" y="0" />
+      <ECTransition Source="ChkAbort" Destination="Idle" Condition="Here = 0" x="0" y="0" />
+      <ECTransition Source="ChkAbort" Destination="Running" Condition="Here = 1" x="0" y="0" />
+      <ECTransition Source="ChkAbort" Destination="Stopping" Condition="Here = 2" x="0" y="0" />
+      <ECTransition Source="ChkAbort" Destination="StopProc" Condition="Here = 3" x="0" y="0" />
+      <ECTransition Source="ChkAbort" Destination="Succeeded" Condition="Here = 4" x="0" y="0" />
+      <ECTransition Source="ChkAbort" Destination="Failed" Condition="Here = 5" x="0" y="0" />
+      <ECTransition Source="ChkAbort" Destination="Aborted" Condition="Here = 6" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="ResetOk" Condition="Accepted" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Idle" Condition="Here = 0" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Running" Condition="Here = 1" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Stopping" Condition="Here = 2" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="StopProc" Condition="Here = 3" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Succeeded" Condition="Here = 4" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Failed" Condition="Here = 5" x="0" y="0" />
+      <ECTransition Source="ChkReset" Destination="Aborted" Condition="Here = 6" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Init">
+      <ST>IdStart := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, UaPath)), "/Start"), "]");
+IdStop := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, UaPath)), "/Stop"), "]");
+IdAbort := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, UaPath)), "/Abort"), "]");
+IdReset := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, UaPath)), "/Reset"), "]");
+IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, UaPath)), "/State;"), CONCAT(UaRoot, UaPath)), "/ErrorID"), "]");
+IdAct := CONCAT(CONCAT("loc[", Module), "/activity]");</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Idle">
+      <ST>State := 0;
+Here := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Running">
+      <ST>State := 1;
+Here := 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Stopping">
+      <ST>State := 2;
+Here := 2;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_StopProc">
+      <ST>State := 2;
+Here := 3;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Succeeded">
+      <ST>State := 3;
+Here := 4;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Failed">
+      <ST>State := 4;
+Here := 5;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Aborted">
+      <ST>State := 5;
+Here := 6;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_GoUa">
+      <ST>Active := TRUE;
+Delta := 1;
+ErrorID := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_GoParent">
+      <ST>Active := TRUE;
+Delta := 1;
+ErrorID := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Succeed">
+      <ST>Active := FALSE;
+Delta := -1;
+ErrorID := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Fail">
+      <ST>Active := FALSE;
+Delta := -1;
+ErrorID := ExecError;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Interrupted">
+      <ST>Active := FALSE;
+Delta := -1;
+ErrorID := 7;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_AbortActive">
+      <ST>Active := FALSE;
+Delta := -1;
+ErrorID := 7;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_StartRefused">
+      <ST>ErrorID := 4;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ChkStart">
+      <ST>Owned := (S_Start = Owner) AND (Owner &lt;&gt; "");
+Accepted := FALSE;
+IF NOT Owned THEN
+  RspError := 5;
+ELSIF ModState &lt;&gt; 6 THEN
+  RspError := 4;
+ELSIF (Here = 1) OR (Here = 2) OR (Here = 3) THEN
+  RspError := 6;
+ELSIF Here = 6 THEN
+  RspError := 4;
+ELSIF NOT InRange THEN
+  RspError := 8;
+ELSIF NOT EqFree THEN
+  RspError := 6;
+ELSE
+  Accepted := TRUE;
+  RspError := 0;
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ChkStop">
+      <ST>Owned := (S_Stop = Owner) AND (Owner &lt;&gt; "");
+Accepted := Owned AND (Here = 1);
+IF NOT Owned THEN
+  RspError := 5;
+ELSIF NOT Accepted THEN
+  RspError := 4;
+ELSE
+  RspError := 0;
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ChkAbort">
+      <ST>Owned := (S_Abort = Owner) AND (Owner &lt;&gt; "");
+Accepted := Owned AND (Here &lt;&gt; 6);
+IF NOT Owned THEN
+  RspError := 5;
+ELSIF NOT Accepted THEN
+  RspError := 4;
+ELSE
+  RspError := 0;
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ChkReset">
+      <ST>Owned := (S_Reset = Owner) AND (Owner &lt;&gt; "");
+Accepted := Owned AND (Here = 6);
+IF NOT Owned THEN
+  RspError := 5;
+ELSIF NOT Accepted THEN
+  RspError := 4;
+ELSE
+  RspError := 0;
+END_IF;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>
