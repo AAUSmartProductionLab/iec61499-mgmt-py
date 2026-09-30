@@ -2,21 +2,13 @@ param(
     # 4diac FORTE Build Environment (https://github.com/eclipse-4diac/4diac-fbe); its
     # toolchain builds open62541, libmodbus etc. and links everything statically.
     [string]$Fbe = 'C:\4diac-fbe',
-    # Config name (fbe/configurations/<name>.txt) or directory (e.g. configurations/pi).
-    [string]$Config = 'fillingcell-win',
+    # Config name (fbe/configurations/<name>.txt) or path below it (e.g. pi/modules-pi).
+    [string]$Config = 'modules-win',
     # 4diac FORTE release built against; must match the IDE that exports the types.
-    [string]$ForteTag = '3.3.0',
-    [switch]$SkipValidate,
-    # Passed to validate.ps1: 4diac project, type manifest, export folder and CMake module.
-    [string]$Project = 'FillingCellFixed',
-    [string]$Manifest = (Join-Path $PSScriptRoot 'types-manifest.json'),
-    [string]$Export = (Join-Path $PSScriptRoot '.cache\export'),
-    [string]$Module = 'fillingcell'
+    [string]$ForteTag = '3.3.0'
 )
+# Builds FORTE only, from the exports build-modules.ps1 validated and wrote.
 $ErrorActionPreference = 'Stop'
-if (-not $SkipValidate) {
-    & (Join-Path $PSScriptRoot 'validate.ps1') -Project $Project -Manifest $Manifest -Export $Export -Module $Module
-}
 $root = Join-Path $PSScriptRoot 'fbe'
 # The FBE builds $root/4diac-forte when it exists (instead of its own bundled FORTE).
 $forte = Join-Path $root '4diac-forte'

@@ -8,16 +8,9 @@ import time
 
 import pytest
 
-import livecell
-from iec61499_mgmt.protocol import Client, Command
-from iec61499_mgmt.sysfile import load_application
-from iec61499_mgmt.typelib import build_library, query_hashes, read_types
-
 
 def pytest_addoption(parser):
     """Register the live-test command line options."""
-    parser.addoption("--forte-exe", help="Launch this FORTE executable for isolated integration tests")
-    parser.addoption("--forte-runtime-dir", help="Prepend this DLL directory to the FORTE child's PATH")
     parser.addoption("--module-forte-exe", help="FORTE built with every module (build-modules.ps1; tests/test_module_live.py)")
     parser.addoption("--pi-host", help="Run tests/test_module_live.py on this Raspberry Pi's FORTE (pi.py install)")
     parser.addoption("--pi-user", help="SSH login on the Pi (default: the pi target's user in modules/filling.yaml)")
@@ -68,32 +61,3 @@ def launch_forte(executable, directory, runtime_dir=None, extra_args=()):
                     process.wait(timeout=5)
             log.seek(0)
             print("FORTE log:", log.read().decode(errors="replace")[-3000:])
-
-
-@pytest.fixture(scope="session")
-def forte_exe(request):
-    """FORTE executable from --forte-exe; skips the test if absent."""
-    executable = request.config.getoption("--forte-exe")
-    if not executable:
-        pytest.skip("Pass --forte-exe to run against an isolated FORTE process")
-    return Path(executable).resolve(strict=True)
-
-
-@pytest.fixture
-def forte(request, forte_exe, tmp_path):
-    """A fresh FORTE with an EMB_RES 'RES'; yields (Resource, opc ua port)."""
-    ua_port = free_port()
-    with launch_forte(forte_exe, tmp_path, request.config.getoption("--forte-runtime-dir"),
-                      ["-op", str(ua_port)]) as port, Client("127.0.0.1", port) as client:
-        client.execute(Command(op="create_fb", resource="", name="RES", type="iec61499::system::EMB_RES"))
-        yield livecell.Resource(client), ua_port
-
-
-@pytest.fixture(scope="session")
-def library(request, forte_exe, tmp_path_factory):
-    """Type library with hashes queried from the runtime (what types.json contains)."""
-    with launch_forte(forte_exe, tmp_path_factory.mktemp("types")) as port, Client("127.0.0.1", port) as client:
-        client.execute(Command(op="create_fb", resource="", name="RES", type="iec61499::system::EMB_RES"))
-        types = read_types(livecell.TYPES)
-        hashes = query_hashes(client, "RES", [n for n in types if n.startswith(livecell.FC)])
-    return build_library(types, hashes, build_id=str(forte_exe), fixed=load_application(livecell.SYS, "FillingCell"))

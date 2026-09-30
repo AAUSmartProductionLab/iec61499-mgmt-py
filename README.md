@@ -9,8 +9,6 @@ outside the repository; proper documentation follows once everything is finalise
 
 ## Map
 
-**Current: generated modules** (since 28 Sep 2026)
-
 | Path | What |
 | --- | --- |
 | `modules/*.yaml` | Module specifications: equipment IO, skill primitives, module level skills, procedures, targets (PC with a simulator, Pi with GPIO/PWM) |
@@ -18,15 +16,7 @@ outside the repository; proper documentation follows once everything is finalise
 | `4diac/ModLib`, `4diac/FillingModule`, `4diac/StopperingModule`, `4diac/FillerModule` | Generated 4diac projects (the `.sys` keeps layouts arranged in the IDE) |
 | `modsync/` | Module ⇄ spec ⇄ AAS: read what runs on a module, report drift, write its AAS, push changes (`python -m modsync`) |
 | `4diac/tools/` | FORTE build (`build-modules.ps1`, `build-runtime.ps1`, FORTE patches incl. the sysfs PWM module), Pi deployment (`pi.py`, `pi/`), module simulator (`module_sim.py`, `run_module.py`) |
-| `iec61499_mgmt/` | FORTE management library: typed commands, client, `.sys` flattening, boot files, read-back verification, type library, guarded changeover |
-
-**Legacy: the filling cell of the first iteration** (kept until the module stack covers its
-experiments)
-
-| Path | What |
-| --- | --- |
-| `4diac/FillingCellFixed`, `4diac/tools/generate_filling_cell.py` | `SK_*` skill composites with PackML, gate and contract blocks, pattern FBs, the OPC UA driven cell |
-| `skill_compiler/`, `examples/` | BPMN compiler (sequences, loops), contract forward check, mutation study; the cell's processes, bindings and products A–E |
+| `iec61499_mgmt/` | FORTE management library: typed commands, client, networks and plans, `.sys` flattening, boot files, read-back verification, type library |
 
 Local only, not committed: `AAS_Builder/` (the lab's AAS builder, lives in the lab
 repository), `arduino_cpp_examples/` (the ESP32 station code the modules were ported from),
@@ -50,8 +40,7 @@ python -m modsync pull --host 192.168.0.191                # which module runs t
 ```
 
 In the 4diac IDE (a workspace outside the repository), import the module projects without
-copying them. The legacy cell: `python 4diac/tools/generate_filling_cell.py`,
-`4diac/tools/build-runtime.ps1`, live tests with `--forte-exe`.
+copying them.
 
 Live tests start their own FORTE on free local ports and stop it afterwards; without the
 FORTE options they are skipped. `tests/test_module_live.py` also runs against a Pi

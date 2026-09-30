@@ -1,4 +1,6 @@
-"""Offline tests for the type library builder, boot files and read-back verification."""
+"""Offline tests for the type library builder, boot files and read-back verification, on the
+generated filling module (its PC application is the fixed part; a small network added online in
+the PROC scope stands for a change)."""
 from pathlib import Path
 
 import pytest
@@ -11,56 +13,55 @@ from iec61499_mgmt.typelib import build_library, read_fbt, read_types
 from iec61499_mgmt.verify import same_value, time_ms
 
 ROOT = Path(__file__).resolve().parents[1]
-TYPES = ROOT / "4diac" / "FillingCellFixed" / "Type Library"
-SYS = ROOT / "4diac" / "FillingCellFixed" / "FillingCellFixed.sys"
+PROJECT = ROOT / "4diac" / "FillingModule"
+TYPES = PROJECT / "Type Library"
+SYS = PROJECT / "FillingModule.sys"
+APP = "Filling"
 HASH = "v2:SHA3-512:abc_-="
 
 
 @pytest.fixture(scope="module")
 def library():
-    """Library of the generated types with a fake hash, boundary from the fixed application."""
+    """Library of the module's types with a fake hash, boundary from the fixed application."""
     types = read_types(TYPES)
-    names = [n for n in types if n.startswith("fillingcell::")]
-    return build_library(types, {n: HASH for n in names}, "test", fixed=load_application(SYS, "FillingCell"))
+    names = [n for n in types if n.startswith(("filling::", "modlib::"))]
+    return build_library(types, {n: HASH for n in names}, "test", fixed=load_application(SYS, APP))
 
 
-def procedure(library):
-    """One P_Call between the facade and the Dose skill."""
+def change(library):
+    """A wait step added online: the module state manager's Resetting runs it."""
     return Network.model_validate({"resource": "RES", "instances": [
-        {"name": "PROC.Dose", "type": "fillingcell::P_Call", "type_hash": HASH,
-         "parameters": {"P1": {"type": "LREAL", "value": 0.5}}}], "connections": [
-        {"source": "Facade.START", "destination": "PROC.Dose.EI"},
-        {"source": "PROC.Dose.CALL", "destination": "EM_Filler.Dose.CALL"},
-        {"source": "PROC.Dose.CP1", "destination": "EM_Filler.Dose.P1", "kind": "data"},
-        {"source": "EM_Filler.Dose.DONE", "destination": "PROC.Dose.DONE"},
-        {"source": "PROC.Dose.EO", "destination": "Facade.FINISHED"}]}).validate_library(library)
+        {"name": "PROC.Wait", "type": "filling::SK_Dwell", "type_hash": HASH,
+         "parameters": {"Duration": {"type": "LREAL", "value": 0.5}}}], "connections": [
+        {"source": "Module.RUN_RESETTING", "destination": "PROC.Wait.START"},
+        {"source": "PROC.Wait.SUCCESS", "destination": "Module.RESETTING_DONE"}]}).validate_library(library)
 
 
 def test_read_fbt_ports():
     """Interface ports are read with kind, direction, type and writability."""
-    name, ports = read_fbt(TYPES / "Procedure" / "P_Call.fbt")
-    assert name == "fillingcell::P_Call"
-    assert ports["EI"].kind == "event" and ports["EI"].direction == "input"
-    assert ports["P1"].writable and ports["P1"].data_type == "LREAL"
-    assert not ports["CP1"].writable and ports["CP1"].direction == "output"
+    name, ports = read_fbt(TYPES / "Skills" / "SK_Dwell.fbt")
+    assert name == "filling::SK_Dwell"
+    assert ports["START"].kind == "event" and ports["START"].direction == "input"
+    assert ports["Duration"].writable and ports["Duration"].data_type == "LREAL"
+    assert not ports["State"].writable and ports["State"].direction == "output"
 
 
-def test_boundary_ports_exclude_procedure_scope(library):
+def test_boundary_ports_exclude_the_owned_scope(library):
     """Ports of fixed instances are boundary ports; nothing inside PROC is."""
-    assert "EM_Filler.Dose.CALL" in library.boundary_ports
+    assert "Module.RESETTING_DONE" in library.boundary_ports
     assert not any(k.startswith("PROC.") for k in library.boundary_ports)
 
 
 def test_boot_file_order_and_format(library):
-    """Resource first, fixed part, procedure without START/STOP, resource start last."""
-    commands = deployment(load_application(SYS, "FillingCell"), procedure=procedure(library), library=library)
+    """Resource first, fixed part, the change without START/STOP, resource start last."""
+    commands = deployment(load_application(SYS, APP), procedure=change(library), library=library)
     lines = boot_file(commands).splitlines()
     assert lines[0].startswith(';<Request ID="1" Action="CREATE"><FB Name="RES" Type="iec61499::system::EMB_RES"')
     assert lines[-1].startswith(';<Request') and 'Action="START"' in lines[-1]
     assert all(line.split(";", 1)[0] in ("", "RES") for line in lines)
     ops = [c.op for c in commands]
     assert "stop" not in ops and ops.count("start") == 1
-    assert any(c.op == "create_fb" and c.type == f"fillingcell::P_Call#{HASH}" for c in commands)
+    assert any(c.op == "create_fb" and c.type == f"filling::SK_Dwell#{HASH}" for c in commands)
 
 
 def test_same_value_and_time():
@@ -88,15 +89,15 @@ class FakeClient:
 
 def test_verify_reports_drift(library):
     """Missing edges, extra instances, wrong values and stopped FBs are all reported."""
-    network = procedure(library)
+    network = change(library)
     edges = [(c.source, c.destination) for c in network.connections]
-    good = FakeClient({"PROC.Dose": ("fillingcell::P_Call", "RUNNING"), "Unit": ("fillingcell::FC_Unit", "RUNNING")},
-                      edges, {"PROC.Dose.P1": "0.5"})
+    good = FakeClient({"PROC.Wait": ("filling::SK_Dwell", "RUNNING"), "Module": ("modlib::MOD_StateManager", "RUNNING")},
+                      edges, {"PROC.Wait.Duration": "0.5"})
     assert verify(good, network) == []
-    bad = FakeClient({"PROC.Dose": ("fillingcell::P_Call", "STOPPED"), "PROC.Extra": ("fillingcell::P_Loop", "RUNNING")},
-                     edges[1:], {"PROC.Dose.P1": "0.25"})
+    bad = FakeClient({"PROC.Wait": ("filling::SK_Dwell", "STOPPED"), "PROC.Extra": ("filling::SK_Tare", "RUNNING")},
+                     edges[1:], {"PROC.Wait.Duration": "0.25"})
     problems = verify(bad, network)
     assert "unexpected instance PROC.Extra" in problems
-    assert "missing connection Facade.START -> PROC.Dose.EI" in problems
-    assert "PROC.Dose is STOPPED, expected RUNNING" in problems
-    assert "PROC.Dose.P1 = 0.25, expected 0.5" in problems
+    assert "missing connection Module.RUN_RESETTING -> PROC.Wait.START" in problems
+    assert "PROC.Wait is STOPPED, expected RUNNING" in problems
+    assert "PROC.Wait.Duration = 0.25, expected 0.5" in problems

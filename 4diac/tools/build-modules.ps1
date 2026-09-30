@@ -26,4 +26,4 @@ if (-not $SkipValidate) {
             -Manifest (Join-Path $PSScriptRoot "manifests\$($p.Project).json") -Export (Join-Path $exports $p.Module)
     }
 }
-& (Join-Path $PSScriptRoot 'build-runtime.ps1') -SkipValidate -Config $Config
+& (Join-Path $PSScriptRoot 'build-runtime.ps1') -Config $Config
