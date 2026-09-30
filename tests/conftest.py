@@ -18,7 +18,11 @@ def pytest_addoption(parser):
     """Register the live-test command line options."""
     parser.addoption("--forte-exe", help="Launch this FORTE executable for isolated integration tests")
     parser.addoption("--forte-runtime-dir", help="Prepend this DLL directory to the FORTE child's PATH")
-    parser.addoption("--unit-forte-exe", help="FORTE built with a unitgen project (tests/test_unit_live.py)")
+    parser.addoption("--module-forte-exe", help="FORTE built with every module (build-modules.ps1; tests/test_module_live.py)")
+    parser.addoption("--pi-host", help="Run tests/test_module_live.py on this Raspberry Pi's FORTE (pi.py install)")
+    parser.addoption("--pi-user", help="SSH login on the Pi (default: the pi target's user in modules/filling.yaml)")
+    parser.addoption("--sim-host", help="This machine's address as the Pi sees it (the Pi's Modbus clients connect here)")
+    parser.addoption("--pi-forte-exe", help="aarch64 FORTE (build-modules.ps1 -Config pi/modules-pi) for tests/test_pwm_emulated.py")
 
 
 def free_port():

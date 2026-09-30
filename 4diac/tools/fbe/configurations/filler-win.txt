@@ -1,8 +1,0 @@
-// 4diac FORTE on Windows (x86_64) for the unit generated from units/filler.yaml (unitgen):
-// OPC UA, Modbus, IO and the FillerUnit types exported by validate.ps1. Build with
-// build-runtime.ps1 -Project FillerUnit -Config filler-win ... (python -m unitgen prints the line).
-include=${FBE_MAIN}/configurations/inc/default.txt
-CMAKE_BUILD_TYPE=RelWithDebInfo
-FBE_EXTERNAL_MODULES_DIR=${FBE_ROOT}/../.cache/export-filler
-// See fillingcell-win.txt: open62541 single-threaded, or a PUBLISH during a method call deadlocks.
-UA_MULTITHREADING:STRING=0

@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EV_Piston" Comment="Typed view of Piston's state channel (inputs and holder)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="stoppering" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="REQ" Type="Event">
+        <With Var="I_AtLimit" />
+        <With Var="I_Holder" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="CNF" Type="Event">
+        <With Var="AtLimit" />
+        <With Var="Holder" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="I_AtLimit" Type="BOOL" />
+      <VarDeclaration Name="I_Holder" Type="WSTRING" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="AtLimit" Type="BOOL" />
+      <VarDeclaration Name="Holder" Type="WSTRING" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="REQ">
+      <ECAction Algorithm="REQ" Output="CNF" />
+    </ECState>
+    <Algorithm Name="REQ">
+      <ST>AtLimit := I_AtLimit;
+Holder := I_Holder;</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

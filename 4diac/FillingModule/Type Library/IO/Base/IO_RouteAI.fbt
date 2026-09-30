@@ -1,0 +1,118 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="IO_RouteAI" Comment="Backend router for IO_AI: 0 simulated, 1 local IO handle, 2 Modbus">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="Event">
+        <With Var="Backend" />
+      </Event>
+      <Event Name="IO_READY" Type="Event">
+        <With Var="QO_G" />
+        <With Var="QO_M" />
+      </Event>
+      <Event Name="CNF_G" Type="Event">
+        <With Var="QO_G" />
+        <With Var="IN_G" />
+      </Event>
+      <Event Name="CNF_M" Type="Event">
+        <With Var="QO_M" />
+        <With Var="IN_M" />
+      </Event>
+      <Event Name="REQ" Type="Event">
+        <With Var="SimValue" />
+        <With Var="Scale" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INIT_IO" Type="Event">
+        <With Var="GQI" />
+        <With Var="MQI" />
+      </Event>
+      <Event Name="INITO" Type="Event">
+        <With Var="QO" />
+      </Event>
+      <Event Name="REQ_G" Type="Event" />
+      <Event Name="REQ_M" Type="Event" />
+      <Event Name="CNF" Type="Event">
+        <With Var="QO" />
+        <With Var="IN" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Backend" Type="USINT" />
+      <VarDeclaration Name="QO_G" Type="BOOL" />
+      <VarDeclaration Name="QO_M" Type="BOOL" />
+      <VarDeclaration Name="SimValue" Type="LREAL" />
+      <VarDeclaration Name="IN_G" Type="WORD" />
+      <VarDeclaration Name="IN_M" Type="WORD" />
+      <VarDeclaration Name="Scale" Type="LREAL" InitialValue="1.0" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="GQI" Type="BOOL" />
+      <VarDeclaration Name="MQI" Type="BOOL" />
+      <VarDeclaration Name="QO" Type="BOOL" />
+      <VarDeclaration Name="IN" Type="LREAL" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Init" x="570" y="100">
+        <ECAction Algorithm="Alg_Init" Output="INIT_IO" />
+      </ECState>
+      <ECState Name="Ready" x="990" y="100">
+        <ECAction Algorithm="Alg_Ready" Output="INITO" />
+      </ECState>
+      <ECState Name="ReqG" x="1410" y="100">
+        <ECAction Output="REQ_G" />
+      </ECState>
+      <ECState Name="ReqM" x="150" y="330">
+        <ECAction Output="REQ_M" />
+      </ECState>
+      <ECState Name="Sim" x="570" y="330">
+        <ECAction Algorithm="Alg_Sim" Output="CNF" />
+      </ECState>
+      <ECState Name="DoneG" x="990" y="330">
+        <ECAction Algorithm="Alg_DoneG" Output="CNF" />
+      </ECState>
+      <ECState Name="DoneM" x="1410" y="330">
+        <ECAction Algorithm="Alg_DoneM" Output="CNF" />
+      </ECState>
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
+      <ECTransition Source="Init" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Ready" Condition="IO_READY" x="0" y="0" />
+      <ECTransition Source="Ready" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="ReqG" Condition="REQ[Backend = 1]" x="0" y="0" />
+      <ECTransition Source="START" Destination="ReqM" Condition="REQ[Backend = 2]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Sim" Condition="REQ" x="0" y="0" />
+      <ECTransition Source="START" Destination="DoneG" Condition="CNF_G" x="0" y="0" />
+      <ECTransition Source="START" Destination="DoneM" Condition="CNF_M" x="0" y="0" />
+      <ECTransition Source="ReqG" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="ReqM" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Sim" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="DoneG" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="DoneM" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Init">
+      <ST>GQI := Backend = 1;
+MQI := Backend = 2;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Ready">
+      <ST>QO := (Backend = 0) OR ((Backend = 1) AND QO_G) OR ((Backend = 2) AND QO_M);</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Sim">
+      <ST>QO := TRUE;
+IN := SimValue;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_DoneG">
+      <ST>QO := QO_G;
+IN := UINT_TO_LREAL(WORD_TO_UINT(IN_G)) * Scale;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_DoneM">
+      <ST>QO := QO_M;
+IN := UINT_TO_LREAL(WORD_TO_UINT(IN_M)) * Scale;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

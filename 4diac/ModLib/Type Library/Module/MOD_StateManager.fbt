@@ -1,0 +1,136 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="MOD_StateManager" Comment="Module state manager: OPC UA methods Reset/Start/Stop/Abort/Clear(Session) answer [Accepted, ErrorID]; publishes the PackML State over OPC UA and on the module's state channel; RUN_RESETTING and RUN_STOPPING start the procedures, which answer with *_DONE or *_FAILED">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Module" />
+        <With Var="UaRoot" />
+        <With Var="UaEnable" />
+        <With Var="StopTimeout" />
+      </Event>
+      <Event Name="RESETTING_DONE" Type="Event" />
+      <Event Name="RESETTING_FAILED" Type="Event" />
+      <Event Name="STOPPING_DONE" Type="Event" />
+      <Event Name="STOPPING_FAILED" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" />
+      <Event Name="RUN_RESETTING" Type="Event" />
+      <Event Name="RUN_STOPPING" Type="Event" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" />
+      <VarDeclaration Name="StopTimeout" Type="TIME" InitialValue="T#10s" />
+    </InputVars>
+    <OutputVars />
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="Ids" Type="modlib::MOD_StateIds" x="400" y="200" />
+    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="4000" y="200" />
+    <FB Name="Reset" Type="iec61499::net::SERVER_2_1" x="7600" y="200" />
+    <FB Name="Start" Type="iec61499::net::SERVER_2_1" x="11200" y="200" />
+    <FB Name="Stop" Type="iec61499::net::SERVER_2_1" x="14800" y="200" />
+    <FB Name="Abort" Type="iec61499::net::SERVER_2_1" x="18400" y="200" />
+    <FB Name="Clear" Type="iec61499::net::SERVER_2_1" x="22000" y="200" />
+    <FB Name="Logic" Type="modlib::MOD_StateLogic" x="25600" y="200" />
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="29200" y="200" />
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="32800" y="200">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="36400" y="200">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <FB Name="SubAct" Type="iec61499::net::SUBSCRIBE_1" x="40000" y="200">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <FB Name="Count" Type="modlib::MOD_ActivityCount" x="43600" y="200" />
+    <FB Name="Wd" Type="iec61499::events::E_DELAY" x="47200" y="200" />
+    <EventConnections>
+      <Connection Source="INIT" Destination="Ids.INIT" />
+      <Connection Source="Ids.INITO" Destination="Owner.INIT" />
+      <Connection Source="Owner.INITO" Destination="Reset.INIT" />
+      <Connection Source="Reset.INITO" Destination="Start.INIT" />
+      <Connection Source="Start.INITO" Destination="Stop.INIT" />
+      <Connection Source="Stop.INITO" Destination="Abort.INIT" />
+      <Connection Source="Abort.INITO" Destination="Clear.INIT" />
+      <Connection Source="Clear.INITO" Destination="PubUa.INIT" />
+      <Connection Source="PubUa.INITO" Destination="PubState.INIT" />
+      <Connection Source="PubState.INITO" Destination="SubQuery.INIT" />
+      <Connection Source="SubQuery.INITO" Destination="SubAct.INIT" />
+      <Connection Source="SubAct.INITO" Destination="PubUa.REQ" />
+      <Connection Source="SubAct.INITO" Destination="PubState.REQ" />
+      <Connection Source="SubAct.INITO" Destination="INITO" />
+      <Connection Source="Owner.CHG" Destination="Logic.OWNER_CHG" />
+      <Connection Source="Reset.IND" Destination="Logic.CMD_RESET" />
+      <Connection Source="Logic.RSP_RESET" Destination="Reset.RSP" />
+      <Connection Source="Start.IND" Destination="Logic.CMD_START" />
+      <Connection Source="Logic.RSP_START" Destination="Start.RSP" />
+      <Connection Source="Stop.IND" Destination="Logic.CMD_STOP" />
+      <Connection Source="Logic.RSP_STOP" Destination="Stop.RSP" />
+      <Connection Source="Abort.IND" Destination="Logic.CMD_ABORT" />
+      <Connection Source="Logic.RSP_ABORT" Destination="Abort.RSP" />
+      <Connection Source="Clear.IND" Destination="Logic.CMD_CLEAR" />
+      <Connection Source="Logic.RSP_CLEAR" Destination="Clear.RSP" />
+      <Connection Source="Logic.CNF" Destination="PubUa.REQ" />
+      <Connection Source="Logic.CNF" Destination="PubState.REQ" />
+      <Connection Source="SubQuery.IND" Destination="PubState.REQ" />
+      <Connection Source="SubAct.IND" Destination="Count.ACT" />
+      <Connection Source="Count.CHG" Destination="Logic.ACT" />
+      <Connection Source="Logic.WD_START" Destination="Wd.START" />
+      <Connection Source="Logic.WD_STOP" Destination="Wd.STOP" />
+      <Connection Source="Wd.EO" Destination="Logic.STOP_TIMEOUT" />
+      <Connection Source="Logic.RUN_RESETTING" Destination="RUN_RESETTING" />
+      <Connection Source="Logic.RUN_STOPPING" Destination="RUN_STOPPING" />
+      <Connection Source="RESETTING_DONE" Destination="Logic.RESETTING_DONE" />
+      <Connection Source="RESETTING_FAILED" Destination="Logic.RESETTING_FAILED" />
+      <Connection Source="STOPPING_DONE" Destination="Logic.STOPPING_DONE" />
+      <Connection Source="STOPPING_FAILED" Destination="Logic.STOPPING_FAILED" />
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Module" Destination="Ids.Module" />
+      <Connection Source="Module" Destination="Owner.Module" />
+      <Connection Source="UaRoot" Destination="Ids.UaRoot" />
+      <Connection Source="UaEnable" Destination="Reset.QI" />
+      <Connection Source="UaEnable" Destination="Start.QI" />
+      <Connection Source="UaEnable" Destination="Stop.QI" />
+      <Connection Source="UaEnable" Destination="Abort.QI" />
+      <Connection Source="UaEnable" Destination="Clear.QI" />
+      <Connection Source="UaEnable" Destination="PubUa.QI" />
+      <Connection Source="StopTimeout" Destination="Wd.DT" />
+      <Connection Source="Owner.Owner" Destination="Logic.Owner" />
+      <Connection Source="Ids.IdReset" Destination="Reset.ID" />
+      <Connection Source="Reset.RD_1" Destination="Logic.S_Reset" />
+      <Connection Source="Logic.Accepted" Destination="Reset.SD_1" />
+      <Connection Source="Logic.ErrorID" Destination="Reset.SD_2" />
+      <Connection Source="Ids.IdStart" Destination="Start.ID" />
+      <Connection Source="Start.RD_1" Destination="Logic.S_Start" />
+      <Connection Source="Logic.Accepted" Destination="Start.SD_1" />
+      <Connection Source="Logic.ErrorID" Destination="Start.SD_2" />
+      <Connection Source="Ids.IdStop" Destination="Stop.ID" />
+      <Connection Source="Stop.RD_1" Destination="Logic.S_Stop" />
+      <Connection Source="Logic.Accepted" Destination="Stop.SD_1" />
+      <Connection Source="Logic.ErrorID" Destination="Stop.SD_2" />
+      <Connection Source="Ids.IdAbort" Destination="Abort.ID" />
+      <Connection Source="Abort.RD_1" Destination="Logic.S_Abort" />
+      <Connection Source="Logic.Accepted" Destination="Abort.SD_1" />
+      <Connection Source="Logic.ErrorID" Destination="Abort.SD_2" />
+      <Connection Source="Ids.IdClear" Destination="Clear.ID" />
+      <Connection Source="Clear.RD_1" Destination="Logic.S_Clear" />
+      <Connection Source="Logic.Accepted" Destination="Clear.SD_1" />
+      <Connection Source="Logic.ErrorID" Destination="Clear.SD_2" />
+      <Connection Source="Ids.IdPub" Destination="PubUa.ID" />
+      <Connection Source="Ids.IdState" Destination="PubState.ID" />
+      <Connection Source="Ids.IdQuery" Destination="SubQuery.ID" />
+      <Connection Source="Ids.IdAct" Destination="SubAct.ID" />
+      <Connection Source="Logic.State" Destination="PubUa.SD_1" />
+      <Connection Source="Logic.State" Destination="PubState.SD_1" />
+      <Connection Source="SubAct.RD_1" Destination="Count.Delta" />
+      <Connection Source="Count.AllIdle" Destination="Logic.AllIdle" />
+    </DataConnections>
+  </FBNetwork>
+</FBType>

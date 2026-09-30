@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="PUBLISH_1" Comment="Generic publish (1 SD, 0 RD); instantiated from GEN_PUBLISH">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="iec61499::net" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="QI" />
+        <With Var="ID" />
+      </Event>
+      <Event Name="REQ" Type="Event">
+        <With Var="QI" />
+        <With Var="SD_1" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit">
+        <With Var="QO" />
+        <With Var="STATUS" />
+      </Event>
+      <Event Name="CNF" Type="Event">
+        <With Var="QO" />
+        <With Var="STATUS" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="QI" Type="BOOL" />
+      <VarDeclaration Name="ID" Type="WSTRING" />
+      <VarDeclaration Name="SD_1" Type="ANY" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="QO" Type="BOOL" />
+      <VarDeclaration Name="STATUS" Type="WSTRING" />
+    </OutputVars>
+  </InterfaceList>
+  <Attribute Name="eclipse4diac::core::GenericClassName" Value="'GEN_PUBLISH'" />
+</FBType>

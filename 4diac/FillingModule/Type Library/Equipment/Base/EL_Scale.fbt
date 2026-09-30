@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EL_Scale" Comment="Scale: commands -&gt; outputs in timed phases (break before make); one holder at a time; all off when the module aborts; inputs -&gt; state channel">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="filling" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Module" />
+        <With Var="Name" />
+        <With Var="UaRoot" />
+      </Event>
+      <Event Name="CMD" Type="Event">
+        <With Var="C_Holder" />
+        <With Var="C_Command" />
+        <With Var="C_Arg" />
+        <With Var="C_Release" />
+      </Event>
+      <Event Name="SAMPLE" Type="Event">
+        <With Var="I_Weight" />
+      </Event>
+      <Event Name="REFRESH" Type="Event" />
+      <Event Name="DRIVEN" Type="Event" />
+      <Event Name="PHASE_T" Type="Event" />
+      <Event Name="MOD_CHG" Type="Event">
+        <With Var="ModState" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit">
+        <With Var="IdCmd" />
+        <With Var="IdState" />
+        <With Var="IdPub" />
+      </Event>
+      <Event Name="DRIVE" Type="Event" />
+      <Event Name="STATE" Type="Event">
+        <With Var="Weight" />
+        <With Var="Holder" />
+        <With Var="ActiveCommand" />
+        <With Var="ActiveArg" />
+      </Event>
+      <Event Name="PHASE_START" Type="Event">
+        <With Var="PhaseDT" />
+      </Event>
+      <Event Name="PHASE_STOP" Type="Event" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" />
+      <VarDeclaration Name="Name" Type="WSTRING" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+      <VarDeclaration Name="C_Holder" Type="WSTRING" />
+      <VarDeclaration Name="C_Command" Type="USINT" />
+      <VarDeclaration Name="C_Arg" Type="LREAL" />
+      <VarDeclaration Name="C_Release" Type="BOOL" />
+      <VarDeclaration Name="I_Weight" Type="LREAL" />
+      <VarDeclaration Name="ModState" Type="USINT" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="IdCmd" Type="WSTRING" />
+      <VarDeclaration Name="IdState" Type="WSTRING" />
+      <VarDeclaration Name="IdPub" Type="WSTRING" />
+      <VarDeclaration Name="Weight" Type="LREAL" />
+      <VarDeclaration Name="Holder" Type="WSTRING" />
+      <VarDeclaration Name="ActiveCommand" Type="USINT" />
+      <VarDeclaration Name="ActiveArg" Type="LREAL" />
+      <VarDeclaration Name="PhaseDT" Type="TIME" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Command" Type="USINT" />
+      <VarDeclaration Name="Phase" Type="USINT" />
+      <VarDeclaration Name="Arg" Type="LREAL" />
+      <VarDeclaration Name="Changed" Type="BOOL" />
+      <VarDeclaration Name="Timed" Type="BOOL" />
+      <VarDeclaration Name="Publish" Type="BOOL" />
+      <VarDeclaration Name="Beat" Type="USINT" />
+      <VarDeclaration Name="LastHolder" Type="WSTRING" />
+      <VarDeclaration Name="Pending" Type="BOOL" />
+      <VarDeclaration Name="AbortPending" Type="BOOL" />
+      <VarDeclaration Name="L_Weight" Type="LREAL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Init" x="570" y="100">
+        <ECAction Algorithm="Alg_Init" Output="INITO" />
+      </ECState>
+      <ECState Name="Sample" x="990" y="100">
+        <ECAction Algorithm="Alg_Sample" />
+      </ECState>
+      <ECState Name="Publish" x="1410" y="100">
+        <ECAction Algorithm="Alg_Publish" Output="STATE" />
+      </ECState>
+      <ECState Name="Refresh" x="150" y="330">
+        <ECAction Output="DRIVE" />
+      </ECState>
+      <ECState Name="Cmd" x="1410" y="100">
+        <ECAction Algorithm="Alg_Cmd" />
+      </ECState>
+      <ECState Name="Report" x="150" y="330">
+        <ECAction Algorithm="Alg_Report" Output="STATE" />
+      </ECState>
+      <ECState Name="NextPhase" x="570" y="330">
+        <ECAction Algorithm="Alg_NextPhase" />
+      </ECState>
+      <ECState Name="Safe" x="990" y="330">
+        <ECAction Algorithm="Alg_Safe" />
+      </ECState>
+      <ECState Name="Break" x="1410" y="330">
+        <ECAction Algorithm="Alg_Break" Output="DRIVE" />
+      </ECState>
+      <ECState Name="Make" x="150" y="560">
+        <ECAction Output="DRIVE" />
+      </ECState>
+      <ECState Name="BreakW" x="1410" y="560" />
+      <ECState Name="MakeW" x="150" y="790" />
+      <ECState Name="QueueB" x="570" y="790">
+        <ECAction Algorithm="Alg_QueueB" />
+      </ECState>
+      <ECState Name="AbortB" x="990" y="790">
+        <ECAction Algorithm="Alg_AbortB" />
+      </ECState>
+      <ECState Name="QueueM" x="1410" y="790">
+        <ECAction Algorithm="Alg_QueueM" />
+      </ECState>
+      <ECState Name="AbortM" x="150" y="1020">
+        <ECAction Algorithm="Alg_AbortM" />
+      </ECState>
+      <ECState Name="CmdPend" x="570" y="1020">
+        <ECAction Algorithm="Alg_CmdPend" />
+      </ECState>
+      <ECState Name="Settled" x="570" y="560" />
+      <ECState Name="PhaseGo" x="990" y="560">
+        <ECAction Output="PHASE_START" />
+        <ECAction Output="STATE" />
+      </ECState>
+      <ECState Name="PhaseEnd" x="1410" y="560">
+        <ECAction Output="PHASE_STOP" />
+        <ECAction Output="STATE" />
+      </ECState>
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
+      <ECTransition Source="START" Destination="Sample" Condition="SAMPLE" x="0" y="0" />
+      <ECTransition Source="START" Destination="Refresh" Condition="REFRESH" x="0" y="0" />
+      <ECTransition Source="START" Destination="Cmd" Condition="CMD[(Holder = &quot;&quot;) OR (C_Holder = Holder)]" x="0" y="0" />
+      <ECTransition Source="START" Destination="NextPhase" Condition="PHASE_T" x="0" y="0" />
+      <ECTransition Source="START" Destination="Safe" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="Init" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Sample" Destination="Publish" Condition="Publish" x="0" y="0" />
+      <ECTransition Source="Sample" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Publish" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Refresh" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Cmd" Destination="Break" Condition="Changed" x="0" y="0" />
+      <ECTransition Source="Cmd" Destination="Report" Condition="1" x="0" y="0" />
+      <ECTransition Source="Report" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="NextPhase" Destination="Break" Condition="1" x="0" y="0" />
+      <ECTransition Source="Safe" Destination="Break" Condition="1" x="0" y="0" />
+      <ECTransition Source="Break" Destination="BreakW" Condition="1" x="0" y="0" />
+      <ECTransition Source="BreakW" Destination="Make" Condition="DRIVEN" x="0" y="0" />
+      <ECTransition Source="Make" Destination="MakeW" Condition="1" x="0" y="0" />
+      <ECTransition Source="MakeW" Destination="Settled" Condition="DRIVEN" x="0" y="0" />
+      <ECTransition Source="BreakW" Destination="QueueB" Condition="CMD" x="0" y="0" />
+      <ECTransition Source="BreakW" Destination="AbortB" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="QueueB" Destination="BreakW" Condition="1" x="0" y="0" />
+      <ECTransition Source="AbortB" Destination="BreakW" Condition="1" x="0" y="0" />
+      <ECTransition Source="MakeW" Destination="QueueM" Condition="CMD" x="0" y="0" />
+      <ECTransition Source="MakeW" Destination="AbortM" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="QueueM" Destination="MakeW" Condition="1" x="0" y="0" />
+      <ECTransition Source="AbortM" Destination="MakeW" Condition="1" x="0" y="0" />
+      <ECTransition Source="Settled" Destination="Safe" Condition="AbortPending" x="0" y="0" />
+      <ECTransition Source="Settled" Destination="CmdPend" Condition="Pending" x="0" y="0" />
+      <ECTransition Source="CmdPend" Destination="Cmd" Condition="(Holder = &quot;&quot;) OR (C_Holder = Holder)" x="0" y="0" />
+      <ECTransition Source="CmdPend" Destination="PhaseGo" Condition="Timed" x="0" y="0" />
+      <ECTransition Source="CmdPend" Destination="PhaseEnd" Condition="1" x="0" y="0" />
+      <ECTransition Source="Settled" Destination="PhaseGo" Condition="Timed" x="0" y="0" />
+      <ECTransition Source="Settled" Destination="PhaseEnd" Condition="1" x="0" y="0" />
+      <ECTransition Source="PhaseGo" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="PhaseEnd" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Init">
+      <ST>IdCmd := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/cmd]");
+IdState := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/state]");
+IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", UaRoot), "/Equipment/"), Name), "/Weight"), "]");</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Sample">
+      <ST>Weight := I_Weight;
+Publish := (Weight &lt;&gt; L_Weight) OR (Holder &lt;&gt; LastHolder) OR (Beat &gt;= 20);
+Beat := Beat + 1;
+ActiveCommand := Command;
+ActiveArg := Arg;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Publish">
+      <ST>L_Weight := Weight;
+LastHolder := Holder;
+Beat := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Cmd">
+      <ST>Holder := C_Holder;
+Changed := (C_Command &lt;&gt; 255) AND ((C_Command &lt;&gt; Command) OR (C_Arg &lt;&gt; Arg));
+IF Changed THEN
+  Command := C_Command;
+  Phase := 0;
+  Arg := C_Arg;
+END_IF;
+IF C_Release THEN
+  Holder := "";
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Report">
+      <ST>LastHolder := Holder;
+Beat := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_NextPhase">
+      <ST>Phase := Phase + 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Safe">
+      <ST>Command := 0;
+Phase := 0;
+Holder := "";
+AbortPending := FALSE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Break">
+      <ST>Timed := FALSE;
+PhaseDT := T#0ms;
+</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_QueueB">
+      <ST>Pending := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_AbortB">
+      <ST>AbortPending := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_QueueM">
+      <ST>Pending := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_AbortM">
+      <ST>AbortPending := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_CmdPend">
+      <ST>Pending := FALSE;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

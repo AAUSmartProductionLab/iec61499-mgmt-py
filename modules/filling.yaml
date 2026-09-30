@@ -1,0 +1,101 @@
+# Filling module ("Dispensing"), ported from arduino_cpp_examples/Physical-Stations
+# (FillingModule.cpp, ESP32). The ESP32's PackML, occupation and MQTT code is not ported: the
+# generated module level (occupation, module state manager, skill state machine, OPC UA)
+# replaces it. What is ported: the pins and motor behaviour (equipment IO), each motion with its
+# stop condition (skill primitives) and the MQTT actions as module level skills.
+# Regenerate: python -m modgen
+module: Filling
+project: FillingModule
+package: filling
+opcua_root: /Objects/Filling
+modbus: {host: 127.0.0.1, port: 1502, unit: 1, poll_ms: 10}   # 4diac/tools/module_sim.py
+
+targets:
+  pc: {host: localhost, io: modbus}
+  pi: {host: 192.168.0.191, user: iiot_gateway, io: gpio,
+       pwm_root: /hostsys/class/pwm}   # the filling Pi
+
+equipment:
+  NeedleAxis:
+    description: Needle lift, DC motor through an L298N (IN3 up, IN4 down, ENB speed), end switches top and bottom
+    inputs:
+      # The ESP32 reads the switches with INPUT_PULLUP and HIGH when pressed; same wiring on the Pi.
+      AtTop:    {modbus: d0, gpio: {line: 23, bias: pull_up}}      # pin 16 (ESP32 pin 39)
+      AtBottom: {modbus: d1, gpio: {line: 24, bias: pull_up}}      # pin 18 (ESP32 pin 36)
+    outputs:
+      Up:    {modbus: c0, gpio: 17}                                # pin 11, L298N IN3 (ESP32 pin 18)
+      Down:  {modbus: c1, gpio: 27}                                # pin 13, L298N IN4 (ESP32 pin 5)
+      # L298N ENB (ESP32 pin 19, analogWrite 0..255): PWM0 on GPIO18 (pin 12), 1 kHz.
+      Speed: {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 1000000}, gain: 257.0,
+              minimum: 0, maximum: 255, unit: duty}
+    commands:
+      Stop: {}
+      # moveToTop/moveToBottom: start with a boost (MOTOR_SPEED + MOTOR_SPEED_BOOST) for 200 ms.
+      Up:   [{Up: true, Speed: 190, for: 200ms}, {Up: true, Speed: 140}]
+      Down: [{Down: true, Speed: 190, for: 200ms}, {Down: true, Speed: 140}]
+      # Stopping after a move: a 100 ms reverse pulse, then off.
+      BrakeUp:   [{Down: true, Speed: 190, for: 100ms}, {}]
+      BrakeDown: [{Up: true, Speed: 140, for: 100ms}, {}]
+      # attachNeedle: down without boost.
+      Attach: {Down: true, Speed: 140}
+    sim: {axis: {forward: Down, backward: Up, speed: Speed, nominal: 140, travel_s: 2.0, dead_s: 0.15,
+                 start: 0.0, switches: {AtTop: 0.0, AtBottom: 1.0}}}
+  Scale:
+    description: Scale; the hardware has none yet (the ESP32 publishes a random weight), so it is simulated
+    inputs:
+      Weight: {type: LREAL, modbus: i0, scale: 0.001, sim: 2.0, unit: g}
+    commands: {Idle: {}, Tare: {}, Measure: {}}
+    sim: {values: {Weight: 2.0}}
+
+skills:
+  MoveNeedleUp:
+    description: Needle up to the top end switch
+    equipment: NeedleAxis
+    command: Up
+    stop: BrakeUp
+    ensures: AtTop
+    invariant: NOT (AtTop AND AtBottom)
+    timeout: 8s
+  MoveNeedleDown:
+    description: Needle down to the bottom end switch
+    equipment: NeedleAxis
+    command: Down
+    stop: BrakeDown
+    ensures: AtBottom
+    invariant: NOT (AtTop AND AtBottom)
+    timeout: 8s
+  AttachNeedle:
+    description: Needle down to the attachment position (bottom switch), without the start boost
+    equipment: NeedleAxis
+    command: Attach
+    stop: BrakeDown
+    ensures: AtBottom
+    timeout: 8s
+  Dwell:
+    description: Wait at the current position (stands in for dispensing until there is a pump)
+    parameters:
+      Duration: {unit: s, minimum: 0.0, maximum: 60.0, default: 1.0}
+    after: Duration
+    offered: false
+  Tare:
+    description: Tare the scale
+    equipment: Scale
+    command: Tare
+    after: 2.0
+  Weigh:
+    description: Read the weight
+    equipment: Scale
+    command: Measure
+    after: 0.2
+    results: {Weight: Weight}
+
+composites:
+  Dispensing:
+    description: Needle down, dwell, needle up, weigh (runFillingCycle)
+    execute: [MoveNeedleDown, {Dwell: {Duration: 1.0}}, MoveNeedleUp, Weigh]
+    stop: [MoveNeedleUp]
+    results: {Weight: Weigh.Weight}
+
+procedures:
+  Resetting: [MoveNeedleUp]        # initHardware: move to the top
+  Stopping: [MoveNeedleUp]

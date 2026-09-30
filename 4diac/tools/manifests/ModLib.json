@@ -1,0 +1,266 @@
+[
+  {
+    "type": "eclipse4diac::core::GenericClassName",
+    "kind": "Standard",
+    "file": "Std/core/GenericClassName.atp",
+    "exported": false
+  },
+  {
+    "type": "eclipse4diac::core::TypeHash",
+    "kind": "Standard",
+    "file": "Std/core/TypeHash.atp",
+    "exported": false
+  },
+  {
+    "type": "iec61499::events::E_CTU",
+    "kind": "Standard",
+    "file": "Std/events/E_CTU.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::events::E_CYCLE",
+    "kind": "Standard",
+    "file": "Std/events/E_CYCLE.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::events::E_DELAY",
+    "kind": "Standard",
+    "file": "Std/events/E_DELAY.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::events::E_RESTART",
+    "kind": "Standard",
+    "file": "Std/events/E_RESTART.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::events::E_T_FF",
+    "kind": "Standard",
+    "file": "Std/events/E_T_FF.fbt",
+    "exported": false
+  },
+  {
+    "type": "eclipse4diac::io::gpiochip::GPIOChip",
+    "kind": "Standard",
+    "file": "Std/io/GPIOChip.fbt",
+    "exported": false
+  },
+  {
+    "type": "eclipse4diac::io::IW",
+    "kind": "Standard",
+    "file": "Std/io/IW.fbt",
+    "exported": false
+  },
+  {
+    "type": "eclipse4diac::io::IX",
+    "kind": "Standard",
+    "file": "Std/io/IX.fbt",
+    "exported": false
+  },
+  {
+    "type": "eclipse4diac::io::pwmsysfs::PWMChip",
+    "kind": "Standard",
+    "file": "Std/io/PWMChip.fbt",
+    "exported": false
+  },
+  {
+    "type": "eclipse4diac::io::QW",
+    "kind": "Standard",
+    "file": "Std/io/QW.fbt",
+    "exported": false
+  },
+  {
+    "type": "eclipse4diac::io::QX",
+    "kind": "Standard",
+    "file": "Std/io/QX.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::CLIENT_0_1",
+    "kind": "Standard",
+    "file": "Std/net/CLIENT_0_1.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::CLIENT_1_0",
+    "kind": "Standard",
+    "file": "Std/net/CLIENT_1_0.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::system::EMB_RES",
+    "kind": "Standard",
+    "file": "Std/system/EMB_RES.res",
+    "exported": false
+  },
+  {
+    "type": "iec61499::system::FORTE_PC",
+    "kind": "Standard",
+    "file": "Std/system/FORTE_PC.dev",
+    "exported": false
+  },
+  {
+    "type": "modlib::IO_RouteDO",
+    "kind": "BasicFB",
+    "file": "IO/Base/IO_RouteDO.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::IO_DO",
+    "kind": "CompositeFB",
+    "file": "IO/IO_DO.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::IO_RouteDI",
+    "kind": "BasicFB",
+    "file": "IO/Base/IO_RouteDI.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::IO_DI",
+    "kind": "CompositeFB",
+    "file": "IO/IO_DI.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::IO_RouteAI",
+    "kind": "BasicFB",
+    "file": "IO/Base/IO_RouteAI.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::IO_AI",
+    "kind": "CompositeFB",
+    "file": "IO/IO_AI.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::IO_RouteAO",
+    "kind": "BasicFB",
+    "file": "IO/Base/IO_RouteAO.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::IO_AO",
+    "kind": "CompositeFB",
+    "file": "IO/IO_AO.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::MOD_OwnerLatch",
+    "kind": "SimpleFB",
+    "file": "Module/Base/MOD_OwnerLatch.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::MOD_OwnerView",
+    "kind": "CompositeFB",
+    "file": "Module/Base/MOD_OwnerView.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::MOD_StateLatch",
+    "kind": "SimpleFB",
+    "file": "Module/Base/MOD_StateLatch.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::MOD_StateView",
+    "kind": "CompositeFB",
+    "file": "Module/Base/MOD_StateView.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::MOD_OccupationIds",
+    "kind": "SimpleFB",
+    "file": "Module/Base/MOD_OccupationIds.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::MOD_OccupationLogic",
+    "kind": "BasicFB",
+    "file": "Module/Base/MOD_OccupationLogic.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::MOD_Occupation",
+    "kind": "CompositeFB",
+    "file": "Module/MOD_Occupation.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::MOD_StateIds",
+    "kind": "SimpleFB",
+    "file": "Module/Base/MOD_StateIds.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::MOD_ActivityCount",
+    "kind": "SimpleFB",
+    "file": "Module/Base/MOD_ActivityCount.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::MOD_StateLogic",
+    "kind": "BasicFB",
+    "file": "Module/Base/MOD_StateLogic.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::MOD_StateManager",
+    "kind": "CompositeFB",
+    "file": "Module/MOD_StateManager.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::SKILL_Control",
+    "kind": "BasicFB",
+    "file": "Skills/SKILL_Control.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::SKILL_FailMerge",
+    "kind": "SimpleFB",
+    "file": "Skills/SKILL_FailMerge.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::SKILL_Release",
+    "kind": "SimpleFB",
+    "file": "Skills/SKILL_Release.fbt",
+    "exported": true
+  },
+  {
+    "type": "iec61499::net::PUBLISH_0",
+    "kind": "GenericComm",
+    "file": "Generic/PUBLISH_0.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::PUBLISH_1",
+    "kind": "GenericComm",
+    "file": "Generic/PUBLISH_1.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::SERVER_2_1",
+    "kind": "GenericComm",
+    "file": "Generic/SERVER_2_1.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::SUBSCRIBE_0",
+    "kind": "GenericComm",
+    "file": "Generic/SUBSCRIBE_0.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::SUBSCRIBE_1",
+    "kind": "GenericComm",
+    "file": "Generic/SUBSCRIBE_1.fbt",
+    "exported": false
+  }
+]

@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="MOD_ActivityCount" Comment="Number of running skills from the +1/-1 activity channel">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="ACT" Type="Event">
+        <With Var="Delta" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="CHG" Type="Event">
+        <With Var="Active" />
+        <With Var="AllIdle" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Delta" Type="INT" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Active" Type="INT" />
+      <VarDeclaration Name="AllIdle" Type="BOOL" InitialValue="TRUE" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="ACT">
+      <ECAction Algorithm="ACT" Output="CHG" />
+    </ECState>
+    <Algorithm Name="ACT">
+      <ST>Active := Active + Delta;
+IF Active &lt; 0 THEN
+  Active := 0;
+END_IF;
+AllIdle := Active = 0;</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

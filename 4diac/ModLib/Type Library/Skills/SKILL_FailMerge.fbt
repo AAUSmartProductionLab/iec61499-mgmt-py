@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_FailMerge" Comment="Merges two failure events with their error codes into one">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="FAIL_A" Type="Event">
+        <With Var="ErrA" />
+      </Event>
+      <Event Name="FAIL_B" Type="Event">
+        <With Var="ErrB" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="FAIL" Type="Event">
+        <With Var="Err" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="ErrA" Type="UINT" />
+      <VarDeclaration Name="ErrB" Type="UINT" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Err" Type="UINT" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="FAIL_A">
+      <ECAction Algorithm="FAIL_A" Output="FAIL" />
+    </ECState>
+    <ECState Name="FAIL_B">
+      <ECAction Algorithm="FAIL_B" Output="FAIL" />
+    </ECState>
+    <Algorithm Name="FAIL_A">
+      <ST>Err := ErrA;</ST>
+    </Algorithm>
+    <Algorithm Name="FAIL_B">
+      <ST>Err := ErrB;</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>
