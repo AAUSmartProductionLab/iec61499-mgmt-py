@@ -13,7 +13,7 @@ from .models import Model
 class Command(Model):
     """One typed management request."""
     op: Literal["create_fb", "delete_fb", "connect", "disconnect", "write", "read",
-                "start", "stop", "query_fbs", "query_connections", "query_type"]
+                "start", "stop", "kill", "query_fbs", "query_connections", "query_type"]
     resource: str
     name: str | None = None
     type: str | None = None
@@ -28,7 +28,7 @@ class Command(Model):
             "create_fb": {"name", "type"}, "delete_fb": {"name"},
             "connect": {"source", "destination"}, "disconnect": {"source", "destination"},
             "write": {"destination", "value"}, "read": {"source"},
-            "start": {"name"}, "stop": {"name"}, "query_fbs": set(),
+            "start": {"name"}, "stop": {"name"}, "kill": {"name"}, "query_fbs": set(),
             "query_connections": set(), "query_type": {"type"},
         }[self.op]
         present = {k for k in ("name", "type", "source", "destination", "value")
@@ -43,7 +43,7 @@ class Command(Model):
                   "disconnect": "DELETE", "query_fbs": "QUERY", "query_connections": "QUERY",
                   "query_type": "QUERY"}.get(self.op, self.op.upper())
         root = ET.Element("Request", ID=str(request_id), Action=action)
-        if self.op in ("create_fb", "delete_fb", "start", "stop"):
+        if self.op in ("create_fb", "delete_fb", "start", "stop", "kill"):
             ET.SubElement(root, "FB", Name=self.name, Type=self.type or "")
         elif self.op in ("connect", "disconnect"):
             ET.SubElement(root, "Connection", Source=self.source, Destination=self.destination)

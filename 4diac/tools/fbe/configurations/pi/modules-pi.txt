@@ -1,0 +1,24 @@
+// 4diac FORTE for a Raspberry Pi 4 (64-bit Linux) with every generated module (modules/*.yaml):
+// OPC UA, Modbus, GPIO via /dev/gpiochip (IO=GPIOCHIP in the FBE defaults), and the ModLib and
+// module exports in .cache/modules. One static aarch64 binary for all Pis; each Pi deploys only
+// its own module. The FBE downloads the cross compiler once. Build with
+//   build-modules.ps1 -Config pi/modules-pi
+include=${FBE_MAIN}/configurations/inc/default.txt
+CMAKE_BUILD_TYPE=RelWithDebInfo
+ARCH=aarch64-linux-musl
+FBE_EXTERNAL_MODULES_DIR=${FBE_ROOT}/../.cache/modules
+// See filler-win.txt: open62541 single-threaded, or a PUBLISH during a method call deadlocks.
+UA_MULTITHREADING:STRING=0
+// POWERLINK is off in FORTE 3.x, but its dependency libpcap still builds and fails in the
+// cross build (flex.exe: pipe failed).
+DEPS=-openpowerlink
+// musl gives threads 128 KiB of stack unless the binary's PT_GNU_STACK says more; open62541 in
+// FORTE's OPC UA thread overflows that (segfault as soon as an OPC UA FB initialises).
+// 8 MiB as glibc. Build-type flags, because the toolchain file sets CMAKE_EXE_LINKER_FLAGS_INIT.
+CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=-Wl,-z,stack-size=8388608
+// PWM on Linux (forte-patches/0002-pwmsysfs-module.patch): PWMChip + QW.
+FORTE_MODULE_PWMSYSFS:BOOL=ON
+// A local channel delivers one external event per subscriber; the module state reaches every
+// skill and equipment item at once (20+), more than FORTE's default queue of 16 holds.
+FORTE_EventChainExternalEventListSize:STRING=256
+FORTE_CommunicationInterruptQueueSize:STRING=64
