@@ -1,0 +1,560 @@
+PWM for FORTE on Linux (new module pwmsysfs): a PWMChip config FB per /sys/class/pwm channel,
+used with the standard QW output FB (0..65535 = fraction of the period). Enable with
+FORTE_MODULE_PWMSYSFS=ON. For the Raspberry Pi's hardware PWM (dtoverlay=pwm-2chan) or any other
+Linux PWM driver (e.g. a PCA9685 board). Applied by build-runtime.ps1.
+
+diff --git a/modules/CMakeLists.txt b/modules/CMakeLists.txt
+index 6d82db0..57d0b1f 100644
+--- a/modules/CMakeLists.txt
++++ b/modules/CMakeLists.txt
+@@ -28,6 +28,7 @@ add_subdirectory(lms_ev3)
+ add_subdirectory(mlpi)
+ add_subdirectory(odroid)
+ add_subdirectory(piface)
++add_subdirectory(pwmsysfs)
+ add_subdirectory(PLC01A1)
+ add_subdirectory(PLCnext)
+ add_subdirectory(powerlink)
+diff --git a/modules/pwmsysfs/CMakeLists.txt b/modules/pwmsysfs/CMakeLists.txt
+new file mode 100644
+index 0000000..4174abe
+--- /dev/null
++++ b/modules/pwmsysfs/CMakeLists.txt
+@@ -0,0 +1,28 @@
++# *******************************************************************************
++# Copyright (c) 2026 Aalborg University
++# This program and the accompanying materials are made available under the
++# terms of the Eclipse Public License 2.0 which is available at
++# http://www.eclipse.org/legal/epl-2.0.
++#
++# SPDX-License-Identifier: EPL-2.0
++#
++# Contributors: Martin Jensen - initial implementation
++# *******************************************************************************/
++
++if (NOT LINUX)
++    return()
++endif ()
++
++option(FORTE_MODULE_PWMSYSFS "Support for Linux PWM channels via /sys/class/pwm" OFF)
++
++if (NOT FORTE_MODULE_PWMSYSFS)
++    return()
++endif ()
++
++add_library(forte-pwmsysfs
++            pwmsysfs_controller.h pwmsysfs_controller.cpp
++            pwmsysfs_config_fb.h pwmsysfs_config_fb.cpp
++)
++target_link_libraries(forte-pwmsysfs PUBLIC forte-core)
++target_link_libraries(forte PUBLIC $<IF:$<BOOL:${BUILD_SHARED_LIBS}>,forte-pwmsysfs,$<LINK_LIBRARY:WHOLE_ARCHIVE,forte-pwmsysfs>>)
++install(TARGETS forte-pwmsysfs EXPORT forte-export FILE_SET HEADERS)
+diff --git a/modules/pwmsysfs/pwmsysfs_config_fb.cpp b/modules/pwmsysfs/pwmsysfs_config_fb.cpp
+new file mode 100644
+index 0000000..f6fb825
+--- /dev/null
++++ b/modules/pwmsysfs/pwmsysfs_config_fb.cpp
+@@ -0,0 +1,181 @@
++/*******************************************************************************
++ * Copyright (c) 2026 Aalborg University
++ * This program and the accompanying materials are made available under the
++ * terms of the Eclipse Public License 2.0 which is available at
++ * http://www.eclipse.org/legal/epl-2.0.
++ *
++ * SPDX-License-Identifier: EPL-2.0
++ *
++ * Contributors:
++ *   Martin Jensen - initial implementation (after GPIOChip by Jörg Walter)
++ *******************************************************************************/
++
++#include "pwmsysfs_config_fb.h"
++#include "pwmsysfs_controller.h"
++
++using namespace forte::literals;
++
++namespace forte::eclipse4diac::io::pwmsysfs {
++
++  namespace {
++    const auto cEventInputNames = std::array{"INIT"_STRID};
++    const auto cEventOutputNames = std::array{"INITO"_STRID, "IND"_STRID};
++    const auto cDataInputNames = std::array{"QI"_STRID,       "VALUE"_STRID,    "ChipNumber"_STRID, "Channel"_STRID,
++                                            "PeriodNs"_STRID, "Inversed"_STRID, "SysfsRoot"_STRID};
++    const auto cDataOutputNames = std::array{"QO"_STRID, "STATUS"_STRID};
++    const SFBInterfaceSpec cFBInterfaceSpec = {
++        .mEINames = cEventInputNames,
++        .mEITypeNames = {},
++        .mEONames = cEventOutputNames,
++        .mEOTypeNames = {},
++        .mDINames = cDataInputNames,
++        .mDONames = cDataOutputNames,
++        .mDIONames = {},
++        .mSocketNames = {},
++        .mPlugNames = {},
++    };
++  } // namespace
++
++  DEFINE_FIRMWARE_FB(FORTE_PWMChip, "eclipse4diac::io::pwmsysfs::PWMChip"_STRID)
++
++  FORTE_PWMChip::FORTE_PWMChip(const forte::StringId paInstanceNameId, CFBContainer &paContainer) :
++      IOConfigFBController(paContainer, cFBInterfaceSpec, paInstanceNameId),
++      var_QI(0_BOOL),
++      var_VALUE(u""_WSTRING),
++      var_ChipNumber(0_UINT),
++      var_Channel(0_UINT),
++      var_PeriodNs(1000000_UDINT),
++      var_Inversed(0_BOOL),
++      var_SysfsRoot(u""_WSTRING),
++      var_QO(0_BOOL),
++      var_STATUS(u""_WSTRING),
++      conn_INITO(*this, 0),
++      conn_IND(*this, 1),
++      conn_QI(nullptr),
++      conn_VALUE(nullptr),
++      conn_ChipNumber(nullptr),
++      conn_Channel(nullptr),
++      conn_PeriodNs(nullptr),
++      conn_Inversed(nullptr),
++      conn_SysfsRoot(nullptr),
++      conn_QO(*this, 0, var_QO),
++      conn_STATUS(*this, 1, var_STATUS) {
++  }
++
++  void FORTE_PWMChip::setInitialValues() {
++    CFunctionBlock::setInitialValues();
++    var_QI = 0_BOOL;
++    var_VALUE = u""_WSTRING;
++    var_ChipNumber = 0_UINT;
++    var_Channel = 0_UINT;
++    var_PeriodNs = 1000000_UDINT;
++    var_Inversed = 0_BOOL;
++    var_SysfsRoot = u""_WSTRING;
++    var_QO = 0_BOOL;
++    var_STATUS = u""_WSTRING;
++  }
++
++  void FORTE_PWMChip::readInputData(const TEventID paEIID) {
++    switch (paEIID) {
++      case scmEventINITID: {
++        readData(0, var_QI, conn_QI);
++        readData(1, var_VALUE, conn_VALUE);
++        readData(2, var_ChipNumber, conn_ChipNumber);
++        readData(3, var_Channel, conn_Channel);
++        readData(4, var_PeriodNs, conn_PeriodNs);
++        readData(5, var_Inversed, conn_Inversed);
++        readData(6, var_SysfsRoot, conn_SysfsRoot);
++        break;
++      }
++      default: break;
++    }
++  }
++
++  void FORTE_PWMChip::writeOutputData(const TEventID paEIID) {
++    switch (paEIID) {
++      case scmEventINITOID:
++      case scmEventINDID: {
++        writeData(7, var_QO, conn_QO);
++        writeData(8, var_STATUS, conn_STATUS);
++        break;
++      }
++      default: break;
++    }
++  }
++
++  CIEC_ANY *FORTE_PWMChip::getDI(const size_t paIndex) {
++    switch (paIndex) {
++      case 0: return &var_QI;
++      case 1: return &var_VALUE;
++      case 2: return &var_ChipNumber;
++      case 3: return &var_Channel;
++      case 4: return &var_PeriodNs;
++      case 5: return &var_Inversed;
++      case 6: return &var_SysfsRoot;
++    }
++    return nullptr;
++  }
++
++  CIEC_ANY *FORTE_PWMChip::getDO(const size_t paIndex) {
++    switch (paIndex) {
++      case 0: return &var_QO;
++      case 1: return &var_STATUS;
++    }
++    return nullptr;
++  }
++
++  CEventConnection *FORTE_PWMChip::getEOConUnchecked(const TPortId paIndex) {
++    switch (paIndex) {
++      case 0: return &conn_INITO;
++      case 1: return &conn_IND;
++    }
++    return nullptr;
++  }
++
++  CDataConnection **FORTE_PWMChip::getDIConUnchecked(const TPortId paIndex) {
++    switch (paIndex) {
++      case 0: return &conn_QI;
++      case 1: return &conn_VALUE;
++      case 2: return &conn_ChipNumber;
++      case 3: return &conn_Channel;
++      case 4: return &conn_PeriodNs;
++      case 5: return &conn_Inversed;
++      case 6: return &conn_SysfsRoot;
++    }
++    return nullptr;
++  }
++
++  CDataConnection *FORTE_PWMChip::getDOConUnchecked(const TPortId paIndex) {
++    switch (paIndex) {
++      case 0: return &conn_QO;
++      case 1: return &conn_STATUS;
++    }
++    return nullptr;
++  }
++
++  forte::io::IODeviceController *FORTE_PWMChip::createDeviceController(CDeviceExecution &paDeviceExecution) {
++    return new PWMSysfsController(paDeviceExecution);
++  }
++
++  void FORTE_PWMChip::setConfig() {
++    PWMSysfsController::Config config;
++    std::string root(var_SysfsRoot.getValue());
++    if (!root.empty()) {
++      config.mRoot = root;
++    }
++    config.mChipNumber = TForteUInt16(var_ChipNumber);
++    config.mChannel = TForteUInt16(var_Channel);
++    config.mPeriodNs = TForteUInt32(var_PeriodNs);
++    config.mInversed = var_Inversed;
++    getDeviceController()->setConfig(&config);
++  }
++
++  void FORTE_PWMChip::onStartup(CEventChainExecutionThread *const paECET) {
++    // Keep the id alive for the handle registration (see the HandleDescriptor fix in forte-patches).
++    std::string id(var_VALUE.getValue());
++    PWMSysfsController::HandleDescriptor desc(id, forte::io::IOMapper::Out);
++    initHandle(desc);
++    started(paECET);
++  }
++
++} // namespace forte::eclipse4diac::io::pwmsysfs
+diff --git a/modules/pwmsysfs/pwmsysfs_config_fb.h b/modules/pwmsysfs/pwmsysfs_config_fb.h
+new file mode 100644
+index 0000000..64639b0
+--- /dev/null
++++ b/modules/pwmsysfs/pwmsysfs_config_fb.h
+@@ -0,0 +1,81 @@
++/*******************************************************************************
++ * Copyright (c) 2026 Aalborg University
++ * This program and the accompanying materials are made available under the
++ * terms of the Eclipse Public License 2.0 which is available at
++ * http://www.eclipse.org/legal/epl-2.0.
++ *
++ * SPDX-License-Identifier: EPL-2.0
++ *
++ * Contributors:
++ *   Martin Jensen - initial implementation (after GPIOChip by Jörg Walter)
++ *******************************************************************************/
++
++#pragma once
++
++#include "forte/funcbloc.h"
++#include "forte/datatypes/forte_bool.h"
++#include "forte/datatypes/forte_udint.h"
++#include "forte/datatypes/forte_uint.h"
++#include "forte/datatypes/forte_wstring.h"
++#include "forte/io/configFB/io_configFB_controller.h"
++
++namespace forte::eclipse4diac::io::pwmsysfs {
++
++  /*! @brief PWMChip: configures one Linux PWM channel and registers it as the handle VALUE.
++   *
++   * A QW whose PARAMS is VALUE then sets the duty cycle as a fraction of the period (0..65535).
++   */
++  class FORTE_PWMChip : public forte::io::IOConfigFBController {
++      DECLARE_FIRMWARE_FB(FORTE_PWMChip)
++
++    private:
++      static const TEventID scmEventINITOID = 0;
++      static const TEventID scmEventINDID = 1;
++      static const TEventID scmEventINITID = 0;
++
++      void readInputData(TEventID paEIID) override;
++      void writeOutputData(TEventID paEIID) override;
++      void setInitialValues() override;
++
++    public:
++      FORTE_PWMChip(const forte::StringId paInstanceNameId, CFBContainer &paContainer);
++
++      CIEC_BOOL var_QI;
++      CIEC_WSTRING var_VALUE;
++      CIEC_UINT var_ChipNumber;
++      CIEC_UINT var_Channel;
++      CIEC_UDINT var_PeriodNs;
++      CIEC_BOOL var_Inversed;
++      CIEC_WSTRING var_SysfsRoot;
++
++      CIEC_BOOL var_QO;
++      CIEC_WSTRING var_STATUS;
++
++      CEventConnection conn_INITO;
++      CEventConnection conn_IND;
++
++      CDataConnection *conn_QI;
++      CDataConnection *conn_VALUE;
++      CDataConnection *conn_ChipNumber;
++      CDataConnection *conn_Channel;
++      CDataConnection *conn_PeriodNs;
++      CDataConnection *conn_Inversed;
++      CDataConnection *conn_SysfsRoot;
++
++      COutDataConnection<CIEC_BOOL> conn_QO;
++      COutDataConnection<CIEC_WSTRING> conn_STATUS;
++
++      CIEC_ANY *getDI(size_t) override;
++      CIEC_ANY *getDO(size_t) override;
++      CEventConnection *getEOConUnchecked(TPortId) override;
++      CDataConnection **getDIConUnchecked(TPortId) override;
++      CDataConnection *getDOConUnchecked(TPortId) override;
++
++    protected:
++      forte::io::IODeviceController *createDeviceController(CDeviceExecution &paDeviceExecution) override;
++
++      void setConfig() override;
++
++      void onStartup(CEventChainExecutionThread *const paECET) override;
++  };
++} // namespace forte::eclipse4diac::io::pwmsysfs
+diff --git a/modules/pwmsysfs/pwmsysfs_controller.cpp b/modules/pwmsysfs/pwmsysfs_controller.cpp
+new file mode 100644
+index 0000000..6c7afbe
+--- /dev/null
++++ b/modules/pwmsysfs/pwmsysfs_controller.cpp
+@@ -0,0 +1,136 @@
++/*******************************************************************************
++ * Copyright (c) 2026 Aalborg University
++ * This program and the accompanying materials are made available under the
++ * terms of the Eclipse Public License 2.0 which is available at
++ * http://www.eclipse.org/legal/epl-2.0.
++ *
++ * SPDX-License-Identifier: EPL-2.0
++ *
++ * Contributors:
++ *   Martin Jensen - initial implementation
++ *******************************************************************************/
++
++#include "pwmsysfs_controller.h"
++
++#include <cerrno>
++#include <cstring>
++#include <fcntl.h>
++#include <string>
++#include <sys/stat.h>
++#include <unistd.h>
++
++#include "forte/datatypes/forte_word.h"
++#include "forte/util/devlog.h"
++
++namespace forte::eclipse4diac::io::pwmsysfs {
++
++  const char *const PWMSysfsController::scmFailedToExport = "Failed to export the PWM channel";
++  const char *const PWMSysfsController::scmFailedToConfigure = "Failed to configure the PWM channel";
++  const char *const PWMSysfsController::scmFailedToWrite = "Failed to write the PWM duty cycle";
++
++  namespace {
++    bool exists(const std::string &paPath) {
++      struct stat info{};
++      return stat(paPath.c_str(), &info) == 0;
++    }
++  } // namespace
++
++  std::string PWMSysfsController::channelPath() const {
++    return mConfig.mRoot + "/pwmchip" + std::to_string(mConfig.mChipNumber) + "/pwm" + std::to_string(mConfig.mChannel);
++  }
++
++  bool PWMSysfsController::writeFile(const std::string &paFile, const std::string &paValue) const {
++    int fd = open(paFile.c_str(), O_WRONLY);
++    if (fd < 0) {
++      DEVLOG_ERROR("[PWMSysfsController] Could not open %s: %s\n", paFile.c_str(), strerror(errno));
++      return false;
++    }
++    bool ok = write(fd, paValue.c_str(), paValue.size()) == static_cast<ssize_t>(paValue.size());
++    if (!ok) {
++      DEVLOG_ERROR("[PWMSysfsController] Could not write '%s' to %s: %s\n", paValue.c_str(), paFile.c_str(),
++                   strerror(errno));
++    }
++    close(fd);
++    return ok;
++  }
++
++  const char *PWMSysfsController::init() {
++    const std::string chip = mConfig.mRoot + "/pwmchip" + std::to_string(mConfig.mChipNumber);
++    const std::string channel = channelPath();
++    if (!exists(channel)) {
++      if (!writeFile(chip + "/export", std::to_string(mConfig.mChannel))) {
++        return scmFailedToExport;
++      }
++      // udev may need a moment to create the channel and hand its files to the gpio group.
++      for (int i = 0; i < 20 && !exists(channel + "/period"); ++i) {
++        sleepThread(50);
++      }
++    }
++    // The duty cycle must never exceed the period: clear it before changing the period.
++    writeFile(channel + "/duty_cycle", "0");
++    if (!writeFile(channel + "/period", std::to_string(mConfig.mPeriodNs)) ||
++        (mConfig.mInversed && !writeFile(channel + "/polarity", "inversed")) ||
++        !writeFile(channel + "/enable", "1")) {
++      return scmFailedToConfigure;
++    }
++    mDutyFd = open((channel + "/duty_cycle").c_str(), O_WRONLY);
++    if (mDutyFd < 0) {
++      DEVLOG_ERROR("[PWMSysfsController] Could not open %s/duty_cycle: %s\n", channel.c_str(), strerror(errno));
++      return scmFailedToConfigure;
++    }
++    DEVLOG_INFO("[PWMSysfsController] PWM chip %u channel %u ready, period %lu ns\n", mConfig.mChipNumber,
++                mConfig.mChannel, mConfig.mPeriodNs);
++    return nullptr;
++  }
++
++  void PWMSysfsController::deInit() {
++    if (mDutyFd >= 0) {
++      close(mDutyFd);
++      mDutyFd = -1;
++      const std::string channel = channelPath();
++      writeFile(channel + "/duty_cycle", "0");
++      writeFile(channel + "/enable", "0");
++    }
++    DEVLOG_INFO("[PWMSysfsController] PWM chip %u channel %u shut down\n", mConfig.mChipNumber, mConfig.mChannel);
++  }
++
++  void PWMSysfsController::runLoop() {
++    // Output only: values are written directly when a QW sets the handle.
++    while (isAlive() && !hasError()) {
++      sleepThread(100);
++    }
++  }
++
++  void PWMSysfsController::handleChangeEvent(forte::io::IOHandle *paHandle) {
++    if (mDutyFd < 0) {
++      return;
++    }
++    auto value = static_cast<PWMSysfsHandle *>(paHandle)->value();
++    auto duty = static_cast<unsigned long long>(mConfig.mPeriodNs) * value / 65535ULL;
++    const std::string text = std::to_string(duty);
++    if (pwrite(mDutyFd, text.c_str(), text.size(), 0) != static_cast<ssize_t>(text.size())) {
++      DEVLOG_ERROR("[PWMSysfsController] Could not write duty cycle %s to PWM chip %u channel %u: %s\n", text.c_str(),
++                   mConfig.mChipNumber, mConfig.mChannel, strerror(errno));
++      mError = scmFailedToWrite;
++    }
++  }
++
++  ::forte::io::IOHandle *PWMSysfsController::createIOHandle(HandleDescriptor &paHandleDescriptor) {
++    return new PWMSysfsHandle(this, paHandleDescriptor.mDirection);
++  }
++
++  PWMSysfsHandle::PWMSysfsHandle(forte::io::IODeviceController *paController,
++                                 forte::io::IOMapper::Direction paDirection) :
++      IOHandle(paController, paDirection, CIEC_ANY::e_WORD) {
++  }
++
++  void PWMSysfsHandle::set(const CIEC_ANY &paValue) {
++    mValue = static_cast<TForteWord>(static_cast<const CIEC_WORD &>(paValue));
++    mController->handleChangeEvent(this);
++  }
++
++  void PWMSysfsHandle::get(CIEC_ANY &paValue) {
++    static_cast<CIEC_WORD &>(paValue) = CIEC_WORD(mValue);
++  }
++
++} // namespace forte::eclipse4diac::io::pwmsysfs
+diff --git a/modules/pwmsysfs/pwmsysfs_controller.h b/modules/pwmsysfs/pwmsysfs_controller.h
+new file mode 100644
+index 0000000..13cdf77
+--- /dev/null
++++ b/modules/pwmsysfs/pwmsysfs_controller.h
+@@ -0,0 +1,87 @@
++/*******************************************************************************
++ * Copyright (c) 2026 Aalborg University
++ * This program and the accompanying materials are made available under the
++ * terms of the Eclipse Public License 2.0 which is available at
++ * http://www.eclipse.org/legal/epl-2.0.
++ *
++ * SPDX-License-Identifier: EPL-2.0
++ *
++ * Contributors:
++ *   Martin Jensen - initial implementation
++ *******************************************************************************/
++
++#pragma once
++
++#include <string>
++
++#include "forte/io/device/io_controller.h"
++
++namespace forte::eclipse4diac::io::pwmsysfs {
++
++  /*! @brief One Linux PWM channel (/sys/class/pwm/pwmchip<N>/pwm<M>).
++   *
++   * The channel is exported, set to its period and enabled at start. Its handle is a WORD:
++   * 0..65535 is the fraction of the period the output is high (duty_cycle = period * value / 65535),
++   * written whenever a QW sets it. At the end the duty cycle is set to 0 and the channel disabled.
++   * Works for the Raspberry Pi's hardware PWM (dtoverlay=pwm-2chan) and any other PWM driver,
++   * e.g. a PCA9685 board through pwm-pca9685.
++   */
++  class PWMSysfsController : public forte::io::IODeviceController {
++    public:
++      explicit PWMSysfsController(CDeviceExecution &paDeviceExecution) : IODeviceController(paDeviceExecution) {};
++
++      struct Config : IODeviceController::Config {
++          std::string mRoot = "/sys/class/pwm";
++          unsigned int mChipNumber = 0;
++          unsigned int mChannel = 0;
++          unsigned long mPeriodNs = 1000000;
++          bool mInversed = false;
++      };
++
++      using IODeviceController::HandleDescriptor;
++
++      void setConfig(struct IODeviceController::Config *paConfig) override {
++        mConfig = *static_cast<Config *>(paConfig);
++      }
++
++      bool isHandleValueEqual(forte::io::IOHandle &) override {
++        return true;
++      }
++
++      void handleChangeEvent(forte::io::IOHandle *paHandle) override;
++      ::forte::io::IOHandle *createIOHandle(HandleDescriptor &paHandleDescriptor) override;
++
++    protected:
++      const char *init() override;
++      void deInit() override;
++      void runLoop() override;
++
++    private:
++      std::string channelPath() const;
++      bool writeFile(const std::string &paFile, const std::string &paValue) const;
++
++      int mDutyFd = -1;
++      Config mConfig;
++
++      static const char *const scmFailedToExport;
++      static const char *const scmFailedToConfigure;
++      static const char *const scmFailedToWrite;
++  };
++
++  /*! @brief WORD handle of a PWM channel: the fraction of the period (0..65535). */
++  class PWMSysfsHandle : public forte::io::IOHandle {
++    public:
++      PWMSysfsHandle(forte::io::IODeviceController *paController, forte::io::IOMapper::Direction paDirection);
++
++      void set(const CIEC_ANY &paValue) override;
++      void get(CIEC_ANY &paValue) override;
++
++      TForteWord value() const {
++        return mValue;
++      }
++
++    private:
++      TForteWord mValue = 0;
++  };
++
++} // namespace forte::eclipse4diac::io::pwmsysfs

@@ -1,0 +1,18 @@
+Fix for FORTE 3.3.0: IODeviceController::HandleDescriptor kept a reference to its id, and
+GPIOChip::onStartup passes a temporary std::string (from var_VALUE.getValue()), so IOMapper
+copied a dangling string when registering the handle. It crashed the Pi build (musl) at the
+first GPIOChip INIT (SIGSEGV in memcpy in IOMapper::registerHandle). Applied by build-runtime.ps1.
+
+diff --git a/core/include/forte/io/device/io_controller.h b/core/include/forte/io/device/io_controller.h
+index 7458093..3f35e6e 100644
+--- a/core/include/forte/io/device/io_controller.h
++++ b/core/include/forte/io/device/io_controller.h
+@@ -59,7 +59,7 @@ namespace forte::io {
+        */
+       class HandleDescriptor {
+         public:
+-          std::string const &mId;
++          std::string mId;  // owned: callers pass temporaries (e.g. GPIOChip's VALUE)
+           IOMapper::Direction mDirection;
+ 
+           HandleDescriptor(std::string const &paId, IOMapper::Direction paDirection) :

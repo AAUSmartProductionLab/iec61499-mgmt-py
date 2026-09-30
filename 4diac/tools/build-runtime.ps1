@@ -26,6 +26,16 @@ if (-not (Test-Path (Join-Path $forte 'CMakeLists.txt'))) {
 }
 $have = (& git -C $forte describe --tags --exact-match 2>$null)
 if ($have -ne $ForteTag) { throw "fbe/4diac-forte is at '$have', expected $ForteTag; delete it to re-fetch" }
+# Fixes to the FORTE release (forte-patches/*.patch, in name order); a patch already applied is skipped.
+$ErrorActionPreference = 'Continue'
+foreach ($patch in Get-ChildItem -Path (Join-Path $PSScriptRoot 'forte-patches') -Filter '*.patch' | Sort-Object Name) {
+    & git -C $forte apply --reverse --check $patch.FullName 2>$null
+    if ($LASTEXITCODE -eq 0) { continue }
+    & git -C $forte apply $patch.FullName
+    if ($LASTEXITCODE -ne 0) { throw "Could not apply $($patch.Name) to fbe/4diac-forte" }
+    "Applied $($patch.Name)"
+}
+$ErrorActionPreference = 'Stop'
 Push-Location $root
 try {
     # Out-of-tree FBE build: configurations/ and build/ live in $root. Call the shell script

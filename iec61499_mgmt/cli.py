@@ -106,7 +106,12 @@ def main():
             library = read(TypeLibrary, args.library) if args.library else None
             commands = deployment(load_application(args.system, args.application), args.resource,
                                   procedure=procedure, library=library)
-            Path(args.out).write_text(boot_file(commands), encoding="utf-8")
+            # LF only: FORTE ends a boot-file command at "/>
+" or "</Request>
+", so CRLF from a
+            # Windows text write merges all lines on Linux (Windows FORTE reads in text mode).
+            Path(args.out).write_text(boot_file(commands), encoding="utf-8", newline="
+")
             return
         else:
             model = {"network": Network, "patch": NetworkPatch, "plan": Plan,
