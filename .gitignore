@@ -229,10 +229,8 @@ docs/
 AAS_Builder/
 arduino_cpp_examples/
 
-# Other tools' and the IDE's local state
+# Other tools' local state
 .kilo/
-4diac/.project
-4diac/FillerUnit/
 
 # modsync output (AAS JSON of the modules read)
 /aas/

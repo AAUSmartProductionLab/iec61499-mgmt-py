@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "iec61499-mgmt-py"
+name = "iec61499-aas-reconfig"
 version = "0.1.0"
-description = "Validated FORTE network models and deterministic management plans"
+description = "AAS-driven online reconfiguration of IEC 61499 modules on Eclipse 4diac FORTE"
 requires-python = ">=3.11"
 dependencies = ["pydantic>=2.9,<3", "defusedxml>=0.7,<1", "pyyaml>=6,<7"]
 
@@ -17,9 +17,14 @@ test = ["pytest>=7,<9", "asyncua>=1.1", "basyx-python-sdk>=2,<3"]
 [project.scripts]
 iec61499 = "iec61499_mgmt.cli:main"
 
-[tool.setuptools.packages.find]
-include = ["iec61499_mgmt*", "modgen*", "modsync*"]
+# One folder per future repository; the Python packages live inside them.
+[tool.setuptools]
+packages = ["iec61499_mgmt", "modgen", "modsync"]
+
+[tool.setuptools.package-dir]
+iec61499_mgmt = "iec61499-mgmt-py/iec61499_mgmt"
+modgen = "iec61499-skill-lib/modgen"
+modsync = "aas61499-tools/modsync"
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-
+testpaths = ["iec61499-mgmt-py/tests", "iec61499-skill-lib/tests", "aas61499-tools/tests", "deploy/tests", "cell/tests"]
