@@ -223,3 +223,21 @@ docs/
 
 # 4diac IDE per-type documentation folders
 *.assets/
+
+# Local reference copies, never committed: the lab's AAS builder (lives in the lab
+# repository) and the ESP32 station code (contains WiFi credentials)
+AAS_Builder/
+arduino_cpp_examples/
+
+# Other tools' and the IDE's local state
+.kilo/
+4diac/.project
+4diac/FillerUnit/
+
+# modsync output (AAS JSON of the modules read)
+/aas/
+
+# Working documents: kept locally for building the project, not part of the repository
+# (proper documentation comes in once everything is finalised)
+/ontology/
+/AAS-driven online reconfiguration of IEC 61499 devices build and modelling plan.md

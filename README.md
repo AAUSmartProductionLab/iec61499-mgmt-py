@@ -1,103 +1,58 @@
 # iec61499-aas-reconfig
 
-AAS-driven online reconfiguration of IEC 61499 devices. This repository holds all components
-for now; each will move to its own repository once its interface is stable (see
-[the build plan](AAS-driven%20online%20reconfiguration%20of%20IEC%2061499%20devices%20build%20and%20modelling%20plan.md)).
+AAS-driven online reconfiguration of IEC 61499 devices: modules (filling, stoppering) run as
+Eclipse 4diac FORTE programs on Raspberry Pis, are described by their Asset Administration
+Shells, and are reconfigured from product, process and resource models. All components share
+this repository for now; each moves to its own repository once its interface is stable.
+Plans, design notes and the ontologies used as the design guide are working documents kept
+outside the repository; proper documentation follows once everything is finalised.
 
-## iec61499-mgmt-py
+## Map
 
-Validated JSON network models and deterministic FORTE management plans, plus an
-experimental BPMN skill compiler. Read [the modelling and implementation design](docs/design.md)
-for the division between operator intent, skill descriptions and runtime wiring.
+**Current: generated modules** (since 28 Sep 2026)
 
-The first working slice supports sequential BPMN tasks, named skill parameters,
-full desired networks and patches. The CLI works offline. Production occupation,
-contract checking, live reconciliation, boot persistence and AAS integration are
-not implemented yet. Example target types/hashes are illustrative.
+| Path | What |
+| --- | --- |
+| `modules/*.yaml` | Module specifications: equipment IO, skill primitives, module level skills, procedures, targets (PC with a simulator, Pi with GPIO/PWM) |
+| `modgen/` | Generator: module spec → 4diac project (`python -m modgen`) |
+| `4diac/ModLib`, `4diac/FillingModule`, `4diac/StopperingModule`, `4diac/FillerModule` | Generated 4diac projects (the `.sys` keeps layouts arranged in the IDE) |
+| `modsync/` | Module ⇄ spec ⇄ AAS: read what runs on a module, report drift, write its AAS, push changes (`python -m modsync`) |
+| `4diac/tools/` | FORTE build (`build-modules.ps1`, `build-runtime.ps1`, FORTE patches incl. the sysfs PWM module), Pi deployment (`pi.py`, `pi/`), module simulator (`module_sim.py`, `run_module.py`) |
+| `iec61499_mgmt/` | FORTE management library: typed commands, client, `.sys` flattening, boot files, read-back verification, type library, guarded changeover |
+
+**Legacy: the filling cell of the first iteration** (kept until the module stack covers its
+experiments)
+
+| Path | What |
+| --- | --- |
+| `4diac/FillingCellFixed`, `4diac/tools/generate_filling_cell.py` | `SK_*` skill composites with PackML, gate and contract blocks, pattern FBs, the OPC UA driven cell |
+| `skill_compiler/`, `examples/` | BPMN compiler (sequences, loops), contract forward check, mutation study; the cell's processes, bindings and products A–E |
+
+Local only, not committed: `AAS_Builder/` (the lab's AAS builder, lives in the lab
+repository), `arduino_cpp_examples/` (the ESP32 station code the modules were ported from),
+`docs/`, `ontology/` and the plan (working documents).
+
+## Quick start
 
 ```powershell
 python -m pip install -e ".[test]"
-python -m pytest -q
-python -m iec61499_mgmt compile examples/fill.bpmn --bindings examples/bindings.json --target examples/target.json --product examples/product.json --out compilation.json --network-out network.json
-python -m iec61499_mgmt plan --current examples/empty-network.json --desired network.json --target examples/target.json --out plan.json
-python -m iec61499_mgmt schema patch --out patch.schema.json
+python -m pytest tests -q                                  # offline tests
+
+python -m modgen                                           # regenerate ModLib and the module projects
+4diac/tools/build-modules.ps1                              # IDE check + export, one FORTE with every module (C:\4diac-fbe)
+python -m pytest tests -q --module-forte-exe 4diac/tools/fbe/build/modules-win/output/bin/forte.exe   # + live module tests
+python 4diac/tools/run_module.py modules/filling.yaml      # simulator + FORTE + module, OPC UA at opc.tcp://localhost:4840
+
+4diac/tools/build-modules.ps1 -Config pi/modules-pi -SkipValidate   # FORTE for the Raspberry Pi (aarch64)
+python 4diac/tools/pi.py install                           # FORTE in Docker on the Pi of modules/filling.yaml
+python 4diac/tools/pi.py module                            # run the module on its Pi
+python -m modsync pull --host 192.168.0.191                # which module runs there, drift from its spec, its AAS
 ```
 
-`compilation.json` contains the procedure IR, draft composite-skill description
-and generated network. `plan.json` contains preflight queries, ordered mutations
-and read-back queries; emitting queries is not verification of a live runtime.
+In the 4diac IDE (a workspace outside the repository), import the module projects without
+copying them. The legacy cell: `python 4diac/tools/generate_filling_cell.py`,
+`4diac/tools/build-runtime.ps1`, live tests with `--forte-exe`.
 
-```python
-from iec61499_mgmt import Network, NetworkPatch, TypeLibrary, plan
-
-current = Network.model_validate_json(current_json)
-desired = Network.model_validate_json(desired_json)
-# Alternatively:
-# desired = NetworkPatch.model_validate_json(patch_json).apply(current)
-commands = plan(current, desired, TypeLibrary.model_validate_json(types_json))
-print(commands.model_dump_json(indent=2))
-```
-
-A parameter patch names its instance and parameter, with a required base-network
-hash from `current.digest()`:
-
-```json
-{
-  "base_hash": "<64-character SHA-256 from current.digest()>",
-  "operations": [
-    {"op": "set_parameter", "instance": "PROC.b_446f7365", "parameter": "P1",
-     "value": {"type": "LREAL", "value": 1.0}}
-  ]
-}
-```
-
-The low-level client can execute individual typed commands:
-
-```python
-from iec61499_mgmt.protocol import Client, Command
-
-with Client("127.0.0.1") as client:
-    response = client.execute(Command(op="query_fbs", resource="RES"))
-    print(response.fbs)
-```
-
-Mutations require the caller to implement the changeover guard and occupation
-protocol described in the design. Management START/STOP are FB lifecycle
-operations, distinct from PackML skill commands.
-
-Standard FORTE types report empty per-type hashes. The library accepts these only
-with `runtime_binary_sha256` in the type manifest, carries that requirement into the
-plan, and provides `library.verify_executable(path)` for local build verification.
-Protocol response fixtures captured from FORTE 3 are in `tests/fixtures/forte3-responses.json`.
-
-## Filling-cell skill blocks (4diac types)
-
-The 4diac project in `4diac/FillingCellFixed` is generated. Primitive skills are
-composite FBs built from a shared PackML state machine, a command gate, a per-skill
-contract block, IO primitives (simulated, GPIO or Modbus) and an OPC UA facade with one
-method per PackML command. Procedures are networks of pattern FBs (`P_Call`, `P_Loop`,
-`P_Choice`, `P_Fork`, `P_Join`, `P_Wait`) in `PROC`. See [skill-blocks.md](docs/skill-blocks.md).
-
-The library also builds `types.json` from a running build (`types`), writes FORTE boot files
-(`boot`) and checks a live resource against the expected network (`iec61499_mgmt.verify`).
-`iec61499_mgmt.changeover` applies a change only while the unit is occupied and quiescent, and
-`skill_compiler.contracts` forward-checks a procedure against the skill contracts. The
-filling-cell processes, bindings and products A–E are in `examples/cell`:
-
-```powershell
-python -m iec61499_mgmt compile examples/cell/fill-v2.bpmn --bindings examples/cell/bindings-v2.json --target examples/cell/target-template.json --library types.json --product examples/cell/product-C.json --out compilation.json --network-out network.json
-```
-
-```powershell
-python 4diac/tools/generate_filling_cell.py
-4diac/tools/build-runtime.ps1      # IDE check + export, then FORTE via C:\4diac-fbe (OPC UA, Modbus, IO)
-python -m pytest tests -q --forte-exe 4diac/tools/fbe/build/fillingcell-win/output/bin/forte.exe
-```
-
-The system maps four applications to device `FORTE_PC` for running from the 4diac IDE: the
-production cell (OPC UA driven), a self-running demo cell with a plant model, a skill bench and
-a pattern demo. See "Running from the 4diac IDE" in [skill-blocks.md](docs/skill-blocks.md).
-
-Live tests start their own FORTE on free localhost ports and terminate it afterwards;
-without `--forte-exe` they are skipped. The FBE build is statically linked and needs
-no DLL path.
+Live tests start their own FORTE on free local ports and stop it afterwards; without the
+FORTE options they are skipped. `tests/test_module_live.py` also runs against a Pi
+(`--pi-host`, `--sim-host`).
