@@ -63,6 +63,17 @@ class ModuleUa:
                 raise AssertionError(f"{path} = {actual!r}, expected {value!r}")
             time.sleep(0.05)
 
+    def record(self, path) -> list:
+        """The values a variable takes from now on, in order (an OPC UA subscription, starting with
+        the current value). A state that lasts less than the 20 ms sampling may be missed."""
+        values = []
+
+        class Handler:
+            def datachange_notification(self, node, value, data):
+                values.append(value)
+        self.client.create_subscription(20, Handler()).subscribe_data_change(self.node(path))
+        return values
+
     def close(self):
         """Disconnect."""
         self.client.disconnect()
