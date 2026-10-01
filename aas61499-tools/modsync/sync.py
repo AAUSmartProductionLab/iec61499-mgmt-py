@@ -17,6 +17,8 @@ from dataclasses import dataclass
 import hashlib
 import importlib.util
 from pathlib import Path
+import socket
+import subprocess
 import time
 
 from iec61499_mgmt.bootfile import boot_file, deployment
@@ -125,6 +127,42 @@ class PiDeployer:
         self.pi.wait_port(self.args.host, self.args.port)
 
 
+class LocalDeployer:
+    """Boot file of the FORTE container on this machine (runtime/install.sh puts it in ~/forte)."""
+
+    def __init__(self, folder: Path | None = None, port: int = 61499):
+        self.folder, self.port = Path(folder or Path.home() / "forte"), port
+
+    def save(self, boot: str):
+        """Replace the boot file; the running program is not touched."""
+        (self.folder / "boot").mkdir(parents=True, exist_ok=True)
+        (self.folder / "boot" / "forte.fboot").write_text(boot, encoding="utf-8", newline="\n")
+
+    def restart(self, boot: str):
+        """Replace the boot file and restart FORTE with it."""
+        self.save(boot)
+        subprocess.run(["docker", "compose", "restart"], cwd=self.folder, check=True)
+        deadline = time.monotonic() + 30
+        while True:
+            try:
+                with socket.create_connection(("127.0.0.1", self.port), timeout=1):
+                    return
+            except OSError:
+                if time.monotonic() > deadline:
+                    raise
+                time.sleep(0.5)
+
+
+def is_local(host: str) -> bool:
+    """``host`` is this machine (a socket can only be bound to one of its own addresses)."""
+    try:
+        with socket.socket() as s:
+            s.bind((socket.gethostbyname(host), 0))
+        return True
+    except OSError:
+        return False
+
+
 class Refused(RuntimeError):
     """The module may not be changed now (running, occupied) or cannot be (types missing in FORTE)."""
 
@@ -142,14 +180,15 @@ def guard(client: Client, snap: Snapshot):
                       "stop and release it first, or use --force")
 
 
-def lacking(client: Client, resource: str, types, known) -> list[str]:
-    """The types FORTE does not have; generic comm FBs are made on demand (GEN_*), so not asked for."""
+def lacking(client: Client, types, known) -> list[str]:
+    """The types FORTE does not have; generic comm FBs are made on demand (GEN_*), so not asked for.
+    Asked of the device, which answers also while it has no program (no resource yet)."""
     missing = []
     for typ in sorted(set(types) - set(known)):
         if GENERIC.fullmatch(typ):
             continue
         try:
-            if not client.execute(Command(op="query_type", resource=resource, type=typ)).types:
+            if not client.execute(Command(op="query_type", resource="", type=typ)).types:
                 missing.append(typ)
         except ManagementError:
             missing.append(typ)
@@ -206,10 +245,13 @@ def push(client: Client, host: str, port: int, cand: Candidate, deployer=None, o
     if drift.empty:
         return ["in sync, nothing to do"]
     boot = boot_file(deployment(cand.app, resource, overrides=overrides))
-    if missing := lacking(client, resource, cand.app.fbs.values(), snap.hashes):
+    if missing := lacking(client, cand.app.fbs.values(), snap.hashes):
         raise Refused(f"FORTE lacks the types {missing}: rebuild it (build-modules.ps1) and install it first")
     if drift.restart or snap.empty:
-        done = [f"redeploy: {line}" for line in drift.lines()]
+        app = cand.app
+        done = ([f"deploy {cand.spec.module} (target {cand.target}): {len(app.fbs)} instances, "
+                 f"{len(app.event_connections) + len(app.data_connections)} connections"] if snap.empty
+                else [f"redeploy: {line}" for line in drift.lines()])
         if dry_run:
             return done
         if deployer is None:
