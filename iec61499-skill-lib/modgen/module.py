@@ -446,7 +446,9 @@ def make_skill_logic(p: Project, pkg: str, name: str, skill: Skill, eq: Equipmen
         if not timed:
             b.state("TimedOut", cmd(0) + f"\nErrorID := {e['Timeout']};\nOutcome := 2;", "CMD")
         b.state("Halt", cmd(stop) + f"\nErrorID := {e['Interrupted']};\nOutcome := 3;", "CMD", ["TIMER_STOP"])
-        b.state("Abort", cmd(0) + "\nOutcome := 0;", "CMD", ["TIMER_STOP"])
+        # An abort always gives the equipment up: with the module aborting, the equipment has already
+        # freed itself, and a message that kept the holder would take it again for good.
+        b.state("Abort", cmd(0, "TRUE") + "\nOutcome := 0;", "CMD", ["TIMER_STOP"])
         b.state("Ending")
         b.state("EndDone", None, "DONE")
         b.state("EndFailed", None, "FAILED")

@@ -235,7 +235,7 @@ Outcome := 3;</ST>
       <ST>C_Holder := Token;
 C_Command := 0;
 C_Arg := Angle;
-C_Release := LastUse;
+C_Release := TRUE;
 Outcome := 0;</ST>
     </Algorithm>
   </BasicFB>

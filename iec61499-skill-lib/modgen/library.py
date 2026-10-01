@@ -459,8 +459,8 @@ READY = ["Idle", "Succeeded", "Failed"]
 def make_skill_control(p: Project):
     """SKILL_Control: the state machine every skill shares (primitive or module level skill).
 
-    Idle/Succeeded/Failed -Start-> Running -> Succeeded | Failed(ErrorID). Stop, a parent HALT or the
-    module entering Stopping -> Stopping: the execution is halted, then the stop procedure runs
+    Idle/Succeeded/Failed -Start-> Running -> Succeeded | Failed(ErrorID). Stop, a parent HALT or (for
+    a skill started over OPC UA) the module entering Stopping -> Stopping: the execution is halted, then the stop procedure runs
     (RUN_STOP -> STOP_DONE) -> Failed(Interrupted). Abort, a parent ABORT or the module entering
     Aborting -> Aborted (outputs off at once); Reset, a parent RESET or the module Clearing -> Idle
     (RESET_O passes it on to children).
@@ -539,7 +539,9 @@ def make_skill_control(p: Project):
         b.trans(w, "Succeed", "EXEC_DONE")
         b.trans(w, "Fail", "EXEC_FAILED")
         b.trans(w, "Halt", "HALT")
-        b.trans(w, "Halt", f"MOD_CHG[ModState = {STATES['Stopping']}]")
+        # Only a skill the occupant started stops itself when the module stops. One started by a parent
+        # is halted by it; a step of the Stopping procedure must run exactly then.
+        b.trans(w, "Halt", f"MOD_CHG[(ModState = {STATES['Stopping']}) AND FromUa]")
     b.trans("Stopping", "RunStop", "EXEC_DONE")
     b.trans("Stopping", "RunStop", "EXEC_FAILED")
     b.trans("StopProc", "Interrupted", "STOP_DONE")
