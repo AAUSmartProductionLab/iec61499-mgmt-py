@@ -7,6 +7,8 @@
     python -m modsync push cell/modules/filling.yaml --target pi           # bring the module to its spec
     python -m modsync watch                                                # pull whenever a module comes online or changes
 
+Run on the module's own computer with --host localhost: push then writes the boot file in ~/forte
+and restarts the FORTE container there (elsewhere it does so over SSH).
 The AAS goes to aas/<idShort>.json; --basyx http://<host>:8081 also uploads it to an AAS server.
 """
 import argparse
@@ -15,11 +17,11 @@ import sys
 import time
 
 from iec61499_mgmt.protocol import Client
-from modgen import load, specs
+from modgen import SPECS, load, specs
 
 from . import aas
 from .compare import Candidate
-from .sync import PiDeployer, Refused, Status, candidates, inspect, push, relative, watch
+from .sync import LocalDeployer, PiDeployer, Refused, Status, candidates, inspect, is_local, push, relative, watch
 
 OUT = Path("aas")
 
@@ -57,11 +59,18 @@ def endpoint(args, cand: Candidate | None) -> tuple[str, int]:
     return host, args.port or (t.port if t else 61499)
 
 
+def spec_path(arg: str) -> Path:
+    """A module spec given as a file, or by its name among the cell's specs (``filling``)."""
+    path = Path(arg)
+    return path if path.exists() or path.suffix else SPECS / f"{arg}.yaml"
+
+
 def chosen(args) -> Candidate | None:
     if not args.spec:
         return None
-    spec = load(Path(args.spec))
-    return Candidate(Path(args.spec), spec, args.target or next(iter(spec.targets)))
+    path = spec_path(args.spec)
+    spec = load(path)
+    return Candidate(path, spec, args.target or next(iter(spec.targets)))
 
 
 def main():
@@ -72,7 +81,7 @@ def main():
         p.add_argument("--out", default=str(OUT), help="Folder for the AAS JSON files")
         p.add_argument("--basyx", help="Also upload the AAS to this AAS server, e.g. http://192.168.0.104:8081")
         if name in ("describe", "push"):
-            p.add_argument("spec", help="Module spec")
+            p.add_argument("spec", help="Module spec: a file, or a module's name (filling)")
         elif name == "pull":
             p.add_argument("--spec", help="Module spec (default: find it among modules/*.yaml)")
         else:
@@ -90,13 +99,13 @@ def main():
     args = parser.parse_args()
 
     if args.command == "describe":
-        spec = load(Path(args.spec))
+        spec = load(spec_path(args.spec))
         target = args.target or next(iter(spec.targets))
         print(f"{spec.module} target {target}, from the spec only")
-        publish(None, args, spec, target, Path(args.spec))
+        publish(None, args, spec, target, spec_path(args.spec))
     elif args.command == "pull":
         cand = chosen(args)
-        cands = [c for c in candidates([args.spec]) if not args.target or c.target == args.target] if cand \
+        cands = [c for c in candidates([cand.path]) if not args.target or c.target == args.target] if cand \
             else candidates(specs())
         host, port = endpoint(args, cand)
         with Client(host, port, timeout=5) as client:
@@ -110,7 +119,8 @@ def main():
         host, port = endpoint(args, cand)
         t = cand.spec.targets[cand.target]
         user = args.user or t.user
-        deployer = PiDeployer(host, user, port) if user else None
+        # On the module's own computer the boot file is local; from elsewhere it goes over SSH.
+        deployer = LocalDeployer(port=port) if is_local(host) else PiDeployer(host, user, port) if user else None
         with Client(host, port, timeout=5) as client:
             try:
                 done = push(client, host, port, cand, deployer, force=args.force, dry_run=args.dry_run)
@@ -125,7 +135,7 @@ def main():
             report(status)
             publish(status, args)
     else:
-        paths = args.spec or specs()
+        paths = [spec_path(s) for s in args.spec] or specs()
         endpoints: dict[tuple[str, int], list[Candidate]] = {}
         for c in candidates(paths):
             if args.target and c.target != args.target:

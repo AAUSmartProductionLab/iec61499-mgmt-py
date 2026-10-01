@@ -240,6 +240,28 @@ def test_removing_a_module_level_skill_needs_a_restart():
         push(forte, "pi", 61499, filling())
 
 
+def test_push_deploys_a_module_to_a_forte_without_a_program():
+    forte = FakeForte(filling())
+    forte.fbs, forte.connections, forte.values = {}, set(), {}            # a fresh install: no resource yet
+    deployer = Recorder()
+    done = push(forte, "pi", 61499, filling(), deployer)
+    assert deployer.restarted == [boot_file(deployment(filling().app))]
+    assert done[0].startswith("deploy Filling (target pi): ") and done[1:] == ["boot file replaced, FORTE restarted"]
+
+
+def test_on_the_modules_own_computer_the_boot_file_is_written_locally(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(sync.subprocess, "run", lambda cmd, cwd, check: calls.append((cmd, cwd)))
+    monkeypatch.setattr(sync.socket, "create_connection", lambda *a, **k: open(tmp_path / "x", "w"))
+    deployer = sync.LocalDeployer(tmp_path)
+    deployer.save("RES;a\n")
+    assert (tmp_path / "boot" / "forte.fboot").read_bytes() == b"RES;a\n" and not calls
+    deployer.restart("RES;b\n")
+    assert (tmp_path / "boot" / "forte.fboot").read_bytes() == b"RES;b\n"
+    assert calls == [(["docker", "compose", "restart"], tmp_path)]
+    assert sync.is_local("127.0.0.1") and not sync.is_local("192.0.2.1")           # a documentation address
+
+
 def read_back(store, tmp_path):
     path = aas.write(store, tmp_path / "aas.json")
     with path.open(encoding="utf-8") as f:

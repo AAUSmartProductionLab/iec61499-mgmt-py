@@ -16,6 +16,8 @@ test = ["pytest>=7,<9", "asyncua>=1.1", "basyx-python-sdk>=2,<3"]
 
 [project.scripts]
 iec61499 = "iec61499_mgmt.cli:main"
+modgen = "modgen.__main__:main"
+modsync = "modsync.__main__:main"
 
 # One folder per future repository; the Python packages live inside them.
 [tool.setuptools]
