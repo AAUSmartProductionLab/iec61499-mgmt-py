@@ -43,6 +43,32 @@ python deploy/pi.py module                                     # run the module 
 python -m modsync pull --host 192.168.0.191                    # which module runs there, drift from its spec, its AAS
 ```
 
+## Install on a Raspberry Pi
+
+One command each, run on the Pi (64-bit Linux with Docker; the login in the `docker` group):
+
+```bash
+# everything: the tools, FORTE in Docker, and the filling module's program
+curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/deploy/install.sh | bash -s -- filling
+
+# or the parts on their own
+curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/runtime/install.sh | bash          # FORTE runtime
+curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/aas61499-tools/install.sh | bash   # modsync, modgen, iec61499
+```
+
+Then, on the Pi:
+
+```bash
+modsync pull --host localhost                                 # which module runs here, drift from its spec, its AAS
+modsync push filling --target pi --host localhost --dry-run   # what would change
+modsync push filling --target pi --host localhost             # bring the module to its spec (online where possible)
+```
+
+Running an installer again updates it; the module's program (`~/forte/boot/forte.fboot`) is kept.
+The runtime installer downloads FORTE as the asset `forte-aarch64` of the latest GitHub release:
+publish a new build with `runtime/package-release.ps1` (or set `FORTE_FILE` to a binary copied
+to the Pi). Settings are listed at the top of each script.
+
 In the 4diac IDE (a workspace outside the repository), import `iec61499-skill-lib/ModLib` and
 the projects in `cell/control/` without copying them.
 
