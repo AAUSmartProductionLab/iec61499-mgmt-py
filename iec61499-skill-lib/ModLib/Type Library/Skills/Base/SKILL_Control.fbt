@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SKILL_Control" Comment="Skill state machine: Start/Stop/Abort/Reset over OPC UA (owner only, Start only in module Execute) and START/HALT/ABORT from a parent; Idle 0, Running 1, Stopping 2, Succeeded 3, Failed 4, Aborted 5">
+<FBType Name="SKILL_Control" Comment="Skill state machine: Start/Stop/Abort/Reset over OPC UA (owner only, Start only in module Execute) and START/HALT/ABORT from a parent; Idle 0, Running 1, Stopping 2, Succeeded 3, Failed 4, Aborted 5; GO starts the execution (FromUa: with the Start arguments, else with the parent's values)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
@@ -69,8 +69,9 @@
         <With Var="State" />
         <With Var="ErrorID" />
       </Event>
-      <Event Name="GO_UA" Type="Event" />
-      <Event Name="GO_PARENT" Type="Event" />
+      <Event Name="GO" Type="Event">
+        <With Var="FromUa" />
+      </Event>
       <Event Name="HALT_O" Type="Event" />
       <Event Name="ABORT_O" Type="Event" />
       <Event Name="RESET_O" Type="Event" />
@@ -109,6 +110,7 @@
       <VarDeclaration Name="State" Type="USINT" />
       <VarDeclaration Name="ErrorID" Type="UINT" />
       <VarDeclaration Name="Delta" Type="INT" />
+      <VarDeclaration Name="FromUa" Type="BOOL" />
     </OutputVars>
   </InterfaceList>
   <BasicFB>
@@ -145,11 +147,11 @@
       </ECState>
       <ECState Name="GoUa" x="570" y="560">
         <ECAction Algorithm="Alg_GoUa" Output="ACT" />
-        <ECAction Output="GO_UA" />
+        <ECAction Output="GO" />
       </ECState>
       <ECState Name="GoParent" x="990" y="560">
         <ECAction Algorithm="Alg_GoParent" Output="ACT" />
-        <ECAction Output="GO_PARENT" />
+        <ECAction Output="GO" />
       </ECState>
       <ECState Name="Halt" x="1410" y="560">
         <ECAction Output="HALT_O" />
@@ -335,12 +337,14 @@ Here := 6;</ST>
     <Algorithm Name="Alg_GoUa">
       <ST>Active := TRUE;
 Delta := 1;
-ErrorID := 0;</ST>
+ErrorID := 0;
+FromUa := TRUE;</ST>
     </Algorithm>
     <Algorithm Name="Alg_GoParent">
       <ST>Active := TRUE;
 Delta := 1;
-ErrorID := 0;</ST>
+ErrorID := 0;
+FromUa := FALSE;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Succeed">
       <ST>Active := FALSE;

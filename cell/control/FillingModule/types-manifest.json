@@ -218,7 +218,7 @@
   {
     "type": "modlib::SKILL_Control",
     "kind": "BasicFB",
-    "file": "Skills/SKILL_Control.fbt",
+    "file": "Skills/Base/SKILL_Control.fbt",
     "exported": false
   },
   {
@@ -234,6 +234,42 @@
     "exported": false
   },
   {
+    "type": "modlib::SKILL_Core",
+    "kind": "CompositeFB",
+    "file": "Skills/SKILL_Core.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_LREAL",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_LREAL.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_INT",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_INT.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_DINT",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_DINT.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_UINT",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_UINT.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_BOOL",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_BOOL.fbt",
+    "exported": false
+  },
+  {
     "type": "filling::EL_NeedleAxis",
     "kind": "BasicFB",
     "file": "Equipment/Base/EL_NeedleAxis.fbt",
@@ -243,6 +279,12 @@
     "type": "filling::EQ_NeedleAxis",
     "kind": "CompositeFB",
     "file": "Equipment/EQ_NeedleAxis.fbt",
+    "exported": true
+  },
+  {
+    "type": "filling::EC_NeedleAxis",
+    "kind": "BasicFB",
+    "file": "Equipment/Commands/EC_NeedleAxis.fbt",
     "exported": true
   },
   {
@@ -261,6 +303,12 @@
     "type": "filling::EQ_Scale",
     "kind": "CompositeFB",
     "file": "Equipment/EQ_Scale.fbt",
+    "exported": true
+  },
+  {
+    "type": "filling::EC_Scale",
+    "kind": "BasicFB",
+    "file": "Equipment/Commands/EC_Scale.fbt",
     "exported": true
   },
   {
@@ -312,12 +360,6 @@
     "exported": true
   },
   {
-    "type": "filling::SP_Dwell",
-    "kind": "SimpleFB",
-    "file": "Skills/Parameters/SP_Dwell.fbt",
-    "exported": true
-  },
-  {
     "type": "filling::SK_Dwell",
     "kind": "CompositeFB",
     "file": "Skills/SK_Dwell.fbt",
@@ -342,27 +384,9 @@
     "exported": true
   },
   {
-    "type": "filling::SP_Weigh",
-    "kind": "SimpleFB",
-    "file": "Skills/Parameters/SP_Weigh.fbt",
-    "exported": true
-  },
-  {
     "type": "filling::SK_Weigh",
     "kind": "CompositeFB",
     "file": "Skills/SK_Weigh.fbt",
-    "exported": true
-  },
-  {
-    "type": "filling::SP_Dispensing",
-    "kind": "SimpleFB",
-    "file": "Skills/Parameters/SP_Dispensing.fbt",
-    "exported": true
-  },
-  {
-    "type": "filling::SC_Dispensing",
-    "kind": "CompositeFB",
-    "file": "Skills/SC_Dispensing.fbt",
     "exported": true
   },
   {
@@ -390,9 +414,9 @@
     "exported": false
   },
   {
-    "type": "iec61499::net::PUBLISH_4",
+    "type": "iec61499::net::PUBLISH_6",
     "kind": "GenericComm",
-    "file": "Generic/PUBLISH_4.fbt",
+    "file": "Generic/PUBLISH_6.fbt",
     "exported": false
   },
   {
@@ -432,9 +456,9 @@
     "exported": false
   },
   {
-    "type": "iec61499::net::SUBSCRIBE_4",
+    "type": "iec61499::net::SUBSCRIBE_6",
     "kind": "GenericComm",
-    "file": "Generic/SUBSCRIBE_4.fbt",
+    "file": "Generic/SUBSCRIBE_6.fbt",
     "exported": false
   }
 ]

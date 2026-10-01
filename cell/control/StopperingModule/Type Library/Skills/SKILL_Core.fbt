@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_Core" Comment="Skill core: state machine, OPC UA Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID], State and ErrorID published, activity counted; the Start method (with the skill's parameters) is wired to CMD_START and RSP_START; GO starts the execution, SUCCESS or FAILURE(ErrorID) ends it">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Module" />
+        <With Var="UaRoot" />
+        <With Var="UaPath" />
+        <With Var="UaEnable" />
+        <With Var="Methods" />
+      </Event>
+      <Event Name="CMD_START" Type="Event">
+        <With Var="S_Start" />
+        <With Var="InRange" />
+        <With Var="EqFree" />
+      </Event>
+      <Event Name="START" Type="Event" />
+      <Event Name="HALT" Type="Event" />
+      <Event Name="ABORT" Type="Event" />
+      <Event Name="RESET" Type="Event" />
+      <Event Name="EXEC_DONE" Type="Event" />
+      <Event Name="EXEC_FAILED" Type="Event">
+        <With Var="ExecError" />
+      </Event>
+      <Event Name="STOP_DONE" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit">
+        <With Var="IdStart" />
+      </Event>
+      <Event Name="RSP_START" Type="Event">
+        <With Var="Accepted" />
+        <With Var="RspError" />
+      </Event>
+      <Event Name="GO" Type="Event">
+        <With Var="FromUa" />
+      </Event>
+      <Event Name="HALT_O" Type="Event" />
+      <Event Name="ABORT_O" Type="Event" />
+      <Event Name="RESET_O" Type="Event" />
+      <Event Name="RUN_STOP" Type="Event" />
+      <Event Name="SUCCESS" Type="Event" />
+      <Event Name="FAILURE" Type="Event">
+        <With Var="ErrorID" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+      <VarDeclaration Name="UaPath" Type="WSTRING" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" />
+      <VarDeclaration Name="Methods" Type="BOOL" />
+      <VarDeclaration Name="S_Start" Type="WSTRING" />
+      <VarDeclaration Name="InRange" Type="BOOL" InitialValue="TRUE" />
+      <VarDeclaration Name="EqFree" Type="BOOL" InitialValue="TRUE" />
+      <VarDeclaration Name="ExecError" Type="UINT" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="IdStart" Type="WSTRING" />
+      <VarDeclaration Name="Accepted" Type="BOOL" />
+      <VarDeclaration Name="RspError" Type="UINT" />
+      <VarDeclaration Name="FromUa" Type="BOOL" />
+      <VarDeclaration Name="State" Type="USINT" />
+      <VarDeclaration Name="ErrorID" Type="UINT" />
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="Control" Type="modlib::SKILL_Control" x="400" y="200" />
+    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="4000" y="200" />
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="7600" y="200" />
+    <FB Name="UaStop" Type="iec61499::net::SERVER_2_1" x="11200" y="200" />
+    <FB Name="UaAbort" Type="iec61499::net::SERVER_2_1" x="14800" y="200" />
+    <FB Name="UaReset" Type="iec61499::net::SERVER_2_1" x="18400" y="200" />
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="22000" y="200" />
+    <FB Name="Act" Type="iec61499::net::PUBLISH_1" x="25600" y="200">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <EventConnections>
+      <Connection Source="INIT" Destination="Control.INIT" />
+      <Connection Source="Control.INITO" Destination="Owner.INIT" />
+      <Connection Source="Owner.INITO" Destination="Mode.INIT" />
+      <Connection Source="Mode.INITO" Destination="UaStop.INIT" />
+      <Connection Source="UaStop.INITO" Destination="UaAbort.INIT" />
+      <Connection Source="UaAbort.INITO" Destination="UaReset.INIT" />
+      <Connection Source="UaReset.INITO" Destination="PubState.INIT" />
+      <Connection Source="PubState.INITO" Destination="Act.INIT" />
+      <Connection Source="Act.INITO" Destination="PubState.REQ" />
+      <Connection Source="Act.INITO" Destination="INITO" />
+      <Connection Source="CMD_START" Destination="Control.CMD_START" />
+      <Connection Source="Control.RSP_START" Destination="RSP_START" />
+      <Connection Source="UaStop.IND" Destination="Control.CMD_STOP" />
+      <Connection Source="Control.RSP_STOP" Destination="UaStop.RSP" />
+      <Connection Source="UaAbort.IND" Destination="Control.CMD_ABORT" />
+      <Connection Source="Control.RSP_ABORT" Destination="UaAbort.RSP" />
+      <Connection Source="UaReset.IND" Destination="Control.CMD_RESET" />
+      <Connection Source="Control.RSP_RESET" Destination="UaReset.RSP" />
+      <Connection Source="Owner.CHG" Destination="Control.OWNER_CHG" />
+      <Connection Source="Mode.CHG" Destination="Control.MOD_CHG" />
+      <Connection Source="Control.PUB" Destination="PubState.REQ" />
+      <Connection Source="Control.ACT" Destination="Act.REQ" />
+      <Connection Source="START" Destination="Control.START" />
+      <Connection Source="HALT" Destination="Control.HALT" />
+      <Connection Source="ABORT" Destination="Control.ABORT" />
+      <Connection Source="RESET" Destination="Control.RESET" />
+      <Connection Source="EXEC_DONE" Destination="Control.EXEC_DONE" />
+      <Connection Source="EXEC_FAILED" Destination="Control.EXEC_FAILED" />
+      <Connection Source="STOP_DONE" Destination="Control.STOP_DONE" />
+      <Connection Source="Control.GO" Destination="GO" />
+      <Connection Source="Control.HALT_O" Destination="HALT_O" />
+      <Connection Source="Control.ABORT_O" Destination="ABORT_O" />
+      <Connection Source="Control.RESET_O" Destination="RESET_O" />
+      <Connection Source="Control.RUN_STOP" Destination="RUN_STOP" />
+      <Connection Source="Control.SUCCESS" Destination="SUCCESS" />
+      <Connection Source="Control.FAILURE" Destination="FAILURE" />
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Module" Destination="Control.Module" />
+      <Connection Source="Module" Destination="Owner.Module" />
+      <Connection Source="Module" Destination="Mode.Module" />
+      <Connection Source="UaRoot" Destination="Control.UaRoot" />
+      <Connection Source="UaPath" Destination="Control.UaPath" />
+      <Connection Source="Methods" Destination="UaStop.QI" />
+      <Connection Source="Methods" Destination="UaAbort.QI" />
+      <Connection Source="Methods" Destination="UaReset.QI" />
+      <Connection Source="UaEnable" Destination="PubState.QI" />
+      <Connection Source="Control.IdStart" Destination="IdStart" />
+      <Connection Source="S_Start" Destination="Control.S_Start" />
+      <Connection Source="InRange" Destination="Control.InRange" />
+      <Connection Source="EqFree" Destination="Control.EqFree" />
+      <Connection Source="Control.Accepted" Destination="Accepted" />
+      <Connection Source="Control.Accepted" Destination="UaStop.SD_1" />
+      <Connection Source="Control.Accepted" Destination="UaAbort.SD_1" />
+      <Connection Source="Control.Accepted" Destination="UaReset.SD_1" />
+      <Connection Source="Control.RspError" Destination="RspError" />
+      <Connection Source="Control.RspError" Destination="UaStop.SD_2" />
+      <Connection Source="Control.RspError" Destination="UaAbort.SD_2" />
+      <Connection Source="Control.RspError" Destination="UaReset.SD_2" />
+      <Connection Source="Control.IdStop" Destination="UaStop.ID" />
+      <Connection Source="UaStop.RD_1" Destination="Control.S_Stop" />
+      <Connection Source="Control.IdAbort" Destination="UaAbort.ID" />
+      <Connection Source="UaAbort.RD_1" Destination="Control.S_Abort" />
+      <Connection Source="Control.IdReset" Destination="UaReset.ID" />
+      <Connection Source="UaReset.RD_1" Destination="Control.S_Reset" />
+      <Connection Source="Owner.Owner" Destination="Control.Owner" />
+      <Connection Source="Mode.State" Destination="Control.ModState" />
+      <Connection Source="Control.IdPub" Destination="PubState.ID" />
+      <Connection Source="Control.State" Destination="PubState.SD_1" />
+      <Connection Source="Control.State" Destination="State" />
+      <Connection Source="Control.ErrorID" Destination="PubState.SD_2" />
+      <Connection Source="Control.ErrorID" Destination="ErrorID" />
+      <Connection Source="Control.IdAct" Destination="Act.ID" />
+      <Connection Source="Control.Delta" Destination="Act.SD_1" />
+      <Connection Source="ExecError" Destination="Control.ExecError" />
+      <Connection Source="Control.FromUa" Destination="FromUa" />
+    </DataConnections>
+  </FBNetwork>
+</FBType>

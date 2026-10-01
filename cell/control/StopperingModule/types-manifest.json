@@ -218,7 +218,7 @@
   {
     "type": "modlib::SKILL_Control",
     "kind": "BasicFB",
-    "file": "Skills/SKILL_Control.fbt",
+    "file": "Skills/Base/SKILL_Control.fbt",
     "exported": false
   },
   {
@@ -234,6 +234,42 @@
     "exported": false
   },
   {
+    "type": "modlib::SKILL_Core",
+    "kind": "CompositeFB",
+    "file": "Skills/SKILL_Core.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_LREAL",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_LREAL.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_INT",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_INT.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_DINT",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_DINT.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_UINT",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_UINT.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_BOOL",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_BOOL.fbt",
+    "exported": false
+  },
+  {
     "type": "stoppering::EL_Piston",
     "kind": "BasicFB",
     "file": "Equipment/Base/EL_Piston.fbt",
@@ -243,6 +279,12 @@
     "type": "stoppering::EQ_Piston",
     "kind": "CompositeFB",
     "file": "Equipment/EQ_Piston.fbt",
+    "exported": true
+  },
+  {
+    "type": "stoppering::EC_Piston",
+    "kind": "BasicFB",
+    "file": "Equipment/Commands/EC_Piston.fbt",
     "exported": true
   },
   {
@@ -264,6 +306,12 @@
     "exported": true
   },
   {
+    "type": "stoppering::EC_Plunger",
+    "kind": "BasicFB",
+    "file": "Equipment/Commands/EC_Plunger.fbt",
+    "exported": true
+  },
+  {
     "type": "stoppering::EV_Plunger",
     "kind": "SimpleFB",
     "file": "Equipment/Base/EV_Plunger.fbt",
@@ -279,6 +327,12 @@
     "type": "stoppering::EQ_StopperArm",
     "kind": "CompositeFB",
     "file": "Equipment/EQ_StopperArm.fbt",
+    "exported": true
+  },
+  {
+    "type": "stoppering::EC_StopperArm",
+    "kind": "BasicFB",
+    "file": "Equipment/Commands/EC_StopperArm.fbt",
     "exported": true
   },
   {
@@ -306,12 +360,6 @@
     "exported": true
   },
   {
-    "type": "stoppering::SP_RaisePiston",
-    "kind": "SimpleFB",
-    "file": "Skills/Parameters/SP_RaisePiston.fbt",
-    "exported": true
-  },
-  {
     "type": "stoppering::SK_RaisePiston",
     "kind": "CompositeFB",
     "file": "Skills/SK_RaisePiston.fbt",
@@ -321,12 +369,6 @@
     "type": "stoppering::SL_ExtendPlunger",
     "kind": "BasicFB",
     "file": "Skills/Logic/SL_ExtendPlunger.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::SP_ExtendPlunger",
-    "kind": "SimpleFB",
-    "file": "Skills/Parameters/SP_ExtendPlunger.fbt",
     "exported": true
   },
   {
@@ -342,12 +384,6 @@
     "exported": true
   },
   {
-    "type": "stoppering::SP_RetractPlunger",
-    "kind": "SimpleFB",
-    "file": "Skills/Parameters/SP_RetractPlunger.fbt",
-    "exported": true
-  },
-  {
     "type": "stoppering::SK_RetractPlunger",
     "kind": "CompositeFB",
     "file": "Skills/SK_RetractPlunger.fbt",
@@ -360,27 +396,9 @@
     "exported": true
   },
   {
-    "type": "stoppering::SP_MoveArm",
-    "kind": "SimpleFB",
-    "file": "Skills/Parameters/SP_MoveArm.fbt",
-    "exported": true
-  },
-  {
     "type": "stoppering::SK_MoveArm",
     "kind": "CompositeFB",
     "file": "Skills/SK_MoveArm.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::SP_Stoppering",
-    "kind": "SimpleFB",
-    "file": "Skills/Parameters/SP_Stoppering.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::SC_Stoppering",
-    "kind": "CompositeFB",
-    "file": "Skills/SC_Stoppering.fbt",
     "exported": true
   },
   {
@@ -405,6 +423,12 @@
     "type": "iec61499::net::PUBLISH_4",
     "kind": "GenericComm",
     "file": "Generic/PUBLISH_4.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::PUBLISH_6",
+    "kind": "GenericComm",
+    "file": "Generic/PUBLISH_6.fbt",
     "exported": false
   },
   {
@@ -447,6 +471,12 @@
     "type": "iec61499::net::SUBSCRIBE_4",
     "kind": "GenericComm",
     "file": "Generic/SUBSCRIBE_4.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::SUBSCRIBE_6",
+    "kind": "GenericComm",
+    "file": "Generic/SUBSCRIBE_6.fbt",
     "exported": false
   }
 ]

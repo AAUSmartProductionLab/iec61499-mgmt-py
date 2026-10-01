@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_Param_INT" Comment="Skill parameter (INT): default, range check of a Start argument, latching for one run">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Default" />
+        <With Var="Lower" />
+        <With Var="Upper" />
+      </Event>
+      <Event Name="CHECK" Type="Event">
+        <With Var="S" />
+        <With Var="OkIn" />
+      </Event>
+      <Event Name="LATCH" Type="Event">
+        <With Var="FromUa" />
+        <With Var="Default" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit">
+        <With Var="P" />
+      </Event>
+      <Event Name="CHECKED" Type="Event">
+        <With Var="InRange" />
+      </Event>
+      <Event Name="LATCHED" Type="Event">
+        <With Var="P" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Default" Type="INT" />
+      <VarDeclaration Name="Lower" Type="INT" InitialValue="-32768" />
+      <VarDeclaration Name="Upper" Type="INT" InitialValue="32767" />
+      <VarDeclaration Name="S" Type="INT" />
+      <VarDeclaration Name="OkIn" Type="BOOL" InitialValue="TRUE" />
+      <VarDeclaration Name="FromUa" Type="BOOL" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="P" Type="INT" />
+      <VarDeclaration Name="InRange" Type="BOOL" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="INIT">
+      <ECAction Algorithm="INIT" Output="INITO" />
+    </ECState>
+    <ECState Name="CHECK">
+      <ECAction Algorithm="CHECK" Output="CHECKED" />
+    </ECState>
+    <ECState Name="LATCH">
+      <ECAction Algorithm="LATCH" Output="LATCHED" />
+    </ECState>
+    <Algorithm Name="INIT">
+      <ST>P := Default;</ST>
+    </Algorithm>
+    <Algorithm Name="CHECK">
+      <ST>InRange := OkIn AND (S &gt;= Lower) AND (S &lt;= Upper);</ST>
+    </Algorithm>
+    <Algorithm Name="LATCH">
+      <ST>IF FromUa THEN
+  P := S;
+ELSE
+  P := Default;
+END_IF;</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

@@ -7,7 +7,8 @@ added online need no connections to the module level or the equipment:
 ``<Module>/owner`` (+ ``/query``)  occupation owner (WSTRING)
 ``<Module>/state`` (+ ``/query``)  module PackML state (USINT)
 ``<Module>/activity``              +1 when a skill starts running, -1 when it ends (INT)
-``<Module>/<Equipment>/cmd``       (Holder, Command, Arg, Release) to the equipment
+``<Module>/<Equipment>/cmd``       (Holder, Release, output values...) to the equipment
+``<Module>/<Equipment>/release``   (Holder): all outputs off and the equipment free again
 ``<Module>/<Equipment>/state``     (inputs..., Holder) from the equipment
 """
 from __future__ import annotations
@@ -23,7 +24,6 @@ STATES = {"Clearing": 1, "Stopped": 2, "Starting": 3, "Idle": 4, "Execute": 6, "
           "Aborted": 9, "Resetting": 15}
 # Skill states (every skill primitive and module level skill).
 SKILL_STATES = {"Idle": 0, "Running": 1, "Stopping": 2, "Succeeded": 3, "Failed": 4, "Aborted": 5}
-KEEP = 255  # equipment command that changes no output (release only)
 
 
 def q(name):
@@ -475,18 +475,19 @@ def make_skill_control(p: Project):
           "EXEC_DONE": [], "EXEC_FAILED": ["ExecError"], "STOP_DONE": []}
     eo = {"INITO": (["IdStart", "IdStop", "IdAbort", "IdReset", "IdPub", "IdAct"], "EInit"),
           **{f"RSP_{k}": ["Accepted", "RspError"] for k in cmds},
-          "PUB": ["State", "ErrorID"], "GO_UA": [], "GO_PARENT": [], "HALT_O": [], "ABORT_O": [], "RESET_O": [], "RUN_STOP": [],
+          "PUB": ["State", "ErrorID"], "GO": ["FromUa"], "HALT_O": [], "ABORT_O": [], "RESET_O": [], "RUN_STOP": [],
           "SUCCESS": [], "FAILURE": ["ErrorID"], "ACT": ["Delta"]}
     iv = {"Module": "WSTRING", "UaRoot": "WSTRING", "UaPath": "WSTRING", "S_Start": "WSTRING", "InRange": "BOOL",
           "EqFree": "BOOL", "S_Stop": "WSTRING", "S_Abort": "WSTRING", "S_Reset": "WSTRING", "Owner": "WSTRING",
           "ModState": "USINT", "ExecError": "UINT"}
     ov = {"IdStart": "WSTRING", "IdStop": "WSTRING", "IdAbort": "WSTRING", "IdReset": "WSTRING", "IdPub": "WSTRING",
           "IdAct": "WSTRING", "Accepted": "BOOL", "RspError": "UINT", "State": "USINT", "ErrorID": "UINT",
-          "Delta": "INT"}
+          "Delta": "INT", "FromUa": "BOOL"}
     b = Basic(p, LIB, "SKILL_Control",
               "Skill state machine: Start/Stop/Abort/Reset over OPC UA (owner only, Start only in module Execute) "
-              "and START/HALT/ABORT from a parent; Idle 0, Running 1, Stopping 2, Succeeded 3, Failed 4, Aborted 5",
-              ei, eo, iv, ov, {"Owned": "BOOL", "Here": "USINT", "Active": "BOOL"}, folder="Skills")
+              "and START/HALT/ABORT from a parent; Idle 0, Running 1, Stopping 2, Succeeded 3, Failed 4, Aborted 5; "
+              "GO starts the execution (FromUa: with the Start arguments, else with the parent's values)",
+              ei, eo, iv, ov, {"Owned": "BOOL", "Here": "USINT", "Active": "BOOL"}, folder="Skills/Base")
     base = cat("UaRoot", "UaPath")
     b.state("START")
     b.state("Init", "\n".join([f"IdStart := {ua('CREATE_METHOD', base, lit('/Start'))};",
@@ -498,8 +499,8 @@ def make_skill_control(p: Project):
     for w, (state, here) in SKILL_WAIT.items():
         b.state(w, f"State := {s[state]};\nHere := {here};", "PUB")
     # Entry actions.
-    b.state("GoUa", "Active := TRUE;\nDelta := 1;\nErrorID := 0;", "ACT", ["GO_UA"])
-    b.state("GoParent", "Active := TRUE;\nDelta := 1;\nErrorID := 0;", "ACT", ["GO_PARENT"])
+    b.state("GoUa", "Active := TRUE;\nDelta := 1;\nErrorID := 0;\nFromUa := TRUE;", "ACT", ["GO"])
+    b.state("GoParent", "Active := TRUE;\nDelta := 1;\nErrorID := 0;\nFromUa := FALSE;", "ACT", ["GO"])
     b.state("Halt", None, "HALT_O")
     b.state("RunStop", None, "RUN_STOP")
     b.state("Succeed", "Active := FALSE;\nDelta := -1;\nErrorID := 0;", "ACT", ["SUCCESS"])
@@ -572,12 +573,105 @@ def make_skill_control(p: Project):
            {"FAIL_A": ["ErrA"], "FAIL_B": ["ErrB"]}, {"FAIL": ["Err"]},
            {"ErrA": "UINT", "ErrB": "UINT"}, {"Err": "UINT"},
            {"FAIL_A": ("Err := ErrA;", "FAIL"), "FAIL_B": ("Err := ErrB;", "FAIL")}, folder="Skills").write()
-    Simple(p, LIB, "SKILL_Release", "Releases the equipment a module level skill holds after a failure or abort: "
-           "(Token, safe command 0, release) for the equipment command channels",
-           {"REQ": ["Token"]}, {"CNF": ["Holder", "Command", "Arg", "Release"]},
-           {"Token": "WSTRING"}, {"Holder": "WSTRING", "Command": "USINT", "Arg": "LREAL", "Release": "BOOL"},
-           {"REQ": ("Holder := Token;\nCommand := 0;\nArg := 0.0;\nRelease := TRUE;", "CNF")},
-           folder="Skills").write()
+    Simple(p, LIB, "SKILL_Release", "Names the holder that gives up the equipment a module level skill holds after a "
+           "failure or abort, for the equipment's release channels (all outputs off, free again)",
+           {"REQ": ["Token"]}, {"CNF": ["Holder"]}, {"Token": "WSTRING"}, {"Holder": "WSTRING"},
+           {"REQ": ("Holder := Token;", "CNF")}, folder="Skills").write()
+
+
+def make_skill_core(p: Project):
+    """SKILL_Core: what every skill has regardless of its parameters (primitive or module level skill).
+
+    SKILL_Control with the OPC UA methods Stop, Abort and Reset, the published State and ErrorID,
+    the module's owner and state, and the activity count. The Start method takes the skill's
+    parameters, so it stays outside (a generic SERVER_2_n): its ID is IdStart, its call goes to
+    CMD_START with the range check (InRange) and the equipment check (EqFree), and RSP_START answers it.
+    """
+    iv = {"Module": "WSTRING", "UaRoot": "WSTRING", "UaPath": "WSTRING", "UaEnable": "BOOL", "Methods": "BOOL",
+          "S_Start": "WSTRING", "InRange": ("BOOL", "TRUE"), "EqFree": ("BOOL", "TRUE"), "ExecError": "UINT"}
+    c = Composite(p, LIB, "SKILL_Core",
+                  "Skill core: state machine, OPC UA Stop/Abort/Reset(Session) -> [Accepted, ErrorID], State and ErrorID "
+                  "published, activity counted; the Start method (with the skill's parameters) is wired to CMD_START "
+                  "and RSP_START; GO starts the execution, SUCCESS or FAILURE(ErrorID) ends it",
+                  {"INIT": (["Module", "UaRoot", "UaPath", "UaEnable", "Methods"], "EInit"),
+                   "CMD_START": ["S_Start", "InRange", "EqFree"], "START": [], "HALT": [], "ABORT": [], "RESET": [],
+                   "EXEC_DONE": [], "EXEC_FAILED": ["ExecError"], "STOP_DONE": []},
+                  {"INITO": (["IdStart"], "EInit"), "RSP_START": ["Accepted", "RspError"], "GO": ["FromUa"],
+                   "HALT_O": [], "ABORT_O": [], "RESET_O": [], "RUN_STOP": [], "SUCCESS": [], "FAILURE": ["ErrorID"]},
+                  iv, {"IdStart": "WSTRING", "Accepted": "BOOL", "RspError": "UINT", "FromUa": "BOOL", "State": "USINT",
+                       "ErrorID": "UINT"}, folder="Skills")
+    c.fb("Control", q("SKILL_Control"))
+    c.fb("Owner", q("MOD_OwnerView"))
+    c.fb("Mode", q("MOD_StateView"))
+    # Method blocks are UaStop etc.: IEC names are case-insensitive, so "Stop" clashes with STOP.
+    methods = ["Stop", "Abort", "Reset"]
+    for m in methods:
+        c.fb(f"Ua{m}", p.server(2, 1))
+    c.fb("PubState", p.publish(2))
+    c.fb("Act", p.publish(1), QI="TRUE")
+    c.chain("INIT", ["Control", "Owner", "Mode", *[f"Ua{m}" for m in methods], "PubState", "Act"],
+            ["PubState.REQ", "INITO"])
+    c.da("Module", "Control.Module", "Owner.Module", "Mode.Module")
+    c.da("UaRoot", "Control.UaRoot")
+    c.da("UaPath", "Control.UaPath")
+    c.da("Methods", *[f"Ua{m}.QI" for m in methods])
+    c.da("UaEnable", "PubState.QI")
+    c.da("Control.IdStart", "IdStart")
+    c.ev("CMD_START", "Control.CMD_START")
+    for v in ["S_Start", "InRange", "EqFree"]:
+        c.da(v, f"Control.{v}")
+    c.ev("Control.RSP_START", "RSP_START")
+    c.da("Control.Accepted", "Accepted", *[f"Ua{m}.SD_1" for m in methods])
+    c.da("Control.RspError", "RspError", *[f"Ua{m}.SD_2" for m in methods])
+    for m in methods:
+        c.da(f"Control.Id{m}", f"Ua{m}.ID")
+        c.ev(f"Ua{m}.IND", f"Control.CMD_{m.upper()}")
+        c.da(f"Ua{m}.RD_1", f"Control.S_{m}")
+        c.ev(f"Control.RSP_{m.upper()}", f"Ua{m}.RSP")
+    c.ev("Owner.CHG", "Control.OWNER_CHG")
+    c.da("Owner.Owner", "Control.Owner")
+    c.ev("Mode.CHG", "Control.MOD_CHG")
+    c.da("Mode.State", "Control.ModState")
+    c.da("Control.IdPub", "PubState.ID")
+    c.ev("Control.PUB", "PubState.REQ")
+    c.da("Control.State", "PubState.SD_1", "State")
+    c.da("Control.ErrorID", "PubState.SD_2", "ErrorID")
+    c.da("Control.IdAct", "Act.ID")
+    c.ev("Control.ACT", "Act.REQ")
+    c.da("Control.Delta", "Act.SD_1")
+    for ev in ["START", "HALT", "ABORT", "RESET", "EXEC_DONE", "EXEC_FAILED", "STOP_DONE"]:
+        c.ev(ev, f"Control.{ev}")
+    c.da("ExecError", "Control.ExecError")
+    for ev in ["GO", "HALT_O", "ABORT_O", "RESET_O", "RUN_STOP", "SUCCESS", "FAILURE"]:
+        c.ev(f"Control.{ev}", ev)
+    c.da("Control.FromUa", "FromUa")
+    c.write()
+
+
+# Types a skill parameter can have, with the widest range (the default Lower and Upper; MIN and MAX
+# are standard functions, so not usable as names).
+PARAM_RANGE = {"LREAL": ("-1.0E308", "1.0E308"), "INT": ("-32768", "32767"), "DINT": ("-2147483648", "2147483647"),
+               "UINT": ("0", "65535"), "BOOL": None}
+
+
+def make_parameters(p: Project):
+    """SKILL_Param_<type>: one skill parameter, chained per skill.
+
+    INIT publishes the default (P := Default); CHECK tests a Start argument S against Lower..Upper and
+    passes the result of the parameters before it on (OkIn -> InRange); LATCH takes the Start
+    argument (FromUa) or the default, which a parent may have set (a bound parameter)."""
+    for typ, bounds in PARAM_RANGE.items():
+        check = "InRange := OkIn AND (S >= Lower) AND (S <= Upper);" if bounds else "InRange := OkIn;"
+        Simple(p, LIB, f"SKILL_Param_{typ}", f"Skill parameter ({typ}): default, range check of a Start argument, "
+               "latching for one run", {"INIT": (["Default", *(["Lower", "Upper"] if bounds else [])], "EInit"),
+                                       "CHECK": ["S", "OkIn"], "LATCH": ["FromUa", "Default"]},
+               {"INITO": (["P"], "EInit"), "CHECKED": ["InRange"], "LATCHED": ["P"]},
+               {"Default": typ, **({"Lower": (typ, bounds[0]), "Upper": (typ, bounds[1])} if bounds else {}), "S": typ,
+                "OkIn": ("BOOL", "TRUE"), "FromUa": "BOOL"},
+               {"P": typ, "InRange": "BOOL"},
+               {"INIT": ("P := Default;", "INITO"), "CHECK": (check, "CHECKED"),
+                "LATCH": ("IF FromUa THEN\n  P := S;\nELSE\n  P := Default;\nEND_IF;", "LATCHED")},
+               folder="Skills/Parameters").write()
 
 
 def make_library(p: Project):
@@ -588,3 +682,5 @@ def make_library(p: Project):
     make_occupation(p)
     make_state_manager(p)
     make_skill_control(p)
+    make_skill_core(p)
+    make_parameters(p)

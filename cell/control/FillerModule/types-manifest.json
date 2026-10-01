@@ -218,7 +218,7 @@
   {
     "type": "modlib::SKILL_Control",
     "kind": "BasicFB",
-    "file": "Skills/SKILL_Control.fbt",
+    "file": "Skills/Base/SKILL_Control.fbt",
     "exported": false
   },
   {
@@ -234,6 +234,42 @@
     "exported": false
   },
   {
+    "type": "modlib::SKILL_Core",
+    "kind": "CompositeFB",
+    "file": "Skills/SKILL_Core.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_LREAL",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_LREAL.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_INT",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_INT.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_DINT",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_DINT.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_UINT",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_UINT.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Param_BOOL",
+    "kind": "SimpleFB",
+    "file": "Skills/Parameters/SKILL_Param_BOOL.fbt",
+    "exported": false
+  },
+  {
     "type": "filler::EL_NeedleAxis",
     "kind": "BasicFB",
     "file": "Equipment/Base/EL_NeedleAxis.fbt",
@@ -246,6 +282,12 @@
     "exported": true
   },
   {
+    "type": "filler::EC_NeedleAxis",
+    "kind": "BasicFB",
+    "file": "Equipment/Commands/EC_NeedleAxis.fbt",
+    "exported": true
+  },
+  {
     "type": "filler::EV_NeedleAxis",
     "kind": "SimpleFB",
     "file": "Equipment/Base/EV_NeedleAxis.fbt",
@@ -255,12 +297,6 @@
     "type": "filler::SL_MoveNeedleDown",
     "kind": "BasicFB",
     "file": "Skills/Logic/SL_MoveNeedleDown.fbt",
-    "exported": true
-  },
-  {
-    "type": "filler::SP_MoveNeedleDown",
-    "kind": "SimpleFB",
-    "file": "Skills/Parameters/SP_MoveNeedleDown.fbt",
     "exported": true
   },
   {
@@ -279,18 +315,6 @@
     "type": "filler::SK_MoveNeedleUp",
     "kind": "CompositeFB",
     "file": "Skills/SK_MoveNeedleUp.fbt",
-    "exported": true
-  },
-  {
-    "type": "filler::SP_Fill",
-    "kind": "SimpleFB",
-    "file": "Skills/Parameters/SP_Fill.fbt",
-    "exported": true
-  },
-  {
-    "type": "filler::SC_Fill",
-    "kind": "CompositeFB",
-    "file": "Skills/SC_Fill.fbt",
     "exported": true
   },
   {

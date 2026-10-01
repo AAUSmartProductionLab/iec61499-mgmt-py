@@ -8,6 +8,7 @@ import yaml
 from iec61499_mgmt.sysfile import load_application
 from modgen import (LIBRARY_PROJECT, SPECS, generate, generate_library, load, manifest_path, project_dir, specs,
                     system_file)
+from modgen.module import app_name
 from modgen.spec import ModuleSpec
 
 FILLER = SPECS / "filler.yaml"
@@ -72,6 +73,9 @@ def canonical(path):
                 node.attrib.pop(attr, None)
             for group in [g for g in node if g.tag in ("InputVars", "OutputVars") and len(g) == 0]:
                 node.remove(group)
+            # The IDE stores the size of a subapp shown unfolded.
+            for size in [a for a in node if a.tag == "Attribute" and a.get("Name") in ("width", "height")]:
+                node.remove(size)
         return ET.canonicalize(ET.tostring(root, encoding="unicode"), strip_text=True)
     return data.decode("utf-8-sig").strip()
 
@@ -124,20 +128,28 @@ def test_filler_flattens_to_module_level_equipment_skills_and_procedures():
         "Boot": "iec61499::events::E_RESTART", "Occupation": "modlib::MOD_Occupation",
         "Module": "modlib::MOD_StateManager", "NeedleAxis": "filler::EQ_NeedleAxis",
         "MoveNeedleDown": "filler::SK_MoveNeedleDown", "MoveNeedleUp": "filler::SK_MoveNeedleUp",
-        "Fill.Control": "filler::SC_Fill", "Fill.Execute.MoveNeedleDown": "filler::SK_MoveNeedleDown",
+        "Fill.Control": "modlib::SKILL_Core", "Fill.UaStart": "iec61499::net::SERVER_2_2",
+        "Fill.Depth": "modlib::SKILL_Param_LREAL", "Fill.PubParams": "iec61499::net::PUBLISH_1",
+        "Fill.Release": "modlib::SKILL_Release", "Fill.Rel_NeedleAxis": "iec61499::net::PUBLISH_1",
+        "Fill.Execute.MoveNeedleDown": "filler::SK_MoveNeedleDown",
         "Fill.Execute.MoveNeedleUp": "filler::SK_MoveNeedleUp", "Fill.Execute.Fail1": "modlib::SKILL_FailMerge",
         "Fill.Stop.MoveNeedleUp": "filler::SK_MoveNeedleUp", "Resetting.MoveNeedleUp": "filler::SK_MoveNeedleUp",
         "Stopping.MoveNeedleUp": "filler::SK_MoveNeedleUp"}
-    # The composite starts its sequence and passes its parameter to the child.
-    assert {("Fill.Control.GO", "Fill.Execute.MoveNeedleDown.START"),
+    # The Start argument is range checked, latched and passed to the child that runs first.
+    assert {("Fill.UaStart.IND", "Fill.Depth.CHECK"), ("Fill.Depth.CHECKED", "Fill.Control.CMD_START"),
+            ("Fill.Control.GO", "Fill.Depth.LATCH"),
+            ("Fill.Depth.LATCHED", "Fill.Execute.MoveNeedleDown.START"),
             ("Fill.Execute.MoveNeedleDown.SUCCESS", "Fill.Execute.MoveNeedleUp.START"),
             ("Fill.Execute.MoveNeedleUp.SUCCESS", "Fill.Control.EXEC_DONE"),
-            ("Fill.Control.P_Depth", "Fill.Execute.MoveNeedleDown.Distance"),
+            ("Fill.Depth.P", "Fill.Execute.MoveNeedleDown.Distance"),
             ("Fill.Control.RUN_STOP", "Fill.Stop.MoveNeedleUp.START"),
             ("Module.RUN_RESETTING", "Resetting.MoveNeedleUp.START"),
             ("Resetting.MoveNeedleUp.SUCCESS", "Module.RESETTING_DONE")} <= wired
+    assert (written["Fill.Depth.Default"], written["Fill.Depth.Lower"], written["Fill.Depth.Upper"]) == ("50.0", "0.0", "50.0")
+    assert written["Fill.PubParams.ID"] == '"opc_ua[WRITE;/Objects/Filler/Skills/Fill/Parameters/Depth]"'
+    assert written["Fill.Rel_NeedleAxis.ID"] == '"loc[Filler/NeedleAxis/release]"'
     # No wiring between skills, equipment and the module level: they meet on local channels.
-    assert not {w for w in wired if "NeedleAxis" in w[0] + w[1] and "INIT" not in w[0] + w[1]}
+    assert not {w for w in wired if any(p.startswith("NeedleAxis.") for p in w) and "INIT" not in w[0] + w[1]}
     assert written["MoveNeedleDown.UaPath"] == '"/Skills/MoveNeedleDown"'
     assert written["MoveNeedleDown.Methods"] == "TRUE"
     # Children are private (no methods) and keep the composite's equipment lock.
@@ -169,8 +181,30 @@ def test_skill_logic_carries_contract_range_and_lock():
     assert "SAMPLE[(Position >= Distance) OR AtBottom]" in conditions
     assert 'SAMPLE[(Holder <> "") AND (Holder <> Token)]' in conditions      # lost the equipment
     assert "C_Holder := Token;" in code
-    _, params = st("FillerModule", "Skills/Parameters", "SP_MoveNeedleDown")
-    assert "InRange := (S_Distance >= 0.0) AND (S_Distance <= 50.0);" in params
+    assert "IdParams := " in code and "/Parameters/Distance" in code          # SL_ names its OPC UA variables
+    skill, _ = st("FillerModule", "Skills", "SK_MoveNeedleDown")
+    latch = next(fb for fb in skill.iter("FB") if fb.get("Name") == "Par_Distance")
+    assert latch.get("Type") == "modlib::SKILL_Param_LREAL"
+    assert {p.get("Name"): p.get("Value") for p in latch.iter("Parameter")} == {"Lower": "0.0", "Upper": "50.0"}
+
+
+@pytest.mark.parametrize("spec_path", specs(), ids=lambda p: p.stem)
+def test_module_level_skills_need_no_type_of_their_own(spec_path):
+    """A module level skill is only instances of library types, generic comm FBs and the module's
+    skill primitives, so FORTE can create a new one online without being rebuilt."""
+    spec = load(spec_path)
+    created = flat(spec.project, app_name(spec, next(iter(spec.targets))))[0]
+    primitives = {f"{spec.package}::SK_{s}" for s in spec.skills}
+    for name in spec.composites:
+        types = {t for n, t in created.items() if n.startswith(name + ".")}
+        assert types and all(t.startswith(("modlib::", "iec61499::net::")) or t in primitives for t in types), types
+
+
+def test_composite_parameters_must_not_take_the_names_of_its_blocks():
+    data = raw()
+    data["composites"]["Fill"]["parameters"]["Execute"] = {"default": 1.0}
+    with pytest.raises(ValueError, match="taken by the skill's own blocks"):
+        ModuleSpec.model_validate(data)
 
 
 def test_open_loop_skill_ends_by_time_and_passes_its_argument():
@@ -181,12 +215,47 @@ def test_open_loop_skill_ends_by_time_and_passes_its_argument():
     assert ("Running", "TIMER") in conditions
 
 
-def test_equipment_runs_command_phases():
-    _, code = st("FillingModule", "Equipment/Base", "EL_NeedleAxis")
+def test_the_command_table_is_in_the_skills_not_in_the_equipment_io():
+    """EC_ (inside every skill of the equipment) turns a command into output values, phase by phase;
+    the equipment IO only writes the values its holder sends."""
+    _, code = st("FillingModule", "Equipment/Commands", "EC_NeedleAxis")
     assert "N_Speed := 190.0;\n    NE_Speed := TRUE;\n    PhaseDT := T#200ms;" in code   # start boost
-    assert "N_Speed := 140.0;" in code
-    _, code = st("StopperingModule", "Equipment/Base", "EL_StopperArm")
+    assert "N_Speed := 140.0;" in code and "O_Release := Release AND NOT Timed;" in code   # released with the last phase
+    _, code = st("StopperingModule", "Equipment/Commands", "EC_StopperArm")
     assert "N_Angle := Arg;" in code
+    logic, code = st("FillingModule", "Equipment/Base", "EL_NeedleAxis")
+    assert "Command" not in code and "Phase" not in code and "190" not in code
+    assert "N_Up := C_Up;" in code and "O_Up := O_Up AND N_Up;" in code                  # break before make
+    skill, _ = st("FillingModule", "Skills", "SK_MoveNeedleUp")
+    assert {fb.get("Name"): fb.get("Type") for fb in skill.iter("FB")}["Driver"] == "filling::EC_NeedleAxis"
+    assert ("Ending", "EndDone", "PLAYED[Outcome = 1]") in {
+        (x.get("Source"), x.get("Destination"), x.get("Condition"))
+        for x in st("FillingModule", "Skills/Logic", "SL_MoveNeedleUp")[0].iter("ECTransition")}
+
+
+def groups(net):
+    """Group name -> its members, for a network."""
+    found = {g.get("Name"): [] for g in net.findall("Group")}
+    for el in net:
+        attr = el.find("Attribute[@Name='GroupName']")
+        if attr is not None:
+            found[attr.get("Value")].append(el.get("Name"))
+    return found
+
+
+def test_blocks_inside_equipment_skills_and_module_level_skills_are_grouped():
+    eq, _ = st("StopperingModule", "Equipment", "EQ_Piston")
+    assert groups(eq.find("FBNetwork")) == {
+        "Core": ["Logic", "Cycle"], "Channels": ["Mode", "SubCmd", "SubRelease", "PubState", "PubUa"],
+        "Inputs": ["In_AtLimit"], "Outputs": ["Out_Up", "Out_Down", "Out_Speed"]}
+    skill, _ = st("StopperingModule", "Skills", "SK_RaisePiston")
+    assert list(groups(skill.find("FBNetwork"))) == ["SkillControl", "Execution", "Equipment"]
+    system = ET.parse(system_file("FillingModule")).getroot()
+    app = next(a for a in system.iter("Application") if a.get("Name") == "Filling").find("SubAppNetwork")
+    inner = next(s for s in app.findall("SubApp") if s.get("Name") == "Dispensing").find("SubAppNetwork")
+    assert groups(inner) == {"SkillControl": ["Control", "UaStart", "PubResults"], "Sequences": ["Execute", "Stop"],
+                             "Releasing": ["Release", "Rel_NeedleAxis", "Rel_Scale"]}
+    assert all(len(g) for g in groups(inner).values())
 
 
 @pytest.mark.parametrize("project", [LIBRARY_PROJECT, *[load(p).project for p in specs()]])

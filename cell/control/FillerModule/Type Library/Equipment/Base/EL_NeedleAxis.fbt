@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EL_NeedleAxis" Comment="NeedleAxis: commands -&gt; outputs in timed phases (break before make); one holder at a time; all off when the module aborts; inputs -&gt; state channel">
+<FBType Name="EL_NeedleAxis" Comment="NeedleAxis: output values from its holder -&gt; outputs (break before make); one holder at a time; all off on release or when the module aborts; inputs -&gt; state channel when they change">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filler" />
@@ -12,9 +12,12 @@
       </Event>
       <Event Name="CMD" Type="Event">
         <With Var="C_Holder" />
-        <With Var="C_Command" />
-        <With Var="C_Arg" />
         <With Var="C_Release" />
+        <With Var="C_Down" />
+        <With Var="C_Up" />
+      </Event>
+      <Event Name="RELEASE" Type="Event">
+        <With Var="R_Holder" />
       </Event>
       <Event Name="SAMPLE" Type="Event">
         <With Var="I_AtTop" />
@@ -23,7 +26,6 @@
       </Event>
       <Event Name="REFRESH" Type="Event" />
       <Event Name="DRIVEN" Type="Event" />
-      <Event Name="PHASE_T" Type="Event" />
       <Event Name="MOD_CHG" Type="Event">
         <With Var="ModState" />
       </Event>
@@ -31,6 +33,7 @@
     <EventOutputs>
       <Event Name="INITO" Type="EInit">
         <With Var="IdCmd" />
+        <With Var="IdRelease" />
         <With Var="IdState" />
         <With Var="IdPub" />
       </Event>
@@ -43,22 +46,17 @@
         <With Var="AtBottom" />
         <With Var="Position" />
         <With Var="Holder" />
-        <With Var="ActiveCommand" />
-        <With Var="ActiveArg" />
       </Event>
-      <Event Name="PHASE_START" Type="Event">
-        <With Var="PhaseDT" />
-      </Event>
-      <Event Name="PHASE_STOP" Type="Event" />
     </EventOutputs>
     <InputVars>
       <VarDeclaration Name="Module" Type="WSTRING" />
       <VarDeclaration Name="Name" Type="WSTRING" />
       <VarDeclaration Name="UaRoot" Type="WSTRING" />
       <VarDeclaration Name="C_Holder" Type="WSTRING" />
-      <VarDeclaration Name="C_Command" Type="USINT" />
-      <VarDeclaration Name="C_Arg" Type="LREAL" />
       <VarDeclaration Name="C_Release" Type="BOOL" />
+      <VarDeclaration Name="C_Down" Type="BOOL" />
+      <VarDeclaration Name="C_Up" Type="BOOL" />
+      <VarDeclaration Name="R_Holder" Type="WSTRING" />
       <VarDeclaration Name="I_AtTop" Type="BOOL" />
       <VarDeclaration Name="I_AtBottom" Type="BOOL" />
       <VarDeclaration Name="I_Position" Type="LREAL" />
@@ -66,6 +64,7 @@
     </InputVars>
     <OutputVars>
       <VarDeclaration Name="IdCmd" Type="WSTRING" />
+      <VarDeclaration Name="IdRelease" Type="WSTRING" />
       <VarDeclaration Name="IdState" Type="WSTRING" />
       <VarDeclaration Name="IdPub" Type="WSTRING" />
       <VarDeclaration Name="O_Down" Type="BOOL" />
@@ -74,23 +73,15 @@
       <VarDeclaration Name="AtBottom" Type="BOOL" />
       <VarDeclaration Name="Position" Type="LREAL" />
       <VarDeclaration Name="Holder" Type="WSTRING" />
-      <VarDeclaration Name="ActiveCommand" Type="USINT" />
-      <VarDeclaration Name="ActiveArg" Type="LREAL" />
-      <VarDeclaration Name="PhaseDT" Type="TIME" />
     </OutputVars>
   </InterfaceList>
   <BasicFB>
     <InternalVars>
-      <VarDeclaration Name="Command" Type="USINT" />
-      <VarDeclaration Name="Phase" Type="USINT" />
-      <VarDeclaration Name="Arg" Type="LREAL" />
-      <VarDeclaration Name="Changed" Type="BOOL" />
-      <VarDeclaration Name="Timed" Type="BOOL" />
       <VarDeclaration Name="Publish" Type="BOOL" />
       <VarDeclaration Name="Beat" Type="USINT" />
       <VarDeclaration Name="LastHolder" Type="WSTRING" />
       <VarDeclaration Name="Pending" Type="BOOL" />
-      <VarDeclaration Name="AbortPending" Type="BOOL" />
+      <VarDeclaration Name="OffPending" Type="BOOL" />
       <VarDeclaration Name="L_AtTop" Type="BOOL" />
       <VarDeclaration Name="L_AtBottom" Type="BOOL" />
       <VarDeclaration Name="L_Position" Type="LREAL" />
@@ -114,14 +105,8 @@
       <ECState Name="Cmd" x="1410" y="100">
         <ECAction Algorithm="Alg_Cmd" />
       </ECState>
-      <ECState Name="Report" x="150" y="330">
-        <ECAction Algorithm="Alg_Report" Output="STATE" />
-      </ECState>
-      <ECState Name="NextPhase" x="570" y="330">
-        <ECAction Algorithm="Alg_NextPhase" />
-      </ECState>
-      <ECState Name="Safe" x="990" y="330">
-        <ECAction Algorithm="Alg_Safe" />
+      <ECState Name="Off" x="990" y="330">
+        <ECAction Algorithm="Alg_Off" />
       </ECState>
       <ECState Name="Break" x="1410" y="330">
         <ECAction Algorithm="Alg_Break" Output="DRIVE" />
@@ -134,67 +119,59 @@
       <ECState Name="QueueB" x="570" y="790">
         <ECAction Algorithm="Alg_QueueB" />
       </ECState>
-      <ECState Name="AbortB" x="990" y="790">
-        <ECAction Algorithm="Alg_AbortB" />
+      <ECState Name="OffB" x="150" y="790">
+        <ECAction Algorithm="Alg_OffB" />
       </ECState>
       <ECState Name="QueueM" x="1410" y="790">
         <ECAction Algorithm="Alg_QueueM" />
       </ECState>
-      <ECState Name="AbortM" x="150" y="1020">
-        <ECAction Algorithm="Alg_AbortM" />
+      <ECState Name="OffM" x="990" y="790">
+        <ECAction Algorithm="Alg_OffM" />
       </ECState>
       <ECState Name="CmdPend" x="570" y="1020">
         <ECAction Algorithm="Alg_CmdPend" />
       </ECState>
       <ECState Name="Settled" x="570" y="560" />
-      <ECState Name="PhaseGo" x="990" y="560">
-        <ECAction Output="PHASE_START" />
-        <ECAction Output="STATE" />
-      </ECState>
-      <ECState Name="PhaseEnd" x="1410" y="560">
-        <ECAction Output="PHASE_STOP" />
-        <ECAction Output="STATE" />
+      <ECState Name="Report" x="150" y="330">
+        <ECAction Algorithm="Alg_Report" Output="STATE" />
       </ECState>
       <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
       <ECTransition Source="START" Destination="Sample" Condition="SAMPLE" x="0" y="0" />
       <ECTransition Source="START" Destination="Refresh" Condition="REFRESH" x="0" y="0" />
       <ECTransition Source="START" Destination="Cmd" Condition="CMD[(Holder = &quot;&quot;) OR (C_Holder = Holder)]" x="0" y="0" />
-      <ECTransition Source="START" Destination="NextPhase" Condition="PHASE_T" x="0" y="0" />
-      <ECTransition Source="START" Destination="Safe" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Off" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Off" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
       <ECTransition Source="Init" Destination="START" Condition="1" x="0" y="0" />
       <ECTransition Source="Sample" Destination="Publish" Condition="Publish" x="0" y="0" />
       <ECTransition Source="Sample" Destination="START" Condition="1" x="0" y="0" />
       <ECTransition Source="Publish" Destination="START" Condition="1" x="0" y="0" />
       <ECTransition Source="Refresh" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="Cmd" Destination="Break" Condition="Changed" x="0" y="0" />
-      <ECTransition Source="Cmd" Destination="Report" Condition="1" x="0" y="0" />
-      <ECTransition Source="Report" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="NextPhase" Destination="Break" Condition="1" x="0" y="0" />
-      <ECTransition Source="Safe" Destination="Break" Condition="1" x="0" y="0" />
+      <ECTransition Source="Cmd" Destination="Break" Condition="1" x="0" y="0" />
+      <ECTransition Source="Off" Destination="Break" Condition="1" x="0" y="0" />
       <ECTransition Source="Break" Destination="BreakW" Condition="1" x="0" y="0" />
       <ECTransition Source="BreakW" Destination="Make" Condition="DRIVEN" x="0" y="0" />
       <ECTransition Source="Make" Destination="MakeW" Condition="1" x="0" y="0" />
       <ECTransition Source="MakeW" Destination="Settled" Condition="DRIVEN" x="0" y="0" />
       <ECTransition Source="BreakW" Destination="QueueB" Condition="CMD" x="0" y="0" />
-      <ECTransition Source="BreakW" Destination="AbortB" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="BreakW" Destination="OffB" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="0" y="0" />
+      <ECTransition Source="BreakW" Destination="OffB" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
       <ECTransition Source="QueueB" Destination="BreakW" Condition="1" x="0" y="0" />
-      <ECTransition Source="AbortB" Destination="BreakW" Condition="1" x="0" y="0" />
+      <ECTransition Source="OffB" Destination="BreakW" Condition="1" x="0" y="0" />
       <ECTransition Source="MakeW" Destination="QueueM" Condition="CMD" x="0" y="0" />
-      <ECTransition Source="MakeW" Destination="AbortM" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="MakeW" Destination="OffM" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="0" y="0" />
+      <ECTransition Source="MakeW" Destination="OffM" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
       <ECTransition Source="QueueM" Destination="MakeW" Condition="1" x="0" y="0" />
-      <ECTransition Source="AbortM" Destination="MakeW" Condition="1" x="0" y="0" />
-      <ECTransition Source="Settled" Destination="Safe" Condition="AbortPending" x="0" y="0" />
+      <ECTransition Source="OffM" Destination="MakeW" Condition="1" x="0" y="0" />
+      <ECTransition Source="Settled" Destination="Off" Condition="OffPending" x="0" y="0" />
       <ECTransition Source="Settled" Destination="CmdPend" Condition="Pending" x="0" y="0" />
       <ECTransition Source="CmdPend" Destination="Cmd" Condition="(Holder = &quot;&quot;) OR (C_Holder = Holder)" x="0" y="0" />
-      <ECTransition Source="CmdPend" Destination="PhaseGo" Condition="Timed" x="0" y="0" />
-      <ECTransition Source="CmdPend" Destination="PhaseEnd" Condition="1" x="0" y="0" />
-      <ECTransition Source="Settled" Destination="PhaseGo" Condition="Timed" x="0" y="0" />
-      <ECTransition Source="Settled" Destination="PhaseEnd" Condition="1" x="0" y="0" />
-      <ECTransition Source="PhaseGo" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="PhaseEnd" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="CmdPend" Destination="Report" Condition="1" x="0" y="0" />
+      <ECTransition Source="Settled" Destination="Report" Condition="1" x="0" y="0" />
+      <ECTransition Source="Report" Destination="START" Condition="1" x="0" y="0" />
     </ECC>
     <Algorithm Name="Alg_Init">
       <ST>IdCmd := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/cmd]");
+IdRelease := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/release]");
 IdState := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/state]");
 IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", UaRoot), "/Equipment/"), Name), "/AtTop;"), UaRoot), "/Equipment/"), Name), "/AtBottom;"), UaRoot), "/Equipment/"), Name), "/Position"), "]");</ST>
     </Algorithm>
@@ -203,9 +180,7 @@ IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(C
 AtBottom := I_AtBottom;
 Position := I_Position;
 Publish := (AtTop &lt;&gt; L_AtTop) OR (AtBottom &lt;&gt; L_AtBottom) OR (Position &lt;&gt; L_Position) OR (Holder &lt;&gt; LastHolder) OR (Beat &gt;= 20);
-Beat := Beat + 1;
-ActiveCommand := Command;
-ActiveArg := Arg;</ST>
+Beat := Beat + 1;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Publish">
       <ST>L_AtTop := AtTop;
@@ -216,40 +191,20 @@ Beat := 0;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Cmd">
       <ST>Holder := C_Holder;
-Changed := (C_Command &lt;&gt; 255) AND ((C_Command &lt;&gt; Command) OR (C_Arg &lt;&gt; Arg));
-IF Changed THEN
-  Command := C_Command;
-  Phase := 0;
-  Arg := C_Arg;
-END_IF;
+N_Down := C_Down;
+N_Up := C_Up;
 IF C_Release THEN
   Holder := "";
 END_IF;</ST>
     </Algorithm>
-    <Algorithm Name="Alg_Report">
-      <ST>LastHolder := Holder;
-Beat := 0;</ST>
-    </Algorithm>
-    <Algorithm Name="Alg_NextPhase">
-      <ST>Phase := Phase + 1;</ST>
-    </Algorithm>
-    <Algorithm Name="Alg_Safe">
-      <ST>Command := 0;
-Phase := 0;
-Holder := "";
-AbortPending := FALSE;</ST>
-    </Algorithm>
-    <Algorithm Name="Alg_Break">
+    <Algorithm Name="Alg_Off">
       <ST>N_Down := FALSE;
 N_Up := FALSE;
-Timed := FALSE;
-PhaseDT := T#0ms;
-IF Command = 1 THEN
-  N_Down := TRUE;
-ELSIF Command = 2 THEN
-  N_Up := TRUE;
-END_IF;
-O_Down := O_Down AND N_Down;
+Holder := "";
+OffPending := FALSE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Break">
+      <ST>O_Down := O_Down AND N_Down;
 O_Up := O_Up AND N_Up;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Make">
@@ -259,17 +214,21 @@ O_Up := N_Up;</ST>
     <Algorithm Name="Alg_QueueB">
       <ST>Pending := TRUE;</ST>
     </Algorithm>
-    <Algorithm Name="Alg_AbortB">
-      <ST>AbortPending := TRUE;</ST>
+    <Algorithm Name="Alg_OffB">
+      <ST>OffPending := TRUE;</ST>
     </Algorithm>
     <Algorithm Name="Alg_QueueM">
       <ST>Pending := TRUE;</ST>
     </Algorithm>
-    <Algorithm Name="Alg_AbortM">
-      <ST>AbortPending := TRUE;</ST>
+    <Algorithm Name="Alg_OffM">
+      <ST>OffPending := TRUE;</ST>
     </Algorithm>
     <Algorithm Name="Alg_CmdPend">
       <ST>Pending := FALSE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Report">
+      <ST>LastHolder := Holder;
+Beat := 0;</ST>
     </Algorithm>
   </BasicFB>
 </FBType>

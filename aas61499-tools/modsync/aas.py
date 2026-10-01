@@ -27,6 +27,7 @@ import urllib.request
 from basyx.aas import model
 from basyx.aas.adapter.json import AASToJsonEncoder, write_aas_json_file
 
+from modgen.module import parameter_port, result_type
 from modgen.spec import ModuleSpec, Parameter
 
 from .compare import Drift
@@ -175,7 +176,8 @@ class Builder:
         composite = name in spec.composites
         decl = spec.composites[name] if composite else spec.skills[name]
         instance = f"{name}.Control" if composite else name
-        params = [parameter(p, pr, current(f"{instance}.{p}", pr, self.snap)) for p, pr in decl.parameters.items()]
+        values = {p: current(parameter_port(spec, name, p), pr, self.snap) for p, pr in decl.parameters.items()}
+        params = [parameter(p, pr, values[p]) for p, pr in decl.parameters.items()]
         start = self.action(f"{name}_Start", f"/Skills/{name}/Start", f"Start {name}",
                             [(p, "Double") for p in decl.parameters])
         for method in SKILL_METHODS[1:]:
@@ -193,8 +195,7 @@ class Builder:
         operation = model.Operation(
             name,
             input_variable=[prop("Session", "", description="Occupation session of the caller"),
-                            *[parameter(p, pr, current(f"{instance}.{p}", pr, self.snap))
-                              for p, pr in decl.parameters.items()]],
+                            *[parameter(p, pr, values[p]) for p, pr in decl.parameters.items()]],
             output_variable=[prop("Accepted", False, model.datatypes.Boolean),
                              prop("ErrorID", 0, model.datatypes.UnsignedShort)],
             semantic_id=ref(f"{BASE}/skills/{name}"),
@@ -225,8 +226,8 @@ class Builder:
         if name in spec.skills:
             skill = spec.skills[name]
             return spec.equipment[skill.equipment].inputs[skill.results[result]].type
-        from modgen.module import result_type
-        return result_type(spec, spec.composites[name], result)
+        comp = spec.composites[name]
+        return result_type(spec, comp.execute, comp.results[result])
 
     # Submodels -------------------------------------------------------------------------------
 
