@@ -8,13 +8,15 @@ from pathlib import Path
 from basyx.aas import model
 from basyx.aas.adapter.json import read_aas_json_file
 import pytest
+import yaml
 
 from iec61499_mgmt.bootfile import boot_file, deployment
 from iec61499_mgmt.protocol import ManagementError, Response
-from iec61499_mgmt.sysfile import load_application
+from iec61499_mgmt.sysfile import FlatApplication, load_application
 from modgen import SPECS, load, specs, system_file
 from modgen.library import STATES
 from modgen.module import app_name
+from modgen.spec import ModuleSpec
 from modsync import aas, sync
 from modsync.compare import Candidate, expected, expected_values, same
 from modsync.device import literal
@@ -31,7 +33,7 @@ class FakeForte:
     """Answers QUERY, READ and WRITE from a program as FORTE would (strings read back unquoted)."""
 
     def __init__(self, cand: Candidate, state="Stopped", occupied=False, lacking=()):
-        app = cand.app
+        app, self.spec = cand.app, cand.spec
         self.fbs = dict(app.fbs)
         self.connections = set(app.event_connections + app.data_connections)
         self.values = {p: literal(v) if v.startswith(("'", '"')) else v
@@ -39,7 +41,7 @@ class FakeForte:
         self.values[MODULE_STATE] = str(STATES[state])
         self.values[OCCUPIED] = "TRUE" if occupied else "FALSE"
         self.lacking = set(lacking)
-        self.writes = []
+        self.writes, self.started, self.triggered = [], [], []
 
     def execute(self, c):
         if c.op == "query_fbs":
@@ -54,11 +56,24 @@ class FakeForte:
                 raise ManagementError(Response(request_id="1", reason="NO_SUCH_OBJECT", raw="", fbs=[],
                                                connections=[], types=[]))
             return response(connections=[{"Source": c.source, "Destination": self.values[c.source]}])
-        if c.op == "write":
+        if c.op == "write" and c.value == "$e":
+            self.triggered.append(c.destination)
+        elif c.op == "write":
             self.writes.append((c.destination, c.value))
             self.values[c.destination] = literal(c.value) if c.value.startswith(("'", '"')) else c.value
-            return response()
-        raise AssertionError(c.op)
+        elif c.op == "create_fb":
+            self.fbs[c.name] = c.type
+            # FORTE starts an instance with its type's initial values, here the skills' parameter defaults.
+            self.values.update(expected_values(self.spec, FlatApplication(fbs={c.name: c.type})))
+        elif c.op == "connect":
+            self.connections.add((c.source, c.destination))
+        elif c.op == "disconnect":
+            self.connections.remove((c.source, c.destination))
+        elif c.op == "start":
+            self.started.append(c.name)
+        else:
+            raise AssertionError(c.op)
+        return response()
 
     def close(self):
         pass
@@ -85,6 +100,22 @@ class Recorder:
 
 def filling(target="pi") -> Candidate:
     return Candidate(FILLING, load(FILLING), target)
+
+
+# A new module level skill composed of the filling module's primitives: two doses.
+DOUBLE_DOSE = {"description": "Needle down, two doses, needle up, weigh",
+               "parameters": {"Dose": {"unit": "s", "minimum": 0.0, "maximum": 10.0, "default": 0.5}},
+               "execute": ["MoveNeedleDown", {"Dwell": {"Duration": "Dose"}}, {"Dwell": {"Duration": "Dose"}},
+                           "MoveNeedleUp", "Weigh"],
+               "stop": ["MoveNeedleUp"], "results": {"Weight": "Weigh.Weight"}}
+
+
+def composed(target="pi", first=False) -> Candidate:
+    """The filling module with DoubleDose added (``first``: before Dispensing, else after it)."""
+    data = yaml.safe_load(FILLING.read_text(encoding="utf-8"))
+    new = {"DoubleDose": DOUBLE_DOSE}
+    data["composites"] = {**new, **data["composites"]} if first else {**data["composites"], **new}
+    return Candidate(FILLING, ModuleSpec.model_validate(data), target)
 
 
 def status(forte, cands=None):
@@ -172,6 +203,41 @@ def test_push_needs_the_types_in_the_runtime():
     del forte.fbs["AttachNeedle"]
     with pytest.raises(Refused, match="rebuild"):
         push(forte, "pi", 61499, filling(), Recorder())
+
+
+def test_a_new_module_level_skill_is_created_online_while_the_module_runs():
+    forte = FakeForte(filling(), state="Execute", occupied=True)          # an orchestrator is working
+    new = composed()
+    drift = inspect(forte, "pi", 61499, [new]).drift
+    assert drift.additive and not drift.restart
+    assert all(n.startswith("DoubleDose.") for n in drift.missing)
+    deployer = Recorder()
+    done = push(forte, "pi", 61499, new, deployer)
+    assert forte.fbs == new.app.fbs
+    assert forte.connections == set(new.app.event_connections + new.app.data_connections)
+    assert set(forte.started) == set(drift.missing)
+    assert forte.triggered == ["DoubleDose.Control.INIT"]         # the INIT chain enters there, once
+    assert forte.values["DoubleDose.Dose.Default"] == "0.5"
+    assert done[0].startswith("create DoubleDose: ") and "initialise from DoubleDose.Control.INIT" in done
+    assert "verified by read-back" in done and deployer.saved == [boot_file(deployment(new.app))]
+    assert inspect(forte, "pi", 61499, [new]).drift.empty
+
+
+def test_a_skill_added_before_another_moves_the_init_chain_online():
+    forte = FakeForte(filling())
+    new = composed(first=True)
+    drift = inspect(forte, "pi", 61499, [new]).drift
+    assert drift.additive and drift.unexpected_connections == [("Stopping.MoveNeedleUp.INITO", "Dispensing.Control.INIT")]
+    done = push(forte, "pi", 61499, new, Recorder())
+    assert "1 INIT links moved" in done[0] and forte.triggered == ["DoubleDose.Control.INIT"]
+
+
+def test_removing_a_module_level_skill_needs_a_restart():
+    forte = FakeForte(composed())
+    drift = inspect(forte, "pi", 61499, [filling()]).drift
+    assert drift.unexpected and not drift.additive and drift.restart
+    with pytest.raises(Refused, match="deployer"):
+        push(forte, "pi", 61499, filling())
 
 
 def read_back(store, tmp_path):

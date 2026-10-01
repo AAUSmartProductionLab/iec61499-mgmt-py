@@ -8,10 +8,20 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 from iec61499_mgmt.sysfile import FlatApplication, flatten
-from modgen.module import application
+from modgen.module import application, parameter_port
 from modgen.spec import ModuleSpec, Parameter
 
 from .device import Snapshot, literal
+
+
+def owner(port: str) -> str:
+    """The instance of ``<instance>.<port>``."""
+    return port.rpartition(".")[0]
+
+
+def init_link(connection: tuple[str, str]) -> bool:
+    """A link of the INIT chain: it only orders the initialisation."""
+    return connection[0].endswith(".INITO") and connection[1].endswith(".INIT")
 
 
 def expected(spec: ModuleSpec, target: str) -> FlatApplication:
@@ -19,38 +29,30 @@ def expected(spec: ModuleSpec, target: str) -> FlatApplication:
     return flatten(application(ET.Element("System"), spec, target).find("SubAppNetwork"))
 
 
-def skill_of(spec: ModuleSpec, typ: str) -> tuple[str, str] | None:
-    """(``SK`` or ``SC``, skill name) of an instance type of the module's own package, else None."""
-    package, _, name = typ.rpartition("::")
-    kind, _, skill = name.partition("_")
-    if package != spec.package or (kind, skill in spec.skills, skill in spec.composites) not in (
-            ("SK", True, False), ("SC", False, True)):
-        return None
-    return kind, skill
-
-
 def parameters(spec: ModuleSpec, fbs: dict[str, str]) -> dict[str, Parameter]:
-    """Every skill parameter input of the program (``<instance>.<parameter>``) with its declaration.
-
-    These are the values that may be changed online: the defaults of offered skills and the
-    constants a module level skill or procedure binds for its steps.
-    """
+    """Every skill parameter input of the program with its declaration: the values that may be
+    changed online (a skill takes them over at its next start). These are the defaults of skill
+    primitive instances (``<instance>.<parameter>``), the constants sequences bind for their steps,
+    and the defaults of module level skills (``<skill>.<parameter>.Default``)."""
     ports = {}
     for name, typ in fbs.items():
-        found = skill_of(spec, typ)
-        if found:
-            kind, skill = found
-            params = spec.skills[skill].parameters if kind == "SK" else spec.composites[skill].parameters
-            ports.update({f"{name}.{p}": pr for p, pr in params.items()})
+        package, _, t = typ.rpartition("::")
+        if package == spec.package and t.startswith("SK_") and t[3:] in spec.skills:
+            ports.update({f"{name}.{p}": pr for p, pr in spec.skills[t[3:]].parameters.items()})
+    for skill, comp in spec.composites.items():
+        ports.update({parameter_port(spec, skill, p): pr for p, pr in comp.parameters.items() if f"{skill}.{p}" in fbs})
     return ports
 
 
 def expected_values(spec: ModuleSpec, app: FlatApplication) -> dict[str, str]:
     """Input values of the generated program: what the deployment writes, plus the parameter
-    defaults it leaves to the type."""
+    defaults it leaves to the type. An input a data connection drives (a parameter a sequence
+    binds to its parent's) holds whatever was passed last, so it has no expected value."""
     values = dict(app.parameters)
+    driven = {d for _, d in app.data_connections}
     for port, pr in parameters(spec, app.fbs).items():
-        values.setdefault(port, pr.literal())
+        if port not in driven:
+            values.setdefault(port, pr.literal())
     return values
 
 
@@ -82,9 +84,18 @@ class Drift:
                     or self.unexpected_connections)
 
     @property
+    def additive(self) -> bool:
+        """Only new instances with their connections are missing (and the INIT chain is linked
+        differently): they can be created online without touching anything that runs."""
+        new = set(self.missing)
+        return (bool(new) and not self.unexpected and not self.retyped
+                and all(map(init_link, self.unexpected_connections))
+                and all(owner(s) in new or owner(d) in new or init_link((s, d)) for s, d in self.missing_connections))
+
+    @property
     def restart(self) -> bool:
         """Only a new boot file and a restart bring the module to the spec."""
-        return self.structural or any(p not in self.online for p in self.values)
+        return (self.structural and not self.additive) or any(p not in self.online for p in self.values)
 
     @property
     def empty(self) -> bool:
