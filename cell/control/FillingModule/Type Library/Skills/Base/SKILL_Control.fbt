@@ -235,7 +235,7 @@
       <ECTransition Source="Running" Destination="Succeed" Condition="EXEC_DONE" x="0" y="0" />
       <ECTransition Source="Running" Destination="Fail" Condition="EXEC_FAILED" x="0" y="0" />
       <ECTransition Source="Running" Destination="Halt" Condition="HALT" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Halt" Condition="MOD_CHG[ModState = 7]" x="0" y="0" />
+      <ECTransition Source="Running" Destination="Halt" Condition="MOD_CHG[(ModState = 7) AND FromUa]" x="0" y="0" />
       <ECTransition Source="Stopping" Destination="RunStop" Condition="EXEC_DONE" x="0" y="0" />
       <ECTransition Source="Stopping" Destination="RunStop" Condition="EXEC_FAILED" x="0" y="0" />
       <ECTransition Source="StopProc" Destination="Interrupted" Condition="STOP_DONE" x="0" y="0" />
