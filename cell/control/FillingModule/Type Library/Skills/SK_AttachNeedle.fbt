@@ -43,68 +43,59 @@
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Control" Type="modlib::SKILL_Control" x="400" y="200">
-      <Parameter Name="InRange" Value="TRUE" />
+    <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="12000" height="5500" locked="false" />
+    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="1000" y="7700" width="23800" height="6080" locked="false" />
+    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="14980" width="28800" height="5820" locked="false" />
+    <FB Name="Control" Type="modlib::SKILL_Core" x="2800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="4000" y="200" />
-    <FB Name="Mode" Type="modlib::MOD_StateView" x="7600" y="200" />
-    <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="11200" y="200" />
-    <FB Name="UaStop" Type="iec61499::net::SERVER_2_1" x="14800" y="200" />
-    <FB Name="UaAbort" Type="iec61499::net::SERVER_2_1" x="18400" y="200" />
-    <FB Name="UaReset" Type="iec61499::net::SERVER_2_1" x="22000" y="200" />
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="25600" y="200" />
-    <FB Name="Act" Type="iec61499::net::PUBLISH_1" x="29200" y="200">
-      <Parameter Name="QI" Value="TRUE" />
-    </FB>
-    <FB Name="Logic" Type="filling::SL_AttachNeedle" x="32800" y="200">
+    <FB Name="Logic" Type="filling::SL_AttachNeedle" x="2800" y="900">
       <Parameter Name="Equipment" Value="&quot;NeedleAxis&quot;" />
+      <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_3" x="36400" y="200">
+    <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="7400" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+    </FB>
+    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_3" x="2800" y="900">
       <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqView" Type="filling::EV_NeedleAxis" x="40000" y="200" />
-    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="43600" y="200">
+    <FB Name="EqView" Type="filling::EV_NeedleAxis" x="8000" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
+    </FB>
+    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="16800" y="900">
       <Parameter Name="DT" Value="T#500ms" />
+      <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_4" x="47200" y="200">
+    <FB Name="Driver" Type="filling::EC_NeedleAxis" x="13200" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
+    </FB>
+    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="18400" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
+    </FB>
+    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_6" x="23600" y="900">
       <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="50800" y="200" />
+    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="9800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Execution" />
+    </FB>
     <EventConnections>
       <Connection Source="Control.RSP_START" Destination="UaStart.RSP" />
-      <Connection Source="Control.RSP_STOP" Destination="UaStop.RSP" />
-      <Connection Source="Control.RSP_ABORT" Destination="UaAbort.RSP" />
-      <Connection Source="Control.RSP_RESET" Destination="UaReset.RSP" />
-      <Connection Source="UaStop.IND" Destination="Control.CMD_STOP" />
-      <Connection Source="UaAbort.IND" Destination="Control.CMD_ABORT" />
-      <Connection Source="UaReset.IND" Destination="Control.CMD_RESET" />
       <Connection Source="UaStart.IND" Destination="Control.CMD_START" />
-      <Connection Source="Owner.CHG" Destination="Control.OWNER_CHG" />
-      <Connection Source="Mode.CHG" Destination="Control.MOD_CHG" />
-      <Connection Source="Control.PUB" Destination="PubState.REQ" />
-      <Connection Source="Control.ACT" Destination="Act.REQ" />
+      <Connection Source="INIT" Destination="Control.INIT" />
+      <Connection Source="Control.INITO" Destination="Logic.INIT" />
+      <Connection Source="Logic.INITO" Destination="UaStart.INIT" />
+      <Connection Source="UaStart.INITO" Destination="EqState.INIT" />
+      <Connection Source="EqState.INITO" Destination="EqCmd.INIT" />
+      <Connection Source="EqCmd.INITO" Destination="INITO" />
       <Connection Source="START" Destination="Control.START" />
       <Connection Source="HALT" Destination="Control.HALT" />
       <Connection Source="ABORT" Destination="Control.ABORT" />
       <Connection Source="RESET" Destination="Control.RESET" />
       <Connection Source="Control.SUCCESS" Destination="SUCCESS" />
       <Connection Source="Control.FAILURE" Destination="FAILURE" />
-      <Connection Source="INIT" Destination="Control.INIT" />
-      <Connection Source="Control.INITO" Destination="Logic.INIT" />
-      <Connection Source="Logic.INITO" Destination="Owner.INIT" />
-      <Connection Source="Owner.INITO" Destination="Mode.INIT" />
-      <Connection Source="Mode.INITO" Destination="UaStart.INIT" />
-      <Connection Source="UaStart.INITO" Destination="UaStop.INIT" />
-      <Connection Source="UaStop.INITO" Destination="UaAbort.INIT" />
-      <Connection Source="UaAbort.INITO" Destination="UaReset.INIT" />
-      <Connection Source="UaReset.INITO" Destination="PubState.INIT" />
-      <Connection Source="PubState.INITO" Destination="Act.INIT" />
-      <Connection Source="Act.INITO" Destination="EqState.INIT" />
-      <Connection Source="EqState.INITO" Destination="EqCmd.INIT" />
-      <Connection Source="EqCmd.INITO" Destination="PubState.REQ" />
-      <Connection Source="EqCmd.INITO" Destination="INITO" />
-      <Connection Source="Control.GO_UA" Destination="Logic.START" />
-      <Connection Source="Control.GO_PARENT" Destination="Logic.START" />
+      <Connection Source="Control.GO" Destination="Logic.START" />
       <Connection Source="Control.HALT_O" Destination="Logic.HALT" />
       <Connection Source="Control.ABORT_O" Destination="Logic.ABORT" />
       <Connection Source="Control.RUN_STOP" Destination="Control.STOP_DONE" />
@@ -113,7 +104,12 @@
       <Connection Source="Logic.HALTED" Destination="Control.EXEC_FAILED" />
       <Connection Source="EqState.IND" Destination="EqView.REQ" />
       <Connection Source="EqView.CNF" Destination="Logic.SAMPLE" />
-      <Connection Source="Logic.CMD" Destination="EqCmd.REQ" />
+      <Connection Source="Logic.CMD" Destination="Driver.PLAY" />
+      <Connection Source="Driver.OUT" Destination="EqCmd.REQ" />
+      <Connection Source="Driver.PHASE_START" Destination="PhaseT.START" />
+      <Connection Source="Driver.PHASE_STOP" Destination="PhaseT.STOP" />
+      <Connection Source="PhaseT.EO" Destination="Driver.PHASE_T" />
+      <Connection Source="Driver.PLAYED" Destination="Logic.PLAYED" />
       <Connection Source="Logic.WAIT_START" Destination="WaitT.START" />
       <Connection Source="Logic.WAIT_STOP" Destination="WaitT.STOP" />
       <Connection Source="WaitT.EO" Destination="Logic.WAIT_OVER" />
@@ -122,41 +118,18 @@
       <Connection Source="Timer.EO" Destination="Logic.TIMER" />
     </EventConnections>
     <DataConnections>
-      <Connection Source="Module" Destination="Control.Module" />
-      <Connection Source="Module" Destination="Owner.Module" />
-      <Connection Source="Module" Destination="Mode.Module" />
-      <Connection Source="UaRoot" Destination="Control.UaRoot" />
-      <Connection Source="UaPath" Destination="Control.UaPath" />
-      <Connection Source="Methods" Destination="UaStart.QI" />
-      <Connection Source="Methods" Destination="UaStop.QI" />
-      <Connection Source="Methods" Destination="UaAbort.QI" />
-      <Connection Source="Methods" Destination="UaReset.QI" />
-      <Connection Source="UaEnable" Destination="PubState.QI" />
       <Connection Source="Control.IdStart" Destination="UaStart.ID" />
+      <Connection Source="UaStart.RD_1" Destination="Control.S_Start" />
       <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
       <Connection Source="Control.RspError" Destination="UaStart.SD_2" />
-      <Connection Source="UaStart.RD_1" Destination="Control.S_Start" />
-      <Connection Source="Control.IdStop" Destination="UaStop.ID" />
-      <Connection Source="Control.Accepted" Destination="UaStop.SD_1" />
-      <Connection Source="Control.RspError" Destination="UaStop.SD_2" />
-      <Connection Source="UaStop.RD_1" Destination="Control.S_Stop" />
-      <Connection Source="Control.IdAbort" Destination="UaAbort.ID" />
-      <Connection Source="Control.Accepted" Destination="UaAbort.SD_1" />
-      <Connection Source="Control.RspError" Destination="UaAbort.SD_2" />
-      <Connection Source="UaAbort.RD_1" Destination="Control.S_Abort" />
-      <Connection Source="Control.IdReset" Destination="UaReset.ID" />
-      <Connection Source="Control.Accepted" Destination="UaReset.SD_1" />
-      <Connection Source="Control.RspError" Destination="UaReset.SD_2" />
-      <Connection Source="UaReset.RD_1" Destination="Control.S_Reset" />
-      <Connection Source="Owner.Owner" Destination="Control.Owner" />
-      <Connection Source="Mode.State" Destination="Control.ModState" />
-      <Connection Source="Control.IdPub" Destination="PubState.ID" />
-      <Connection Source="Control.State" Destination="PubState.SD_1" />
+      <Connection Source="Module" Destination="Control.Module" />
+      <Connection Source="UaRoot" Destination="Control.UaRoot" />
+      <Connection Source="UaPath" Destination="Control.UaPath" />
+      <Connection Source="UaEnable" Destination="Control.UaEnable" />
+      <Connection Source="Methods" Destination="Control.Methods" />
+      <Connection Source="Methods" Destination="UaStart.QI" />
       <Connection Source="Control.State" Destination="State" />
-      <Connection Source="Control.ErrorID" Destination="PubState.SD_2" />
       <Connection Source="Control.ErrorID" Destination="ErrorID" />
-      <Connection Source="Control.IdAct" Destination="Act.ID" />
-      <Connection Source="Control.Delta" Destination="Act.SD_1" />
       <Connection Source="Module" Destination="Logic.Module" />
       <Connection Source="Token" Destination="Logic.Token" />
       <Connection Source="LastUse" Destination="Logic.LastUse" />
@@ -170,10 +143,16 @@
       <Connection Source="EqView.AtBottom" Destination="Logic.AtBottom" />
       <Connection Source="EqView.Holder" Destination="Logic.Holder" />
       <Connection Source="Logic.IdEqCmd" Destination="EqCmd.ID" />
-      <Connection Source="Logic.C_Holder" Destination="EqCmd.SD_1" />
-      <Connection Source="Logic.C_Command" Destination="EqCmd.SD_2" />
-      <Connection Source="Logic.C_Arg" Destination="EqCmd.SD_3" />
-      <Connection Source="Logic.C_Release" Destination="EqCmd.SD_4" />
+      <Connection Source="Logic.C_Holder" Destination="Driver.Holder" />
+      <Connection Source="Logic.C_Command" Destination="Driver.Command" />
+      <Connection Source="Logic.C_Release" Destination="Driver.Release" />
+      <Connection Source="Driver.O_Holder" Destination="EqCmd.SD_1" />
+      <Connection Source="Driver.O_Release" Destination="EqCmd.SD_2" />
+      <Connection Source="Driver.N_Up" Destination="EqCmd.SD_3" />
+      <Connection Source="Driver.N_Down" Destination="EqCmd.SD_4" />
+      <Connection Source="Driver.N_Speed" Destination="EqCmd.SD_5" />
+      <Connection Source="Driver.NE_Speed" Destination="EqCmd.SD_6" />
+      <Connection Source="Driver.PhaseDT" Destination="PhaseT.DT" />
       <Connection Source="Logic.TimerDT" Destination="Timer.DT" />
     </DataConnections>
   </FBNetwork>

@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EC_Scale" Comment="Commands of Scale as output values, in timed phases: Idle=0, Tare=1, Measure=2">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="filling" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="PLAY" Type="Event">
+        <With Var="Holder" />
+        <With Var="Command" />
+        <With Var="Release" />
+      </Event>
+      <Event Name="PHASE_T" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="OUT" Type="Event">
+        <With Var="O_Holder" />
+        <With Var="O_Release" />
+      </Event>
+      <Event Name="PHASE_START" Type="Event">
+        <With Var="PhaseDT" />
+      </Event>
+      <Event Name="PHASE_STOP" Type="Event" />
+      <Event Name="PLAYED" Type="Event" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Holder" Type="WSTRING" />
+      <VarDeclaration Name="Command" Type="USINT" />
+      <VarDeclaration Name="Release" Type="BOOL" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="O_Holder" Type="WSTRING" />
+      <VarDeclaration Name="O_Release" Type="BOOL" />
+      <VarDeclaration Name="PhaseDT" Type="TIME" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Phase" Type="USINT" />
+      <VarDeclaration Name="Timed" Type="BOOL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Play" x="570" y="100">
+        <ECAction Algorithm="Alg_Play" Output="PHASE_STOP" />
+      </ECState>
+      <ECState Name="Next" x="990" y="100">
+        <ECAction Algorithm="Alg_Next" />
+      </ECState>
+      <ECState Name="Send" x="1410" y="100">
+        <ECAction Algorithm="Alg_Send" Output="OUT" />
+      </ECState>
+      <ECState Name="Hold" x="150" y="330">
+        <ECAction Output="PHASE_START" />
+      </ECState>
+      <ECState Name="Played" x="570" y="330">
+        <ECAction Output="PLAYED" />
+      </ECState>
+      <ECTransition Source="START" Destination="Play" Condition="PLAY" x="0" y="0" />
+      <ECTransition Source="START" Destination="Next" Condition="PHASE_T" x="0" y="0" />
+      <ECTransition Source="Play" Destination="Send" Condition="1" x="0" y="0" />
+      <ECTransition Source="Next" Destination="Send" Condition="1" x="0" y="0" />
+      <ECTransition Source="Send" Destination="Hold" Condition="Timed" x="0" y="0" />
+      <ECTransition Source="Send" Destination="Played" Condition="1" x="0" y="0" />
+      <ECTransition Source="Hold" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Played" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Play">
+      <ST>Phase := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Next">
+      <ST>Phase := Phase + 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Send">
+      <ST>Timed := FALSE;
+PhaseDT := T#0ms;
+O_Holder := Holder;
+O_Release := Release AND NOT Timed;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

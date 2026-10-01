@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EC_StopperArm" Comment="Commands of StopperArm as output values, in timed phases: Detach=0, MoveTo=1">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="stoppering" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="PLAY" Type="Event">
+        <With Var="Holder" />
+        <With Var="Command" />
+        <With Var="Arg" />
+        <With Var="Release" />
+      </Event>
+      <Event Name="PHASE_T" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="OUT" Type="Event">
+        <With Var="O_Holder" />
+        <With Var="O_Release" />
+        <With Var="N_Angle" />
+        <With Var="NE_Angle" />
+      </Event>
+      <Event Name="PHASE_START" Type="Event">
+        <With Var="PhaseDT" />
+      </Event>
+      <Event Name="PHASE_STOP" Type="Event" />
+      <Event Name="PLAYED" Type="Event" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Holder" Type="WSTRING" />
+      <VarDeclaration Name="Command" Type="USINT" />
+      <VarDeclaration Name="Arg" Type="LREAL" />
+      <VarDeclaration Name="Release" Type="BOOL" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="O_Holder" Type="WSTRING" />
+      <VarDeclaration Name="O_Release" Type="BOOL" />
+      <VarDeclaration Name="N_Angle" Type="LREAL" />
+      <VarDeclaration Name="NE_Angle" Type="BOOL" />
+      <VarDeclaration Name="PhaseDT" Type="TIME" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Phase" Type="USINT" />
+      <VarDeclaration Name="Timed" Type="BOOL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Play" x="570" y="100">
+        <ECAction Algorithm="Alg_Play" Output="PHASE_STOP" />
+      </ECState>
+      <ECState Name="Next" x="990" y="100">
+        <ECAction Algorithm="Alg_Next" />
+      </ECState>
+      <ECState Name="Send" x="1410" y="100">
+        <ECAction Algorithm="Alg_Send" Output="OUT" />
+      </ECState>
+      <ECState Name="Hold" x="150" y="330">
+        <ECAction Output="PHASE_START" />
+      </ECState>
+      <ECState Name="Played" x="570" y="330">
+        <ECAction Output="PLAYED" />
+      </ECState>
+      <ECTransition Source="START" Destination="Play" Condition="PLAY" x="0" y="0" />
+      <ECTransition Source="START" Destination="Next" Condition="PHASE_T" x="0" y="0" />
+      <ECTransition Source="Play" Destination="Send" Condition="1" x="0" y="0" />
+      <ECTransition Source="Next" Destination="Send" Condition="1" x="0" y="0" />
+      <ECTransition Source="Send" Destination="Hold" Condition="Timed" x="0" y="0" />
+      <ECTransition Source="Send" Destination="Played" Condition="1" x="0" y="0" />
+      <ECTransition Source="Hold" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Played" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Play">
+      <ST>Phase := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Next">
+      <ST>Phase := Phase + 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Send">
+      <ST>N_Angle := 0.0;
+NE_Angle := FALSE;
+Timed := FALSE;
+PhaseDT := T#0ms;
+IF Command = 1 THEN
+  N_Angle := Arg;
+  NE_Angle := TRUE;
+END_IF;
+O_Holder := Holder;
+O_Release := Release AND NOT Timed;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

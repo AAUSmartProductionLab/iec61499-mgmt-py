@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
 import shutil
 import xml.etree.ElementTree as ET
 
@@ -29,6 +30,22 @@ STD = {
 # Interface declarations of standard types, vendored from the 4diac IDE 3.3 type libraries.
 STDTYPES = Path(__file__).resolve().parents[1] / "stdtypes"
 NET = "iec61499::net"
+
+
+GENERIC = re.compile(rf"{NET}::(SERVER|PUBLISH|SUBSCRIBE)_(\d+)(?:_(\d+))?")
+
+
+def server(sds: int, rds: int) -> str:
+    """SERVER_sds_rds: an OPC UA method with rds arguments in and sds results out."""
+    return f"{NET}::SERVER_{sds}_{rds}"
+
+
+def publish(n: int) -> str:
+    return f"{NET}::PUBLISH_{n}"
+
+
+def subscribe(n: int) -> str:
+    return f"{NET}::SUBSCRIBE_{n}"
 
 
 def elem(parent, tag, **attrs):
@@ -63,12 +80,47 @@ def keep_layout(root, path):
         walk(tree, "")
         return found
 
+    def group(node):
+        attr = node.find("Attribute[@Name='GroupName']")
+        return attr.get("Value") if attr is not None else None
+
     before = placed(old)
     for key, node in placed(root).items():
-        if key in before:
+        # A block's position is relative to its group: only kept while it stays in that group.
+        if key in before and group(before[key]) == group(node):
             for attr in LAYOUT:
                 if attr in before[key].attrib:
                     node.set(attr, before[key].get(attr))
+
+
+LEFT, TOP, GAP = 2800, 900, 1200     # room for parameter values left of a block, the group title, between groups
+
+
+def arrange(net, groups, x=1000, y=1000):
+    """Arrange a network's blocks in titled groups stacked from top to bottom.
+
+    ``groups``: (name, comment, members, columns, dx, dy) with the grid pitch of the group; members
+    not in the network are skipped, empty groups left out. The IDE 3.2 has no group colours.
+    """
+    blocks = {el.get("Name"): el for el in net if el.tag in ("FB", "SubApp")}
+    made = []
+    for name, comment, members, cols, dx, dy in groups:
+        names = [n for n in members if n in blocks]
+        if not names:
+            continue
+        rows = (len(names) + cols - 1) // cols
+        width, height = LEFT + min(cols, len(names)) * dx, TOP + rows * dy
+        made.append(ET.Element("Group", Name=name, Comment=comment, x=str(x), y=str(y), width=str(width),
+                               height=str(height), locked="false"))
+        for i, n in enumerate(names):
+            el = blocks[n]
+            # A grouped block's position is relative to its group.
+            el.set("x", str(LEFT + (i % cols) * dx))
+            el.set("y", str(TOP + (i // cols) * dy))
+            elem(el, "Attribute", Name="GroupName", Type="STRING", Value=name)
+        y += height + GAP
+    for i, g in enumerate(made):
+        net.insert(i, g)
 
 
 def save(root, path):
@@ -113,20 +165,21 @@ def interface(root, inputs, outputs, iv=None, ov=None, sub=False):
         for name, variables in events.items():
             variables, etype = variables if isinstance(variables, tuple) else (variables, "Event")
             event = elem(group, prefix + "Event", Name=name, Type=etype)
-            for var in variables:
+            for var in [] if sub else variables:          # the IDE keeps no With on a subapp's events
                 elem(event, "With", Var=var)
     for tag, variables in [("InputVars", iv or {}), ("OutputVars", ov or {})]:
-        declare(elem(iface, tag), variables)
+        if variables or not sub:                          # nor empty variable lists
+            declare(elem(iface, tag), variables)
     return iface
 
 
 def connections(net, events, data):
     """Add event and data connection lists to a network."""
-    ec, dc = elem(net, "EventConnections"), elem(net, "DataConnections")
-    for s, d in events:
-        elem(ec, "Connection", Source=s, Destination=d)
-    for s, d in data:
-        elem(dc, "Connection", Source=s, Destination=d)
+    for tag, pairs in [("EventConnections", events), ("DataConnections", data)]:
+        if pairs:                                         # as the IDE saves it: no empty lists
+            group = elem(net, tag)
+            for s, d in pairs:
+                elem(group, "Connection", Source=s, Destination=d)
 
 
 def fb(net, name, typ, x, y, **params):
@@ -176,19 +229,20 @@ class Project:
 
     # Generic comm FBs: declared once per size, instantiated by FORTE from GEN_*.
     def server(self, sds: int, rds: int) -> str:
-        """Qualified SERVER_sds_rds (OPC UA method: rds arguments in, sds results out)."""
-        self.generic.add(("SERVER", sds, rds))
-        return f"{NET}::SERVER_{sds}_{rds}"
+        return self.use(server(sds, rds))
 
     def publish(self, n: int) -> str:
-        """Qualified PUBLISH_n."""
-        self.generic.add(("PUBLISH", n, 0))
-        return f"{NET}::PUBLISH_{n}"
+        return self.use(publish(n))
 
     def subscribe(self, n: int) -> str:
-        """Qualified SUBSCRIBE_n."""
-        self.generic.add(("SUBSCRIBE", 0, n))
-        return f"{NET}::SUBSCRIBE_{n}"
+        return self.use(subscribe(n))
+
+    def use(self, typ: str) -> str:
+        """Declare ``typ`` in the project if it is a generic comm FB; return it."""
+        if m := GENERIC.fullmatch(typ):
+            kind, a, b = m[1], int(m[2]), int(m[3] or 0)
+            self.generic.add({"SERVER": (kind, a, b), "PUBLISH": (kind, a, 0), "SUBSCRIBE": (kind, 0, a)}[kind])
+        return typ
 
     def record(self, name, kind, rel, exported):
         """Record a written file in the manifest."""
@@ -374,17 +428,18 @@ class Simple(FB):
             elem(alg, "ST").text = code  # element text, as the IDE writes it
 
 
-class Composite(FB):
-    """Composite FB with an internal FB network."""
-    kind = "CompositeFB"
+class Wiring:
+    """FB instances and connections collected for one network (a composite type's or a subapp's)."""
 
-    def __init__(self, project, package, name, comment, ei, eo, iv=None, ov=None, folder=""):
-        super().__init__(project, name, comment, ei, eo, iv, ov, folder, package)
-        self.net = elem(self.root, "FBNetwork")
-        self.fbs, self.events, self.data = [], [], []
+    def __init__(self):
+        self.fbs, self.events, self.data, self.groups = [], [], [], []
+
+    def group(self, name, comment, members, cols=8, dx=4600, dy=3400):
+        """Show ``members`` together in a titled group (see :func:`arrange`); groups stack in the order given."""
+        self.groups.append((name, comment, list(members), cols, dx, dy))
 
     def fb(self, name, typ, **params):
-        """Add an internal FB instance."""
+        """Add an FB instance with parameter values."""
         self.fbs.append((name, typ, params))
         return name
 
@@ -403,9 +458,39 @@ class Composite(FB):
             self.ev(a + ".INITO", z + ".INIT")
         self.ev(names[-1] + ".INITO", *([last] if isinstance(last, str) else last))
 
-    def write(self):
-        """Emit the network, then write the file."""
+    def emit(self, net, x, y, dx):
+        """Write the instances in one row (no overlapping blocks) and the connections, then the groups."""
         for i, (name, typ, params) in enumerate(self.fbs):
-            fb(self.net, name, typ, 400 + i * 3600, 200, **params)  # one row: no overlapping blocks
-        connections(self.net, self.events, self.data)
+            fb(net, name, typ, x + i * dx, y, **params)
+        connections(net, self.events, self.data)
+        order = {"FB": 0, "SubApp": 1}                  # FBs ahead of subapps already in the network
+        net[:] = sorted(net, key=lambda e: order.get(e.tag, 2))
+        arrange(net, self.groups)
+
+
+class SubNet(Wiring):
+    """The network of an untyped subapplication; ``write`` emits it into ``net``."""
+
+    def __init__(self, net):
+        super().__init__()
+        self.net = net
+
+    def write(self):
+        self.emit(self.net, 1000, 1000, 4000)
+
+
+class Composite(FB, Wiring):
+    """Composite FB with an internal FB network."""
+    kind = "CompositeFB"
+
+    def __init__(self, project, package, name, comment, ei, eo, iv=None, ov=None, folder=""):
+        FB.__init__(self, project, name, comment, ei, eo, iv, ov, folder, package)
+        Wiring.__init__(self)
+        self.net = elem(self.root, "FBNetwork")
+
+    def write(self):
+        """Emit the network (declaring the generic comm FBs it uses), then write the file."""
+        for _, typ, _ in self.fbs:
+            self.project.use(typ)
+        self.emit(self.net, 400, 200, 3600)
         return super().write()

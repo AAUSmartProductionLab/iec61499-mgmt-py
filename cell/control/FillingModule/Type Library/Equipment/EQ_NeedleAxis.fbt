@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EQ_NeedleAxis" Comment="Needle lift, DC motor through an L298N (IN3 up, IN4 down, ENB speed), end switches top and bottom; equipment IO: owns its IO points; commands Stop=0, Up=1, Down=2, BrakeUp=3, BrakeDown=4, Attach=5">
+<FBType Name="EQ_NeedleAxis" Comment="Needle lift, DC motor through an L298N (IN3 up, IN4 down, ENB speed), end switches top and bottom; equipment IO: owns its IO points, writes the output values its holder sends, reads its inputs every cycle and reports changes">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filling" />
@@ -64,27 +64,55 @@
     <OutputVars />
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Logic" Type="filling::EL_NeedleAxis" x="400" y="200" />
-    <FB Name="Mode" Type="modlib::MOD_StateView" x="4000" y="200" />
-    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_4" x="7600" y="200">
-      <Parameter Name="QI" Value="TRUE" />
+    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="17800" height="6340" locked="false" />
+    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="1000" y="8540" width="25800" height="5300" locked="false" />
+    <Group Name="Inputs" Comment="The equipment's sensors: read every cycle, one block per IO point" x="1000" y="15040" width="12000" height="4700" locked="false" />
+    <Group Name="Outputs" Comment="The equipment's actuators: written on a change and every cycle, one block per IO point" x="1000" y="20940" width="16600" height="4700" locked="false" />
+    <FB Name="Logic" Type="filling::EL_NeedleAxis" x="2800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_3" x="11200" y="200">
-      <Parameter Name="QI" Value="TRUE" />
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="10300" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="PubUa" Type="iec61499::net::PUBLISH_2" x="14800" y="200" />
-    <FB Name="In_AtTop" Type="modlib::IO_DI" x="18400" y="200" />
-    <FB Name="In_AtBottom" Type="modlib::IO_DI" x="22000" y="200" />
-    <FB Name="Out_Up" Type="modlib::IO_DO" x="25600" y="200" />
-    <FB Name="Out_Down" Type="modlib::IO_DO" x="29200" y="200" />
-    <FB Name="Out_Speed" Type="modlib::IO_AO" x="32800" y="200" />
-    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="36400" y="200" />
-    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="40000" y="200" />
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="21200" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_6" x="2800" y="900">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="7400" y="900">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_3" x="12000" y="900">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_2" x="16600" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="In_AtTop" Type="modlib::IO_DI" x="2800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Inputs" />
+    </FB>
+    <FB Name="In_AtBottom" Type="modlib::IO_DI" x="7400" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Inputs" />
+    </FB>
+    <FB Name="Out_Up" Type="modlib::IO_DO" x="2800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
+    </FB>
+    <FB Name="Out_Down" Type="modlib::IO_DO" x="7400" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
+    </FB>
+    <FB Name="Out_Speed" Type="modlib::IO_AO" x="12000" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
+    </FB>
     <EventConnections>
       <Connection Source="INIT" Destination="Logic.INIT" />
       <Connection Source="Logic.INITO" Destination="Mode.INIT" />
       <Connection Source="Mode.INITO" Destination="SubCmd.INIT" />
-      <Connection Source="SubCmd.INITO" Destination="PubState.INIT" />
+      <Connection Source="SubCmd.INITO" Destination="SubRelease.INIT" />
+      <Connection Source="SubRelease.INITO" Destination="PubState.INIT" />
       <Connection Source="PubState.INITO" Destination="PubUa.INIT" />
       <Connection Source="PubUa.INITO" Destination="In_AtTop.INIT" />
       <Connection Source="In_AtTop.INITO" Destination="In_AtBottom.INIT" />
@@ -94,6 +122,7 @@
       <Connection Source="Out_Speed.INITO" Destination="Cycle.START" />
       <Connection Source="Out_Speed.INITO" Destination="INITO" />
       <Connection Source="SubCmd.IND" Destination="Logic.CMD" />
+      <Connection Source="SubRelease.IND" Destination="Logic.RELEASE" />
       <Connection Source="Mode.CHG" Destination="Logic.MOD_CHG" />
       <Connection Source="Cycle.EO" Destination="Logic.REFRESH" />
       <Connection Source="Cycle.EO" Destination="In_AtTop.REQ" />
@@ -105,9 +134,6 @@
       <Connection Source="Out_Up.CNF" Destination="Out_Down.REQ" />
       <Connection Source="Out_Down.CNF" Destination="Out_Speed.REQ" />
       <Connection Source="Out_Speed.CNF" Destination="Logic.DRIVEN" />
-      <Connection Source="Logic.PHASE_START" Destination="PhaseT.START" />
-      <Connection Source="Logic.PHASE_STOP" Destination="PhaseT.STOP" />
-      <Connection Source="PhaseT.EO" Destination="Logic.PHASE_T" />
     </EventConnections>
     <DataConnections>
       <Connection Source="Module" Destination="Logic.Module" />
@@ -115,14 +141,18 @@
       <Connection Source="UaRoot" Destination="Logic.UaRoot" />
       <Connection Source="Module" Destination="Mode.Module" />
       <Connection Source="Logic.IdCmd" Destination="SubCmd.ID" />
+      <Connection Source="Logic.IdRelease" Destination="SubRelease.ID" />
       <Connection Source="Logic.IdState" Destination="PubState.ID" />
       <Connection Source="Logic.IdPub" Destination="PubUa.ID" />
       <Connection Source="UaEnable" Destination="PubUa.QI" />
       <Connection Source="CycleTime" Destination="Cycle.DT" />
       <Connection Source="SubCmd.RD_1" Destination="Logic.C_Holder" />
-      <Connection Source="SubCmd.RD_2" Destination="Logic.C_Command" />
-      <Connection Source="SubCmd.RD_3" Destination="Logic.C_Arg" />
-      <Connection Source="SubCmd.RD_4" Destination="Logic.C_Release" />
+      <Connection Source="SubCmd.RD_2" Destination="Logic.C_Release" />
+      <Connection Source="SubCmd.RD_3" Destination="Logic.C_Up" />
+      <Connection Source="SubCmd.RD_4" Destination="Logic.C_Down" />
+      <Connection Source="SubCmd.RD_5" Destination="Logic.C_Speed" />
+      <Connection Source="SubCmd.RD_6" Destination="Logic.CE_Speed" />
+      <Connection Source="SubRelease.RD_1" Destination="Logic.R_Holder" />
       <Connection Source="Mode.State" Destination="Logic.ModState" />
       <Connection Source="AtTop_Backend" Destination="In_AtTop.Backend" />
       <Connection Source="AtTop_Modbus" Destination="In_AtTop.ModbusId" />
@@ -154,7 +184,6 @@
       <Connection Source="Logic.E_Speed" Destination="Out_Speed.EN" />
       <Connection Source="Speed_Gain" Destination="Out_Speed.Gain" />
       <Connection Source="Speed_Bias" Destination="Out_Speed.Bias" />
-      <Connection Source="Logic.PhaseDT" Destination="PhaseT.DT" />
     </DataConnections>
   </FBNetwork>
 </FBType>

@@ -31,8 +31,8 @@ DURATION = r"^\d+(ms|s)$"
 PROCEDURES = Literal["Resetting", "Stopping"]
 # IO backends of the IO primitives (IO_DI, IO_DO, IO_AI, IO_AO): 1 is a local IO handle (GPIO line or PWM channel).
 BACKENDS = {"sim": 0, "gpio": 1, "pwm": 1, "modbus": 2}
-# Command code that changes no outputs (used to release an equipment item).
-KEEP = 255
+# Blocks and pins of a module level skill's subapp (IEC names are case-insensitive).
+RESERVED = {"CONTROL", "UASTART", "PUBPARAMS", "PUBRESULTS", "RELEASE", "EXECUTE", "STOP", "INIT", "INITO"}
 
 
 class Model(BaseModel):
@@ -364,6 +364,9 @@ class ModuleSpec(Model):
         for name, comp in self.composites.items():
             if not comp.execute:
                 raise ValueError(f"{name}: empty execute sequence")
+            # A module level skill's parameter latches are named like its parameters, next to these.
+            if taken := {p for p in comp.parameters if p.upper() in RESERVED or p.upper().startswith("REL_")}:
+                raise ValueError(f"{name}: parameter names taken by the skill's own blocks {sorted(taken)}")
             self.check_steps(name, comp.execute, set(comp.parameters))
             self.check_steps(name, comp.stop, set(comp.parameters))
             for result, source in comp.results.items():

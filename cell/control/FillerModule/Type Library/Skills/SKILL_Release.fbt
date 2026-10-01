@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SKILL_Release" Comment="Releases the equipment a module level skill holds after a failure or abort: (Token, safe command 0, release) for the equipment command channels">
+<FBType Name="SKILL_Release" Comment="Names the holder that gives up the equipment a module level skill holds after a failure or abort, for the equipment's release channels (all outputs off, free again)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
@@ -12,9 +12,6 @@
     <EventOutputs>
       <Event Name="CNF" Type="Event">
         <With Var="Holder" />
-        <With Var="Command" />
-        <With Var="Arg" />
-        <With Var="Release" />
       </Event>
     </EventOutputs>
     <InputVars>
@@ -22,9 +19,6 @@
     </InputVars>
     <OutputVars>
       <VarDeclaration Name="Holder" Type="WSTRING" />
-      <VarDeclaration Name="Command" Type="USINT" />
-      <VarDeclaration Name="Arg" Type="LREAL" />
-      <VarDeclaration Name="Release" Type="BOOL" />
     </OutputVars>
   </InterfaceList>
   <SimpleFB>
@@ -32,10 +26,7 @@
       <ECAction Algorithm="REQ" Output="CNF" />
     </ECState>
     <Algorithm Name="REQ">
-      <ST>Holder := Token;
-Command := 0;
-Arg := 0.0;
-Release := TRUE;</ST>
+      <ST>Holder := Token;</ST>
     </Algorithm>
   </SimpleFB>
 </FBType>

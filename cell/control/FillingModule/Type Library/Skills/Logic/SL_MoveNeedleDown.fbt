@@ -22,6 +22,7 @@
         <With Var="Holder" />
       </Event>
       <Event Name="WAIT_OVER" Type="Event" />
+      <Event Name="PLAYED" Type="Event" />
     </EventInputs>
     <EventOutputs>
       <Event Name="INITO" Type="EInit">
@@ -74,6 +75,9 @@
     </OutputVars>
   </InterfaceList>
   <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Outcome" Type="USINT" />
+    </InternalVars>
     <ECC>
       <ECState Name="Idle" x="150" y="100" />
       <ECState Name="Init" x="570" y="100">
@@ -109,7 +113,6 @@
       <ECState Name="Unsafe" x="570" y="560">
         <ECAction Algorithm="Alg_Unsafe" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
-        <ECAction Output="FAILED" />
       </ECState>
       <ECState Name="Lost" x="990" y="560">
         <ECAction Algorithm="Alg_Lost" Output="TIMER_STOP" />
@@ -118,20 +121,27 @@
       <ECState Name="Done" x="1410" y="560">
         <ECAction Algorithm="Alg_Done" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
-        <ECAction Output="DONE" />
       </ECState>
       <ECState Name="TimedOut" x="150" y="790">
         <ECAction Algorithm="Alg_TimedOut" Output="CMD" />
-        <ECAction Output="FAILED" />
       </ECState>
       <ECState Name="Halt" x="570" y="790">
         <ECAction Algorithm="Alg_Halt" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
-        <ECAction Output="HALTED" />
       </ECState>
       <ECState Name="Abort" x="990" y="790">
         <ECAction Algorithm="Alg_Abort" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
+      </ECState>
+      <ECState Name="Ending" x="990" y="1020" />
+      <ECState Name="EndDone" x="1410" y="1020">
+        <ECAction Output="DONE" />
+      </ECState>
+      <ECState Name="EndFailed" x="150" y="1250">
+        <ECAction Output="FAILED" />
+      </ECState>
+      <ECState Name="EndHalted" x="570" y="1250">
+        <ECAction Output="HALTED" />
       </ECState>
       <ECState Name="Running" x="1410" y="790" />
       <ECTransition Source="Idle" Destination="Init" Condition="INIT" x="0" y="0" />
@@ -155,18 +165,26 @@
       <ECTransition Source="Running" Destination="RunSample" Condition="SAMPLE" x="0" y="0" />
       <ECTransition Source="RunSample" Destination="Running" Condition="1" x="0" y="0" />
       <ECTransition Source="Busy" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="Unsafe" Destination="Idle" Condition="1" x="0" y="0" />
       <ECTransition Source="Lost" Destination="Idle" Condition="1" x="0" y="0" />
       <ECTransition Source="AlreadyDone" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="TimedOut" Destination="Idle" Condition="1" x="0" y="0" />
+      <ECTransition Source="Unsafe" Destination="Ending" Condition="1" x="0" y="0" />
+      <ECTransition Source="Done" Destination="Ending" Condition="1" x="0" y="0" />
+      <ECTransition Source="Halt" Destination="Ending" Condition="1" x="0" y="0" />
+      <ECTransition Source="Abort" Destination="Ending" Condition="1" x="0" y="0" />
+      <ECTransition Source="TimedOut" Destination="Ending" Condition="1" x="0" y="0" />
+      <ECTransition Source="Ending" Destination="EndDone" Condition="PLAYED[Outcome = 1]" x="0" y="0" />
+      <ECTransition Source="Ending" Destination="EndFailed" Condition="PLAYED[Outcome = 2]" x="0" y="0" />
+      <ECTransition Source="Ending" Destination="EndHalted" Condition="PLAYED[Outcome = 3]" x="0" y="0" />
+      <ECTransition Source="Ending" Destination="Idle" Condition="PLAYED" x="0" y="0" />
+      <ECTransition Source="Ending" Destination="Abort" Condition="ABORT" x="0" y="0" />
+      <ECTransition Source="EndDone" Destination="Idle" Condition="1" x="0" y="0" />
+      <ECTransition Source="EndFailed" Destination="Idle" Condition="1" x="0" y="0" />
+      <ECTransition Source="EndHalted" Destination="Idle" Condition="1" x="0" y="0" />
       <ECTransition Source="Check" Destination="Run" Condition="1" x="0" y="0" />
       <ECTransition Source="Run" Destination="Running" Condition="1" x="0" y="0" />
       <ECTransition Source="Running" Destination="Halt" Condition="HALT" x="0" y="0" />
       <ECTransition Source="Running" Destination="Abort" Condition="ABORT" x="0" y="0" />
       <ECTransition Source="Reject" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="Done" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="Halt" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="Abort" Destination="Idle" Condition="1" x="0" y="0" />
     </ECC>
     <Algorithm Name="Alg_Init">
       <ST>IdEqState := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Equipment), "/state]");
@@ -196,7 +214,8 @@ TimerDT := Timeout;</ST>
 C_Command := 0;
 C_Arg := 0.0;
 C_Release := LastUse;
-ErrorID := 2;</ST>
+ErrorID := 2;
+Outcome := 2;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Lost">
       <ST>ErrorID := 6;</ST>
@@ -205,27 +224,31 @@ ErrorID := 2;</ST>
       <ST>C_Holder := Token;
 C_Command := 4;
 C_Arg := 0.0;
-C_Release := LastUse;</ST>
+C_Release := LastUse;
+Outcome := 1;</ST>
     </Algorithm>
     <Algorithm Name="Alg_TimedOut">
       <ST>C_Holder := Token;
 C_Command := 0;
 C_Arg := 0.0;
 C_Release := LastUse;
-ErrorID := 3;</ST>
+ErrorID := 3;
+Outcome := 2;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Halt">
       <ST>C_Holder := Token;
 C_Command := 4;
 C_Arg := 0.0;
 C_Release := LastUse;
-ErrorID := 7;</ST>
+ErrorID := 7;
+Outcome := 3;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Abort">
       <ST>C_Holder := Token;
 C_Command := 0;
 C_Arg := 0.0;
-C_Release := LastUse;</ST>
+C_Release := LastUse;
+Outcome := 0;</ST>
     </Algorithm>
   </BasicFB>
 </FBType>
