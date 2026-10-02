@@ -89,8 +89,9 @@ modsync pull --host 192.168.0.191 --register http://<host>:8090    # ... or with
 when it comes online or changes). The service keeps each profile and AAS in its `--store`
 folder; a profile registered again unchanged is not published again. A broken restriction of the
 ontology refuses the registration; `--strict` also refuses what the ontology does not describe.
-`ModuleTypeAAS` (`modreg/model.py`) is the lab's resource type for an OPC UA module; profiles of
-the lab's own `ResourceTypeAAS` go through the same service. aas-model loads its message schemas
+`ModuleTypeAAS` (`modreg/model.py`) is a resource in the structure of the resource ontology (ARSO:
+Skills, Operational Data, Parameters, Control Configuration) for an OPC UA module, written with the
+shared model's classes; profiles of the lab's own `ResourceTypeAAS` go through the same service. aas-model loads its message schemas
 from the lab's GitHub pages when it is imported, unless `MQTT_SCHEMAS_DIR` names a local copy.
 
 In the 4diac IDE (a workspace outside the repository), import `iec61499-skill-lib/ModLib` and
