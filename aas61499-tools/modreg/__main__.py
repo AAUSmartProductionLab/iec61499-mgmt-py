@@ -21,9 +21,12 @@ from modsync.__main__ import spec_path
 from modsync.compare import Candidate
 from modsync.sync import inspect, relative
 
-from . import model, profile as profiles
-from .ontology import Blueprint, check
-from .service import AasServer, Registry, send, serve
+try:
+    from . import model, profile as profiles
+    from .ontology import Blueprint, check
+    from .service import AasServer, Registry, send, serve
+except ImportError as e:
+    sys.exit(f"modreg needs the registration extra ({e}): python -m pip install -e \".[registration]\"")
 
 
 def module_profile(args) -> dict:
@@ -123,7 +126,7 @@ def main(argv=None) -> int:
                 return 1
             what = "checked" if args.check else "unchanged" if answer["unchanged"] else "registered"
             print(f"{what}: {answer['id_short']} ({answer['id']}), {len(answer['submodels'])} submodels")
-            for line in [answer["summary"], *answer["published"]]:
+            for line in [answer["summary"], *([] if answer["unchanged"] else answer["published"])]:
                 if line:
                     print(f"  {line}")
     except model.ProfileError as e:

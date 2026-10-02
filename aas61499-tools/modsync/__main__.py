@@ -10,6 +10,8 @@
 Run on the module's own computer with --host localhost: push then writes the boot file in ~/forte
 and restarts the FORTE container there (elsewhere it does so over SSH).
 The AAS goes to aas/<idShort>.json; --basyx http://<host>:8081 also uploads it to an AAS server.
+--register http://<host>:8090 sends the module's profile to the registration service (modreg), which
+builds the AAS on the lab's shared model, checks it against the ontology and publishes it.
 """
 import argparse
 from pathlib import Path
@@ -39,6 +41,30 @@ def publish(status: Status | None, args, spec=None, target=None, path=None):
     if args.basyx:
         for line in aas.upload(store, args.basyx):
             print(f"  {line}")
+    if args.register:
+        register(status, args, spec, target, path)
+
+
+def register(status: Status | None, args, spec=None, target=None, path=None):
+    """Send the module's profile to the registration service; a refusal is reported, not raised."""
+    from modreg import profile as profiles          # needs the registration extra (aas-model)
+    from modreg.service import send
+    if status is not None:
+        c, snap = status.candidate, status.snapshot
+        profile = profiles.describe(c.spec, c.target, snap, status.drift, relative(c.path), f"opc.tcp://{snap.host}:4840")
+    else:
+        profile = profiles.describe(spec, target, spec_path=relative(path))
+    try:
+        code, answer = send(args.register, profile)
+    except OSError as e:
+        print(f"  registration: {args.register} not reached ({e})")
+        return
+    if code >= 400:
+        print(f"  registration refused at {answer.get('step')} (HTTP {code})")
+        for line in answer.get("reasons", [])[:20]:
+            print(f"    {line}")
+    else:
+        print(f"  registration: {'unchanged' if answer['unchanged'] else 'registered'} {answer['id_short']} at {args.register}")
 
 
 def report(status: Status):
@@ -80,6 +106,7 @@ def main():
         p = sub.add_parser(name)
         p.add_argument("--out", default=str(OUT), help="Folder for the AAS JSON files")
         p.add_argument("--basyx", help="Also upload the AAS to this AAS server, e.g. http://192.168.0.104:8081")
+        p.add_argument("--register", metavar="URL", help="Also send the module's profile to this registration service (modreg serve)")
         if name in ("describe", "push"):
             p.add_argument("spec", help="Module spec: a file, or a module's name (filling)")
         elif name == "pull":
