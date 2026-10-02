@@ -78,6 +78,9 @@
     <FB Name="Act" Type="iec61499::net::PUBLISH_1" x="25600" y="200">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
+    <FB Name="ToIdle" Type="iec61499::events::E_DELAY" x="29200" y="200">
+      <Parameter Name="DT" Value="T#1500ms" />
+    </FB>
     <EventConnections>
       <Connection Source="INIT" Destination="Control.INIT" />
       <Connection Source="Control.INITO" Destination="Owner.INIT" />
@@ -115,6 +118,9 @@
       <Connection Source="Control.RUN_STOP" Destination="RUN_STOP" />
       <Connection Source="Control.SUCCESS" Destination="SUCCESS" />
       <Connection Source="Control.FAILURE" Destination="FAILURE" />
+      <Connection Source="Control.TO_IDLE_START" Destination="ToIdle.START" />
+      <Connection Source="Control.TO_IDLE_STOP" Destination="ToIdle.STOP" />
+      <Connection Source="ToIdle.EO" Destination="Control.TO_IDLE" />
     </EventConnections>
     <DataConnections>
       <Connection Source="Module" Destination="Control.Module" />
