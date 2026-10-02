@@ -1,14 +1,19 @@
-"""The AAS type of an IEC 61499 module, on the lab's shared AAS model (``aas_model``).
+"""The AAS type of an IEC 61499 module: the structure of the resource ontology (ARSO), written with
+the lab's shared AAS model (``aas_model``, pydantic).
 
-``aas_model.ResourceTypeAAS`` is the lab's resource: an MQTT station with the skills Halt, Occupy
-and Release and a location on the planar table. A module speaks OPC UA and nothing else, and what
-makes it reconfigurable has no place there. ``ModuleTypeAAS`` is that resource with
+``aas_model.ResourceTypeAAS`` is the lab's resource: an MQTT station with a Control Component
+Instance, Variables and a location. ``ModuleTypeAAS`` is a resource as ARSO describes it, for a
+module that speaks OPC UA only:
 
-- the MQTT defaults replaced by an (empty) OPC UA interface, and no default skills or mappings;
-- per skill the elements reconfiguration needs (``ModuleSkill``): kind, contract or sequences,
-  occupied equipment, the state data point and the implementing function block;
-- Hierarchical Structures (the equipment) and Control Configuration (what runs on the controller)
-  as submodels of their own.
+- **Nameplate**, **Hierarchical Structures** (the equipment), **Asset Interfaces Description**
+  (one OPC UA interface) and **Asset Interfaces Mapping Configuration**: the shared model's classes;
+- **Skills** (ARSO's control component: Interfaces, Skills, Errors) instead of the Control
+  Component Instance: per skill its SemanticId, Operation and InterfaceReference, and what
+  reconfiguration needs (kind, parameters, contract or sequences, occupied equipment, state
+  reference, implementing function block);
+- **Operational Data** instead of Variables: the live values as data points;
+- **Parameters**: the skill parameters as deployed;
+- **Control Configuration**: what runs on the controller.
 
 A profile is the dump of such a model without what the type already says (``profile``); ``asset``
 builds the model back from it and ``environment`` the AAS. ``TYPES`` names the types a profile may
@@ -16,10 +21,11 @@ be of, so the lab's MQTT stations go through the same code.
 """
 from __future__ import annotations
 
+import copy
 import functools
 import json
 import typing
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import aas_pydantic.aas_model
 import aas_pydantic.convert_aas_instance
@@ -27,25 +33,21 @@ import aas_pydantic.convert_aas_instance
 from aas_model.builder import deep_merge
 from aas_model.constants import BASE_URL, DELEGATION_BASE
 from aas_model.id_injector import inject_ids
-from aas_model.resource_template import ResourceTypeAAS, nameplate, variables
-from aas_model.resource_template.control_component_instance import ResourceControlComponentInstance
+from aas_model.resource_template import ResourceTypeAAS, nameplate
 from aas_model.submodel_templates import (
-    Aimc, AimcMappingConfigurations, DmpAssetInterfacesDescription, DmpOpcuaInterface, ExtendedSkill, ExtendedSkills,
-    MqttInterface,
+    Aimc, AimcMappingConfigurations, DmpAssetInterfacesDescription, DmpOpcuaInterface, MqttInterface, SkillOperation,
 )
-from aas_model.submodel_templates.parameters import Parameters
-from aas_model.submodel_templates.variables import Variables
 from aas_pydantic import (
-    AAS, Property, ReferenceElement, Submodel, SubmodelElementCollection, convert_model_to_aas,
+    AAS, Property, ReferenceElement, Submodel, SubmodelElementCollection, SubmodelElementList,
+    convert_model_to_aas,
 )
-from pydantic import BaseModel
-from pydantic_core import to_jsonable_python
-from aas_pydantic.submodel_templates.control_component_instance import Parameter, Parameters as SkillParameters, Values
+from aas_pydantic.submodel_templates.capability_description import CapabilityDescription
 from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures
 from aas_pydantic.submodel_templates.nameplate import Nameplate
 from basyx.aas import model as basyx
 from basyx.aas.adapter.json import AASToJsonEncoder
-
+from pydantic import BaseModel
+from pydantic_core import to_jsonable_python
 
 
 class _Typing:
@@ -65,33 +67,23 @@ class _Typing:
 
 aas_pydantic.aas_model.typing = aas_pydantic.convert_aas_instance.typing = _Typing()
 
-SKILL = f"{BASE_URL}/ControlComponent/Skill"
-CONFIGURATION = f"{BASE_URL}/ControlConfiguration"
+ARSO = f"{BASE_URL}/ARSO"
+SKILL = f"{BASE_URL}/skills"
 RESOURCE_TEMPLATE = f"{BASE_URL}/aas/templates/resource"
 
 
-# Skills: what reconfiguration needs to know about each ------------------------------------------
+# Skills (ARSO control component) ------------------------------------------------------------------
 
-class ParameterValues(Values):
-    """The values a skill parameter accepts: its range, default and unit."""
-    Default: Optional[Property] = None
-    Minimum: Optional[Property] = None
-    Maximum: Optional[Property] = None
-    Unit: Optional[Property] = None
-
-
-class ModuleSkillParameter(Parameter):
-    Values: ParameterValues = ParameterValues()
-
-
-class ModuleSkillParameters(SkillParameters):
-    Parameter: Dict[str, ModuleSkillParameter] = {}
+class SkillParameters(SubmodelElementCollection):
+    """The skill's parameters as Properties: the value is the deployed one, the qualifiers Unit,
+    Minimum, Maximum and Default the declaration."""
+    description: str = "The parameters of the skill; value: as deployed, qualifiers: the declaration."
+    Parameter: Dict[str, Property] = {}
 
 
 class SkillContract(SubmodelElementCollection):
     """What a skill primitive needs before it starts, holds while it runs and reaches when it ends:
     conditions over the equipment's inputs, as the module spec states them."""
-    semantic_id: str = f"{SKILL}/Contract/1/0"
     description: str = "Precondition, postcondition or duration, invariant and timeout of a skill primitive."
     Requires: Optional[Property] = None
     Ensures: Optional[Property] = None
@@ -101,66 +93,113 @@ class SkillContract(SubmodelElementCollection):
 
 
 class StepBindings(SubmodelElementCollection):
-    semantic_id: str = f"{SKILL}/Step/Bindings/1/0"
     description: str = "Values bound to the parameters of the step's skill: a constant, or the name of a parameter of the composite."
     Binding: Dict[str, Property] = {}
 
 
 class SkillStep(SubmodelElementCollection):
-    semantic_id: str = f"{SKILL}/Step/1/0"
+    """One use of a skill in a sequence. ``Skill`` refers to the skill in this submodel, or names
+    it (an external reference) if it only runs as a step and so is not listed."""
     description: str = "One use of a skill in a sequence."
-    Skill: ReferenceElement = ReferenceElement(
-        semantic_id=f"{SKILL}/Step/Skill/1/0", description="The skill this step runs.")
+    Skill: ReferenceElement = ReferenceElement(description="The skill this step runs.")
     InstancePath: Optional[Property] = None
     Bindings: Optional[StepBindings] = None
 
 
-class SkillSequence(SubmodelElementCollection):
-    """The steps of a module level skill, in the order of their idShorts (Step01, Step02, ...)."""
-    semantic_id: str = f"{SKILL}/Sequence/1/0"
-    description: str = "A sequence of steps."
-    Step: Dict[str, SkillStep] = {}
+class SkillSequence(SubmodelElementList):
+    description: str = "The steps of a module level skill, in order."
+    item_type: typing.ClassVar = SkillStep
+    value: List[SkillStep] = []
+    type_value_list_element: Optional[str] = "SubmodelElementCollection"
 
 
-class SkillOccupies(SubmodelElementCollection):
-    semantic_id: str = f"{SKILL}/Occupies/1/0"
-    description: str = "The equipment (nodes of the Hierarchical Structures) the skill locks while it runs."
-    Node: Dict[str, ReferenceElement] = {}
+class SkillReferences(SubmodelElementList):
+    item_type: typing.ClassVar = ReferenceElement
+    value: List[ReferenceElement] = []
+    type_value_list_element: Optional[str] = "ReferenceElement"
 
 
 class SkillImplementation(SubmodelElementCollection):
-    semantic_id: str = f"{SKILL}/Implementation/1/0"
     description: str = "The IEC 61499 function block that implements the skill."
     InstancePath: Optional[Property] = None
     FBType: Optional[Property] = None
     TypeHash: Optional[Property] = None
 
 
-class ModuleSkill(ExtendedSkill):
-    """A skill of a module: the lab's skill (native interface, delegated operation) plus what
-    composing and checking skills needs. Every addition is optional."""
-    Parameters: ModuleSkillParameters = ModuleSkillParameters()
+class ModuleSkill(SubmodelElementCollection):
+    """A skill as ARSO has it: SemanticId, the Operation (named like the skill) and the reference
+    to the action of the interface it invokes are mandatory; the rest is for skills that can be
+    reconfigured."""
+    SemanticId: Property = Property(description="The skill's own semantic identifier.")
+    Operation: Dict[str, SkillOperation] = {}       # one, named like the skill
+    InterfaceReference: ReferenceElement = ReferenceElement(
+        description="The action of the Asset Interfaces Description this skill invokes.")
     Kind: Optional[Property] = None                 # Primitive | Composite
+    Parameters: Optional[SkillParameters] = None
     Contract: Optional[SkillContract] = None        # primitives
+    Uses: Optional[SkillReferences] = None          # composites: the skills they use
     Execute: Optional[SkillSequence] = None         # composites: what Start runs
     Stop: Optional[SkillSequence] = None            # composites: what Stop runs
-    Occupies: Optional[SkillOccupies] = None
+    Occupies: Optional[SkillReferences] = None      # the equipment locked while the skill runs
     StateReference: Optional[ReferenceElement] = None
     Implementation: Optional[SkillImplementation] = None
 
 
-class ModuleSkills(ExtendedSkills):
+class SkillInterfaces(SubmodelElementCollection):
+    description: str = "Device-level interfaces; empty: each skill refers to its action of the Asset Interfaces Description."
+
+
+class SkillSet(SubmodelElementCollection):
+    description: str = "The skills of the resource."
     Skill: Dict[str, ModuleSkill] = {}
 
 
-class ModuleControlComponentInstance(ResourceControlComponentInstance):
-    Skills: ModuleSkills = ModuleSkills()
+class SkillError(SubmodelElementCollection):
+    ErrorCode: Property = Property(value_type="xs:integer")
+
+
+class SkillErrors(SubmodelElementCollection):
+    description: str = "The error codes a command or a skill answers with."
+    Error: Dict[str, SkillError] = {}
+
+
+class Skills(Submodel):
+    """ARSO's Skills submodel: the flattened Control Component Type (Interfaces, Skills, Errors)."""
+    semantic_id: str = f"{ARSO}/Skills/1/0/Submodel"
+    description: str = "The skills the resource offers."
+    Interfaces: SkillInterfaces = SkillInterfaces()
+    Skills: SkillSet = SkillSet()
+    Errors: SkillErrors = SkillErrors()
+
+
+# Operational Data and Parameters ------------------------------------------------------------------
+
+class OperationalData(Submodel):
+    """The live values of the resource. A data point is a decimal Property with the concept it
+    stands for as semanticId; the Asset Interfaces Mapping Configuration feeds it."""
+    semantic_id: str = f"{ARSO}/OperationalData/1/0/Submodel"
+    description: str = "Live values of the resource: state, occupation, skill states and results, equipment inputs."
+    Datapoint: Dict[str, Property] = {}
+
+
+class ParameterEntry(SubmodelElementCollection):
+    """A parameter as deployed: its value and the property of the interface that shows it."""
+    InterfaceReference: ReferenceElement = ReferenceElement(
+        description="The property of the Asset Interfaces Description that shows the parameter.")
+    Value: Property = Property()
+    Unit: Optional[Property] = None
+
+
+class ModuleParameters(Submodel):
+    semantic_id: str = f"{ARSO}/Parameters/1/0/Submodel"
+    description: str = "The parameters of the resource's skills as deployed."
+    Parameter: Dict[str, ParameterEntry] = {}
 
 
 # Control Configuration: what runs on the controller -----------------------------------------------
 
 class ControlRuntime(SubmodelElementCollection):
-    semantic_id: str = f"{CONFIGURATION}/Runtime/1/0"
+    semantic_id: str = f"{ARSO}/ControlConfiguration/Runtime/1/0"
     description: str = "The runtime that executes the control program."
     Name: Property = Property(value="Eclipse 4diac FORTE")
     ManagementEndpoint: Property = Property()
@@ -168,20 +207,20 @@ class ControlRuntime(SubmodelElementCollection):
 
 
 class ControlType(SubmodelElementCollection):
-    semantic_id: str = f"{CONFIGURATION}/Type/1/0"
+    semantic_id: str = f"{ARSO}/ControlConfiguration/Type/1/0"
     description: str = "A function block type in use, with the hash the runtime reports for it."
     Name: Property = Property()
     Hash: Property = Property()
 
 
 class ControlTypes(SubmodelElementCollection):
-    semantic_id: str = f"{CONFIGURATION}/Types/1/0"
+    semantic_id: str = f"{ARSO}/ControlConfiguration/Types/1/0"
     description: str = "The function block types the running program uses."
     Type: Dict[str, ControlType] = {}
 
 
 class ControlDifferences(SubmodelElementCollection):
-    semantic_id: str = f"{CONFIGURATION}/Differences/1/0"
+    semantic_id: str = f"{ARSO}/ControlConfiguration/Differences/1/0"
     description: str = "Where the running program differs from the one its source generates."
     Difference: Dict[str, Property] = {}
 
@@ -217,21 +256,24 @@ def structure() -> HierarchicalStructures:
                                   ArcheType=ArcheType(value="OneDown"))
 
 
-class ModuleTypeAAS(ResourceTypeAAS):
-    """Resource AAS of an IEC 61499 module: OPC UA only, with its equipment and control program."""
+class ModuleTypeAAS(AAS):
+    """Resource AAS of an IEC 61499 module, in ARSO's structure."""
+    model_config = {"extra": "forbid"}
+
     nameplate: Nameplate = nameplate()
+    hierarchical_structures: HierarchicalStructures = structure()
     asset_interfaces_description: ModuleInterfaces = ModuleInterfaces(id_short="AssetInterfacesDescription")
-    control_component_instance: ModuleControlComponentInstance = ModuleControlComponentInstance(
-        id_short="ControlComponentInstance")
-    variables: Variables = variables()
-    parameters: Parameters = Parameters(id_short="Parameters")
+    skills: Skills = Skills(id_short="Skills")
+    operational_data: OperationalData = OperationalData(id_short="OperationalData")
     asset_interfaces_mapping_configuration: Aimc = Aimc(
         id_short="AssetInterfacesMappingConfiguration", MappingConfigurations=AimcMappingConfigurations(value=[]))
-    hierarchical_structures: HierarchicalStructures = structure()
     control_configuration: ControlConfiguration = ControlConfiguration(id_short="ControlConfiguration")
+    # A module without skill parameters has no Parameters submodel.
+    parameters: Optional[ModuleParameters] = None
+    capability_description: Optional[CapabilityDescription] = None
 
 
-TYPES: dict[str, type[ResourceTypeAAS]] = {"ResourceTypeAAS": ResourceTypeAAS, "ModuleTypeAAS": ModuleTypeAAS}
+TYPES: dict[str, type[AAS]] = {"ResourceTypeAAS": ResourceTypeAAS, "ModuleTypeAAS": ModuleTypeAAS}
 # Keys of a profile that are about building the AAS, not part of it.
 BUILD_KEYS = ("aas_type", "delegation_base", "global_asset_id")
 
@@ -292,6 +334,8 @@ def slim(node, dumped, known, declared=None, name=None):
                 out[field] = part
         if new and declared is not None and declared is not type(node):
             out["modelType"] = type(node).__name__
+        if isinstance(node, aas_pydantic.Reference):
+            out["type_"] = node.type_                # a field of the base class takes either kind
         return out if out or new else SAME
     if isinstance(node, dict) and any(isinstance(v, BaseModel) for v in node.values()):
         start = known if isinstance(known, dict) else {}
@@ -320,7 +364,7 @@ def difference(a, b, path="") -> str | None:
     return None if a == b else f"{path}: {str(a)[:80]!r} became {str(b)[:80]!r}"
 
 
-def profile(asset: ResourceTypeAAS, **build) -> dict:
+def profile(asset: AAS, **build) -> dict:
     """The asset as a profile: its dump without what its type and its elements' classes say anyway.
     Reading the profile has to give the asset back, which is checked here."""
     full = asset.model_dump(mode="json")
@@ -334,9 +378,10 @@ def profile(asset: ResourceTypeAAS, **build) -> dict:
     return result
 
 
-def validated(profile: dict) -> ResourceTypeAAS:
+def validated(profile: dict) -> AAS:
     """The model a profile describes, as written (self references not filled in yet)."""
-    data = {k: v for k, v in profile.items() if k not in BUILD_KEYS}
+    # A copy: validation fills the dictionaries it is given with the elements it makes of them.
+    data = copy.deepcopy({k: v for k, v in profile.items() if k not in BUILD_KEYS})
     aas_type = profile.get("aas_type", "ResourceTypeAAS")
     merged = deep_merge(defaults(aas_type, data), data)
     try:
@@ -345,14 +390,14 @@ def validated(profile: dict) -> ResourceTypeAAS:
         raise ProfileError(str(e)) from e
 
 
-def asset(profile: dict) -> ResourceTypeAAS:
+def asset(profile: dict) -> AAS:
     """The validated model of a profile, with ids and self references filled in."""
     model = validated(profile)
     inject_ids(model, delegation_base=profile.get("delegation_base") or DELEGATION_BASE)
     return model
 
 
-def environment(model: ResourceTypeAAS, global_asset_id: str | None = None) -> dict:
+def environment(model: AAS, global_asset_id: str | None = None) -> dict:
     """The AAS of a model: its shell and submodels as an AAS JSON environment. The shared model
     names the asset like the shell; ``global_asset_id`` gives it its own id."""
     store = convert_model_to_aas(model)
