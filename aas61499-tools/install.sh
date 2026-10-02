@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Install the IEC 61499 tools: modsync (read what runs on a module, compare it with its spec,
 # describe it as an AAS, push changes and rewire it online), modgen (module spec -> 4diac
-# project) and iec61499 (management commands, boot files).
+# project), iec61499 (management commands, boot files) and modreg (a module's profile and the
+# registration service; needs EXTRAS with "registration").
 #
 #   curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/aas61499-tools/install.sh | bash
 #
@@ -17,11 +18,14 @@
 #   IEC61499_HOME  where the repository goes (default ~/iec61499-aas-reconfig)
 #   REF            branch or tag (default main)
 #   REPO_URL       clone from here instead of GitHub
+#   EXTRAS         Python extras to install (default aas,opcua); add "registration" for modreg:
+#                  the lab's shared AAS model, which needs internet access when it is imported
 set -euo pipefail
 
 REPO_URL="${REPO_URL:-https://github.com/AAUSmartProductionLab/iec61499-mgmt-py.git}"
 REF="${REF:-main}"
 HOME_DIR="${IEC61499_HOME:-$HOME/iec61499-aas-reconfig}"
+EXTRAS="${EXTRAS:-aas,opcua}"
 BIN="$HOME/.local/bin"
 
 say() { printf '\033[1m==> %s\033[0m\n' "$*"; }
@@ -45,14 +49,14 @@ fi
 say "Installing the Python packages"
 [ -x "$HOME_DIR/.venv/bin/python" ] || python3 -m venv "$HOME_DIR/.venv"
 "$HOME_DIR/.venv/bin/python" -m pip install --quiet --upgrade pip
-"$HOME_DIR/.venv/bin/python" -m pip install --quiet -e "$HOME_DIR[aas,opcua]"
+"$HOME_DIR/.venv/bin/python" -m pip install --quiet -e "$HOME_DIR[$EXTRAS]"
 
 mkdir -p "$BIN"
-for tool in modsync modgen iec61499; do
+for tool in modsync modgen iec61499 modreg; do
     ln -sf "$HOME_DIR/.venv/bin/$tool" "$BIN/$tool"
 done
 
-say "Installed: modsync, modgen, iec61499 (in $BIN)"
+say "Installed: modsync, modgen, iec61499, modreg (in $BIN)"
 case ":$PATH:" in
     *":$BIN:"*) ;;
     *) echo "  note  $BIN is not on your PATH; add it:  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.profile  (then log in again)";;

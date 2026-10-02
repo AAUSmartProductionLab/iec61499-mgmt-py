@@ -15,7 +15,7 @@ follows once everything is finalised.
 | --- | --- | --- |
 | `iec61499-mgmt-py/` | iec61499-mgmt-py | `iec61499_mgmt`: FORTE management library (typed commands, client, networks and plans, `.sys` flattening, boot files, type library, read-back verification) |
 | `iec61499-skill-lib/` | iec61499-skill-lib | `modgen`: generator from module specs to 4diac projects; `ModLib`: the generated module library (occupation, PackML module state manager, skill state machine, composite control, IO primitives for sim, GPIO, PWM, Modbus); `stdtypes`: IDE declarations of standard FBs |
-| `aas61499-tools/` | aas61499-tools | `modsync`: module ⇄ spec ⇄ AAS (read what runs, report drift, describe as AAS, push changes) |
+| `aas61499-tools/` | aas61499-tools | `modsync`: module ⇄ spec ⇄ AAS (read what runs, report drift, describe as AAS, push changes); `modreg`: a module's profile on the lab's shared AAS model, the ontology check and the registration service |
 | `runtime/` | runtime | FORTE build: FBE configurations (PC, Pi), FORTE patches (IO handle fix, sysfs PWM module), header shims, IDE validation and export (`validate.ps1`), `build-modules.ps1`, `build-runtime.ps1` |
 | `deploy/` | deploy | Raspberry Pi: FORTE in Docker (`pi/`), install and deployment (`pi.py`) |
 | `cell/` | the filling line | `modules/`: module specs; `control/`: generated 4diac projects (FillingModule, StopperingModule, FillerModule); `sim/`: Modbus simulator, `run_module.py`, OPC UA client |
@@ -68,6 +68,30 @@ Running an installer again updates it; the module's program (`~/forte/boot/forte
 The runtime installer downloads FORTE as the asset `forte-aarch64` of the latest GitHub release:
 publish a new build with `runtime/package-release.ps1` (or set `FORTE_FILE` to a binary copied
 to the Pi). Settings are listed at the top of each script.
+
+## Registering a module
+
+A module describes itself with a **profile**: its AAS on the lab's shared pydantic model
+([aas-model](https://github.com/tristan-schwoerer/aas-model)) without what its type says anyway.
+The registration service reads the profile into the model, builds the AAS from it, checks the
+AAS against the ontology and publishes it to an AAS server.
+
+```powershell
+python -m pip install -e ".[registration]"                     # aas-model, BaSyx SDK 2.1, rdflib
+modreg profile filling --target pi                             # profiles/FillingModuleAAS.json, from the spec
+modreg check filling --target pi --ontology ontology/ARSO      # does its AAS follow the ontology?
+modreg serve --ontology ontology/ARSO --basyx http://<host>:8081   # the service, on port 8090
+modreg register filling --target pi --service http://<host>:8090   # send the profile to it
+modsync pull --host 192.168.0.191 --register http://<host>:8090    # ... or with what runs on the module
+```
+
+`--register` works with `modsync describe`, `pull`, `push` and `watch` (a module is registered
+when it comes online or changes). The service keeps each profile and AAS in its `--store`
+folder; a profile registered again unchanged is not published again. A broken restriction of the
+ontology refuses the registration; `--strict` also refuses what the ontology does not describe.
+`ModuleTypeAAS` (`modreg/model.py`) is the lab's resource type for an OPC UA module; profiles of
+the lab's own `ResourceTypeAAS` go through the same service. aas-model loads its message schemas
+from the lab's GitHub pages when it is imported, unless `MQTT_SCHEMAS_DIR` names a local copy.
 
 In the 4diac IDE (a workspace outside the repository), import `iec61499-skill-lib/ModLib` and
 the projects in `cell/control/` without copying them.
