@@ -39,6 +39,7 @@
         <With Var="ExecError" />
       </Event>
       <Event Name="STOP_DONE" Type="Event" />
+      <Event Name="TO_IDLE" Type="Event" />
     </EventInputs>
     <EventOutputs>
       <Event Name="INITO" Type="EInit">
@@ -83,6 +84,8 @@
       <Event Name="ACT" Type="Event">
         <With Var="Delta" />
       </Event>
+      <Event Name="TO_IDLE_START" Type="Event" />
+      <Event Name="TO_IDLE_STOP" Type="Event" />
     </EventOutputs>
     <InputVars>
       <VarDeclaration Name="Module" Type="WSTRING" />
@@ -138,6 +141,7 @@
       </ECState>
       <ECState Name="Succeeded" x="990" y="330">
         <ECAction Algorithm="Alg_Succeeded" Output="PUB" />
+        <ECAction Output="TO_IDLE_START" />
       </ECState>
       <ECState Name="Failed" x="1410" y="330">
         <ECAction Algorithm="Alg_Failed" Output="PUB" />
@@ -147,10 +151,12 @@
       </ECState>
       <ECState Name="GoUa" x="570" y="560">
         <ECAction Algorithm="Alg_GoUa" Output="ACT" />
+        <ECAction Output="TO_IDLE_STOP" />
         <ECAction Output="GO" />
       </ECState>
       <ECState Name="GoParent" x="990" y="560">
         <ECAction Algorithm="Alg_GoParent" Output="ACT" />
+        <ECAction Output="TO_IDLE_STOP" />
         <ECAction Output="GO" />
       </ECState>
       <ECState Name="Halt" x="1410" y="560">
@@ -259,6 +265,7 @@
       <ECTransition Source="Halt" Destination="Stopping" Condition="1" x="0" y="0" />
       <ECTransition Source="RunStop" Destination="StopProc" Condition="1" x="0" y="0" />
       <ECTransition Source="Succeed" Destination="Succeeded" Condition="1" x="0" y="0" />
+      <ECTransition Source="Succeeded" Destination="Idle" Condition="TO_IDLE" x="0" y="0" />
       <ECTransition Source="Fail" Destination="Failed" Condition="1" x="0" y="0" />
       <ECTransition Source="Interrupted" Destination="Failed" Condition="1" x="0" y="0" />
       <ECTransition Source="AbortChk" Destination="AbortActive" Condition="Active" x="0" y="0" />

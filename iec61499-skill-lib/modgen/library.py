@@ -454,12 +454,15 @@ SKILL_WAIT = {"Idle": ("Idle", 0), "Running": ("Running", 1), "Stopping": ("Stop
               "StopProc": ("Stopping", 3), "Succeeded": ("Succeeded", 4), "Failed": ("Failed", 5),
               "Aborted": ("Aborted", 6)}
 READY = ["Idle", "Succeeded", "Failed"]
+# How long a skill shows Succeeded before it returns to Idle by itself.
+SUCCEEDED_FOR = "T#1500ms"
 
 
 def make_skill_control(p: Project):
     """SKILL_Control: the state machine every skill shares (primitive or module level skill).
 
-    Idle/Succeeded/Failed -Start-> Running -> Succeeded | Failed(ErrorID). Stop, a parent HALT or (for
+    Idle/Succeeded/Failed -Start-> Running -> Succeeded | Failed(ErrorID); Succeeded returns to Idle
+    by itself after SUCCEEDED_FOR (TO_IDLE_START -> TO_IDLE). Stop, a parent HALT or (for
     a skill started over OPC UA) the module entering Stopping -> Stopping: the execution is halted, then the stop procedure runs
     (RUN_STOP -> STOP_DONE) -> Failed(Interrupted). Abort, a parent ABORT or the module entering
     Aborting -> Aborted (outputs off at once); Reset, a parent RESET or the module Clearing -> Idle
@@ -472,11 +475,11 @@ def make_skill_control(p: Project):
     ei = {"INIT": (["Module", "UaRoot", "UaPath"], "EInit"),
           **{f"CMD_{k}": v for k, v in cmds.items()},
           "OWNER_CHG": ["Owner"], "MOD_CHG": ["ModState"], "START": [], "HALT": [], "ABORT": [], "RESET": [],
-          "EXEC_DONE": [], "EXEC_FAILED": ["ExecError"], "STOP_DONE": []}
+          "EXEC_DONE": [], "EXEC_FAILED": ["ExecError"], "STOP_DONE": [], "TO_IDLE": []}
     eo = {"INITO": (["IdStart", "IdStop", "IdAbort", "IdReset", "IdPub", "IdAct"], "EInit"),
           **{f"RSP_{k}": ["Accepted", "RspError"] for k in cmds},
           "PUB": ["State", "ErrorID"], "GO": ["FromUa"], "HALT_O": [], "ABORT_O": [], "RESET_O": [], "RUN_STOP": [],
-          "SUCCESS": [], "FAILURE": ["ErrorID"], "ACT": ["Delta"]}
+          "SUCCESS": [], "FAILURE": ["ErrorID"], "ACT": ["Delta"], "TO_IDLE_START": [], "TO_IDLE_STOP": []}
     iv = {"Module": "WSTRING", "UaRoot": "WSTRING", "UaPath": "WSTRING", "S_Start": "WSTRING", "InRange": "BOOL",
           "EqFree": "BOOL", "S_Stop": "WSTRING", "S_Abort": "WSTRING", "S_Reset": "WSTRING", "Owner": "WSTRING",
           "ModState": "USINT", "ExecError": "UINT"}
@@ -497,10 +500,11 @@ def make_skill_control(p: Project):
                                f"IdPub := {ua('WRITE', base, lit('/State;'), base, lit('/ErrorID'))};",
                                f"IdAct := {loc('Module', 'activity')};"]), "INITO")
     for w, (state, here) in SKILL_WAIT.items():
-        b.state(w, f"State := {s[state]};\nHere := {here};", "PUB")
-    # Entry actions.
-    b.state("GoUa", "Active := TRUE;\nDelta := 1;\nErrorID := 0;\nFromUa := TRUE;", "ACT", ["GO"])
-    b.state("GoParent", "Active := TRUE;\nDelta := 1;\nErrorID := 0;\nFromUa := FALSE;", "ACT", ["GO"])
+        b.state(w, f"State := {s[state]};\nHere := {here};", "PUB", ["TO_IDLE_START"] if w == "Succeeded" else ())
+    # Entry actions; a start stops the timer of a Succeeded it leaves.
+    b.state("GoUa", "Active := TRUE;\nDelta := 1;\nErrorID := 0;\nFromUa := TRUE;", "ACT", ["TO_IDLE_STOP", "GO"])
+    b.state("GoParent", "Active := TRUE;\nDelta := 1;\nErrorID := 0;\nFromUa := FALSE;", "ACT",
+            ["TO_IDLE_STOP", "GO"])
     b.state("Halt", None, "HALT_O")
     b.state("RunStop", None, "RUN_STOP")
     b.state("Succeed", "Active := FALSE;\nDelta := -1;\nErrorID := 0;", "ACT", ["SUCCESS"])
@@ -559,6 +563,7 @@ def make_skill_control(p: Project):
     b.trans("Halt", "Stopping", "1")
     b.trans("RunStop", "StopProc", "1")
     b.trans("Succeed", "Succeeded", "1")
+    b.trans("Succeeded", "Idle", "TO_IDLE")
     b.trans("Fail", "Failed", "1")
     b.trans("Interrupted", "Failed", "1")
     b.trans("AbortChk", "AbortActive", "Active")
@@ -611,6 +616,7 @@ def make_skill_core(p: Project):
         c.fb(f"Ua{m}", p.server(2, 1))
     c.fb("PubState", p.publish(2))
     c.fb("Act", p.publish(1), QI="TRUE")
+    c.fb("ToIdle", STD["E_DELAY"], DT=SUCCEEDED_FOR)
     c.chain("INIT", ["Control", "Owner", "Mode", *[f"Ua{m}" for m in methods], "PubState", "Act"],
             ["PubState.REQ", "INITO"])
     c.da("Module", "Control.Module", "Owner.Module", "Mode.Module")
@@ -646,6 +652,9 @@ def make_skill_core(p: Project):
     c.da("ExecError", "Control.ExecError")
     for ev in ["GO", "HALT_O", "ABORT_O", "RESET_O", "RUN_STOP", "SUCCESS", "FAILURE"]:
         c.ev(f"Control.{ev}", ev)
+    c.ev("Control.TO_IDLE_START", "ToIdle.START")
+    c.ev("Control.TO_IDLE_STOP", "ToIdle.STOP")
+    c.ev("ToIdle.EO", "Control.TO_IDLE")
     c.da("Control.FromUa", "FromUa")
     c.write()
 
