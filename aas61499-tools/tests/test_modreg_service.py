@@ -125,6 +125,9 @@ def test_registering_a_module_publishes_its_aas(service, aas_server, stoppering)
     status, again = send(url, profile)
     assert status == 200 and again["unchanged"] and again["registered_at"] == answer["registered_at"]
     assert len(aas_server.calls) == before
+    # Read again later with nothing changed on the module: still the same registration.
+    later = {**profile, "control_configuration": {**profile["control_configuration"], "ReadAt": {"value": "2026-10-02T12:00:00+00:00"}}}
+    assert send(url, later)[1]["unchanged"] and len(aas_server.calls) == before
 
     # A changed profile replaces the AAS.
     changed = json.loads(json.dumps(profile))
@@ -188,3 +191,15 @@ def test_the_command_line(service, tmp_path, capsys):
     assert "registered: StopperingModuleAAS" in capsys.readouterr().out
     assert main(["register", str(written), "--service", url]) == 0
     assert "unchanged: StopperingModuleAAS" in capsys.readouterr().out
+
+
+def test_modsync_registers_the_module_it_describes(service, aas_server, tmp_path, monkeypatch, capsys):
+    from modsync.__main__ import main as modsync
+
+    url, registry = service
+    monkeypatch.setattr("sys.argv", ["modsync", "describe", "stoppering", "--target", "pi", "--out", str(tmp_path / "aas"),
+                                     "--register", url])
+    modsync()
+    assert f"registration: registered StopperingModuleAAS at {url}" in capsys.readouterr().out
+    assert [r["id_short"] for r in registry.registrations()] == ["StopperingModuleAAS"]
+    assert aas_server.calls[-1] == "POST shells"

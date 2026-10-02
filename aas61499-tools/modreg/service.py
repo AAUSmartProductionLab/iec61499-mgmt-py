@@ -65,7 +65,10 @@ class Registration:
 
 
 def digest(profile: dict) -> str:
-    return hashlib.sha256(json.dumps(profile, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    """SHA-256 of what a profile says, which the time it was read at is not part of."""
+    said = {**profile, "control_configuration": {k: v for k, v in (profile.get("control_configuration") or {}).items()
+                                                 if k != "ReadAt"}}
+    return hashlib.sha256(json.dumps(said, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
 def b64(identifier: str) -> str:
