@@ -8,7 +8,8 @@ properties say how an element of an AAS is recognised as a member of a class:
 - ``arso:parentClass`` with ``arso:idShort``: by its idShort below a parent of that class
   (``arso:transitiveParentClass``: below it at any depth);
 - ``arso:parentClass`` alone: every child of that parent with the class's AAS model type that no
-  idShort rule claims;
+  idShort rule claims (an item of a list has neither idShort nor, often, a semanticId of its own, so
+  there this also holds for a class that is otherwise recognised by its semanticId);
 - ``arso:unconditionalAasType``: every element of that AAS model type.
 
 ``Blueprint`` reads a folder of Turtle files once; ``check`` gives every element of an AAS (the JSON
@@ -191,8 +192,9 @@ class Blueprint:
     def fits(self, c: URIRef, model_type: str) -> bool:
         return self.model_type.get(c) in (None, model_type)
 
-    def recognise(self, element: dict, parent: set[URIRef], ancestors: set[URIRef]) -> set[URIRef]:
-        """The ontology classes an element belongs to, given those of its parent and of everything above."""
+    def recognise(self, element: dict, parent: set[URIRef], ancestors: set[URIRef], item: bool = False) -> set[URIRef]:
+        """The ontology classes an element belongs to, given those of its parent and of everything
+        above; ``item``: it is an item of a list."""
         mt = element.get("modelType", "")
         below = lambda c: bool(self.parents[c] & parent or self.above[c] & ancestors)       # noqa: E731
         anchored = lambda c: bool(self.parents[c] or self.above[c])                         # noqa: E731
@@ -203,7 +205,7 @@ class Blueprint:
             found = {c for c in self.classes if id_short in self.id_short[c] and below(c) and self.fits(c, mt)}
         if not found:
             claimed_by_semantic = {c for v in self.by_semantic.values() for c in v}
-            found = {c for c in self.classes if not self.id_short[c] and c not in claimed_by_semantic
+            found = {c for c in self.classes if not self.id_short[c] and (item or c not in claimed_by_semantic)
                      and self.parents[c] & parent and self.model_type[c] == mt}
         found |= self.everywhere.get(mt, set())
         for c in self.by_value:
@@ -304,9 +306,9 @@ class Check:
         if finding not in self.report.findings:
             self.report.findings.append(finding)
 
-    def element(self, path: str, element: dict, parent: set[URIRef], ancestors: set[URIRef]) -> set[URIRef]:
+    def element(self, path: str, element: dict, parent: set[URIRef], ancestors: set[URIRef], item: bool = False) -> set[URIRef]:
         b = self.blueprint
-        classes = b.recognise(element, parent, ancestors)
+        classes = b.recognise(element, parent, ancestors, item)
         self.report.classes[path] = sorted(name(c) for c in classes)
         if not classes and parent & b.described:
             what = semantic_ids(element)[:1] or ["no semanticId"]
@@ -316,7 +318,8 @@ class Check:
         children = []
         for i, child in enumerate(element.get(member_name) or [] if member_name else []):
             child_path = f"{path}/{child.get('idShort') or f'[{i}]'}"
-            children.append((child, self.element(child_path, child, classes, ancestors | classes)))
+            children.append((child, self.element(child_path, child, classes, ancestors | classes,
+                                                 element["modelType"] == "SubmodelElementList")))
         self.restrictions(path, element, classes, {"children": children})
         return classes
 

@@ -28,7 +28,8 @@ t:Parts a owl:Class ; rdfs:subClassOf aas:SubmodelElementCollection ; t:parentCl
 t:Part a owl:Class ; rdfs:subClassOf aas:SubmodelElementCollection ; t:parentClass t:Parts ;
   rdfs:subClassOf [ a owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
                     owl:someValuesFrom t:Size ] .
-t:Size a owl:Class ; rdfs:subClassOf aas:Property ; t:semanticId "urn:size" ;
+t:Sizes a owl:Class ; rdfs:subClassOf aas:SubmodelElementList ; t:parentClass t:Plate ; t:idShort "Sizes" .
+t:Size a owl:Class ; t:parentClass t:Sizes , t:Part ; rdfs:subClassOf aas:Property ; t:semanticId "urn:size" ;
   rdfs:subClassOf [ a owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Property/value> ;
                     owl:allValuesFrom [ a rdfs:Datatype ; owl:oneOf ( "S" "L" ) ] ] .
 """
@@ -102,3 +103,12 @@ def test_what_the_ontology_does_not_describe_is_reported_not_refused(tiny):
     env = small(element("Property", "Maker"))
     env["submodels"].append(stranger)
     assert "Other: submodel (urn:other) is not in the ontology" in "\n".join(check(env, tiny).lines())
+
+
+def test_an_item_of_a_list_is_recognised_by_its_list(tiny):
+    """Items have no idShort, and builders leave their semanticId out: the list says what they are."""
+    sizes = element("SubmodelElementList", "Sizes", value=[{"modelType": "Property", "value": "S"},
+                                                           {"modelType": "Property", "value": "XL"}])
+    report = check(small(element("Property", "Maker"), sizes), tiny)
+    assert report.classes["Plate/Sizes/[0]"] == ["Size"]
+    assert [str(f) for f in report.errors] == ["error: Plate/Sizes/[1]: Size value has to be one of L, S"]
