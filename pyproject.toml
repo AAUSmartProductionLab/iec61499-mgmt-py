@@ -14,7 +14,8 @@ opcua = ["asyncua>=1.1"]
 aas = ["basyx-python-sdk>=2,<3"]
 # The registration service (modreg): the lab's shared AAS model and the ontology check.
 registration = [
-    "aas-model @ git+https://github.com/tristan-schwoerer/aas-model.git@3e73c153b50b977c320a7257975bd1ba990c1e1f",
+    # The archive, not git+: pip would fetch the submodules, whose paths are too long for Windows.
+    "aas-model @ https://github.com/tristan-schwoerer/aas-model/archive/3e73c153b50b977c320a7257975bd1ba990c1e1f.zip",
     "basyx-python-sdk>=2.1,<3",
     "rdflib>=7,<8",
 ]
