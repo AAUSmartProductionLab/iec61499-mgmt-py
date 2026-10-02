@@ -143,24 +143,30 @@ def test_a_new_module_level_skill_is_created_online_while_another_runs(module, t
     created by management commands while the module runs another skill; FORTE is neither rebuilt
     nor restarted, and the boot file saved afterwards brings up the same program."""
     ua, a, S = module.ua, "orchestrator-1", SKILL_STATES
+    DONE = (S["Succeeded"], S["Idle"])          # looked at afterwards, a skill that succeeded may be back in Idle
     assert ua.call("Occupation/Occupy", a) == [True, 0]
     assert ua.call("Module/Reset", a) == [True, 0]
     ua.expect("Module/State", STATES["Idle"], timeout=15)
     assert ua.call("Module/Start", a) == [True, 0]
     ua.expect("Module/State", STATES["Execute"])
+    dispensing = ua.record("Skills/Dispensing/State")
     assert ua.call("Skills/Dispensing/Start", a) == [True, 0]
     ua.expect("Skills/Dispensing/State", S["Running"], timeout=1)
     new, deployer = composed("pc"), Recorder()
     done = push(module.client, module.host, module.port, new, deployer, overrides=module.overrides)
     assert done[0].startswith("create DoubleDose: ") and "verified by read-back" in done, done
-    ua.expect("Skills/Dispensing/State", S["Succeeded"], timeout=10)        # the running skill went on
+    # The running skill went on (it may have ended while the new one was created).
+    deadline = time.monotonic() + 10
+    while S["Succeeded"] not in dispensing and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert S["Succeeded"] in dispensing and S["Failed"] not in dispensing, dispensing
     assert ua.value("Skills/DoubleDose/Parameters/Dose") == 0.5
     assert ua.call("Skills/DoubleDose/Start", a, 20.0) == [False, ERRORS["OutOfRange"]]
     assert ua.call("Skills/DoubleDose/Start", a, 0.3) == [True, 0]
     ua.expect("Skills/DoubleDose/State", S["Succeeded"], timeout=10)
     assert ua.value("Skills/DoubleDose/Results/Weight") == pytest.approx(2.0)
     assert ua.value("Skills/DoubleDose/Parameters/Dose") == 0.3
-    assert ua.value("Skills/DoubleDose/Execute/Dwell_2/State") == S["Succeeded"]
+    assert ua.value("Skills/DoubleDose/Execute/Dwell_2/State") in DONE
     # A FORTE started from the saved boot file runs the same program.
     module.client.close()
     with module.fresh(deployer.saved[0]) as (client, port):

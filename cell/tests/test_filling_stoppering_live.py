@@ -10,7 +10,7 @@ import uuid
 
 import pytest
 
-from test_module_live import E, M, S, STOPPERING_FAST, outputs, ready, running
+from test_module_live import DONE, E, M, S, STOPPERING_FAST, outputs, ready, running
 
 
 def in_order(history, *values, timeout=1.0) -> bool:
@@ -97,7 +97,7 @@ def test_filling_resetting_and_stopping_bring_the_needle_to_the_top(filling):
     assert ua.call("Module/Reset", a) == [True, 0]
     ua.expect("Module/State", M["Idle"], timeout=8)
     assert ua.value("Equipment/NeedleAxis/AtTop") is True
-    assert ua.value("Procedures/Resetting/MoveNeedleUp/State") == S["Succeeded"]
+    assert ua.value("Procedures/Resetting/MoveNeedleUp/State") in DONE
     assert ua.call("Module/Start", a) == [True, 0]
     assert ua.call("Skills/MoveNeedleDown/Start", a) == [True, 0]
     ua.expect("Skills/MoveNeedleDown/State", S["Succeeded"], timeout=6)
@@ -140,6 +140,36 @@ def test_filling_needle_skills_drive_boost_brake_and_end_switches(filling):
     assert settled(sim) == [] and sim.shoot_through == 0
 
 
+def test_a_skill_shows_succeeded_for_a_moment_then_is_idle_again(filling):
+    sim, ua = filling
+    a = str(uuid.uuid4())
+    ready(sim, ua, a)
+    states = ua.record("Skills/Weigh/State")
+    assert ua.call("Skills/Weigh/Start", a) == [True, 0]
+    ua.expect("Skills/Weigh/State", S["Succeeded"], timeout=2)
+    succeeded = time.monotonic()
+    ua.expect("Skills/Weigh/State", S["Idle"], timeout=3)
+    assert 1.2 <= time.monotonic() - succeeded <= 2.2                        # Succeeded for 1.5 s
+    assert in_order(states, S["Running"], S["Succeeded"], S["Idle"]), states
+    assert ua.value("Skills/Weigh/ErrorID") == 0
+    # Started again while it shows Succeeded: the earlier success no longer sends it to Idle.
+    assert ua.call("Skills/Tare/Start", a) == [True, 0]
+    ua.expect("Skills/Tare/State", S["Succeeded"], timeout=4)
+    assert ua.call("Skills/Tare/Start", a) == [True, 0]                      # tares for 2 s
+    ua.expect("Skills/Tare/State", S["Running"], timeout=1)
+    time.sleep(1.7)                                                          # past the first success's 1.5 s
+    assert ua.value("Skills/Tare/State") == S["Running"]
+    ua.expect("Skills/Tare/State", S["Succeeded"], timeout=2)
+    ua.expect("Skills/Tare/State", S["Idle"], timeout=3)
+    # A failure stays until the next start.
+    assert ua.call("Skills/MoveNeedleDown/Start", a) == [True, 0]
+    ua.expect("Skills/MoveNeedleDown/State", S["Running"], timeout=1)
+    assert ua.call("Skills/MoveNeedleDown/Stop", a) == [True, 0]
+    ua.expect("Skills/MoveNeedleDown/State", S["Failed"], timeout=3)
+    time.sleep(2.0)
+    assert ua.value("Skills/MoveNeedleDown/State") == S["Failed"]
+
+
 def test_filling_scale_skills(filling):
     sim, ua = filling
     a = str(uuid.uuid4())
@@ -166,7 +196,7 @@ def test_filling_dispensing_runs_its_steps_in_order_and_holds_the_needle(filling
     assert ua.call("Skills/Dispensing/Start", a) == [True, 0]
     ua.expect("Skills/Dispensing/Execute/Dwell/State", S["Running"], timeout=6)
     assert ua.value("Equipment/NeedleAxis/AtBottom") is True                # dwelling at the bottom
-    assert ua.value("Skills/Dispensing/Execute/MoveNeedleDown/State") == S["Succeeded"]
+    assert ua.value("Skills/Dispensing/Execute/MoveNeedleDown/State") in DONE
     assert ua.value("Skills/Dispensing/Execute/MoveNeedleUp/State") == S["Idle"]
     assert ua.call("Skills/MoveNeedleUp/Start", a) == [False, E["Busy"]]    # Dispensing holds the needle
     assert ua.call("Skills/Dispensing/Start", a) == [False, E["Busy"]]
@@ -192,7 +222,7 @@ def test_filling_stop_of_dispensing_lifts_the_needle(filling):
     assert ua.value("Skills/Dispensing/ErrorID") == E["Interrupted"]
     assert in_order(states, S["Running"], S["Stopping"], S["Failed"]), states
     assert ua.value("Skills/Dispensing/Execute/Dwell/ErrorID") == E["Interrupted"]
-    assert ua.value("Skills/Dispensing/Stopping/MoveNeedleUp/State") == S["Succeeded"]
+    assert ua.value("Skills/Dispensing/Stopping/MoveNeedleUp/State") in DONE
     assert ua.value("Equipment/NeedleAxis/AtTop") is True
     assert ua.value("Module/State") == M["Execute"]
     assert ua.call("Skills/MoveNeedleDown/Start", a) == [True, 0]            # the needle was released
@@ -276,7 +306,7 @@ def start(sim, ua, a):
 def test_stoppering_resetting_homes_the_equipment(stoppering):
     sim, ua, a = stoppering
     for step in ["ArmMiddle", "ArmHome", "RetractPlunger", "LowerPiston", "RaisePiston"]:
-        assert ua.value(f"Procedures/Resetting/{step}/State") == S["Succeeded"], step
+        assert ua.value(f"Procedures/Resetting/{step}/State") in DONE, step
     angles = [round(v) for n, v in outputs(sim, "StopperArm.Angle") if v is not None]
     assert angles == [90, 120]
     order = [n for n, v in outputs(sim, "Plunger.Retract", "Piston.Down", "Piston.Up") if v]
@@ -337,7 +367,7 @@ def test_stoppering_stop_and_abort_in_the_middle_of_the_cycle(stoppering):
     states = ua.record("Skills/Stoppering/State")
     assert ua.call("Skills/Stoppering/Start", a) == [True, 0]
     ua.expect("Skills/Stoppering/Execute/ExtendPlunger/State", S["Running"], timeout=8)
-    assert ua.value("Skills/Stoppering/Execute/ArmOut/State") == S["Succeeded"]
+    assert ua.value("Skills/Stoppering/Execute/ArmOut/State") in DONE
     assert ua.call("Skills/Stoppering/Stop", a) == [True, 0]
     ua.expect("Skills/Stoppering/State", S["Failed"], timeout=3)
     assert ua.value("Skills/Stoppering/ErrorID") == E["Interrupted"]

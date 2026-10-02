@@ -32,6 +32,8 @@ from module_sim import ModuleSim, SimServer  # noqa: E402
 from module_ua import ModuleUa  # noqa: E402,F401  (also used by other live tests through this module)
 
 S, E, M = SKILL_STATES, ERRORS, STATES
+# Looked at afterwards, a skill that succeeded may be back in Idle (it stays Succeeded for 1.5 s).
+DONE = (S["Succeeded"], S["Idle"])
 
 
 @contextmanager
@@ -211,7 +213,7 @@ def test_module_stop_halts_running_skills_and_runs_the_stopping_procedure(filler
     ua.expect("Module/State", M["Stopped"], timeout=6)
     assert ua.value("Skills/MoveNeedleDown/State") == S["Failed"]
     assert ua.value("Skills/MoveNeedleDown/ErrorID") == E["Interrupted"]
-    assert ua.value("Procedures/Stopping/MoveNeedleUp/State") == S["Succeeded"]
+    assert ua.value("Procedures/Stopping/MoveNeedleUp/State") in DONE
     assert ua.value("Equipment/NeedleAxis/AtTop") is True
     assert ua.call("Skills/MoveNeedleUp/Start", a) == [False, E["NotReady"]]
 
