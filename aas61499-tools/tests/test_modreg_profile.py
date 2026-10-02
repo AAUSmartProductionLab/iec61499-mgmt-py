@@ -104,53 +104,81 @@ def test_a_module_speaks_opc_ua_only(stoppering, stoppering_aas):
     assert at(state, "forms", "href")["value"] == "/0:Objects/1:Stoppering/1:Module/1:State"
 
 
-def test_skills_carry_what_reconfiguration_needs(stoppering, stoppering_aas):
+def test_skills_are_arsos_skills_with_what_reconfiguration_needs(stoppering, stoppering_aas):
     spec, _ = stoppering
-    skills = at(submodel(stoppering_aas, "ControlComponentInstance"), "Skills")
-    assert names(skills) == ["Occupy", "Release", *spec.skills, *spec.composites]
+    described = submodel(stoppering_aas, "Skills")
+    assert names(described) == ["Interfaces", "Skills", "Errors"]
+    assert described["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/Skills/1/0/Submodel"
+    assert at(described, "Errors", "Timeout", "ErrorCode")["value"] == "3"
+    skills = at(described, "Skills")
+    offered = [n for n, s in [*spec.skills.items(), *spec.composites.items()] if s.offered]
+    assert names(skills) == ["Occupy", "Release", *offered]
     primitive = at(skills, "RaisePiston")
     decl = spec.skills["RaisePiston"]
-    assert at(primitive, "Kind")["value"] == "Primitive"
-    assert at(primitive, "Contract", "After")["value"] == decl.after
-    assert names(at(primitive, "Occupies")) == [decl.equipment]
-    assert at(primitive, "Parameters", "Duration", "Type")["value"] == "LREAL"
-    assert float(at(primitive, "Parameters", "Duration", "Values", "Maximum")["value"]) == decl.parameters["Duration"].maximum
-    operation = at(primitive, "operation")
+    assert at(primitive, "SemanticId")["value"] == f"{BASE}/skills/RaisePiston"
+    assert at(primitive, "InterfaceReference")["value"]["keys"][-1]["value"] == "RaisePiston_Start"
+    operation = at(primitive, "RaisePiston")                        # the Operation is named like the skill
+    assert operation["modelType"] == "Operation"
     assert [v["value"]["idShort"] for v in operation["inputVariables"]] == ["Session", "Duration"]
     assert [v["value"]["idShort"] for v in operation["outputVariables"]] == ["Accepted", "ErrorID"]
+    assert at(primitive, "Kind")["value"] == "Primitive"
+    assert at(primitive, "Contract", "After")["value"] == decl.after
+    duration = at(primitive, "Parameters", "Duration")
+    declared = {q["type"]: q["value"] for q in duration["qualifiers"]}
+    assert float(duration["value"]) == decl.parameters["Duration"].default
+    assert float(declared["Maximum"]) == decl.parameters["Duration"].maximum and declared["Unit"] == "s"
+    assert [r["value"]["keys"][-1]["value"] for r in children(at(primitive, "Occupies"))] == [decl.equipment]
+    assert at(primitive, "StateReference")["value"]["keys"][-1]["value"] == "RaisePiston_State"
     name, composite = next(iter(spec.composites.items()))
-    described = at(skills, name)
-    assert at(described, "Kind")["value"] == "Composite"
-    assert names(at(described, "Execute")) == [f"Step{i:02d}" for i in range(1, len(composite.execute) + 1)]
-    first = at(described, "Execute", "Step01")
-    assert at(first, "Skill")["value"]["keys"][-1]["value"] == composite.execute[0].skill
-    assert at(first, "InstancePath")["value"] == f"{name}.Execute.{composite.execute[0].name}"
-    assert set(names(at(described, "Uses"))) == {s.skill for s in [*composite.execute, *composite.stop]}
-    # A primitive that is not offered runs only inside module level skills: no interface of its own.
-    hidden = [n for n, s in spec.skills.items() if not s.offered]
-    for skill in hidden:
-        assert at(skills, skill, "Disabled")["value"] == "true" and "operation" not in names(at(skills, skill))
+    sequence = at(skills, name)
+    assert at(sequence, "Kind")["value"] == "Composite"
+    steps = children(at(sequence, "Execute"))
+    assert at(sequence, "Execute")["modelType"] == "SubmodelElementList" and len(steps) == len(composite.execute)
+    assert at(steps[0], "Skill")["value"]["keys"][-1]["value"] == composite.execute[0].skill
+    assert at(steps[0], "InstancePath")["value"] == f"{name}.Execute.{composite.execute[0].name}"
+    assert len(children(at(sequence, "Uses"))) == len({s.skill for s in [*composite.execute, *composite.stop]})
 
 
-def test_equipment_variables_and_mappings(stoppering, stoppering_aas):
+def test_a_skill_that_only_runs_as_a_step_is_named_not_listed():
+    """ARSO asks every skill for an Operation and an action of the interface; Dwell has neither."""
+    spec = load(SPECS / "filling.yaml")
+    assert not spec.skills["Dwell"].offered
+    env = model.build(profiles.describe(spec, "pi"))
+    skills = at(submodel(env, "Skills"), "Skills")
+    assert "Dwell" not in names(skills)
+    step = next(s for s in children(at(skills, "Dispensing", "Execute")) if "Dwell" in at(s, "InstancePath")["value"])
+    assert at(step, "Skill")["value"] == {"type": "ExternalReference",
+                                          "keys": [{"type": "GlobalReference", "value": f"{BASE}/skills/Dwell"}]}
+    assert float(at(step, "Bindings", "Duration")["value"]) == 1.0
+    # No skill of the filling module has a parameter of its own, so it has no Parameters submodel.
+    assert "Parameters" not in [s["idShort"] for s in env["submodels"]]
+
+
+def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
     spec, _ = stoppering
     structure = submodel(stoppering_aas, "HierarchicalStructures")
     assert at(structure, "EntryNode")["globalAssetId"] == stoppering_aas["assetAdministrationShells"][0]["assetInformation"]["globalAssetId"]
     assert names(at(structure, "EntryNode")) == list(spec.equipment)
-    variables = names(submodel(stoppering_aas, "Variables"))
+    data = submodel(stoppering_aas, "OperationalData")
+    assert data["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/OperationalData/1/0/Submodel"
     inputs = [f"{item}_{s}" for item, eq in spec.equipment.items() for s in eq.inputs]
-    assert {"PackMLState", "OccupationState", *inputs} <= set(variables)
+    assert {"PackMLState", "OccupationState", *inputs} <= set(names(data))
+    # A data point is a decimal with a value and the concept it stands for.
+    assert all(d["valueType"] == "xs:decimal" and d["value"] == "0" and d["semanticId"] for d in children(data))
     mappings = at(submodel(stoppering_aas, "AssetInterfacesMappingConfiguration"), "MappingConfigurations")
     feed = children(mappings)[0]
-    # Every variable has a source: the property of the interface that publishes it.
-    assert len(children(at(feed, "Sinks"))) == len(children(at(feed, "Sources"))) == len(variables)
+    # Every data point has a source: the property of the interface that publishes it.
+    assert len(children(at(feed, "Sinks"))) == len(children(at(feed, "Sources"))) == len(names(data))
+    parameters = submodel(stoppering_aas, "Parameters")
+    assert parameters["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/Parameters/1/0/Submodel"
+    entry = at(parameters, "RaisePiston_Duration")
+    assert float(at(entry, "Value")["value"]) == spec.skills["RaisePiston"].parameters["Duration"].default
+    assert at(entry, "InterfaceReference")["value"]["keys"][-1]["value"] == "RaisePiston_Parameter_Duration"
 
 
 def test_every_reference_resolves(stoppering_aas):
     found = [(path, ref) for sm in stoppering_aas["submodels"] for path, ref in references(sm, sm["idShort"])]
-    dangling = [path for path, ref in found if resolve(stoppering_aas, ref) is None]
-    # The lab's type points at a ControlComponentType submodel that it does not build.
-    assert len(found) > 50 and dangling == ["ControlComponentInstance/Type/value"]
+    assert len(found) > 50 and [path for path, ref in found if resolve(stoppering_aas, ref) is None] == []
 
 
 def test_a_module_that_was_read_shows_what_runs_there():
@@ -167,8 +195,9 @@ def test_a_module_that_was_read_shows_what_runs_there():
     assert at(config, "SyncState")["value"] == "Drift" and len(names(at(config, "Differences"))) == 1
     assert at(config, "Runtime", "ManagementEndpoint")["value"] == "192.168.0.50:61499"
     assert len(names(at(config, "Types"))) == len(set(app.fbs.values()))
-    assert float(at(submodel(env, "Parameters"), "RaisePiston", "Duration", "parameter")["value"]) == 5.5
-    implementation = at(submodel(env, "ControlComponentInstance"), "Skills", "RaisePiston", "Implementation")
+    assert float(at(submodel(env, "Parameters"), "RaisePiston_Duration", "Value")["value"]) == 5.5
+    assert float(at(submodel(env, "Skills"), "Skills", "RaisePiston", "Parameters", "Duration")["value"]) == 5.5
+    implementation = at(submodel(env, "Skills"), "Skills", "RaisePiston", "Implementation")
     assert at(implementation, "FBType")["value"] == app.fbs["RaisePiston"]
     assert at(implementation, "TypeHash")["value"] == f"v2:{app.fbs['RaisePiston']}"
     # The program digest is of the spec, not of what was read.
@@ -187,7 +216,7 @@ def test_what_is_not_a_profile_is_refused():
     with pytest.raises(model.ProfileError, match="unknown AAS type"):
         model.asset({"aas_type": "Nothing", "id_short": "X"})
     with pytest.raises(model.ProfileError, match="[Ee]xtra"):
-        model.asset({"aas_type": "ModuleTypeAAS", "id_short": "X", "skills": {}})
+        model.asset({"aas_type": "ModuleTypeAAS", "id_short": "X", "variables": {}})
 
 
 @pytest.mark.skipif(not ARSO.exists(), reason="the ontologies are a local working document (ontology/ARSO)")

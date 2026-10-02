@@ -167,7 +167,7 @@ def test_an_aas_that_breaks_the_ontology_is_refused(tmp_path, tiny, aas_server):
 def test_strict_refuses_what_the_ontology_does_not_describe(tmp_path, loose):
     profile = {"aas_type": "ModuleTypeAAS", "id_short": "EmptyModuleAAS"}
     registration = Registry(tmp_path / "lenient", loose).register(profile)
-    assert len(registration.unknown) == len(registration.submodels) == 8       # the tiny ontology knows none of them
+    assert len(registration.unknown) == len(registration.submodels) == 7       # the tiny ontology knows none of them
     with pytest.raises(Refused, match="is not in the ontology") as refused:
         Registry(tmp_path / "strict", loose, strict=True).register(profile)
     assert refused.value.status == 422
