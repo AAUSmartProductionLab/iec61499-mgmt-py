@@ -1,0 +1,572 @@
+{
+ "assetAdministrationShells": [],
+ "submodels": [
+  {
+   "modelType": "Submodel",
+   "kind": "Template",
+   "idShort": "ControlConfiguration",
+   "id": "https://smartproductionlab.aau.dk/ARSO/ControlConfiguration/1/0/Submodel",
+   "semanticId": {
+    "type": "ExternalReference",
+    "keys": [
+     {
+      "type": "GlobalReference",
+      "value": "https://smartproductionlab.aau.dk/ARSO/ControlConfiguration/1/0/Submodel"
+     }
+    ]
+   },
+   "administration": {
+    "version": "1",
+    "revision": "0"
+   },
+   "description": [
+    {
+     "language": "en",
+     "text": "Custom — what runs on the resource's controller and how it got there."
+    }
+   ],
+   "submodelElements": [
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Runtime",
+     "description": [
+      {
+       "language": "en",
+       "text": "The controller runtime: Name, ManagementEndpoint, Resource."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "Property",
+       "idShort": "ManagementEndpoint",
+       "description": [
+        {
+         "language": "en",
+         "text": "Property Name, ManagementEndpoint or Resource of the runtime."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "valueType": "xs:string"
+      },
+      {
+       "modelType": "Property",
+       "idShort": "Name",
+       "description": [
+        {
+         "language": "en",
+         "text": "Property Name, ManagementEndpoint or Resource of the runtime."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "valueType": "xs:string"
+      },
+      {
+       "modelType": "Property",
+       "idShort": "Resource",
+       "description": [
+        {
+         "language": "en",
+         "text": "Property Name, ManagementEndpoint or Resource of the runtime."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "valueType": "xs:string"
+      }
+     ]
+    },
+    {
+     "modelType": "Property",
+     "idShort": "Generator",
+     "description": [
+      {
+       "language": "en",
+       "text": "Property ModuleSpec, Target, Generator (what the program was generated from and by), ProgramDigest (SHA-256 of the generated program: instances, types, connections, values) or ReadAt (when the controller was read)."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "valueType": "xs:string"
+    },
+    {
+     "modelType": "Property",
+     "idShort": "ModuleSpec",
+     "description": [
+      {
+       "language": "en",
+       "text": "Property ModuleSpec, Target, Generator (what the program was generated from and by), ProgramDigest (SHA-256 of the generated program: instances, types, connections, values) or ReadAt (when the controller was read)."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "valueType": "xs:string"
+    },
+    {
+     "modelType": "Property",
+     "idShort": "ProgramDigest",
+     "description": [
+      {
+       "language": "en",
+       "text": "Property ModuleSpec, Target, Generator (what the program was generated from and by), ProgramDigest (SHA-256 of the generated program: instances, types, connections, values) or ReadAt (when the controller was read)."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "valueType": "xs:string"
+    },
+    {
+     "modelType": "Property",
+     "idShort": "ReadAt",
+     "description": [
+      {
+       "language": "en",
+       "text": "Property ModuleSpec, Target, Generator (what the program was generated from and by), ProgramDigest (SHA-256 of the generated program: instances, types, connections, values) or ReadAt (when the controller was read)."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "valueType": "xs:string"
+    },
+    {
+     "modelType": "Property",
+     "idShort": "Target",
+     "description": [
+      {
+       "language": "en",
+       "text": "Property ModuleSpec, Target, Generator (what the program was generated from and by), ProgramDigest (SHA-256 of the generated program: instances, types, connections, values) or ReadAt (when the controller was read)."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "valueType": "xs:string"
+    },
+    {
+     "modelType": "Property",
+     "idShort": "SyncState",
+     "description": [
+      {
+       "language": "en",
+       "text": "InSync (the running program is the one its source generates), Drift (it differs, see Differences), NoProgram, NotRead (described from the source only)."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "One",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "valueType": "xs:string"
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Differences",
+     "description": [
+      {
+       "language": "en",
+       "text": "One Property per difference between the running program and its source."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "Property",
+       "idShort": "CCfgDifference__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "One difference."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "valueType": "xs:string"
+      }
+     ]
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Types",
+     "description": [
+      {
+       "language": "en",
+       "text": "The function block types in use, each with Name and Hash as the runtime reports them."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "CCfgType__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "One function block type in use."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "Property",
+         "idShort": "Hash",
+         "description": [
+          {
+           "language": "en",
+           "text": "Property Name or Hash of a type, as the runtime reports them."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "valueType": "xs:string"
+        },
+        {
+         "modelType": "Property",
+         "idShort": "Name",
+         "description": [
+          {
+           "language": "en",
+           "text": "Property Name or Hash of a type, as the runtime reports them."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "valueType": "xs:string"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "ActiveProcedure",
+     "description": [
+      {
+       "language": "en",
+       "text": "Reference to the Process AAS (and version) whose procedure is active, with NetworkHash, BootFileHash, ActivatedAt."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": []
+    },
+    {
+     "modelType": "SubmodelElementList",
+     "idShort": "ChangeLog",
+     "description": [
+      {
+       "language": "en",
+       "text": "One Change SMC per reconfiguration: Time, Trigger, ChangeClass (a pprl:ChangeClass IRI), From, To, Result, Duration."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "orderRelevant": true,
+     "typeValueListElement": "SubmodelElementCollection",
+     "value": [
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "CCfgChange__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "One reconfiguration record."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": []
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "conceptDescriptions": []
+}
