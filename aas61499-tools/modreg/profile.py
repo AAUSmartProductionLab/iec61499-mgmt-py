@@ -43,6 +43,9 @@ from modsync.compare import Drift, expected, expected_values
 from modsync.device import Snapshot
 
 from . import model
+from .generated import control_configuration as cc, skills as arso
+from .generated.operational_data import OperationalData
+from .generated.parameters import ParameterEntry, Parameters
 from .model import ModuleSkill, ModuleTypeAAS
 
 AID = "{aas_id}/submodels/AssetInterfacesDescription"
@@ -182,12 +185,10 @@ class Describer:
         op.output_variable = [var("Accepted", "xs:boolean", "The command was accepted"),
                               var("ErrorID", "xs:unsignedShort", f"Why it was refused: {ERRORS}")]
         self.operations[name] = (action, ["Session", *parameters])
-        skill = ModuleSkill(description=description, Operation={name: op})
-        skill.SemanticId.value = skill_id(name)
-        skill.InterfaceReference.value = affordance("actions", action)
-        return skill
+        return ModuleSkill(description=description, SemanticId=prop(skill_id(name)), SkillOperation={name: op},
+                           InterfaceReference=ReferenceElement(value=affordance("actions", action)))
 
-    def sequence(self, owner: str, steps) -> model.SkillSequence:
+    def sequence(self, owner: str, steps) -> model.ModuleSkillSequence:
         """A sequence with each step's bindings; constants as they run on the module."""
         items = []
         for i, step in enumerate(steps, 1):
@@ -195,10 +196,10 @@ class Describer:
             bindings = {p: prop(v if isinstance(v, str) else current(f"{owner}.{step.name}.{p}", declared[p], self.snap),
                                 "xs:string" if isinstance(v, str) else XSD[declared[p].type])
                         for p, v in step.bind.items()}
-            items.append(model.SkillStep(id_short=f"Step{i:02d}", Skill=self.skill_reference(step.skill),
-                                         InstancePath=prop(f"{owner}.{step.name}"),
-                                         Bindings=model.StepBindings(Binding=bindings) if bindings else None))
-        return model.SkillSequence(value=items)
+            items.append(model.ModuleSkillStep(
+                id_short=f"Step{i:02d}", Skill=self.skill_reference(step.skill), InstancePath=prop(f"{owner}.{step.name}"),
+                Bindings=model.StepBindings(Binding=bindings) if bindings else None))
+        return model.ModuleSkillSequence(value=items)
 
     def implementation(self, instance: str) -> model.SkillImplementation:
         typ = self.snap.fbs.get(instance) if self.snap else None
@@ -218,27 +219,28 @@ class Describer:
         skill = self.entry(name, start, decl.parameters, decl.description or f"Skill {name}")
         skill.Kind = prop("Composite" if composite else "Primitive")
         if decl.parameters:
-            skill.Parameters = model.SkillParameters()
+            skill.Parameters = arso.Parameters()
             for p, pr in decl.parameters.items():
                 value = current(parameter_port(spec, name, p), pr, self.snap)
                 declared = (("Unit", pr.unit), ("Minimum", pr.minimum), ("Maximum", pr.maximum), ("Default", pr.default))
-                put(skill.Parameters.Parameter, p, Property(
+                put(skill.Parameters.SkillParameter, p, Property(
                     value=text(value), value_type=XSD[pr.type], description=pr.description or f"Parameter {p}",
                     qualifiers=[Qualifier(type_=k, value=text(v), kind="ConceptQualifier") for k, v in declared if v is not None]))
                 self.property(f"{name}_Parameter_{p}", f"{node}/Parameters/{p}", pr.type,
                               f"{name} {p} of the current or last run", pr.unit)
         if composite:
-            skill.Execute = self.sequence(f"{name}.Execute", decl.execute)
-            skill.Stop = self.sequence(f"{name}.Stop", decl.stop) if decl.stop else None
+            put(skill.SkillSequence, "Execute", self.sequence(f"{name}.Execute", decl.execute))
+            if decl.stop:
+                put(skill.SkillSequence, "Stop", self.sequence(f"{name}.Stop", decl.stop))
             used = dict.fromkeys(s.skill for s in [*decl.execute, *decl.stop])
-            skill.Uses = model.SkillReferences(value=[self.skill_reference(u, u) for u in used])
+            skill.Uses = model.SkillUses(value=[self.skill_reference(u, u) for u in used])
         else:
             ends = {"Ensures": decl.ensures} if decl.ensures is not None else {"After": decl.after}
             terms = {"Requires": decl.requires, **ends, "Invariant": decl.invariant, "Timeout": decl.timeout}
             skill.Contract = model.SkillContract(**{k: prop(v) for k, v in terms.items() if v is not None})
         occupied = [ReferenceElement(id_short=item, value=path(STRUCTURE, ("Entity", "EntryNode"), ("Entity", item)))
                     for item in spec.uses(name)]
-        skill.Occupies = model.SkillReferences(value=occupied) if occupied else None
+        skill.Occupies = model.SkillOccupies(value=occupied) if occupied else None
         skill.Implementation = self.implementation(f"{name}.Control" if composite else name)
         state = self.property(f"{name}_State", f"{node}/State", "USINT", f"{name} state: {SKILL_STATES}")
         self.observe(f"{name}_State", state, f"{skill_id(name)}/State", f"State of {name}: {SKILL_STATES}")
@@ -259,19 +261,18 @@ class Describer:
 
     # Submodels -------------------------------------------------------------------------------
 
-    def parameters(self) -> model.ModuleParameters | None:
+    def parameters(self) -> Parameters | None:
         """The value of each skill parameter as deployed (the default a start without one uses)."""
         spec, entries = self.spec, {}
         for name in self.listed:
             decl = spec.composites.get(name) or spec.skills[name]
             for p, pr in decl.parameters.items():
                 value = current(parameter_port(spec, name, p), pr, self.snap)
-                entry = model.ParameterEntry(description=pr.description or f"Parameter {p} of {name}",
-                                             semantic_id=f"{skill_id(name)}/Parameters/{p}",
-                                             Value=prop(value, XSD[pr.type]), Unit=prop(pr.unit) if pr.unit else None)
-                entry.InterfaceReference.value = affordance("properties", f"{name}_Parameter_{p}")
-                entries[f"{name}_{p}"] = entry
-        return model.ModuleParameters(id_short="Parameters", Parameter=entries) if entries else None
+                shown = ReferenceElement(value=affordance("properties", f"{name}_Parameter_{p}"))
+                entries[f"{name}_{p}"] = ParameterEntry(
+                    description=pr.description or f"Parameter {p} of {name}", semantic_id=f"{skill_id(name)}/Parameters/{p}",
+                    InterfaceReference=shown, Value=prop(value, XSD[pr.type]), Unit=prop(pr.unit) if pr.unit else None)
+        return Parameters(id_short="Parameters", ParameterEntry=entries) if entries else None
 
     def mappings(self) -> Aimc:
         """What feeds the data points, and how each Operation reaches its method."""
@@ -292,7 +293,7 @@ class Describer:
         return Aimc(id_short="AssetInterfacesMappingConfiguration",
                     MappingConfigurations=AimcMappingConfigurations(value=mappings))
 
-    def control_configuration(self) -> model.ControlConfiguration:
+    def control_configuration(self) -> model.ModuleControlConfiguration:
         snap, drift, t = self.snap, self.drift, self.spec.targets[self.target]
         if snap is None:
             sync = "NotRead"
@@ -300,19 +301,20 @@ class Describer:
             sync = "NoProgram"
         else:
             sync = "InSync" if drift is not None and drift.empty else "Drift"
-        cc = model.ControlConfiguration(id_short="ControlConfiguration")
-        cc.Runtime.ManagementEndpoint.value = f"{snap.host}:{snap.port}" if snap else f"{t.host}:{t.port}"
-        cc.Runtime.Resource.value = snap.resource if snap else "RES"
-        cc.ModuleSpec.value = self.spec_path or ""
-        cc.Target.value = self.target
-        cc.ProgramDigest.value = program_digest(self.spec, self.target)
-        cc.SyncState.value = sync
-        cc.ReadAt.value = snap.read_at if snap else ""
-        for i, line in enumerate(drift.lines()[:100] if drift else [], 1):
-            put(cc.Differences.Difference, f"D{i:03d}", prop(line))
-        for i, typ in enumerate(sorted(set(snap.fbs.values())) if snap else [], 1):
-            put(cc.Types.Type, f"T{i:03d}", model.ControlType(Name=prop(typ), Hash=prop(snap.hashes.get(typ, ""))))
-        return cc
+        differences = {f"D{i:03d}": prop(line) for i, line in enumerate(drift.lines()[:100] if drift else [], 1)}
+        types = {f"T{i:03d}": cc.CCfgType(Name=prop(typ), Hash=prop(snap.hashes.get(typ, "")))
+                 for i, typ in enumerate(sorted(set(snap.fbs.values())) if snap else [], 1)}
+        return model.ModuleControlConfiguration(
+            id_short="ControlConfiguration",
+            Runtime=cc.Runtime(Name=prop("Eclipse 4diac FORTE"), Resource=prop(snap.resource if snap else "RES"),
+                               ManagementEndpoint=prop(f"{snap.host}:{snap.port}" if snap else f"{t.host}:{t.port}")),
+            ModuleSpec=prop(self.spec_path or ""), Target=prop(self.target), Generator=prop("modgen"),
+            ProgramDigest=prop(program_digest(self.spec, self.target),
+                               description="SHA-256 of the program the module spec generates for the target."),
+            SyncState=prop(sync, description="InSync: the running program is the one the module spec generates; Drift: "
+                           "it differs (see Differences); NoProgram: the runtime has none; NotRead: from the spec only."),
+            ReadAt=prop(snap.read_at if snap else ""), Differences=cc.Differences(CCfgDifference=differences),
+            Types=cc.Types(CCfgType=types))
 
     def build(self) -> tuple[ModuleTypeAAS, str]:
         spec = self.spec
@@ -341,7 +343,7 @@ class Describer:
         for name in self.listed:
             put(skills, name, self.skill(name))
         for name, code in ERROR_CODES.items():
-            put(asset.skills.Errors.Error, name, model.SkillError(ErrorCode=prop(code, "xs:integer")))
+            put(asset.skills.Errors.Error, name, arso.Error(ErrorCode=prop(code, "xs:integer")))
         nodes = {}
         for item, eq in spec.equipment.items():
             nodes[item] = Node(entity_type="CoManagedEntity", global_asset_id="",
