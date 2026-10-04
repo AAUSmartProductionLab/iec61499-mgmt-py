@@ -89,9 +89,22 @@ modsync pull --host 192.168.0.191 --register http://<host>:8090    # ... or with
 when it comes online or changes). The service keeps each profile and AAS in its `--store`
 folder; a profile registered again unchanged is not published again. A broken restriction of the
 ontology refuses the registration; `--strict` also refuses what the ontology does not describe.
-`ModuleTypeAAS` (`modreg/model.py`) is a resource in the structure of the resource ontology (ARSO:
-Skills, Operational Data, Parameters, Control Configuration) for an OPC UA module, written with the
-shared model's classes; profiles of the lab's own `ResourceTypeAAS` go through the same service. aas-model loads its message schemas
+`ModuleTypeAAS` (`modreg/model.py`) is a resource in the structure of the resource ontology (ARSO)
+for an OPC UA module; profiles of the lab's own `ResourceTypeAAS` go through the same service.
+Nameplate, Hierarchical Structures, interface description and mapping configuration are aas-model's
+classes. The ontology's own submodels (Skills, Operational Data, Parameters, Control
+Configuration) have no IDTA template, so their classes are made the way aas-model makes its own:
+
+```powershell
+git submodule update --init aas-model                          # the aas-model checkout (not --recursive)
+modreg generate --ontology ontology/ARSO                       # ontology -> modreg/templates/*.json -> modreg/generated/*.py
+```
+
+`modreg generate` writes a submodel template per submodel from what the ontology states (element
+types, idShorts, semanticIds, cardinalities) and has aas-model's generator
+(`aas-model/scripts/idta_generate.py`) make the pydantic classes from it. Both are committed; a
+test fails when they no longer match the ontology. The submodule is at the commit the
+`registration` extra installs. aas-model loads its message schemas
 from the lab's GitHub pages when it is imported, unless `MQTT_SCHEMAS_DIR` names a local copy.
 
 In the 4diac IDE (a workspace outside the repository), import `iec61499-skill-lib/ModLib` and
