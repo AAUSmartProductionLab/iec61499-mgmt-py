@@ -1,0 +1,145 @@
+{
+ "assetAdministrationShells": [],
+ "submodels": [
+  {
+   "modelType": "Submodel",
+   "kind": "Template",
+   "idShort": "Parameters",
+   "id": "https://smartproductionlab.aau.dk/ARSO/Parameters/1/0/Submodel",
+   "semanticId": {
+    "type": "ExternalReference",
+    "keys": [
+     {
+      "type": "GlobalReference",
+      "value": "https://smartproductionlab.aau.dk/ARSO/Parameters/1/0/Submodel"
+     }
+    ]
+   },
+   "administration": {
+    "version": "1",
+    "revision": "0"
+   },
+   "description": [
+    {
+     "language": "en",
+     "text": "Custom — Static configuration parameters."
+    }
+   ],
+   "submodelElements": [
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "ParameterEntry__00__",
+     "description": [
+      {
+       "language": "en",
+       "text": "A named parameter entry."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "OneToMany",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "ReferenceElement",
+       "idShort": "InterfaceReference",
+       "description": [
+        {
+         "language": "en",
+         "text": "Points to an AID property (.../InteractionMetadata/properties/{key}) in the same AAS (parameters_builder.py hardcodes the properties path segment, never actions/events)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "Property",
+       "idShort": "Value",
+       "description": [
+        {
+         "language": "en",
+         "text": "The parameter's value as deployed; its valueType is the parameter's type (added 2 Oct 2026 for the registration service)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "One",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "valueType": "xs:string"
+      },
+      {
+       "modelType": "Property",
+       "idShort": "Unit",
+       "description": [
+        {
+         "language": "en",
+         "text": "The unit of the value (added 2 Oct 2026)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "valueType": "xs:string"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "conceptDescriptions": []
+}

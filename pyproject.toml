@@ -29,7 +29,7 @@ modreg = "modreg.__main__:main"
 
 # One folder per future repository; the Python packages live inside them.
 [tool.setuptools]
-packages = ["iec61499_mgmt", "modgen", "modsync", "modreg"]
+packages = ["iec61499_mgmt", "modgen", "modsync", "modreg", "modreg.generated"]
 
 [tool.setuptools.package-dir]
 iec61499_mgmt = "iec61499-mgmt-py/iec61499_mgmt"

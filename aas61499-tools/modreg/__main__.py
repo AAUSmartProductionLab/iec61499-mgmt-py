@@ -6,6 +6,7 @@
     modreg check profiles/FillingModuleAAS.json --ontology ontology/ARSO   # does the AAS follow the ontology?
     modreg serve --ontology ontology/ARSO --basyx http://<host>:8081       # the registration service
     modreg register filling --target pi --service http://<host>:8090       # send the module's profile to it
+    modreg generate --ontology ontology/ARSO              # the ontology's own submodels: templates and classes
 
 A profile is the module's AAS on the lab's shared model (aas-model) without what its type says
 anyway; the service validates it, builds the AAS, checks it against the ontology and publishes it.
@@ -22,7 +23,7 @@ from modsync.compare import Candidate
 from modsync.sync import inspect, relative
 
 try:
-    from . import model, profile as profiles
+    from . import model, profile as profiles, templates
     from .ontology import Blueprint, check
     from .service import AasServer, Registry, send, serve
 except ImportError as e:
@@ -92,12 +93,20 @@ def main(argv=None) -> int:
     p.add_argument("--ontology", help="folder with the ontology's Turtle files; without it nothing is checked")
     p.add_argument("--strict", action="store_true", help="also refuse what the ontology does not describe")
     p.add_argument("--basyx", help="AAS server to publish to, e.g. http://<host>:8081")
+    p = sub.add_parser("generate", help="write the submodel templates of the ontology's own submodels and their classes")
+    p.add_argument("--ontology", required=True, help="folder with the ontology's Turtle files")
+    p.add_argument("--aas-model", default=str(templates.AAS_MODEL), help="aas-model checkout (its generator makes the classes)")
     p = sub.add_parser("register", help="send a profile to the registration service")
     source(p, "profile (.json) or module spec")
     p.add_argument("--service", required=True, help="the registration service, e.g. http://<host>:8090")
     p.add_argument("--check", action="store_true", help="only validate and check, do not register")
     args = parser.parse_args(argv)
 
+    if args.command == "generate":
+        written = templates.write_templates(args.ontology)
+        for path in [*written, *templates.generate(written, aas_model=Path(args.aas_model))]:
+            print(path.relative_to(Path.cwd()) if path.is_relative_to(Path.cwd()) else path)
+        return 0
     if args.command == "serve":
         registry = Registry(args.store, Blueprint(args.ontology) if args.ontology else None,
                             AasServer(args.basyx) if args.basyx else None, args.strict)

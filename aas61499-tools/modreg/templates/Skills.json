@@ -1,0 +1,629 @@
+{
+ "assetAdministrationShells": [],
+ "submodels": [
+  {
+   "modelType": "Submodel",
+   "kind": "Template",
+   "idShort": "Skills",
+   "id": "https://smartproductionlab.aau.dk/ARSO/Skills/1/0/Submodel",
+   "semanticId": {
+    "type": "ExternalReference",
+    "keys": [
+     {
+      "type": "GlobalReference",
+      "value": "https://smartproductionlab.aau.dk/ARSO/Skills/1/0/Submodel"
+     }
+    ]
+   },
+   "administration": {
+    "version": "1",
+    "revision": "0"
+   },
+   "description": [
+    {
+     "language": "en",
+     "text": "IDTA 02015 CCType — Control Component Type (Interfaces, Skills, Errors), ARSO-flattened."
+    }
+   ],
+   "submodelElements": [
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Interfaces",
+     "description": [
+      {
+       "language": "en",
+       "text": "Mandatory top-level container, always present and always empty."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "One",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": []
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Skills",
+     "description": [
+      {
+       "language": "en",
+       "text": "Mandatory top-level container for all Skill entries."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "One",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "Skill__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "A named skill."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "Property",
+         "idShort": "SemanticId",
+         "description": [
+          {
+           "language": "en",
+           "text": "The skill's own semantic identifier URI (lab namespace convention, enforced via SHACL sh:pattern)."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "One",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "valueType": "xs:string"
+        },
+        {
+         "modelType": "Operation",
+         "idShort": "SkillOperation__00__",
+         "description": [
+          {
+           "language": "en",
+           "text": "The invocable Operation of a skill entry."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "OneToMany",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "modelType": "ReferenceElement",
+         "idShort": "InterfaceReference",
+         "description": [
+          {
+           "language": "en",
+           "text": "Points directly at the specific AID action idShort (arso:InterfaceSMC/InteractionMetadata/actions/{action}) this skill invokes."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "One",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "modelType": "Property",
+         "idShort": "StateMachine",
+         "description": [
+          {
+           "language": "en",
+           "text": "Present only on asynchronous skills."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "valueType": "xs:string"
+        },
+        {
+         "modelType": "Property",
+         "idShort": "Kind",
+         "description": [
+          {
+           "language": "en",
+           "text": "Primitive (one function of one equipment item, with a contract) or Composite (a sequence of other skills)."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "valueType": "xs:string"
+        },
+        {
+         "modelType": "SubmodelElementCollection",
+         "idShort": "Parameters",
+         "description": [
+          {
+           "language": "en",
+           "text": "The skill's parameters as Properties (css:SkillParameter); value is the current (deployed) value, qualifiers Unit, Minimum, Maximum and Default the declaration."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "value": [
+          {
+           "modelType": "Property",
+           "idShort": "SkillParameter__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "One skill parameter (css:InputParameter)."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "valueType": "xs:string"
+          }
+         ]
+        },
+        {
+         "modelType": "RelationshipElement",
+         "idShort": "RealizesProperty",
+         "description": [
+          {
+           "language": "en",
+           "text": "First: a parameter of this skill; second: a property (PropertyContainer) of a capability this skill realizes (CapabilityRealizedBy)."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "modelType": "SubmodelElementCollection",
+         "idShort": "Contract",
+         "description": [
+          {
+           "language": "en",
+           "text": "For primitive skills: Requires (precondition), Ensures (postcondition) or After (open-loop duration), Invariant, Timeout."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "value": []
+        },
+        {
+         "modelType": "SubmodelElementList",
+         "idShort": "Uses",
+         "description": [
+          {
+           "language": "en",
+           "text": "References to the skills a composite skill uses (IDTA 02015 Uses)."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "orderRelevant": true,
+         "typeValueListElement": "SubmodelElement",
+         "value": []
+        },
+        {
+         "modelType": "SubmodelElementList",
+         "idShort": "SkillSequence__00__",
+         "description": [
+          {
+           "language": "en",
+           "text": "A composite's sequence of Steps (Execute: what Start runs; Stop: what Stop runs)."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToMany",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "orderRelevant": true,
+         "typeValueListElement": "SubmodelElementCollection",
+         "value": [
+          {
+           "modelType": "SubmodelElementCollection",
+           "idShort": "SkillStep__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "One use of a skill in a sequence: Skill [ReferenceElement, 1] to a skill listed in Uses, and Bindings [SMC of Property, 0..1] with the constants bound to its parameters (current values)."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "value": []
+          }
+         ]
+        },
+        {
+         "modelType": "SubmodelElementList",
+         "idShort": "Occupies",
+         "description": [
+          {
+           "language": "en",
+           "text": "References to HierarchicalStructures nodes (equipment) the skill locks while it runs; two skills occupying one node never run at once."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "orderRelevant": true,
+         "typeValueListElement": "SubmodelElement",
+         "value": []
+        },
+        {
+         "modelType": "ReferenceElement",
+         "idShort": "StateReference",
+         "description": [
+          {
+           "language": "en",
+           "text": "The AID property that publishes this skill's state (the synchronous alternative to StateMachine)."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "modelType": "SubmodelElementCollection",
+         "idShort": "Implementation",
+         "description": [
+          {
+           "language": "en",
+           "text": "The runtime block implementing the skill: FBType (qualified IEC 61499 type), TypeHash (as the runtime reports it) and InstancePath (dotted instance name)."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "value": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Errors",
+     "description": [
+      {
+       "language": "en",
+       "text": "Mandatory top-level container for global CC error entries."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "One",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "Error__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "A named error entry, if populated."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "Property",
+         "idShort": "ErrorCode",
+         "description": [
+          {
+           "language": "en",
+           "text": "Numeric error code identifying this error."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "One",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "valueType": "xs:string"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "conceptDescriptions": []
+}
