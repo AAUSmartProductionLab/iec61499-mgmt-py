@@ -7,7 +7,8 @@ A module has
   (``after``) says done, with parameters, contract and timeout;
 - module level skills (composites): a sequence of skill instances with its own parameters, and
   an optional stop sequence;
-- procedures the module state manager runs while Resetting and Stopping.
+- procedures the module state manager runs while Resetting and Stopping;
+- the capabilities it offers (for its AAS), each realized by an offered skill.
 
 Validation is fail-closed: every name an expression uses must be a signal of the skill's
 equipment or one of its parameters, and every step must name a known skill.
@@ -332,8 +333,40 @@ class Aas(Model):
     location: str | None = None
 
 
+class CapabilityProperty(Model):
+    """One property of an offered capability: a value (the container type it takes) or a range
+    (the fill volumes it can do), in a unit. ``parameter`` names the parameter of the realizing
+    skill that sets the property, if one does."""
+    value: float | bool | str | None = None
+    minimum: float | None = None
+    maximum: float | None = None
+    unit: str | None = None
+    semantic_id: str | None = None       # default <base>/semantics/<property name>
+    parameter: str | None = None
+    description: str = ""
+
+    @model_validator(mode="after")
+    def value_or_range(self):
+        ranged = self.minimum is not None or self.maximum is not None
+        if (self.value is None) == (not ranged):
+            raise ValueError("a capability property has a value or a range (minimum and maximum), not both")
+        if ranged and (self.minimum is None or self.maximum is None or self.minimum > self.maximum):
+            raise ValueError("a capability property range needs minimum <= maximum")
+        return self
+
+
+class Capability(Model):
+    """A capability the module offers (IDTA 02020, role Offered), realized by one of its offered
+    skills or module level skills."""
+    realized_by: str = Ident
+    description: str = ""
+    semantic_id: str | None = None       # default <base>/semantics/<capability name>
+    properties: dict[str, CapabilityProperty] = Field(default_factory=dict)
+
+
 class ModuleSpec(Model):
-    """One module: equipment, skill primitives, module level skills and procedures."""
+    """One module: equipment, skill primitives, module level skills, procedures and the
+    capabilities they realize."""
     module: str = Ident
     project: str = Ident                 # 4diac project folder under cell/control/
     package: str = Ident                 # 4diac package of the module's own types
@@ -346,6 +379,7 @@ class ModuleSpec(Model):
     composites: dict[str, Composite] = Field(default_factory=dict)
     procedures: dict[PROCEDURES, list[Step]] = Field(default_factory=dict)
     stop_timeout: str = Field(default="10s", pattern=DURATION)   # Stopping waits this long for running skills
+    capabilities: dict[str, Capability] = Field(default_factory=dict)
     aas: Aas = Aas()
 
     short_steps = field_validator("procedures", mode="before")(
@@ -378,6 +412,8 @@ class ModuleSpec(Model):
             if not seq:
                 raise ValueError(f"{proc}: empty procedure")
             self.check_steps(proc, seq, set())
+        for name, cap in self.capabilities.items():
+            self.check_capability(name, cap)
         if not self.targets:
             raise ValueError("At least one target is needed")
         for name, target in self.targets.items():
@@ -419,6 +455,18 @@ class ModuleSpec(Model):
             p = skill.parameters.get(skill.after)
             if p is None or p.type != "LREAL":
                 raise ValueError(f"{name}.after: {skill.after} is not an LREAL parameter (seconds)")
+
+    def check_capability(self, name, cap: Capability):
+        """A capability is realized by a skill the module offers; a property names its parameter."""
+        for ident in [name, *cap.properties]:
+            if not re.match(IDENT, ident):
+                raise ValueError(f"Not an identifier: capability {name}, {ident}")
+        skill = self.skills.get(cap.realized_by) or self.composites.get(cap.realized_by)
+        if skill is None or not skill.offered:
+            raise ValueError(f"capability {name}: {cap.realized_by} is not a skill the module offers")
+        for prop, value in cap.properties.items():
+            if value.parameter is not None and value.parameter not in skill.parameters:
+                raise ValueError(f"capability {name}.{prop}: {cap.realized_by} has no parameter {value.parameter}")
 
     def check_steps(self, owner, seq: list[Step], parent_params: set[str]):
         """Steps name skill primitives (composites of composites come later), bind known parameters, are unique."""
