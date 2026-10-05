@@ -199,7 +199,13 @@ with, and aas-model itself is changed as little as possible.
   publishes it to an AAS server; a broken restriction refuses the registration. `modsync
   describe|pull|push|watch --register <url>` sends a module's profile.
 - **Tested** offline, by hand against a throwaway BaSyx 2.0 container (create, replace, delete)
-  and with a simulated module read live. Not run against the lab's AAS server, and the lab's
+  and with a simulated module read live. On 5 Oct the whole flow ran on Linux, automated in the
+  HMI repository (`tests/test_end_to_end.py`): FORTE 3.3.0 built natively with every module (its
+  `tools/forte/build.sh`: the 4diac IDE exports headlessly under Xvfb, no FBE), the filling module
+  on its Modbus simulator (`cell/sim/run_module.py`, target pc), `modsync pull --register` into
+  `modreg serve`, the BaSyx AAS environment 2.0.0-milestone-15 as a plain jar, and the HMI built
+  from BaSyx alone running Dispensing on FORTE. The address space FORTE serves is exactly the one
+  the AAS describes (35 variables, 31 methods). Not run against the lab's AAS server, and the lab's
   data mapping service has not been tried with the OPC UA mappings.
 
 Consequences of following ARSO strictly:
