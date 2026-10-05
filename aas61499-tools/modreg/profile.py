@@ -208,7 +208,10 @@ class Describer:
         items = []
         for i, step in enumerate(steps, 1):
             declared = self.spec.skills[step.skill].parameters
-            bindings = {p: prop(v if isinstance(v, str) else current(f"{owner}.{step.name}.{p}", declared[p], self.snap),
+            # A constant as the module runs it, else as bound (not the skill's default).
+            bindings = {p: prop(v if isinstance(v, str) else current(f"{owner}.{step.name}.{p}",
+                                                                     declared[p].model_copy(update={"default": v}),
+                                                                     self.snap),
                                 "xs:string" if isinstance(v, str) else XSD[declared[p].type])
                         for p, v in step.bind.items()}
             state = self.step_variables(step, f"{node}/{step.name}", f"{key}_{step.name}", f"{concept}/{step.name}")

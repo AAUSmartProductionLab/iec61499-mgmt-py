@@ -137,6 +137,11 @@ def test_skills_are_arsos_skills_with_what_reconfiguration_needs(stoppering, sto
     assert at(sequence, "Execute")["modelType"] == "SubmodelElementList" and len(steps) == len(composite.execute)
     assert at(steps[0], "Skill")["value"]["keys"][-1]["value"] == composite.execute[0].skill
     assert at(steps[0], "InstancePath")["value"] == f"{name}.Execute.{composite.execute[0].name}"
+    # A constant bound to a step is the bound value, not the default of the step's skill.
+    bound = next((i, s) for i, s in enumerate(composite.execute) if s.bind)
+    for parameter, constant in bound[1].bind.items():
+        assert float(at(steps[bound[0]], "Bindings", parameter)["value"]) == constant
+    assert any(constant != spec.skills[bound[1].skill].parameters[p].default for p, constant in bound[1].bind.items())
     assert len(children(at(sequence, "Uses"))) == len({s.skill for s in [*composite.execute, *composite.stop]})
 
 
