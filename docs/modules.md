@@ -1,15 +1,15 @@
 # Filling and stoppering modules: from the ESP32 code to generated modules
 
 Source: `arduino_cpp_examples/Physical-Stations` (PlatformIO; `FillingModule.cpp` on an ESP32,
-`StopperingModule.cpp` on an ESP32-S3). Drafted and implemented 29 Sep 2026: the specs are
-`modules/filling.yaml` and `modules/stoppering.yaml`, the generated 4diac projects
-`4diac/FillingModule` and `4diac/StopperingModule`; both run against `4diac/tools/module_sim.py`
-in `tests/test_module_live.py`. Not yet on the Pis (wiring, PWM overlay).
+`StopperingModule.cpp` on an ESP32-S3; a local reference copy, not in the repository). The
+specs are `cell/modules/filling.yaml` and `cell/modules/stoppering.yaml`, the generated 4diac
+projects `cell/control/FillingModule` and `cell/control/StopperingModule`. Both run against the
+simulator (`cell/sim/module_sim.py`) in `cell/tests/`, and on the lab Pi's FORTE with the
+simulator as IO; the motors, switches and servo are not wired yet.
 
-Decided 29 Sep 2026: we call them **modules** (not stations or units); each module runs on its
-own Raspberry Pi 4 and is deployed on its own; orchestration only through OPC UA methods and
-variables (MQTT may come back later as an option); PWM through a small FORTE module (plan M.2 in
-[work.md](work.md#modules-on-the-two-pis-plan)).
+We call them **modules** (not stations or units). Each module runs on its own Raspberry Pi 4 and
+is deployed on its own; it is orchestrated only through OPC UA methods and variables (MQTT may
+come back later as an option). The structure of a generated module is in [work.md](work.md).
 
 ## What goes where
 
@@ -19,8 +19,8 @@ The ESP32 code has three layers. Only the bottom one is module-specific.
 | --- | --- | --- |
 | `ESP32Module` (WiFi, MQTT, NTP, UUID, AAS registration from `data/config.yaml`), `PackMLStateMachine` (states, Occupy/Release, Halt, state publishing) | Nothing new: the generic module level (occupation, module state manager, skill state machine, OPC UA facade) | Same for every module; generated |
 | The functions registered as MQTT actions (`runFillingCycle`, `attachNeedle`, `tareScale`, `runStopperingCycle`) and the homing in `initHardware` | Module level skills (composites) and module procedures | Sequences of motions |
-| Each motion with its stop condition (`moveToBottom`, `moveDCDown`, `runServo`, ...) | Skill primitives | One command on one equipment item until a sensor, a timer or a timeout |
-| Pins, H-bridge direction bits, PWM duty, boost and brake pulses, servo angle | Equipment IO CFBs | They own the pins; skills only send commands |
+| Each motion with its stop condition (`moveToBottom`, `moveDCDown`, `runServo`, ...), with its H-bridge direction bits, PWM duty, boost and brake pulses or servo angle | Skill primitives, each with the command table of its equipment (`EC_<Equipment>`) | One command on one equipment item until a sensor, a timer or a timeout |
+| Pins | Equipment IO CFBs | They own the pins and write what their one holder sends; they know nothing about what the pins mean |
 
 ## Filling module ("Dispensing", filling Pi)
 
@@ -79,39 +79,23 @@ The ESP32 code has three layers. Only the bottom one is module-specific.
 | `Stoppering` | LowerPiston → MoveArm(1°) → MoveArm(121°) → ExtendPlunger(10 s) → RetractPlunger(6.5 s) → RaisePiston(2 s) | `/CMD/Stoppering` |
 | Module procedure Resetting | MoveArm(90°) → MoveArm(120°) → RetractPlunger(6.5 s) → LowerPiston → RaisePiston(1.5 s) | `initHardware()` |
 
-## What the generator needs for this
-
-Iteration 1 covers only on/off outputs, sensor-ended primitives and one procedure. Needed, roughly in order:
-
-1. **Valued outputs and commands with values**: a PWM duty or servo angle as an output (`LREAL`,
-   range) and commands that set it (`Up: {Up: true, Speed: 140}`), including an argument passed
-   by the skill (`MoveTo(Angle)`).
-2. **Open-loop primitives**: `ends: after Duration` (a timer instead of a sensor), with
-   `Duration` a parameter.
-3. **Command profiles in the equipment**: start boost and brake pulse are equipment behaviour
-   (`Up: [{Speed: 190, for: 200ms}, {Speed: 140}]`, `brake: {reverse: 100ms}`), so skills stay simple.
-4. **Skills without equipment** (`Dwell`) and **simulated equipment** (`Scale`).
-5. **Composites and module procedures** (iteration 2, steps 2.4 and 2.5), with parameters passed
-   from composite to child (`MoveArm(Angle = 1)`).
-6. **A PWM backend on the Pi** (below).
-
 ## IO on the Raspberry Pi
 
-- **Digital in and out**: `GPIOChip` + `IX`/`QX`, verified on the lab Pi (blink).
-- **PWM** (motor speed, servo): FORTE 3.3 has no PWM for Linux. Decided: a small FORTE module
-  for Linux sysfs PWM (`/sys/class/pwm/pwmchipN`), one config FB `PWMChip` per channel like
-  `GPIOChip`, used with the standard `QW` output FB (duty 0..65535; the servo angle is converted
-  in the equipment IO CFB). It drives the Pi's two hardware channels (`dtoverlay=pwm-2chan`,
-  GPIO12/13 or 18/19) and a PCA9685 16-channel board through the kernel `pwm-pca9685` driver.
-  The servo needs a hardware channel or the PCA9685 (software PWM jitters). Effort and steps:
-  plan M.2 in work.md.
+- **Digital in and out**: `GPIOChip` + `IX`/`QX` (one FB per line).
+- **PWM** (motor speed, servo): FORTE 3.3 has none for Linux, so the runtime carries a small
+  module for Linux sysfs PWM (`runtime/forte-patches/0002-pwmsysfs-module.patch`): one config FB
+  `PWMChip` per channel, used with the standard `QW` output FB (duty 0..65535; the servo angle is
+  converted by the generated IO block). It drives the Pi's two hardware channels
+  (`dtoverlay=pwm-2chan`, PWM0 on GPIO18, PWM1 on GPIO19) and would drive a PCA9685 board through
+  the kernel `pwm-pca9685` driver. Tested on the aarch64 binary under emulation and on the lab Pi.
 - **Channel count** (one Pi per module): filling needs 1 PWM channel (needle speed); stoppering
   3 outputs (servo, piston and plunger enables), but both enables run at 200/255, so one channel
-  drives both and the Pi's 2 hardware channels suffice. More: a PCA9685 board, same module.
+  drives both and the Pi's 2 hardware channels suffice.
 - **Analog inputs**: none needed by these two modules (the weight is simulated). Later: an ADC
   with a Linux IIO driver (ADS1115, MCP3008) read by the same kind of module (`IW`).
-- **Wiring**: L298N logic inputs accept 3.3 V; the end switches read HIGH when pressed (wired to
-  3.3 V, pull-down on the Pi instead of the ESP32's pull-up).
+- **Wiring**: L298N logic inputs accept 3.3 V. The end switches are wired as on the ESP32
+  (to GND, internal pull-up, pressed = TRUE; `bias: pull_up` in the spec). The pin of every IO
+  point is in the module spec, next to the ESP32 pin it replaces.
 
 ## Interface to the orchestrator
 
