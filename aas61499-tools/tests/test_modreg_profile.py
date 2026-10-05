@@ -6,11 +6,13 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 pytest.importorskip("aas_model")
 pytest.importorskip("rdflib")
 
 from modgen import SPECS, load                                              # noqa: E402
+from modgen.spec import ModuleSpec                                          # noqa: E402
 from modreg import model, profile as profiles                               # noqa: E402
 from modreg.ontology import Blueprint, check                                # noqa: E402
 from modsync.aas import browse_path                                         # noqa: E402
@@ -205,6 +207,80 @@ def test_the_procedures_of_the_module_are_sequences_of_steps(stoppering, stopper
     data = names(submodel(stoppering_aas, "OperationalData"))
     first = spec.procedures["Resetting"][0].name
     assert {f"Procedure_Resetting_{first}_State", f"Procedure_Resetting_{first}_ErrorID"} <= set(data)
+
+
+IDTA_CAPABILITY = "https://admin-shell.io/idta/CapabilityDescription"
+
+
+def semantic(element: dict) -> str:
+    keys = (element.get("semanticId") or {}).get("keys") or []
+    return keys[0]["value"] if keys else ""
+
+
+def offered_capabilities(env: dict) -> list[dict]:
+    """The offered capabilities of an AAS read the way the BaSyx web UI's process sequence module
+    reads them (utils/capabilities.ts): standard containers by semanticId, the role by its boolean
+    qualifier, the meaning by supplemental semanticId, units from the first IEC 61360 data
+    specification, and the realizing skill by the CapabilityRealizedBy whose first is the capability."""
+    found = []
+    for sm in env["submodels"]:
+        if semantic(sm) != "https://admin-shell.io/idta/SubmodelTemplate/CapabilityDescription/1/0":
+            continue
+        for cset in (c for c in children(sm) if semantic(c) == f"{IDTA_CAPABILITY}/CapabilitySet/1/0"):
+            for box in (c for c in children(cset) if semantic(c) == f"{IDTA_CAPABILITY}/CapabilityContainer/1/0"):
+                cap = next(c for c in children(box) if c["modelType"] == "Capability"
+                           and semantic(c) == f"{IDTA_CAPABILITY}/Capability/1/0")
+                role = [q for q in cap.get("qualifiers", []) if semantic(q).startswith(f"{IDTA_CAPABILITY}/CapabilityRoleQualifier/")
+                        and q["valueType"] == "xs:boolean" and q["value"] in ("true", "1")]
+                reference = {"type": "ModelReference", "keys": [
+                    {"type": "Submodel", "value": sm["id"]}, {"type": "SubmodelElementCollection", "value": cset["idShort"]},
+                    {"type": "SubmodelElementCollection", "value": box["idShort"]}, {"type": "Capability", "value": cap["idShort"]}]}
+                properties = {}
+                for pset in (c for c in children(box) if semantic(c) == f"{IDTA_CAPABILITY}/PropertySet/1/0"):
+                    for item in (c for c in children(pset) if semantic(c) == f"{IDTA_CAPABILITY}/PropertyContainer/1/0"):
+                        for prop in children(item):
+                            meaning = prop["supplementalSemanticIds"][0]["keys"][0]["value"]
+                            unit = ((prop.get("embeddedDataSpecifications") or [{}])[0].get("dataSpecificationContent") or {}).get("unit", "")
+                            properties[meaning] = {"kind": prop["modelType"], "unit": unit, "value": prop.get("value"),
+                                                   "min": prop.get("min"), "max": prop.get("max"), "type": prop.get("valueType")}
+                realized = [r["second"] for rel in children(box) if semantic(rel) == f"{IDTA_CAPABILITY}/CapabilityRelations/1/0"
+                            for r in children(rel) if r["modelType"] == "RelationshipElement"
+                            and semantic(r) == f"{IDTA_CAPABILITY}/CapabilityRealizedBy/1/0" and r["first"] == reference]
+                found.append({"role": [semantic(q).rsplit("/", 3)[-3] for q in role], "reference": reference,
+                              "meanings": [r["keys"][0]["value"] for r in cap.get("supplementalSemanticIds", [])],
+                              "properties": properties, "realized_by": realized})
+    return found
+
+
+def test_offered_capabilities_are_realized_by_skills_as_a_planner_reads_them():
+    spec = load(SPECS / "filling.yaml")
+    env = model.build(profiles.describe(spec, "pi"))
+    [filling] = offered_capabilities(env)
+    assert filling["role"] == ["Offered"]
+    assert filling["meanings"] == [f"{BASE}/semantics/Filling"]
+    # The capability is realized by the Dispensing skill of the Skills submodel: a reference.
+    [skill] = filling["realized_by"]
+    assert resolve(env, skill)["idShort"] == "Dispensing"
+    assert skill["keys"][0]["value"] == submodel(env, "Skills")["id"]
+    volume = filling["properties"][f"{BASE}/semantics/FillVolume"]
+    assert (volume["kind"], volume["min"], volume["max"], volume["unit"]) == ("Range", "0.5", "10.0", "mL")
+    assert filling["properties"][f"{BASE}/semantics/ContainerType"]["value"] == "vial"
+    # A product's Vial 2 mL filling requirement (the planner's pharma example): the required value
+    # lies in the offered range, the required error range holds the offered error, strings agree.
+    required = {"FillVolume": 2.0, "ContainerType": "vial"}
+    assert float(volume["min"]) <= required["FillVolume"] <= float(volume["max"])
+    assert 0.0 <= float(filling["properties"][f"{BASE}/semantics/AbsoluteFillError"]["value"]) <= 0.1
+    assert filling["properties"][f"{BASE}/semantics/ContainerType"]["value"] == required["ContainerType"]
+    # The shell lists the submodel, and the profile gives the capabilities back.
+    assert submodel(env, "CapabilityDescription")["id"] in [r["keys"][0]["value"] for r in
+                                                           env["assetAdministrationShells"][0]["submodels"]]
+
+
+def test_a_module_without_capabilities_has_no_capability_description():
+    data = yaml.safe_load((SPECS / "filling.yaml").read_text(encoding="utf-8"))
+    data.pop("capabilities")
+    env = model.build(profiles.describe(ModuleSpec.model_validate(data), "pi"))
+    assert "CapabilityDescription" not in [s["idShort"] for s in env["submodels"]]
 
 
 def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):

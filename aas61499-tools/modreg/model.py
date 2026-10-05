@@ -35,8 +35,8 @@ from aas_model.resource_template import ResourceTypeAAS, nameplate
 from aas_model.submodel_templates import (
     Aimc, AimcMappingConfigurations, DmpAssetInterfacesDescription, DmpOpcuaInterface, MqttInterface, SkillOperation,
 )
-from aas_pydantic import AAS, Property, ReferenceElement, SubmodelElementCollection, convert_model_to_aas
-from aas_pydantic.submodel_templates.capability_description import CapabilityDescription
+from aas_pydantic import AAS, ModelReference, Property, ReferenceElement, SubmodelElementCollection, convert_model_to_aas
+from aas_pydantic.submodel_templates import capability_description as cd
 from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures
 from aas_pydantic.submodel_templates.nameplate import Nameplate
 from basyx.aas import model as basyx
@@ -160,6 +160,29 @@ class ModuleSkills(skills.Skills):
     Procedures: Optional[ModuleProcedures] = None
 
 
+class RealizedBySkill(cd.CapabilityRealizedBy):
+    """IDTA 02020 leaves the skill open (an external reference); ARSO wants the Skill of the same
+    AAS's Skills submodel, so here it is a model reference to it."""
+    second: ModelReference = ModelReference()
+
+
+class ModuleCapabilityRelations(cd.CapabilityRelations):
+    CapabilityRealizedBy: Dict[str, RealizedBySkill] = {}
+
+
+class ModuleCapabilityContainer(cd.CapabilityContainer):
+    CapabilityRelations: Optional[ModuleCapabilityRelations] = None
+
+
+class ModuleCapabilitySet(cd.CapabilitySet):
+    CapabilityContainer: Dict[str, ModuleCapabilityContainer] = {}
+
+
+class ModuleCapabilityDescription(cd.CapabilityDescription):
+    """The capabilities a module offers, each realized by one of its skills."""
+    CapabilitySet: Dict[str, ModuleCapabilitySet] = {}
+
+
 class ModuleControlConfiguration(ControlConfiguration):
     SyncState: Property = Property(value="NotRead")
 
@@ -191,7 +214,7 @@ class ModuleTypeAAS(AAS):
     control_configuration: ModuleControlConfiguration = ModuleControlConfiguration(id_short="ControlConfiguration")
     # A module without skill parameters has no Parameters submodel.
     parameters: Optional[Parameters] = None
-    capability_description: Optional[CapabilityDescription] = None
+    capability_description: Optional[ModuleCapabilityDescription] = None
 
 
 TYPES: dict[str, type[AAS]] = {"ResourceTypeAAS": ResourceTypeAAS, "ModuleTypeAAS": ModuleTypeAAS}
@@ -326,10 +349,56 @@ def environment(model: AAS, global_asset_id: str | None = None) -> dict:
     found = {"assetAdministrationShells": [o for o in store if isinstance(o, basyx.AssetAdministrationShell)],
              "submodels": [o for o in store if isinstance(o, basyx.Submodel)]}
     env = json.loads(json.dumps(found, cls=AASToJsonEncoder))
+    with_units(env["submodels"])
+    typed_qualifiers(env["submodels"])
     if global_asset_id:
         for shell in env["assetAdministrationShells"]:
             shell["assetInformation"]["globalAssetId"] = global_asset_id
     return env
+
+
+IEC61360 = "https://admin-shell.io/DataSpecificationTemplates/DataSpecificationIEC61360/3/0"
+
+
+def with_units(element) -> None:
+    """Every element with a ``Unit`` qualifier also states its unit the standard way, in an IEC 61360
+    data specification, first among its data specifications (where readers such as the BaSyx web
+    UI's capability matching look). aas-model writes its own data specifications, without units."""
+    if isinstance(element, list):
+        for item in element:
+            with_units(item)
+        return
+    if not isinstance(element, dict):
+        return
+    unit = next((q.get("value") for q in element.get("qualifiers") or [] if q.get("type") == "Unit"), None)
+    if unit and element.get("modelType") not in (None, "Submodel", "AssetAdministrationShell"):
+        names = element.get("displayName") or [{"language": "en", "text": element.get("idShort", "")}]
+        element["embeddedDataSpecifications"] = [{
+            "dataSpecification": {"type": "ExternalReference", "keys": [{"type": "GlobalReference", "value": IEC61360}]},
+            "dataSpecificationContent": {"modelType": "DataSpecificationIec61360", "preferredName": names, "unit": unit},
+        }, *(element.get("embeddedDataSpecifications") or [])]
+    for value in element.values():
+        if isinstance(value, (list, dict)):
+            with_units(value)
+
+
+BOOLEAN_QUALIFIERS = ("CapabilityRoleQualifier/Required", "CapabilityRoleQualifier/Offered",
+                      "CapabilityRoleQualifier/NotAssigned")
+
+
+def typed_qualifiers(element) -> None:
+    """The capability role qualifiers are booleans (IDTA 02020). aas-model hands a qualifier's value
+    to BaSyx uncast, which refuses "true" as xs:boolean, so the model keeps them as strings."""
+    if isinstance(element, list):
+        for item in element:
+            typed_qualifiers(item)
+    elif isinstance(element, dict):
+        for qualifier in element.get("qualifiers") or []:
+            if qualifier.get("type") in BOOLEAN_QUALIFIERS:
+                qualifier["valueType"] = "xs:boolean"
+        for value in element.values():
+            if isinstance(value, (list, dict)):
+                typed_qualifiers(value)
 
 
 def build(profile: dict) -> dict:

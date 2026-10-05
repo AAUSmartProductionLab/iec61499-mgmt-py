@@ -34,8 +34,11 @@ from aas_model.resource_template.asset_interfaces_mapping_configuration import m
 from aas_model.submodel_templates import (
     Aimc, AimcMappingConfigurations, DmpActionInput, DmpActionOutput, OpcuaAction, OpcuaProperty, OperationVariableProp,
 )
-from aas_pydantic import ExternalReference, Key, ModelReference, Property, Qualifier, ReferenceElement
+from aas_pydantic import (
+    Capability, ExternalReference, Key, ModelReference, Property, Qualifier, ReferenceElement, RelationshipElement,
+)
 from aas_pydantic.submodel_templates import asset_interfaces_description as wot
+from aas_pydantic.submodel_templates import capability_description as cd
 from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures, Node
 from aas_pydantic.submodel_templates.nameplate import ManufacturerProductDesignation, SerialNumber
 
@@ -55,6 +58,11 @@ AID = "{aas_id}/submodels/AssetInterfacesDescription"
 SKILLS = "{aas_id}/submodels/Skills"
 STRUCTURE = "{aas_id}/submodels/HierarchicalStructures"
 DATA = "{aas_id}/submodels/OperationalData"
+CAPABILITIES = "{aas_id}/submodels/CapabilityDescription"
+# IDTA 02020: the Capability element and its role qualifier.
+CAPABILITY = "https://admin-shell.io/idta/CapabilityDescription/Capability/1/0"
+OFFERED = "https://admin-shell.io/idta/CapabilityDescription/CapabilityRoleQualifier/Offered/1/0"
+OFFERED_SET = "OfferedCapabilities"
 SMC = "SubmodelElementCollection"
 XSD = {"BOOL": "xs:boolean", "LREAL": "xs:double", "INT": "xs:short", "DINT": "xs:int", "UINT": "xs:unsignedShort",
        "UDINT": "xs:unsignedInt", "USINT": "xs:unsignedByte", "WSTRING": "xs:string"}
@@ -91,6 +99,15 @@ def affordance(kind: str, key: str) -> ModelReference:
 
 def skill_id(name: str) -> str:
     return f"{model.SKILL}/{name}"
+
+
+def meaning(name: str, given: str | None = None) -> str:
+    """What a capability or capability property means: the spec's IRI, else the lab's."""
+    return given or f"{BASE_URL}/semantics/{name}"
+
+
+def capability_path(name: str) -> ModelReference:
+    return path(CAPABILITIES, (SMC, OFFERED_SET), (SMC, name), ("Capability", "Capability"))
 
 
 def schema(parameters: dict[str, Parameter]) -> dict:
@@ -332,6 +349,57 @@ class Describer:
         return Aimc(id_short="AssetInterfacesMappingConfiguration",
                     MappingConfigurations=AimcMappingConfigurations(value=mappings))
 
+    def capabilities(self) -> model.ModuleCapabilityDescription | None:
+        """The capabilities the module offers (IDTA 02020): each with its meaning, its properties
+        (a value or a range, with a unit) and the skill realizing it (CapabilityRealizedBy, a
+        reference into the Skills submodel)."""
+        containers = {}
+        for name, cap in self.spec.capabilities.items():
+            capability = Capability(
+                id_short="Capability", semantic_id=CAPABILITY, supplemental_semantic_ids=[meaning(name, cap.semantic_id)],
+                display_name={"en": name}, description=cap.description or f"{name}, realized by {cap.realized_by}",
+                # xs:boolean in the AAS (model.typed_qualifiers): aas-model cannot convert it.
+                qualifiers=[Qualifier(type_="CapabilityRoleQualifier/Offered", value="true",
+                                      semantic_id=OFFERED, kind="ConceptQualifier")])
+            properties = {}
+            for prop, value in cap.properties.items():
+                about = dict(id_short="Value", supplemental_semantic_ids=[meaning(prop, value.semantic_id)],
+                             display_name={"en": prop}, description=value.description,
+                             qualifiers=[Qualifier(type_="Unit", value=value.unit, kind="ConceptQualifier")] if value.unit else [])
+                if value.value is None:
+                    element = cd.PropertyContainer(PropertyRange={"Value": cd.PropertyRange(
+                        min=text(value.minimum), max=text(value.maximum), value_type="xs:double", **about)})
+                else:
+                    kind = "xs:boolean" if isinstance(value.value, bool) else "xs:string" if isinstance(value.value, str) else "xs:double"
+                    element = cd.PropertyContainer(PropertyProperty={"Value": cd.PropertyProperty(
+                        value=text(value.value), value_type=kind, **about)})
+                put(properties, prop, element)
+            realized = model.RealizedBySkill(
+                id_short="RealizedBy", first=capability_path(name), second=path(SKILLS, (SMC, "Skills"), (SMC, cap.realized_by)))
+            containers[name] = model.ModuleCapabilityContainer(
+                id_short=name, Capability=capability,
+                PropertySet={"PropertySet": cd.PropertySet(id_short="PropertySet", PropertyContainer=properties)} if properties else {},
+                CapabilityRelations=model.ModuleCapabilityRelations(id_short="CapabilityRelations",
+                                                                    CapabilityRealizedBy={"RealizedBy": realized}))
+        if not containers:
+            return None
+        return model.ModuleCapabilityDescription(id_short="CapabilityDescription", CapabilitySet={
+            OFFERED_SET: model.ModuleCapabilitySet(id_short=OFFERED_SET, CapabilityContainer=containers)})
+
+    def realizes(self, skills: dict[str, ModuleSkill]) -> None:
+        """A capability property a skill parameter sets: the skill's RealizesProperty (ARSO)."""
+        for name, cap in self.spec.capabilities.items():
+            for prop, value in cap.properties.items():
+                if value.parameter is None:
+                    continue
+                skill = skills[cap.realized_by]
+                if skill.RealizesProperty is not None:
+                    raise model.ProfileError(f"{cap.realized_by}: ARSO holds one RealizesProperty per skill")
+                skill.RealizesProperty = RelationshipElement(
+                    id_short="RealizesProperty",
+                    first=path(SKILLS, (SMC, "Skills"), (SMC, cap.realized_by), (SMC, "Parameters"), ("Property", value.parameter)),
+                    second=path(CAPABILITIES, (SMC, OFFERED_SET), (SMC, name), (SMC, "PropertySet"), (SMC, prop), ("Range" if value.value is None else "Property", "Value")))
+
     def control_configuration(self) -> model.ModuleControlConfiguration:
         snap, drift, t = self.snap, self.drift, self.spec.targets[self.target]
         if snap is None:
@@ -414,6 +482,8 @@ class Describer:
         for name, (_, concept, title) in self.datapoints.items():
             put(asset.operational_data.Datapoint, name,
                 Property(value="0", value_type="xs:decimal", semantic_id=concept, description=title))
+        self.realizes(skills)
+        asset.capability_description = self.capabilities()
         asset.parameters = self.parameters()
         asset.asset_interfaces_mapping_configuration = self.mappings()
         asset.control_configuration = self.control_configuration()

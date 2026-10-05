@@ -110,9 +110,9 @@ def test_registering_a_module_publishes_its_aas(service, aas_server, stoppering)
     profile = stoppering
     status, answer = send(url, profile)
     assert status == 201 and answer["id_short"] == "StopperingModuleAAS" and not answer["unchanged"]
-    assert len(answer["submodels"]) == 8
+    assert len(answer["submodels"]) == 9      # with the Capability Description
     # Created on the AAS server: every submodel, then the shell.
-    assert aas_server.calls.count("POST submodels") == 8 and aas_server.calls[-1] == "POST shells"
+    assert aas_server.calls.count("POST submodels") == 9 and aas_server.calls[-1] == "POST shells"
     shell = aas_server.items[("shells", b64(answer["id"]))]
     assert shell["assetInformation"]["globalAssetId"] == profile["global_asset_id"]
     # Kept by the service: the profile as sent and the AAS built from it.
@@ -134,11 +134,11 @@ def test_registering_a_module_publishes_its_aas(service, aas_server, stoppering)
     changed["nameplate"] = {"SerialNumber": {"value": "STOP-0002"}}
     status, renewed = send(url, changed)
     assert status == 201 and renewed["digest"] != answer["digest"]
-    assert aas_server.calls[before:].count("PUT submodels") == 8 and "POST submodels" not in aas_server.calls[before:]
+    assert aas_server.calls[before:].count("PUT submodels") == 9 and "POST submodels" not in aas_server.calls[before:]
 
     request = urllib.request.Request(f"{url}/profiles/StopperingModuleAAS", method="DELETE")
     with urllib.request.urlopen(request, timeout=30) as response:
-        assert len(json.loads(response.read())["published"]) == 9
+        assert len(json.loads(response.read())["published"]) == 10
     assert aas_server.items == {} and get(f"{url}/profiles") == []
 
 
@@ -186,7 +186,7 @@ def test_the_command_line(service, tmp_path, capsys):
     written = tmp_path / "profiles" / "StopperingModuleAAS.json"
     assert json.loads(written.read_text(encoding="utf-8"))["aas_type"] == "ModuleTypeAAS"
     assert main(["build", str(written), "--out", str(tmp_path / "aas")]) == 0
-    assert len(json.loads((tmp_path / "aas" / "StopperingModuleAAS.json").read_text(encoding="utf-8"))["submodels"]) == 8
+    assert len(json.loads((tmp_path / "aas" / "StopperingModuleAAS.json").read_text(encoding="utf-8"))["submodels"]) == 9
     assert main(["register", str(written), "--service", url]) == 0
     assert "registered: StopperingModuleAAS" in capsys.readouterr().out
     assert main(["register", str(written), "--service", url]) == 0
