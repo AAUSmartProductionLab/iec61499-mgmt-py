@@ -155,6 +155,7 @@ stateDiagram-v2
     Succeeded --> Running: Start
     Failed --> Running: Start
     Running --> Succeeded: goal reached
+    Succeeded --> Idle: after 1.5 s
     Running --> Failed: fault (ErrorID 1, 2, 3, 6)
     Running --> Stopping: Stop, or module Stop
     Stopping --> Failed: stopped (ErrorID 7)
@@ -169,6 +170,7 @@ stateDiagram-v2
 Notes:
 
 - A skill can be started again directly from Succeeded or Failed; no Reset is needed.
+- Succeeded is shown for 1.5 s, then the skill is Idle again; Failed stays until the next Start. So Idle with `ErrorID = 0` after Running means the run succeeded. Follow `State` with a subscription: a client that polls more slowly than that can miss Succeeded.
 - A skill that is already at its goal (for example the axis is already at the end switch) succeeds at once without moving anything.
 - Skills that use different equipment can run at the same time. Two skills on the same equipment cannot: the second is refused with 6.
 - A *module level skill* runs several steps in sequence and holds its equipment from the first step that uses it until the end.
