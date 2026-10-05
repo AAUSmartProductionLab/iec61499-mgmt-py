@@ -21,6 +21,9 @@ classes from and checks every resource AAS against), until the repository is spl
 | `runtime/` | runtime | FORTE build: FBE configurations (PC, Pi), FORTE patches (IO handle fix, sysfs PWM module), header shims, IDE validation and export (`validate.ps1`), `build-modules.ps1`, `build-runtime.ps1` |
 | `deploy/` | deploy | Raspberry Pi: FORTE in Docker (`pi/`), install and deployment (`pi.py`) |
 | `cell/` | the filling line | `modules/`: module specs; `control/`: generated 4diac projects (FillingModule, StopperingModule, FillerModule); `sim/`: Modbus simulator, `run_module.py`, OPC UA client |
+| `aas-model/` | (submodule) | The lab's shared pydantic AAS model; `modreg` builds on it and uses its generator |
+| `ontology/` | (working copy) | The product, process, resource and link ontologies with their notes; ARSO is the blueprint of the resource AAS |
+| `docs/` | (working notes) | `work.md`: what is built, how, learnings, next steps; `modules.md`: the two modules and what was ported; `hmi/`: the OPC UA interface of each module for an HMI; figures |
 
 Each folder has its own `tests/`; `conftest.py` at the top holds the shared live-test options.
 
