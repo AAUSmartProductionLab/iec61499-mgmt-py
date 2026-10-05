@@ -175,15 +175,21 @@ with, and aas-model itself is changed as little as possible.
   (`modreg/templates/`) and runs aas-model's generator on them (`modreg/generated/`). Both are
   committed; a test fails when they no longer match the ontology. Hand-written subclasses remain
   only for what ARSO names but does not declare: the terms of a Contract, the children of a Step
-  and of Implementation, the item type of Uses and Occupies (`modreg/model.py`).
+  and of Implementation, the item type of Uses and Occupies, and the module's procedures
+  (`modreg/model.py`).
 - **The AAS of a module** (`ModuleTypeAAS`): Skills instead of aas-model's Control Component
   Instance (per skill SemanticId, an Operation named like the skill, the reference to its Start
   action, kind, parameters, contract or Execute and Stop sequences, occupied equipment, state
-  reference, implementing function block); Operational Data instead of Variables (decimal data
-  points fed by the mapping configuration from the OPC UA properties); Parameters (the deployed
+  reference, implementing function block; each step of a sequence refers to the State it
+  publishes); the Resetting and Stopping procedures as sequences of steps beside the skills (5 Oct,
+  so that an HMI can be built from the AAS alone); Operational Data instead of Variables (decimal
+  data points fed by the mapping configuration from the OPC UA properties, skill and step states
+  alike); Parameters (the deployed
   value of each skill parameter; none: no submodel); Control Configuration (spec, target, program
   digest, and from a module that was read the sync state, differences and type hashes); one
-  OPC UA interface with every method as an action and every variable as a property.
+  OPC UA interface with every method as an action and every variable as a property, steps'
+  variables included (State, ErrorID, the parameters and results of the step's skill), results
+  and parameters with their units.
 - **Profile.** The dump of that model without what its type and its elements' classes say anyway
   (about 150 KB per module); writing one checks that reading it back gives the same model.
 - **Check.** `modreg check` recognises every element of the built AAS as a member of an ARSO
@@ -201,8 +207,9 @@ Consequences of following ARSO strictly:
 - A primitive that is not offered (Dwell) is not listed as a skill, because ARSO asks every
   skill for an Operation and an interface action; steps name it by an external reference.
 - Booleans are 0 or 1 and states their number in data points (ARSO's data point is a decimal).
-- About 380 elements per module are reported as not described: the Web of Things terms aas-model
-  writes into the interface description (key, type, title, op, input, output, browse path).
+- About 500 (filling) and 650 (stoppering) elements are reported as not described: the Web of
+  Things terms aas-model writes into the interface description (key, type, title, op, input,
+  output, browse path), and the step references and procedures `modreg` adds.
 
 Findings about aas-model, to raise with its author:
 
@@ -212,7 +219,8 @@ Findings about aas-model, to raise with its author:
 - `pip install git+...` fails on Windows (a submodule with over-long paths); the archive works,
   and the submodule here must not be initialised recursively.
 - Importing it loads the MQTT schemas from GitHub pages unless `MQTT_SCHEMAS_DIR` is set or its
-  `MQTTSchemas` submodule is checked out.
+  `MQTTSchemas` submodule is checked out. Behind a proxy that blocks GitHub archives and pages,
+  `git submodule update --init` inside `aas-model` and `pip install -e ./aas-model` work.
 - Dumping is slow because type hints are resolved for every element (minutes for a module);
   `modreg` caches them.
 - Validation fills the dictionaries it is given, so a profile must be copied before it is read.

@@ -322,7 +322,7 @@ replaced on 2 Oct by aas-model, which the lab's registration and management node
 
 | # | Item | State |
 | --- | --- | --- |
-| MF1 | The module's profile from the module spec: nameplate, hierarchical structures (equipment), interface description (per target: OPC UA endpoint, an action per method, a property per published variable), skills, operational data, parameters, control configuration | Done (`modreg profile`) |
+| MF1 | The module's profile from the module spec: nameplate, hierarchical structures (equipment), interface description (per target: OPC UA endpoint, an action per method, a property per published variable, steps' variables included), skills (steps referring to their State), the Resetting and Stopping procedures, operational data, parameters, control configuration | Done (`modreg profile`); steps, procedures and result units added 5 Oct so an HMI can be built from the AAS |
 | MF2 | ProgramDigest: SHA-256 of the generated program for the target (instances with types, connections, values) | Done, in Control Configuration. A ProfileDigest and the same digest computed from a running program are open |
 | MF3 | Identification in the generated application: a ModLib type publishing GlobalAssetId, AasId, ProfileDigest, ProgramDigest read-only at `/Objects/<Module>/Identification` (needs a FORTE rebuild once) | Open |
 | MF4 | The profile deployed to the Pi together with the boot file | Open |
