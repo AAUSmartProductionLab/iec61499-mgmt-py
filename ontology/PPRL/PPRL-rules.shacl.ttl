@@ -1,0 +1,104 @@
+@prefix pprl: <https://w3id.org/2025/pprl#> .
+@prefix css:  <http://www.w3id.org/hsu-aut/css#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Closed-world rules of the PPR link ontology, checked on the CSS-level graph (the
+# individuals the projection creates with pprl:describes*). They need no reasoning: the
+# paths spell out the property chains.
+
+pprl:prefixes sh:declare
+  [ sh:prefix "pprl" ; sh:namespace "https://w3id.org/2025/pprl#"^^<http://www.w3.org/2001/XMLSchema#anyURI> ] ,
+  [ sh:prefix "css" ; sh:namespace "http://www.w3id.org/hsu-aut/css#"^^<http://www.w3.org/2001/XMLSchema#anyURI> ] .
+
+# A leaf process step requires exactly one capability; a process with sub-processes requires none
+# (its children do).
+pprl:LeafRequiresOneCapabilityShape a sh:NodeShape ;
+  sh:targetClass pprl:LeafProcess ;
+  sh:property [ sh:path css:requiresCapability ; sh:minCount 1 ; sh:maxCount 1 ;
+                sh:message "A leaf process requires exactly one capability." ] ;
+  sh:property [ sh:path pprl:hasSubProcess ; sh:maxCount 0 ;
+                sh:message "A LeafProcess has no sub-processes." ] .
+
+pprl:ParentRequiresNoCapabilityShape a sh:NodeShape ;
+  sh:targetSubjectsOf pprl:hasSubProcess ;
+  sh:property [ sh:path css:requiresCapability ; sh:maxCount 0 ;
+                sh:message "A process with sub-processes requires no capability itself; its leaves do." ] .
+
+# The bound skill is one of the step's candidates, and the chosen resource provides it.
+pprl:BoundSkillIsCandidateShape a sh:NodeShape ;
+  sh:targetSubjectsOf pprl:boundTo ;
+  sh:sparql [
+    sh:message "Bound skill {?skill} does not realise a capability matching one this step requires." ;
+    sh:prefixes pprl:prefixes ;
+    sh:select """
+      SELECT $this ?skill WHERE {
+        $this pprl:boundTo ?skill .
+        FILTER NOT EXISTS { $this css:requiresCapability/pprl:matches/css:isRealizedBySkill ?skill . }
+      }""" ] .
+
+pprl:ExecutedByProvidesSkillShape a sh:NodeShape ;
+  sh:targetSubjectsOf pprl:executedBy ;
+  sh:sparql [
+    sh:message "Resource {?r} does not provide the bound skill {?skill}." ;
+    sh:prefixes pprl:prefixes ;
+    sh:select """
+      SELECT $this ?r ?skill WHERE {
+        $this pprl:executedBy ?r ; pprl:boundTo ?skill .
+        FILTER NOT EXISTS { ?r css:providesSkill ?skill . }
+      }""" ] .
+
+# Matching goes from a required to an offered capability.
+pprl:MatchRolesShape a sh:NodeShape ;
+  sh:targetSubjectsOf pprl:matches ;
+  sh:class pprl:RequiredCapability ;
+  sh:property [ sh:path pprl:matches ; sh:class pprl:OfferedCapability ] .
+
+# Skill composition stays inside one resource: a composite uses skills of the resource that
+# provides it or of its (transitive) parts, never of a sibling resource.
+pprl:UsesDownwardShape a sh:NodeShape ;
+  sh:targetSubjectsOf pprl:usesSkill ;
+  sh:sparql [
+    sh:message "Skill {$this} uses {?used}, which is not provided by its resource or one of its parts." ;
+    sh:prefixes pprl:prefixes ;
+    sh:select """
+      SELECT $this ?used WHERE {
+        $this pprl:usesSkill ?used .
+        ?r css:providesSkill $this .
+        FILTER NOT EXISTS { ?r pprl:hasPart* ?part . ?part css:providesSkill ?used . }
+      }""" ] .
+
+# A skill only occupies its own resource or its parts.
+pprl:OccupiesDownwardShape a sh:NodeShape ;
+  sh:targetSubjectsOf pprl:occupies ;
+  sh:sparql [
+    sh:message "Skill {$this} occupies {?e}, which is not its resource or one of its parts." ;
+    sh:prefixes pprl:prefixes ;
+    sh:select """
+      SELECT $this ?e WHERE {
+        $this pprl:occupies ?e .
+        ?r css:providesSkill $this .
+        FILTER NOT EXISTS { ?r pprl:hasPart* ?e . }
+      }""" ] .
+
+# Order only between siblings.
+pprl:PrecedesSiblingsShape a sh:NodeShape ;
+  sh:targetSubjectsOf pprl:directlyPrecedes ;
+  sh:sparql [
+    sh:message "{$this} directly precedes {?b}, which is not a sibling." ;
+    sh:prefixes pprl:prefixes ;
+    sh:select """
+      SELECT $this ?b WHERE {
+        $this pprl:directlyPrecedes ?b .
+        FILTER NOT EXISTS { ?parent pprl:hasSubProcess $this , ?b . }
+      }""" ] .
+
+# The order has no cycle.
+pprl:PrecedesAcyclicShape a sh:NodeShape ;
+  sh:targetSubjectsOf pprl:directlyPrecedes ;
+  sh:sparql [
+    sh:message "{$this} precedes itself (a cycle in the process order)." ;
+    sh:prefixes pprl:prefixes ;
+    sh:select """
+      SELECT $this WHERE { $this pprl:directlyPrecedes+ $this . }""" ] .

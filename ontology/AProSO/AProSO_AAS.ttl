@@ -1,0 +1,122 @@
+@prefix aproso: <https://w3id.org/2025/aproso#> .
+@prefix apso: <https://w3id.org/2025/apso#> .
+@prefix arso: <https://w3id.org/2025/arso#> .
+@prefix aas:  <https://admin-shell.io/aas/3/1/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# ONTOLOGY METADATA
+#################################################################
+
+<https://w3id.org/2025/aproso>
+  rdf:type owl:Ontology ;
+  owl:versionIRI <https://w3id.org/2025/aproso/0.1.0> ;
+  owl:imports <https://admin-shell.io/aas/3/1/> ;
+  owl:imports <https://w3id.org/2025/aproso/modules/process-information> ;
+  owl:imports <https://w3id.org/2025/aproso/modules/process-structure> ;
+  owl:imports <https://w3id.org/2025/aproso/modules/capability-bindings> ;
+  owl:imports <https://w3id.org/2025/aproso/modules/validation-policy> ;
+  rdfs:comment """AProSO v0.1 — Process AAS blueprint ontology (drafted 30 Sep 2026).
+
+  The Product AAS (APSO) says what a product needs, independent of any resource: its
+  Bill of Process with required capabilities. The Process AAS says how it is made on one
+  line: a nested process map (ProcessStructure) whose leaves each require one capability,
+  the flow between siblings, the binding of each leaf to a resource's offered capability
+  and skill with its parameter values (CapabilityBindings), the check result (Validation)
+  and what the orchestrator runs (Policy). One Process AAS per product and line, one AAS
+  version per recipe version.
+
+    Process(AAS)
+      - ProcessInformation:SM [1]
+      - ProcessStructure:SM [1]
+      - CapabilityBindings:SM [0..1]   (required once Status is Approved)
+      - Validation:SM [0..1]
+      - Policy:SM [0..1]
+
+  Per-submodel modules define the internal structure; this root defines the typed
+  AAS-to-submodel links and the resolved cross-submodel relations. Relations to the
+  product and resource AAS and to CSS live in the PPR link ontology (pprl).""" .
+
+#################################################################
+# PROCESS AAS TYPE
+#################################################################
+
+aproso:ProcessAAS rdf:type owl:Class ;
+  rdfs:subClassOf aas:AssetAdministrationShell ;
+  rdfs:label "Process AAS" ;
+  rdfs:comment "Asset Administration Shell of a process (recipe) for one product on one line." .
+
+#################################################################
+# AAS → typed submodel direct links
+#################################################################
+
+aproso:hasSubmodel rdf:type owl:ObjectProperty ;
+  rdfs:domain aas:AssetAdministrationShell ;
+  rdfs:range aas:Submodel ;
+  rdfs:comment "Direct link from AAS to a submodel instance, bypassing AAS Reference indirection." .
+
+aproso:hasProcessInformationSubmodel rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:subPropertyOf aproso:hasSubmodel ; rdfs:range aproso:ProcessInformationSubmodel .
+aproso:hasProcessStructureSubmodel rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:subPropertyOf aproso:hasSubmodel ; rdfs:range aproso:ProcessStructureSubmodel .
+aproso:hasCapabilityBindingsSubmodel rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:subPropertyOf aproso:hasSubmodel ; rdfs:range aproso:CapabilityBindingsSubmodel .
+aproso:hasValidationSubmodel rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:subPropertyOf aproso:hasSubmodel ; rdfs:range aproso:ValidationSubmodel .
+aproso:hasPolicySubmodel rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:subPropertyOf aproso:hasSubmodel ; rdfs:range aproso:PolicySubmodel .
+
+aproso:ProcessAAS rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty aproso:hasProcessInformationSubmodel ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:ProcessInformationSubmodel ],
+  [ rdf:type owl:Restriction ; owl:onProperty aproso:hasProcessStructureSubmodel ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:ProcessStructureSubmodel ],
+  [ rdf:type owl:Restriction ; owl:onProperty aproso:hasCapabilityBindingsSubmodel ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:CapabilityBindingsSubmodel ],
+  [ rdf:type owl:Restriction ; owl:onProperty aproso:hasValidationSubmodel ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:ValidationSubmodel ],
+  [ rdf:type owl:Restriction ; owl:onProperty aproso:hasPolicySubmodel ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:PolicySubmodel ] .
+
+#################################################################
+# Resolved cross-submodel relations (created by the JSON-to-RDF projection)
+#################################################################
+
+aproso:hasSubProcess rdf:type owl:ObjectProperty ;
+  rdfs:domain [ rdf:type owl:Class ; owl:unionOf ( aproso:ProcessEntryNodeEntity aproso:ProcessNodeEntity ) ] ;
+  rdfs:range aproso:ProcessNodeEntity ;
+  rdfs:comment "Resolved nesting: a node's sub-process (an Entity in its statements)." .
+
+aproso:precedes rdf:type owl:ObjectProperty ;
+  rdfs:domain aproso:ProcessNodeEntity ;
+  rdfs:range aproso:ProcessNodeEntity ;
+  rdfs:comment "Resolved Precedes relationship between two sibling nodes." .
+
+aproso:refines rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:domain [ rdf:type owl:Class ; owl:unionOf ( aproso:ProcessEntryNodeEntity aproso:ProcessNodeEntity ) ] ;
+  rdfs:range [ rdf:type owl:Class ; owl:unionOf ( apso:ProcessSMC apso:ProcessStructureSMC ) ] ;
+  rdfs:comment "Resolved Refines: the Bill of Process process (Product AAS) that a node realises on the line." .
+
+aproso:bindsStep rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:domain aproso:BindingSMC ; rdfs:range aproso:ProcessNodeEntity ;
+  rdfs:comment "Resolved Binding.Step: the leaf node bound (a leaf: SHACL pprl:BindingOnLeafShape)." .
+
+aproso:bindsRequiredCapability rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:domain aproso:BindingSMC ; rdfs:range arso:CapabilityContainerSMC ;
+  rdfs:comment "Resolved Binding.RequiredCapability." .
+
+aproso:hasCandidate rdf:type owl:ObjectProperty ;
+  rdfs:domain aproso:BindingSMC ; rdfs:range arso:CapabilityContainerSMC ;
+  rdfs:comment "Resolved Binding.Candidates entry: an offered capability that matches." .
+
+aproso:bindsOfferedCapability rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:subPropertyOf aproso:hasCandidate ;
+  rdfs:domain aproso:BindingSMC ; rdfs:range arso:CapabilityContainerSMC ;
+  rdfs:comment "Resolved Binding.OfferedCapability: the chosen candidate." .
+
+aproso:bindsSkill rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:domain aproso:BindingSMC ; rdfs:range arso:SkillSMC ;
+  rdfs:comment "Resolved Binding.Skill: the skill realising the chosen capability." .

@@ -232,7 +232,5 @@ arduino_cpp_examples/
 # modsync output (AAS JSON of the modules read)
 /aas/
 
-# The ontologies: a working copy kept locally, not part of the repository
-/ontology/
 # FORTE prepared for a GitHub release (runtime/package-release.ps1)
 runtime/dist/

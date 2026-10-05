@@ -1,0 +1,102 @@
+@prefix arso: <https://w3id.org/2025/arso#> .
+@prefix aas:  <https://admin-shell.io/aas/3/1/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+
+#### STILL UNDER DEVELOPMENT - This is currently a placeholder for the concept of "Operational Data".
+
+#################################################################
+# SMT STRUCTURE OVERVIEW
+#################################################################
+# OperationalData (Submodel)
+#   ├─ Datapoint [Property, 1..*]
+#   │    ├─ valueType constrained to xs:decimal
+#   │    └─ semanticId required
+#   └─ DatapointGroup [SMC, 0..*]
+#        └─ contains only Datapoint children
+
+#################################################################
+# ONTOLOGY METADATA
+#################################################################
+
+<https://w3id.org/2025/arso/modules/operational-data>
+  rdf:type owl:Ontology ;
+  owl:imports <https://admin-shell.io/aas/3/1/> ;
+  rdfs:comment """ARSO module: Operational Data (Custom).""" .
+
+
+#################################################################
+# SUBMODEL TYPE
+#################################################################
+
+arso:OperationalDataSubmodel rdf:type owl:Class ;
+  rdfs:subClassOf aas:Submodel ;
+  rdfs:label "Operational Data Submodel" ;
+  arso:semanticId "https://smartproductionlab.aau.dk/ARSO/OperationalData/1/0/Submodel" ;
+  rdfs:comment "Custom — Runtime variable bindings." .
+
+
+#################################################################
+# ELEMENT TYPES
+#################################################################
+
+arso:Datapoint rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  rdfs:comment "A domain-specific measurement or value, represented as an AAS Property." .
+
+arso:DatapointGroup rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  rdfs:comment "A structured group of Datapoints." .
+
+arso:OperationalDataVariableSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:parentClass arso:OperationalDataSubmodel ;
+  rdfs:comment "SMC {variable_name} -- a named variable entry, as currently produced by the generation pipeline (variables_builder.py::_create_variable_collection). Wraps an optional InterfaceReference plus any schema-derived data fields (distinct from the placeholder arso:Datapoint concept above, which the converter does not yet type). Applied unconditionally to every direct SubmodelElementCollection child of OperationalData (no idShort -- variable names are user-defined). Its semanticId, when present, must use the lab's URI namespace (enforced via SHACL sh:pattern)." .
+
+arso:OperationalDataInterfaceReferenceRef rdf:type owl:Class ;
+  rdfs:subClassOf aas:ReferenceElement ;
+  arso:parentClass arso:OperationalDataVariableSMC ;
+  arso:idShort "InterfaceReference" ;
+  rdfs:comment "ReferenceElement InterfaceReference -- points to an AID property (.../InteractionMetadata/properties/{key}) in the same AAS (variables_builder.py hardcodes the properties path segment, never actions/events). Cross-SM target existence enforced via SPARQL SHACL (arso:OperationalDataInterfaceRefTargetShape)." .
+
+
+#################################################################
+# ELEMENT CONSTRAINTS
+#################################################################
+
+# Datapoint must use decimal values
+arso:Datapoint rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Property/valueType> ;
+  owl:hasValue <https://admin-shell.io/aas/3/1/DataTypeDefXsd/Decimal> ] .
+
+# Datapoint must have exactly one value
+arso:Datapoint rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Property/value> ;
+  owl:cardinality "1"^^xsd:nonNegativeInteger ] .
+
+# Datapoint must have a semanticId
+arso:Datapoint rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/HasSemantics/semanticId> ;
+  owl:minCardinality "1"^^xsd:nonNegativeInteger ] .
+
+# DatapointGroup may only contain Datapoints
+arso:DatapointGroup rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+  owl:allValuesFrom arso:Datapoint ] .
+
+
+#################################################################
+# CONTAINMENT CONSTRAINTS
+#################################################################
+
+arso:OperationalDataSubmodel rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ;
+  owl:someValuesFrom arso:Datapoint ] .

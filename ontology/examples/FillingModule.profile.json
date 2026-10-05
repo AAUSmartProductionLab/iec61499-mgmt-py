@@ -1,0 +1,138 @@
+{
+  "FillingModule": {
+    "idShort": "FillingModuleAAS",
+    "id": "https://smartproductionlab.aau.dk/aas/FillingModuleAAS",
+    "globalAssetId": "https://smartproductionlab.aau.dk/assets/FillingModule",
+    "assetType": "https://smartproductionlab.aau.dk/Resource/CPPM/DispensingSystem",
+    "DigitalNameplate": {
+      "ManufacturerName": "Aalborg University, Smart Production Lab",
+      "ManufacturerProductDesignation": "Filling module (Raspberry Pi 4, Eclipse 4diac FORTE)",
+      "serialNumber": "FILL-PI-001"
+    },
+    "HierarchicalStructures": {
+      "Name": "FillingModule",
+      "Archetype": "OneUp",
+      "IsPartOf": {
+        "aauFillingLine": {"globalAssetId": "https://smartproductionlab.aau.dk/assets/MWQ2ODY5ZDEtZTQ3Yy00NWU4LTlmYTAtNTI3YjVlMDk4MWFi"}
+      }
+    },
+    "AID": {
+      "InterfaceOPCUA": {
+        "protocol": "OPCUA",
+        "Title": "Filling module",
+        "EndpointMetadata": {
+          "protocol": "OPC UA",
+          "encoding": "TCP Binary",
+          "base": "opc.tcp://192.168.0.191:4840",
+          "port": "4840",
+          "security_mode": "None",
+          "security_policy": "http://opcfoundation.org/UA/SecurityPolicy#None",
+          "namespace_index": "1"
+        },
+        "InteractionMetadata": {
+          "actions": {
+            "Dispensing_Start": {
+              "key": "Start",
+              "title": "Start Dispensing",
+              "synchronous": false,
+              "forms": {"href": "/0:Objects/1:Filling/1:Skills/1:Dispensing/1:Start", "op": "invokeaction"}
+            },
+            "Dispensing_Stop": {
+              "key": "Stop",
+              "title": "Stop Dispensing",
+              "synchronous": false,
+              "forms": {"href": "/0:Objects/1:Filling/1:Skills/1:Dispensing/1:Stop", "op": "invokeaction"}
+            }
+          },
+          "properties": {
+            "Dispensing_State": {
+              "key": "State",
+              "title": "Dispensing state",
+              "forms": {"href": "/0:Objects/1:Filling/1:Skills/1:Dispensing/1:State", "op": "observeproperty"}
+            },
+            "Scale_Weight": {
+              "key": "Weight",
+              "title": "Weight",
+              "forms": {"href": "/0:Objects/1:Filling/1:Equipment/1:Scale/1:Weight", "op": "observeproperty"}
+            }
+          }
+        }
+      }
+    },
+    "Skills": {
+      "Dispensing": {
+        "semantic_id": "https://smartproductionlab.aau.dk/skills/Dispensing",
+        "interface": "Dispensing_Start",
+        "interfaceKey": "InterfaceOPCUA",
+        "description": "Needle down, dwell, needle up, weigh"
+      }
+    },
+    "Capabilities": {
+      "Dispensing": {
+        "semantic_id": "https://smartproductionlab.aau.dk/Capability/Dispensing",
+        "realizedBy": "Dispensing"
+      }
+    },
+    "OperationalData": {
+      "DispensingState": {"InterfaceReference": "Dispensing_State", "semanticId": "https://smartproductionlab.aau.dk/StateMachine/Skill/1"},
+      "Weight": {"InterfaceReference": "Scale_Weight", "semanticId": "https://smartproductionlab.aau.dk/variables/Scale/Weight"}
+    },
+    "AIMC": {
+      "InterfaceOPCUA": {
+        "DefaultPollingInterval": "500",
+        "Mappings": [
+          {"source": "Dispensing_State", "sink": "DispensingState"},
+          {"source": "Scale_Weight", "sink": "Weight"}
+        ]
+      }
+    },
+
+    "x-extensions": {
+      "_comment": "Proposed profile extensions (aas-implementation-plan.md, 'Manifest'); the lab's builder ignores this key today.",
+      "AID.actions.Dispensing_Start": {
+        "safe": false,
+        "idempotent": false,
+        "input": {"type": "object", "properties": {
+          "RD_1": {"type": "string", "title": "Session"},
+          "RD_2": {"type": "number", "title": "Volume", "unit": "mL", "minimum": 0.1, "maximum": 2.0}}},
+        "output": {"type": "object", "properties": {
+          "SD_1": {"type": "boolean", "title": "Accepted"},
+          "SD_2": {"type": "integer", "title": "ErrorID", "minimum": 0, "maximum": 8}}},
+        "forms": {"uav_browsePath": "/0:Objects/1:Filling/1:Skills/1:Dispensing/1:Start"}
+      },
+      "AID.properties.Dispensing_State": {"type": "integer", "minimum": 0, "maximum": 5, "observable": true},
+      "HierarchicalStructures.Components": {
+        "NeedleAxis": {"semanticId": "http://www.w3id.org/hsu-aut/VDI2206#Component"},
+        "Scale": {"semanticId": "http://www.w3id.org/hsu-aut/VDI2206#Component"}
+      },
+      "Capabilities.Dispensing": {
+        "role": "Offered",
+        "properties": {"Volume": {"semanticId": "https://smartproductionlab.aau.dk/Property/Volume", "unit": "mL",
+                                  "min": 0.1, "max": 2.0, "expressionGoal": "Assurance", "logicInterpretation": "between",
+                                  "realizedByParameter": "Dispensing.Volume"}}
+      },
+      "Skills.Dispensing": {
+        "kind": "Composite",
+        "methods": {"Start": "Dispensing_Start", "Stop": "Dispensing_Stop", "Abort": "Dispensing_Abort", "Reset": "Dispensing_Reset"},
+        "stateMachine": "https://smartproductionlab.aau.dk/StateMachine/Skill/1",
+        "state": "DispensingState",
+        "parameters": {"Volume": {"type": "double", "unit": "mL", "min": 0.1, "max": 2.0, "default": 1.0, "input": "RD_2"}},
+        "uses": ["MoveNeedleDown", "Dwell", "MoveNeedleUp", "Weigh"],
+        "execute": ["MoveNeedleDown", {"Dwell": {"Duration": "Volume / FlowRate"}}, "MoveNeedleUp", "Weigh"],
+        "stop": ["MoveNeedleUp"],
+        "occupies": ["NeedleAxis", "Scale"],
+        "results": {"Weight": "Weight"},
+        "implementation": {"fbType": "filling::SC_Dispensing", "instancePath": "Dispensing.Control"}
+      },
+      "OperationalData.Weight": {"unit": "g", "expressionGoal": "Actual_Value", "group": "Scale", "history": true},
+      "ControlConfiguration": {
+        "runtime": "Eclipse 4diac FORTE 3.3.0",
+        "managementEndpoint": "192.168.0.191:61499",
+        "moduleSpec": "modules/filling.yaml",
+        "profileDigest": "sha256:<of this profile without this field>",
+        "programDigest": "sha256:<of the generated program: instances, types, connections, parameters>",
+        "typeHashes": {"filling::SC_Dispensing": "v2:SHA3-512:..."}
+      }
+    }
+  }
+}

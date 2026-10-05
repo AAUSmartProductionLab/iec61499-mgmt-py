@@ -1,0 +1,51 @@
+@prefix aproso: <https://w3id.org/2025/aproso#> .
+@prefix aas:  <https://admin-shell.io/aas/3/1/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# SMT STRUCTURE OVERVIEW
+#################################################################
+# Validation (Submodel) — the result of checking the process map and its bindings
+#   ├─ Status [Property, 1]              Passed | Rejected | NotChecked
+#   ├─ CheckedAt [Property, xs:dateTime, 0..1]
+#   ├─ CheckedAgainst [SML of ReferenceElement or Property, 0..1]  skill versions, type hashes
+#   └─ Violations [SML of Violation SMC, 0..1]
+#        └─ Violation: Step [ReferenceElement], Condition [Property], Actual [Property]
+#
+# Policy (Submodel, the lab's) — what the orchestrator executes
+#   └─ Policy [SMC, 1]
+#        ├─ File [File, 1]               behaviour tree XML (semanticId https://www.behaviortree.dev/BehaviourTree)
+#        └─ GeneratedFrom [SML of ReferenceElement, 0..1] → ProcessStructure, CapabilityBindings
+
+<https://w3id.org/2025/aproso/modules/validation-policy>
+  rdf:type owl:Ontology ;
+  owl:imports <https://admin-shell.io/aas/3/1/> ;
+  rdfs:comment """AProSO module: Validation (check result of the process map and bindings) and
+  Policy (the lab's behaviour tree the orchestrator runs, generated from structure and bindings).""" .
+
+aproso:ValidationSubmodel rdf:type owl:Class ;
+  rdfs:subClassOf aas:Submodel ;
+  rdfs:label "Validation Submodel" ;
+  rdfs:comment "Check result: Status, CheckedAt, CheckedAgainst, Violations." .
+
+aproso:ValidationStatusProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; rdfs:comment "Status [1] — Passed, Rejected or NotChecked." .
+aproso:ViolationsSML rdf:type owl:Class ; rdfs:subClassOf aas:SubmodelElementList ; rdfs:comment "Violations [0..1]." .
+aproso:ViolationSMC rdf:type owl:Class ; rdfs:subClassOf aas:SubmodelElementCollection ; rdfs:comment "Violation — Step, Condition, Actual." .
+
+aproso:PolicySubmodel rdf:type owl:Class ;
+  rdfs:subClassOf aas:Submodel ;
+  rdfs:label "Policy Submodel" ;
+  rdfs:comment "The lab's Policy submodel (semanticId https://smartproductionlab.aau.dk/submodels/Policy/1/0): the behaviour tree the orchestrator executes." .
+
+aproso:PolicySMC rdf:type owl:Class ; rdfs:subClassOf aas:SubmodelElementCollection ; rdfs:comment "Policy [1] — File (behaviour tree XML) and GeneratedFrom." .
+
+aproso:ValidationSubmodel rdfs:subClassOf [
+  rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ;
+  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:ValidationStatusProperty ] .
+
+aproso:PolicySubmodel rdfs:subClassOf [
+  rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ;
+  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:PolicySMC ] .

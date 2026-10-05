@@ -1,0 +1,82 @@
+@prefix arso: <https://w3id.org/2025/arso#> .
+@prefix aas:  <https://admin-shell.io/aas/3/1/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# SMT STRUCTURE OVERVIEW
+#################################################################
+# Parameters (Submodel)
+#   └─ ParameterEntry [SMC, 1..*]
+#        ├─ name [Property]
+#        ├─ value [Property]
+#        ├─ valueType [Property]
+#        └─ unit [Property, optional]
+
+#################################################################
+# ONTOLOGY METADATA
+#################################################################
+
+<https://w3id.org/2025/arso/modules/parameters>
+  rdf:type owl:Ontology ;
+  owl:imports <https://admin-shell.io/aas/3/1/> ;
+  rdfs:comment """ARSO module: Parameters (Custom).""" .
+
+
+#################################################################
+# SUBMODEL TYPE
+#################################################################
+
+arso:ParametersSubmodel rdf:type owl:Class ;
+  rdfs:subClassOf aas:Submodel ;
+  rdfs:label "Parameters Submodel" ;
+  arso:semanticId "https://smartproductionlab.aau.dk/ARSO/Parameters/1/0/Submodel" ;
+  rdfs:comment "Custom — Static configuration parameters." .
+
+
+#################################################################
+# ELEMENT TYPES
+#################################################################
+
+arso:ParameterEntrySMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:parentClass arso:ParametersSubmodel ;
+  rdfs:comment "SMC {parameter_name} -- a named parameter entry, as currently produced by the generation pipeline (parameters_builder.py::_create_parameter_collection, which mirrors variables_builder.py exactly). Wraps an optional InterfaceReference plus any schema-derived data fields. Applied unconditionally to every direct SubmodelElementCollection child of Parameters (no idShort -- parameter names are user-defined). Its semanticId, when present, must use the lab's URI namespace (enforced via SHACL sh:pattern)." .
+
+arso:ParameterInterfaceReferenceRef rdf:type owl:Class ;
+  rdfs:subClassOf aas:ReferenceElement ;
+  arso:parentClass arso:ParameterEntrySMC ;
+  arso:idShort "InterfaceReference" ;
+  rdfs:comment "ReferenceElement InterfaceReference -- points to an AID property (.../InteractionMetadata/properties/{key}) in the same AAS (parameters_builder.py hardcodes the properties path segment, never actions/events). Cross-SM target existence enforced via SPARQL SHACL (arso:ParameterInterfaceRefTargetShape)." .
+
+
+arso:ParameterValueProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:ParameterEntrySMC ;
+  arso:idShort "Value" ;
+  rdfs:comment "Property Value -- the parameter's value as deployed; its valueType is the parameter's type (added 2 Oct 2026 for the registration service)." .
+
+arso:ParameterUnitProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:ParameterEntrySMC ;
+  arso:idShort "Unit" ;
+  rdfs:comment "Property Unit (xs:string, optional) -- the unit of the value (added 2 Oct 2026)." .
+
+
+#################################################################
+# CONTAINMENT CONSTRAINTS
+#################################################################
+
+arso:ParametersSubmodel rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ;
+  owl:someValuesFrom arso:ParameterEntrySMC ] .
+
+# A parameter entry has exactly one Value and at most one Unit.
+arso:ParameterEntrySMC rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ParameterValueProperty ] ,
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ParameterUnitProperty ] .

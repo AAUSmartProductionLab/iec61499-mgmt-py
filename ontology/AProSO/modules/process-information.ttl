@@ -1,0 +1,46 @@
+@prefix aproso: <https://w3id.org/2025/aproso#> .
+@prefix aas:  <https://admin-shell.io/aas/3/1/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# SMT STRUCTURE OVERVIEW
+#################################################################
+# ProcessInformation (Submodel) — the lab's process header, plus approval
+#   ├─ ProcessName [Property, xs:string, 1]
+#   ├─ ProcessType [Property, xs:string, 0..1]        e.g. AsepticFilling
+#   ├─ Status [Property, xs:string, 1]                Draft | Approved | Retired (lab: planned, ...)
+#   ├─ CreatedAt [Property, xs:dateTime, 0..1]
+#   ├─ ProductReference [Property or ReferenceElement, 1]   → Product AAS
+#   ├─ ResourceReference [Property or ReferenceElement, 0..1] → line (Resource AAS)
+#   ├─ ApprovedBy [Property, xs:string, 0..1]
+#   └─ ApprovedAt [Property, xs:dateTime, 0..1]
+# Version and revision: the AAS administrative information of the Process AAS.
+
+<https://w3id.org/2025/aproso/modules/process-information>
+  rdf:type owl:Ontology ;
+  owl:imports <https://admin-shell.io/aas/3/1/> ;
+  rdfs:comment """AProSO module: ProcessInformation, the header of a Process AAS (as in the lab's
+  AP2030-UNS process configs), with the approval fields a recipe needs.""" .
+
+aproso:ProcessInformationSubmodel rdf:type owl:Class ;
+  rdfs:subClassOf aas:Submodel ;
+  rdfs:label "ProcessInformation Submodel" ;
+  rdfs:comment "Header of a Process AAS: name, type, status, product and line it is for, approval." .
+
+aproso:ProcessNameProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; rdfs:comment "ProcessName:string [1]." .
+aproso:ProcessTypeProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; rdfs:comment "ProcessType:string [0..1]." .
+aproso:ProcessStatusProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; rdfs:comment "Status:string [1] — Draft, Approved or Retired; only an Approved process may be activated." .
+aproso:CreatedAtProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; rdfs:comment "CreatedAt:dateTime [0..1]." .
+aproso:ProductReferenceElement rdf:type owl:Class ; rdfs:subClassOf aas:SubmodelElement ; rdfs:comment "ProductReference [1] — the Product AAS this process makes (Property with the AAS id, as the lab writes it, or ReferenceElement)." .
+aproso:ResourceReferenceElement rdf:type owl:Class ; rdfs:subClassOf aas:SubmodelElement ; rdfs:comment "ResourceReference [0..1] — the line (Resource AAS) this process runs on." .
+aproso:ApprovedByProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; rdfs:comment "ApprovedBy:string [0..1]." .
+aproso:ApprovedAtProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; rdfs:comment "ApprovedAt:dateTime [0..1]." .
+
+aproso:ProcessInformationSubmodel rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ; owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:ProcessNameProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ; owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:ProcessStatusProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ; owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:ProductReferenceElement ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:ResourceReferenceElement ] .
