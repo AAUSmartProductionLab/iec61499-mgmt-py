@@ -100,3 +100,14 @@ procedures:
   # initHardware: servo 90 then 120, plunger up, piston down to the switch and up for clearance.
   Resetting: [{MoveArm: {Angle: 90.0}, as: ArmMiddle}, {MoveArm: {Angle: 120.0}, as: ArmHome}, RetractPlunger,
               LowerPiston, {RaisePiston: {Duration: 1.5}}]
+
+# What the module offers (see filling.yaml): illustrative values, as the vial stoppering station of
+# the process planner's pharma example, until the station is measured.
+capabilities:
+  Stoppering:
+    description: Place a rubber stopper on a filled vial and press it in
+    realized_by: Stoppering
+    properties:
+      ContainerType: {value: vial}
+      GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
+      StopperDiameter: {minimum: 6.0, maximum: 20.0, unit: mm}
