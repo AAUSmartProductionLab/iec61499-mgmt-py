@@ -5,9 +5,10 @@ Eclipse 4diac FORTE programs on Raspberry Pis, are described by their Asset Admi
 Shells, and are reconfigured from product, process and resource models.
 
 Each top-level folder is a future repository; for now they share this one, with one Python
-project (`pyproject.toml`) for the three packages. Plans, design notes and the ontologies used
-as the design guide are working documents kept outside the repository; proper documentation
-follows once everything is finalised.
+project (`pyproject.toml`) for the three packages. `docs/` and the build and modelling plan are
+working documents (notes, plans, learnings), in the repository for now so they can be shared
+between computers; they are not finished documentation and will be cleaned up or removed. The
+ontologies are a working copy kept outside the repository.
 
 ## Map
 
@@ -23,8 +24,8 @@ follows once everything is finalised.
 Each folder has its own `tests/`; `conftest.py` at the top holds the shared live-test options.
 
 Local only, not committed: `AAS_Builder/` (the lab's AAS builder, lives in the lab
-repository), `arduino_cpp_examples/` (the ESP32 station code the modules were ported from),
-`docs/`, `ontology/` and the plan (working documents).
+repository), `arduino_cpp_examples/` (the ESP32 station code the modules were ported from) and
+`ontology/`.
 
 ## Quick start
 

@@ -218,9 +218,6 @@ __marimo__/
 .streamlit/secrets.toml
 /.metadata/
 
-# docs to later be published
-docs/
-
 # 4diac IDE per-type documentation folders
 *.assets/
 
@@ -235,9 +232,7 @@ arduino_cpp_examples/
 # modsync output (AAS JSON of the modules read)
 /aas/
 
-# Working documents: kept locally for building the project, not part of the repository
-# (proper documentation comes in once everything is finalised)
+# The ontologies: a working copy kept locally, not part of the repository
 /ontology/
-/AAS-driven online reconfiguration of IEC 61499 devices build and modelling plan.md
 # FORTE prepared for a GitHub release (runtime/package-release.ps1)
 runtime/dist/
