@@ -97,17 +97,22 @@ parent with a capability).
 python -m pytest ontology/checks
 ```
 
-## Where modsync's AAS differs from ARSO (to align next)
+## The resource AAS that is built, against ARSO
 
-1. Skills submodel: ARSO wants the `Interfaces`, `Skills` and `Errors` containers and a
-   `SemanticId` Property per skill, and accepts the semanticIds
-   `https://admin-shell.io/idta/ControlComponentType/1/0` or `.../ARSO/Skills/1/0/Submodel`;
-   modsync (like the lab's Registration Service) puts the skills directly in the submodel with
-   `https://smartfactory.de/aas/submodel/Skills#1/0`, which ARSO does not list.
-2. Steps: modsync writes `Execute`/`Stop` steps and `Occupies` as text; ARSO 0.5 has references
-   (`Step.Skill`, `Occupies` entries) so they resolve.
-3. AID: ARSO requires `security` and `securityDefinitions` in `EndpointMetadata`; OPC UA forms
-   in IDTA 02017-1-1 use `uav_browsePath` (modsync writes the browse path in `href`).
-4. `Variables` (modsync, lab builder) versus ARSO's `OperationalData`.
-5. Digital Nameplate and Hierarchical Structures are mandatory in ARSO; modsync emits neither.
-6. `ControlSoftware` → `ControlConfiguration` (ARSO accepts modsync's semanticId meanwhile).
+`modreg` (in `aas61499-tools/`) builds a module's AAS in ARSO's structure and checks it
+(`modreg check <module> --ontology ontology/ARSO`); both modules break no restriction. What
+still differs:
+
+1. Elements the check reports as not described: the Web of Things terms the lab's shared model
+   writes into the Asset Interfaces Description (key, type, title, observable, unit, op, input
+   and output schemas, `uav_browsePath`, `uav_componentOf`), about 380 per module.
+2. What ARSO names but does not declare, so the classes are hand-written in `modreg/model.py`:
+   the terms of a skill's Contract, the children of a Step and of Implementation, the item types
+   of Uses and Occupies.
+3. A skill that is not offered has no Operation and no interface action, which ARSO asks of every
+   skill; such a skill is not listed, and steps name it by an external reference.
+4. Operational Data: ARSO's data point is a decimal Property, so Booleans are 0 or 1.
+5. Capabilities, Technical Data and the active procedure and change log of Control
+   Configuration are not written yet.
+6. The AAS `modsync` writes itself (`modsync/aas.py`, from before `modreg`) does not follow ARSO
+   and is to be retired.
