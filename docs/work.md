@@ -190,8 +190,22 @@ with, and aas-model itself is changed as little as possible.
   OPC UA interface with every method as an action and every variable as a property, steps'
   variables included (State, ErrorID, the parameters and results of the step's skill), results
   and parameters with their units.
+- **Who says what** (6 Oct). The Capability Description (IDTA 02020) holds the capabilities the
+  module offers, with their values and ranges (the spec's `capabilities:` section), each realized
+  by a skill: `CapabilityRealizedBy` is a model reference into the Skills submodel. The Skills
+  submodel says which skills exist and how they are parameterized; each skill refers to the
+  interface: `Methods` to the action of each command (Start, Stop, Abort, Reset),
+  `StateReference`, `ErrorReference` and `Results` to the properties publishing them, every step
+  to its State. `Skills/Module` does the same for the module's PackML commands, its state and its
+  occupation. The interface description holds only how to reach things (endpoint, browse paths).
+  The AIMC maps the interface onto the rest: every property feeds one element (a skill parameter
+  its Parameters entry, everything else its Operational Data point), every action is invoked by
+  one delegated Operation of the Skills submodel (`<Skill>` for Start, `<Skill>_Stop` ...,
+  `Occupy`, `Release`, `Module_Reset` ...). A client follows these references from a capability to
+  the browse paths it calls (`modlink.aas` in the HMI repository); the end to end test runs the
+  filling module's Filling capability on FORTE that way.
 - **Profile.** The dump of that model without what its type and its elements' classes say anyway
-  (about 150 KB per module); writing one checks that reading it back gives the same model.
+  (about 180 to 230 KB per module); writing one checks that reading it back gives the same model.
 - **Check.** `modreg check` recognises every element of the built AAS as a member of an ARSO
   class (by semanticId, by idShort below a parent, as the item of a list) and tests the OWL
   restrictions of each. Both modules break none.
@@ -236,6 +250,12 @@ Findings about aas-model, to raise with its author:
 - Items of lists lose their semanticId and get a `temp_id_short_attribute_*` property.
 - Element classes are registered by class name only, so two classes of the same name in
   different templates (`Skill`, `Parameters`) shadow each other when a dump names its class.
+- Qualifier values are handed to BaSyx uncast, so an `xs:boolean` qualifier ("true") fails to
+  build; the capability role qualifiers are kept as strings and typed when the AAS is written.
+- No IEC 61360 unit on elements (its own data specifications carry class names); `modreg` adds a
+  unit data specification first wherever a `Unit` qualifier is, which is where planners read it.
+- IDTA 02020's `CapabilityRealizedBy.second` is an external reference in its classes; ARSO wants
+  the skill of the same AAS, so `modreg` declares it a model reference.
 - OPC UA: `uav_componentOf` wants a NodeId; FORTE's change at every start, so the browse path of
   the owning object is written there.
 

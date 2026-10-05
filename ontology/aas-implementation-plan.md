@@ -322,7 +322,7 @@ replaced on 2 Oct by aas-model, which the lab's registration and management node
 
 | # | Item | State |
 | --- | --- | --- |
-| MF1 | The module's profile from the module spec: nameplate, hierarchical structures (equipment), interface description (per target: OPC UA endpoint, an action per method, a property per published variable, steps' variables included), skills (steps referring to their State), the Resetting and Stopping procedures, operational data, parameters, control configuration | Done (`modreg profile`); steps, procedures and result units added 5 Oct so an HMI can be built from the AAS |
+| MF1 | The module's profile from the module spec: nameplate, hierarchical structures (equipment), interface description (per target: OPC UA endpoint, an action per method, a property per published variable, steps' variables included), skills (steps referring to their State), the Resetting and Stopping procedures, operational data, parameters, control configuration | Done (`modreg profile`); steps, procedures and result units added 5 Oct so an HMI can be built from the AAS; 6 Oct the capability description, the skills' references to every action and property (Methods, ErrorReference, Results, the module's commands) and an AIMC mapping every action and property |
 | MF2 | ProgramDigest: SHA-256 of the generated program for the target (instances with types, connections, values) | Done, in Control Configuration. A ProfileDigest and the same digest computed from a running program are open |
 | MF3 | Identification in the generated application: a ModLib type publishing GlobalAssetId, AasId, ProfileDigest, ProgramDigest read-only at `/Objects/<Module>/Identification` (needs a FORTE rebuild once) | Open |
 | MF4 | The profile deployed to the Pi together with the boot file | Open |
@@ -335,7 +335,7 @@ replaced on 2 Oct by aas-model, which the lab's registration and management node
 
 | # | Item | Where |
 | --- | --- | --- |
-| M1 | Capability description: offered capabilities with property ranges, realised by a skill and its parameters (RealizesProperty) | aas-model has the IDTA class; the profile does not fill it yet (step S2 in `docs/work.md`) |
+| M1 | Capability description: offered capabilities with property ranges, realised by a skill and its parameters (RealizesProperty) | Done 6 Oct from the spec's `capabilities:` section (CapabilityRealizedBy a model reference to the skill, units as IEC 61360); RealizesProperty when a property names a skill parameter. The values of the two modules are illustrative until measured |
 | M2 | Declare in ARSO what a module's skill carries beyond ARSO 0.5: the terms of a Contract, the children of a Step and of Implementation, the item types of Uses and Occupies | ARSO `control-component.ttl`; today hand-written classes in `modreg/model.py` |
 | M3 | The Web of Things terms of the interface description that aas-model writes (key, type, title, observable, unit, op, input and output schemas, `uav_browsePath`, `uav_componentOf`) | ARSO `aid.ttl`; today reported as not described |
 | M4 | Operational data: unit, groups per equipment and per skill, history (TimeSeries, IDTA 02008, with a segment linked to the historian) | ARSO `operational-data.ttl` is a placeholder |
