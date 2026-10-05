@@ -97,10 +97,13 @@ class StepBindings(SubmodelElementCollection):
 
 class ModuleSkillStep(skills.SkillStep):
     """``Skill`` refers to the skill in this submodel, or names it (an external reference) if it
-    only runs as a step and so is not listed."""
+    only runs as a step and so is not listed. ``StateReference`` refers to the step's own State
+    in the interface description, as a skill's does (its ErrorID, parameters and results are
+    published beside it)."""
     Skill: ReferenceElement = ReferenceElement(description="The skill this step runs.")
     InstancePath: Optional[Property] = None
     Bindings: Optional[StepBindings] = None
+    StateReference: Optional[ReferenceElement] = None
 
 
 class ModuleSkillSequence(skills.SkillSequence):
