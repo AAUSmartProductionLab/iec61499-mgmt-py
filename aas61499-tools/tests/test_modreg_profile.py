@@ -13,6 +13,7 @@ pytest.importorskip("rdflib")
 from modgen import SPECS, load                                              # noqa: E402
 from modreg import model, profile as profiles                               # noqa: E402
 from modreg.ontology import Blueprint, check                                # noqa: E402
+from modsync.aas import browse_path                                         # noqa: E402
 from modsync.compare import compare, expected, expected_values              # noqa: E402
 from modsync.device import Snapshot                                         # noqa: E402
 
@@ -157,6 +158,29 @@ def test_a_skill_that_only_runs_as_a_step_is_named_not_listed():
         assert at(properties, key, "type")["value"] == "number"
     # No skill of the filling module has a parameter of its own, so it has no Parameters submodel.
     assert "Parameters" not in [s["idShort"] for s in env["submodels"]]
+
+
+def test_steps_publish_like_skills_where_the_program_puts_them():
+    """A step's State, ErrorID, parameters and results are in the interface, at the path its
+    instance publishes them in the generated program; the step refers to its State."""
+    spec = load(SPECS / "filling.yaml")
+    env = model.build(profiles.describe(spec, "pi"))
+    values = expected_values(spec, expected(spec, "pi"))
+    dispensing = at(submodel(env, "Skills"), "Skills", "Dispensing")
+    steps = [*children(at(dispensing, "Execute")), *children(at(dispensing, "Stop"))]
+    assert len(steps) == len(spec.composites["Dispensing"].execute) + len(spec.composites["Dispensing"].stop)
+    for step in steps:
+        state = resolve(env, at(step, "StateReference")["value"])
+        ua_path = values[at(step, "InstancePath")["value"] + ".UaPath"].strip('"')
+        assert at(state, "forms", "href")["value"] == browse_path(spec, f"{ua_path}/State")
+    properties = at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", "properties")
+    assert at(properties, "Dispensing_Execute_Dwell_Parameter_Duration", "unit")["value"] == "s"
+    assert at(properties, "Dispensing_Execute_Weigh_Result_Weight", "unit")["value"] == "g"
+    assert at(properties, "Dispensing_Stopping_MoveNeedleUp_ErrorID", "forms", "href")["value"].endswith(
+        "/1:Dispensing/1:Stopping/1:MoveNeedleUp/1:ErrorID")
+    # Their State and ErrorID are data points, fed like those of the skills.
+    data = names(submodel(env, "OperationalData"))
+    assert {"Dispensing_Execute_Weigh_State", "Dispensing_Stopping_MoveNeedleUp_ErrorID"} <= set(data)
 
 
 def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):

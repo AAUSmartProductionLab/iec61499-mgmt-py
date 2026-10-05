@@ -199,18 +199,37 @@ class Describer:
         return ModuleSkill(description=description, SemanticId=prop(skill_id(name)), SkillOperation={name: op},
                            InterfaceReference=ReferenceElement(value=affordance("actions", action)))
 
-    def sequence(self, owner: str, steps) -> model.ModuleSkillSequence:
-        """A sequence with each step's bindings; constants as they run on the module."""
+    def sequence(self, owner: str, steps, node: str, key: str, concept: str) -> model.ModuleSkillSequence:
+        """A sequence with each step's bindings (constants as they run on the module) and the
+        variables each step publishes below ``node``."""
         items = []
         for i, step in enumerate(steps, 1):
             declared = self.spec.skills[step.skill].parameters
             bindings = {p: prop(v if isinstance(v, str) else current(f"{owner}.{step.name}.{p}", declared[p], self.snap),
                                 "xs:string" if isinstance(v, str) else XSD[declared[p].type])
                         for p, v in step.bind.items()}
+            state = self.step_variables(step, f"{node}/{step.name}", f"{key}_{step.name}", f"{concept}/{step.name}")
             items.append(model.ModuleSkillStep(
                 id_short=f"Step{i:02d}", Skill=self.skill_reference(step.skill), InstancePath=prop(f"{owner}.{step.name}"),
-                Bindings=model.StepBindings(Binding=bindings) if bindings else None))
+                Bindings=model.StepBindings(Binding=bindings) if bindings else None,
+                StateReference=ReferenceElement(value=affordance("properties", state))))
         return model.ModuleSkillSequence(value=items)
+
+    def step_variables(self, step, node: str, key: str, concept: str) -> str:
+        """What a step publishes, as for a skill: State and ErrorID (both data points), and the
+        parameters and results of the skill it runs. Gives the key of its State."""
+        decl, title = self.spec.skills[step.skill], key.replace("_", " ")
+        state = self.property(f"{key}_State", f"{node}/State", "USINT", f"{title} state: {SKILL_STATES}")
+        self.observe(f"{key}_State", state, f"{concept}/State", f"State of {title}: {SKILL_STATES}")
+        error = self.property(f"{key}_ErrorID", f"{node}/ErrorID", "UINT", f"{title} error: {ERRORS}")
+        self.observe(f"{key}_ErrorID", error, f"{concept}/ErrorID", f"Why {title} last failed: {ERRORS}")
+        for p, pr in decl.parameters.items():
+            self.property(f"{key}_Parameter_{p}", f"{node}/Parameters/{p}", pr.type,
+                          f"{title} {p} of the current or last run", pr.unit)
+        for r in decl.results:
+            source = result_input(self.spec, step.skill, r)
+            self.property(f"{key}_Result_{r}", f"{node}/Results/{r}", source.type, f"{title} result {r}", source.unit)
+        return state
 
     def implementation(self, instance: str) -> model.SkillImplementation:
         typ = self.snap.fbs.get(instance) if self.snap else None
@@ -240,9 +259,12 @@ class Describer:
                 self.property(f"{name}_Parameter_{p}", f"{node}/Parameters/{p}", pr.type,
                               f"{name} {p} of the current or last run", pr.unit)
         if composite:
-            put(skill.SkillSequence, "Execute", self.sequence(f"{name}.Execute", decl.execute))
+            put(skill.SkillSequence, "Execute", self.sequence(f"{name}.Execute", decl.execute, f"{node}/Execute",
+                                                              f"{name}_Execute", f"{skill_id(name)}/Execute"))
             if decl.stop:
-                put(skill.SkillSequence, "Stop", self.sequence(f"{name}.Stop", decl.stop))
+                # Published below .../Stopping: a "Stop" object would collide with the Stop method.
+                put(skill.SkillSequence, "Stop", self.sequence(f"{name}.Stop", decl.stop, f"{node}/Stopping",
+                                                               f"{name}_Stopping", f"{skill_id(name)}/Stopping"))
             used = dict.fromkeys(s.skill for s in [*decl.execute, *decl.stop])
             skill.Uses = model.SkillUses(value=[self.skill_reference(u, u) for u in used])
         else:
