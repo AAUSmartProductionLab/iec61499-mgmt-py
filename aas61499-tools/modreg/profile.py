@@ -59,6 +59,7 @@ SKILLS = "{aas_id}/submodels/Skills"
 STRUCTURE = "{aas_id}/submodels/HierarchicalStructures"
 DATA = "{aas_id}/submodels/OperationalData"
 CAPABILITIES = "{aas_id}/submodels/CapabilityDescription"
+PARAMETERS = "{aas_id}/submodels/Parameters"
 # IDTA 02020: the Capability element and its role qualifier.
 CAPABILITY = "https://admin-shell.io/idta/CapabilityDescription/Capability/1/0"
 OFFERED = "https://admin-shell.io/idta/CapabilityDescription/CapabilityRoleQualifier/Offered/1/0"
@@ -151,7 +152,9 @@ class Describer:
         self.actions: dict[str, OpcuaAction] = {}
         self.properties: dict[str, OpcuaProperty] = {}
         self.datapoints: dict[str, tuple[str, str, str]] = {}    # data point -> (interface property, concept, title)
-        self.operations: dict[str, tuple[str, list[str]]] = {}    # skill -> (interface action, arguments)
+        # Operation -> (where it is, the interface action it invokes, its arguments in call order)
+        self.operations: dict[str, tuple[ModelReference, str, list[str]]] = {}
+        self.parameter_entries: dict[str, str] = {}              # interface property -> Parameters entry
         # The skills the AAS lists: those with an interface of their own.
         self.listed = [n for n, s in [*spec.skills.items(), *spec.composites.items()] if s.offered]
 
@@ -202,22 +205,38 @@ class Describer:
         named = ExternalReference(key=(Key(type_="GlobalReference", value=skill_id(name)),))
         return ReferenceElement(id_short=id_short, value=named)
 
-    def entry(self, name: str, action: str, parameters: dict[str, Parameter], description: str) -> ModuleSkill:
-        """What ARSO asks of every skill: SemanticId, Operation and the reference to its action."""
-        def var(id_short, value_type, about):
-            return OperationVariableProp(id_short=id_short, value_type=value_type, description=about)
+    def operation(self, name: str, action: str, parameters: dict[str, Parameter], about: str, meaning_id: str,
+                  at: ModelReference):
+        """A delegated Operation that invokes an action of the interface (the AIMC maps it there):
+        the session and the parameters in, Accepted and ErrorID out. ``at`` is where it lives."""
+        def var(id_short, value_type, text_):
+            return OperationVariableProp(id_short=id_short, value_type=value_type, description=text_)
 
         op = skill_operation(name, synchronous=True)
-        op.semantic_id = skill_id(name)
-        op.description = f"Start {name}; the answer says whether it was accepted, its State how it went."
+        op.semantic_id = meaning_id
+        op.description = about
         op.in_output_variable = []
         op.input_variable = [var("Session", "xs:string", "Occupation session of the caller"),
                              *[var(p, XSD[pr.type], pr.description or p) for p, pr in parameters.items()]]
         op.output_variable = [var("Accepted", "xs:boolean", "The command was accepted"),
                               var("ErrorID", "xs:unsignedShort", f"Why it was refused: {ERRORS}")]
-        self.operations[name] = (action, ["Session", *parameters])
+        self.operations[name] = (at, action, ["Session", *parameters])
+        return op
+
+    def entry(self, name: str, action: str, parameters: dict[str, Parameter], description: str) -> ModuleSkill:
+        """What ARSO asks of every skill: SemanticId, Operation and the reference to its action."""
+        op = self.operation(name, action, parameters,
+                            f"Start {name}; the answer says whether it was accepted, its State how it went.",
+                            skill_id(name), path(SKILLS, (SMC, "Skills"), (SMC, name), ("Operation", name)))
         return ModuleSkill(description=description, SemanticId=prop(skill_id(name)), SkillOperation={name: op},
                            InterfaceReference=ReferenceElement(value=affordance("actions", action)))
+
+    def links(self, kind: str, keys: dict[str, str]) -> model.InterfaceLinks:
+        """References to actions or properties of the interface, by the name they go by."""
+        found = {}
+        for name, key in keys.items():
+            put(found, name, ReferenceElement(value=affordance(kind, key)))
+        return model.InterfaceLinks(Link=found)
 
     def sequence(self, owner: str, steps, node: str, key: str, concept: str) -> model.ModuleSkillSequence:
         """A sequence with each step's bindings (constants as they run on the module) and the
@@ -247,11 +266,14 @@ class Describer:
         error = self.property(f"{key}_ErrorID", f"{node}/ErrorID", "UINT", f"{title} error: {ERRORS}")
         self.observe(f"{key}_ErrorID", error, f"{concept}/ErrorID", f"Why {title} last failed: {ERRORS}")
         for p, pr in decl.parameters.items():
-            self.property(f"{key}_Parameter_{p}", f"{node}/Parameters/{p}", pr.type,
-                          f"{title} {p} of the current or last run", pr.unit)
+            found = self.property(f"{key}_Parameter_{p}", f"{node}/Parameters/{p}", pr.type,
+                                  f"{title} {p} of the current or last run", pr.unit)
+            self.observe(found, found, f"{concept}/Parameters/{p}", f"{title} {p} of the current or last run")
         for r in decl.results:
             source = result_input(self.spec, step.skill, r)
-            self.property(f"{key}_Result_{r}", f"{node}/Results/{r}", source.type, f"{title} result {r}", source.unit)
+            found = self.property(f"{key}_Result_{r}", f"{node}/Results/{r}", source.type, f"{title} result {r}",
+                                  source.unit)
+            self.observe(found, found, f"{concept}/Results/{r}", f"Result {r} of {title}")
         return state
 
     def implementation(self, instance: str) -> model.SkillImplementation:
@@ -270,6 +292,12 @@ class Describer:
         for method in SKILL_METHODS[1:]:
             self.action(f"{name}_{method}", f"{node}/{method}", f"{method} {name}")
         skill = self.entry(name, start, decl.parameters, decl.description or f"Skill {name}")
+        for method in SKILL_METHODS[1:]:
+            command = f"{name}_{method}"
+            put(skill.SkillOperation, command, self.operation(
+                command, command, {}, f"{method} {name}; the answer says whether it was accepted.",
+                f"{skill_id(name)}/{method}", path(SKILLS, (SMC, "Skills"), (SMC, name), ("Operation", command))))
+        skill.Methods = self.links("actions", {m: f"{name}_{m}" for m in SKILL_METHODS})
         skill.Kind = prop("Composite" if composite else "Primitive")
         if decl.parameters:
             skill.Parameters = arso.Parameters()
@@ -279,8 +307,9 @@ class Describer:
                 put(skill.Parameters.SkillParameter, p, Property(
                     value=text(value), value_type=XSD[pr.type], description=pr.description or f"Parameter {p}",
                     qualifiers=[Qualifier(type_=k, value=text(v), kind="ConceptQualifier") for k, v in declared if v is not None]))
-                self.property(f"{name}_Parameter_{p}", f"{node}/Parameters/{p}", pr.type,
-                              f"{name} {p} of the current or last run", pr.unit)
+                key = self.property(f"{name}_Parameter_{p}", f"{node}/Parameters/{p}", pr.type,
+                                    f"{name} {p} of the current or last run", pr.unit)
+                self.parameter_entries[key] = f"{name}_{p}"
         if composite:
             put(skill.SkillSequence, "Execute", self.sequence(f"{name}.Execute", decl.execute, f"{node}/Execute",
                                                               f"{name}_Execute", f"{skill_id(name)}/Execute"))
@@ -303,11 +332,14 @@ class Describer:
         skill.StateReference = ReferenceElement(value=affordance("properties", state))
         error = self.property(f"{name}_ErrorID", f"{node}/ErrorID", "UINT", f"{name} error: {ERRORS}")
         self.observe(f"{name}_ErrorID", error, f"{skill_id(name)}/ErrorID", f"Why {name} last failed: {ERRORS}")
+        skill.ErrorReference = ReferenceElement(value=affordance("properties", error))
+        results = {}
         for r in decl.results:
             source = result_input(spec, name, r)
-            key = self.property(f"{name}_Result_{r}", f"{node}/Results/{r}", source.type, f"{name} result {r}",
-                                source.unit)
-            self.observe(f"{name}_Result_{r}", key, f"{skill_id(name)}/Results/{r}", f"Result {r} of {name}")
+            results[r] = self.property(f"{name}_Result_{r}", f"{node}/Results/{r}", source.type, f"{name} result {r}",
+                                       source.unit)
+            self.observe(f"{name}_Result_{r}", results[r], f"{skill_id(name)}/Results/{r}", f"Result {r} of {name}")
+        skill.Results = self.links("properties", results) if results else None
         return skill
 
     def occupation(self, name: str) -> ModuleSkill:
@@ -331,18 +363,26 @@ class Describer:
         return Parameters(id_short="Parameters", ParameterEntry=entries) if entries else None
 
     def mappings(self) -> Aimc:
-        """What feeds the data points, and how each Operation reaches its method."""
-        lines = "\n".join(f"        {v} = sources.{key}," for v, (key, _, _) in self.datapoints.items())
-        mappings = [mapping_configuration(
-            id_short="OPCUA",
-            sources=[source(key, affordance("properties", key)) for key, _, _ in self.datapoints.values()],
-            sinks=[sink(v, path(DATA, ("Property", v))) for v in self.datapoints],
-            transformation=f"function aimc_main(sources)\n    return {{\n{lines}\n    }}\nend\n")]
-        for name, (action, arguments) in self.operations.items():
+        """How the interface reaches the other submodels (AIMC): every property of the interface
+        feeds one element (a skill parameter its Parameters entry, everything else its Operational
+        Data point), and every action of the interface is invoked by one Operation of the Skills
+        submodel (a skill's command, Occupy or Release, a module command)."""
+        def identity(id_short: str, feeds: dict[str, ModelReference]) -> object:
+            lines = "\n".join(f"        {key} = sources.{key}," for key in feeds)
+            return mapping_configuration(
+                id_short=id_short, sources=[source(key, affordance("properties", key)) for key in feeds],
+                sinks=[sink(key, sinks) for key, sinks in feeds.items()],
+                transformation=f"function aimc_main(sources)\n    return {{\n{lines}\n    }}\nend\n")
+
+        data = {key: path(DATA, ("Property", point)) for point, (key, _, _) in self.datapoints.items()}
+        mappings = [identity("OPCUA", data)]
+        if self.parameter_entries:
+            mappings.append(identity("Parameters", {key: path(PARAMETERS, (SMC, entry), ("Property", "Value"))
+                                                    for key, entry in self.parameter_entries.items()}))
+        for name, (at, action, arguments) in self.operations.items():
             fields = "\n".join(f"            {a} = op.{a}," for a in arguments)
-            operation = path(SKILLS, (SMC, "Skills"), (SMC, name), ("Operation", name))
             mappings.append(mapping_configuration(
-                id_short=name, sources=[source(name, operation)], sinks=[sink(name, affordance("actions", action))],
+                id_short=name, sources=[source(name, at)], sinks=[sink(name, affordance("actions", action))],
                 transformation=(f"-- {name}: the invocation's inputs become the arguments of the OPC UA method, in this order\n"
                                 f"function aimc_main(sources)\n    local op = sources.{name}\n    return {{\n"
                                 f"        {action} = {{\n{fields}\n        }},\n    }}\nend\n")))
@@ -443,10 +483,18 @@ class Describer:
             put(skills, name, self.occupation(name))
         occupied = self.property("Occupation_Occupied", "/Occupation/Occupied", "BOOL", "Occupied by a session")
         self.observe("OccupationState", occupied, OCCUPIED, "Occupied by a session: 0 free, 1 occupied")
+        machine = model.ModuleStateMachine(id_short="Module")
         for m in MODULE_METHODS:
-            self.action(f"Module_{m}", f"/Module/{m}", f"Module {m}")
+            command = self.action(f"Module_{m}", f"/Module/{m}", f"Module {m}")
+            put(machine.Command, command, self.operation(
+                command, command, {}, f"{m} the module (PackML); the answer says whether it was accepted.",
+                f"{MODULE_STATE}/{m}", path(SKILLS, (SMC, "Module"), ("Operation", command))))
         state = self.property("Module_State", "/Module/State", "USINT", f"PackML state: {MODULE_STATES}")
         self.observe("PackMLState", state, MODULE_STATE, f"PackML state of the module: {MODULE_STATES}")
+        machine.Methods = self.links("actions", {m: f"Module_{m}" for m in MODULE_METHODS})
+        machine.StateReference = ReferenceElement(value=affordance("properties", state))
+        machine.OccupiedReference = ReferenceElement(value=affordance("properties", occupied))
+        asset.skills.Module = machine
         for name in self.listed:
             put(skills, name, self.skill(name))
         if spec.procedures:

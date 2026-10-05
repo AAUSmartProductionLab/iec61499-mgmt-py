@@ -124,6 +124,12 @@ class SkillOccupies(skills.Occupies):
     type_value_list_element: Optional[str] = "ReferenceElement"
 
 
+class InterfaceLinks(SubmodelElementCollection):
+    """References into the Asset Interfaces Description: where a client finds what this element
+    names (an action to call or a property to read, with its browse path)."""
+    Link: Dict[str, ReferenceElement] = {}
+
+
 class SkillImplementation(skills.Implementation):
     InstancePath: Optional[Property] = None
     FBType: Optional[Property] = None
@@ -132,8 +138,14 @@ class SkillImplementation(skills.Implementation):
 
 class ModuleSkill(skills.Skill):
     """The ontology's skill with a module's contract, sequences (Execute, Stop), lists and
-    implementation, and the lab's delegated Operation as its Operation."""
+    implementation, and the lab's delegated Operations: the skill's own (Start) and one per further
+    command (``<Skill>_Stop``, ``_Abort``, ``_Reset``), which the AIMC maps onto the interface's
+    actions. ``Methods`` refers to the action of every command, ``ErrorReference`` and ``Results``
+    to the properties publishing the ErrorID and the results."""
     SkillOperation: Dict[str, DelegatedOperation] = {}
+    Methods: Optional[InterfaceLinks] = None
+    ErrorReference: Optional[ReferenceElement] = None
+    Results: Optional[InterfaceLinks] = None
     Contract: Optional[SkillContract] = None
     Uses: Optional[SkillUses] = None
     SkillSequence: Dict[str, ModuleSkillSequence] = {}
@@ -152,10 +164,22 @@ class ModuleProcedures(SubmodelElementCollection):
     Procedure: Dict[str, ModuleSkillSequence] = {}
 
 
+class ModuleStateMachine(SubmodelElementCollection):
+    """The module's own PackML state machine: one delegated Operation per command
+    (``Module_Reset`` ...), which the AIMC maps onto the interface's actions, the references to
+    those actions (``Methods``), and the properties publishing its state and its occupation."""
+    description: str = "The module's PackML commands, their actions, its state and its occupation."
+    Command: Dict[str, DelegatedOperation] = {}
+    Methods: Optional[InterfaceLinks] = None
+    StateReference: Optional[ReferenceElement] = None
+    OccupiedReference: Optional[ReferenceElement] = None
+
+
 class ModuleSkills(skills.Skills):
     Skills: ModuleSkillSet = ModuleSkillSet()
     Interfaces: skills.Interfaces = skills.Interfaces()
     Errors: skills.Errors = skills.Errors()
+    Module: Optional[ModuleStateMachine] = None
     # A module without procedures has none.
     Procedures: Optional[ModuleProcedures] = None
 
