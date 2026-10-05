@@ -1,0 +1,106 @@
+@prefix aproso: <https://w3id.org/2025/aproso#> .
+@prefix arso: <https://w3id.org/2025/arso#> .
+@prefix aas:  <https://admin-shell.io/aas/3/1/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# SMT STRUCTURE OVERVIEW
+#################################################################
+# ProcessStructure (Submodel) — the process map for one product on one line, in the shape of
+# IDTA 02011 Hierarchical Structures (Entities with statements), with the flow in the same tree.
+#
+#   ├─ EntryNode [Entity, 1] — the product-level process (e.g. Produce HGH)
+#   └─ ArcheType [Property, 1] — Full
+#
+# Every process node (EntryNode or Node) may carry in its statements:
+#   ├─ {node} [Entity Node, 0..*] — its sub-processes (recursive; a node without
+#   │    sub-processes is a leaf, the level at which one capability is required)
+#   ├─ HasPart [RelationshipElement, 0..*] — 02011 parent -> child (optional; the nesting
+#   │    of the Entities already says it)
+#   ├─ Precedes [RelationshipElement, 0..*] — first finishes before second starts; between
+#   │    sub-processes of this node only (a partial order: unordered siblings may run in parallel)
+#   ├─ ProcessType [Property, xs:anyURI, 0..1] — process class IRI
+#   ├─ Refines [ReferenceElement, 0..1] — the Process or ProcessStructure of the product's Bill
+#   │    of Process this node realises (steps added for the line, e.g. transport, have none)
+#   ├─ RequiredCapability [SMC CapabilityContainer (02020, role Required), 0..1] — leaves
+#   │    added for the line; leaves that refine a BoP process use its RequiredCapability
+#   ├─ OnlyIf [SMC, 0..1] — run the node only if a product parameter has a value:
+#   │    Parameter [ReferenceElement, 1], Equals [Property, 1]
+#   └─ Repeat [SMC, 0..1] — run the node several times: Count [Property, 0..1] or
+#        CountFrom [ReferenceElement to a product parameter, 0..1]
+#
+# The three flow constructs (partial order, OnlyIf, Repeat) replace the BPMN subset; choice
+# of resource is not flow but binding (CapabilityBindings).
+
+<https://w3id.org/2025/aproso/modules/process-structure>
+  rdf:type owl:Ontology ;
+  owl:imports <https://admin-shell.io/aas/3/1/> ;
+  owl:imports <https://w3id.org/2025/arso/modules/hierarchical-structures> ;
+  owl:imports <https://w3id.org/2025/arso/modules/capabilities> ;
+  rdfs:comment """AProSO module: ProcessStructure, the nested process map of a Process AAS
+  (IDTA 02011 shape reused for processes, flow relations in the node statements).""" .
+
+#################################################################
+# SUBMODEL AND ELEMENT TYPES
+#################################################################
+
+aproso:ProcessStructureSubmodel rdf:type owl:Class ;
+  rdfs:subClassOf arso:HierarchicalStructuresSubmodel ;
+  rdfs:label "ProcessStructure Submodel" ;
+  rdfs:comment "Process map: a Hierarchical Structures submodel whose nodes are processes." .
+
+aproso:ProcessEntryNodeEntity rdf:type owl:Class ;
+  rdfs:subClassOf arso:EntryNodeEntity ;
+  rdfs:comment "EntryNode — the product-level process. The Process AAS's own asset." .
+
+aproso:ProcessNodeEntity rdf:type owl:Class ;
+  rdfs:subClassOf arso:NodeEntity ;
+  rdfs:comment "Node — a sub-process at any level (CoManagedEntity)." .
+
+aproso:PrecedesRel rdf:type owl:Class ;
+  rdfs:subClassOf aas:RelationshipElement ;
+  rdfs:comment "RelationshipElement Precedes — first: a sub-process; second: a sibling that starts only after first has finished." .
+
+aproso:ProcessTypeIriProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  rdfs:comment "Property ProcessType (xs:anyURI) — the process class, e.g. https://smartproductionlab.aau.dk/Process/Dispensing." .
+
+aproso:RefinesRef rdf:type owl:Class ;
+  rdfs:subClassOf aas:ReferenceElement ;
+  rdfs:comment "ReferenceElement Refines — the process of the Product AAS's Bill of Process that this node realises on the line." .
+
+aproso:NodeRequiredCapabilitySMC rdf:type owl:Class ;
+  rdfs:subClassOf arso:CapabilityContainerSMC ;
+  rdfs:comment "RequiredCapability — an IDTA 02020 CapabilityContainer with role Required, for leaves that do not refine a Bill of Process process (e.g. transport between modules)." .
+
+aproso:OnlyIfSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  rdfs:comment "SMC OnlyIf — Parameter (ReferenceElement to a product parameter) and Equals (Property): the node runs only when the parameter has that value (e.g. inspection when InspectionRequired = true)." .
+
+aproso:RepeatSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  rdfs:comment "SMC Repeat — Count (Property) or CountFrom (ReferenceElement to a product parameter): the node runs that many times in a row (e.g. DosingCycles)." .
+
+#################################################################
+# CONTAINMENT CONSTRAINTS
+#################################################################
+
+aproso:ProcessStructureSubmodel rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ;
+  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+  owl:onClass aproso:ProcessEntryNodeEntity ] .
+
+aproso:ProcessEntryNodeEntity rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Entity/statements> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:ProcessTypeIriProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Entity/statements> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:RefinesRef ] .
+
+aproso:ProcessNodeEntity rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Entity/statements> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:ProcessTypeIriProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Entity/statements> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:RefinesRef ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Entity/statements> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:NodeRequiredCapabilitySMC ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Entity/statements> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:OnlyIfSMC ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/Entity/statements> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:RepeatSMC ] .

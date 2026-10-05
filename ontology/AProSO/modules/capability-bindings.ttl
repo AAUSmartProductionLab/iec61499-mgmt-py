@@ -1,0 +1,75 @@
+@prefix aproso: <https://w3id.org/2025/aproso#> .
+@prefix aas:  <https://admin-shell.io/aas/3/1/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# SMT STRUCTURE OVERVIEW
+#################################################################
+# CapabilityBindings (Submodel) — which resource does each leaf of the process map, with which
+# skill and parameter values. The lab's RequiredCapabilities (capability -> candidate resources)
+# is the Candidates part; a binding adds the choice and the parameter mapping.
+#
+#   └─ Binding [SMC, 1..*]
+#        ├─ Step [ReferenceElement, 1]                 → leaf ProcessNode (ProcessStructure)
+#        ├─ RequiredCapability [ReferenceElement, 1]   → RequiredCapability (Product BoP or node)
+#        ├─ Candidates [SML of ReferenceElement, 0..1] → offered CapabilityContainers that match
+#        ├─ OfferedCapability [ReferenceElement, 0..1] → the chosen one (Resource AAS Capabilities)
+#        ├─ Skill [ReferenceElement, 0..1]             → the Skill realising it (Resource AAS Skills)
+#        ├─ Resource [Property or ReferenceElement, 0..1] → the resource (module) AAS
+#        └─ ParameterMappings [SML of ParameterMapping SMC, 0..1]
+#             └─ ParameterMapping
+#                  ├─ SkillParameter [ReferenceElement, 1] → Skill/Parameters/{parameter}
+#                  └─ exactly one of: Source [ReferenceElement → product parameter],
+#                     Value [Property], Expression [Property, ST over product parameters]
+
+<https://w3id.org/2025/aproso/modules/capability-bindings>
+  rdf:type owl:Ontology ;
+  owl:imports <https://admin-shell.io/aas/3/1/> ;
+  rdfs:comment """AProSO module: CapabilityBindings — required capability of each leaf step,
+  the matching offered capabilities, the chosen resource and skill, and where each skill
+  parameter takes its value from.""" .
+
+aproso:CapabilityBindingsSubmodel rdf:type owl:Class ;
+  rdfs:subClassOf aas:Submodel ;
+  rdfs:label "CapabilityBindings Submodel" ;
+  rdfs:comment "Binding of the process map's leaves to resources, skills and parameter values." .
+
+aproso:BindingSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  rdfs:comment "SMC Binding — one leaf step with its required capability, candidates, chosen offered capability, skill and resource, and parameter mappings." .
+
+aproso:BindingStepRef rdf:type owl:Class ; rdfs:subClassOf aas:ReferenceElement ; rdfs:comment "Step [1] → the leaf ProcessNode." .
+aproso:BindingRequiredCapabilityRef rdf:type owl:Class ; rdfs:subClassOf aas:ReferenceElement ; rdfs:comment "RequiredCapability [1] → the RequiredCapability container of the step." .
+aproso:BindingCandidatesSML rdf:type owl:Class ; rdfs:subClassOf aas:SubmodelElementList ; rdfs:comment "Candidates [0..1] — references to every offered CapabilityContainer that matches (the lab's RequiredCapabilities/resources)." .
+aproso:BindingOfferedCapabilityRef rdf:type owl:Class ; rdfs:subClassOf aas:ReferenceElement ; rdfs:comment "OfferedCapability [0..1] → the chosen offered CapabilityContainer; one of Candidates." .
+aproso:BindingSkillRef rdf:type owl:Class ; rdfs:subClassOf aas:ReferenceElement ; rdfs:comment "Skill [0..1] → the Skill that realises the chosen capability (its CapabilityRealizedBy)." .
+aproso:BindingResourceElement rdf:type owl:Class ; rdfs:subClassOf aas:SubmodelElement ; rdfs:comment "Resource [0..1] — the resource AAS providing the chosen capability." .
+
+aproso:ParameterMappingsSML rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementList ;
+  rdfs:comment "ParameterMappings [0..1] — one ParameterMapping per skill parameter set by this step." .
+
+aproso:ParameterMappingSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  rdfs:comment "SMC ParameterMapping — SkillParameter (ReferenceElement) and exactly one source: Source (ReferenceElement to a product parameter), Value (Property) or Expression (Property)." .
+
+aproso:BindingSMC rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ; owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:BindingStepRef ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ; owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:BindingRequiredCapabilityRef ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:BindingCandidatesSML ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:BindingOfferedCapabilityRef ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:BindingSkillRef ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass aproso:ParameterMappingsSML ] .
+
+aproso:CapabilityBindingsSubmodel rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ;
+  owl:someValuesFrom aproso:BindingSMC ] .
+
+aproso:ParameterMappingsSML rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementList/value> ;
+  owl:allValuesFrom aproso:ParameterMappingSMC ] .

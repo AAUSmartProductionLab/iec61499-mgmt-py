@@ -1,0 +1,282 @@
+@prefix pprl: <https://w3id.org/2025/pprl#> .
+@prefix css:  <http://www.w3id.org/hsu-aut/css#> .
+@prefix apso: <https://w3id.org/2025/apso#> .
+@prefix arso: <https://w3id.org/2025/arso#> .
+@prefix aproso: <https://w3id.org/2025/aproso#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# ONTOLOGY METADATA
+#################################################################
+
+<https://w3id.org/2025/pprl>
+  rdf:type owl:Ontology ;
+  owl:versionIRI <https://w3id.org/2025/pprl/0.1.0> ;
+  owl:imports <http://www.w3id.org/hsu-aut/css> ;
+  owl:imports <https://w3id.org/2025/apso> ;
+  owl:imports <https://w3id.org/2025/arso> ;
+  owl:imports <https://w3id.org/2025/aproso> ;
+  rdfs:comment """PPRL v0.1 — Product-Process-Resource link ontology (drafted 30 Sep 2026).
+
+  APSO, ARSO and AProSO each describe the structure of one kind of AAS and can be
+  checked on their own. This ontology holds what lies between them, on top of the CSS
+  reference model (Plattform Industrie 4.0 capabilities, skills, services):
+
+    1. which CSS concept an AAS element describes (describes*, represents*);
+    2. relations CSS leaves open: process decomposition and order, resource parts,
+       required versus offered capabilities and their matching, skill composition and
+       occupation, the binding of a process step to a skill, and where a parameter
+       value comes from;
+    3. derived relations (property chains): the candidate resources and skills of a
+       process step;
+    4. the change classes of a reconfiguration.
+
+  The chain a product value travels, and the questions a reconfiguration asks:
+
+    product parameter  <-takesValueFrom-  required capability property
+      (Product AAS BoP)                     (leaf process of the BoP or process map)
+                                                  | matchesProperty
+    skill parameter  <-css:isRealizedBySkillParameter-  offered capability property
+      (Resource AAS Skills)                               (Resource AAS Capabilities)
+
+    process step -css:requiresCapability-> RequiredCapability -matches-> OfferedCapability
+    OfferedCapability -css:isRealizedBySkill-> Skill -usesSkill-> Skill ... -occupies-> equipment
+
+  Rules OWL cannot state (closed-world checks) are SHACL shapes in PPRL-rules.shacl.ttl.""" .
+
+
+#################################################################
+# 1. WHAT AN AAS ELEMENT DESCRIBES (AAS element -> CSS individual)
+#################################################################
+
+pprl:representsProduct rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:domain apso:ProductAAS ;
+  rdfs:range css:Product ;
+  rdfs:comment "The CSS Product a Product AAS represents (as arso:representsResource does for resources)." .
+
+pprl:representsProcess rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+  rdfs:domain aproso:ProcessAAS ;
+  rdfs:range css:Process ;
+  rdfs:comment "The CSS Process (the product-level process on one line) a Process AAS represents." .
+
+pprl:describes rdf:type owl:ObjectProperty ;
+  rdfs:comment "An AAS element describes a CSS individual. Created by the JSON-to-RDF projection, one per element that stands for a CSS concept." .
+
+pprl:describesProcess rdf:type owl:ObjectProperty ;
+  rdfs:subPropertyOf pprl:describes ;
+  rdfs:domain [ rdf:type owl:Class ; owl:unionOf ( apso:ProcessSMC apso:ProcessStructureSMC
+                                                   aproso:ProcessEntryNodeEntity aproso:ProcessNodeEntity ) ] ;
+  rdfs:range css:Process .
+
+pprl:describesProduct rdf:type owl:ObjectProperty ;
+  rdfs:subPropertyOf pprl:describes ;
+  rdfs:domain [ rdf:type owl:Class ; owl:unionOf ( apso:BomEntity apso:BomEntryNodeEntity ) ] ;
+  rdfs:range css:Product .
+
+pprl:describesCapability rdf:type owl:ObjectProperty ;
+  rdfs:subPropertyOf pprl:describes ;
+  rdfs:domain arso:CapabilityContainerSMC ;
+  rdfs:range css:Capability ;
+  rdfs:comment "Required (APSO RequiredCapability, AProSO node) or offered (ARSO Capabilities) container." .
+
+pprl:describesProperty rdf:type owl:ObjectProperty ;
+  rdfs:subPropertyOf pprl:describes ;
+  rdfs:domain [ rdf:type owl:Class ; owl:unionOf ( arso:PropertyContainerSMC apso:ParameterSMC ) ] ;
+  rdfs:range css:Property ;
+  rdfs:comment "A capability property (PropertyContainer) or a product process parameter (BoP parameter)." .
+
+pprl:describesSkill rdf:type owl:ObjectProperty ;
+  rdfs:subPropertyOf pprl:describes ;
+  rdfs:domain arso:SkillSMC ;
+  rdfs:range css:Skill .
+
+pprl:describesSkillParameter rdf:type owl:ObjectProperty ;
+  rdfs:subPropertyOf pprl:describes ;
+  rdfs:domain arso:SkillParameterProperty ;
+  rdfs:range css:SkillParameter .
+
+pprl:describesResource rdf:type owl:ObjectProperty ;
+  rdfs:subPropertyOf pprl:describes ;
+  rdfs:domain [ rdf:type owl:Class ; owl:unionOf ( arso:EntryNodeEntity arso:NodeEntity ) ] ;
+  rdfs:range css:Resource ;
+  rdfs:comment "A HierarchicalStructures node of a Resource AAS (the module itself, or an equipment item)." .
+
+
+#################################################################
+# 2a. PROCESSES: decomposition, order, refinement, input and output
+#################################################################
+
+pprl:hasSubProcess rdf:type owl:ObjectProperty ;
+  rdfs:subPropertyOf pprl:containsProcess ;
+  rdfs:domain css:Process ;
+  rdfs:range css:Process ;
+  owl:inverseOf pprl:subProcessOf ;
+  rdfs:comment "Direct decomposition (CSS: 'a process can be decomposed into sub-processes'). From APSO subProcesses and AProSO node nesting." .
+
+pprl:subProcessOf rdf:type owl:ObjectProperty ;
+  rdfs:domain css:Process ;
+  rdfs:range css:Process .
+
+pprl:containsProcess rdf:type owl:ObjectProperty , owl:TransitiveProperty ;
+  rdfs:domain css:Process ;
+  rdfs:range css:Process ;
+  rdfs:comment "Any-depth decomposition (transitive closure of hasSubProcess)." .
+
+pprl:LeafProcess rdf:type owl:Class ;
+  rdfs:subClassOf css:Process ;
+  rdfs:comment "A process with no sub-processes: the level at which one capability is required and a skill is bound. Asserted by the projection (OWL cannot conclude 'has none'); checked in SHACL." .
+
+pprl:directlyPrecedes rdf:type owl:ObjectProperty ;
+  rdfs:subPropertyOf pprl:precedes ;
+  rdfs:domain css:Process ;
+  rdfs:range css:Process ;
+  rdfs:comment "First finishes before second starts; siblings only (SHACL). From APSO ProcessOrder and AProSO Precedes." .
+
+pprl:precedes rdf:type owl:ObjectProperty , owl:TransitiveProperty ;
+  rdfs:domain css:Process ;
+  rdfs:range css:Process ;
+  rdfs:comment "Transitive order. Two siblings not related by precedes may run in parallel." .
+
+pprl:refines rdf:type owl:ObjectProperty ;
+  rdfs:domain css:Process ;
+  rdfs:range css:Process ;
+  rdfs:comment "A process of a line's process map (Process AAS) realises a process of the product's Bill of Process (Product AAS)." .
+
+# Consumes and Produces map to css:hasInput and css:hasOutput (CSS: Process -> Product).
+
+
+#################################################################
+# 2b. RESOURCES: parts
+#################################################################
+
+pprl:hasPart rdf:type owl:ObjectProperty ;
+  rdfs:subPropertyOf pprl:containsResource ;
+  rdfs:domain css:Resource ;
+  rdfs:range css:Resource ;
+  rdfs:comment "Direct part (HierarchicalStructures HasPart): line -> module -> equipment item." .
+
+pprl:containsResource rdf:type owl:ObjectProperty , owl:TransitiveProperty ;
+  rdfs:domain css:Resource ;
+  rdfs:range css:Resource .
+
+
+#################################################################
+# 2c. CAPABILITIES: required versus offered, matching
+#################################################################
+
+pprl:RequiredCapability rdf:type owl:Class ;
+  rdfs:subClassOf css:Capability ;
+  owl:disjointWith pprl:OfferedCapability ;
+  rdfs:comment "A capability a process needs (IDTA 02020 CapabilityRoleQualifier Required), with property constraints." .
+
+pprl:OfferedCapability rdf:type owl:Class ;
+  rdfs:subClassOf css:Capability ;
+  rdfs:comment "A capability a resource provides (role Offered), with property ranges." .
+
+css:Process rdfs:subClassOf [
+  rdf:type owl:Restriction ; owl:onProperty css:requiresCapability ; owl:allValuesFrom pprl:RequiredCapability ] .
+
+css:Resource rdfs:subClassOf [
+  rdf:type owl:Restriction ; owl:onProperty css:providesCapability ; owl:allValuesFrom pprl:OfferedCapability ] .
+
+pprl:providedBy rdf:type owl:ObjectProperty ;
+  owl:inverseOf css:providesCapability ;
+  rdfs:domain pprl:OfferedCapability ;
+  rdfs:range css:Resource .
+
+pprl:matches rdf:type owl:ObjectProperty ;
+  rdfs:domain pprl:RequiredCapability ;
+  rdfs:range pprl:OfferedCapability ;
+  rdfs:comment "The offered capability can serve the required one: the same capability class (semanticId) or a specialisation of it (02020 CapabilityGeneralizedBy), and every property constraint of the required one is met by the offered property it matches (value within range, same unit). Computed by the matcher and asserted; OWL does not compare numbers." .
+
+pprl:matchesProperty rdf:type owl:ObjectProperty ;
+  rdfs:domain css:Property ;
+  rdfs:range css:Property ;
+  rdfs:comment "A required capability property is met by this offered capability property (e.g. Volume = 1.0 mL within Volume 0.1..2.0 mL)." .
+
+pprl:takesValueFrom rdf:type owl:ObjectProperty ;
+  rdfs:domain css:Property ;
+  rdfs:range css:Property ;
+  rdfs:comment "A required capability property takes its value from a product process parameter (02020 SameProperty in the APSO BoP)." .
+
+
+#################################################################
+# 2d. SKILLS: composition, occupation, binding
+#################################################################
+
+pprl:usesSkill rdf:type owl:ObjectProperty ;
+  rdfs:domain css:Skill ;
+  rdfs:range css:Skill ;
+  rdfs:comment "A composite skill uses another skill (ARSO Skill Uses). Only skills of the same resource or of its parts (SHACL pprl:UsesDownwardShape): coordination across resources belongs to the process map and the orchestrator, not to a skill." .
+
+pprl:CompositeSkill rdf:type owl:Class ;
+  owl:equivalentClass [ rdf:type owl:Class ; owl:intersectionOf (
+      css:Skill [ rdf:type owl:Restriction ; owl:onProperty pprl:usesSkill ; owl:someValuesFrom css:Skill ] ) ] ;
+  rdfs:comment "A skill made of other skills (a module level skill)." .
+
+pprl:PrimitiveSkill rdf:type owl:Class ;
+  rdfs:subClassOf css:Skill ;
+  owl:disjointWith pprl:CompositeSkill ;
+  rdfs:comment "A skill that uses no other skill: one function of one equipment item, with a contract (pre-, postcondition, invariant as css:Constraint)." .
+
+pprl:occupies rdf:type owl:ObjectProperty ;
+  rdfs:domain css:Skill ;
+  rdfs:range css:Resource ;
+  rdfs:comment "The equipment a skill locks while it runs (ARSO Skill Occupies); the resource providing the skill or one of its parts (SHACL)." .
+
+pprl:boundTo rdf:type owl:ObjectProperty ;
+  owl:inverseOf css:controls ;
+  rdfs:domain pprl:LeafProcess ;
+  rdfs:range css:Skill ;
+  rdfs:comment "The skill chosen to carry out a leaf process step (AProSO Binding.Skill); CSS says the other way round: the skill controls the process. Must be one of the step's candidate skills (SHACL)." .
+
+pprl:executedBy rdf:type owl:ObjectProperty ;
+  rdfs:domain pprl:LeafProcess ;
+  rdfs:range css:Resource ;
+  rdfs:comment "The resource chosen for a leaf process step (AProSO Binding.Resource)." .
+
+
+#################################################################
+# 3. DERIVED: candidates of a process step
+#################################################################
+
+pprl:candidateResource rdf:type owl:ObjectProperty ;
+  rdfs:domain css:Process ;
+  rdfs:range css:Resource ;
+  owl:propertyChainAxiom ( css:requiresCapability pprl:matches pprl:providedBy ) ;
+  rdfs:comment "Resources that provide a capability matching one the process requires." .
+
+pprl:candidateSkill rdf:type owl:ObjectProperty ;
+  rdfs:domain css:Process ;
+  rdfs:range css:Skill ;
+  owl:propertyChainAxiom ( css:requiresCapability pprl:matches css:isRealizedBySkill ) ;
+  rdfs:comment "Skills that realise a capability matching one the process requires." .
+
+
+#################################################################
+# 4. CHANGE CLASSES OF A RECONFIGURATION
+#################################################################
+
+pprl:ChangeClass rdf:type owl:Class ;
+  rdfs:comment "What a reconfiguration has to change, from the cheapest to the most expensive. Used in ARSO ControlConfiguration ChangeLog entries." .
+
+pprl:ParameterChange rdf:type owl:NamedIndividual , pprl:ChangeClass ;
+  rdfs:label "Parameter change" ;
+  rdfs:comment "Only product parameter values changed. The same bindings hold; the mapped skill parameters are written online (a skill takes them over at its next start). No controller program change." .
+
+pprl:FlowChange rdf:type owl:NamedIndividual , pprl:ChangeClass ;
+  rdfs:label "Flow change" ;
+  rdfs:comment "The process map's order or steps changed, with the same required capabilities. A new orchestrator policy; no controller program change." .
+
+pprl:CompositionChange rdf:type owl:NamedIndividual , pprl:ChangeClass ;
+  rdfs:label "Composition change" ;
+  skos:altLabel "Structural change" ;
+  rdfs:comment "A required capability has no matching offered capability, but a resource's primitive skills can be composed to realise it (their contracts compose). A new composite skill and offered capability are added to that resource; its controller program changes." .
+
+pprl:HardwareChange rdf:type owl:NamedIndividual , pprl:ChangeClass ;
+  rdfs:label "Hardware change" ;
+  rdfs:comment "No composition of available skills realises the required capability. Engineering: new equipment or a new resource." .

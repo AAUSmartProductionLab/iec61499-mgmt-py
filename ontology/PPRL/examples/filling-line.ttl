@@ -1,0 +1,101 @@
+@prefix ex:   <https://smartproductionlab.aau.dk/example/filling-line#> .
+@prefix pprl: <https://w3id.org/2025/pprl#> .
+@prefix css:  <http://www.w3id.org/hsu-aut/css#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Worked example at the CSS level: what the projection of the HGH Product AAS, its Process AAS
+# for the InnoLab line, and the Filling and Stoppering module AAS would create. Used by
+# tests/test_ontology.py (reasoning and SHACL). Values from modules/filling.yaml and
+# modules/stoppering.yaml.
+
+#################################################################
+# Product (Product AAS: BoM and Bill of Process)
+#################################################################
+
+ex:HGHVial a css:Product ; rdfs:label "Filled and stoppered HGH vial" .
+ex:EmptyVial a css:Product .
+ex:HGHSolution a css:Product .
+ex:Stopper a css:Product .
+
+ex:FillVolume a css:Property ; rdfs:label "FillVolume (BoP process parameter)" ; rdf:value 1.0 .
+
+# Bill of Process (product side): fill, then stopper
+ex:BoP_Fill a css:Process ; rdfs:label "BoP: Fill" ;
+  css:requiresCapability ex:ReqDispensing ;
+  css:hasInput ex:EmptyVial , ex:HGHSolution .
+ex:BoP_Close a css:Process ; rdfs:label "BoP: Close" ;
+  css:requiresCapability ex:ReqStoppering ;
+  css:hasInput ex:Stopper ; css:hasOutput ex:HGHVial .
+ex:BoP_Fill pprl:directlyPrecedes ex:BoP_Close .
+ex:BoP_Produce a css:Process ; pprl:hasSubProcess ex:BoP_Fill , ex:BoP_Close .
+
+ex:ReqDispensing a pprl:RequiredCapability ; rdfs:label "Dispensing (required)" ;
+  css:isSpecifiedBy ex:ReqVolume .
+ex:ReqVolume a css:Property ; rdfs:label "Volume = 1.0 mL" ; pprl:takesValueFrom ex:FillVolume .
+ex:ReqStoppering a pprl:RequiredCapability ; rdfs:label "Stoppering (required)" .
+
+#################################################################
+# Process map for the line (Process AAS: ProcessStructure)
+#################################################################
+
+ex:Produce a css:Process ; rdfs:label "Produce HGH on the InnoLab line" ;
+  pprl:refines ex:BoP_Produce ;
+  pprl:hasSubProcess ex:Dispense , ex:Transfer , ex:Close .
+ex:Dispense a pprl:LeafProcess ; pprl:refines ex:BoP_Fill ; css:requiresCapability ex:ReqDispensing .
+ex:Transfer a pprl:LeafProcess ; rdfs:label "Transfer between modules (added for the line)" ;
+  css:requiresCapability ex:ReqMove .
+ex:Close a pprl:LeafProcess ; pprl:refines ex:BoP_Close ; css:requiresCapability ex:ReqStoppering .
+ex:Dispense pprl:directlyPrecedes ex:Transfer .
+ex:Transfer pprl:directlyPrecedes ex:Close .
+ex:ReqMove a pprl:RequiredCapability ; rdfs:label "MoveToPosition (required)" .
+
+#################################################################
+# Resources (Resource AAS: HierarchicalStructures, Capabilities, Skills)
+#################################################################
+
+ex:Line a css:Resource ; pprl:hasPart ex:FillingModule , ex:StopperingModule , ex:Shuttle1 .
+ex:FillingModule a css:Resource ; pprl:hasPart ex:NeedleAxis , ex:Scale ;
+  css:providesCapability ex:OffDispensing ;
+  css:providesSkill ex:Dispensing , ex:MoveNeedleDown , ex:MoveNeedleUp , ex:Dwell , ex:Weigh .
+ex:NeedleAxis a css:Resource .
+ex:Scale a css:Resource .
+ex:StopperingModule a css:Resource ; pprl:hasPart ex:Piston , ex:StopperArm ;
+  css:providesCapability ex:OffStoppering ;
+  css:providesSkill ex:Stoppering , ex:LowerPiston , ex:MoveArm .
+ex:Piston a css:Resource .
+ex:StopperArm a css:Resource .
+ex:Shuttle1 a css:Resource ; css:providesCapability ex:OffMove ; css:providesSkill ex:MoveToPosition .
+
+ex:OffDispensing a pprl:OfferedCapability ; rdfs:label "Dispensing (offered)" ;
+  css:isSpecifiedBy ex:OffVolume ; css:isRealizedBySkill ex:Dispensing .
+ex:OffVolume a css:Property ; rdfs:label "Volume 0.1..2.0 mL" ; css:isRealizedBySkillParameter ex:DispensingVolume .
+ex:OffStoppering a pprl:OfferedCapability ; css:isRealizedBySkill ex:Stoppering .
+ex:OffMove a pprl:OfferedCapability ; css:isRealizedBySkill ex:MoveToPosition .
+
+ex:Dispensing a css:Skill ; css:hasParameter ex:DispensingVolume ;
+  pprl:usesSkill ex:MoveNeedleDown , ex:Dwell , ex:MoveNeedleUp , ex:Weigh ;
+  pprl:occupies ex:NeedleAxis , ex:Scale .
+ex:DispensingVolume a css:InputParameter .
+ex:MoveNeedleDown a pprl:PrimitiveSkill ; pprl:occupies ex:NeedleAxis .
+ex:MoveNeedleUp a pprl:PrimitiveSkill ; pprl:occupies ex:NeedleAxis .
+ex:Dwell a pprl:PrimitiveSkill .
+ex:Weigh a pprl:PrimitiveSkill ; pprl:occupies ex:Scale .
+ex:Stoppering a css:Skill ; pprl:usesSkill ex:LowerPiston , ex:MoveArm ; pprl:occupies ex:Piston , ex:StopperArm .
+ex:LowerPiston a pprl:PrimitiveSkill ; pprl:occupies ex:Piston .
+ex:MoveArm a pprl:PrimitiveSkill ; pprl:occupies ex:StopperArm .
+ex:MoveToPosition a pprl:PrimitiveSkill .
+
+#################################################################
+# Matching (the matcher's result) and binding (Process AAS: CapabilityBindings)
+#################################################################
+
+ex:ReqDispensing pprl:matches ex:OffDispensing .
+ex:ReqVolume pprl:matchesProperty ex:OffVolume .
+ex:ReqStoppering pprl:matches ex:OffStoppering .
+ex:ReqMove pprl:matches ex:OffMove .
+
+ex:Dispense pprl:boundTo ex:Dispensing ; pprl:executedBy ex:FillingModule .
+ex:Transfer pprl:boundTo ex:MoveToPosition ; pprl:executedBy ex:Shuttle1 .
+ex:Close pprl:boundTo ex:Stoppering ; pprl:executedBy ex:StopperingModule .
