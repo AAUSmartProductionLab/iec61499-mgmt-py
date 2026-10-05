@@ -36,7 +36,7 @@ from aas_pydantic.submodel_templates import asset_interfaces_description as wot
 from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures, Node
 from aas_pydantic.submodel_templates.nameplate import ManufacturerProductDesignation, SerialNumber
 
-from modgen.module import parameter_port, result_type
+from modgen.module import parameter_port
 from modgen.spec import ModuleSpec, Parameter
 from modsync.aas import MODULE_METHODS, SKILL_METHODS, browse_path, current, identity
 from modsync.compare import Drift, expected, expected_values
@@ -98,6 +98,17 @@ def schema(parameters: dict[str, Parameter]) -> dict:
         field.update({k: v for k, v in (("minimum", pr.minimum), ("maximum", pr.maximum)) if v is not None})
         fields[name] = field
     return {"type": "object", "properties": fields}
+
+
+def result_input(spec: ModuleSpec, skill: str, result: str):
+    """The equipment input behind a skill's result (its type and unit); a composite's result is
+    the result of one of its execute steps."""
+    if skill in spec.composites:
+        step_name, _, inner = spec.composites[skill].results[result].partition(".")
+        step = next(s for s in spec.composites[skill].execute if s.name == step_name)
+        return result_input(spec, step.skill, inner)
+    decl = spec.skills[skill]
+    return spec.equipment[decl.equipment].inputs[decl.results[result]]
 
 
 def program_digest(spec: ModuleSpec, target: str) -> str:
@@ -248,9 +259,9 @@ class Describer:
         error = self.property(f"{name}_ErrorID", f"{node}/ErrorID", "UINT", f"{name} error: {ERRORS}")
         self.observe(f"{name}_ErrorID", error, f"{skill_id(name)}/ErrorID", f"Why {name} last failed: {ERRORS}")
         for r in decl.results:
-            iec = (result_type(spec, decl.execute, decl.results[r]) if composite
-                   else spec.equipment[decl.equipment].inputs[decl.results[r]].type)
-            key = self.property(f"{name}_Result_{r}", f"{node}/Results/{r}", iec, f"{name} result {r}")
+            source = result_input(spec, name, r)
+            key = self.property(f"{name}_Result_{r}", f"{node}/Results/{r}", source.type, f"{name} result {r}",
+                                source.unit)
             self.observe(f"{name}_Result_{r}", key, f"{skill_id(name)}/Results/{r}", f"Result {r} of {name}")
         return skill
 
