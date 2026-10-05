@@ -10,9 +10,12 @@ and registers with (its manifest), ``model.environment`` into the AAS.
   Operation (the parameters as inputs) and the reference to its Start action; and its kind,
   parameters, contract or sequences, occupied equipment, state reference and implementing function
   block. A primitive that is not offered only runs as a step of a module level skill: it is not
-  listed, the steps name it.
+  listed, the steps name it. Every step refers to the State it publishes (with its ErrorID,
+  parameters and results beside it). The procedures the module runs while Resetting and Stopping
+  are sequences of steps as well.
 - **Operational Data** with the mapping that feeds it (Asset Interfaces Mapping Configuration):
-  module state, occupation, skill states and results, equipment inputs, as decimal data points.
+  module state, occupation, skill and step states and results, equipment inputs, as decimal data
+  points.
 - **Parameters**: the value of every skill parameter as deployed (none: no submodel).
 - **Hierarchical Structures**: the equipment as parts of the module.
 - **Control Configuration**: spec, target and program digest; from a module that was read also the
@@ -375,6 +378,12 @@ class Describer:
         self.observe("PackMLState", state, MODULE_STATE, f"PackML state of the module: {MODULE_STATES}")
         for name in self.listed:
             put(skills, name, self.skill(name))
+        if spec.procedures:
+            procedures = model.ModuleProcedures()
+            for proc, steps in spec.procedures.items():
+                put(procedures.Procedure, proc, self.sequence(proc, steps, f"/Procedures/{proc}", f"Procedure_{proc}",
+                                                              f"{BASE_URL}/procedures/{proc}"))
+            asset.skills.Procedures = procedures
         for name, code in ERROR_CODES.items():
             put(asset.skills.Errors.Error, name, arso.Error(ErrorCode=prop(code, "xs:integer")))
         nodes = {}

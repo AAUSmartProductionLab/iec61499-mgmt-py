@@ -7,7 +7,7 @@ module that speaks OPC UA only:
 
 - **Nameplate**, **Hierarchical Structures** (the equipment), **Asset Interfaces Description**
   (one OPC UA interface) and **Asset Interfaces Mapping Configuration**: the shared model's classes;
-- **Skills** (ARSO's control component: Interfaces, Skills, Errors) instead of the Control
+- **Skills** (ARSO's control component: Interfaces, Skills, Errors, and the module's procedures) instead of the Control
   Component Instance, **Operational Data** instead of Variables, **Parameters** and **Control
   Configuration**: ARSO's own submodels. Their classes are generated from the ontology by
   aas-model's generator (``modreg.generated``, see ``templates``); only what the ontology leaves
@@ -145,10 +145,19 @@ class ModuleSkillSet(skills.Skills_2):
     Skill: Dict[str, ModuleSkill] = {}
 
 
+class ModuleProcedures(SubmodelElementCollection):
+    """What the module's state machine runs itself: a sequence of steps while Resetting and one
+    while Stopping, published below ``/Procedures/<name>`` like the steps of a module level skill."""
+    description: str = "The procedures the module's state machine runs while Resetting and while Stopping."
+    Procedure: Dict[str, ModuleSkillSequence] = {}
+
+
 class ModuleSkills(skills.Skills):
     Skills: ModuleSkillSet = ModuleSkillSet()
     Interfaces: skills.Interfaces = skills.Interfaces()
     Errors: skills.Errors = skills.Errors()
+    # A module without procedures has none.
+    Procedures: Optional[ModuleProcedures] = None
 
 
 class ModuleControlConfiguration(ControlConfiguration):

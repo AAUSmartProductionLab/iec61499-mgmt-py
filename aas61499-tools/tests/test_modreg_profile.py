@@ -108,7 +108,7 @@ def test_a_module_speaks_opc_ua_only(stoppering, stoppering_aas):
 def test_skills_are_arsos_skills_with_what_reconfiguration_needs(stoppering, stoppering_aas):
     spec, _ = stoppering
     described = submodel(stoppering_aas, "Skills")
-    assert names(described) == ["Interfaces", "Skills", "Errors"]
+    assert names(described) == ["Interfaces", "Skills", "Errors", "Procedures"]
     assert described["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/Skills/1/0/Submodel"
     assert at(described, "Errors", "Timeout", "ErrorCode")["value"] == "3"
     skills = at(described, "Skills")
@@ -181,6 +181,25 @@ def test_steps_publish_like_skills_where_the_program_puts_them():
     # Their State and ErrorID are data points, fed like those of the skills.
     data = names(submodel(env, "OperationalData"))
     assert {"Dispensing_Execute_Weigh_State", "Dispensing_Stopping_MoveNeedleUp_ErrorID"} <= set(data)
+
+
+def test_the_procedures_of_the_module_are_sequences_of_steps(stoppering, stoppering_aas):
+    spec, _ = stoppering
+    values = expected_values(spec, expected(spec, "pi"))
+    procedures = at(submodel(stoppering_aas, "Skills"), "Procedures")
+    assert names(procedures) == list(spec.procedures) == ["Resetting"]          # it stops without one
+    for proc, steps in spec.procedures.items():
+        described = children(at(procedures, proc))
+        assert [at(s, "InstancePath")["value"] for s in described] == [f"{proc}.{s.name}" for s in steps]
+        for step, item in zip(steps, described):
+            assert at(item, "Skill")["value"]["keys"][-1]["value"] == step.skill
+            state = resolve(stoppering_aas, at(item, "StateReference")["value"])
+            ua_path = values[f"{proc}.{step.name}.UaPath"].strip('"')
+            assert ua_path.startswith(f"/Procedures/{proc}/")
+            assert at(state, "forms", "href")["value"] == browse_path(spec, f"{ua_path}/State")
+    data = names(submodel(stoppering_aas, "OperationalData"))
+    first = spec.procedures["Resetting"][0].name
+    assert {f"Procedure_Resetting_{first}_State", f"Procedure_Resetting_{first}_ErrorID"} <= set(data)
 
 
 def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
