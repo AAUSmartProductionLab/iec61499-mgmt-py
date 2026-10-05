@@ -110,7 +110,7 @@ def test_a_module_speaks_opc_ua_only(stoppering, stoppering_aas):
 def test_skills_are_arsos_skills_with_what_reconfiguration_needs(stoppering, stoppering_aas):
     spec, _ = stoppering
     described = submodel(stoppering_aas, "Skills")
-    assert names(described) == ["Interfaces", "Skills", "Errors", "Procedures"]
+    assert names(described) == ["Interfaces", "Skills", "Errors", "Module", "Procedures"]
     assert described["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/Skills/1/0/Submodel"
     assert at(described, "Errors", "Timeout", "ErrorCode")["value"] == "3"
     skills = at(described, "Skills")
@@ -281,6 +281,63 @@ def test_a_module_without_capabilities_has_no_capability_description():
     data.pop("capabilities")
     env = model.build(profiles.describe(ModuleSpec.model_validate(data), "pi"))
     assert "CapabilityDescription" not in [s["idShort"] for s in env["submodels"]]
+
+
+def interaction(env: dict, kind: str) -> dict:
+    return at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", kind)
+
+
+def href(env: dict, reference: dict) -> str:
+    return at(resolve(env, reference), "forms", "href")["value"]
+
+
+def test_a_skill_refers_to_every_action_and_property_of_its_interface(stoppering, stoppering_aas):
+    spec, _ = stoppering
+    root = "/0:Objects/1:Stoppering"
+    skill = at(submodel(stoppering_aas, "Skills"), "Skills", "RaisePiston")
+    methods = {m["idShort"]: href(stoppering_aas, m["value"]) for m in children(at(skill, "Methods"))}
+    assert methods == {m: f"{root}/1:Skills/1:RaisePiston/1:{m}" for m in ("Start", "Stop", "Abort", "Reset")}
+    assert href(stoppering_aas, at(skill, "StateReference")["value"]) == f"{root}/1:Skills/1:RaisePiston/1:State"
+    assert href(stoppering_aas, at(skill, "ErrorReference")["value"]) == f"{root}/1:Skills/1:RaisePiston/1:ErrorID"
+    # One Operation per command; the skill's own (Start) is named like the skill.
+    operations = [c["idShort"] for c in children(skill) if c["modelType"] == "Operation"]
+    assert operations == ["RaisePiston", "RaisePiston_Stop", "RaisePiston_Abort", "RaisePiston_Reset"]
+    filling = model.build(profiles.describe(load(SPECS / "filling.yaml"), "pi"))
+    results = at(submodel(filling, "Skills"), "Skills", "Dispensing", "Results")
+    assert href(filling, at(results, "Weight")["value"]) == "/0:Objects/1:Filling/1:Skills/1:Dispensing/1:Results/1:Weight"
+    # The module's own commands, state and occupation.
+    machine = at(submodel(stoppering_aas, "Skills"), "Module")
+    assert {m["idShort"]: href(stoppering_aas, m["value"]) for m in children(at(machine, "Methods"))} == \
+        {m: f"{root}/1:Module/1:{m}" for m in ("Reset", "Start", "Stop", "Abort", "Clear")}
+    assert href(stoppering_aas, at(machine, "StateReference")["value"]) == f"{root}/1:Module/1:State"
+    assert href(stoppering_aas, at(machine, "OccupiedReference")["value"]) == f"{root}/1:Occupation/1:Occupied"
+
+
+def test_the_aimc_maps_every_action_and_property_onto_a_submodel(stoppering_aas):
+    env = stoppering_aas
+    configs = children(at(submodel(env, "AssetInterfacesMappingConfiguration"), "MappingConfigurations"))
+    fed: dict[str, list[dict]] = {}          # interface property -> the elements it feeds
+    invoked: dict[str, list[dict]] = {}      # interface action -> the Operations invoking it
+    for config in configs:
+        sources = [resolve(env, at(s, "Source")["value"]) for s in children(at(config, "Sources"))]
+        sinks = [resolve(env, at(s, "Sink")["value"]) for s in children(at(config, "Sinks"))]
+        assert None not in sources and None not in sinks
+        for found_source, found_sink in zip(sources, sinks):
+            if found_source["modelType"] == "Operation":
+                invoked.setdefault(found_sink["idShort"], []).append(found_source)
+            else:
+                fed.setdefault(found_source["idShort"], []).append(found_sink)
+    assert sorted(fed) == sorted(names(interaction(env, "properties")))
+    assert all(len(sinks) == 1 for sinks in fed.values())
+    assert sorted(invoked) == sorted(names(interaction(env, "actions")))
+    assert all(len(ops) == 1 for ops in invoked.values())
+    # A skill parameter feeds its Parameters entry, a result or state its data point, an action is
+    # invoked by its Operation in the Skills submodel.
+    assert fed["RaisePiston_Parameter_Duration"][0]["idShort"] == "Value"
+    assert fed["Stoppering_Execute_ArmIn_Parameter_Angle"][0]["idShort"] == "Stoppering_Execute_ArmIn_Parameter_Angle"
+    assert invoked["RaisePiston_Stop"][0]["idShort"] == "RaisePiston_Stop"
+    assert invoked["Module_Reset"][0]["idShort"] == "Module_Reset"
+    assert invoked["Occupation_Occupy"][0]["idShort"] == "Occupy"
 
 
 def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
