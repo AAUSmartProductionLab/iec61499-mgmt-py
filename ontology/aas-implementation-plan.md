@@ -2,11 +2,14 @@
 
 How the [conceptual model](conceptual-model.md) is carried in the product, process and resource
 AAS, shown on the filling line (the Filling module, the HGH vial), and the plan to get there.
-Drafted 30 Sep 2026.
+Drafted 30 Sep 2026; the manifest, backlog and plan sections brought up to date on 5 Oct 2026
+with what `modreg` built (see `docs/work.md`, Registration). The example structures are the
+target of the design: the resource AAS `modreg` builds today has the Skills, Operational Data,
+Parameters and Control Configuration of ARSO 0.5 and not yet what is marked `[new]` below.
 
 The models serve three uses, and every element below is there for at least one of them:
 
-1. **Plug and produce:** a module that is connected describes itself (modsync pull), its offered
+1. **Plug and produce:** a module that is connected describes itself (its profile), its offered
    capabilities are matched against the required ones of the current products, and it can be
    used without engineering.
 2. **Reconfiguration:** a change of product, process or resource is classified (parameter,
@@ -15,11 +18,13 @@ The models serve three uses, and every element below is there for at least one o
    call for proposals carries required capabilities with Requirement values, a proposal offered
    ones with Assurance values.
 
-**The ontologies are the design guide, not a validation layer** (decided 30 Sep 2026): they
-say which components the product, process and resource models have, why, and what each is wired
-to. Nothing in the pipeline validates models against them; SHACL and reasoning checks come
-much later, if there is time. The checks in `ontology/checks` only keep the design guide itself
-consistent.
+**The ontologies are the design guide, and ARSO is also the blueprint** (since 2 Oct 2026):
+they say which components the product, process and resource models have, why, and what each is
+wired to. For the resource AAS, `modreg` generates the classes of ARSO's own submodels from the
+ontology and checks every built AAS against ARSO's restrictions before it is registered. The
+product and process ontologies are not used for validation yet; SHACL and reasoning over the
+links come later, if there is time. The checks in `ontology/checks` keep the ontologies
+themselves consistent.
 
 ## How one skill is wired across the submodels
 
@@ -226,7 +231,7 @@ FillingModuleAAS  (arso:ResourceAAS; derivedFrom lab:aas/templates/resource)
 │         └─ LinkedSegment                   { Endpoint → the lab historian, Query "…module = Filling…",
 │                                              StartTime, State "InProgress" }
 └─ ControlConfiguration (ARSO v0.5)          Runtime, ModuleSpec, Target, SyncState, Differences, Types,
-                                             ActiveProcedure, ChangeLog  (modsync writes it as ControlSoftware today)
+                                             ActiveProcedure, ChangeLog  (modreg writes all but the last two)
 ```
 
 ### Product AAS (APSO v0.2)
@@ -294,78 +299,49 @@ says all of that but nothing ties it to the program. So three layers:
    ProfileDigest, ProgramDigest), like the OPC UA DI nameplate. The identity belongs to the
    station, not the Pi: a config file on the Pi for now; later the station's wiring board as a
    HAT with an ID EEPROM (`/proc/device-tree/hat`), so the identity travels with the hardware.
-2. **The manifest is the lab's AAS profile** (JSON, `AAS_Builder` in the lab repository): the
-   AAS without the boilerplate, which the lab's `AASGenerator` expands into the full AAS and
-   `aas_to_profile` inverts. It replaces the deprecated YAML the ESP32 stations sent. modgen
-   generates it from the module spec together with the program, `pi.py` deploys it next to the
-   boot file, and it is pushed to the registration (or fetched by modsync) when the module
-   comes online. One path for every kind of module: an ESP32 or a PLC carries only the profile,
-   the full AAS is built centrally; on a Pi size does not matter, but the same path keeps one
-   registration mechanism.
-3. **Verification against the program.** modsync reads the running program and compares its
-   digest with the manifest's ProgramDigest (instances, types with hashes, connections,
-   parameters), then adds the live parts (running parameter values, sync state) and registers.
+   *Not built.*
+2. **The manifest is the module's profile**: its AAS on the lab's shared pydantic model
+   (aas-model) without what the type and the element classes say anyway. `modreg profile` writes
+   it from the module spec, or from the spec and the running program; the registration service
+   (`modreg serve`) reads it into the model, builds the AAS, checks it against ARSO and
+   publishes it to the AAS server. One path for every kind of resource: the lab's MQTT stations
+   send profiles of aas-model's own resource type through the same service. *Built*; deploying
+   the profile next to the boot file is not.
+3. **Verification against the program.** `modsync` reads the running program and compares it
+   with the program the spec generates (instances, types with hashes, connections, values); the
+   profile carries the result (SyncState, Differences, type hashes) and the digest of the
+   generated program (ProgramDigest). *Built*; comparing a digest published by the module itself
+   waits for layer 1.
 
-Checked on 30 Sep 2026 with [examples/FillingModule.profile.json](examples/FillingModule.profile.json)
-against the lab's builder: the profile (about 2.6 KB) builds a 25 KB AAS with seven submodels
-(DigitalNameplate, HierarchicalStructures, AID with the OPC UA endpoint and actions, Skills,
-Capabilities, OperationalData, AIMC) and converts back to the same profile. Two quirks:
-`synchronous` comes back as a string (the builder writes it as `xs:string`), and
-HierarchicalStructures `HasPart` expects separate assets with their own globalAssetId, so an
-equipment item without its own AAS (a co-managed entity) cannot be expressed yet.
+The first design (30 Sep) used the profile format of the lab's earlier AAS builder; it was
+replaced on 2 Oct by aas-model, which the lab's registration and management node share.
 
-**What the profile has to gain** (the `x-extensions` in the example, ignored by the builder
-today); each needs a builder, the inverse parser and the ARSO module, as the lab's
-`submodel_registry.py` requires:
-
-| Section | Extension |
-| --- | --- |
-| AID actions | TD fields `safe`, `idempotent`; `input` / `output` as an inline data schema (object with typed, titled, ranged fields) beside today's schema URL; forms `uav_browsePath` |
-| AID properties | data schema: `type`, `unit`, `minimum` / `maximum`, `observable` |
-| HierarchicalStructures | components as co-managed entities (VDI 2206 `Component`) |
-| Capabilities | `role` (Offered / Required), `properties` with unit, range, 61360 expression goal and logic interpretation, `realizedByParameter` |
-| Skills | `kind`, `methods` (Start/Stop/Abort/Reset → actions), `stateMachine`, `state` (data point), `parameters` (with `input` field of the Start action), `uses`, `execute`, `stop`, `occupies`, `results`, `implementation` |
-| OperationalData | per data point `unit`, `expressionGoal`, `group`, `history` (TimeSeries) |
-| ControlConfiguration (new section) | runtime, management endpoint, module spec, ProfileDigest, ProgramDigest, type hashes |
-
-**Consequence for this repository:** modsync stops building AAS itself (`modsync/aas.py`
-becomes a profile emitter); the lab's builder is the one AAS generator. The profile is the
-contract between the two repositories; tests here run the lab's builder on the emitted profiles
-when a copy is available and skip otherwise.
-
-## Backlog: manifest and AAS builder
-
-Items to pick up one at a time; each ends with its check. MF = this repository, AB = the lab's
-AAS_Builder (each AB item: builder, inverse parser in `aas_to_profile.py`, ARSO module, entry in
-`submodel_registry.py`, round-trip test, as that registry requires).
+## Backlog: manifest and models
 
 **Manifest (MF)**
 
-| # | Item | Check |
+| # | Item | State |
 | --- | --- | --- |
-| MF1 | modgen writes `<Module>.profile.json` in today's profile sections from the module spec: DigitalNameplate (the spec's `aas:` section extended with manufacturer, designation, serial number), HierarchicalStructures (IsPartOf the line), AID (per target: OPC UA endpoint; an action per OPC UA method, a property per published variable, forms with browse paths), Skills (per offered skill, interface = its Start action), Capabilities (a new `capabilities:` section in the spec), OperationalData (per published variable), AIMC (identity mappings) | the lab's builder builds it and `aas_to_profile` returns it unchanged (test skipped when `AAS_Builder` is absent) |
-| MF2 | Digests: ProfileDigest (SHA-256 of the canonical profile without the digest fields) and ProgramDigest (SHA-256 of the generated program for the target: instances with types, connections, parameter values), computed the same way from a running program by modsync | the digest of a deployed program equals the manifest's |
-| MF3 | Identification in the generated application: a ModLib type publishing GlobalAssetId, AasId, ProfileDigest, ProgramDigest read-only at `/Objects/<Module>/Identification` (needs a FORTE rebuild once) | live: the values read over OPC UA equal the manifest's |
-| MF4 | `pi.py` deploys the profile to `~/forte/manifest/` together with the boot file; `pi.py manifest` shows it | deploy and read back |
-| MF5 | `modsync pull` reads Identification, fetches the profile (SSH now, HTTP later), compares the digests, reports a mismatch, then registers (full AAS from the lab's builder when available, else from `modsync/aas.py`) | live: a manifest that does not match the program is reported |
-| MF6 | Identity storage: `~/forte/identity.json` on the Pi now; later a HAT ID EEPROM on each station's wiring board (`/proc/device-tree/hat`) | the identity follows the station when the Pi is swapped |
-| MF7 | Transport on connect: push the profile to the lab's registration (if it accepts JSON profiles; decision 5) or register the built AAS with BaSyx | the module appears in BaSyx when it comes online |
-| MF8 | Retire the AAS builder in `modsync/aas.py` once the lab's builder covers AB1–AB8 | modsync emits profiles only |
+| MF1 | The module's profile from the module spec: nameplate, hierarchical structures (equipment), interface description (per target: OPC UA endpoint, an action per method, a property per published variable), skills, operational data, parameters, control configuration | Done (`modreg profile`) |
+| MF2 | ProgramDigest: SHA-256 of the generated program for the target (instances with types, connections, values) | Done, in Control Configuration. A ProfileDigest and the same digest computed from a running program are open |
+| MF3 | Identification in the generated application: a ModLib type publishing GlobalAssetId, AasId, ProfileDigest, ProgramDigest read-only at `/Objects/<Module>/Identification` (needs a FORTE rebuild once) | Open |
+| MF4 | The profile deployed to the Pi together with the boot file | Open |
+| MF5 | On pull: read Identification, fetch the profile, compare the digests, report a mismatch, then register | Partly: `modsync pull --register` builds the profile from spec and running program and registers it |
+| MF6 | Identity storage: a file on the Pi now; later a HAT ID EEPROM on each station's wiring board | Open |
+| MF7 | Transport on connect: `modsync watch --register` sends the profile when a module comes online or changes | Done over HTTP to `modreg serve`; the lab's registration (MQTT) is not addressed |
+| MF8 | Retire the AAS builder in `modsync/aas.py` | Open, once the profile path is accepted |
 
-**AAS builder extensions (AB)**
+**Models (what the resource AAS still lacks against the example structures above)**
 
-| # | Item | Check |
+| # | Item | Where |
 | --- | --- | --- |
-| AB1 | AID actions after the W3C WoT TD ActionAffordance: `safe`, `idempotent`, `synchronous` as booleans (today a string), `input` / `output` as an inline data schema (object with typed, titled, ranged, unit fields; enums) beside today's schema URL; forms `op` and `uav_browsePath` | round trip; the Skills Operation is built from an inline schema as from a URL |
-| AB2 | AID properties with a data schema: `type`, `unit`, `minimum` / `maximum`, `observable`, `readOnly` | round trip |
-| AB3 | HierarchicalStructures components as co-managed entities (no own AAS), semanticId VDI 2206 `Component`; HasPart without a separate asset | round trip |
-| AB4 | Capabilities: role (Offered / Required), PropertySet with properties or ranges and IEC 61360 qualifiers (expression goal, logic interpretation), GeneralizedBy, `realizedByParameter` | round trip; the matcher reads ranges and goals |
-| AB5 | Skills: `kind`, `methods`, `stateMachine` (type IRI), `state` (→ OperationalData), `parameters` (with the Start action's input field), `uses`, `execute` / `stop` steps, `occupies`, `results`, `implementation` | round trip; every method reference resolves to an AID action (a plain test of the builder) |
-| AB6 | OperationalData data points: groups per hierarchy node and per skill; DataPoint with Value, Timestamp, Quality, Unit, History; AIMC sinks on the Value | round trip; every AIMC sink is a data point Value |
-| AB7 | TimeSeries submodel (IDTA 02008): metadata record and a LinkedSegment to the historian | round trip; the historian answers the segment's query |
-| AB8 | ControlConfiguration submodel: runtime, management endpoint, module spec, digests, type hashes, later active procedure and change log | round trip |
-| AB9 | Product and process profiles: APSO (BoM, Bill of Process with required capabilities) and AProSO (process structure, bindings, validation, policy) sections | the HGH example builds and round-trips |
-| AB10 | Deferred (validation comes later, if time): `aas_to_rdf` projection and ARSO/APSO/AProSO SHACL covering AB1–AB9 | the worked filling-line example as AAS validates |
+| M1 | Capability description: offered capabilities with property ranges, realised by a skill and its parameters (RealizesProperty) | aas-model has the IDTA class; the profile does not fill it yet (step S2 in `docs/work.md`) |
+| M2 | Declare in ARSO what a module's skill carries beyond ARSO 0.5: the terms of a Contract, the children of a Step and of Implementation, the item types of Uses and Occupies | ARSO `control-component.ttl`; today hand-written classes in `modreg/model.py` |
+| M3 | The Web of Things terms of the interface description that aas-model writes (key, type, title, observable, unit, op, input and output schemas, `uav_browsePath`, `uav_componentOf`) | ARSO `aid.ttl`; today reported as not described |
+| M4 | Operational data: unit, groups per equipment and per skill, history (TimeSeries, IDTA 02008, with a segment linked to the historian) | ARSO `operational-data.ttl` is a placeholder |
+| M5 | Control configuration: active procedure and change log | ARSO has the classes; nothing writes them |
+| M6 | Product and process profiles: APSO (bill of material, bill of process with required capabilities) and AProSO (process structure, bindings, validation, policy) | Not started |
+| M7 | A projection of the built AAS to RDF and SHACL rules across submodels (references that resolve, uses only downwards) | Deferred; `modreg check` covers the structure inside each submodel and the shell |
 
 ## Ontology changes this implies
 
@@ -384,11 +360,11 @@ Baby steps; each ends with tests and a note in `docs/work.md`. Estimates are wor
 | --- | --- | --- | --- |
 | 0 | CSS 2.0.2 (done); conceptual model second iteration (done) | ontology tests | – |
 | 1 | Ontologies: PPRL 0.2, ARSO 0.6, APSO 0.3, AProSO 0.2 as above; the worked example extended with a skill's methods, AID action and property, AIMC mapping and data points | the design guide stays consistent (`ontology/checks`, local) | 1 |
-| 2a | Manifest: modgen emits the module's profile (today's sections) with ProfileDigest and ProgramDigest; the generated application publishes `Identification`; `pi.py` deploys the profile next to the boot file; modsync pull fetches it and checks the digests | the lab's builder builds and round-trips the profile; live: a manifest that does not match the program is reported | 1 |
-| 2b | Profile extensions in the lab's AAS_Builder (the table above), each with builder, inverse parser and ARSO module; modgen fills them from the module spec (`aas:` section extended, a new `capabilities:` section) | round trip with extensions | 2.5 |
+| 2a | Manifest. **Done 2 to 4 Oct:** the module's profile on aas-model, the classes of ARSO's own submodels generated from the ontology, the ARSO check, the registration service, `modsync --register`. **Open:** the generated application publishes `Identification`; the profile is deployed next to the boot file; pull checks the digests | the lab's builder builds and round-trips the profile; live: a manifest that does not match the program is reported | 1 |
+| 2b | The model items M1 to M4 above: declared in ARSO, classes regenerated (`modreg generate`), filled from the module spec (`aas:` section extended, a new `capabilities:` section) | round trip with extensions | 2.5 |
 | 3 | Stable OPC UA node ids: check whether FORTE's OPC UA layer takes a node id with the browse path in the FB's ID (e.g. `browsePath,nodeId` pairs); if so, give every node a string id (`ns=1;s=Filling.Skills.Dispensing.Start`) so forms carry both | live test: ids survive a restart | 0.5 |
 | 4 | Live data: an AIMC executor (the lab's DataBridge, generated from our AIMC, or a small `modsync bridge`: OPC UA subscription → BaSyx value update) and the historian behind the TimeSeries LinkedSegment | live test against FORTE and a local BaSyx | 1.5 |
-| 5 | Product and process: product spec → APSO AAS; process map → AProSO AAS; the matcher (required vs offered: class or generalisation, 61360 goals and ranges) writes Candidates; binding and parameter mapping; validation with the contract check (skill_compiler.contracts on data point conditions); policy (behaviour tree) generation for the lab's orchestrator | the HGH example end to end offline; A–D changeovers as change classes | 4 |
+| 5 | Product and process: product spec → APSO AAS; process map → AProSO AAS; the matcher (required vs offered: class or generalisation, 61360 goals and ranges) writes Candidates; binding and parameter mapping; validation with a contract check (the skills' requires, ensures and invariant against data point conditions; the first cell's checker was removed with it); policy (behaviour tree) generation for the lab's orchestrator | the HGH example end to end offline; A–D changeovers as change classes | 4 |
 | 6 | Plug and produce loop: `modsync watch` sees a module come online → its AAS registered → matcher recomputes candidates → rebinding → push (parameter change online, composition change as a new composite deployed) | live on the two Pis | 2 |
 | 7 (journal) | Agents: CSS service layer; VDI/VDE 2193 call for proposals / proposal carrying Requirement / Assurance properties; module agents bidding for leaf steps; look at RoboCaSk | simulation with both modules | – |
 
@@ -407,10 +383,10 @@ checked reconfiguration); 3, 4 and 6 make the demonstration live; 7 is journal m
    TimescaleDB, the UNS broker's store?).
 4. **OPC UA forms:** browse path (works now, since FORTE's numeric node ids change at every
    start) and node id once phase 3 makes them stable.
-5. **Registration:** the lab's newer AAS_Builder already builds OPC UA interfaces from a
-   profile. Does its registration path accept a JSON profile pushed by a module (as the ESP32s
-   pushed YAML to `Registration/Config`), or do OPC UA modules register their built AAS directly
-   with BaSyx (as `modsync --basyx` does)?
-6. **Where the profile extensions are made:** in the lab's AAS_Builder (proposed, one generator)
-   or first in this repository and upstreamed later.
+5. **Registration** (settled 2 Oct): a module's profile goes to the registration service
+   (`modreg serve`, HTTP), which builds and publishes the AAS. Open: whether that service runs
+   beside the lab's own registration or becomes part of it, and publishing to the lab's server.
+6. **Where the model is defined** (settled 2 and 4 Oct): ARSO says what a resource AAS consists
+   of; classes come from aas-model, for ARSO's own submodels generated from the ontology through
+   aas-model's generator; aas-model itself is changed as little as possible.
 7. **Identity storage:** a config file on the Pi now; a HAT ID EEPROM per station later?

@@ -2,6 +2,32 @@
 
 Sep 25, 2026 · @Martin Jensen
 
+> **Status on 5 Oct 2026: where the work has moved away from this plan.** The plan is kept as
+> written; the current state is in [docs/work.md](docs/work.md). Read the sections below with
+> these changes in mind:
+>
+> - **"Unit" is now "module"**, and the unit structure described under *Standard unit structure
+>   and skill pattern* and *IEC 61499 control structure and translation rules* (a PackML machine,
+>   gate and status chain per skill, `SK_*` skills owning their IO, `P_Call` pattern blocks, the
+>   `EM_Filler` and `PROC` subapplications) was built first and then replaced. A module now has
+>   one PackML machine at module level, skills with a small state machine (Idle, Running,
+>   Stopping, Succeeded, Failed, Aborted), equipment IO blocks that own the pins, and module level
+>   skills made of instances only. The first cell was removed on 30 Sep.
+> - **Modules are generated** from a module specification (`modgen`), one per Raspberry Pi; the
+>   cases are the filling and the stoppering module ported from the ESP32 stations.
+> - **No BPMN translator.** Procedures are sequences in the module spec; the process side is
+>   designed as a process map in the process ontology (`ontology/`), not implemented.
+> - **Change application** is `modsync push` (parameter values and new module level skills
+>   online, anything else by boot file and restart), not the guarded changeover of the first cell.
+> - **Resource AAS**: the structure of the resource ontology (ARSO), built with the lab's shared
+>   pydantic model (aas-model) and checked against ARSO by a registration service (`modreg`).
+>   The submodel list under *Model specification: resource AAS* and *Our own submodel templates*
+>   is superseded where it differs.
+> - **Repositories**: one repository with a top-level folder per planned repository (see the
+>   README), to be split later.
+> - **Schedule**: the build plan's dates are past; what is done and what is next is in
+>   `docs/work.md` (Status against the plan's work packages, Next steps).
+
 ## Scope and fixed decisions
 
 The CIRP CMS 2027 paper shows that product, process and resource AAS content can drive checked, online reconfiguration of an IEC 61499 filling cell; the full paper is due 18 November 2026 (6 pages).
