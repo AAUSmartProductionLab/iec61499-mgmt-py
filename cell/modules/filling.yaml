@@ -99,3 +99,18 @@ composites:
 procedures:
   Resetting: [MoveNeedleUp]        # initHardware: move to the top
   Stopping: [MoveNeedleUp]
+
+# What the module offers to a product's processes: its AAS's Capability Description (IDTA 02020,
+# role Offered), each capability realized by an offered skill (CapabilityRealizedBy). Meanings
+# default to https://smartproductionlab.aau.dk/semantics/<Name>. The values are illustrative (as
+# the vial filling station of the process planner's pharma example) until the station is measured;
+# Dispensing takes no volume yet (Dwell stands in for a pump), so FillVolume names no parameter.
+capabilities:
+  Filling:
+    description: Fill a liquid into an open vial under the needle and weigh it
+    realized_by: Dispensing
+    properties:
+      ContainerType: {value: vial}
+      GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
+      FillVolume: {minimum: 0.5, maximum: 10.0, unit: mL}
+      AbsoluteFillError: {value: 0.05, unit: mL}
