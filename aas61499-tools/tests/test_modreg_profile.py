@@ -150,6 +150,11 @@ def test_a_skill_that_only_runs_as_a_step_is_named_not_listed():
     assert at(step, "Skill")["value"] == {"type": "ExternalReference",
                                           "keys": [{"type": "GlobalReference", "value": f"{BASE}/skills/Dwell"}]}
     assert float(at(step, "Bindings", "Duration")["value"]) == 1.0
+    # A result carries the unit of the equipment input behind it, through the step for a composite.
+    properties = at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", "properties")
+    for key in ("Weigh_Result_Weight", "Dispensing_Result_Weight"):
+        assert at(properties, key, "unit")["value"] == spec.equipment["Scale"].inputs["Weight"].unit == "g"
+        assert at(properties, key, "type")["value"] == "number"
     # No skill of the filling module has a parameter of its own, so it has no Parameters submodel.
     assert "Parameters" not in [s["idShort"] for s in env["submodels"]]
 
