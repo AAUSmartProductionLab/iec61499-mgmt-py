@@ -31,9 +31,9 @@ Small things everything else stands on.
 
 | # | Step | Where | Done when | Days |
 | --- | --- | --- | --- | --- |
-| 0.1 | **One ARSO.** Bring the generation project's copy up to this repository's (reconfiguration elements of a skill, Control Configuration, parameter entry). This copy is the one that is edited until the ontologies get their own repository | `ontology/`, generation project | Both projects load the same files; each one's tests pass | 0.5 |
-| 0.2 | **Capability vocabulary.** The capability and property meanings as lab IRIs kept in `ontology/`; module specs and the planner's recipes use them | `ontology/`, `cell/modules`, planner | A required capability of a recipe and the offered one of a module carry the same IRI | 1 |
-| 0.3 | **Fill volume.** A Volume parameter on Dispensing, turned into a dwell time at the station's flow rate; FillVolume of the Filling capability names it | module library, `cell/modules/filling.yaml`, FORTE rebuild | `Dispensing.Start(Session, 2.0)` dwells for the matching time on FORTE; the AAS links FillVolume to the parameter | 1.5 |
+| 0.1 | **One ARSO, one closed validator.** Bring the generation project's copy up to this repository's (reconfiguration elements of a skill, Control Configuration, parameter entry) and validate with its closed SHACL shapes. **Open, 6 Oct:** in a fresh checkout the generation project's own valid example fails its validator with about 3,000 closed-shape violations, so there is no passing baseline to merge against yet (asked) | `ontology/`, generation project | Both projects load the same files; each one's tests pass; a module AAS passes the closed validation | 0.5 + the gap |
+| 0.2 | **Capability vocabulary.** **Done 6 Oct on this side:** `ontology/Vocabulary/capabilities.ttl` (8 capabilities, 7 properties with units, below CSS, IRIs `.../semantics/<Name>`); the module specs are tested against it. **Open:** the planner's recipes still use `.../demo/pharma/semantics/<Name>` | `ontology/`, `cell/modules`, planner | A required capability of a recipe and the offered one of a module carry the same IRI | 1 |
+| 0.3 | **Fill volume.** **Done 6 Oct:** Dispensing takes a Volume (0.5 to 10 mL); the new building block Dispense waits Volume / FlowRate (1 mL/s, a constant of the step that reconfiguration can change); FillVolume of the Filling capability names the parameter; live test on the rebuilt FORTE | module spec format, `cell/modules/filling.yaml`, FORTE rebuild | `Dispensing.Start(Session, 2.5)` dispenses for 2.5 s on FORTE; the AAS links FillVolume to the parameter | 1.5 |
 
 ### Phase 1: the AAS is all the integrator needs (about 8 days)
 
@@ -53,7 +53,7 @@ This is the paper's core claim, and where this repository does not yet match the
 | --- | --- | --- | --- | --- |
 | 2.1 | **Matcher.** Required against offered capability on the RDF projection of the Capability Descriptions (the generation project's projection), SHACL rules for values and ranges; the planner's and `modlink`'s matching stay as cross-checks | `ontology/`, validation code | The pharma recipes give the same verdicts as the planner's matcher, or the differences are explained | 2 |
 | 2.2 | **Planner on our modules.** The planner reads ARSO's Skills submodel and the shared vocabulary, and binds a step's parameter to a skill parameter (FillVolume → Volume) | planner (TypeScript) | A recipe step binds to Dispensing of the registered filling module in the planner | 1.5 |
-| 2.3 | **Plan executor.** Walks a Production Sequence: occupies the modules it needs, runs each step's skill with its bindings, follows optional and parallel flows, keeps the product counter | `modlink` | One product runs Dispense then Close on the filling and stoppering modules, on the simulators and on FORTE | 2.5 |
+| 2.3 | **Execution by agents.** Decided 6 Oct: plans are executed by a multi-agent system, not a central executor. One agent per product and one per resource; I4.0 bidding (VDI/VDE 2193) assigns steps. A resource agent has three sets of tools: run its skills (`modlink`), look up its capabilities (its AAS), and reconfigure its IEC 61499 program (`modsync`); with an accepted bid it runs the task, rewiring or reconfiguring first if needed. What this repository owes it: the reconfiguration functions as a callable interface (create a skill from a description, set a parameter, verify) | a new agents component, `modlink`, `modsync` | A product agent gets Dispense and Close done by the two resource agents, on the simulators and on FORTE | 4 |
 | 2.4 | **Check before running.** A plan is refused when a step has no candidate, a bound value is outside the skill's range, or a module's AAS no longer matches its program | executor, matcher | Three broken plans are refused with the reason | 1 |
 
 ### Phase 3: experiments and the paper (the last three weeks)
@@ -102,14 +102,26 @@ Not to be cut: 0.2, 0.3, 1.3, 1.4, 2.3 and 3.1. Without them there is no loop to
 
 Decisions, each blocking a step:
 
-| Decision | Blocks | My recommendation |
-| --- | --- | --- |
-| May ARSO be extended for building blocks and for what a skill's Contract, Step and Implementation contain? | 1.1 | Yes; additions only, in the control component module |
-| Is the validator closed (refuses what ARSO does not describe) or open (reports it)? | 0.1 | Open for now, closed once ARSO describes the Web of Things terms of the interface |
-| Fill volume as dwell time at a fixed flow rate, or a pump? | 0.3 | Flow rate; no hardware change |
-| Does the plan executor live in `modlink`? | 2.3 | Yes; an export for the lab's orchestrator later |
-| Which product and which changes does the paper show? | 3.1 | One vial product on two modules; the four scenarios above |
+Decided on 6 Oct 2026:
 
-Facts only you or the lab have: when the two modules are wired; the measured values of each
-station (fill range and accuracy, diameters) and the flow rate; who changes the planner (2.2 is
-TypeScript in your fork); whether we may publish to the lab's AAS server.
+| Decision | Answer |
+| --- | --- |
+| May ARSO be extended for building blocks and for what a skill's Contract, Step and Implementation contain? | Yes |
+| Validator closed or open? | Closed, as the SHACL validation of the generation project is |
+| Fill volume | A time at a fixed flow rate; the volume decides the time |
+| Who executes plans | A multi-agent system: an agent per product and per resource, I4.0 bidding; resource agents use the skills, the AAS and the reconfiguration tools |
+| Products | Prefilled syringe, cartridge or vial, as in the planner's examples |
+| Planning | By hand in the planner's web UI for now; an automatic planner may write the same submodels later |
+
+Still open:
+
+| Question | Blocks |
+| --- | --- |
+| Does the generation project's valid example pass its validator for you? Here it does not | 0.1 |
+| May I change the planner's recipes to the shared vocabulary in your fork, or do you? | 0.2 |
+| The agents: a framework and where they live; are they programs with fixed behaviour or LLM agents calling tools? | 2.3 |
+| Which changes does the paper show? | 3.1 |
+
+Facts only you or the lab have: the measured values of each station (fill range and accuracy,
+diameters) and the flow rate; whether we may publish to the lab's AAS server. One module is being
+wired to its Pi now.
