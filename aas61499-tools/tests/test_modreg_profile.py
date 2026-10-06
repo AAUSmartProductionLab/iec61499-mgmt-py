@@ -103,6 +103,10 @@ def test_a_module_speaks_opc_ua_only(stoppering, stoppering_aas):
     # The arguments in call order: the session, then the skill's parameters.
     assert names(at(start, "input", "properties")) == ["Session", *spec.skills["RaisePiston"].parameters]
     assert names(at(start, "output", "properties")) == ["Accepted", "ErrorID"]
+    # Which command the action carries out: the semantic id of the Operation that invokes it.
+    assert [ref["keys"][0]["value"] for ref in start["supplementalSemanticIds"]] == [f"{BASE}/skills/RaisePiston"]
+    stop = at(actions, "RaisePiston_Stop")
+    assert [ref["keys"][0]["value"] for ref in stop["supplementalSemanticIds"]] == [f"{BASE}/skills/RaisePiston/Stop"]
     state = at(interfaces, "interface_opcua", "InteractionMetadata", "properties", "Module_State")
     assert at(state, "forms", "href")["value"] == "/0:Objects/1:Stoppering/1:Module/1:State"
 
