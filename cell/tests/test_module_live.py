@@ -250,7 +250,7 @@ def test_filling_module_dispenses_and_weighs(request, tmp_path):
     with running(request, tmp_path, "filling") as (sim, ua):
         a = str(uuid.uuid4())
         ready(sim, ua, a)                                     # Resetting: needle already at the top
-        assert ua.call("Skills/Dispensing/Start", a) == [True, 0]
+        assert ua.call("Skills/Dispensing/Start", a, 1.0) == [True, 0]
         ua.expect("Skills/Dispensing/State", S["Succeeded"], timeout=10)
         assert ua.value("Skills/Dispensing/Results/Weight") == pytest.approx(2.0)
         assert ua.value("Equipment/NeedleAxis/AtTop") is True

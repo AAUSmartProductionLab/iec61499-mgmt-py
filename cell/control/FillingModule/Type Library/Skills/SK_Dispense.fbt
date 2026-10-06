@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SK_Dispense" Comment="Skill primitive Dispense: Dispense a volume at the station's flow rate (open loop, by time, until there is a pump) (parameters: Volume [mL] 0.5..10.0, default 1.0; FlowRate [mL/s] 0.1..5.0, default 1.0). OPC UA Start(Session, parameters...)/Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID]; START/HALT/ABORT/RESET from a parent -&gt; SUCCESS or FAILURE(ErrorID)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="filling" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Module" />
+        <With Var="UaRoot" />
+        <With Var="UaPath" />
+        <With Var="UaEnable" />
+        <With Var="Methods" />
+        <With Var="Token" />
+        <With Var="LastUse" />
+        <With Var="Volume" />
+        <With Var="FlowRate" />
+      </Event>
+      <Event Name="START" Type="Event">
+        <With Var="Volume" />
+        <With Var="FlowRate" />
+      </Event>
+      <Event Name="HALT" Type="Event" />
+      <Event Name="ABORT" Type="Event" />
+      <Event Name="RESET" Type="Event" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" />
+      <Event Name="SUCCESS" Type="Event" />
+      <Event Name="FAILURE" Type="Event">
+        <With Var="ErrorID" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+      <VarDeclaration Name="UaPath" Type="WSTRING" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" />
+      <VarDeclaration Name="Methods" Type="BOOL" />
+      <VarDeclaration Name="Token" Type="WSTRING" />
+      <VarDeclaration Name="LastUse" Type="BOOL" InitialValue="TRUE" />
+      <VarDeclaration Name="Volume" Type="LREAL" InitialValue="1.0" />
+      <VarDeclaration Name="FlowRate" Type="LREAL" InitialValue="1.0" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="State" Type="USINT" />
+      <VarDeclaration Name="ErrorID" Type="UINT" />
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="25800" height="5500" locked="false" />
+    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="1000" y="7700" width="16800" height="6340" locked="false" />
+    <FB Name="Control" Type="modlib::SKILL_Core" x="2800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+    </FB>
+    <FB Name="Logic" Type="filling::SL_Dispense" x="2800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Execution" />
+    </FB>
+    <FB Name="UaStart" Type="iec61499::net::SERVER_2_3" x="7400" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+    </FB>
+    <FB Name="Par_Volume" Type="modlib::SKILL_Param_LREAL" x="12000" y="900">
+      <Parameter Name="Lower" Value="0.5" />
+      <Parameter Name="Upper" Value="10.0" />
+      <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+    </FB>
+    <FB Name="Par_FlowRate" Type="modlib::SKILL_Param_LREAL" x="16600" y="900">
+      <Parameter Name="Lower" Value="0.1" />
+      <Parameter Name="Upper" Value="5.0" />
+      <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+    </FB>
+    <FB Name="PubParams" Type="iec61499::net::PUBLISH_2" x="21200" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+    </FB>
+    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="9800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Execution" />
+    </FB>
+    <EventConnections>
+      <Connection Source="Control.RSP_START" Destination="UaStart.RSP" />
+      <Connection Source="UaStart.IND" Destination="Par_Volume.CHECK" />
+      <Connection Source="Control.GO" Destination="Par_Volume.LATCH" />
+      <Connection Source="Par_Volume.CHECKED" Destination="Par_FlowRate.CHECK" />
+      <Connection Source="Par_Volume.LATCHED" Destination="Par_FlowRate.LATCH" />
+      <Connection Source="Par_FlowRate.CHECKED" Destination="Control.CMD_START" />
+      <Connection Source="Par_FlowRate.LATCHED" Destination="PubParams.REQ" />
+      <Connection Source="PubParams.INITO" Destination="PubParams.REQ" />
+      <Connection Source="INIT" Destination="Control.INIT" />
+      <Connection Source="Control.INITO" Destination="Logic.INIT" />
+      <Connection Source="Logic.INITO" Destination="UaStart.INIT" />
+      <Connection Source="UaStart.INITO" Destination="Par_Volume.INIT" />
+      <Connection Source="Par_Volume.INITO" Destination="Par_FlowRate.INIT" />
+      <Connection Source="Par_FlowRate.INITO" Destination="PubParams.INIT" />
+      <Connection Source="PubParams.INITO" Destination="INITO" />
+      <Connection Source="START" Destination="Control.START" />
+      <Connection Source="HALT" Destination="Control.HALT" />
+      <Connection Source="ABORT" Destination="Control.ABORT" />
+      <Connection Source="RESET" Destination="Control.RESET" />
+      <Connection Source="Control.SUCCESS" Destination="SUCCESS" />
+      <Connection Source="Control.FAILURE" Destination="FAILURE" />
+      <Connection Source="Par_FlowRate.LATCHED" Destination="Logic.START" />
+      <Connection Source="Control.HALT_O" Destination="Logic.HALT" />
+      <Connection Source="Control.ABORT_O" Destination="Logic.ABORT" />
+      <Connection Source="Control.RUN_STOP" Destination="Control.STOP_DONE" />
+      <Connection Source="Logic.DONE" Destination="Control.EXEC_DONE" />
+      <Connection Source="Logic.FAILED" Destination="Control.EXEC_FAILED" />
+      <Connection Source="Logic.HALTED" Destination="Control.EXEC_FAILED" />
+      <Connection Source="Logic.TIMER_START" Destination="Timer.START" />
+      <Connection Source="Logic.TIMER_STOP" Destination="Timer.STOP" />
+      <Connection Source="Timer.EO" Destination="Logic.TIMER" />
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Control.IdStart" Destination="UaStart.ID" />
+      <Connection Source="UaStart.RD_1" Destination="Control.S_Start" />
+      <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
+      <Connection Source="Control.RspError" Destination="UaStart.SD_2" />
+      <Connection Source="UaStart.RD_2" Destination="Par_Volume.S" />
+      <Connection Source="Control.FromUa" Destination="Par_Volume.FromUa" />
+      <Connection Source="Par_Volume.P" Destination="PubParams.SD_1" />
+      <Connection Source="UaStart.RD_3" Destination="Par_FlowRate.S" />
+      <Connection Source="Control.FromUa" Destination="Par_FlowRate.FromUa" />
+      <Connection Source="Par_FlowRate.P" Destination="PubParams.SD_2" />
+      <Connection Source="Par_Volume.InRange" Destination="Par_FlowRate.OkIn" />
+      <Connection Source="Par_FlowRate.InRange" Destination="Control.InRange" />
+      <Connection Source="Module" Destination="Control.Module" />
+      <Connection Source="UaRoot" Destination="Control.UaRoot" />
+      <Connection Source="UaPath" Destination="Control.UaPath" />
+      <Connection Source="UaEnable" Destination="Control.UaEnable" />
+      <Connection Source="Methods" Destination="Control.Methods" />
+      <Connection Source="Methods" Destination="UaStart.QI" />
+      <Connection Source="Control.State" Destination="State" />
+      <Connection Source="Control.ErrorID" Destination="ErrorID" />
+      <Connection Source="UaRoot" Destination="Logic.UaRoot" />
+      <Connection Source="UaPath" Destination="Logic.UaPath" />
+      <Connection Source="UaEnable" Destination="PubParams.QI" />
+      <Connection Source="Logic.IdParams" Destination="PubParams.ID" />
+      <Connection Source="Volume" Destination="Par_Volume.Default" />
+      <Connection Source="Par_Volume.P" Destination="Logic.Volume" />
+      <Connection Source="FlowRate" Destination="Par_FlowRate.Default" />
+      <Connection Source="Par_FlowRate.P" Destination="Logic.FlowRate" />
+      <Connection Source="Logic.ErrorID" Destination="Control.ExecError" />
+      <Connection Source="Logic.TimerDT" Destination="Timer.DT" />
+    </DataConnections>
+  </FBNetwork>
+</FBType>

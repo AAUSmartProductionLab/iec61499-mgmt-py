@@ -366,6 +366,18 @@
     "exported": true
   },
   {
+    "type": "filling::SL_Dispense",
+    "kind": "BasicFB",
+    "file": "Skills/Logic/SL_Dispense.fbt",
+    "exported": true
+  },
+  {
+    "type": "filling::SK_Dispense",
+    "kind": "CompositeFB",
+    "file": "Skills/SK_Dispense.fbt",
+    "exported": true
+  },
+  {
     "type": "filling::SL_Tare",
     "kind": "BasicFB",
     "file": "Skills/Logic/SL_Tare.fbt",
@@ -429,6 +441,12 @@
     "type": "iec61499::net::SERVER_2_2",
     "kind": "GenericComm",
     "file": "Generic/SERVER_2_2.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::SERVER_2_3",
+    "kind": "GenericComm",
+    "file": "Generic/SERVER_2_3.fbt",
     "exported": false
   },
   {

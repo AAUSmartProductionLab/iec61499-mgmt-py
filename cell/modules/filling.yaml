@@ -77,6 +77,13 @@ skills:
       Duration: {unit: s, minimum: 0.0, maximum: 60.0, default: 1.0}
     after: Duration
     offered: false
+  Dispense:
+    description: Dispense a volume at the station's flow rate (open loop, by time, until there is a pump)
+    parameters:
+      Volume: {unit: mL, minimum: 0.5, maximum: 10.0, default: 1.0, description: Volume to dispense}
+      FlowRate: {unit: mL/s, minimum: 0.1, maximum: 5.0, default: 1.0, description: Flow rate of the station (calibration)}
+    after: Volume / FlowRate
+    offered: false
   Tare:
     description: Tare the scale
     equipment: Scale
@@ -91,8 +98,11 @@ skills:
 
 composites:
   Dispensing:
-    description: Needle down, dwell, needle up, weigh (runFillingCycle)
-    execute: [MoveNeedleDown, {Dwell: {Duration: 1.0}}, MoveNeedleUp, Weigh]
+    description: Needle down, dispense the volume, needle up, weigh (runFillingCycle)
+    parameters:
+      Volume: {unit: mL, minimum: 0.5, maximum: 10.0, default: 1.0, description: Fill volume}
+    # The flow rate is the station's: a constant of this step, changed by reconfiguration.
+    execute: [MoveNeedleDown, {Dispense: {Volume: Volume, FlowRate: 1.0}}, MoveNeedleUp, Weigh]
     stop: [MoveNeedleUp]
     results: {Weight: Weigh.Weight}
 
@@ -104,7 +114,8 @@ procedures:
 # role Offered), each capability realized by an offered skill (CapabilityRealizedBy). Meanings
 # default to https://smartproductionlab.aau.dk/semantics/<Name>. The values are illustrative (as
 # the vial filling station of the process planner's pharma example) until the station is measured;
-# Dispensing takes no volume yet (Dwell stands in for a pump), so FillVolume names no parameter.
+# FillVolume is set by Dispensing's Volume parameter; without a pump the volume is a time at the
+# station's flow rate (Dispense).
 capabilities:
   Filling:
     description: Fill a liquid into an open vial under the needle and weigh it
@@ -112,5 +123,5 @@ capabilities:
     properties:
       ContainerType: {value: vial}
       GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
-      FillVolume: {minimum: 0.5, maximum: 10.0, unit: mL}
+      FillVolume: {minimum: 0.5, maximum: 10.0, unit: mL, parameter: Volume}
       AbsoluteFillError: {value: 0.05, unit: mL}

@@ -253,17 +253,21 @@ Read the weight.
 | --- | --- | --- |
 | Weight | Double | `Skills/Weigh/Results/Weight` |
 
-Not callable on their own (used only as steps): `Dwell` (Wait at the current position (stands in for dispensing until there is a pump)).
+Not callable on their own (used only as steps): `Dwell` (Wait at the current position (stands in for dispensing until there is a pump)), `Dispense` (Dispense a volume at the station's flow rate (open loop, by time, until there is a pump)).
 
 ### 8.2 Module level skills (a sequence of steps)
 
 #### `Dispensing`
 
-Needle down, dwell, needle up, weigh (runFillingCycle).
+Needle down, dispense the volume, needle up, weigh (runFillingCycle).
 
-- **Start:** `Skills/Dispensing/Start(Session: String)`
+- **Start:** `Skills/Dispensing/Start(Session: String, Volume: Double)`
 - **Uses equipment:** NeedleAxis, Scale
 - **Fails** with the ErrorID of the step that failed; the remaining steps do not run.
+
+| Parameter (argument order) | Type | Unit | Range | Default | Node with the value |
+| --- | --- | --- | --- | --- | --- |
+| Volume | Double | mL | 0.5 .. 10 | 1 | `Skills/Dispensing/Parameters/Volume` |
 
 | Result | Type | Node |
 | --- | --- | --- |
@@ -274,7 +278,7 @@ Steps, in order. Each step publishes its own `State` and `ErrorID` (read-only; s
 | # | Step | What it does | State node |
 | --- | --- | --- | --- |
 | 1 | `MoveNeedleDown`: MoveNeedleDown | Needle down to the bottom end switch | `Skills/Dispensing/Execute/MoveNeedleDown/State` |
-| 2 | `Dwell`: Dwell with Duration=1.0 | Wait at the current position (stands in for dispensing until there is a pump) | `Skills/Dispensing/Execute/Dwell/State` |
+| 2 | `Dispense`: Dispense with Volume=Volume (the skill's parameter), FlowRate=1.0 | Dispense a volume at the station's flow rate (open loop, by time, until there is a pump) | `Skills/Dispensing/Execute/Dispense/State` |
 | 3 | `MoveNeedleUp`: MoveNeedleUp | Needle up to the top end switch | `Skills/Dispensing/Execute/MoveNeedleUp/State` |
 | 4 | `Weigh`: Weigh | Read the weight | `Skills/Dispensing/Execute/Weigh/State` |
 
@@ -404,18 +408,21 @@ Every node of the module as browsed from the running controller (initial values 
 | `/Filling/Skills/Dispensing/Reset` | Method | (String) -> (Boolean, UInt16) | |
 | `/Filling/Skills/Dispensing/State` | Variable | Byte | 0 |
 | `/Filling/Skills/Dispensing/ErrorID` | Variable | UInt16 | 0 |
-| `/Filling/Skills/Dispensing/Start` | Method | (String) -> (Boolean, UInt16) | |
+| `/Filling/Skills/Dispensing/Start` | Method | (String, Double) -> (Boolean, UInt16) | |
+| `/Filling/Skills/Dispensing/Parameters` | Object | | |
+| `/Filling/Skills/Dispensing/Parameters/Volume` | Variable | Double | 1.0 |
 | `/Filling/Skills/Dispensing/Results` | Object | | |
 | `/Filling/Skills/Dispensing/Results/Weight` | Variable | Double | 0.0 |
 | `/Filling/Skills/Dispensing/Execute` | Object | | |
 | `/Filling/Skills/Dispensing/Execute/MoveNeedleDown` | Object | | |
 | `/Filling/Skills/Dispensing/Execute/MoveNeedleDown/State` | Variable | Byte | 0 |
 | `/Filling/Skills/Dispensing/Execute/MoveNeedleDown/ErrorID` | Variable | UInt16 | 0 |
-| `/Filling/Skills/Dispensing/Execute/Dwell` | Object | | |
-| `/Filling/Skills/Dispensing/Execute/Dwell/State` | Variable | Byte | 0 |
-| `/Filling/Skills/Dispensing/Execute/Dwell/ErrorID` | Variable | UInt16 | 0 |
-| `/Filling/Skills/Dispensing/Execute/Dwell/Parameters` | Object | | |
-| `/Filling/Skills/Dispensing/Execute/Dwell/Parameters/Duration` | Variable | Double | 1.0 |
+| `/Filling/Skills/Dispensing/Execute/Dispense` | Object | | |
+| `/Filling/Skills/Dispensing/Execute/Dispense/State` | Variable | Byte | 0 |
+| `/Filling/Skills/Dispensing/Execute/Dispense/ErrorID` | Variable | UInt16 | 0 |
+| `/Filling/Skills/Dispensing/Execute/Dispense/Parameters` | Object | | |
+| `/Filling/Skills/Dispensing/Execute/Dispense/Parameters/Volume` | Variable | Double | 1.0 |
+| `/Filling/Skills/Dispensing/Execute/Dispense/Parameters/FlowRate` | Variable | Double | 1.0 |
 | `/Filling/Skills/Dispensing/Execute/MoveNeedleUp` | Object | | |
 | `/Filling/Skills/Dispensing/Execute/MoveNeedleUp/State` | Variable | Byte | 0 |
 | `/Filling/Skills/Dispensing/Execute/MoveNeedleUp/ErrorID` | Variable | UInt16 | 0 |
