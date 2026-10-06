@@ -236,7 +236,7 @@ class ModuleTypeAAS(AAS):
     asset_interfaces_mapping_configuration: Aimc = Aimc(
         id_short="AssetInterfacesMappingConfiguration", MappingConfigurations=AimcMappingConfigurations(value=[]))
     control_configuration: ModuleControlConfiguration = ModuleControlConfiguration(id_short="ControlConfiguration")
-    # A module without skill parameters has no Parameters submodel.
+    # Optional and not written by ``describe``: a skill's parameters are with the skill.
     parameters: Optional[Parameters] = None
     capability_description: Optional[ModuleCapabilityDescription] = None
 
