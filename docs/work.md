@@ -575,16 +575,10 @@ capabilities, skill links and mappings in the AAS (6 Oct).
 
 Smaller open items that are in no phase of that plan:
 
-- Fill volume has no actuator yet (Dwell stands in for dispensing): model Volume as a dwell time
-  at a fixed flow rate, or add a pump.
-- Declare in ARSO what `modreg` still hand-writes (contract terms, step children, implementation
-  details, list item types) and the Web of Things terms of the interface description.
 - Retire `modsync/aas.py` once the profile path is accepted.
 - Publish the FORTE binary as a release asset so the `curl` installer works; test the installers
   and the time synchronisation on the real Pi; install the rebuilt FORTE (Succeeded → Idle) there.
 - Wire both modules; give the stoppering Pi its address.
-- The module's own identification over OPC UA and the profile deployed next to the boot file
-  (manifest, see `ontology/aas-implementation-plan.md`).
 - Split the work into repositories once one product runs end to end on two modules: six
   repositories, the ontologies first ([repositories.md](repositories.md)). Until then keep the
   folders independent. Move the test module `filler` into the skill library; CI.
