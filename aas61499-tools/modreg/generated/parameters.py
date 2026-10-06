@@ -11,7 +11,7 @@ class ParameterEntry(SubmodelElementCollection):
     semantic_id: str = ""
     description: str = "A named parameter entry."
     InterfaceReference: Optional[ReferenceElement] = None
-    Value: Property
+    Value: Optional[Property] = None
     Unit: Optional[Property] = None
 
 # alias so field ``ParameterEntry_t`` can name a class of the same id_short
