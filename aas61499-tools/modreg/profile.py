@@ -14,9 +14,11 @@ and registers with (its manifest), ``model.environment`` into the AAS.
   parameters and results beside it). The procedures the module runs while Resetting and Stopping
   are sequences of steps as well.
 - **Operational Data** with the mapping that feeds it (Asset Interfaces Mapping Configuration):
-  module state, occupation, skill and step states and results, equipment inputs, as decimal data
-  points.
-- **Parameters**: the value of every skill parameter as deployed (none: no submodel).
+  module state, occupation, skill and step states, parameters and results, equipment inputs, as
+  decimal data points.
+- No **Parameters** submodel: a skill's parameters are with the skill (the inputs of its Operation,
+  and declared with unit, limits and deployed value in its Parameters). The submodel is optional
+  in ARSO; what belongs in it is open.
 - **Hierarchical Structures**: the equipment as parts of the module.
 - **Control Configuration**: spec, target and program digest; from a module that was read also the
   synchronisation state, the differences and the type hashes.
@@ -51,7 +53,6 @@ from modsync.device import Snapshot
 from . import model
 from .generated import control_configuration as cc, skills as arso
 from .generated.operational_data import OperationalData
-from .generated.parameters import ParameterEntry, Parameters
 from .model import ModuleSkill, ModuleTypeAAS
 
 AID = "{aas_id}/submodels/AssetInterfacesDescription"
@@ -59,7 +60,6 @@ SKILLS = "{aas_id}/submodels/Skills"
 STRUCTURE = "{aas_id}/submodels/HierarchicalStructures"
 DATA = "{aas_id}/submodels/OperationalData"
 CAPABILITIES = "{aas_id}/submodels/CapabilityDescription"
-PARAMETERS = "{aas_id}/submodels/Parameters"
 # IDTA 02020: the Capability element and its role qualifier.
 CAPABILITY = "https://admin-shell.io/idta/CapabilityDescription/Capability/1/0"
 OFFERED = "https://admin-shell.io/idta/CapabilityDescription/CapabilityRoleQualifier/Offered/1/0"
@@ -154,7 +154,6 @@ class Describer:
         self.datapoints: dict[str, tuple[str, str, str]] = {}    # data point -> (interface property, concept, title)
         # Operation -> (where it is, the interface action it invokes, its arguments in call order)
         self.operations: dict[str, tuple[ModelReference, str, list[str]]] = {}
-        self.parameter_entries: dict[str, str] = {}              # interface property -> Parameters entry
         # The skills the AAS lists: those with an interface of their own.
         self.listed = [n for n, s in [*spec.skills.items(), *spec.composites.items()] if s.offered]
 
@@ -312,7 +311,7 @@ class Describer:
                     qualifiers=[Qualifier(type_=k, value=text(v), kind="ConceptQualifier") for k, v in declared if v is not None]))
                 key = self.property(f"{name}_Parameter_{p}", f"{node}/Parameters/{p}", pr.type,
                                     f"{name} {p} of the current or last run", pr.unit)
-                self.parameter_entries[key] = f"{name}_{p}"
+                self.observe(key, key, f"{skill_id(name)}/Parameters/{p}", f"{name} {p} of the current or last run")
         if composite:
             put(skill.SkillSequence, "Execute", self.sequence(f"{name}.Execute", decl.execute, f"{node}/Execute",
                                                               f"{name}_Execute", f"{skill_id(name)}/Execute"))
@@ -352,24 +351,10 @@ class Describer:
 
     # Submodels -------------------------------------------------------------------------------
 
-    def parameters(self) -> Parameters | None:
-        """The value of each skill parameter as deployed (the default a start without one uses)."""
-        spec, entries = self.spec, {}
-        for name in self.listed:
-            decl = spec.composites.get(name) or spec.skills[name]
-            for p, pr in decl.parameters.items():
-                value = current(parameter_port(spec, name, p), pr, self.snap)
-                shown = ReferenceElement(value=affordance("properties", f"{name}_Parameter_{p}"))
-                entries[f"{name}_{p}"] = ParameterEntry(
-                    description=pr.description or f"Parameter {p} of {name}", semantic_id=f"{skill_id(name)}/Parameters/{p}",
-                    InterfaceReference=shown, Value=prop(value, XSD[pr.type]), Unit=prop(pr.unit) if pr.unit else None)
-        return Parameters(id_short="Parameters", ParameterEntry=entries) if entries else None
-
     def mappings(self) -> Aimc:
         """How the interface reaches the other submodels (AIMC): every property of the interface
-        feeds one element (a skill parameter its Parameters entry, everything else its Operational
-        Data point), and every action of the interface is invoked by one Operation of the Skills
-        submodel (a skill's command, Occupy or Release, a module command)."""
+        feeds its Operational Data point, and every action of the interface is invoked by one
+        Operation of the Skills submodel (a skill's command, Occupy or Release, a module command)."""
         def identity(id_short: str, feeds: dict[str, ModelReference]) -> object:
             lines = "\n".join(f"        {key} = sources.{key}," for key in feeds)
             return mapping_configuration(
@@ -379,9 +364,6 @@ class Describer:
 
         data = {key: path(DATA, ("Property", point)) for point, (key, _, _) in self.datapoints.items()}
         mappings = [identity("OPCUA", data)]
-        if self.parameter_entries:
-            mappings.append(identity("Parameters", {key: path(PARAMETERS, (SMC, entry), ("Property", "Value"))
-                                                    for key, entry in self.parameter_entries.items()}))
         for name, (at, action, arguments) in self.operations.items():
             fields = "\n".join(f"            {a} = op.{a}," for a in arguments)
             mappings.append(mapping_configuration(
@@ -535,7 +517,6 @@ class Describer:
                 Property(value="0", value_type="xs:decimal", semantic_id=concept, description=title))
         self.realizes(skills)
         asset.capability_description = self.capabilities()
-        asset.parameters = self.parameters()
         asset.asset_interfaces_mapping_configuration = self.mappings()
         asset.control_configuration = self.control_configuration()
         return ModuleTypeAAS.model_validate(asset.model_dump()), asset_id

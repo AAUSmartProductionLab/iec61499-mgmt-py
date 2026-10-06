@@ -169,9 +169,13 @@ def test_a_skill_that_only_runs_as_a_step_is_named_not_listed():
     for key in ("Weigh_Result_Weight", "Dispensing_Result_Weight"):
         assert at(properties, key, "unit")["value"] == spec.equipment["Scale"].inputs["Weight"].unit == "g"
         assert at(properties, key, "type")["value"] == "number"
-    # Dispensing's Volume is the module's one skill parameter: deployed value and where it shows.
-    volume = at(submodel(env, "Parameters"), "Dispensing_Volume")
-    assert float(at(volume, "Value")["value"]) == 1.0 and at(volume, "Unit")["value"] == "mL"
+    # Dispensing's Volume is with the skill: an input of its Operation, and declared with its unit
+    # and deployed value. There is no Parameters submodel for it.
+    dispensing = at(skills, "Dispensing")
+    assert [v["value"]["idShort"] for v in at(dispensing, "Dispensing")["inputVariables"]] == ["Session", "Volume"]
+    volume = at(dispensing, "Parameters", "Volume")
+    assert float(volume["value"]) == 1.0 and {q["type"]: q["value"] for q in volume["qualifiers"]}["Unit"] == "mL"
+    assert "Parameters" not in [s["idShort"] for s in env["submodels"]]
 
 
 def test_steps_publish_like_skills_where_the_program_puts_them():
@@ -338,9 +342,9 @@ def test_the_aimc_maps_every_action_and_property_onto_a_submodel(stoppering_aas)
     assert all(len(sinks) == 1 for sinks in fed.values())
     assert sorted(invoked) == sorted(names(interaction(env, "actions")))
     assert all(len(ops) == 1 for ops in invoked.values())
-    # A skill parameter feeds its Parameters entry, a result or state its data point, an action is
-    # invoked by its Operation in the Skills submodel.
-    assert fed["RaisePiston_Parameter_Duration"][0]["idShort"] == "Value"
+    # A parameter, result or state feeds its data point, an action is invoked by its Operation in
+    # the Skills submodel.
+    assert fed["RaisePiston_Parameter_Duration"][0]["idShort"] == "RaisePiston_Parameter_Duration"
     assert fed["Stoppering_Execute_ArmIn_Parameter_Angle"][0]["idShort"] == "Stoppering_Execute_ArmIn_Parameter_Angle"
     assert invoked["RaisePiston_Stop"][0]["idShort"] == "RaisePiston_Stop"
     assert invoked["Module_Reset"][0]["idShort"] == "Module_Reset"
@@ -362,11 +366,10 @@ def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
     feed = children(mappings)[0]
     # Every data point has a source: the property of the interface that publishes it.
     assert len(children(at(feed, "Sinks"))) == len(children(at(feed, "Sources"))) == len(names(data))
-    parameters = submodel(stoppering_aas, "Parameters")
-    assert parameters["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/Parameters/1/0/Submodel"
-    entry = at(parameters, "RaisePiston_Duration")
-    assert float(at(entry, "Value")["value"]) == spec.skills["RaisePiston"].parameters["Duration"].default
-    assert at(entry, "InterfaceReference")["value"]["keys"][-1]["value"] == "RaisePiston_Parameter_Duration"
+    # A skill parameter of the current or last run is a data point as well, not a Parameters entry.
+    assert at(data, "RaisePiston_Parameter_Duration")["semanticId"]["keys"][0]["value"] == \
+        f"{BASE}/skills/RaisePiston/Parameters/Duration"
+    assert "Parameters" not in [s["idShort"] for s in stoppering_aas["submodels"]]
 
 
 def test_every_reference_resolves(stoppering_aas):
@@ -388,7 +391,6 @@ def test_a_module_that_was_read_shows_what_runs_there():
     assert at(config, "SyncState")["value"] == "Drift" and len(names(at(config, "Differences"))) == 1
     assert at(config, "Runtime", "ManagementEndpoint")["value"] == "192.168.0.50:61499"
     assert len(names(at(config, "Types"))) == len(set(app.fbs.values()))
-    assert float(at(submodel(env, "Parameters"), "RaisePiston_Duration", "Value")["value"]) == 5.5
     assert float(at(submodel(env, "Skills"), "Skills", "RaisePiston", "Parameters", "Duration")["value"]) == 5.5
     implementation = at(submodel(env, "Skills"), "Skills", "RaisePiston", "Implementation")
     assert at(implementation, "FBType")["value"] == app.fbs["RaisePiston"]
