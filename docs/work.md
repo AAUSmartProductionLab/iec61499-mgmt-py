@@ -590,5 +590,6 @@ Open decisions and smaller items:
 - Wire both modules; give the stoppering Pi its address.
 - The module's own identification over OPC UA and the profile deployed next to the boot file
   (manifest, see `ontology/aas-implementation-plan.md`).
-- Split the repository along its top-level folders; move the test module `filler` into the skill
-  library; CI.
+- Split the work into repositories once one product runs end to end on two modules: six
+  repositories, the ontologies first ([repositories.md](repositories.md)). Until then keep the
+  folders independent. Move the test module `filler` into the skill library; CI.
