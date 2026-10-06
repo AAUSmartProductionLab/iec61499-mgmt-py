@@ -567,18 +567,13 @@ toolchains, 4diac IDE 3.2.x.
 
 ## Next steps
 
-What the paper (CIRP, full paper 18 Nov 2026) has to show is that the models **drive** a checked
-reconfiguration of the modules. One vertical slice on the filling module, each change class once:
+The plan is in [next-steps.md](next-steps.md): the integrated architecture as the target, the
+aim (a vendor's module, taken in and reconfigured from its AAS alone), four phases with their
+checks, the timeline against the paper and the decisions that block it. Done so far towards it:
+a module level skill created online (1 Oct), registration through `modreg` (2 to 4 Oct),
+capabilities, skill links and mappings in the AAS (6 Oct).
 
-| Step | What | State |
-| --- | --- | --- |
-| S1 | A module level skill without a type of its own, created online by management commands, verified by read-back, boot file rewritten | Done 1 Oct |
-| – | Registration: the module's AAS in ARSO's structure, built with aas-model, checked and published | Done 2 to 4 Oct |
-| S2 | The slice's models: the HGH product (fill volume, required Dispensing with Volume), the filling module's offered Dispensing as a capability description (Volume range, realised by the Dispensing skill), the process map Dispense → Transfer → Close | Next |
-| S3 | Matcher and binding (required against offered, ranges), change classification, validation, and application through `modsync push`: a parameter change (online write), a flow change (orchestrator policy only), a composition change (a new module level skill created online) | |
-| S4 | Experiment runner: the three changes timed (downtime, command count, verification) against a full redeployment | |
-
-Open decisions and smaller items:
+Smaller open items that are in no phase of that plan:
 
 - Fill volume has no actuator yet (Dwell stands in for dispensing): model Volume as a dwell time
   at a fixed flow rate, or add a pump.
