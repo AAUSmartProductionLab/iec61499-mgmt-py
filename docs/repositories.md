@@ -1,8 +1,14 @@
 # Repositories: how the work divides
 
-Proposal of 6 Oct 2026; nothing is split yet. Everything built so far sits in four places: this
-repository, the HMI repository (with `modlink`), the AAS generation project
-(`ARSO_Ontology_AAS_Generation`) and the process sequence UI (a BaSyx web UI fork). Several parts
+Proposal of 6 Oct 2026; nothing is split yet. Everything built so far sits in four places:
+
+| Where | What |
+| --- | --- |
+| [iec61499-mgmt-py](https://github.com/AAUSmartProductionLab/iec61499-mgmt-py) (this repository) | Runtime, module library and generator, management client, `modsync`, `modreg`, the ontologies, the two modules |
+| [iec61499-opcua-hmi](https://github.com/AAUSmartProductionLab/iec61499-opcua-hmi) | `modlink`, the HMI, an OPC UA stand-in for a module (`sim/`), the Linux FORTE build (`tools/forte`), the end-to-end test |
+| [ARSO_Ontology_AAS_Generation](https://github.com/MartinJensen37/ARSO_Ontology_AAS_Generation) | The LLM generator with its editor, an AAS builder, AAS → RDF, SHACL validation, a copy of ARSO |
+| [basyx-aas-web-ui](https://github.com/MartinJensen37/basyx-aas-web-ui), branch `feat/process-sequence-pharma` | The process sequence planner: one module folder (`aas-web-ui/src/pages/modules/ProcessSequence`) in a fork of the BaSyx web UI |
+ Several parts
 exist twice (the ontology, the AAS validation, the AAS builder) and several are bundled with
 something they do not depend on (`modlink` inside the HMI, the registration service inside the
 IEC 61499 tools).
@@ -43,12 +49,13 @@ The target, in six repositories of ours (numbers refer to the parts below):
 | **ontologies** | 1 | The single source of truth, pulled into the others; pure data with its shapes |
 | **aas-resource-tools** | 3, 4, 10 | Protocol-neutral AAS work on one model: build, validate, register (and match). Changes together |
 | **iec61499-modules** | 5, 6, 8, 9 | Everything IEC 61499: library and shell, generator, management client, sync and reconfiguration, runtime builds and Pi deployment. Binaries are released from it |
-| **module-clients** | 11, 12 | `modlink`, the HMI and later the plan executor: one OPC UA client code base |
+| **module-clients** | 11, 12 | `modlink`, the HMI and later the plan executor: one OPC UA client code base. This is iec61499-opcua-hmi as it is |
 | **aas-generator** | 7 | Already separate; a vendor's tool with its own user interface |
 | **filling-line** | 14 | The concrete line, its tests and experiments; pulls the others in |
 
-Beside them: the lab's **aas-model** (2) and the **process-planner** fork (13), which are
-already separate.
+Beside them: the lab's **aas-model** (2) and the **process-planner** (13), which are already
+separate. The planner is a module folder on a branch of a fork whose `main` follows upstream
+BaSyx; it stays there (rebased on upstream), since it cannot run without the web UI around it.
 
 Inside each repository the parts stay separate folders and packages with one-way dependencies,
 as the top-level folders are here. That keeps a later split cheap (`git filter-repo --path`).
@@ -94,9 +101,9 @@ Each could be a repository of its own; the recommendation above groups them.
 | 8 | **iec61499-mgmt-py** | The FORTE management protocol client: typed commands, networks and plans, boot files, type library, read-back | `iec61499-mgmt-py/` here | – |
 | 9 | **aas61499-tools** | `modsync` (read a running module, compare, push changes, create skills online, watch) and the IEC 61499 side of the AAS: the profile from a module spec and a running program; later the module's identity and the reconfiguration manager | `aas61499-tools/modsync`, `modreg/profile.py` here | 3, 5, 8 |
 | 10 | **aas-registration** | The registration service: read a profile, build the AAS, validate it, publish it to the AAS server | `modreg/service.py` and its command line here | 3, 4 |
-| 11 | **modlink** | The OPC UA client library every client shares: link, module client, AAS reader that follows capability → skill → interface, `run_capability`; later the plan executor | The HMI repository | – (reads the AAS as JSON) |
-| 12 | **module-hmi** | The operator pages built from the AAS | The HMI repository | 11 |
-| 13 | **process-planner** | Products, production sequences, required capabilities, binding of steps to skills | The BaSyx web UI fork | 4 (matcher), the AAS server |
+| 11 | **modlink** | The OPC UA client library every client shares: link, module client, AAS reader that follows capability → skill → interface, `run_capability`; later the plan executor | `modlink/` of iec61499-opcua-hmi | – (only `asyncua`; reads the AAS as plain JSON) |
+| 12 | **module-hmi** | The operator pages built from the AAS (FastAPI); an OPC UA stand-in for a module | `hmi/`, `sim/` of iec61499-opcua-hmi | 11 |
+| 13 | **process-planner** | Products, production sequences, required capabilities, binding of steps to skills; its own Production Sequence and Skills templates and a matcher in TypeScript | The ProcessSequence module of the basyx-aas-web-ui fork | The AAS server; later 4 (matcher) and 1 (vocabulary) |
 
 ### The line itself
 
@@ -190,6 +197,21 @@ Settled by the split:
   partly from the program.
 - The registration service and the resource model are independent of IEC 61499, so the lab's
   MQTT stations and a vendor's module go the same way.
+
+Duplicates between the repositories that sharing has to remove (found 6 Oct):
+
+- **State and error numbers**: `modlink/codes.py` repeats the tables of ModLib; a test in the HMI
+  repository compares them with a checkout of this one.
+- **Module descriptions**: `hmi/profiles.py` holds built-in descriptions of both modules beside
+  the ones read from the AAS; its AAS test data are written from this repository.
+- **The Linux FORTE build** (`tools/forte` of the HMI repository) beside the Windows and Pi
+  builds here.
+- **Capability vocabulary**: the planner's demo uses `.../demo/pharma/semantics/<Name>`, the
+  module specs `.../semantics/<Name>`, so required and offered capabilities do not meet yet.
+- **Skills template**: the planner reads its own Application Skills 1.0, the modules publish
+  ARSO's Skills submodel.
+- **Matching**: in the planner (TypeScript) and in `modlink`; the ontology matcher is proposed
+  as the authority.
 
 Still to decide:
 
