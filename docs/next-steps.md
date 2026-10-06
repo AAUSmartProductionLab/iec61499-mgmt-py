@@ -31,8 +31,8 @@ Small things everything else stands on.
 
 | # | Step | Where | Done when | Days |
 | --- | --- | --- | --- | --- |
-| 0.1 | **One ARSO, one closed validator.** Bring the generation project's copy up to this repository's (reconfiguration elements of a skill, Control Configuration, parameter entry) and validate with its closed SHACL shapes. **Open, 6 Oct:** in a fresh checkout the generation project's own valid example fails its validator with about 3,000 closed-shape violations, so there is no passing baseline to merge against yet (asked) | `ontology/`, generation project | Both projects load the same files; each one's tests pass; a module AAS passes the closed validation | 0.5 + the gap |
-| 0.2 | **Capability vocabulary.** **Done 6 Oct on this side:** `ontology/Vocabulary/capabilities.ttl` (8 capabilities, 7 properties with units, below CSS, IRIs `.../semantics/<Name>`); the module specs are tested against it. **Open:** the planner's recipes still use `.../demo/pharma/semantics/<Name>` | `ontology/`, `cell/modules`, planner | A required capability of a recipe and the offered one of a module carry the same IRI | 1 |
+| 0.1 | **One ARSO, one closed validator.** Bring the generation project's copy up to this repository's (reconfiguration elements of a skill, Control Configuration, parameter entry) and validate with its closed SHACL shapes. **Found 6 Oct:** the closed validation of the generation project has not passed since its shapes were regenerated with the closed ruleset on 11 Sep (commit `119150c`): its own valid example gives 2,962 violations. The ruleset writes `sh:ignoredProperties` as separate values and nothing gathers them into the list SHACL requires, so nothing is ignored; with lists 758 remain, because the ruleset also closes the AAS metamodel's mixin classes and the projection's labels are not ignored. Its regression suite only checks that invalid fixtures fail. With the shapes of 6 Sep (not closed) the valid example passes, and a module AAS built here has 198 issues. **To do first, in the generation project:** gather the lists, close only ARSO's classes, ignore labels, and test that the valid example passes | `ontology/`, generation project | The generation project's valid example passes its closed validation; both projects load the same ARSO; a module AAS passes | 1.5 |
+| 0.2 | **Capability vocabulary.** **Done 6 Oct on this side:** `ontology/Vocabulary/capabilities.ttl` (8 capabilities, 7 properties with units, below CSS, IRIs `.../semantics/<Name>`); the module specs are tested against it. The planner's recipes and stations use the same IRIs since 6 Oct (fork, `058a03e`); demo data already on a server has to be seeded again | `ontology/`, `cell/modules`, planner | A required capability of a recipe and the offered one of a module carry the same IRI | 1 |
 | 0.3 | **Fill volume.** **Done 6 Oct:** Dispensing takes a Volume (0.5 to 10 mL); the new building block Dispense waits Volume / FlowRate (1 mL/s, a constant of the step that reconfiguration can change); FillVolume of the Filling capability names the parameter; live test on the rebuilt FORTE | module spec format, `cell/modules/filling.yaml`, FORTE rebuild | `Dispensing.Start(Session, 2.5)` dispenses for 2.5 s on FORTE; the AAS links FillVolume to the parameter | 1.5 |
 
 ### Phase 1: the AAS is all the integrator needs (about 8 days)
@@ -117,9 +117,8 @@ Still open:
 
 | Question | Blocks |
 | --- | --- |
-| Does the generation project's valid example pass its validator for you? Here it does not | 0.1 |
-| May I change the planner's recipes to the shared vocabulary in your fork, or do you? | 0.2 |
-| The agents: a framework and where they live; are they programs with fixed behaviour or LLM agents calling tools? | 2.3 |
+| May I repair the closed validation in the generation project (see 0.1)? | 0.1 |
+| The agents are software agents in a framework such as SPADE; their inner structure (BDI, fixed plans) is not settled | 2.3 |
 | Which changes does the paper show? | 3.1 |
 
 Facts only you or the lab have: the measured values of each station (fill range and accuracy,
