@@ -76,6 +76,10 @@ arso:unconditionalAasType rdf:type owl:AnnotationProperty ;
   rdfs:label "unconditionalAasType" ;
   rdfs:comment "Explicit opt-in: any RDF node whose base AAS modelType class is the given value is unconditionally also typed as this class, wherever it occurs in the graph -- no parent/idShort scoping at all. Only safe for AAS modelTypes that are inherently specific to one concept (e.g. aas:Capability); NOT a general 'sole ARSO subclass' inference, since a generic modelType like aas:ReferenceElement legitimately has many unrelated ARSO subclasses and must never be auto-applied this way." .
 
+arso:resolvedFrom rdf:type owl:AnnotationProperty ;
+  rdfs:label "resolvedFrom" ;
+  rdfs:comment "On a resolved link: the class of the list whose ReferenceElements the JSON-to-RDF projection resolves into this link. The link runs from the element that holds the list to every element of the same document that one of its references names." .
+
 
 #################################################################
 #################################################################
@@ -185,6 +189,7 @@ arso:hasControlConfigurationSubmodel rdf:type owl:ObjectProperty , owl:Functiona
 arso:usesSkill rdf:type owl:ObjectProperty ;
   rdfs:domain arso:SkillSMC ;
   rdfs:range arso:SkillSMC ;
+  arso:resolvedFrom arso:SkillUsesSML ;
   rdfs:comment "Resolved Uses entry: a composite skill uses this skill (same AAS or an AAS that is a part of it)." .
 
 arso:occupies rdf:type owl:ObjectProperty ;
