@@ -1,0 +1,107 @@
+@prefix lab:  <https://smartproductionlab.aau.dk/semantics/> .
+@prefix css:  <http://www.w3id.org/hsu-aut/css#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# The shared capability vocabulary of the lab's filling lines.
+#
+# A capability and each of its properties has one meaning, named by an
+# IRI below https://smartproductionlab.aau.dk/semantics/. A module's
+# offered capability (module spec, Capability Description of its AAS)
+# and a product's required capability (the process planner) carry the
+# same IRI as supplemental semanticId; that is what lets them be
+# matched. Capabilities are classes below css:Capability, their
+# properties classes below css:Property.
+#
+# Not yet placed below the manufacturing taxonomies (DIN 8580 for
+# Filling, Stoppering and Capping; VDI 2860 for the handling
+# capabilities). The names are those of the process planner's examples
+# (vial, prefilled syringe, cartridge).
+#################################################################
+
+<https://smartproductionlab.aau.dk/semantics>
+  rdf:type owl:Ontology ;
+  owl:versionInfo "0.1" ;
+  owl:imports <http://www.w3id.org/hsu-aut/css> ;
+  rdfs:comment "Capabilities and capability properties of aseptic filling lines for vials, prefilled syringes and cartridges (AAU Smart Production Lab)." .
+
+lab:unit rdf:type owl:AnnotationProperty ;
+  rdfs:comment "The unit the values of a property are given in (as written in the AAS)." .
+
+lab:valueType rdf:type owl:AnnotationProperty ;
+  rdfs:comment "The kind of value a property takes: number or string." .
+
+lab:characterizes rdf:type owl:AnnotationProperty ;
+  rdfs:comment "A capability this property describes." .
+
+
+#################################################################
+# Capabilities
+#################################################################
+
+lab:Unpacking rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
+  rdfs:label "Unpacking" ; rdfs:comment "Take containers out of their packaging." .
+
+lab:Loading rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
+  rdfs:label "Loading" ; rdfs:comment "Place a container on the carrier that takes it through the line." .
+
+lab:Filling rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
+  rdfs:label "Filling" ; rdfs:comment "Fill a volume of liquid into an open container." .
+
+lab:Stoppering rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
+  rdfs:label "Stoppering" ; rdfs:comment "Place a stopper on a filled container and press it in." .
+
+lab:Capping rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
+  rdfs:label "Capping" ; rdfs:comment "Put a cap on a stoppered container and fasten it." .
+
+lab:Inspection rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
+  rdfs:label "Inspection" ; rdfs:comment "Inspect a container and decide whether it passes." .
+
+lab:Unloading rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
+  rdfs:label "Unloading" ; rdfs:comment "Take a container off its carrier." .
+
+lab:Packing rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
+  rdfs:label "Packing" ; rdfs:comment "Put finished containers into their packaging." .
+
+
+#################################################################
+# Properties
+#################################################################
+
+lab:ContainerType rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Container type" ; lab:valueType "string" ;
+  rdfs:comment "The kind of primary container: vial, syringe or cartridge." ;
+  lab:characterizes lab:Loading , lab:Filling , lab:Stoppering , lab:Capping , lab:Inspection , lab:Unloading .
+
+lab:GraspDiameter rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Grasp diameter" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Outer diameter of the container where it is held." ;
+  lab:characterizes lab:Loading , lab:Filling , lab:Stoppering , lab:Capping , lab:Inspection , lab:Unloading .
+
+lab:FillVolume rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Fill volume" ; lab:valueType "number" ; lab:unit "mL" ;
+  rdfs:comment "Volume of liquid filled into one container in one filling." ;
+  lab:characterizes lab:Filling .
+
+lab:AbsoluteFillError rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Absolute fill error" ; lab:valueType "number" ; lab:unit "mL" ;
+  rdfs:comment "Largest deviation of the filled volume from the fill volume." ;
+  lab:characterizes lab:Filling .
+
+lab:StopperDiameter rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Stopper diameter" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Diameter of the stopper that is placed." ;
+  lab:characterizes lab:Stoppering .
+
+lab:CapDiameter rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Cap diameter" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Diameter of the cap that is put on." ;
+  lab:characterizes lab:Capping .
+
+lab:InspectionMethod rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Inspection method" ; lab:valueType "string" ;
+  rdfs:comment "How the container is inspected, e.g. vision." ;
+  lab:characterizes lab:Inspection .
