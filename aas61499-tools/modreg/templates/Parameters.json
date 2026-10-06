@@ -94,7 +94,7 @@
          "type": "SMT/Cardinality",
          "valueType": "xs:string",
          "kind": "TemplateQualifier",
-         "value": "One",
+         "value": "ZeroToOne",
          "semanticId": {
           "type": "ExternalReference",
           "keys": [
