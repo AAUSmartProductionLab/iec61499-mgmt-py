@@ -221,6 +221,9 @@ class Describer:
         op.output_variable = [var("Accepted", "xs:boolean", "The command was accepted"),
                               var("ErrorID", "xs:unsignedShort", f"Why it was refused: {ERRORS}")]
         self.operations[name] = (at, action, ["Session", *parameters])
+        # The action says which command it carries out, beside the id every action has. Open:
+        # whether this should be its semanticId instead (6 Oct 2026).
+        self.actions[action].supplemental_semantic_ids = [meaning_id]
         return op
 
     def entry(self, name: str, action: str, parameters: dict[str, Parameter], description: str) -> ModuleSkill:
