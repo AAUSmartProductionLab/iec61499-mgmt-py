@@ -25,6 +25,10 @@ def raw(path=FILLER):
     (lambda d: d["skills"]["MoveNeedleDown"].update(equipment="Pump"), "unknown equipment"),
     (lambda d: d["skills"]["MoveNeedleDown"]["parameters"]["Distance"].update(default=80.0), "default outside"),
     (lambda d: d["skills"]["MoveNeedleDown"].update(after=2.0), "either by ensures"),
+    (lambda d: d["skills"].update(Dose={"parameters": {"Volume": {"default": 1.0}}, "after": "Volume / Rate",
+                                        "offered": False}), "not an expression over LREAL parameters"),
+    (lambda d: d["skills"].update(Dose={"parameters": {"Volume": {"default": 1.0}, "Rate": {"default": 1.0, "minimum": 0.0}},
+                                        "after": "Volume / Rate", "offered": False}), "minimum has to be above 0"),
     (lambda d: d["skills"]["MoveNeedleDown"].update(stop="Brake"), "unknown stop command"),
     (lambda d: d["equipment"]["NeedleAxis"].update(commands={"Down": ["Down"], "Stop": []}), "safe state"),
     (lambda d: d["equipment"]["NeedleAxis"]["commands"].update(Both=["Down", "Lift"]), "unknown output"),
@@ -268,7 +272,7 @@ def test_blocks_inside_equipment_skills_and_module_level_skills_are_grouped():
     system = ET.parse(system_file("FillingModule")).getroot()
     app = next(a for a in system.iter("Application") if a.get("Name") == "Filling").find("SubAppNetwork")
     inner = next(s for s in app.findall("SubApp") if s.get("Name") == "Dispensing").find("SubAppNetwork")
-    assert groups(inner) == {"SkillControl": ["Control", "UaStart", "PubResults"], "Sequences": ["Execute", "Stop"],
+    assert groups(inner) == {"SkillControl": ["Control", "UaStart", "Volume", "PubParams", "PubResults"], "Sequences": ["Execute", "Stop"],
                              "Releasing": ["Release", "Rel_NeedleAxis", "Rel_Scale"]}
     assert all(len(g) for g in groups(inner).values())
 
