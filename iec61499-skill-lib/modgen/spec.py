@@ -235,7 +235,9 @@ class Skill(Model):
     parameters: dict[str, Parameter] = Field(default_factory=dict)
     requires: str = "TRUE"
     ensures: str | None = None                 # sensor condition (ST over equipment inputs and parameters)
-    after: str | float | None = None           # open loop: a parameter (seconds) or a number of seconds
+    # Open loop: a number of seconds, or an ST expression over LREAL parameters giving them
+    # (``Duration``, ``Volume / FlowRate``).
+    after: str | float | None = None
     invariant: str = "TRUE"
     timeout: str = Field(default="10s", pattern=DURATION)
     results: dict[str, str] = Field(default_factory=dict)   # result name -> equipment input
@@ -452,9 +454,13 @@ class ModuleSpec(Model):
             if isinstance(value, str) and (unknown := names(value) - known):
                 raise ValueError(f"{name}.{field}: unknown names {sorted(unknown)}")
         if isinstance(skill.after, str):
-            p = skill.parameters.get(skill.after)
-            if p is None or p.type != "LREAL":
-                raise ValueError(f"{name}.after: {skill.after} is not an LREAL parameter (seconds)")
+            used = names(skill.after)
+            if not used or (bad := {n for n in used if n not in skill.parameters or skill.parameters[n].type != "LREAL"}):
+                raise ValueError(f"{name}.after: {skill.after} is not an expression over LREAL parameters (seconds)")
+            # A divisor that may be zero would give an endless or negative time.
+            for divisor in re.findall(r"/\s*([A-Za-z_][A-Za-z0-9_]*)", skill.after):
+                if (skill.parameters[divisor].minimum or 0) <= 0:
+                    raise ValueError(f"{name}.after: {divisor} divides, so its minimum has to be above 0")
 
     def check_capability(self, name, cap: Capability):
         """A capability is realized by a skill the module offers; a property names its parameter."""
