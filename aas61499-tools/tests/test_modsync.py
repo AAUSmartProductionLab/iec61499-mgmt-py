@@ -143,7 +143,7 @@ def test_a_module_running_its_spec_is_identified_and_in_sync():
     assert (st.candidate.spec.module, st.candidate.target, st.distance) == ("Filling", "pi", 0)
     assert st.identified and st.drift.empty, st.drift.lines()
     assert "START" not in st.snapshot.fbs                       # the resource's own block
-    assert st.snapshot.hashes["filling::SK_Dwell"].startswith("v2:SHA3-512:")
+    assert st.snapshot.hashes["filling::SK_Dispense"].startswith("v2:SHA3-512:")
 
 
 def test_other_programs_are_not_taken_for_a_module():
@@ -159,13 +159,13 @@ def test_other_programs_are_not_taken_for_a_module():
 
 def test_a_changed_skill_parameter_is_drift_pushed_online_and_saved():
     forte = FakeForte(filling())
-    forte.values["Dispensing.Execute.Dwell.Duration"] = "2.5"
+    forte.values["Dispensing.Execute.Dispense.FlowRate"] = "2.5"
     st = status(forte)
-    assert st.drift.values == {"Dispensing.Execute.Dwell.Duration": ("1.0", "2.5")}
+    assert st.drift.values == {"Dispensing.Execute.Dispense.FlowRate": ("1.0", "2.5")}
     assert not st.drift.restart
     deployer = Recorder()
     done = push(forte, "pi", 61499, filling(), deployer)
-    assert forte.writes == [("Dispensing.Execute.Dwell.Duration", "1.0")]
+    assert forte.writes == [("Dispensing.Execute.Dispense.FlowRate", "1.0")]
     assert deployer.saved == [boot_file(deployment(filling().app))] and not deployer.restarted
     assert "boot file saved" in done
     assert status(forte).drift.empty
@@ -175,10 +175,10 @@ def test_values_read_at_init_and_structure_need_a_restart():
     forte = FakeForte(filling())
     forte.values["MoveNeedleUp.UaPath"] = "/Skills/Other"
     assert status(forte).drift.restart and not status(forte).drift.structural
-    forte.connections.discard(("Dispensing.Execute.Dwell.SUCCESS", "Dispensing.Execute.MoveNeedleUp.START"))
+    forte.connections.discard(("Dispensing.Execute.Dispense.SUCCESS", "Dispensing.Execute.MoveNeedleUp.START"))
     drift = status(forte).drift
     assert drift.structural
-    assert drift.missing_connections == [("Dispensing.Execute.Dwell.SUCCESS", "Dispensing.Execute.MoveNeedleUp.START")]
+    assert drift.missing_connections == [("Dispensing.Execute.Dispense.SUCCESS", "Dispensing.Execute.MoveNeedleUp.START")]
     with pytest.raises(Refused, match="deployer"):
         push(forte, "pi", 61499, filling())
     assert push(forte, "pi", 61499, filling(), dry_run=True)[0].startswith("redeploy: ")
@@ -190,7 +190,7 @@ def test_values_read_at_init_and_structure_need_a_restart():
 @pytest.mark.parametrize("state, occupied", [("Execute", False), ("Idle", True)])
 def test_push_leaves_a_busy_module_alone_unless_forced(state, occupied):
     forte = FakeForte(filling(), state=state, occupied=occupied)
-    forte.values["Dispensing.Execute.Dwell.Duration"] = "2.5"
+    forte.values["Dispensing.Execute.Dispense.FlowRate"] = "2.5"
     with pytest.raises(Refused, match="stop and release"):
         push(forte, "pi", 61499, filling(), Recorder())
     assert not forte.writes
@@ -289,16 +289,16 @@ def test_aas_from_the_spec(tmp_path):
 
 def test_aas_shows_what_runs_on_the_module(tmp_path):
     forte = FakeForte(filling())
-    forte.values["Dispensing.Execute.Dwell.Duration"] = "2.5"
+    forte.values["Dispensing.Execute.Dispense.FlowRate"] = "2.5"
     st = status(forte)
     objects = read_back(aas.build(st.candidate.spec, st.candidate.target, st.snapshot, st.drift), tmp_path)
     execute = objects["Skills"].get_referable("Dispensing").get_referable("Execute")
-    assert [p.value for p in execute.value] == ["MoveNeedleDown", "Dwell(Duration=2.5)", "MoveNeedleUp", "Weigh"]
+    assert [p.value for p in execute.value] == ["MoveNeedleDown", "Dispense(Volume=Volume, FlowRate=2.5)", "MoveNeedleUp", "Weigh"]
     control = objects["ControlSoftware"]
     assert control.get_referable("SyncState").value == "Drift"
-    assert "Dwell.Duration = 2.5" in control.get_referable("Differences").get_referable("D001").value
+    assert "Dispense.FlowRate = 2.5" in control.get_referable("Differences").get_referable("D001").value
     types = {t.get_referable("Name").value: t.get_referable("Hash").value for t in control.get_referable("Types").value}
-    assert types["filling::SK_Dwell"].startswith("v2:SHA3-512:")
+    assert types["filling::SK_Dispense"].startswith("v2:SHA3-512:")
     impl = objects["Skills"].get_referable("MoveNeedleUp").get_referable("Implementation")
     assert impl.get_referable("FBType").value == "filling::SK_MoveNeedleUp"
 
@@ -316,7 +316,7 @@ def test_watch_reports_a_module_when_it_comes_online_and_when_it_changes(monkeyp
 
     def changed(st):
         seen.append(st.drift.size())
-        forte.values["Dispensing.Execute.Dwell.Duration"] = "3.0"   # changed online after the first report
+        forte.values["Dispensing.Execute.Dispense.FlowRate"] = "3.0"   # changed online after the first report
     watch({("pi", 61499): candidates([FILLING])}, changed, interval=0, rounds=4, log=log.append)
     assert log == ["pi:61499: offline (ConnectionRefusedError)"]
     assert seen == [0, 1]                  # online in sync, then the change; the unchanged round is quiet

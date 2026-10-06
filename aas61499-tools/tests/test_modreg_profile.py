@@ -148,23 +148,26 @@ def test_skills_are_arsos_skills_with_what_reconfiguration_needs(stoppering, sto
 
 
 def test_a_skill_that_only_runs_as_a_step_is_named_not_listed():
-    """ARSO asks every skill for an Operation and an action of the interface; Dwell has neither."""
+    """ARSO asks every skill for an Operation and an action of the interface; Dispense has neither."""
     spec = load(SPECS / "filling.yaml")
-    assert not spec.skills["Dwell"].offered
+    assert not spec.skills["Dispense"].offered
     env = model.build(profiles.describe(spec, "pi"))
     skills = at(submodel(env, "Skills"), "Skills")
-    assert "Dwell" not in names(skills)
-    step = next(s for s in children(at(skills, "Dispensing", "Execute")) if "Dwell" in at(s, "InstancePath")["value"])
+    assert "Dispense" not in names(skills)
+    step = next(s for s in children(at(skills, "Dispensing", "Execute")) if "Dispense" in at(s, "InstancePath")["value"])
     assert at(step, "Skill")["value"] == {"type": "ExternalReference",
-                                          "keys": [{"type": "GlobalReference", "value": f"{BASE}/skills/Dwell"}]}
-    assert float(at(step, "Bindings", "Duration")["value"]) == 1.0
+                                          "keys": [{"type": "GlobalReference", "value": f"{BASE}/skills/Dispense"}]}
+    # The volume comes from the module level skill's parameter, the flow rate is the station's constant.
+    assert at(step, "Bindings", "Volume")["value"] == "Volume"
+    assert float(at(step, "Bindings", "FlowRate")["value"]) == 1.0
     # A result carries the unit of the equipment input behind it, through the step for a composite.
     properties = at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", "properties")
     for key in ("Weigh_Result_Weight", "Dispensing_Result_Weight"):
         assert at(properties, key, "unit")["value"] == spec.equipment["Scale"].inputs["Weight"].unit == "g"
         assert at(properties, key, "type")["value"] == "number"
-    # No skill of the filling module has a parameter of its own, so it has no Parameters submodel.
-    assert "Parameters" not in [s["idShort"] for s in env["submodels"]]
+    # Dispensing's Volume is the module's one skill parameter: deployed value and where it shows.
+    volume = at(submodel(env, "Parameters"), "Dispensing_Volume")
+    assert float(at(volume, "Value")["value"]) == 1.0 and at(volume, "Unit")["value"] == "mL"
 
 
 def test_steps_publish_like_skills_where_the_program_puts_them():
@@ -181,7 +184,7 @@ def test_steps_publish_like_skills_where_the_program_puts_them():
         ua_path = values[at(step, "InstancePath")["value"] + ".UaPath"].strip('"')
         assert at(state, "forms", "href")["value"] == browse_path(spec, f"{ua_path}/State")
     properties = at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", "properties")
-    assert at(properties, "Dispensing_Execute_Dwell_Parameter_Duration", "unit")["value"] == "s"
+    assert at(properties, "Dispensing_Execute_Dispense_Parameter_FlowRate", "unit")["value"] == "mL/s"
     assert at(properties, "Dispensing_Execute_Weigh_Result_Weight", "unit")["value"] == "g"
     assert at(properties, "Dispensing_Stopping_MoveNeedleUp_ErrorID", "forms", "href")["value"].endswith(
         "/1:Dispensing/1:Stopping/1:MoveNeedleUp/1:ErrorID")

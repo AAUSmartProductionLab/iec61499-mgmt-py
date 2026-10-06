@@ -34,7 +34,7 @@ from module_ua import ModuleUa  # noqa: E402
 from test_modsync import Recorder, composed  # noqa: E402
 
 FILLING = SPECS / "filling.yaml"
-DWELL = "Dispensing.Execute.Dwell.Duration"
+DWELL = "Dispensing.Execute.Dispense.FlowRate"
 
 
 @pytest.fixture
@@ -122,7 +122,7 @@ def test_a_parameter_changed_online_is_reported_described_and_pushed_back(module
     path = aas.write(store, tmp_path / "aas.json")
     with path.open(encoding="utf-8") as f:
         skills = next(o for o in read_aas_json_file(f, failsafe=False) if o.id_short == "Skills")
-    assert skills.get_referable("Dispensing").get_referable("Execute").get_referable("Step02").value == "Dwell(Duration=2.5)"
+    assert skills.get_referable("Dispensing").get_referable("Execute").get_referable("Step02").value == "Dispense(Volume=Volume, FlowRate=2.5)"
     done = push(module.client, module.host, module.port, module.cand, overrides=module.overrides)
     assert done[0] == f"write {DWELL} := 1.0 (was 2.5)"
     assert check(module).drift.empty
@@ -150,7 +150,7 @@ def test_a_new_module_level_skill_is_created_online_while_another_runs(module, t
     assert ua.call("Module/Start", a) == [True, 0]
     ua.expect("Module/State", STATES["Execute"])
     dispensing = ua.record("Skills/Dispensing/State")
-    assert ua.call("Skills/Dispensing/Start", a) == [True, 0]
+    assert ua.call("Skills/Dispensing/Start", a, 1.0) == [True, 0]
     ua.expect("Skills/Dispensing/State", S["Running"], timeout=1)
     new, deployer = composed("pc"), Recorder()
     done = push(module.client, module.host, module.port, new, deployer, overrides=module.overrides)
