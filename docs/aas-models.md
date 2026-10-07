@@ -9,11 +9,13 @@ It describes what is **built**, and says where a model exists only on paper. Sou
 | What | Where it was read from |
 | --- | --- |
 | Resource AAS of a module | `modreg` in this repository and the AAS it builds for the filling module; ARSO 0.6 (`ontology/ARSO`) |
-| Product AAS, plan, stations of the planner | the planner's process sequence module (fork `basyx-aas-web-ui`, branch `feat/process-sequence-pharma`, commit `058a03e`): its README, the Production Sequence contract and the pharma demo data |
+| Product AAS, plan, stations of the planner | the demo data on the local AAS server (37 AASs, 30 sequences), which a newer planner than the pushed one wrote; and the planner's process sequence module (fork `basyx-aas-web-ui`, branch `feat/process-sequence-pharma`, commit `058a03e`) for its README and readers |
 | Intended product and process models | APSO 0.2, AProSO 0.1 and PPRL 0.1 (`ontology/`), [aas-implementation-plan.md](../ontology/aas-implementation-plan.md) |
 | Deviations of the generator's resource AAS from IDTA | [IDTA_CONFORMANCE.md](../ontology/ARSO/IDTA_CONFORMANCE.md) |
 
-Not seen: AASs on the lab's server, and anything of the planner that is not on that branch.
+Not seen: AASs on the lab's server, and the source of the planner version that is running locally.
+
+Five example AASs built this way, with class diagrams, are in [aas-examples.md](aas-examples.md).
 
 ## 1. The three at a glance
 
@@ -201,32 +203,37 @@ APSO describes a product AAS differently. Neither is wrong; only one is built:
 
 ## 4. The plan: Production Sequence
 
-Semantic id `https://smartproductionlab.aau.dk/SubmodelTemplate/ProductionSequence/1/0`. A submodel
-of the product AAS it plans, with the identifier
-`https://smartproductionlab.aau.dk/sm/process-plan/{base64url(AAS id)}`.
+Semantic id `https://smartproductionlab.aau.dk/SubmodelTemplate/ProductionSequence/2/0`, schema
+`production-sequence/2.0`, as the planner on the local server writes it (the pushed branch still
+has 1.0, with scopes). One submodel per sequence, in the AAS of the product it plans: the
+product's own sequence (`Role` Primary, identifier
+`https://smartproductionlab.aau.dk/sm/process-plan/{base64url(AAS id)}`) and one more for every
+sequence it calls (`Role` Subprocess).
 
 ```
 ProductionSequence
-├─ PlanSchema, Revision, Product (→ product AAS), RootScope
-└─ Scopes
-     └─ Scope                    a sequence: the product's own, or that of a part
-          ├─ Material            which part of the bill of material (→ Hierarchical Structures)
-          ├─ SharedPlanOwner     the part's AAS, if the part has its own plan
-          └─ Steps
-               └─ Step           Kind = step | call | parallel | conditional, with an Order
-                    ├─ Process                snapshot of a process (→ Process Parameters)
-                    ├─ RequiredCapabilities   (→ product's Capability Description)
-                    ├─ Resource               the station (→ resource AAS)
-                    ├─ Skill, SkillId         the skill that runs it (→ resource's skills)
-                    └─ Bindings
-                         └─ Binding           Name, Value, and the process parameter it
-                                              comes from (SourceAas, SourceElement)
+├─ PlanSchema, Revision, SequenceId, Name, Role
+├─ Subject                     the product (→ product AAS)
+├─ Subprocesses                the sequences this one calls
+└─ Steps
+     └─ Step                   Kind = step | call | parallel | conditional; NodeId, Name, Order
+          ├─ ProcessOwner, ProcessReference   the process it runs (→ Process Parameters)
+          ├─ RequiredCapabilities             only if they differ from the process's own
+          ├─ Resource                         the station (→ resource AAS)
+          ├─ SkillId, Skill                   the skill that runs it (→ the resource's skills)
+          ├─ ExecutionMode                    station or manual
+          └─ Bindings
+               └─ Binding                     Name, Value, and the process parameter it comes
+                                              from (SourceAas, SourceElement)
+          call:        SequenceReference to another sequence
+          parallel:    Branches, each with its own Steps
+          conditional: Condition and the Steps it guards
 ```
 
-- A **call** runs another scope, a **parallel** step several branches that all join, a
+- A **call** runs another sequence, a **parallel** step several branches that all join, a
   **conditional** step its body every nth product.
 - A **binding** gives one skill parameter its value: a constant, or a process parameter of the
-  product (a null source means the constant).
+  product (no source means the constant).
 - It is an editable plan. It has no approval, no check result and no execution history.
 
 AProSO describes a process AAS of its own. The mapping:
@@ -235,7 +242,7 @@ AProSO describes a process AAS of its own. The mapping:
 | --- | --- |
 | Process AAS, one per product and line | a submodel of the product AAS |
 | Process Information (status, approval, product and line) | `Product`, `Revision`; no status or approval |
-| Process Structure (nodes, precedes, conditions) | Scopes and Steps with Order, calls, branches, conditions |
+| Process Structure (nodes, precedes, conditions) | Steps with Order, calls of other sequences, branches, conditions |
 | Capability Bindings (required capability, candidates, chosen offer, skill, parameter mappings) | per step: RequiredCapabilities, Resource, Skill, Bindings |
 | Validation | not there |
 | Policy (the executable form, e.g. a behaviour tree) | not there |
@@ -244,7 +251,7 @@ AProSO describes a process AAS of its own. The mapping:
 
 | # | Link | From | To | Status |
 | --- | --- | --- | --- | --- |
-| 1 | Part of a product | product BoM entity (global asset id), or a scope's `SharedPlanOwner` | the part's AAS | Built in the planner |
+| 1 | Part of a product | product BoM entity (global asset id); a call step names the part's sequence | the part's AAS | Built in the planner |
 | 2 | Process needs a capability | process in Process Parameters (`RequiredCapability`) | Required capability in the product's Capability Description | Built in the planner |
 | 3 | Required matches offered | Required capability of the product | Offered capability of a resource | Built in the planner and in `modlink` as code: same meaning, values within range, same unit. As an ontology check: planned |
 | 4 | Step assigned to a station | step `Resource` | resource AAS | Built in the planner |
@@ -294,7 +301,7 @@ Inside the resource the chain continues with section 2.2: capability → skill �
 
 ## 8. What would complete this
 
-- The product and plan AASs you have outside the planner's branch, if any, and how real products
-  (not the demo recipes) are meant to look.
+- The source of the planner that writes Production Sequence 2.0, so that its rules can be read and
+  not only its data; and how real products (not the demo recipes) are meant to look.
 - Whether a line gets its own AAS, and where the plan belongs when there are two lines.
 - The lab's own resource AASs on the server, to compare with section 2.4.
