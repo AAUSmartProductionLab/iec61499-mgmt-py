@@ -266,21 +266,26 @@ class Describer:
         return model.InterfaceLinks(Link=found)
 
     def sequence(self, owner: str, steps, node: str, key: str, concept: str) -> model.ModuleSkillSequence:
-        """A sequence with each step's bindings (constants as they run on the module) and the
-        variables each step publishes below ``node``."""
+        """A sequence with each step's bindings (a constant as it runs on the module, or the
+        reference to the parameter of the module level skill that is handed down) and the variables
+        each step publishes below ``node``."""
         items = []
         for i, step in enumerate(steps, 1):
             declared = self.spec.skills[step.skill].parameters
-            # A constant as the module runs it, else as bound (not the skill's default).
-            bindings = {p: prop(v if isinstance(v, str) else current(f"{owner}.{step.name}.{p}",
-                                                                     declared[p].model_copy(update={"default": v}),
-                                                                     self.snap),
-                                "xs:string" if isinstance(v, str) else XSD[declared[p].type])
-                        for p, v in step.bind.items()}
+            bindings = model.StepBindings()
+            for p, v in step.bind.items():
+                if isinstance(v, str):
+                    put(bindings.Source, p, ReferenceElement(value=path(
+                        SKILLS, (SMC, "Skills"), (SMC, owner.partition(".")[0]), (SMC, "Parameters"), ("Property", v))))
+                else:
+                    # As the module runs it, else as bound (not the skill's default).
+                    put(bindings.Binding, p, prop(
+                        current(f"{owner}.{step.name}.{p}", declared[p].model_copy(update={"default": v}), self.snap),
+                        XSD[declared[p].type]))
             state = self.step_variables(step, f"{node}/{step.name}", f"{key}_{step.name}", f"{concept}/{step.name}")
             items.append(model.ModuleSkillStep(
                 id_short=f"Step{i:02d}", Skill=self.skill_reference(step.skill), InstancePath=prop(f"{owner}.{step.name}"),
-                Bindings=model.StepBindings(Binding=bindings) if bindings else None,
+                Bindings=bindings if bindings.Binding or bindings.Source else None,
                 StateReference=ReferenceElement(value=affordance("properties", state))))
         return model.ModuleSkillSequence(value=items)
 

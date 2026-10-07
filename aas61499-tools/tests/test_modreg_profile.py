@@ -187,7 +187,9 @@ def test_a_skill_that_only_runs_as_a_step_is_a_building_block():
     assert reference in [u["value"] for u in children(at(skills, "Dispensing", "Uses"))]
     assert resolve(env, reference)["idShort"] == "Dispense"
     # The volume comes from the module level skill's parameter, the flow rate is the station's constant.
-    assert at(step, "Bindings", "Volume")["value"] == "Volume"
+    handed_down = at(step, "Bindings", "Volume")
+    assert handed_down["modelType"] == "ReferenceElement"
+    assert resolve(env, handed_down["value"]) is at(skills, "Dispensing", "Parameters", "Volume")
     assert float(at(step, "Bindings", "FlowRate")["value"]) == 1.0
     # A result carries the unit of the equipment input behind it, through the step for a composite.
     properties = at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", "properties")

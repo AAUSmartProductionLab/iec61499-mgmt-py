@@ -33,7 +33,7 @@ class Uses(SubmodelElementList):
 
 class SkillStep(SubmodelElementCollection):
     semantic_id: str = ""
-    description: str = "One use of a skill in a sequence: Skill [ReferenceElement, 1] to a skill listed in Uses (a Skill or a BuildingBlock), and Bindings [SMC of Property, 0..1] with the constants bound to its parameters (current values)."
+    description: str = "One use of a skill in a sequence: Skill [ReferenceElement, 1] to a skill listed in Uses (a Skill or a BuildingBlock), and Bindings [SMC, 0..1] with what is bound to its parameters, each named like the parameter: a Property with the constant (current value), or a ReferenceElement to the parameter of the composite skill that is handed down to the step."
     pass
 
 class SkillSequence(SubmodelElementList):

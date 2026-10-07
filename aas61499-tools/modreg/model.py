@@ -82,8 +82,12 @@ DelegatedOperation = SkillOperation         # a field cannot be named like its t
 # what it puts there is declared here.
 
 class StepBindings(SubmodelElementCollection):
-    description: str = "Values bound to the parameters of the step's skill: a constant, or the name of a parameter of the composite."
+    """Named like the parameters of the step's skill. ``Binding``: the constants; ``Source``: the
+    parameters the module level skill hands down, each a reference to that parameter of it."""
+    description: str = ("What is bound to the parameters of the step's skill: a constant (its value), or a parameter "
+                        "of the module level skill (a reference to it).")
     Binding: Dict[str, Property] = {}
+    Source: Dict[str, ReferenceElement] = {}
 
 
 class ModuleSkillStep(skills.SkillStep):
