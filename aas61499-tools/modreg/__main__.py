@@ -10,6 +10,9 @@
 
 A profile is the module's AAS on the lab's shared model (aas-model) without what its type says
 anyway; the service validates it, builds the AAS, checks it against the ontology and publishes it.
+A product with its plan is a profile of its own type and goes the same way:
+
+    modreg build cell/examples/Vial2mLAAS.json            # the AAS of a product
 """
 import argparse
 import json

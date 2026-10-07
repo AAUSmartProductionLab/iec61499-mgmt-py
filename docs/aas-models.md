@@ -9,7 +9,8 @@ It describes what is **built**, and says where a model exists only on paper. Sou
 | What | Where it was read from |
 | --- | --- |
 | Resource AAS of a module | `modreg` in this repository and the AAS it builds for the filling module; ARSO 0.6 (`ontology/ARSO`) |
-| Product AAS, plan, stations of the planner | the demo data on the local AAS server (37 AASs, 30 sequences), which a newer planner than the pushed one wrote; and the planner's process sequence module (fork `basyx-aas-web-ui`, branch `feat/process-sequence-pharma`, commit `058a03e`) for its README and readers |
+| Product AAS, plan, stations of the planner | the demo data on the local AAS server (37 AASs, 31 sequences), which a newer planner than the pushed one wrote; and the planner's process sequence module (fork `basyx-aas-web-ui`, branch `feat/process-sequence-pharma`, commit `058a03e`) for its README and readers |
+| Product AAS and plan as built here | `modreg` (`product.py`), the templates in `aas61499-tools/modreg/templates`, and the vial of the example line |
 | Intended product and process models | APSO 0.2, AProSO 0.1 and PPRL 0.1 (`ontology/`), [aas-implementation-plan.md](../ontology/aas-implementation-plan.md) |
 | Deviations of the generator's resource AAS from IDTA | [IDTA_CONFORMANCE.md](../ontology/ARSO/IDTA_CONFORMANCE.md) |
 
@@ -52,8 +53,12 @@ flowchart LR
 | AAS | One per | Built by | Checked against |
 | --- | --- | --- | --- |
 | Resource | module | `modreg` from the module spec or the running module | ARSO 0.6: `modreg check`, and the closed SHACL validation of the generator |
-| Product | product, and each part that has its own plan | the planner (demo data); real products are not modelled | nothing yet (APSO is not applied to it) |
-| Plan | product (a submodel of the product AAS, not an AAS of its own) | the planner | its own structural rules; AProSO is not applied to it |
+| Product | product, and each part that has its own plan | the planner (demo data), and `modreg` from the product's profile | its pydantic type (`ProductTypeAAS`); no ontology (APSO is not applied to it) |
+| Plan | product (a submodel of the product AAS, not an AAS of its own) | the planner, and `modreg` as part of the product | its pydantic class; against the resources by following its links (`cell/examples/plan_check.py`); AProSO is not applied to it |
+
+All three are built the same way: an AAS type on the lab's shared pydantic model (aas-model), a
+profile that is the dump of that type without what the type says anyway, and `modreg build` to
+make the AAS from it. `ModuleTypeAAS` is the resource, `ProductTypeAAS` the product with its plan.
 
 There is no process AAS today. The ontologies describe one (AProSO); the planner keeps the plan
 as the Production Sequence submodel of the product it is for. Section 7 lists this and the other
@@ -173,19 +178,38 @@ a module should already show as a station there. They differ on skills (section 
 
 ## 3. Product AAS
 
-As the planner builds it. A product (a recipe) and each part with a plan of its own are AASs.
+As the planner builds it, and as `modreg` builds it from a profile (`ProductTypeAAS`). A product (a
+recipe) and each part with a plan of its own are AASs.
 
 | Submodel | Template | What it holds | Changed |
 | --- | --- | --- | --- |
-| Hierarchical Structures | IDTA 02011 | The product and its parts (container, liquid, stopper, cap); a part points to its own AAS by its global asset id | No |
-| Process Parameters | IDTA 02031-1 | The processes the product needs, each with its id, name, description, planned time, product, process and resource parameters, and the materials it uses (`ProcessBoM`) | One extension |
+| Nameplate | IDTA 02006-3-0 | What the product is. Written by `modreg`; the planner's demo products have none | No |
+| Hierarchical Structures | IDTA 02011 | The product and its parts (container, liquid, stopper, cap), each with `Quantity` and `QuantityUnit`; a part points to its own AAS by its global asset id | Quantity as two Properties (the template only counts: `BulkCount`) |
+| Process Parameters | IDTA 02031-1 | The processes the product needs, each with its id, name, description, planned time, product, process and resource parameters, and the materials it uses (`ProcessBoM`) | Extended |
 | Capability Description | IDTA 02020 | The capabilities the product requires (role Required), with the values or acceptable ranges | No |
 | Production Sequence | ours (the planner's) | The plan, section 4 | Custom |
 
-- **The extension:** a process may carry `RequiredCapability` references
-  (`https://smartproductionlab.aau.dk/ProcessParameters/RequiredCapability/1/0`) to Required
-  capabilities in the product's Capability Description. It adds to the template and redefines
-  nothing.
+- **The extension of Process Parameters** (it adds to the template and redefines nothing):
+  - a process may carry a `RequiredCapability` reference
+    (`https://smartproductionlab.aau.dk/ProcessParameters/RequiredCapability/1/0`) to a Required
+    capability in the product's Capability Description;
+  - a material in `ProcessBoM` is a `MaterialUse`: `MaterialReference` to the part in the bill of
+    material, `Role` (workpiece, incorporated, output), and `Quantity` with `Unit` or a
+    `QuantityParameterReference` to the parameter that gives the amount;
+  - the three parameter collections hold one Property per parameter, named by its idShort.
+- **Where the classes come from:** two submodel templates in `aas61499-tools/modreg/templates`:
+  `ProcessParameters.json` is IDTA's published template with the extension above;
+  `ProductionSequence.json` is written from the plans the planner saves. aas-model's generator makes
+  the pydantic classes from them (`modreg generate`), as it does for ARSO's own submodels.
+- **Checked against the planner's data (7 Oct):** all 31 Production Sequences on the local server
+  read into the class without losing an element, and 26 of the 29 Process Parameters submodels once
+  their durations are taken as text. The other three are older demo data that names a material by a
+  bare reference instead of a `MaterialUse`.
+- **Reading an AAS back into its type is not ready:** aas-model cannot read an `xs:duration`
+  (`PlannedProcessTime`) from an AAS. Building one, the direction used here, works.
+- **Not covered yet:** the sequences a plan calls (further submodels of the product) are not part
+  of the type; a Property with an empty value is written without a value (aas-model's rule; the
+  planner reads a missing value as empty).
 - **Meanings:** capabilities and their properties are named by supplemental semantic ids in the
   shared vocabulary (`https://smartproductionlab.aau.dk/semantics/<Name>`, kept in
   `ontology/Vocabulary`), as the modules do.
@@ -283,15 +307,18 @@ Inside the resource the chain continues with section 2.2: capability â†’ skill â
 1. **Skills of a resource.** The planner reads its own skill catalog (`SkillId`, `Parameters` with
    `ParameterId`, `DataType`, `Unit`, `MinValue`, `MaxValue`, `DefaultValue`); the modules publish
    ARSO Skills (the skill's idShort, `Parameters` properties with unit, limits and default as
-   qualifiers). Same content, different shape. Until the planner reads ARSO, steps 7 and 8 above
-   cannot be done for a module (plan step 2.2).
+   qualifiers). Same content, different shape. **Decided 7 Oct:** the resource's skill definition
+   (ARSO Skills) is the one that holds; the web UI and the planner are adjusted to read it (plan
+   step 2.2). Until then steps 7 and 8 above cannot be done for a module in the planner. The vial of
+   the example line already refers to the modules' ARSO skills.
 2. **Process AAS or submodel.** AProSO: an AAS per product and line. Planner: a submodel of the
    product. Consequence of the planner's way: one plan per product, so the same product on two
    lines needs something more.
 3. **Product processes.** APSO's Bill of Process (a tree, with order) against IDTA 02031 Process
    Parameters (a list) plus the plan (the order).
 4. **Nothing checks a product AAS or a plan against an ontology.** APSO and AProSO exist but
-   describe structures that are not the ones built.
+   describe structures that are not the ones built. The pydantic type checks the structure, and
+   `plan_check` the links into the resources.
 5. **Capability element in the generator.** It writes the meaning as the main semantic id; the
    modules and the planner follow IDTA 02020 (decided 6 Oct). Both are accepted by the validator.
 6. **Elements `modreg` writes that ARSO does not declare** (section 2.3), and the interface terms

@@ -340,7 +340,7 @@ replaced on 2 Oct by aas-model, which the lab's registration and management node
 | M3 | The Web of Things terms of the interface description that aas-model writes (key, type, title, observable, unit, op, input and output schemas, `uav_browsePath`, `uav_componentOf`) | ARSO `aid.ttl`; today reported as not described |
 | M4 | Operational data: unit, groups per equipment and per skill, history (TimeSeries, IDTA 02008, with a segment linked to the historian) | ARSO `operational-data.ttl` is a placeholder |
 | M5 | Control configuration: active procedure and change log | ARSO has the classes; nothing writes them |
-| M6 | Product and process profiles: APSO (bill of material, bill of process with required capabilities) and AProSO (process structure, bindings, validation, policy) | Not started |
+| M6 | Product and process profiles: APSO (bill of material, bill of process with required capabilities) and AProSO (process structure, bindings, validation, policy) | Done 7 Oct in the form the process planner writes, not APSO's and AProSO's: `ProductTypeAAS` (`modreg/product.py`) with Nameplate, Hierarchical Structures, Process Parameters (IDTA 02031-1), Capability Description (Required) and Production Sequence 2.0; see `docs/aas-models.md` |
 | M7 | A projection of the built AAS to RDF and SHACL rules across submodels (references that resolve, uses only downwards) | Deferred; `modreg check` covers the structure inside each submodel and the shell |
 
 ## Ontology changes this implies
