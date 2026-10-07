@@ -111,6 +111,19 @@ test fails when they no longer match the ontology. The submodule is at the commi
 `registration` extra installs. aas-model loads its message schemas
 from the lab's GitHub pages when it is imported, unless `MQTT_SCHEMAS_DIR` names a local copy.
 
+A product with its plan is described the same way. `ProductTypeAAS` (`modreg/product.py`) holds a
+Nameplate, the bill of material (Hierarchical Structures), Process Parameters (IDTA 02031-1),
+the required capabilities (Capability Description) and the Production Sequence of the lab's
+process planner. Its profile is a file, and `modreg build` makes the AAS from it:
+
+```powershell
+modreg build cell/examples/Vial2mLAAS.json                     # aas/Vial2mLAAS.json: the vial of the example line
+python cell/examples/example_line.py --out aas --publish http://<host>:8081   # the line's five AASs, the plan checked first
+```
+
+The templates of Process Parameters and Production Sequence are files in `modreg/templates`
+(IDTA's with the lab's extension; the planner's); `modreg generate` makes their classes too.
+
 In the 4diac IDE (a workspace outside the repository), import `iec61499-skill-lib/ModLib` and
 the projects in `cell/control/` without copying them.
 

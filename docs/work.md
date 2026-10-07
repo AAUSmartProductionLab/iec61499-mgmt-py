@@ -263,6 +263,32 @@ Findings about aas-model, to raise with its author:
   the skill of the same AAS, so `modreg` declares it a model reference.
 - OPC UA: `uav_componentOf` wants a NodeId; FORTE's change at every start, so the browse path of
   the owning object is written there.
+- A container that holds its own kind (the steps inside a step of a plan) is named by the generator
+  before its class is written, so the generated module does not import; `modreg` moves such names
+  behind the classes. `modreg generate` imports the generated classes, so when they are broken
+  call `modreg.templates.generate` directly.
+- A Property with an empty string is written without a value.
+- Reading an AAS back into its type turns an `xs:duration` into the text of a Python object
+  (`relativedelta(seconds=+5)`), which then cannot be written. Building is not affected.
+
+### A product and its plan (7 Oct)
+
+The same path as a module: `ProductTypeAAS` (`modreg/product.py`) on aas-model, a profile that is
+its dump, `modreg build` for the AAS. It replaces a YAML description of our own and a builder that
+wrote AAS JSON by hand, which had been the first form of the example line's vial.
+
+- Nameplate, Hierarchical Structures and Capability Description are aas-model's classes. Process
+  Parameters and Production Sequence have none, so each got a submodel template in
+  `modreg/templates` (IDTA 02031-1 as published plus the lab's extension; the planner's 2.0, written
+  from the plans it saves) and classes from aas-model's generator.
+- A profile refers to its own AAS as `{aas_id}`; aas-model fills it in, so a reference inside the
+  product needs no identifier written out. A reference to a resource names it in full.
+- The plan's identifier is the planner's (`.../sm/process-plan/<the AAS id, base64url>`), set by the
+  type when the profile gives none.
+- A product is of asset kind Type; aas-model writes Instance, so a type states its own kind.
+- The vial's profile is 30 kB and readable; a module's is about 300 kB.
+- Checked by reading the planner's own data into the classes: all 31 Production Sequences on the
+  local server, and the Process Parameters submodels in the planner's current form.
 
 ## Checklist: a generated 4diac project the IDE can open
 
