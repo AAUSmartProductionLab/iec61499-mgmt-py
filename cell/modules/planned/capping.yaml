@@ -1,0 +1,84 @@
+# Capping module. Planned, not built: the lab has no capping station yet, so there is no program
+# and no hardware behind this spec. The equipment and the motions are a first description to work
+# with (7 Oct 2026), written like the filling and stoppering modules; the capability is that of the
+# process planner's vial capping station, with illustrative values.
+# It lives outside cell/modules so that no project is generated for it. Its AAS: modreg build <this file>.
+module: Capping
+project: CappingModule
+package: capping
+opcua_root: /Objects/Capping
+modbus: {host: 127.0.0.1, port: 1504, unit: 1, poll_ms: 10}
+
+targets:
+  pc: {host: localhost, io: modbus}
+
+equipment:
+  CapFeeder:
+    description: Pusher that brings one cap under the head, with a sensor for the cap in place
+    inputs:
+      CapInPlace: {modbus: d0}
+    outputs:
+      Push: {modbus: c0}
+    commands:
+      Idle: {}
+      Push: [Push]
+  CrimpHead:
+    description: Head that presses the cap on and crimps it, end switches top and bottom
+    inputs:
+      AtTop:    {modbus: d1}
+      AtBottom: {modbus: d2}
+    outputs:
+      Up:   {modbus: c1}
+      Down: {modbus: c2}
+    commands:
+      Stop: {}
+      Up: [Up]
+      Down: [Down]
+
+skills:
+  FeedCap:
+    description: Push a cap under the head
+    equipment: CapFeeder
+    command: Push
+    ensures: CapInPlace
+    timeout: 5s
+  LowerHead:
+    description: Head down onto the cap
+    equipment: CrimpHead
+    command: Down
+    ensures: AtBottom
+    invariant: NOT (AtTop AND AtBottom)
+    timeout: 5s
+  Crimp:
+    description: Hold the head down for Duration to crimp the cap
+    equipment: CrimpHead
+    command: Down
+    parameters:
+      Duration: {unit: s, minimum: 0.0, maximum: 5.0, default: 1.5}
+    after: Duration
+  RaiseHead:
+    description: Head up to the top end switch
+    equipment: CrimpHead
+    command: Up
+    ensures: AtTop
+    invariant: NOT (AtTop AND AtBottom)
+    timeout: 5s
+
+composites:
+  Capping:
+    description: Feed a cap, lower the head, crimp, raise the head
+    execute: [FeedCap, LowerHead, Crimp, RaiseHead]
+    stop: [RaiseHead]
+
+procedures:
+  Resetting: [RaiseHead]
+  Stopping: [RaiseHead]
+
+capabilities:
+  Capping:
+    description: Put a cap on a stoppered vial and crimp it
+    realized_by: Capping
+    properties:
+      ContainerType: {value: vial}
+      GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
+      CapDiameter: {minimum: 13.0, maximum: 20.0, unit: mm}
