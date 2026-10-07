@@ -3,7 +3,8 @@
 Plan of 6 Oct 2026. The guiding star is the integrated architecture in *Plug and produce
 architecture: components, flow and status* (the ten-step loop: connect, identify, discover,
 verify, register, match, plan and bind, execute, monitor, reconfigure). What is built and how is
-in [work.md](work.md); how the work divides into repositories in
+in [work.md](work.md); what each AAS holds and how the submodels connect in
+[aas-models.md](aas-models.md); how the work divides into repositories in
 [repositories.md](repositories.md).
 
 ## What we are aiming at
