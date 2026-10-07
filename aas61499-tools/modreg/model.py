@@ -157,6 +157,18 @@ class ModuleSkillSet(skills.Skills_2):
     Skill: Dict[str, ModuleSkill] = {}
 
 
+class ModuleBuildingBlock(skills.BuildingBlock):
+    """The ontology's building block (a primitive the module does not offer) with a module's
+    contract, occupied equipment and implementation: the block type a step of it is an instance of."""
+    Contract: Optional[SkillContract] = None
+    Occupies: Optional[SkillOccupies] = None
+    Implementation: SkillImplementation = SkillImplementation()
+
+
+class ModuleBuildingBlockSet(skills.BuildingBlocks):
+    BuildingBlock: Dict[str, ModuleBuildingBlock] = {}
+
+
 class ModuleProcedures(SubmodelElementCollection):
     """What the module's state machine runs itself: a sequence of steps while Resetting and one
     while Stopping, published below ``/Procedures/<name>`` like the steps of a module level skill."""
@@ -182,6 +194,8 @@ class ModuleSkills(skills.Skills):
     Module: Optional[ModuleStateMachine] = None
     # A module without procedures has none.
     Procedures: Optional[ModuleProcedures] = None
+    # A module that offers every primitive has none.
+    BuildingBlocks: Optional[ModuleBuildingBlockSet] = None
 
 
 class RealizedBySkill(cd.CapabilityRealizedBy):
