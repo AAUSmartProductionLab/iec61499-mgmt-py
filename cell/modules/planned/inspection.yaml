@@ -1,0 +1,59 @@
+# Inspection module. Planned, not built: the lab has no inspection station yet, so there is no
+# program and no hardware behind this spec. The equipment and the motions are a first description
+# to work with (7 Oct 2026), written like the filling and stoppering modules; the capability is
+# that of the process planner's vial inspection station, with illustrative values.
+# It lives outside cell/modules so that no project is generated for it. Its AAS: modreg build <this file>.
+module: Inspection
+project: InspectionModule
+package: inspection
+opcua_root: /Objects/Inspection
+modbus: {host: 127.0.0.1, port: 1505, unit: 1, poll_ms: 10}
+
+targets:
+  pc: {host: localhost, io: modbus}
+
+equipment:
+  Camera:
+    description: Camera with a ring light and its own image evaluation; a trigger in, done and the verdict out
+    inputs:
+      Done:   {modbus: d0}
+      Passed: {modbus: d1}
+    outputs:
+      Light:   {modbus: c0}
+      Trigger: {modbus: c1}
+    commands:
+      Idle: {}
+      Light: [Light]
+      Capture: {Light: true, Trigger: true}
+
+skills:
+  Illuminate:
+    description: Light on and wait Settle for it to be steady; the light stays on
+    equipment: Camera
+    command: Light
+    stop: Light
+    parameters:
+      Settle: {unit: s, minimum: 0.0, maximum: 2.0, default: 0.2}
+    after: Settle
+  Capture:
+    description: Take the image and wait for the camera's verdict
+    equipment: Camera
+    command: Capture
+    ensures: Done
+    timeout: 3s
+    results: {Passed: Passed}
+
+composites:
+  Inspection:
+    description: Light on, take the image, report whether the vial passed
+    execute: [Illuminate, Capture]
+    results: {Passed: Capture.Passed}
+
+capabilities:
+  Inspection:
+    description: Inspect a closed vial with the camera and decide whether it passes
+    realized_by: Inspection
+    properties:
+      ContainerType: {value: vial}
+      GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
+      InspectionMethod: {value: vision}

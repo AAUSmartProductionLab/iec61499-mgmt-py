@@ -24,7 +24,8 @@ def vocabulary():
 
 def test_every_offered_capability_and_property_is_in_the_vocabulary(vocabulary):
     offered = 0
-    for path in specs():
+    # The planned modules too: they are described before they are built.
+    for path in [*specs(), *sorted((SPECS / "planned").glob("*.yaml"))]:
         spec = load(path)
         for name, capability in spec.capabilities.items():
             offered += 1
@@ -39,7 +40,7 @@ def test_every_offered_capability_and_property_is_in_the_vocabulary(vocabulary):
                 kind = str(vocabulary.value(term, LAB.valueType))
                 given = value.value if value.value is not None else value.minimum
                 assert kind == ("string" if isinstance(given, str) else "number"), f"{spec.module}.{name}.{prop}"
-    assert offered >= 2
+    assert offered >= 4
 
 
 def test_the_fill_volume_is_set_by_a_skill_parameter():
