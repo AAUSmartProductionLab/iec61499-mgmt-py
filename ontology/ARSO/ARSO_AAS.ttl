@@ -188,9 +188,9 @@ arso:hasControlConfigurationSubmodel rdf:type owl:ObjectProperty , owl:Functiona
 
 arso:usesSkill rdf:type owl:ObjectProperty ;
   rdfs:domain arso:SkillSMC ;
-  rdfs:range arso:SkillSMC ;
+  rdfs:range [ rdf:type owl:Class ; owl:unionOf ( arso:SkillSMC arso:BuildingBlockSMC ) ] ;
   arso:resolvedFrom arso:SkillUsesSML ;
-  rdfs:comment "Resolved Uses entry: a composite skill uses this skill (same AAS or an AAS that is a part of it)." .
+  rdfs:comment "Resolved Uses entry: a composite skill uses this skill or building block (same AAS or an AAS that is a part of it)." .
 
 arso:occupies rdf:type owl:ObjectProperty ;
   rdfs:domain arso:SkillSMC ;
