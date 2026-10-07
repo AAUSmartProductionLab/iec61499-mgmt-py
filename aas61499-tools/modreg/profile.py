@@ -9,10 +9,11 @@ and registers with (its manifest), ``model.environment`` into the AAS.
 - **Skills**: Occupy, Release and every skill the module offers, each with its SemanticId, its
   Operation (the parameters as inputs) and the reference to its Start action; and its kind,
   parameters, contract or sequences, occupied equipment, state reference and implementing function
-  block. A primitive that is not offered only runs as a step of a module level skill: it is not
-  listed, the steps name it. Every step refers to the State it publishes (with its ErrorID,
-  parameters and results beside it). The procedures the module runs while Resetting and Stopping
-  are sequences of steps as well.
+  block. A primitive that is not offered only runs as a step of a module level skill: it is a
+  building block (its block type, parameters, contract and equipment), which the steps refer to.
+  The skills of kind Primitive and the building blocks are what a new skill can be built from.
+  Every step refers to the State it publishes (with its ErrorID, parameters and results beside
+  it). The procedures the module runs while Resetting and Stopping are sequences of steps as well.
 - **Operational Data** with the mapping that feeds it (Asset Interfaces Mapping Configuration):
   module state, occupation, skill and step states, parameters and results, equipment inputs, as
   decimal data points.
@@ -37,7 +38,7 @@ from aas_model.submodel_templates import (
     Aimc, AimcMappingConfigurations, DmpActionInput, DmpActionOutput, OpcuaAction, OpcuaProperty, OperationVariableProp,
 )
 from aas_pydantic import (
-    Capability, ExternalReference, Key, ModelReference, Property, Qualifier, ReferenceElement, RelationshipElement,
+    Capability, Key, ModelReference, Property, Qualifier, ReferenceElement, RelationshipElement,
 )
 from aas_pydantic.submodel_templates import asset_interfaces_description as wot
 from aas_pydantic.submodel_templates import capability_description as cd
@@ -121,6 +122,26 @@ def schema(parameters: dict[str, Parameter]) -> dict:
     return {"type": "object", "properties": fields}
 
 
+def block_type(spec: ModuleSpec, skill: str) -> str:
+    """The function block type of a skill primitive, as modgen names it."""
+    return f"{spec.package}::SK_{skill}"
+
+
+def declared_parameter(name: str, pr: Parameter, value) -> Property:
+    """A skill parameter holding ``value``, with its declaration (unit, limits, default) as qualifiers."""
+    declared = (("Unit", pr.unit), ("Minimum", pr.minimum), ("Maximum", pr.maximum), ("Default", pr.default))
+    return Property(
+        value=text(value), value_type=XSD[pr.type], description=pr.description or f"Parameter {name}",
+        qualifiers=[Qualifier(type_=k, value=text(v), kind="ConceptQualifier") for k, v in declared if v is not None])
+
+
+def contract(decl) -> model.SkillContract:
+    """A primitive's contract, as the module spec states it."""
+    ends = {"Ensures": decl.ensures} if decl.ensures is not None else {"After": decl.after}
+    terms = {"Requires": decl.requires, **ends, "Invariant": decl.invariant, "Timeout": decl.timeout}
+    return model.SkillContract(**{k: prop(v) for k, v in terms.items() if v is not None})
+
+
 def result_input(spec: ModuleSpec, skill: str, result: str):
     """The equipment input behind a skill's result (its type and unit); a composite's result is
     the result of one of its execute steps."""
@@ -198,11 +219,9 @@ class Describer:
     # Skills ----------------------------------------------------------------------------------
 
     def skill_reference(self, name: str, id_short: str = "Skill") -> ReferenceElement:
-        """A skill of this submodel; one that only runs as a step is named, not listed."""
-        if name in self.listed:
-            return ReferenceElement(id_short=id_short, value=path(SKILLS, (SMC, "Skills"), (SMC, name)))
-        named = ExternalReference(key=(Key(type_="GlobalReference", value=skill_id(name)),))
-        return ReferenceElement(id_short=id_short, value=named)
+        """A skill of this submodel, or its building block if the module does not offer it."""
+        held = "Skills" if name in self.listed else "BuildingBlocks"
+        return ReferenceElement(id_short=id_short, value=path(SKILLS, (SMC, held), (SMC, name)))
 
     def operation(self, name: str, action: str, parameters: dict[str, Parameter], about: str, meaning_id: str,
                   at: ModelReference):
@@ -285,6 +304,36 @@ class Describer:
         return model.SkillImplementation(InstancePath=prop(instance), FBType=prop(typ),
                                          TypeHash=prop(self.snap.hashes.get(typ, "")))
 
+    def occupies(self, name: str) -> model.SkillOccupies | None:
+        """The equipment a skill locks while it runs, as nodes of the Hierarchical Structures."""
+        occupied = [ReferenceElement(id_short=item, value=path(STRUCTURE, ("Entity", "EntryNode"), ("Entity", item)))
+                    for item in self.spec.uses(name)]
+        return model.SkillOccupies(value=occupied) if occupied else None
+
+    def building_block(self, name: str) -> model.ModuleBuildingBlock:
+        """A primitive the module does not offer: the block type a step of it is an instance of,
+        what it takes (the values are the type's defaults; a step's own are its Bindings), what it
+        gives back, its contract and the equipment it locks."""
+        spec, decl = self.spec, self.spec.skills[name]
+        typ = block_type(spec, name)
+        known = self.snap.hashes.get(typ) if self.snap else None
+        block = model.ModuleBuildingBlock(
+            description=decl.description or f"Skill {name}", SemanticId=prop(skill_id(name)), Kind=prop("Primitive"),
+            Contract=contract(decl), Occupies=self.occupies(name),
+            Implementation=model.SkillImplementation(FBType=prop(typ), TypeHash=prop(known) if known else None))
+        if decl.parameters:
+            block.Parameters = arso.Parameters()
+            for p, pr in decl.parameters.items():
+                put(block.Parameters.SkillParameter, p, declared_parameter(p, pr, pr.default))
+        if decl.results:
+            block.Results = arso.Results()
+            for r in decl.results:
+                source = result_input(spec, name, r)
+                put(block.Results.BuildingBlockResult, r, Property(
+                    value_type=XSD[source.type], description=f"Result {r}",
+                    qualifiers=[Qualifier(type_="Unit", value=source.unit, kind="ConceptQualifier")] if source.unit else []))
+        return block
+
     def skill(self, name: str) -> ModuleSkill:
         spec = self.spec
         composite = name in spec.composites
@@ -304,11 +353,8 @@ class Describer:
         if decl.parameters:
             skill.Parameters = arso.Parameters()
             for p, pr in decl.parameters.items():
-                value = current(parameter_port(spec, name, p), pr, self.snap)
-                declared = (("Unit", pr.unit), ("Minimum", pr.minimum), ("Maximum", pr.maximum), ("Default", pr.default))
-                put(skill.Parameters.SkillParameter, p, Property(
-                    value=text(value), value_type=XSD[pr.type], description=pr.description or f"Parameter {p}",
-                    qualifiers=[Qualifier(type_=k, value=text(v), kind="ConceptQualifier") for k, v in declared if v is not None]))
+                put(skill.Parameters.SkillParameter, p,
+                    declared_parameter(p, pr, current(parameter_port(spec, name, p), pr, self.snap)))
                 key = self.property(f"{name}_Parameter_{p}", f"{node}/Parameters/{p}", pr.type,
                                     f"{name} {p} of the current or last run", pr.unit)
                 self.observe(key, key, f"{skill_id(name)}/Parameters/{p}", f"{name} {p} of the current or last run")
@@ -322,12 +368,8 @@ class Describer:
             used = dict.fromkeys(s.skill for s in [*decl.execute, *decl.stop])
             skill.Uses = model.SkillUses(value=[self.skill_reference(u, u) for u in used])
         else:
-            ends = {"Ensures": decl.ensures} if decl.ensures is not None else {"After": decl.after}
-            terms = {"Requires": decl.requires, **ends, "Invariant": decl.invariant, "Timeout": decl.timeout}
-            skill.Contract = model.SkillContract(**{k: prop(v) for k, v in terms.items() if v is not None})
-        occupied = [ReferenceElement(id_short=item, value=path(STRUCTURE, ("Entity", "EntryNode"), ("Entity", item)))
-                    for item in spec.uses(name)]
-        skill.Occupies = model.SkillOccupies(value=occupied) if occupied else None
+            skill.Contract = contract(decl)
+        skill.Occupies = self.occupies(name)
         skill.Implementation = self.implementation(f"{name}.Control" if composite else name)
         state = self.property(f"{name}_State", f"{node}/State", "USINT", f"{name} state: {SKILL_STATES}")
         self.observe(f"{name}_State", state, f"{skill_id(name)}/State", f"State of {name}: {SKILL_STATES}")
@@ -482,6 +524,11 @@ class Describer:
         asset.skills.Module = machine
         for name in self.listed:
             put(skills, name, self.skill(name))
+        blocks = model.ModuleBuildingBlockSet()
+        for name, decl in spec.skills.items():
+            if not decl.offered:
+                put(blocks.BuildingBlock, name, self.building_block(name))
+        asset.skills.BuildingBlocks = blocks if blocks.BuildingBlock else None
         if spec.procedures:
             procedures = model.ModuleProcedures()
             for proc, steps in spec.procedures.items():
