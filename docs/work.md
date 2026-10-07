@@ -175,9 +175,9 @@ with, and aas-model itself is changed as little as possible.
   ontology/ARSO` writes one for each from ARSO's classes, annotations and restrictions
   (`modreg/templates/`) and runs aas-model's generator on them (`modreg/generated/`). Both are
   committed; a test fails when they no longer match the ontology. Hand-written subclasses remain
-  only for what ARSO names but does not declare: the terms of a Contract, the children of a Step
-  and of Implementation, the item type of Uses and Occupies, and the module's procedures
-  (`modreg/model.py`).
+  only for what ARSO names but does not declare: the children of a Step, the item type of Uses
+  and Occupies, a skill's references into the interface, and the module's state machine and
+  procedures (`modreg/model.py`).
 - **The AAS of a module** (`ModuleTypeAAS`): Skills instead of aas-model's Control Component
   Instance (per skill SemanticId, an Operation named like the skill, the reference to its Start
   action, kind, parameters, contract or Execute and Stop sequences, occupied equipment, state
@@ -185,9 +185,12 @@ with, and aas-model itself is changed as little as possible.
   publishes); the Resetting and Stopping procedures as sequences of steps beside the skills (5 Oct,
   so that an HMI can be built from the AAS alone); Operational Data instead of Variables (decimal
   data points fed by the mapping configuration from the OPC UA properties, skill and step states
-  alike); Parameters (the deployed
-  value of each skill parameter; none: no submodel); Control Configuration (spec, target, program
-  digest, and from a module that was read the sync state, differences and type hashes); one
+  alike); the primitives that are not offered as building blocks (7 Oct: block type, parameters,
+  contract, equipment; with the skills of kind Primitive they are what a new skill can be built
+  from); no Parameters submodel (6 Oct: a skill's parameters are with the skill, the submodel
+  stays optional in ARSO); Control Configuration (the rule set the program is built by, spec,
+  target, program digest, and from a module that was read the sync state, differences and type
+  hashes); one
   OPC UA interface with every method as an action and every variable as a property, steps'
   variables included (State, ErrorID, the parameters and results of the step's skill), results
   and parameters with their units.
@@ -199,8 +202,8 @@ with, and aas-model itself is changed as little as possible.
   `StateReference`, `ErrorReference` and `Results` to the properties publishing them, every step
   to its State. `Skills/Module` does the same for the module's PackML commands, its state and its
   occupation. The interface description holds only how to reach things (endpoint, browse paths).
-  The AIMC maps the interface onto the rest: every property feeds one element (a skill parameter
-  its Parameters entry, everything else its Operational Data point), every action is invoked by
+  The AIMC maps the interface onto the rest: every property feeds its Operational Data point,
+  every action is invoked by
   one delegated Operation of the Skills submodel (`<Skill>` for Start, `<Skill>_Stop` ...,
   `Occupy`, `Release`, `Module_Reset` ...). A client follows these references from a capability to
   the browse paths it calls (`modlink.aas` in the HMI repository); the end to end test runs the
@@ -226,7 +229,8 @@ with, and aas-model itself is changed as little as possible.
 Consequences of following ARSO strictly:
 
 - A primitive that is not offered (Dwell) is not listed as a skill, because ARSO asks every
-  skill for an Operation and an interface action; steps name it by an external reference.
+  skill for an Operation and an interface action. It is a building block
+  (`Skills/BuildingBlocks`), which steps and `Uses` refer to.
 - Booleans are 0 or 1 and states their number in data points (ARSO's data point is a decimal).
 - About 500 (filling) and 650 (stoppering) elements are reported as not described: the Web of
   Things terms aas-model writes into the interface description (key, type, title, op, input,
@@ -572,7 +576,8 @@ The plan is in [next-steps.md](next-steps.md): the integrated architecture as th
 aim (a vendor's module, taken in and reconfigured from its AAS alone), four phases with their
 checks, the timeline against the paper and the decisions that block it. Done so far towards it:
 a module level skill created online (1 Oct), registration through `modreg` (2 to 4 Oct),
-capabilities, skill links and mappings in the AAS (6 Oct).
+capabilities, skill links and mappings in the AAS (6 Oct), the closed validation of the generation
+project repaired and both module AAS passing it, building blocks and the module rules (7 Oct).
 
 Smaller open items that are in no phase of that plan:
 
