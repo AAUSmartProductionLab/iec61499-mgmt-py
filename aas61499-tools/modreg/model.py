@@ -15,7 +15,7 @@ module that speaks OPC UA only:
 
 A profile is the dump of such a model without what the type already says (``profile``); ``asset``
 builds the model back from it and ``environment`` the AAS. ``TYPES`` names the types a profile may
-be of, so the lab's MQTT stations go through the same code.
+be of, so the lab's MQTT stations and the products (``product``) go through the same code.
 """
 from __future__ import annotations
 
@@ -48,6 +48,7 @@ from .generated import skills
 from .generated.control_configuration import ControlConfiguration
 from .generated.operational_data import OperationalData
 from .generated.parameters import Parameters
+from .product import ProductTypeAAS
 
 
 class _Typing:
@@ -240,7 +241,8 @@ class ModuleTypeAAS(AAS):
     capability_description: Optional[ModuleCapabilityDescription] = None
 
 
-TYPES: dict[str, type[AAS]] = {"ResourceTypeAAS": ResourceTypeAAS, "ModuleTypeAAS": ModuleTypeAAS}
+TYPES: dict[str, type[AAS]] = {"ResourceTypeAAS": ResourceTypeAAS, "ModuleTypeAAS": ModuleTypeAAS,
+                               "ProductTypeAAS": ProductTypeAAS}
 # Keys of a profile that are about building the AAS, not part of it.
 BUILD_KEYS = ("aas_type", "delegation_base", "global_asset_id")
 
@@ -257,8 +259,9 @@ def defaults(aas_type: str, profile: dict) -> dict:
         raise ProfileError(f"unknown AAS type {aas_type!r}; known: {', '.join(TYPES)}") from None
     if not profile.get("id_short"):
         raise ProfileError("a profile needs an id_short")
+    stated = {"asset_type": profile["asset_type"]} if "asset_type" in profile else {}      # else the type's own
     return cls(id_short=profile["id_short"], id=profile.get("id") or f"{BASE_URL}/aas/{profile['id_short']}",
-               asset_type=profile.get("asset_type", "")).model_dump(mode="json")
+               **stated).model_dump(mode="json")
 
 
 def class_defaults(cls: type) -> dict:
@@ -366,7 +369,8 @@ def asset(profile: dict) -> AAS:
 
 def environment(model: AAS, global_asset_id: str | None = None) -> dict:
     """The AAS of a model: its shell and submodels as an AAS JSON environment. The shared model
-    names the asset like the shell; ``global_asset_id`` gives it its own id."""
+    names the asset like the shell and calls it an instance; ``global_asset_id`` gives it its own
+    id, and a type that states its ``ASSET_KIND`` its own kind."""
     store = convert_model_to_aas(model)
     # json.dumps, not BaSyx's file writer: that one encodes in Python and takes seconds for a module.
     found = {"assetAdministrationShells": [o for o in store if isinstance(o, basyx.AssetAdministrationShell)],
@@ -374,9 +378,11 @@ def environment(model: AAS, global_asset_id: str | None = None) -> dict:
     env = json.loads(json.dumps(found, cls=AASToJsonEncoder))
     with_units(env["submodels"])
     typed_qualifiers(env["submodels"])
-    if global_asset_id:
-        for shell in env["assetAdministrationShells"]:
+    for shell in env["assetAdministrationShells"]:
+        if global_asset_id:
             shell["assetInformation"]["globalAssetId"] = global_asset_id
+        if getattr(model, "ASSET_KIND", None):
+            shell["assetInformation"]["assetKind"] = model.ASSET_KIND
     return env
 
 
