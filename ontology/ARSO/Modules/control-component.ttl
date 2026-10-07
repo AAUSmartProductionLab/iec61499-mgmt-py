@@ -220,6 +220,54 @@ arso:SkillImplementationSMC rdf:type owl:Class ;
   arso:idShort "Implementation" ;
   rdfs:comment "SMC Implementation — the runtime block implementing the skill: FBType (qualified IEC 61499 type), TypeHash (as the runtime reports it) and InstancePath (dotted instance name). Lets a reader check that the described skill is the deployed one." .
 
+arso:ImplementationFBTypeProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:SkillImplementationSMC ;
+  arso:idShort "FBType" ;
+  rdfs:comment "Property FBType (xs:string) — the qualified IEC 61499 type of the block. A step that runs the skill is an instance of this type (v0.6)." .
+
+arso:ImplementationTypeHashProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:SkillImplementationSMC ;
+  arso:idShort "TypeHash" ;
+  rdfs:comment "Property TypeHash (xs:string) — the hash of the type as the runtime reports it; there when the resource was read (v0.6)." .
+
+arso:ImplementationInstancePathProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:SkillImplementationSMC ;
+  arso:idShort "InstancePath" ;
+  rdfs:comment "Property InstancePath (xs:string) — the dotted name of the instance that is the skill. A building block has none: it has instances only as steps (v0.6)." .
+
+arso:ContractRequiresProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:SkillContractSMC ;
+  arso:idShort "Requires" ;
+  rdfs:comment "Property Requires (xs:string) — the precondition: what has to hold when the skill starts. An expression over the resource's state variables and the skill's parameters, or a duration (v0.6)." .
+
+arso:ContractEnsuresProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:SkillContractSMC ;
+  arso:idShort "Ensures" ;
+  rdfs:comment "Property Ensures (xs:string) — the postcondition: the skill has succeeded when it holds (a sensor ends it). An expression over the resource's state variables and the skill's parameters, or a duration (v0.6)." .
+
+arso:ContractAfterProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:SkillContractSMC ;
+  arso:idShort "After" ;
+  rdfs:comment "Property After (xs:string) — the open-loop duration: the skill has succeeded when it has passed, in seconds (a time ends it). An expression over the resource's state variables and the skill's parameters, or a duration (v0.6)." .
+
+arso:ContractInvariantProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:SkillContractSMC ;
+  arso:idShort "Invariant" ;
+  rdfs:comment "Property Invariant (xs:string) — what has to hold all the while the skill runs. An expression over the resource's state variables and the skill's parameters, or a duration (v0.6)." .
+
+arso:ContractTimeoutProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:SkillContractSMC ;
+  arso:idShort "Timeout" ;
+  rdfs:comment "Property Timeout (xs:string) — the longest the skill may run. An expression over the resource's state variables and the skill's parameters, or a duration (v0.6)." .
+
 
 #################################################################
 # ELEMENT TYPES — Building blocks (submodel level, v0.6)
@@ -362,6 +410,28 @@ arso:BuildingBlockSMC rdfs:subClassOf
     owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:SkillOccupiesSML ],
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
     owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:BuildingBlockResultsSMC ] .
+
+# A Contract states each term at most once (v0.6)
+arso:SkillContractSMC rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractRequiresProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractEnsuresProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractAfterProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractInvariantProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractTimeoutProperty ] .
+
+# An Implementation names the block type; hash and instance at most once (v0.6)
+arso:SkillImplementationSMC rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ImplementationFBTypeProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ImplementationTypeHashProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ImplementationInstancePathProperty ] .
 
 # A Step names exactly one skill
 arso:SkillStepSMC rdfs:subClassOf [

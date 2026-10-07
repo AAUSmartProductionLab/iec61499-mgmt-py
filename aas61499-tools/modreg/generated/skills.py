@@ -20,7 +20,11 @@ class Parameters(SubmodelElementCollection):
 class Contract(SubmodelElementCollection):
     semantic_id: str = ""
     description: str = "For primitive skills: Requires (precondition), Ensures (postcondition) or After (open-loop duration), Invariant, Timeout."
-    pass
+    Requires: Optional[Property] = None
+    Ensures: Optional[Property] = None
+    After: Optional[Property] = None
+    Invariant: Optional[Property] = None
+    Timeout: Optional[Property] = None
 
 class Uses(SubmodelElementList):
     semantic_id: str = ""
@@ -46,7 +50,9 @@ class Occupies(SubmodelElementList):
 class Implementation(SubmodelElementCollection):
     semantic_id: str = ""
     description: str = "The runtime block implementing the skill: FBType (qualified IEC 61499 type), TypeHash (as the runtime reports it) and InstancePath (dotted instance name)."
-    pass
+    FBType: Property
+    TypeHash: Optional[Property] = None
+    InstancePath: Optional[Property] = None
 
 # alias so field ``Parameters_t`` can name a class of the same id_short
 Parameters_t: TypeAlias = Parameters
