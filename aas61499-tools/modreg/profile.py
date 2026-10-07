@@ -79,6 +79,8 @@ ANSWER = {"type": "object", "properties": {"Accepted": {"type": "boolean"},
                                             "ErrorID": {"type": "integer", "minimum": 0, "maximum": 65535}}}
 # The concepts of the two values every resource of the lab has.
 MODULE_STATE = "https://w3id.org/2026/apex/semantic/state/operational"
+# The rules a generated module is built by (docs/module-rules.md).
+RULES = f"{BASE_URL}/rules/module/1"
 OCCUPIED = "https://w3id.org/2026/apex/semantic/state/occupied"
 
 
@@ -488,6 +490,8 @@ class Describer:
             id_short="ControlConfiguration",
             Runtime=cc.Runtime(Name=prop("Eclipse 4diac FORTE"), Resource=prop(snap.resource if snap else "RES"),
                                ManagementEndpoint=prop(f"{snap.host}:{snap.port}" if snap else f"{t.host}:{t.port}")),
+            Rules=prop(RULES, description="The rule set the program is built by: its shell, the interface of a "
+                       "skill primitive and the pattern of a module level skill."),
             ModuleSpec=prop(self.spec_path or ""), Target=prop(self.target), Generator=prop("modgen"),
             ProgramDigest=prop(program_digest(self.spec, self.target),
                                description="SHA-256 of the program the module spec generates for the target."),

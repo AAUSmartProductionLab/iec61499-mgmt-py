@@ -141,6 +141,34 @@
     },
     {
      "modelType": "Property",
+     "idShort": "Rules",
+     "description": [
+      {
+       "language": "en",
+       "text": "The IRI of the rule set the resource's program is built by: its shell, the interface of a skill primitive and the pattern of a composite skill."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "valueType": "xs:string"
+    },
+    {
+     "modelType": "Property",
      "idShort": "Generator",
      "description": [
       {

@@ -414,6 +414,7 @@ def test_a_module_that_was_read_shows_what_runs_there():
     env = model.build(profile)
     config = submodel(env, "ControlConfiguration")
     assert at(config, "SyncState")["value"] == "Drift" and len(names(at(config, "Differences"))) == 1
+    assert at(config, "Rules")["value"] == f"{BASE}/rules/module/1"          # docs/module-rules.md
     assert at(config, "Runtime", "ManagementEndpoint")["value"] == "192.168.0.50:61499"
     assert len(names(at(config, "Types"))) == len(set(app.fbs.values()))
     assert float(at(submodel(env, "Skills"), "Skills", "RaisePiston", "Parameters", "Duration")["value"]) == 5.5
