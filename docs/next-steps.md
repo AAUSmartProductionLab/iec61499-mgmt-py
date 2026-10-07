@@ -41,7 +41,7 @@ This is the paper's core claim, and where this repository does not yet match the
 
 | # | Step | Where | Done when | Days |
 | --- | --- | --- | --- | --- |
-| 1.1 | **The model says what a skill can be built from.** Building blocks that are not offered (Dwell) with their block type, parameters and equipment; the fixed pattern of a module level skill written down as a rule of the module, not only as generator code. Declared in ARSO, classes regenerated | `ontology/ARSO`, `modreg`, module library notes | The AAS of the filling module lists Dwell as a building block; `modreg check` still passes | 1.5 |
+| 1.1 | **The model says what a skill can be built from.** Building blocks that are not offered (Dwell) with their block type, parameters and equipment; the fixed pattern of a module level skill written down as a rule of the module, not only as generator code. Declared in ARSO, classes regenerated. **Done 7 Oct:** the Skills submodel has `BuildingBlocks` (Dwell and Dispense in the filling module: block type, parameters with unit, limits and default, contract, equipment); steps and `Uses` refer to them. Every listed skill names its block type without the module being read. ARSO 0.6 also says what an Implementation and a Contract hold. The rules are in [module-rules.md](module-rules.md) (the shell, a primitive's interface, the pattern of a module level skill, what changes online), and the Control Configuration names the rule set. Both module AAS conform to the generation project's closed validation, which holds the same ARSO 0.6 | `ontology/ARSO`, `modreg`, module library notes | The AAS of the filling module lists Dwell as a building block; `modreg check` still passes | 1.5 |
 | 1.2 | **Structure from the running module.** The structural half of a profile (skills, parameters, sequences, equipment, interface, type hashes) read from FORTE alone; the descriptive half (nameplate, capabilities, units, descriptions) from a description file; merged | `modreg`, `modsync` | The profile built without the module spec equals the one built from it, for both modules | 2.5 |
 | 1.3 | **Identify and verify against the AAS.** The module publishes its identity (asset id, AAS id, program digest); `modsync` compares the running program with what the AAS states, not with the spec | module library (one block, FORTE rebuild), `modsync` | A program that differs from its AAS is reported; loop steps 2 and 4 hold without a spec | 1.5 |
 | 1.4 | **Reconfigure from the AAS.** A new module level skill described as steps and bindings (as the AAS describes one) is created online from that description; a parameter value is changed; the change is recorded in Control Configuration and the AAS is registered again | `modsync`, `modreg` | The live test that creates DoubleDose online passes when driven by a skill description instead of a module spec; the change log shows it | 2 |
@@ -112,16 +112,18 @@ Decided on 6 Oct 2026:
 | Who executes plans | A multi-agent system: an agent per product and per resource, I4.0 bidding; resource agents use the skills, the AAS and the reconfiguration tools |
 | Products | Prefilled syringe, cartridge or vial, as in the planner's examples |
 | Planning | By hand in the planner's web UI for now; an automatic planner may write the same submodels later |
+| Which skills need a capability? (7 Oct) | A composite skill does; a primitive is a building block and needs none; Occupy and Release are access control and need none |
+| Where are a skill's parameters? (6 Oct) | With the skill: the inputs of its Operation. The Parameters submodel is optional and does not hold them |
+| Capability element (6 Oct) | As IDTA 02020: the template's id, the meaning as a supplemental id |
 
 Still open:
 
 | Question | Blocks |
 | --- | --- |
 | Occupy and Release are access control, not production. Do they stay in the list of skills, and are they called skills at all? (The rule leaves them out by their semantic id for now) | later |
-| Tare and AttachNeedle are primitives that no composite uses. Should Dispensing run them (as first steps, or in a start phase a composite does not have today)? A change to the module program | 1.1 |
 | Interface actions name their command as a supplemental semantic id. Should it be the semanticId instead? | later |
 | What belongs in the Parameters submodel (optional; not a skill's parameters)? A station constant such as the flow rate is a candidate | later |
-| Elements ARSO does not describe pass both validators. Describe those the interface and the control need (operation type, browse path, owning object, data type, key, an action's input and output; a skill's Methods, ErrorReference and Results, the module's commands) and leave the descriptive ones (title, unit, observable, synchronous, security)? | 1.1 |
+| Elements ARSO does not describe pass both validators. Describe those the interface and the control need (operation type, browse path, owning object, data type, key, an action's input and output; a skill's Methods, ErrorReference and Results, the module's commands) and leave the descriptive ones (title, unit, observable, synchronous, security)? Not done with 1.1 | 1.4 |
 | The generation tool's builder still writes a Capability's meaning as its semanticId and no Kind; change it to the form of IDTA 02020 (both are accepted now)? | later |
 | The agents are software agents in a framework such as SPADE; their inner structure (BDI, fixed plans) is not settled | 2.3 |
 | Which changes does the paper show? | 3.1 |
