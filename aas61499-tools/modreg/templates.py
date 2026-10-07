@@ -13,6 +13,11 @@ without one stands for any number of elements the user names), its semanticId an
 restrictions of its parent, its cardinality. Children are the classes that name the parent as
 ``arso:parentClass`` and the classes its restrictions ask for.
 
+Two more templates are kept as files, because they are not the ontology's: Process Parameters
+(IDTA 02031-1 as published, with the lab's extension: the parameters as Properties, MaterialUse and
+RequiredCapability) and Production Sequence 2.0 (the process planner's, written from the plans it
+saves). Their classes are made the same way; a product's AAS is built from them (``product``).
+
 The generator is the one in the aas-model checkout (``aas-model/scripts/idta_generate.py``), run
 with field names equal to the idShorts, which is the style of the classes aas-model ships.
 """
@@ -35,6 +40,8 @@ GENERATED = HERE / "generated"
 AAS_MODEL = HERE.parents[1] / "aas-model"
 # The submodels of the ontology that aas-model has no template of.
 SUBMODELS = ("SkillsSubmodel", "OperationalDataSubmodel", "ParametersSubmodel", "ControlConfigurationSubmodel")
+# Templates kept as files in ``templates``: not written from the ontology.
+GIVEN = ("ProcessParameters", "ProductionSequence")
 CARDINALITY = "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
 SUFFIX = re.compile(r"(Submodel|SMC|SML|Property|Ref|Element|Rel|Entity)$")
 MANY = ("ZeroToMany", "OneToMany")
@@ -157,6 +164,11 @@ def write_templates(ontology: Path | str, out: Path = TEMPLATES) -> list[Path]:
     return written
 
 
+def given(folder: Path = TEMPLATES) -> list[Path]:
+    """The templates that are kept as files."""
+    return [folder / f"{name}.json" for name in GIVEN]
+
+
 # aas-model's generator names a field after its element in snake_case; the classes aas-model ships
 # (and so the AAS: a field's name is the element's idShort) keep the idShort as it is.
 RUN = """
@@ -172,6 +184,23 @@ for template in sys.argv[3:]:
 """
 
 
+ALIAS = re.compile(r"(?:^# alias [^\n]*\n)?^(\w+)_t: TypeAlias = \1\n", re.MULTILINE)
+REBUILD = "# ── Resolve forward references"
+
+
+def aliases_after_classes(source: str) -> str:
+    """A container that holds its own kind (the steps inside a step of a plan) is named by the
+    generator before its class is written. Such a name moves behind the classes, where the
+    annotations are resolved."""
+    early = [m for m in ALIAS.finditer(source)
+             if (cls := re.search(rf"^class {m.group(1)}\(", source, re.MULTILINE)) and cls.start() > m.start()]
+    if not early or REBUILD not in source:
+        return source
+    for m in reversed(early):
+        source = source[:m.start()] + source[m.end():]
+    return source.replace(REBUILD, "".join(m.group(0) for m in early) + "\n" + REBUILD, 1)
+
+
 def generate(templates: list[Path], out: Path = GENERATED, aas_model: Path = AAS_MODEL) -> list[Path]:
     """Have aas-model's generator make the pydantic classes of the templates."""
     scripts = aas_model / "scripts"
@@ -184,8 +213,9 @@ def generate(templates: list[Path], out: Path = GENERATED, aas_model: Path = AAS
         raise RuntimeError(f"aas-model's generator failed:\n{run.stderr[-2000:]}")
     made = sorted(p for p in out.glob("*.py") if p.name != "__init__.py")
     for path in made:                                   # one line ending, whatever the platform wrote
-        path.write_text(path.read_text(encoding="utf-8").rstrip() + "\n", encoding="utf-8", newline="\n")
+        path.write_text(aliases_after_classes(path.read_text(encoding="utf-8")).rstrip() + "\n", encoding="utf-8", newline="\n")
     (out / "__init__.py").write_text(
-        '"""Pydantic classes of the resource ontology\'s own submodels, made by aas-model\'s generator from\n'
-        'the templates in ``modreg/templates`` (``modreg generate``). Do not edit."""\n', encoding="utf-8", newline="\n")
+        '"""Pydantic classes of the submodels aas-model has no classes of (the resource ontology\'s own, Process\n'
+        'Parameters and Production Sequence), made by aas-model\'s generator from the templates in\n'
+        '``modreg/templates`` (``modreg generate``). Do not edit."""\n', encoding="utf-8", newline="\n")
     return made

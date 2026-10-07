@@ -6,7 +6,7 @@
     modreg check profiles/FillingModuleAAS.json --ontology ontology/ARSO   # does the AAS follow the ontology?
     modreg serve --ontology ontology/ARSO --basyx http://<host>:8081       # the registration service
     modreg register filling --target pi --service http://<host>:8090       # send the module's profile to it
-    modreg generate --ontology ontology/ARSO              # the ontology's own submodels: templates and classes
+    modreg generate --ontology ontology/ARSO              # templates of the ontology's own submodels, and all classes
 
 A profile is the module's AAS on the lab's shared model (aas-model) without what its type says
 anyway; the service validates it, builds the AAS, checks it against the ontology and publishes it.
@@ -104,7 +104,7 @@ def main(argv=None) -> int:
 
     if args.command == "generate":
         written = templates.write_templates(args.ontology)
-        for path in [*written, *templates.generate(written, aas_model=Path(args.aas_model))]:
+        for path in [*written, *templates.generate([*written, *templates.given()], aas_model=Path(args.aas_model))]:
             print(path.relative_to(Path.cwd()) if path.is_relative_to(Path.cwd()) else path)
         return 0
     if args.command == "serve":
