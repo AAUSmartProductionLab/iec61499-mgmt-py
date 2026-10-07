@@ -118,6 +118,9 @@ Decided on 6 Oct 2026:
 | Capability element (6 Oct) | As IDTA 02020: the template's id, the meaning as a supplemental id |
 | What does a step's binding hold? (7 Oct) | The smallest change: a parameter the skill hands down is a reference to that parameter of the skill (it was its name as a string); a constant stays a value. What a step runs with shows at the interface anyway; the planner's own bindings and the HMI are unchanged |
 | Where do a contract's terms come from when there is no spec? (7 Oct) | From the AAS manifest the module's vendor provides: the descriptive half of step 1.2 is that manifest, not a file of our own |
+| How is a product or a plan described? (7 Oct) | Like a module: an AAS type on the pydantic model (aas-model) and a profile that is its dump, built by the same tool. No description format of our own. Done for the product with its plan (`ProductTypeAAS`); the vial of the example line is such a profile |
+| What does a module carry as its manifest? (7 Oct) | The pydantic dump (the profile). It is what `modreg profile` writes today, from the module spec (the YAML file a module's program is generated from) and the running program; storing it on the module is not built (step 1.3) |
+| The planner reads its own skill catalog, the modules publish ARSO Skills. Which holds? (7 Oct) | The resource's skill definition. The web UI and the planner are adjusted to read it (step 2.2) |
 
 Still open:
 
@@ -129,6 +132,8 @@ Still open:
 | Elements ARSO does not describe pass both validators. Describe those the interface and the control need (operation type, browse path, owning object, data type, key, an action's input and output; a skill's Methods, ErrorReference and Results, the module's commands) and leave the descriptive ones (title, unit, observable, synchronous, security)? Not done with 1.1 | 1.4 |
 | The generation tool's builder still writes a Capability's meaning as its semanticId and no Kind; change it to the form of IDTA 02020 (both are accepted now)? | later |
 | A running program does not tell a constant that was bound to a step from a default that was left. When the profile is made from the program (1.2), does a step list every parameter of its skill, or only those that differ from the default? | 1.2 |
+| The module specs (YAML) hold what the AAS does not: which output or input of the controller an equipment item is wired to, per target. Without them a program cannot be generated. Do they stay as the generator's input, or does the wiring move into the AAS so that the profile is the only description? | 1.4 |
+| The plan is a submodel of the product AAS, as the planner writes it. Does it become an AAS of its own (a process AAS per product and line, as AProSO describes)? | 2.2 |
 | Later, if needed: a binding whose value is an expression over the skill's parameters; a station setting (such as the flow rate) held once in the Parameters submodel and bound by every step that uses it | later |
 | The agents are software agents in a framework such as SPADE; their inner structure (BDI, fixed plans) is not settled | 2.3 |
 | Which changes does the paper show? | 3.1 |
