@@ -29,7 +29,7 @@ class Uses(SubmodelElementList):
 
 class SkillStep(SubmodelElementCollection):
     semantic_id: str = ""
-    description: str = "One use of a skill in a sequence: Skill [ReferenceElement, 1] to a skill listed in Uses, and Bindings [SMC of Property, 0..1] with the constants bound to its parameters (current values)."
+    description: str = "One use of a skill in a sequence: Skill [ReferenceElement, 1] to a skill listed in Uses (a Skill or a BuildingBlock), and Bindings [SMC of Property, 0..1] with the constants bound to its parameters (current values)."
     pass
 
 class SkillSequence(SubmodelElementList):
@@ -84,6 +84,31 @@ class Skills_2(SubmodelElementCollection):
     description: str = "Mandatory top-level container for all Skill entries."
     Skill: Dict[str, Skill_t] = {}
 
+class Results(SubmodelElementCollection):
+    semantic_id: str = ""
+    description: str = "The results of the building block, one Property each."
+    BuildingBlockResult: Dict[str, Property] = {}
+
+# alias so field ``Results_t`` can name a class of the same id_short
+Results_t: TypeAlias = Results
+class BuildingBlock(SubmodelElementCollection):
+    semantic_id: str = ""
+    description: str = "A skill primitive that only runs as a step of composite skills."
+    SemanticId: Property
+    Kind: Optional[Property] = None
+    Parameters: Optional[Parameters_t] = None
+    Contract: Optional[Contract_t] = None
+    Occupies: Optional[Occupies_t] = None
+    Implementation: Implementation_t
+    Results: Optional[Results_t] = None
+
+# alias so field ``BuildingBlock_t`` can name a class of the same id_short
+BuildingBlock_t: TypeAlias = BuildingBlock
+class BuildingBlocks(SubmodelElementCollection):
+    semantic_id: str = ""
+    description: str = "The skill primitives of the resource that it does not offer through its interface."
+    BuildingBlock: Dict[str, BuildingBlock_t] = {}
+
 class Error(SubmodelElementCollection):
     semantic_id: str = ""
     description: str = "A named error entry, if populated."
@@ -98,6 +123,8 @@ class Errors(SubmodelElementCollection):
 
 # alias so field ``Interfaces_t`` can name a class of the same id_short
 Interfaces_t: TypeAlias = Interfaces
+# alias so field ``BuildingBlocks_t`` can name a class of the same id_short
+BuildingBlocks_t: TypeAlias = BuildingBlocks
 # alias so field ``Errors_t`` can name a class of the same id_short
 Errors_t: TypeAlias = Errors
 class Skills(Submodel):
@@ -107,6 +134,7 @@ class Skills(Submodel):
     REVISION: ClassVar[str] = "0"
     Interfaces: Interfaces_t
     Skills: Skills_2
+    BuildingBlocks: Optional[BuildingBlocks_t] = None
     Errors: Errors_t
 
 # ── Resolve forward references (Pydantic circular refs) ──
@@ -120,6 +148,9 @@ Occupies.model_rebuild()
 Implementation.model_rebuild()
 Skill.model_rebuild()
 Skills_2.model_rebuild()
+Results.model_rebuild()
+BuildingBlock.model_rebuild()
+BuildingBlocks.model_rebuild()
 Error.model_rebuild()
 Errors.model_rebuild()
 Skills.model_rebuild()
