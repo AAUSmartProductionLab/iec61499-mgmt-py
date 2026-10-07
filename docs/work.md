@@ -55,7 +55,8 @@ Module (one FORTE resource)                       OPC UA below /Objects/<Module>
 ```
 
 A module level skill has no type of its own, so a new one is only instances and connections,
-which FORTE creates online. The shared types are generated into every project so the IDE opens
+which FORTE creates online. Which instances and connections, and what else a module has to keep
+to whoever built it, is written down as rules in [module-rules.md](module-rules.md). The shared types are generated into every project so the IDE opens
 each on its own, and compiled once from the `ModLib` project; one FORTE binary serves every
 module. Each network is laid out in named groups (`fbxml.arrange`).
 
