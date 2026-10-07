@@ -76,7 +76,7 @@ def test_values_are_the_ones_the_module_runs_with():
     found = read(spec, {f"Stoppering.Execute.{step.name}.Angle": "5.0"})
     assert found["composites"]["Stoppering"]["execute"][1]["bind"]["Angle"] == 5.0
     data = yaml.safe_load(FILLING.read_text(encoding="utf-8"))
-    del data["composites"]["Dispensing"]["parameters"]["Volume"]["maximum"]
+    data["composites"]["Settle"] = {"parameters": {"Rounds": {"minimum": 0.0, "default": 1.0}}, "execute": ["Tare"]}
     unlimited = ModuleSpec.model_validate(data)
-    found = read(unlimited, {"Dispensing.Volume.Upper": "1.0E308"})
-    assert found["composites"]["Dispensing"]["parameters"]["Volume"]["maximum"] is None and found == stated(unlimited)
+    found = read(unlimited, {"Settle.Rounds.Upper": "1.0E308"})
+    assert found["composites"]["Settle"]["parameters"]["Rounds"]["maximum"] is None and found == stated(unlimited)

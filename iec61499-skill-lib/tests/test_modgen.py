@@ -41,6 +41,12 @@ def raw(path=FILLER):
     (lambda d: d["composites"]["Fill"].update(execute=[{"MoveNeedleDown": {"Speed": 1}}]), "no parameter Speed"),
     (lambda d: d["composites"]["Fill"].update(execute=[{"MoveNeedleDown": {"Distance": "Depthh"}}]),
      "is not a parameter of Fill"),
+    # What reaches a step is not checked by the step itself, so it is checked here.
+    (lambda d: d["composites"]["Fill"].update(execute=[{"MoveNeedleDown": {"Distance": 80.0}}]), "beyond the limits"),
+    (lambda d: d["composites"]["Fill"]["parameters"]["Depth"].update(maximum=80.0), "beyond the limits"),
+    (lambda d: d["composites"]["Fill"]["parameters"]["Depth"].pop("minimum"), "beyond the limits"),
+    (lambda d: d["composites"]["Fill"]["parameters"].update(Depth={"type": "INT", "minimum": 0, "maximum": 50, "default": 50}),
+     "Depth is INT, the parameter LREAL"),
     (lambda d: d["equipment"]["NeedleAxis"]["inputs"]["AtTop"].update(modbus="i0"), "BOOL inputs"),
     (lambda d: d["equipment"]["NeedleAxis"]["inputs"]["Position"].update(gpio=4), "only BOOL inputs"),
     (lambda d: d["equipment"]["NeedleAxis"]["outputs"]["Up"].update(gpio=5), "share gpio"),
