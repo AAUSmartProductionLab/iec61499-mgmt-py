@@ -81,15 +81,6 @@ DelegatedOperation = SkillOperation         # a field cannot be named like its t
 # ontology names some containers without declaring what is in them; a module fills those, and
 # what it puts there is declared here.
 
-class SkillContract(skills.Contract):
-    """Conditions over the equipment's inputs, as the module spec states them."""
-    Requires: Optional[Property] = None
-    Ensures: Optional[Property] = None
-    After: Optional[Property] = None
-    Invariant: Optional[Property] = None
-    Timeout: Optional[Property] = None
-
-
 class StepBindings(SubmodelElementCollection):
     description: str = "Values bound to the parameters of the step's skill: a constant, or the name of a parameter of the composite."
     Binding: Dict[str, Property] = {}
@@ -130,12 +121,6 @@ class InterfaceLinks(SubmodelElementCollection):
     Link: Dict[str, ReferenceElement] = {}
 
 
-class SkillImplementation(skills.Implementation):
-    InstancePath: Optional[Property] = None
-    FBType: Optional[Property] = None
-    TypeHash: Optional[Property] = None
-
-
 class ModuleSkill(skills.Skill):
     """The ontology's skill with a module's contract, sequences (Execute, Stop), lists and
     implementation, and the lab's delegated Operations: the skill's own (Start) and one per further
@@ -146,11 +131,9 @@ class ModuleSkill(skills.Skill):
     Methods: Optional[InterfaceLinks] = None
     ErrorReference: Optional[ReferenceElement] = None
     Results: Optional[InterfaceLinks] = None
-    Contract: Optional[SkillContract] = None
     Uses: Optional[SkillUses] = None
     SkillSequence: Dict[str, ModuleSkillSequence] = {}
     Occupies: Optional[SkillOccupies] = None
-    Implementation: Optional[SkillImplementation] = None
 
 
 class ModuleSkillSet(skills.Skills_2):
@@ -158,11 +141,9 @@ class ModuleSkillSet(skills.Skills_2):
 
 
 class ModuleBuildingBlock(skills.BuildingBlock):
-    """The ontology's building block (a primitive the module does not offer) with a module's
-    contract, occupied equipment and implementation: the block type a step of it is an instance of."""
-    Contract: Optional[SkillContract] = None
+    """The ontology's building block (a primitive the module does not offer) with the equipment a
+    step of it locks."""
     Occupies: Optional[SkillOccupies] = None
-    Implementation: SkillImplementation = SkillImplementation()
 
 
 class ModuleBuildingBlockSet(skills.BuildingBlocks):

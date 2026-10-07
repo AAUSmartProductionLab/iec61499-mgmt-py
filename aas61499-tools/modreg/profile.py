@@ -45,6 +45,7 @@ from aas_pydantic.submodel_templates import capability_description as cd
 from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures, Node
 from aas_pydantic.submodel_templates.nameplate import ManufacturerProductDesignation, SerialNumber
 
+from modgen.library import q
 from modgen.module import parameter_port
 from modgen.spec import ModuleSpec, Parameter
 from modsync.aas import MODULE_METHODS, SKILL_METHODS, browse_path, current, identity
@@ -122,6 +123,9 @@ def schema(parameters: dict[str, Parameter]) -> dict:
     return {"type": "object", "properties": fields}
 
 
+CONTROL_TYPE = q("SKILL_Core")
+
+
 def block_type(spec: ModuleSpec, skill: str) -> str:
     """The function block type of a skill primitive, as modgen names it."""
     return f"{spec.package}::SK_{skill}"
@@ -135,11 +139,11 @@ def declared_parameter(name: str, pr: Parameter, value) -> Property:
         qualifiers=[Qualifier(type_=k, value=text(v), kind="ConceptQualifier") for k, v in declared if v is not None])
 
 
-def contract(decl) -> model.SkillContract:
+def contract(decl) -> arso.Contract:
     """A primitive's contract, as the module spec states it."""
     ends = {"Ensures": decl.ensures} if decl.ensures is not None else {"After": decl.after}
     terms = {"Requires": decl.requires, **ends, "Invariant": decl.invariant, "Timeout": decl.timeout}
-    return model.SkillContract(**{k: prop(v) for k, v in terms.items() if v is not None})
+    return arso.Contract(**{k: prop(v) for k, v in terms.items() if v is not None})
 
 
 def result_input(spec: ModuleSpec, skill: str, result: str):
@@ -297,12 +301,14 @@ class Describer:
             self.observe(found, found, f"{concept}/Results/{r}", f"Result {r} of {title}")
         return state
 
-    def implementation(self, instance: str) -> model.SkillImplementation:
-        typ = self.snap.fbs.get(instance) if self.snap else None
-        if typ is None:
-            return model.SkillImplementation(InstancePath=prop(instance))
-        return model.SkillImplementation(InstancePath=prop(instance), FBType=prop(typ),
-                                         TypeHash=prop(self.snap.hashes.get(typ, "")))
+    def implementation(self, typ: str, instance: str | None = None) -> arso.Implementation:
+        """The block behind a skill: its type (``typ`` as the module's rules name it; from a module
+        that was read, the type its instance has there, with the hash) and the instance that is the
+        skill (a building block has none)."""
+        typ = (self.snap.fbs.get(instance) if self.snap and instance else None) or typ
+        known = self.snap.hashes.get(typ) if self.snap else None
+        return arso.Implementation(FBType=prop(typ), TypeHash=prop(known) if known else None,
+                                   InstancePath=prop(instance) if instance else None)
 
     def occupies(self, name: str) -> model.SkillOccupies | None:
         """The equipment a skill locks while it runs, as nodes of the Hierarchical Structures."""
@@ -315,12 +321,10 @@ class Describer:
         what it takes (the values are the type's defaults; a step's own are its Bindings), what it
         gives back, its contract and the equipment it locks."""
         spec, decl = self.spec, self.spec.skills[name]
-        typ = block_type(spec, name)
-        known = self.snap.hashes.get(typ) if self.snap else None
         block = model.ModuleBuildingBlock(
             description=decl.description or f"Skill {name}", SemanticId=prop(skill_id(name)), Kind=prop("Primitive"),
             Contract=contract(decl), Occupies=self.occupies(name),
-            Implementation=model.SkillImplementation(FBType=prop(typ), TypeHash=prop(known) if known else None))
+            Implementation=self.implementation(block_type(spec, name)))
         if decl.parameters:
             block.Parameters = arso.Parameters()
             for p, pr in decl.parameters.items():
@@ -370,7 +374,9 @@ class Describer:
         else:
             skill.Contract = contract(decl)
         skill.Occupies = self.occupies(name)
-        skill.Implementation = self.implementation(f"{name}.Control" if composite else name)
+        # A module level skill has no type of its own: it is its Control block, a SKILL_Core.
+        skill.Implementation = (self.implementation(CONTROL_TYPE, f"{name}.Control") if composite
+                                else self.implementation(block_type(spec, name), name))
         state = self.property(f"{name}_State", f"{node}/State", "USINT", f"{name} state: {SKILL_STATES}")
         self.observe(f"{name}_State", state, f"{skill_id(name)}/State", f"State of {name}: {SKILL_STATES}")
         skill.StateReference = ReferenceElement(value=affordance("properties", state))

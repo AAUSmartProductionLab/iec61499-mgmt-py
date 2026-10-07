@@ -136,9 +136,16 @@ def test_skills_are_arsos_skills_with_what_reconfiguration_needs(stoppering, sto
     assert float(declared["Maximum"]) == decl.parameters["Duration"].maximum and declared["Unit"] == "s"
     assert [r["value"]["keys"][-1]["value"] for r in children(at(primitive, "Occupies"))] == [decl.equipment]
     assert at(primitive, "StateReference")["value"]["keys"][-1]["value"] == "RaisePiston_State"
+    # The block type a step of the primitive would be an instance of, known without reading the module.
+    assert at(primitive, "Implementation", "FBType")["value"] == f"{spec.package}::SK_RaisePiston"
+    assert at(primitive, "Implementation", "InstancePath")["value"] == "RaisePiston"
+    assert "TypeHash" not in names(at(primitive, "Implementation"))          # only a module that was read has it
     name, composite = next(iter(spec.composites.items()))
     sequence = at(skills, name)
     assert at(sequence, "Kind")["value"] == "Composite"
+    # A module level skill has no type of its own: it is its Control block.
+    assert at(sequence, "Implementation", "FBType")["value"] == "modlib::SKILL_Core"
+    assert at(sequence, "Implementation", "InstancePath")["value"] == f"{name}.Control"
     steps = children(at(sequence, "Execute"))
     assert at(sequence, "Execute")["modelType"] == "SubmodelElementList" and len(steps) == len(composite.execute)
     assert at(steps[0], "Skill")["value"]["keys"][-1]["value"] == composite.execute[0].skill
