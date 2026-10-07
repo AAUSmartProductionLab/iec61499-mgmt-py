@@ -1,0 +1,756 @@
+{
+ "assetAdministrationShells": [],
+ "submodels": [
+  {
+   "idShort": "ProcessParameters",
+   "description": [
+    {
+     "language": "en",
+     "text": "The Submodel provides all the necessary parameters in a structured form that are required for the manufacture of any product"
+    }
+   ],
+   "administration": {
+    "version": "1",
+    "revision": "0",
+    "templateId": "https://admin-shell-io/IDTA-02031-1"
+   },
+   "id": "https://admin-shell-io/idta/SubmodelTemplate/ProcessParameters/1/0",
+   "kind": "Template",
+   "semanticId": {
+    "type": "ExternalReference",
+    "keys": [
+     {
+      "type": "GlobalReference",
+      "value": "https://admin-shell-io/idta/SubmodelTemplate/ProcessParameters/1/0"
+     }
+    ]
+   },
+   "submodelElements": [
+    {
+     "idShort": "Processes",
+     "description": [
+      {
+       "language": "en",
+       "text": "Provides all the necessary parameters of processes in a structured form that are required to manufacture a product"
+      }
+     ],
+     "semanticId": {
+      "type": "ExternalReference",
+      "keys": [
+       {
+        "type": "GlobalReference",
+        "value": "https://admin-shell.io/idta/ProcessParameters/Processes/1/0"
+       }
+      ]
+     },
+     "qualifiers": [
+      {
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       },
+       "kind": "TemplateQualifier",
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "value": "One"
+      }
+     ],
+     "value": [
+      {
+       "idShort": "Process__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "The processes to be executed are described individually in the SMC Process."
+        }
+       ],
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/idta/ProcessParameters/Process/1/0"
+         }
+        ]
+       },
+       "qualifiers": [
+        {
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         },
+         "kind": "TemplateQualifier",
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "value": "ZeroToMany"
+        }
+       ],
+       "value": [
+        {
+         "idShort": "ProcessId",
+         "description": [
+          {
+           "language": "en",
+           "text": "Describes the ID of the process"
+          }
+         ],
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/idta/ProcessParameters/ProcessId/1/0"
+           }
+          ]
+         },
+         "qualifiers": [
+          {
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           },
+           "kind": "TemplateQualifier",
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "value": "One"
+          }
+         ],
+         "valueType": "xs:string",
+         "modelType": "Property"
+        },
+        {
+         "idShort": "ProcessName",
+         "description": [
+          {
+           "language": "en",
+           "text": "Describes the Name of the Process"
+          }
+         ],
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/idta/ProcessParameters/ProcessName/1/0"
+           }
+          ]
+         },
+         "qualifiers": [
+          {
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           },
+           "kind": "TemplateQualifier",
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "value": "One"
+          }
+         ],
+         "valueType": "xs:string",
+         "modelType": "Property"
+        },
+        {
+         "idShort": "ProcessDescription",
+         "description": [
+          {
+           "language": "en",
+           "text": "Describes the process."
+          }
+         ],
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/idta/ProcessParameters/ProcessDescription/1/0"
+           }
+          ]
+         },
+         "qualifiers": [
+          {
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           },
+           "kind": "TemplateQualifier",
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "value": "One"
+          }
+         ],
+         "value": [
+          {
+           "language": "en",
+           "text": "Describes the process."
+          }
+         ],
+         "modelType": "MultiLanguageProperty"
+        },
+        {
+         "idShort": "PlannedProcessTime",
+         "description": [
+          {
+           "language": "en",
+           "text": "Planned processing time for process execution (without set-up time)"
+          }
+         ],
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/idta/ProcessParameters/PlannedProcessTime/1/0"
+           }
+          ]
+         },
+         "qualifiers": [
+          {
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           },
+           "kind": "TemplateQualifier",
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "value": "One"
+          }
+         ],
+         "valueType": "xs:duration",
+         "modelType": "Property"
+        },
+        {
+         "idShort": "ProductParameters",
+         "description": [
+          {
+           "language": "en",
+           "text": "Mandatory product parameters for process execution"
+          }
+         ],
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/idta/ProcessParameters/ProductParameters/1/0"
+           }
+          ]
+         },
+         "qualifiers": [
+          {
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           },
+           "kind": "TemplateQualifier",
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "value": "One"
+          }
+         ],
+         "modelType": "SubmodelElementCollection",
+         "value": [
+          {
+           "modelType": "Property",
+           "idShort": "Parameter__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "One parameter, named by its idShort; its semanticId says what it means."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "valueType": "xs:string"
+          }
+         ]
+        },
+        {
+         "idShort": "ProcessParameters",
+         "description": [
+          {
+           "language": "en",
+           "text": "Mandatory process parameters for process execution"
+          }
+         ],
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/idta/ProcessParameters/ProcessParameters/1/0"
+           }
+          ]
+         },
+         "qualifiers": [
+          {
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           },
+           "kind": "TemplateQualifier",
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "value": "One"
+          }
+         ],
+         "modelType": "SubmodelElementCollection",
+         "value": [
+          {
+           "modelType": "Property",
+           "idShort": "Parameter__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "One parameter, named by its idShort; its semanticId says what it means."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "valueType": "xs:string"
+          }
+         ]
+        },
+        {
+         "idShort": "ResourceParameters",
+         "description": [
+          {
+           "language": "en",
+           "text": "Mandatory resource parameters for process execution"
+          }
+         ],
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/idta/ProcessParameters/ResourceParameters/1/0"
+           }
+          ]
+         },
+         "qualifiers": [
+          {
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           },
+           "kind": "TemplateQualifier",
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "value": "One"
+          }
+         ],
+         "modelType": "SubmodelElementCollection",
+         "value": [
+          {
+           "modelType": "Property",
+           "idShort": "Parameter__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "One parameter, named by its idShort; its semanticId says what it means."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "valueType": "xs:string"
+          }
+         ]
+        },
+        {
+         "idShort": "ProcessBoM",
+         "description": [
+          {
+           "language": "en",
+           "text": "Describes the products or semi-finished products to be involved in the process"
+          }
+         ],
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/idta/ProcessParameters/ProcessBoM/1/0"
+           }
+          ]
+         },
+         "qualifiers": [
+          {
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           },
+           "kind": "TemplateQualifier",
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "value": "One"
+          }
+         ],
+         "modelType": "SubmodelElementCollection",
+         "value": [
+          {
+           "modelType": "SubmodelElementCollection",
+           "idShort": "MaterialUse__00__",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://smartproductionlab.aau.dk/ProcessParameters/MaterialUse/1/0"
+             }
+            ]
+           },
+           "description": [
+            {
+             "language": "en",
+             "text": "Lab extension: one material the process uses or makes."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "value": [
+            {
+             "modelType": "ReferenceElement",
+             "idShort": "MaterialReference",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://smartproductionlab.aau.dk/ProcessParameters/MaterialUse/MaterialReference/1/0"
+               }
+              ]
+             },
+             "description": [
+              {
+               "language": "en",
+               "text": "The material: an entity of the bill of material."
+              }
+             ],
+             "qualifiers": [
+              {
+               "type": "SMT/Cardinality",
+               "valueType": "xs:string",
+               "kind": "TemplateQualifier",
+               "value": "One",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                 }
+                ]
+               }
+              }
+             ]
+            },
+            {
+             "modelType": "Property",
+             "idShort": "Role",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://smartproductionlab.aau.dk/ProcessParameters/MaterialUse/Role/1/0"
+               }
+              ]
+             },
+             "description": [
+              {
+               "language": "en",
+               "text": "workpiece, incorporated or output."
+              }
+             ],
+             "qualifiers": [
+              {
+               "type": "SMT/Cardinality",
+               "valueType": "xs:string",
+               "kind": "TemplateQualifier",
+               "value": "One",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                 }
+                ]
+               }
+              }
+             ],
+             "valueType": "xs:string"
+            },
+            {
+             "modelType": "Property",
+             "idShort": "Quantity",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://smartproductionlab.aau.dk/ProcessParameters/MaterialUse/Quantity/1/0"
+               }
+              ]
+             },
+             "description": [
+              {
+               "language": "en",
+               "text": "How much of the material."
+              }
+             ],
+             "qualifiers": [
+              {
+               "type": "SMT/Cardinality",
+               "valueType": "xs:string",
+               "kind": "TemplateQualifier",
+               "value": "ZeroToOne",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                 }
+                ]
+               }
+              }
+             ],
+             "valueType": "xs:double"
+            },
+            {
+             "modelType": "Property",
+             "idShort": "Unit",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://smartproductionlab.aau.dk/ProcessParameters/MaterialUse/Unit/1/0"
+               }
+              ]
+             },
+             "description": [
+              {
+               "language": "en",
+               "text": "The unit of the quantity."
+              }
+             ],
+             "qualifiers": [
+              {
+               "type": "SMT/Cardinality",
+               "valueType": "xs:string",
+               "kind": "TemplateQualifier",
+               "value": "ZeroToOne",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                 }
+                ]
+               }
+              }
+             ],
+             "valueType": "xs:string"
+            },
+            {
+             "modelType": "ReferenceElement",
+             "idShort": "QuantityParameterReference",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://smartproductionlab.aau.dk/ProcessParameters/MaterialUse/QuantityParameterReference/1/0"
+               }
+              ]
+             },
+             "description": [
+              {
+               "language": "en",
+               "text": "The parameter that gives the quantity, instead of a fixed one."
+              }
+             ],
+             "qualifiers": [
+              {
+               "type": "SMT/Cardinality",
+               "valueType": "xs:string",
+               "kind": "TemplateQualifier",
+               "value": "ZeroToOne",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                 }
+                ]
+               }
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "modelType": "ReferenceElement",
+         "idShort": "RequiredCapability",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://smartproductionlab.aau.dk/ProcessParameters/RequiredCapability/1/0"
+           }
+          ]
+         },
+         "description": [
+          {
+           "language": "en",
+           "text": "Lab extension: the Required capability the process needs, in the Capability Description of the same AAS."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "modelType": "SubmodelElementCollection"
+      }
+     ],
+     "modelType": "SubmodelElementCollection"
+    }
+   ],
+   "modelType": "Submodel"
+  }
+ ],
+ "conceptDescriptions": []
+}
