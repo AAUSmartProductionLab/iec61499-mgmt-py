@@ -403,8 +403,8 @@ class ModuleSpec(Model):
             # A module level skill's parameter latches are named like its parameters, next to these.
             if taken := {p for p in comp.parameters if p.upper() in RESERVED or p.upper().startswith("REL_")}:
                 raise ValueError(f"{name}: parameter names taken by the skill's own blocks {sorted(taken)}")
-            self.check_steps(name, comp.execute, set(comp.parameters))
-            self.check_steps(name, comp.stop, set(comp.parameters))
+            self.check_steps(name, comp.execute, comp.parameters)
+            self.check_steps(name, comp.stop, comp.parameters)
             for result, source in comp.results.items():
                 step, _, res = source.partition(".")
                 found = next((s for s in comp.execute if s.name == step), None)
@@ -413,7 +413,7 @@ class ModuleSpec(Model):
         for proc, seq in self.procedures.items():
             if not seq:
                 raise ValueError(f"{proc}: empty procedure")
-            self.check_steps(proc, seq, set())
+            self.check_steps(proc, seq, {})
         for name, cap in self.capabilities.items():
             self.check_capability(name, cap)
         if not self.targets:
@@ -474,8 +474,10 @@ class ModuleSpec(Model):
             if value.parameter is not None and value.parameter not in skill.parameters:
                 raise ValueError(f"capability {name}.{prop}: {cap.realized_by} has no parameter {value.parameter}")
 
-    def check_steps(self, owner, seq: list[Step], parent_params: set[str]):
-        """Steps name skill primitives (composites of composites come later), bind known parameters, are unique."""
+    def check_steps(self, owner, seq: list[Step], parent_params: dict[str, Parameter]):
+        """Steps name skill primitives (composites of composites come later), bind known parameters, are unique.
+        What is bound to a step's parameter stays within its limits: a skill started by a parent does not
+        check its values itself (only a Start over OPC UA is range checked)."""
         seen = set()
         for step in seq:
             target = self.skills.get(step.skill)
@@ -489,6 +491,19 @@ class ModuleSpec(Model):
                     raise ValueError(f"{owner}.{step.name}: {step.skill} has no parameter {param}")
                 if isinstance(value, str) and value not in parent_params:
                     raise ValueError(f"{owner}.{step.name}.{param}: {value} is not a parameter of {owner}")
+                takes = target.parameters[param]
+                if isinstance(value, str):
+                    given = parent_params[value]
+                    if given.type != takes.type:
+                        raise ValueError(f"{owner}.{step.name}.{param}: {value} is {given.type}, the parameter {takes.type}")
+                    low, high = given.minimum, given.maximum
+                else:
+                    low = high = value
+                if takes.type in NUMERIC and (
+                        (takes.minimum is not None and (low is None or low < takes.minimum))
+                        or (takes.maximum is not None and (high is None or high > takes.maximum))):
+                    raise ValueError(f"{owner}.{step.name}.{param}: {value} goes beyond the limits of "
+                                     f"{step.skill}.{param} ({takes.minimum} to {takes.maximum})")
 
     def points(self):
         """(``<Equipment>.<Signal>``, Input or Output) for every IO point."""

@@ -107,7 +107,9 @@ in, and `DONE` (with the results), `FAILED` (with `ErrorID`) and `INITO` out.
    sequence), `Methods = FALSE`, `Token = <Skill>`, and `LastUse = TRUE` only on the last step that
    uses its equipment item.
 2. A constant bound to a step's parameter is the value of that input. A parameter of the skill
-   bound to it is a data connection from the sequence's input.
+   bound to it is a data connection from the sequence's input. Either stays within the limits of
+   the step's parameter and has its type: a skill started by a parent does not check its values
+   (only a `Start` over OPC UA is range checked), so whoever builds the sequence has to.
 3. `START` → the first step's `START`; each step's `SUCCESS` → the next step's `START`; the last
    `SUCCESS` → `DONE`. `HALT`, `ABORT` and `RESET` go to every step.
 4. Failures are merged pairwise by `Fail<i>` (`modlib::SKILL_FailMerge`), since a data input takes
@@ -127,7 +129,8 @@ and gives up its equipment itself. `Module.RUN_<NAME>` starts it, and its `DONE`
 2. **A parameter value**: the input holding it is written; the skill takes it over at its next
    start. It is `<instance>.<parameter>` on a primitive instance (the default of an offered
    primitive, or the constant of a step), and `<Skill>.<parameter>.Default` for a module level
-   skill.
+   skill. The value has to lie within the parameter's limits; the controller does not refuse a
+   write.
 3. Types do not change online: a new skill primitive or equipment item needs a new program.
 
 ## 5. What the AAS states of this
