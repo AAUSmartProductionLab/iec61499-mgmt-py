@@ -1,0 +1,1257 @@
+{
+ "aas_type": "ProductTypeAAS",
+ "id_short": "Vial2mLAAS",
+ "id": "https://smartproductionlab.aau.dk/aas/Vial2mLAAS",
+ "description": "A 2 mL vial, filled, stoppered, capped and inspected",
+ "display_name": {
+  "en": "Vial 2 mL"
+ },
+ "nameplate": {
+  "URIOfTheProduct": {
+   "value": "https://smartproductionlab.aau.dk/assets/Vial2mL"
+  },
+  "ManufacturerProductDesignation": {
+   "value": {
+    "en": "Filled vial 2 mL"
+   }
+  }
+ },
+ "hierarchical_structures": {
+  "EntryNode": {
+   "display_name": {
+    "en": "Vial 2 mL"
+   },
+   "global_asset_id": "https://smartproductionlab.aau.dk/assets/Vial2mL",
+   "Node": {
+    "Vial": {
+     "display_name": {
+      "en": "Glass vial 2R"
+     },
+     "Quantity": {
+      "semantic_id": "https://smartproductionlab.aau.dk/semantics/Quantity",
+      "value": "1.0",
+      "value_type": "xs:double"
+     },
+     "QuantityUnit": {
+      "semantic_id": "https://smartproductionlab.aau.dk/semantics/QuantityUnit",
+      "value": "piece"
+     }
+    },
+    "Liquid": {
+     "display_name": {
+      "en": "Demo liquid"
+     },
+     "Quantity": {
+      "semantic_id": "https://smartproductionlab.aau.dk/semantics/Quantity",
+      "value": "2.0",
+      "value_type": "xs:double"
+     },
+     "QuantityUnit": {
+      "semantic_id": "https://smartproductionlab.aau.dk/semantics/QuantityUnit",
+      "value": "mL"
+     }
+    },
+    "Stopper": {
+     "display_name": {
+      "en": "Rubber stopper 13 mm"
+     },
+     "Quantity": {
+      "semantic_id": "https://smartproductionlab.aau.dk/semantics/Quantity",
+      "value": "1.0",
+      "value_type": "xs:double"
+     },
+     "QuantityUnit": {
+      "semantic_id": "https://smartproductionlab.aau.dk/semantics/QuantityUnit",
+      "value": "piece"
+     }
+    },
+    "Cap": {
+     "display_name": {
+      "en": "Crimp cap 13 mm"
+     },
+     "Quantity": {
+      "semantic_id": "https://smartproductionlab.aau.dk/semantics/Quantity",
+      "value": "1.0",
+      "value_type": "xs:double"
+     },
+     "QuantityUnit": {
+      "semantic_id": "https://smartproductionlab.aau.dk/semantics/QuantityUnit",
+      "value": "piece"
+     }
+    }
+   }
+  }
+ },
+ "process_parameters": {
+  "Processes": {
+   "Process": {
+    "Filling": {
+     "ProcessId": {
+      "value": "Filling"
+     },
+     "ProcessName": {
+      "value": "Filling"
+     },
+     "ProcessDescription": {
+      "value": {
+       "en": "Fill 2 mL of liquid into the open vial"
+      }
+     },
+     "PlannedProcessTime": {
+      "value": "PT10S"
+     },
+     "ProductParameters": {
+      "Parameter": {
+       "ContainerType": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/ContainerType",
+        "value": "vial"
+       },
+       "GraspDiameter": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/GraspDiameter",
+        "qualifiers": [
+         {
+          "type_": "Unit",
+          "value": "mm",
+          "kind": "ConceptQualifier"
+         }
+        ],
+        "value": "16.0",
+        "value_type": "xs:double"
+       },
+       "FillVolume": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/FillVolume",
+        "qualifiers": [
+         {
+          "type_": "Unit",
+          "value": "mL",
+          "kind": "ConceptQualifier"
+         }
+        ],
+        "value": "2.0",
+        "value_type": "xs:double"
+       }
+      }
+     },
+     "ProcessParameters": {},
+     "ResourceParameters": {},
+     "ProcessBoM": {
+      "MaterialUse": {
+       "Vial": {
+        "MaterialReference": {
+         "value": {
+          "key": [
+           {
+            "type_": "Submodel",
+            "value": "{aas_id}/submodels/HierarchicalStructures"
+           },
+           {
+            "type_": "Entity",
+            "value": "EntryNode"
+           },
+           {
+            "type_": "Entity",
+            "value": "Vial"
+           }
+          ],
+          "type_": "ModelReference"
+         }
+        },
+        "Role": {
+         "value": "workpiece"
+        },
+        "Quantity": {
+         "value": "1.0"
+        },
+        "Unit": {
+         "value": "piece"
+        }
+       },
+       "Liquid": {
+        "MaterialReference": {
+         "value": {
+          "key": [
+           {
+            "type_": "Submodel",
+            "value": "{aas_id}/submodels/HierarchicalStructures"
+           },
+           {
+            "type_": "Entity",
+            "value": "EntryNode"
+           },
+           {
+            "type_": "Entity",
+            "value": "Liquid"
+           }
+          ],
+          "type_": "ModelReference"
+         }
+        },
+        "Role": {
+         "value": "incorporated"
+        },
+        "QuantityParameterReference": {
+         "value": {
+          "key": [
+           {
+            "type_": "Submodel",
+            "value": "{aas_id}/submodels/ProcessParameters"
+           },
+           {
+            "type_": "SubmodelElementCollection",
+            "value": "Processes"
+           },
+           {
+            "type_": "SubmodelElementCollection",
+            "value": "Filling"
+           },
+           {
+            "type_": "SubmodelElementCollection",
+            "value": "ProductParameters"
+           },
+           {
+            "type_": "Property",
+            "value": "FillVolume"
+           }
+          ],
+          "type_": "ModelReference"
+         }
+        }
+       }
+      }
+     },
+     "RequiredCapability": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "{aas_id}/submodels/CapabilityDescription"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "RequiredCapabilities"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Filling"
+        },
+        {
+         "type_": "Capability",
+         "value": "Capability"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     }
+    },
+    "Stoppering": {
+     "ProcessId": {
+      "value": "Stoppering"
+     },
+     "ProcessName": {
+      "value": "Stoppering"
+     },
+     "ProcessDescription": {
+      "value": {
+       "en": "Place the stopper on the filled vial and press it in"
+      }
+     },
+     "PlannedProcessTime": {
+      "value": "PT5S"
+     },
+     "ProductParameters": {
+      "Parameter": {
+       "ContainerType": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/ContainerType",
+        "value": "vial"
+       },
+       "GraspDiameter": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/GraspDiameter",
+        "qualifiers": [
+         {
+          "type_": "Unit",
+          "value": "mm",
+          "kind": "ConceptQualifier"
+         }
+        ],
+        "value": "16.0",
+        "value_type": "xs:double"
+       },
+       "StopperDiameter": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/StopperDiameter",
+        "qualifiers": [
+         {
+          "type_": "Unit",
+          "value": "mm",
+          "kind": "ConceptQualifier"
+         }
+        ],
+        "value": "13.0",
+        "value_type": "xs:double"
+       }
+      }
+     },
+     "ProcessParameters": {},
+     "ResourceParameters": {},
+     "ProcessBoM": {
+      "MaterialUse": {
+       "Stopper": {
+        "MaterialReference": {
+         "value": {
+          "key": [
+           {
+            "type_": "Submodel",
+            "value": "{aas_id}/submodels/HierarchicalStructures"
+           },
+           {
+            "type_": "Entity",
+            "value": "EntryNode"
+           },
+           {
+            "type_": "Entity",
+            "value": "Stopper"
+           }
+          ],
+          "type_": "ModelReference"
+         }
+        },
+        "Role": {
+         "value": "incorporated"
+        },
+        "Quantity": {
+         "value": "1.0"
+        },
+        "Unit": {
+         "value": "piece"
+        }
+       }
+      }
+     },
+     "RequiredCapability": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "{aas_id}/submodels/CapabilityDescription"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "RequiredCapabilities"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Stoppering"
+        },
+        {
+         "type_": "Capability",
+         "value": "Capability"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     }
+    },
+    "Capping": {
+     "ProcessId": {
+      "value": "Capping"
+     },
+     "ProcessName": {
+      "value": "Capping"
+     },
+     "ProcessDescription": {
+      "value": {
+       "en": "Put the cap on the stoppered vial and crimp it"
+      }
+     },
+     "PlannedProcessTime": {
+      "value": "PT5S"
+     },
+     "ProductParameters": {
+      "Parameter": {
+       "ContainerType": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/ContainerType",
+        "value": "vial"
+       },
+       "GraspDiameter": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/GraspDiameter",
+        "qualifiers": [
+         {
+          "type_": "Unit",
+          "value": "mm",
+          "kind": "ConceptQualifier"
+         }
+        ],
+        "value": "16.0",
+        "value_type": "xs:double"
+       },
+       "CapDiameter": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/CapDiameter",
+        "qualifiers": [
+         {
+          "type_": "Unit",
+          "value": "mm",
+          "kind": "ConceptQualifier"
+         }
+        ],
+        "value": "13.0",
+        "value_type": "xs:double"
+       }
+      }
+     },
+     "ProcessParameters": {},
+     "ResourceParameters": {},
+     "ProcessBoM": {
+      "MaterialUse": {
+       "Cap": {
+        "MaterialReference": {
+         "value": {
+          "key": [
+           {
+            "type_": "Submodel",
+            "value": "{aas_id}/submodels/HierarchicalStructures"
+           },
+           {
+            "type_": "Entity",
+            "value": "EntryNode"
+           },
+           {
+            "type_": "Entity",
+            "value": "Cap"
+           }
+          ],
+          "type_": "ModelReference"
+         }
+        },
+        "Role": {
+         "value": "incorporated"
+        },
+        "Quantity": {
+         "value": "1.0"
+        },
+        "Unit": {
+         "value": "piece"
+        }
+       }
+      }
+     },
+     "RequiredCapability": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "{aas_id}/submodels/CapabilityDescription"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "RequiredCapabilities"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Capping"
+        },
+        {
+         "type_": "Capability",
+         "value": "Capability"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     }
+    },
+    "Inspection": {
+     "ProcessId": {
+      "value": "Inspection"
+     },
+     "ProcessName": {
+      "value": "Inspection"
+     },
+     "ProcessDescription": {
+      "value": {
+       "en": "Inspect the closed vial"
+      }
+     },
+     "PlannedProcessTime": {
+      "value": "PT3S"
+     },
+     "ProductParameters": {
+      "Parameter": {
+       "ContainerType": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/ContainerType",
+        "value": "vial"
+       },
+       "GraspDiameter": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/GraspDiameter",
+        "qualifiers": [
+         {
+          "type_": "Unit",
+          "value": "mm",
+          "kind": "ConceptQualifier"
+         }
+        ],
+        "value": "16.0",
+        "value_type": "xs:double"
+       },
+       "InspectionMethod": {
+        "semantic_id": "https://smartproductionlab.aau.dk/semantics/InspectionMethod",
+        "value": "vision"
+       }
+      }
+     },
+     "ProcessParameters": {},
+     "ResourceParameters": {},
+     "ProcessBoM": {},
+     "RequiredCapability": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "{aas_id}/submodels/CapabilityDescription"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "RequiredCapabilities"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Inspection"
+        },
+        {
+         "type_": "Capability",
+         "value": "Capability"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     }
+    }
+   }
+  }
+ },
+ "capability_description": {
+  "id_short": "CapabilityDescription",
+  "id": "CapabilityDescription",
+  "CapabilitySet": {
+   "RequiredCapabilities": {
+    "CapabilityContainer": {
+     "Filling": {
+      "Capability": {
+       "display_name": {
+        "en": "Filling"
+       },
+       "semantic_id": "https://admin-shell.io/idta/CapabilityDescription/Capability/1/0",
+       "supplemental_semantic_ids": [
+        "https://smartproductionlab.aau.dk/semantics/Filling"
+       ],
+       "qualifiers": [
+        {
+         "type_": "CapabilityRoleQualifier/Required",
+         "value": "true",
+         "semantic_id": "https://admin-shell.io/idta/CapabilityDescription/CapabilityRoleQualifier/Required/1/0",
+         "kind": "ConceptQualifier"
+        }
+       ]
+      },
+      "PropertySet": {
+       "PropertySet": {
+        "PropertyContainer": {
+         "ContainerType": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "ContainerType"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/ContainerType"
+            ],
+            "value": "vial"
+           }
+          }
+         },
+         "GraspDiameter": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "GraspDiameter"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/GraspDiameter"
+            ],
+            "qualifiers": [
+             {
+              "type_": "Unit",
+              "value": "mm",
+              "kind": "ConceptQualifier"
+             }
+            ],
+            "value": "16.0",
+            "value_type": "xs:double"
+           }
+          }
+         },
+         "FillVolume": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "FillVolume"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/FillVolume"
+            ],
+            "qualifiers": [
+             {
+              "type_": "Unit",
+              "value": "mL",
+              "kind": "ConceptQualifier"
+             }
+            ],
+            "value": "2.0",
+            "value_type": "xs:double"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "Stoppering": {
+      "Capability": {
+       "display_name": {
+        "en": "Stoppering"
+       },
+       "semantic_id": "https://admin-shell.io/idta/CapabilityDescription/Capability/1/0",
+       "supplemental_semantic_ids": [
+        "https://smartproductionlab.aau.dk/semantics/Stoppering"
+       ],
+       "qualifiers": [
+        {
+         "type_": "CapabilityRoleQualifier/Required",
+         "value": "true",
+         "semantic_id": "https://admin-shell.io/idta/CapabilityDescription/CapabilityRoleQualifier/Required/1/0",
+         "kind": "ConceptQualifier"
+        }
+       ]
+      },
+      "PropertySet": {
+       "PropertySet": {
+        "PropertyContainer": {
+         "ContainerType": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "ContainerType"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/ContainerType"
+            ],
+            "value": "vial"
+           }
+          }
+         },
+         "GraspDiameter": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "GraspDiameter"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/GraspDiameter"
+            ],
+            "qualifiers": [
+             {
+              "type_": "Unit",
+              "value": "mm",
+              "kind": "ConceptQualifier"
+             }
+            ],
+            "value": "16.0",
+            "value_type": "xs:double"
+           }
+          }
+         },
+         "StopperDiameter": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "StopperDiameter"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/StopperDiameter"
+            ],
+            "qualifiers": [
+             {
+              "type_": "Unit",
+              "value": "mm",
+              "kind": "ConceptQualifier"
+             }
+            ],
+            "value": "13.0",
+            "value_type": "xs:double"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "Capping": {
+      "Capability": {
+       "display_name": {
+        "en": "Capping"
+       },
+       "semantic_id": "https://admin-shell.io/idta/CapabilityDescription/Capability/1/0",
+       "supplemental_semantic_ids": [
+        "https://smartproductionlab.aau.dk/semantics/Capping"
+       ],
+       "qualifiers": [
+        {
+         "type_": "CapabilityRoleQualifier/Required",
+         "value": "true",
+         "semantic_id": "https://admin-shell.io/idta/CapabilityDescription/CapabilityRoleQualifier/Required/1/0",
+         "kind": "ConceptQualifier"
+        }
+       ]
+      },
+      "PropertySet": {
+       "PropertySet": {
+        "PropertyContainer": {
+         "ContainerType": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "ContainerType"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/ContainerType"
+            ],
+            "value": "vial"
+           }
+          }
+         },
+         "GraspDiameter": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "GraspDiameter"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/GraspDiameter"
+            ],
+            "qualifiers": [
+             {
+              "type_": "Unit",
+              "value": "mm",
+              "kind": "ConceptQualifier"
+             }
+            ],
+            "value": "16.0",
+            "value_type": "xs:double"
+           }
+          }
+         },
+         "CapDiameter": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "CapDiameter"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/CapDiameter"
+            ],
+            "qualifiers": [
+             {
+              "type_": "Unit",
+              "value": "mm",
+              "kind": "ConceptQualifier"
+             }
+            ],
+            "value": "13.0",
+            "value_type": "xs:double"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "Inspection": {
+      "Capability": {
+       "display_name": {
+        "en": "Inspection"
+       },
+       "semantic_id": "https://admin-shell.io/idta/CapabilityDescription/Capability/1/0",
+       "supplemental_semantic_ids": [
+        "https://smartproductionlab.aau.dk/semantics/Inspection"
+       ],
+       "qualifiers": [
+        {
+         "type_": "CapabilityRoleQualifier/Required",
+         "value": "true",
+         "semantic_id": "https://admin-shell.io/idta/CapabilityDescription/CapabilityRoleQualifier/Required/1/0",
+         "kind": "ConceptQualifier"
+        }
+       ]
+      },
+      "PropertySet": {
+       "PropertySet": {
+        "PropertyContainer": {
+         "ContainerType": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "ContainerType"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/ContainerType"
+            ],
+            "value": "vial"
+           }
+          }
+         },
+         "GraspDiameter": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "GraspDiameter"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/GraspDiameter"
+            ],
+            "qualifiers": [
+             {
+              "type_": "Unit",
+              "value": "mm",
+              "kind": "ConceptQualifier"
+             }
+            ],
+            "value": "16.0",
+            "value_type": "xs:double"
+           }
+          }
+         },
+         "InspectionMethod": {
+          "PropertyProperty": {
+           "Value": {
+            "display_name": {
+             "en": "InspectionMethod"
+            },
+            "supplemental_semantic_ids": [
+             "https://smartproductionlab.aau.dk/semantics/InspectionMethod"
+            ],
+            "value": "vision"
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "production_sequence": {
+  "id_short": "ProductionSequence",
+  "id": "https://smartproductionlab.aau.dk/sm/process-plan/aHR0cHM6Ly9zbWFydHByb2R1Y3Rpb25sYWIuYWF1LmRrL2Fhcy9WaWFsMm1MQUFT",
+  "PlanSchema": {
+   "value": "production-sequence/2.0"
+  },
+  "Revision": {
+   "value": "1"
+  },
+  "SequenceId": {
+   "value": "product"
+  },
+  "Name": {
+   "value": "Vial 2 mL"
+  },
+  "Role": {
+   "value": "Primary"
+  },
+  "Subject": {
+   "value": {
+    "key": [
+     {
+      "type_": "AssetAdministrationShell",
+      "value": "{aas_id}"
+     }
+    ],
+    "type_": "ModelReference"
+   }
+  },
+  "Steps": {
+   "Step": {
+    "Step_0000": {
+     "NodeId": {
+      "value": "Filling"
+     },
+     "Kind": {
+      "value": "step"
+     },
+     "Name": {
+      "value": "Filling"
+     },
+     "Order": {
+      "value": "0"
+     },
+     "ProcessOwner": {
+      "value": {
+       "key": [
+        {
+         "type_": "AssetAdministrationShell",
+         "value": "{aas_id}"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "ProcessReference": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "{aas_id}/submodels/ProcessParameters"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Processes"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Filling"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "Resource": {
+      "value": {
+       "key": [
+        {
+         "type_": "AssetAdministrationShell",
+         "value": "https://smartproductionlab.aau.dk/aas/FillingModuleAAS"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "SkillId": {
+      "value": "Dispensing"
+     },
+     "Skill": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "https://smartproductionlab.aau.dk/aas/FillingModuleAAS/submodels/Skills"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Skills"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Dispensing"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "ExecutionMode": {
+      "value": "station"
+     },
+     "Bindings": {
+      "Binding": {
+       "Binding_0000": {
+        "Name": {
+         "value": "Volume"
+        },
+        "Value": {},
+        "SourceAas": {
+         "value": {
+          "key": [
+           {
+            "type_": "AssetAdministrationShell",
+            "value": "{aas_id}"
+           }
+          ],
+          "type_": "ModelReference"
+         }
+        },
+        "SourceElement": {
+         "value": {
+          "key": [
+           {
+            "type_": "Submodel",
+            "value": "{aas_id}/submodels/ProcessParameters"
+           },
+           {
+            "type_": "SubmodelElementCollection",
+            "value": "Processes"
+           },
+           {
+            "type_": "SubmodelElementCollection",
+            "value": "Filling"
+           },
+           {
+            "type_": "SubmodelElementCollection",
+            "value": "ProductParameters"
+           },
+           {
+            "type_": "Property",
+            "value": "FillVolume"
+           }
+          ],
+          "type_": "ModelReference"
+         }
+        }
+       }
+      }
+     }
+    },
+    "Step_0001": {
+     "NodeId": {
+      "value": "Stoppering"
+     },
+     "Kind": {
+      "value": "step"
+     },
+     "Name": {
+      "value": "Stoppering"
+     },
+     "Order": {
+      "value": "1"
+     },
+     "ProcessOwner": {
+      "value": {
+       "key": [
+        {
+         "type_": "AssetAdministrationShell",
+         "value": "{aas_id}"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "ProcessReference": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "{aas_id}/submodels/ProcessParameters"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Processes"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Stoppering"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "Resource": {
+      "value": {
+       "key": [
+        {
+         "type_": "AssetAdministrationShell",
+         "value": "https://smartproductionlab.aau.dk/aas/StopperingModuleAAS"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "SkillId": {
+      "value": "Stoppering"
+     },
+     "Skill": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "https://smartproductionlab.aau.dk/aas/StopperingModuleAAS/submodels/Skills"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Skills"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Stoppering"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "ExecutionMode": {
+      "value": "station"
+     },
+     "Bindings": {}
+    },
+    "Step_0002": {
+     "NodeId": {
+      "value": "Capping"
+     },
+     "Kind": {
+      "value": "step"
+     },
+     "Name": {
+      "value": "Capping"
+     },
+     "Order": {
+      "value": "2"
+     },
+     "ProcessOwner": {
+      "value": {
+       "key": [
+        {
+         "type_": "AssetAdministrationShell",
+         "value": "{aas_id}"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "ProcessReference": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "{aas_id}/submodels/ProcessParameters"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Processes"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Capping"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "Resource": {
+      "value": {
+       "key": [
+        {
+         "type_": "AssetAdministrationShell",
+         "value": "https://smartproductionlab.aau.dk/aas/CappingModuleAAS"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "SkillId": {
+      "value": "Capping"
+     },
+     "Skill": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "https://smartproductionlab.aau.dk/aas/CappingModuleAAS/submodels/Skills"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Skills"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Capping"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "ExecutionMode": {
+      "value": "station"
+     },
+     "Bindings": {}
+    },
+    "Step_0003": {
+     "NodeId": {
+      "value": "Inspection"
+     },
+     "Kind": {
+      "value": "step"
+     },
+     "Name": {
+      "value": "Inspection"
+     },
+     "Order": {
+      "value": "3"
+     },
+     "ProcessOwner": {
+      "value": {
+       "key": [
+        {
+         "type_": "AssetAdministrationShell",
+         "value": "{aas_id}"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "ProcessReference": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "{aas_id}/submodels/ProcessParameters"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Processes"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Inspection"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "Resource": {
+      "value": {
+       "key": [
+        {
+         "type_": "AssetAdministrationShell",
+         "value": "https://smartproductionlab.aau.dk/aas/InspectionModuleAAS"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "SkillId": {
+      "value": "Inspection"
+     },
+     "Skill": {
+      "value": {
+       "key": [
+        {
+         "type_": "Submodel",
+         "value": "https://smartproductionlab.aau.dk/aas/InspectionModuleAAS/submodels/Skills"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Skills"
+        },
+        {
+         "type_": "SubmodelElementCollection",
+         "value": "Inspection"
+        }
+       ],
+       "type_": "ModelReference"
+      }
+     },
+     "ExecutionMode": {
+      "value": "station"
+     },
+     "Bindings": {}
+    }
+   }
+  }
+ },
+ "global_asset_id": "https://smartproductionlab.aau.dk/assets/Vial2mL"
+}

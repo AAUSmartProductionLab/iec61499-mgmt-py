@@ -5,10 +5,11 @@ one product planned on them (a 2 mL vial). Each product's plan is followed into 
 they are built; a plan that does not fit is refused. What the submodels are and how they link is
 in [aas-models.md](aas-models.md).
 
-This file is written by `python cell/examples/describe.py`. The examples themselves are the
-module specs (`cell/modules`, `cell/modules/planned`) and the product descriptions
-(`cell/examples/*.yaml`); `python cell/examples/example_line.py --out <folder> --publish <server>`
-builds the AASs and puts them on an AAS server.
+This file is written by `python cell/examples/describe.py`. Every AAS is built by `modreg` from a
+profile, the pydantic dump of its type: a resource's profile is made from its module spec
+(`cell/modules`, `cell/modules/planned`), a product's profile is a file (`cell/examples/Vial2mLAAS.json`).
+`python cell/examples/example_line.py --out <folder> --publish <server>` builds the AASs and puts
+them on an AAS server.
 
 | AAS | Kind | Submodels |
 | --- | --- | --- |
@@ -248,8 +249,14 @@ classDiagram
   class Process {
     ProcessId, ProcessName
     ProcessDescription
+    PlannedProcessTime
     ProcessParameters
     ResourceParameters
+  }
+  class MaterialUse {
+    <<lab extension>>
+    Role
+    Quantity, Unit
   }
   class ProductParameter {
     value, unit
@@ -302,12 +309,14 @@ classDiagram
   HierarchicalStructures *-- "0..*" Part
   ProcessParameters *-- "1..*" Process
   Process *-- "0..*" ProductParameter : ProductParameters
+  Process *-- "0..*" MaterialUse : ProcessBoM
   CapabilityDescription *-- "0..*" RequiredCapability
   RequiredCapability *-- "0..*" RequiredProperty
   ProductionSequence *-- "0..*" Step
   Step *-- "0..*" Binding
 
-  Process --> Part : ProcessBoM
+  MaterialUse --> Part : MaterialReference
+  MaterialUse --> ProductParameter : QuantityParameterReference
   Process --> RequiredCapability : RequiredCapability
   Step --> Process : ProcessReference
   Step --> ResourceAAS : Resource
@@ -554,19 +563,19 @@ Bill of material (Hierarchical Structures):
 
 | Part | Name | Quantity |
 | --- | --- | --- |
-| Vial | Glass vial 2R | 1 piece |
-| Liquid | Demo liquid | 2 mL |
-| Stopper | Rubber stopper 13 mm | 1 piece |
-| Cap | Crimp cap 13 mm | 1 piece |
+| Vial | Glass vial 2R | 1.0 piece |
+| Liquid | Demo liquid | 2.0 mL |
+| Stopper | Rubber stopper 13 mm | 1.0 piece |
+| Cap | Crimp cap 13 mm | 1.0 piece |
 
 Processes (Process Parameters) and what they require (Capability Description):
 
-| Process | Product parameters | Materials | Required capability |
-| --- | --- | --- | --- |
-| Filling | ContainerType = vial, GraspDiameter = 16.0 mm, FillVolume = 2.0 mL | Vial, Liquid | `https://smartproductionlab.aau.dk/semantics/Filling` |
-| Stoppering | ContainerType = vial, GraspDiameter = 16.0 mm, StopperDiameter = 13.0 mm | Stopper | `https://smartproductionlab.aau.dk/semantics/Stoppering` |
-| Capping | ContainerType = vial, GraspDiameter = 16.0 mm, CapDiameter = 13.0 mm | Cap | `https://smartproductionlab.aau.dk/semantics/Capping` |
-| Inspection | ContainerType = vial, GraspDiameter = 16.0 mm, InspectionMethod = vision | – | `https://smartproductionlab.aau.dk/semantics/Inspection` |
+| Process | Planned time | Product parameters | Materials | Required capability |
+| --- | --- | --- | --- | --- |
+| Filling | PT10S | ContainerType = vial, GraspDiameter = 16.0 mm, FillVolume = 2.0 mL | Vial (workpiece, 1.0 piece), Liquid (incorporated, FillVolume) | `https://smartproductionlab.aau.dk/semantics/Filling` |
+| Stoppering | PT5S | ContainerType = vial, GraspDiameter = 16.0 mm, StopperDiameter = 13.0 mm | Stopper (incorporated, 1.0 piece) | `https://smartproductionlab.aau.dk/semantics/Stoppering` |
+| Capping | PT5S | ContainerType = vial, GraspDiameter = 16.0 mm, CapDiameter = 13.0 mm | Cap (incorporated, 1.0 piece) | `https://smartproductionlab.aau.dk/semantics/Capping` |
+| Inspection | PT3S | ContainerType = vial, GraspDiameter = 16.0 mm, InspectionMethod = vision | – | `https://smartproductionlab.aau.dk/semantics/Inspection` |
 
 The plan (Production Sequence, `production-sequence/2.0`):
 

@@ -13,7 +13,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import example_line                                             # noqa: E402
-from product_aas import at, children, resolve, semantic_ids, shell_of, unit_of   # noqa: E402
+from plan_check import at, children, resolve, semantic_ids, shell_of, unit_of    # noqa: E402
 
 RESOURCE_STRUCTURE = '''```mermaid
 classDiagram
@@ -232,8 +232,14 @@ classDiagram
   class Process {
     ProcessId, ProcessName
     ProcessDescription
+    PlannedProcessTime
     ProcessParameters
     ResourceParameters
+  }
+  class MaterialUse {
+    <<lab extension>>
+    Role
+    Quantity, Unit
   }
   class ProductParameter {
     value, unit
@@ -286,12 +292,14 @@ classDiagram
   HierarchicalStructures *-- "0..*" Part
   ProcessParameters *-- "1..*" Process
   Process *-- "0..*" ProductParameter : ProductParameters
+  Process *-- "0..*" MaterialUse : ProcessBoM
   CapabilityDescription *-- "0..*" RequiredCapability
   RequiredCapability *-- "0..*" RequiredProperty
   ProductionSequence *-- "0..*" Step
   Step *-- "0..*" Binding
 
-  Process --> Part : ProcessBoM
+  MaterialUse --> Part : MaterialReference
+  MaterialUse --> ProductParameter : QuantityParameterReference
   Process --> RequiredCapability : RequiredCapability
   Step --> Process : ProcessReference
   Step --> ResourceAAS : Resource
@@ -395,6 +403,13 @@ def resource_section(env: dict) -> list[str]:
     return lines
 
 
+def material(use: dict) -> str:
+    """A material a process uses: its role, and how much (a fixed quantity, or what a parameter says)."""
+    by_parameter = at(use, "QuantityParameterReference")
+    amount = last(by_parameter["value"]) if by_parameter else f"{at(use, 'Quantity')['value']} {at(use, 'Unit')['value']}"
+    return f"{use['idShort']} ({at(use, 'Role')['value']}, {amount})"
+
+
 def product_section(env: dict, resources: dict[str, dict]) -> list[str]:
     shell, envs = shell_of(env), [env, *resources.values()]
     by_id = {shell_of(r)["id"]: shell_of(r)["idShort"] for r in resources.values()}
@@ -426,16 +441,18 @@ def product_section(env: dict, resources: dict[str, dict]) -> list[str]:
     for part in parts:
         lines.append(f"| {part['idShort']} | {part['displayName'][0]['text']} | {at(part, 'Quantity')['value']} {at(part, 'QuantityUnit')['value']} |")
     lines += ["", "Processes (Process Parameters) and what they require (Capability Description):", "",
-              "| Process | Product parameters | Materials | Required capability |", "| --- | --- | --- | --- |"]
+              "| Process | Planned time | Product parameters | Materials | Required capability |", "| --- | --- | --- | --- | --- |"]
     for process in processes:
         parameters = ", ".join(f"{p['idShort']} = {shown(p)}" for p in children(at(process, "ProductParameters")))
-        materials = ", ".join(m["idShort"] for m in children(at(process, "ProcessBoM"))) or "–"
+        materials = ", ".join(material(m) for m in children(at(process, "ProcessBoM"))) or "–"
         required = resolve(envs, at(process, "RequiredCapability")["value"])
-        lines.append(f"| {process['idShort']} | {parameters} | {materials} | `{semantic_ids(required)[1]}` |")
+        lines.append(f"| {process['idShort']} | {at(process, 'PlannedProcessTime')['value']} | {parameters} | {materials} | "
+                     f"`{semantic_ids(required)[1]}` |")
     lines += ["", f"The plan (Production Sequence, `{at(plan, 'PlanSchema')['value']}`):", "",
               "| Order | Step | Resource | Skill | Bound |", "| --- | --- | --- | --- | --- |"]
     for step in steps:
-        bound = ", ".join(f"{at(b, 'Name')['value']} ← {last(at(b, 'SourceElement')['value'])}" for b in children(at(step, "Bindings"))) or "–"
+        bound = ", ".join(f"{at(b, 'Name')['value']} ← {last(at(b, 'SourceElement')['value']) if at(b, 'SourceElement') else at(b, 'Value').get('value')}"
+                          for b in children(at(step, "Bindings"))) or "–"
         lines.append(f"| {int(at(step, 'Order')['value']) + 1} | {at(step, 'Name')['value']} | "
                      f"{by_id[at(step, 'Resource')['value']['keys'][0]['value']]} | {at(step, 'SkillId')['value']} | {bound} |")
     lines.append("")
@@ -452,10 +469,11 @@ def document() -> str:
         "they are built; a plan that does not fit is refused. What the submodels are and how they link is",
         "in [aas-models.md](aas-models.md).",
         "",
-        "This file is written by `python cell/examples/describe.py`. The examples themselves are the",
-        "module specs (`cell/modules`, `cell/modules/planned`) and the product descriptions",
-        "(`cell/examples/*.yaml`); `python cell/examples/example_line.py --out <folder> --publish <server>`",
-        "builds the AASs and puts them on an AAS server.",
+        "This file is written by `python cell/examples/describe.py`. Every AAS is built by `modreg` from a",
+        "profile, the pydantic dump of its type: a resource's profile is made from its module spec",
+        "(`cell/modules`, `cell/modules/planned`), a product's profile is a file (`cell/examples/Vial2mLAAS.json`).",
+        "`python cell/examples/example_line.py --out <folder> --publish <server>` builds the AASs and puts",
+        "them on an AAS server.",
         "",
         "| AAS | Kind | Submodels |",
         "| --- | --- | --- |",
