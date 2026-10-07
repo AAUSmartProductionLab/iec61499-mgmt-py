@@ -1,7 +1,7 @@
 # The AAS models: product, plan and resource
 
 What each AAS holds, which submodel templates it uses, what we changed in them, and how the
-submodels connect inside one AAS and across AASs. Written on 8 Oct 2026 so that the planner, the
+submodels connect inside one AAS and across AASs. Written on 7 Oct 2026 so that the planner, the
 modules, the HMI and the AAS generator are described in one place.
 
 It describes what is **built**, and says where a model exists only on paper. Sources:
