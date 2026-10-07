@@ -64,6 +64,7 @@ class ControlConfiguration(Submodel):
     VERSION: ClassVar[str] = "1"
     REVISION: ClassVar[str] = "0"
     Runtime: Optional[Runtime_t] = None
+    Rules: Optional[Property] = None
     Generator: Optional[Property] = None
     ModuleSpec: Optional[Property] = None
     ProgramDigest: Optional[Property] = None
