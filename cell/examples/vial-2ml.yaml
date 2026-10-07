@@ -1,0 +1,58 @@
+# A product for the example line: a 2 mL vial that is filled, stoppered, capped and inspected.
+# The values are illustrative. Its AAS is built by example_line.py in the form the process planner
+# reads (bill of material, IDTA 02031 process parameters with required capabilities, Production
+# Sequence 2.0), with meanings from the shared vocabulary (ontology/Vocabulary).
+product: Vial2mL
+name: Vial 2 mL
+description: A 2 mL vial, filled, stoppered, capped and inspected
+designation: Filled vial 2 mL
+
+# Bill of material: what the product consists of.
+parts:
+  Vial:    {name: Glass vial 2R, quantity: 1, unit: piece}
+  Liquid:  {name: Demo liquid, quantity: 2, unit: mL}
+  Stopper: {name: Rubber stopper 13 mm, quantity: 1, unit: piece}
+  Cap:     {name: Crimp cap 13 mm, quantity: 1, unit: piece}
+
+# What has to be done to the product. ``requires`` names the capability a process needs; the
+# parameters are the product's values for it, which an offering resource has to cover.
+processes:
+  Filling:
+    description: Fill 2 mL of liquid into the open vial
+    requires: Filling
+    parameters:
+      ContainerType: {value: vial}
+      GraspDiameter: {value: 16.0, unit: mm}
+      FillVolume: {value: 2.0, unit: mL}
+    materials: [Vial, Liquid]
+  Stoppering:
+    description: Place the stopper on the filled vial and press it in
+    requires: Stoppering
+    parameters:
+      ContainerType: {value: vial}
+      GraspDiameter: {value: 16.0, unit: mm}
+      StopperDiameter: {value: 13.0, unit: mm}
+    materials: [Stopper]
+  Capping:
+    description: Put the cap on the stoppered vial and crimp it
+    requires: Capping
+    parameters:
+      ContainerType: {value: vial}
+      GraspDiameter: {value: 16.0, unit: mm}
+      CapDiameter: {value: 13.0, unit: mm}
+    materials: [Cap]
+  Inspection:
+    description: Inspect the closed vial
+    requires: Inspection
+    parameters:
+      ContainerType: {value: vial}
+      GraspDiameter: {value: 16.0, unit: mm}
+      InspectionMethod: {value: vision}
+
+# The plan: the processes in order, each assigned to a skill of a resource. ``bind`` hands a
+# product parameter to a parameter of that skill.
+sequence:
+  - {process: Filling, resource: FillingModuleAAS, skill: Dispensing, bind: {Volume: FillVolume}}
+  - {process: Stoppering, resource: StopperingModuleAAS, skill: Stoppering}
+  - {process: Capping, resource: CappingModuleAAS, skill: Capping}
+  - {process: Inspection, resource: InspectionModuleAAS, skill: Inspection}
