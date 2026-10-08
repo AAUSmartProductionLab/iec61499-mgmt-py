@@ -1,6 +1,7 @@
-# Stoppering module, ported from arduino_cpp_examples/Physical-Stations (StopperingModule.cpp,
-# ESP32-S3). As for the filling module, only the equipment behaviour, the motions and the
-# stoppering cycle are ported; the module level is generated.
+# Stoppering module. It began as a port of the ESP32-S3 station (StopperingModule.cpp: a piston on a
+# DC motor, a servo arm and a plunger); since 8 Oct 2026 it is built like the other modules of the
+# line: a linear axis that brings the head down onto the vial (a stepper motor with a limit switch,
+# moved to a position) and one small linear actuator that presses the stopper in.
 # Regenerate: python -m modgen
 module: Stoppering
 project: StopperingModule
@@ -14,92 +15,76 @@ targets:
        pwm_root: /hostsys/class/pwm}    # the stoppering Pi (set its address)
 
 equipment:
-  Piston:
-    description: Piston, DC motor through an L298N (IN3 up, IN4 down, ENB speed) with a limit switch at the working position
+  LinearAxis:
+    kind: LinearAxis
+    description: Lift of the stoppering head, a stepper motor through a step and direction driver, with a limit switch at the top (home)
     inputs:
-      AtLimit: {modbus: d0, gpio: {line: 23, bias: pull_up}}        # pin 16 (ESP32 pin 4, INPUT_PULLUP)
+      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up}}        # pin 16
     outputs:
-      Up:    {modbus: c0, gpio: 17}                                 # pin 11, IN3 (ESP32 pin 39)
-      Down:  {modbus: c1, gpio: 27}                                 # pin 13, IN4 (ESP32 pin 40)
-      # ENB (ESP32 pin 41, 200/255 at 1 kHz): PWM1 on GPIO19 (pin 35; dtoverlay=pwm-2chan).
-      Speed: {type: LREAL, modbus: h0, pwm: {channel: 1, period_ns: 1000000}, gain: 257.0,
-              minimum: 0, maximum: 255, unit: duty}
+      Enable: {modbus: c0, gpio: 17}                               # pin 11, the driver's enable
+      Down:   {modbus: c1, gpio: 27}                               # pin 13, the driver's DIR: on is down, away from the switch
+      # The driver's STEP: PWM0 on GPIO18 (pin 12), one step per period (1 kHz); 50 % duty while it moves.
+      Step:   {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 1000000}, gain: 655.35,
+               minimum: 0, maximum: 100, unit: "%"}
     commands:
       Stop: {}
-      Up: {Up: true, Speed: 200}
-      Down: {Down: true, Speed: 200}
-    sim: {axis: {forward: Down, backward: Up, speed: Speed, nominal: 200, travel_s: 3.0, dead_s: 0.0,
-                 start: 0.5, switches: {AtLimit: 1.0}}}
-  Plunger:
-    description: Linear actuator through an L298N (IN1 retract, IN2 extend); no sensors. ENA (200/255 on the
-      ESP32) is tied to 3.3 V on the Pi, which has only two hardware PWM channels, so it runs at full speed
+      Up:   {Enable: true, Step: 50}
+      Down: {Enable: true, Down: true, Step: 50}
+    # As the filling module's axis: the speed and the travel are placeholders until it is measured.
+    position: {unit: mm, speed: 20.0, increase: Down, decrease: Up, home: AtHome, minimum: 0.0, maximum: 60.0}
+    sim: {stepper: {step: Step, direction: Down, enable: Enable, speed: 20.0, travel: 60.0, start: 15.0,
+                    switches: {AtHome: 0.0}}}
+  Piston:
+    kind: StopperingPiston
+    description: Small linear actuator that presses the stopper in, through an L298N (IN1 retract, IN2 extend); no sensors
     outputs:
-      Retract: {modbus: c2, gpio: 5}                                # pin 29, IN1 (ESP32 pin 17)
-      Extend:  {modbus: c3, gpio: 6}                                # pin 31, IN2 (ESP32 pin 16)
+      Retract: {modbus: c2, gpio: 5}                               # pin 29, IN1
+      Extend:  {modbus: c3, gpio: 6}                               # pin 31, IN2
     commands:
       Stop: {}
       Extend: [Extend]
       Retract: [Retract]
-    sim: {axis: {forward: Extend, backward: Retract, travel_s: 8.0, start: 0.0}}
-  StopperArm:
-    description: Servo that places the stopper; 0..180 degrees (outer home 120, inner 1), no feedback
-    outputs:
-      # ESP32 pin 2 (ESP32Servo, 50 Hz): PWM0 on GPIO18 (pin 12), 20 ms period; 0.5..2.5 ms pulse.
-      Angle: {type: LREAL, modbus: h1, pwm: {channel: 0, period_ns: 20000000}, gain: 36.408, bias: 1638.4,
-              minimum: 0, maximum: 180, unit: deg}
-    commands:
-      Detach: {}               # no pulses: the servo holds no torque (as the ESP32 detaches it)
-      MoveTo: {Angle: Arg}
-    sim: {servo: {output: Angle}}
+      # Back in and off: what ends a press, also one that is cut short. The stroke times are
+      # placeholders until the actuator is measured.
+      Back: [{Retract: true, for: 3s}, {}]
+    sim: {axis: {forward: Extend, backward: Retract, travel_s: 3.0, start: 0.0}}
 
 skills:
-  LowerPiston:
-    description: Piston down to the limit switch (working position)
-    equipment: Piston
-    command: Down
-    ensures: AtLimit
-    timeout: 10s
-  RaisePiston:
-    description: Piston up for Duration (open loop, no top sensor)
-    equipment: Piston
+  Home:
+    description: Head up to the limit switch; from there its position is known
+    equipment: LinearAxis
     command: Up
+    ensures: AtHome
+    timeout: 8s
+  MoveAxis:
+    description: Head to Position, measured down from the limit switch; the direction follows from where it is
+    equipment: LinearAxis
+    move_to: Position
     parameters:
-      Duration: {unit: s, minimum: 0.0, maximum: 10.0, default: 2.0}
-    after: Duration
-  ExtendPlunger:
-    description: Plunger down for Duration (open loop)
-    equipment: Plunger
+      Position: {unit: mm, minimum: 0.0, maximum: 60.0, default: 0.0, description: Where to move to}
+    timeout: 8s
+  PressStopper:
+    description: Press the stopper in, the piston out for the stroke and back in (open loop, by time)
+    equipment: Piston
     command: Extend
-    parameters:
-      Duration: {unit: s, minimum: 0.0, maximum: 20.0, default: 10.0}
-    after: Duration
-  RetractPlunger:
-    description: Plunger up for Duration (open loop)
-    equipment: Plunger
+    stop: Back
+    after: 3.0
+  RetractPiston:
+    description: Piston back in for the stroke (open loop); for a piston left out by an abort
+    equipment: Piston
     command: Retract
-    parameters:
-      Duration: {unit: s, minimum: 0.0, maximum: 20.0, default: 6.5}
-    after: Duration
-  MoveArm:
-    description: Servo to Angle and wait Settle seconds (no feedback)
-    equipment: StopperArm
-    command: MoveTo
-    arg: Angle
-    parameters:
-      Angle: {unit: deg, minimum: 0.0, maximum: 180.0, default: 120.0}
-      Settle: {unit: s, minimum: 0.0, maximum: 5.0, default: 2.0}
-    after: Settle
+    after: 3.0
 
 composites:
   Stoppering:
-    description: Piston to the working position, place the stopper with the servo, plunge, piston up (runStopperingCycle)
-    execute: [LowerPiston, {MoveArm: {Angle: 1.0}, as: ArmIn}, {MoveArm: {Angle: 121.0}, as: ArmOut},
-              ExtendPlunger, RetractPlunger, RaisePiston]
+    description: Head down onto the vial, press the stopper in, head up again
+    # The working position is the station's: a constant of the step, changed by reconfiguration.
+    execute: [{MoveAxis: {Position: 40.0}, as: HeadDown}, PressStopper, {MoveAxis: {Position: 0.0}, as: HeadUp}]
+    stop: [Home]
 
 procedures:
-  # initHardware: servo 90 then 120, plunger up, piston down to the switch and up for clearance.
-  Resetting: [{MoveArm: {Angle: 90.0}, as: ArmMiddle}, {MoveArm: {Angle: 120.0}, as: ArmHome}, RetractPlunger,
-              LowerPiston, {RaisePiston: {Duration: 1.5}}]
+  Resetting: [RetractPiston, Home]     # the piston in before the head moves
+  Stopping: [Home]
 
 # What the module offers (see filling.yaml): illustrative values, as the vial stoppering station of
 # the process planner's pharma example, until the station is measured.

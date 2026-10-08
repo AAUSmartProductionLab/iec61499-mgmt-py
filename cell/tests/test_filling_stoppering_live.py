@@ -10,7 +10,7 @@ import uuid
 
 import pytest
 
-from test_module_live import DONE, E, M, S, STOPPERING_FAST, outputs, ready, running
+from test_module_live import DONE, E, M, S, outputs, ready, running
 
 
 def in_order(history, *values, timeout=1.0) -> bool:
@@ -43,9 +43,9 @@ def settled(sim, wait=0.3):
 # Module states (both modules)
 # --------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("name, overrides", [("filling", None), ("stoppering", STOPPERING_FAST)])
-def test_module_states_follow_the_commands_of_its_occupant(request, tmp_path, name, overrides):
-    with running(request, tmp_path, name, overrides) as (sim, ua):
+@pytest.mark.parametrize("name", ["filling", "stoppering"])
+def test_module_states_follow_the_commands_of_its_occupant(request, tmp_path, name):
+    with running(request, tmp_path, name) as (sim, ua):
         a, b = str(uuid.uuid4()), str(uuid.uuid4())
 
         def refused(error, *commands, session=a):
@@ -392,118 +392,132 @@ def test_filling_an_axis_that_never_reaches_its_switch_fails_homing_and_is_freed
 
 @pytest.fixture
 def stoppering(request, tmp_path):
-    overrides = {**STOPPERING_FAST, **getattr(request, "param", {})}
-    with running(request, tmp_path, "stoppering", overrides) as (sim, ua):
-        a = str(uuid.uuid4())
-        assert ua.call("Occupation/Occupy", a) == [True, 0]
-        assert ua.call("Module/Reset", a) == [True, 0]
-        ua.expect("Module/State", M["Idle"], timeout=15)
-        yield sim, ua, a
+    with running(request, tmp_path, "stoppering", getattr(request, "param", None)) as (sim, ua):
+        yield sim, ua
 
 
-def start(sim, ua, a):
-    assert ua.call("Module/Start", a) == [True, 0]
-    ua.expect("Module/State", M["Execute"])
-    time.sleep(0.1)
-    sim.trace.clear()
-
-
-def test_stoppering_resetting_homes_the_equipment(stoppering):
-    sim, ua, a = stoppering
-    for step in ["ArmMiddle", "ArmHome", "RetractPlunger", "LowerPiston", "RaisePiston"]:
-        assert ua.value(f"Procedures/Resetting/{step}/State") in DONE, step
-    angles = [round(v) for n, v in outputs(sim, "StopperArm.Angle") if v is not None]
-    assert angles == [90, 120]
-    order = [n for n, v in outputs(sim, "Plunger.Retract", "Piston.Down", "Piston.Up") if v]
-    assert order == ["Plunger.Retract", "Piston.Down", "Piston.Up"]
-    assert 0.3 <= on_time(sim, "Piston.Up") <= 0.9                           # raised for 0.5 s (clearance)
-    assert 0.5 < sim.position("Piston") < 1.0
-    assert settled(sim) == [] and sim.shoot_through == 0
-    # Skills are refused until the module is started.
-    assert ua.call("Skills/LowerPiston/Start", a) == [False, E["NotReady"]]
-
-
-def test_stoppering_piston_skills(stoppering):
-    sim, ua, a = stoppering
-    start(sim, ua, a)
-    assert ua.value("Equipment/Piston/AtLimit") is False
-    assert ua.call("Skills/LowerPiston/Start", a) == [True, 0]
-    ua.expect("Skills/LowerPiston/State", S["Running"], timeout=1)
-    assert ua.call("Skills/RaisePiston/Start", a, 1.0) == [False, E["Busy"]]   # the piston is taken
-    ua.expect("Skills/LowerPiston/State", S["Succeeded"], timeout=5)
-    assert ua.value("Equipment/Piston/AtLimit") is True and sim.position("Piston") == 1.0
-    assert outputs(sim) == [("Piston.Down", True), ("Piston.Speed", 200.0), ("Piston.Down", False), ("Piston.Speed", None)]
-    # Up for a given time, with its range checked.
-    assert ua.value("Skills/RaisePiston/Parameters/Duration") == 2.0
-    assert ua.call("Skills/RaisePiston/Start", a, 11.0) == [False, E["OutOfRange"]]
-    assert ua.call("Skills/RaisePiston/Start", a, -1.0) == [False, E["OutOfRange"]]
-    assert ua.call("Skills/RaisePiston/Start", a, 0.6) == [True, 0]
-    ua.expect("Skills/RaisePiston/State", S["Succeeded"], timeout=3)
-    assert ua.value("Skills/RaisePiston/Parameters/Duration") == 0.6
-    assert 0.5 <= on_time(sim, "Piston.Up") <= 0.9
-    assert sim.position("Piston") == pytest.approx(1.0 - 0.6 / 3.0, abs=0.08)
-    ua.expect("Equipment/Piston/AtLimit", False)
+def test_stoppering_resetting_draws_the_piston_in_and_homes_the_head(stoppering):
+    sim, ua = stoppering
+    a = str(uuid.uuid4())
+    sim.axes["Piston"].position = 0.5                                        # left out, e.g. by an abort
+    assert ua.call("Occupation/Occupy", a) == [True, 0]
+    assert ua.call("Module/Reset", a) == [True, 0]
+    ua.expect("Module/State", M["Idle"], timeout=12)
+    assert sim.position("Piston") == 0.0 and sim.position("LinearAxis") == 0.0
+    assert ua.value("Equipment/LinearAxis/AtHome") is True and ua.value("Equipment/LinearAxis/Homed") is True
+    assert ua.value("Procedures/Resetting/RetractPiston/State") in DONE
+    assert ua.value("Procedures/Resetting/Home/State") in DONE
     assert settled(sim) == [] and sim.shoot_through == 0
 
 
-def test_stoppering_plunger_and_arm_run_at_the_same_time(stoppering):
-    sim, ua, a = stoppering
-    start(sim, ua, a)
-    assert ua.call("Skills/ExtendPlunger/Start", a, 1.0) == [True, 0]
-    assert ua.call("Skills/MoveArm/Start", a, 45.0, 0.5) == [True, 0]       # other equipment: not refused
-    ua.expect("Skills/ExtendPlunger/State", S["Running"], timeout=1)
-    assert ua.value("Skills/MoveArm/State") == S["Running"]
-    assert ua.call("Skills/RetractPlunger/Start", a, 1.0) == [False, E["Busy"]]
-    ua.expect("Skills/MoveArm/State", S["Succeeded"], timeout=2)
-    ua.expect("Skills/ExtendPlunger/State", S["Succeeded"], timeout=2)
-    assert [v if v is None else round(v) for n, v in outputs(sim, "StopperArm.Angle")] == [45, None]   # then detached
-    assert 0.8 <= on_time(sim, "Plunger.Extend") <= 1.3
-    assert sim.position("Plunger") == pytest.approx(1.0 / 8.0, abs=0.03)
-    assert ua.call("Skills/MoveArm/Start", a, 181.0, 0.5) == [False, E["OutOfRange"]]
-    assert ua.call("Skills/RetractPlunger/Start", a, 1.5) == [True, 0]
-    ua.expect("Skills/RetractPlunger/State", S["Succeeded"], timeout=3)
-    assert sim.position("Plunger") == 0.0
+def test_stoppering_has_the_same_axis_skills_as_the_filling_module(stoppering):
+    """One kind of component, the same two skills in every module that has one."""
+    sim, ua = stoppering
+    a = str(uuid.uuid4())
+    ready(sim, ua, a)
+    assert ua.call("Skills/MoveAxis/Start", a, 80.0) == [False, E["OutOfRange"]]
+    assert ua.call("Skills/MoveAxis/Start", a, 25.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    assert ua.value("Equipment/LinearAxis/ActualPosition") == 25.0
+    assert sim.position("LinearAxis") == pytest.approx(25.0, abs=1.5)
+    assert ua.call("Skills/Home/Start", a) == [True, 0]
+    ua.expect("Skills/Home/State", S["Succeeded"], timeout=6)
+    assert ua.value("Equipment/LinearAxis/AtHome") is True and sim.position("LinearAxis") == 0.0
+    assert settled(sim) == []
+
+
+def test_stoppering_a_press_goes_out_for_the_stroke_and_back_in(stoppering):
+    sim, ua = stoppering
+    a = str(uuid.uuid4())
+    ready(sim, ua, a)
+    states = ua.record("Skills/PressStopper/State")
+    started = time.monotonic()
+    assert ua.call("Skills/PressStopper/Start", a) == [True, 0]
+    ua.expect("Skills/PressStopper/State", S["Running"], timeout=1)
+    time.sleep(2.0)
+    assert sim.position("Piston") > 0.5                                      # on its way out
+    ua.expect("Skills/PressStopper/State", S["Succeeded"], timeout=8)
+    assert 5.5 <= time.monotonic() - started <= 7.5                          # 3 s out, 3 s back
+    assert in_order(states, S["Running"], S["Succeeded"]), states
+    assert outputs(sim, "Piston.Extend", "Piston.Retract") == [
+        ("Piston.Extend", True), ("Piston.Extend", False), ("Piston.Retract", True), ("Piston.Retract", False)]
+    assert 2.6 <= on_time(sim, "Piston.Extend") <= 3.4 and 2.6 <= on_time(sim, "Piston.Retract") <= 3.4
+    assert sim.position("Piston") == pytest.approx(0.0, abs=0.1)
+    assert settled(sim) == [] and sim.shoot_through == 0
+
+
+def test_stoppering_a_press_that_is_stopped_still_draws_the_piston_in(stoppering):
+    sim, ua = stoppering
+    a = str(uuid.uuid4())
+    ready(sim, ua, a)
+    assert ua.call("Skills/PressStopper/Start", a) == [True, 0]
+    ua.expect("Skills/PressStopper/State", S["Running"], timeout=1)
+    time.sleep(1.0)
+    assert ua.call("Skills/PressStopper/Stop", a) == [True, 0]
+    ua.expect("Skills/PressStopper/State", S["Failed"], timeout=6)
+    assert ua.value("Skills/PressStopper/ErrorID") == E["Interrupted"]
+    assert sim.position("Piston") == 0.0 and settled(sim) == []
     assert sim.shoot_through == 0
 
 
-def test_stoppering_stop_and_abort_in_the_middle_of_the_cycle(stoppering):
-    sim, ua, a = stoppering
-    start(sim, ua, a)
+def test_stoppering_runs_its_steps_in_order_and_holds_its_equipment(stoppering):
+    sim, ua = stoppering
+    a = str(uuid.uuid4())
+    ready(sim, ua, a)
+    steps = {s: ua.record(f"Skills/Stoppering/Execute/{s}/State") for s in ["HeadDown", "PressStopper", "HeadUp"]}
+    assert ua.call("Skills/Stoppering/Start", a) == [True, 0]
+    ua.expect("Skills/Stoppering/Execute/PressStopper/State", S["Running"], timeout=6)
+    assert ua.value("Equipment/LinearAxis/ActualPosition") == 40.0           # pressing at the working position
+    assert sim.position("LinearAxis") == pytest.approx(40.0, abs=1.5)
+    assert ua.call("Skills/MoveAxis/Start", a, 0.0) == [False, E["Busy"]]    # Stoppering holds the head
+    assert ua.call("Skills/RetractPiston/Start", a) == [False, E["Busy"]]    # and the piston
+    ua.expect("Skills/Stoppering/State", S["Succeeded"], timeout=12)
+    assert all(in_order(h, S["Running"], S["Succeeded"]) for h in steps.values()), steps
+    assert ua.value("Equipment/LinearAxis/ActualPosition") == 0.0 and sim.position("Piston") == pytest.approx(0.0, abs=0.1)
+    assert ua.value("Module/State") == M["Execute"]
+    assert settled(sim) == [] and sim.shoot_through == 0
+
+
+def test_stoppering_stop_draws_the_piston_in_and_homes_the_head(stoppering):
+    sim, ua = stoppering
+    a = str(uuid.uuid4())
+    ready(sim, ua, a)
     states = ua.record("Skills/Stoppering/State")
     assert ua.call("Skills/Stoppering/Start", a) == [True, 0]
-    ua.expect("Skills/Stoppering/Execute/ExtendPlunger/State", S["Running"], timeout=8)
-    assert ua.value("Skills/Stoppering/Execute/ArmOut/State") in DONE
+    ua.expect("Skills/Stoppering/Execute/PressStopper/State", S["Running"], timeout=6)
+    time.sleep(1.0)
     assert ua.call("Skills/Stoppering/Stop", a) == [True, 0]
-    ua.expect("Skills/Stoppering/State", S["Failed"], timeout=3)
+    ua.expect("Skills/Stoppering/State", S["Failed"], timeout=12)
     assert ua.value("Skills/Stoppering/ErrorID") == E["Interrupted"]
-    assert in_order(states, S["Running"], S["Failed"]), states             # no stop sequence: Stopping is instant
-    assert ua.value("Skills/Stoppering/Execute/RetractPlunger/State") == S["Idle"]
-    assert "Plunger.Extend" not in settled(sim)
-    assert ua.value("Module/State") == M["Execute"]
-    # Again, and this time the module aborts: everything off, the servo without pulses.
+    assert in_order(states, S["Running"], S["Stopping"], S["Failed"]), states
+    assert ua.value("Skills/Stoppering/Stopping/Home/State") in DONE
+    assert sim.position("Piston") == 0.0 and sim.position("LinearAxis") == 0.0
+    # The piston came in before the head went up.
+    last = {n: max(t for t, m, v in sim.trace if m == n and v) for n in ("Piston.Retract", "LinearAxis.Step")}
+    assert last["Piston.Retract"] < last["LinearAxis.Step"]
+    assert settled(sim) == [] and sim.shoot_through == 0
+
+
+def test_stoppering_abort_switches_off_and_the_module_recovers(stoppering):
+    sim, ua = stoppering
+    a = str(uuid.uuid4())
+    ready(sim, ua, a)
     assert ua.call("Skills/Stoppering/Start", a) == [True, 0]
-    ua.expect("Skills/Stoppering/Execute/ArmIn/State", S["Running"], timeout=8)
-    assert sim.angle("StopperArm") is not None
+    ua.expect("Skills/Stoppering/Execute/PressStopper/State", S["Running"], timeout=6)
+    time.sleep(1.0)
     assert ua.call("Module/Abort", a) == [True, 0]
     ua.expect("Module/State", M["Aborted"])
     ua.expect("Skills/Stoppering/State", S["Aborted"])
-    assert settled(sim) == [] and sim.angle("StopperArm") is None
-    assert ua.call("Module/Clear", a) == [True, 0]
-    ua.expect("Skills/Stoppering/State", S["Idle"])
-    assert sim.shoot_through == 0
-
-
-@pytest.mark.parametrize("stoppering", [{"LowerPiston.Timeout": "T#2s"}], indirect=True)
-def test_stoppering_a_piston_that_never_reaches_its_switch_times_out(stoppering):
-    sim, ua, a = stoppering
-    start(sim, ua, a)
-    assert ua.call("Skills/RaisePiston/Start", a, 0.5) == [True, 0]
-    ua.expect("Skills/RaisePiston/State", S["Succeeded"], timeout=3)
-    sim.axes["Piston"].travel_s = 1e9
-    assert ua.call("Skills/LowerPiston/Start", a) == [True, 0]
-    ua.expect("Skills/LowerPiston/State", S["Failed"], timeout=4)
-    assert ua.value("Skills/LowerPiston/ErrorID") == E["Timeout"]
     assert settled(sim) == []
-    assert ua.value("Module/State") == M["Execute"]
-    assert ua.call("Skills/RaisePiston/Start", a, 0.5) == [True, 0]          # the piston is free again
-    ua.expect("Skills/RaisePiston/State", S["Succeeded"], timeout=3)
+    assert 0.1 < sim.position("Piston") < 0.9                                # left where it was, the head down
+    assert sim.position("LinearAxis") == pytest.approx(40.0, abs=1.5)
+    assert ua.call("Module/Clear", a) == [True, 0]
+    ua.expect("Module/State", M["Stopped"])
+    assert ua.call("Module/Reset", a) == [True, 0]                           # the piston in, then the head home
+    ua.expect("Module/State", M["Idle"], timeout=12)
+    assert sim.position("Piston") == 0.0 and sim.position("LinearAxis") == 0.0
+    assert ua.call("Module/Start", a) == [True, 0]
+    ua.expect("Module/State", M["Execute"])
+    assert ua.call("Skills/Stoppering/Start", a) == [True, 0]
+    ua.expect("Skills/Stoppering/State", S["Succeeded"], timeout=15)
+    assert sim.shoot_through == 0

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SL_RetractPlunger" Comment="RetractPlunger: Requires TRUE; holds Plunger.Retract until Duration s; Invariant TRUE">
+<FBType Name="SL_Home" Comment="Home: Requires TRUE; holds LinearAxis.Up until AtHome; Invariant TRUE">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="stoppering" />
@@ -10,16 +10,14 @@
         <With Var="Equipment" />
         <With Var="Token" />
         <With Var="LastUse" />
-        <With Var="UaRoot" />
-        <With Var="UaPath" />
+        <With Var="Timeout" />
       </Event>
-      <Event Name="START" Type="Event">
-        <With Var="Duration" />
-      </Event>
+      <Event Name="START" Type="Event" />
       <Event Name="HALT" Type="Event" />
       <Event Name="ABORT" Type="Event" />
       <Event Name="TIMER" Type="Event" />
       <Event Name="SAMPLE" Type="Event">
+        <With Var="AtHome" />
         <With Var="Holder" />
       </Event>
       <Event Name="WAIT_OVER" Type="Event" />
@@ -29,7 +27,6 @@
       <Event Name="INITO" Type="EInit">
         <With Var="IdEqState" />
         <With Var="IdEqCmd" />
-        <With Var="IdParams" />
       </Event>
       <Event Name="DONE" Type="Event" />
       <Event Name="FAILED" Type="Event">
@@ -59,9 +56,8 @@
       <VarDeclaration Name="Equipment" Type="WSTRING" />
       <VarDeclaration Name="Token" Type="WSTRING" />
       <VarDeclaration Name="LastUse" Type="BOOL" />
-      <VarDeclaration Name="UaRoot" Type="WSTRING" />
-      <VarDeclaration Name="UaPath" Type="WSTRING" />
-      <VarDeclaration Name="Duration" Type="LREAL" />
+      <VarDeclaration Name="Timeout" Type="TIME" />
+      <VarDeclaration Name="AtHome" Type="BOOL" />
       <VarDeclaration Name="Holder" Type="WSTRING" />
     </InputVars>
     <OutputVars>
@@ -69,7 +65,6 @@
       <VarDeclaration Name="TimerDT" Type="TIME" />
       <VarDeclaration Name="IdEqState" Type="WSTRING" />
       <VarDeclaration Name="IdEqCmd" Type="WSTRING" />
-      <VarDeclaration Name="IdParams" Type="WSTRING" />
       <VarDeclaration Name="C_Holder" Type="WSTRING" />
       <VarDeclaration Name="C_Command" Type="USINT" />
       <VarDeclaration Name="C_Arg" Type="LREAL" />
@@ -103,44 +98,50 @@
       <ECState Name="Recheck" x="150" y="560">
         <ECAction Output="WAIT_STOP" />
       </ECState>
-      <ECState Name="Run" x="990" y="330">
+      <ECState Name="AlreadyDone" x="570" y="560">
+        <ECAction Output="DONE" />
+      </ECState>
+      <ECState Name="Run" x="990" y="560">
         <ECAction Algorithm="Alg_Run" Output="CMD" />
         <ECAction Output="TIMER_START" />
       </ECState>
-      <ECState Name="RunSample" x="1410" y="330">
+      <ECState Name="RunSample" x="1410" y="560">
         <ECAction Algorithm="Alg_RunSample" Output="EQ_FREE" />
       </ECState>
-      <ECState Name="Unsafe" x="150" y="560">
+      <ECState Name="Unsafe" x="150" y="790">
         <ECAction Algorithm="Alg_Unsafe" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
       </ECState>
-      <ECState Name="Lost" x="570" y="560">
+      <ECState Name="Lost" x="570" y="790">
         <ECAction Algorithm="Alg_Lost" Output="TIMER_STOP" />
         <ECAction Output="FAILED" />
       </ECState>
-      <ECState Name="Done" x="990" y="560">
+      <ECState Name="Done" x="990" y="790">
         <ECAction Algorithm="Alg_Done" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
       </ECState>
-      <ECState Name="Halt" x="1410" y="560">
+      <ECState Name="TimedOut" x="1410" y="790">
+        <ECAction Algorithm="Alg_TimedOut" Output="CMD" />
+      </ECState>
+      <ECState Name="Halt" x="150" y="1020">
         <ECAction Algorithm="Alg_Halt" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
       </ECState>
-      <ECState Name="Abort" x="150" y="790">
+      <ECState Name="Abort" x="570" y="1020">
         <ECAction Algorithm="Alg_Abort" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
       </ECState>
-      <ECState Name="Ending" x="150" y="1020" />
-      <ECState Name="EndDone" x="570" y="1020">
+      <ECState Name="Ending" x="990" y="1020" />
+      <ECState Name="EndDone" x="1410" y="1020">
         <ECAction Output="DONE" />
       </ECState>
-      <ECState Name="EndFailed" x="990" y="1020">
+      <ECState Name="EndFailed" x="150" y="1250">
         <ECAction Output="FAILED" />
       </ECState>
-      <ECState Name="EndHalted" x="1410" y="1020">
+      <ECState Name="EndHalted" x="570" y="1250">
         <ECAction Output="HALTED" />
       </ECState>
-      <ECState Name="Running" x="570" y="790" />
+      <ECState Name="Running" x="990" y="1250" />
       <ECTransition Source="Idle" Destination="Init" Condition="INIT" x="0" y="0" />
       <ECTransition Source="Init" Destination="Idle" Condition="1" x="0" y="0" />
       <ECTransition Source="Idle" Destination="Check" Condition="START" x="0" y="0" />
@@ -154,17 +155,21 @@
       <ECTransition Source="WaitW" Destination="Idle" Condition="HALT" x="0" y="0" />
       <ECTransition Source="WaitW" Destination="Idle" Condition="ABORT" x="0" y="0" />
       <ECTransition Source="Recheck" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="Check" Destination="AlreadyDone" Condition="AtHome" x="0" y="0" />
       <ECTransition Source="Running" Destination="Unsafe" Condition="SAMPLE[NOT (TRUE)]" x="0" y="0" />
       <ECTransition Source="Running" Destination="Lost" Condition="SAMPLE[(Holder &lt;&gt; &quot;&quot;) AND (Holder &lt;&gt; Token)]" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Done" Condition="TIMER" x="0" y="0" />
+      <ECTransition Source="Running" Destination="Done" Condition="SAMPLE[AtHome]" x="0" y="0" />
+      <ECTransition Source="Running" Destination="TimedOut" Condition="TIMER" x="0" y="0" />
       <ECTransition Source="Running" Destination="RunSample" Condition="SAMPLE" x="0" y="0" />
       <ECTransition Source="RunSample" Destination="Running" Condition="1" x="0" y="0" />
       <ECTransition Source="Busy" Destination="Idle" Condition="1" x="0" y="0" />
       <ECTransition Source="Lost" Destination="Idle" Condition="1" x="0" y="0" />
+      <ECTransition Source="AlreadyDone" Destination="Idle" Condition="1" x="0" y="0" />
       <ECTransition Source="Unsafe" Destination="Ending" Condition="1" x="0" y="0" />
       <ECTransition Source="Done" Destination="Ending" Condition="1" x="0" y="0" />
       <ECTransition Source="Halt" Destination="Ending" Condition="1" x="0" y="0" />
       <ECTransition Source="Abort" Destination="Ending" Condition="1" x="0" y="0" />
+      <ECTransition Source="TimedOut" Destination="Ending" Condition="1" x="0" y="0" />
       <ECTransition Source="Ending" Destination="EndDone" Condition="PLAYED[Outcome = 1]" x="0" y="0" />
       <ECTransition Source="Ending" Destination="EndFailed" Condition="PLAYED[Outcome = 2]" x="0" y="0" />
       <ECTransition Source="Ending" Destination="EndHalted" Condition="PLAYED[Outcome = 3]" x="0" y="0" />
@@ -181,8 +186,7 @@
     </ECC>
     <Algorithm Name="Alg_Init">
       <ST>IdEqState := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Equipment), "/state]");
-IdEqCmd := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Equipment), "/cmd]");
-IdParams := CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, UaPath)), "/Parameters/Duration"), "]");</ST>
+IdEqCmd := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Equipment), "/cmd]");</ST>
     </Algorithm>
     <Algorithm Name="Alg_Reject">
       <ST>ErrorID := 1;</ST>
@@ -195,10 +199,10 @@ IdParams := CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, UaPath)), "/Par
     </Algorithm>
     <Algorithm Name="Alg_Run">
       <ST>C_Holder := Token;
-C_Command := 2;
+C_Command := 1;
 C_Arg := 0.0;
 C_Release := FALSE;
-TimerDT := MUL_TIME(T#1s, Duration);</ST>
+TimerDT := Timeout;</ST>
     </Algorithm>
     <Algorithm Name="Alg_RunSample">
       <ST>EqFree := (Holder = "") OR (Holder = Token);</ST>
@@ -220,6 +224,14 @@ C_Command := 0;
 C_Arg := 0.0;
 C_Release := LastUse;
 Outcome := 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_TimedOut">
+      <ST>C_Holder := Token;
+C_Command := 0;
+C_Arg := 0.0;
+C_Release := LastUse;
+ErrorID := 3;
+Outcome := 2;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Halt">
       <ST>C_Holder := Token;

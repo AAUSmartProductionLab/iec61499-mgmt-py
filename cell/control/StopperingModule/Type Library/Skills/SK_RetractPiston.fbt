@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SK_RetractPlunger" Comment="Skill primitive RetractPlunger: Plunger up for Duration (open loop) (parameters: Duration [s] 0.0..20.0, default 6.5). OPC UA Start(Session, parameters...)/Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID]; START/HALT/ABORT/RESET from a parent -&gt; SUCCESS or FAILURE(ErrorID)">
+<FBType Name="SK_RetractPiston" Comment="Skill primitive RetractPiston: Piston back in for the stroke (open loop); for a piston left out by an abort (parameters: none). OPC UA Start(Session, parameters...)/Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID]; START/HALT/ABORT/RESET from a parent -&gt; SUCCESS or FAILURE(ErrorID)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="stoppering" />
@@ -13,11 +13,8 @@
         <With Var="Methods" />
         <With Var="Token" />
         <With Var="LastUse" />
-        <With Var="Duration" />
       </Event>
-      <Event Name="START" Type="Event">
-        <With Var="Duration" />
-      </Event>
+      <Event Name="START" Type="Event" />
       <Event Name="HALT" Type="Event" />
       <Event Name="ABORT" Type="Event" />
       <Event Name="RESET" Type="Event" />
@@ -37,7 +34,6 @@
       <VarDeclaration Name="Methods" Type="BOOL" />
       <VarDeclaration Name="Token" Type="WSTRING" />
       <VarDeclaration Name="LastUse" Type="BOOL" InitialValue="TRUE" />
-      <VarDeclaration Name="Duration" Type="LREAL" InitialValue="6.5" />
     </InputVars>
     <OutputVars>
       <VarDeclaration Name="State" Type="USINT" />
@@ -45,39 +41,31 @@
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="21200" height="5500" locked="false" />
-    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="1000" y="7700" width="23800" height="6080" locked="false" />
-    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="14980" width="28800" height="4780" locked="false" />
+    <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="12000" height="5500" locked="false" />
+    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="1000" y="7700" width="23800" height="5820" locked="false" />
+    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="14720" width="28800" height="4780" locked="false" />
     <FB Name="Control" Type="modlib::SKILL_Core" x="2800" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="Logic" Type="stoppering::SL_RetractPlunger" x="2800" y="900">
-      <Parameter Name="Equipment" Value="&quot;Plunger&quot;" />
+    <FB Name="Logic" Type="stoppering::SL_RetractPiston" x="2800" y="900">
+      <Parameter Name="Equipment" Value="&quot;Piston&quot;" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="7400" y="900">
-      <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
-    </FB>
-    <FB Name="Par_Duration" Type="modlib::SKILL_Param_LREAL" x="12000" y="900">
-      <Parameter Name="Lower" Value="0.0" />
-      <Parameter Name="Upper" Value="20.0" />
-      <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
-    </FB>
-    <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="16600" y="900">
+    <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="7400" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
     <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_1" x="2800" y="900">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqView" Type="stoppering::EV_Plunger" x="8000" y="900">
+    <FB Name="EqView" Type="stoppering::EV_Piston" x="8000" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
     <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="16800" y="900">
       <Parameter Name="DT" Value="T#500ms" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="Driver" Type="stoppering::EC_Plunger" x="13200" y="900">
+    <FB Name="Driver" Type="stoppering::EC_Piston" x="13200" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
     <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="18400" y="900">
@@ -92,17 +80,11 @@
     </FB>
     <EventConnections>
       <Connection Source="Control.RSP_START" Destination="UaStart.RSP" />
-      <Connection Source="UaStart.IND" Destination="Par_Duration.CHECK" />
-      <Connection Source="Control.GO" Destination="Par_Duration.LATCH" />
-      <Connection Source="Par_Duration.CHECKED" Destination="Control.CMD_START" />
-      <Connection Source="Par_Duration.LATCHED" Destination="PubParams.REQ" />
-      <Connection Source="PubParams.INITO" Destination="PubParams.REQ" />
+      <Connection Source="UaStart.IND" Destination="Control.CMD_START" />
       <Connection Source="INIT" Destination="Control.INIT" />
       <Connection Source="Control.INITO" Destination="Logic.INIT" />
       <Connection Source="Logic.INITO" Destination="UaStart.INIT" />
-      <Connection Source="UaStart.INITO" Destination="Par_Duration.INIT" />
-      <Connection Source="Par_Duration.INITO" Destination="PubParams.INIT" />
-      <Connection Source="PubParams.INITO" Destination="EqState.INIT" />
+      <Connection Source="UaStart.INITO" Destination="EqState.INIT" />
       <Connection Source="EqState.INITO" Destination="EqCmd.INIT" />
       <Connection Source="EqCmd.INITO" Destination="INITO" />
       <Connection Source="START" Destination="Control.START" />
@@ -111,7 +93,7 @@
       <Connection Source="RESET" Destination="Control.RESET" />
       <Connection Source="Control.SUCCESS" Destination="SUCCESS" />
       <Connection Source="Control.FAILURE" Destination="FAILURE" />
-      <Connection Source="Par_Duration.LATCHED" Destination="Logic.START" />
+      <Connection Source="Control.GO" Destination="Logic.START" />
       <Connection Source="Control.HALT_O" Destination="Logic.HALT" />
       <Connection Source="Control.ABORT_O" Destination="Logic.ABORT" />
       <Connection Source="Control.RUN_STOP" Destination="Control.STOP_DONE" />
@@ -138,10 +120,6 @@
       <Connection Source="UaStart.RD_1" Destination="Control.S_Start" />
       <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
       <Connection Source="Control.RspError" Destination="UaStart.SD_2" />
-      <Connection Source="UaStart.RD_2" Destination="Par_Duration.S" />
-      <Connection Source="Control.FromUa" Destination="Par_Duration.FromUa" />
-      <Connection Source="Par_Duration.P" Destination="PubParams.SD_1" />
-      <Connection Source="Par_Duration.InRange" Destination="Control.InRange" />
       <Connection Source="Module" Destination="Control.Module" />
       <Connection Source="UaRoot" Destination="Control.UaRoot" />
       <Connection Source="UaPath" Destination="Control.UaPath" />
@@ -153,12 +131,6 @@
       <Connection Source="Module" Destination="Logic.Module" />
       <Connection Source="Token" Destination="Logic.Token" />
       <Connection Source="LastUse" Destination="Logic.LastUse" />
-      <Connection Source="UaRoot" Destination="Logic.UaRoot" />
-      <Connection Source="UaPath" Destination="Logic.UaPath" />
-      <Connection Source="UaEnable" Destination="PubParams.QI" />
-      <Connection Source="Logic.IdParams" Destination="PubParams.ID" />
-      <Connection Source="Duration" Destination="Par_Duration.Default" />
-      <Connection Source="Par_Duration.P" Destination="Logic.Duration" />
       <Connection Source="Logic.ErrorID" Destination="Control.ExecError" />
       <Connection Source="Logic.EqFree" Destination="Control.EqFree" />
       <Connection Source="Logic.IdEqState" Destination="EqState.ID" />

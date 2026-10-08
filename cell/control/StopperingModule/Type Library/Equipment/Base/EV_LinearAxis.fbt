@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EV_LinearAxis" Comment="Typed view of LinearAxis's state channel (inputs and holder)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="stoppering" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="REQ" Type="Event">
+        <With Var="I_AtHome" />
+        <With Var="I_ActualPosition" />
+        <With Var="I_Homed" />
+        <With Var="I_Moving" />
+        <With Var="I_Holder" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="CNF" Type="Event">
+        <With Var="AtHome" />
+        <With Var="ActualPosition" />
+        <With Var="Homed" />
+        <With Var="Moving" />
+        <With Var="Holder" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="I_AtHome" Type="BOOL" />
+      <VarDeclaration Name="I_ActualPosition" Type="LREAL" />
+      <VarDeclaration Name="I_Homed" Type="BOOL" />
+      <VarDeclaration Name="I_Moving" Type="BOOL" />
+      <VarDeclaration Name="I_Holder" Type="WSTRING" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="AtHome" Type="BOOL" />
+      <VarDeclaration Name="ActualPosition" Type="LREAL" />
+      <VarDeclaration Name="Homed" Type="BOOL" />
+      <VarDeclaration Name="Moving" Type="BOOL" />
+      <VarDeclaration Name="Holder" Type="WSTRING" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="REQ">
+      <ECAction Algorithm="REQ" Output="CNF" />
+    </ECState>
+    <Algorithm Name="REQ">
+      <ST>AtHome := I_AtHome;
+ActualPosition := I_ActualPosition;
+Homed := I_Homed;
+Moving := I_Moving;
+Holder := I_Holder;</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

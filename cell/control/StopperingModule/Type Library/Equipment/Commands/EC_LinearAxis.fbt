@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EC_StopperArm" Comment="Commands of StopperArm as output values, in timed phases: Detach=0, MoveTo=1">
+<FBType Name="EC_LinearAxis" Comment="Commands of LinearAxis as output values, in timed phases: Stop=0, Up=1, Down=2, MoveTo=3">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="stoppering" />
@@ -17,8 +17,12 @@
       <Event Name="OUT" Type="Event">
         <With Var="O_Holder" />
         <With Var="O_Release" />
-        <With Var="N_Angle" />
-        <With Var="NE_Angle" />
+        <With Var="N_Enable" />
+        <With Var="N_Down" />
+        <With Var="N_Step" />
+        <With Var="NE_Step" />
+        <With Var="N_Move" />
+        <With Var="N_Goal" />
       </Event>
       <Event Name="PHASE_START" Type="Event">
         <With Var="PhaseDT" />
@@ -35,8 +39,12 @@
     <OutputVars>
       <VarDeclaration Name="O_Holder" Type="WSTRING" />
       <VarDeclaration Name="O_Release" Type="BOOL" />
-      <VarDeclaration Name="N_Angle" Type="LREAL" />
-      <VarDeclaration Name="NE_Angle" Type="BOOL" />
+      <VarDeclaration Name="N_Enable" Type="BOOL" />
+      <VarDeclaration Name="N_Down" Type="BOOL" />
+      <VarDeclaration Name="N_Step" Type="LREAL" />
+      <VarDeclaration Name="NE_Step" Type="BOOL" />
+      <VarDeclaration Name="N_Move" Type="BOOL" />
+      <VarDeclaration Name="N_Goal" Type="LREAL" />
       <VarDeclaration Name="PhaseDT" Type="TIME" />
     </OutputVars>
   </InterfaceList>
@@ -78,13 +86,26 @@
       <ST>Phase := Phase + 1;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Send">
-      <ST>N_Angle := 0.0;
-NE_Angle := FALSE;
+      <ST>N_Enable := FALSE;
+N_Down := FALSE;
+N_Step := 0.0;
+NE_Step := FALSE;
+N_Move := FALSE;
+N_Goal := 0.0;
 Timed := FALSE;
 PhaseDT := T#0ms;
 IF Command = 1 THEN
-  N_Angle := Arg;
-  NE_Angle := TRUE;
+  N_Enable := TRUE;
+  N_Step := 50.0;
+  NE_Step := TRUE;
+ELSIF Command = 2 THEN
+  N_Enable := TRUE;
+  N_Down := TRUE;
+  N_Step := 50.0;
+  NE_Step := TRUE;
+ELSIF Command = 3 THEN
+  N_Move := TRUE;
+  N_Goal := Arg;
 END_IF;
 O_Holder := Holder;
 O_Release := Release AND NOT Timed;</ST>

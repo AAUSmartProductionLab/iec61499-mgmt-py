@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SUBSCRIBE_2" Comment="Generic subscribe (0 SD, 2 RD); instantiated from GEN_SUBSCRIBE">
+<FBType Name="SUBSCRIBE_8" Comment="Generic subscribe (0 SD, 8 RD); instantiated from GEN_SUBSCRIBE">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="iec61499::net" />
@@ -23,6 +23,12 @@
         <With Var="STATUS" />
         <With Var="RD_1" />
         <With Var="RD_2" />
+        <With Var="RD_3" />
+        <With Var="RD_4" />
+        <With Var="RD_5" />
+        <With Var="RD_6" />
+        <With Var="RD_7" />
+        <With Var="RD_8" />
       </Event>
     </EventOutputs>
     <InputVars>
@@ -34,6 +40,12 @@
       <VarDeclaration Name="STATUS" Type="WSTRING" />
       <VarDeclaration Name="RD_1" Type="ANY" />
       <VarDeclaration Name="RD_2" Type="ANY" />
+      <VarDeclaration Name="RD_3" Type="ANY" />
+      <VarDeclaration Name="RD_4" Type="ANY" />
+      <VarDeclaration Name="RD_5" Type="ANY" />
+      <VarDeclaration Name="RD_6" Type="ANY" />
+      <VarDeclaration Name="RD_7" Type="ANY" />
+      <VarDeclaration Name="RD_8" Type="ANY" />
     </OutputVars>
   </InterfaceList>
   <Attribute Name="eclipse4diac::core::GenericClassName" Value="'GEN_SUBSCRIBE'" />

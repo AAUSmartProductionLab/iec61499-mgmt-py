@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EC_Piston" Comment="Commands of Piston as output values, in timed phases: Stop=0, Up=1, Down=2">
+<FBType Name="EC_Piston" Comment="Commands of Piston as output values, in timed phases: Stop=0, Extend=1, Retract=2, Back=3">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="stoppering" />
@@ -16,10 +16,8 @@
       <Event Name="OUT" Type="Event">
         <With Var="O_Holder" />
         <With Var="O_Release" />
-        <With Var="N_Up" />
-        <With Var="N_Down" />
-        <With Var="N_Speed" />
-        <With Var="NE_Speed" />
+        <With Var="N_Retract" />
+        <With Var="N_Extend" />
       </Event>
       <Event Name="PHASE_START" Type="Event">
         <With Var="PhaseDT" />
@@ -35,10 +33,8 @@
     <OutputVars>
       <VarDeclaration Name="O_Holder" Type="WSTRING" />
       <VarDeclaration Name="O_Release" Type="BOOL" />
-      <VarDeclaration Name="N_Up" Type="BOOL" />
-      <VarDeclaration Name="N_Down" Type="BOOL" />
-      <VarDeclaration Name="N_Speed" Type="LREAL" />
-      <VarDeclaration Name="NE_Speed" Type="BOOL" />
+      <VarDeclaration Name="N_Retract" Type="BOOL" />
+      <VarDeclaration Name="N_Extend" Type="BOOL" />
       <VarDeclaration Name="PhaseDT" Type="TIME" />
     </OutputVars>
   </InterfaceList>
@@ -80,20 +76,21 @@
       <ST>Phase := Phase + 1;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Send">
-      <ST>N_Up := FALSE;
-N_Down := FALSE;
-N_Speed := 0.0;
-NE_Speed := FALSE;
+      <ST>N_Retract := FALSE;
+N_Extend := FALSE;
 Timed := FALSE;
 PhaseDT := T#0ms;
 IF Command = 1 THEN
-  N_Up := TRUE;
-  N_Speed := 200.0;
-  NE_Speed := TRUE;
+  N_Extend := TRUE;
 ELSIF Command = 2 THEN
-  N_Down := TRUE;
-  N_Speed := 200.0;
-  NE_Speed := TRUE;
+  N_Retract := TRUE;
+ELSIF Command = 3 THEN
+  IF Phase = 0 THEN
+    N_Retract := TRUE;
+    PhaseDT := T#3000ms;
+    Timed := TRUE;
+  ELSE
+  END_IF;
 END_IF;
 O_Holder := Holder;
 O_Release := Release AND NOT Timed;</ST>

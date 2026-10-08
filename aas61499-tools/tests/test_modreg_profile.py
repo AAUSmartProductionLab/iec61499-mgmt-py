@@ -97,16 +97,16 @@ def test_a_module_speaks_opc_ua_only(stoppering, stoppering_aas):
     for skill in offered:
         assert {f"{skill}_{m}" for m in ("Start", "Stop", "Abort", "Reset")} <= set(names(actions))
     assert {"Occupation_Occupy", "Occupation_Release", "Module_Reset", "Module_Clear"} <= set(names(actions))
-    start = at(actions, "RaisePiston_Start")
-    path = "/0:Objects/1:Stoppering/1:Skills/1:RaisePiston/1:Start"
+    start = at(actions, "MoveAxis_Start")
+    path = "/0:Objects/1:Stoppering/1:Skills/1:MoveAxis/1:Start"
     assert at(start, "forms", "href")["value"] == at(start, "forms", "uav_browsePath")["value"] == path
     # The arguments in call order: the session, then the skill's parameters.
-    assert names(at(start, "input", "properties")) == ["Session", *spec.skills["RaisePiston"].parameters]
+    assert names(at(start, "input", "properties")) == ["Session", *spec.skills["MoveAxis"].parameters]
     assert names(at(start, "output", "properties")) == ["Accepted", "ErrorID"]
     # Which command the action carries out: the semantic id of the Operation that invokes it.
-    assert [ref["keys"][0]["value"] for ref in start["supplementalSemanticIds"]] == [f"{BASE}/skills/RaisePiston"]
-    stop = at(actions, "RaisePiston_Stop")
-    assert [ref["keys"][0]["value"] for ref in stop["supplementalSemanticIds"]] == [f"{BASE}/skills/RaisePiston/Stop"]
+    assert [ref["keys"][0]["value"] for ref in start["supplementalSemanticIds"]] == [f"{BASE}/skills/MoveAxis"]
+    stop = at(actions, "MoveAxis_Stop")
+    assert [ref["keys"][0]["value"] for ref in stop["supplementalSemanticIds"]] == [f"{BASE}/skills/MoveAxis/Stop"]
     state = at(interfaces, "interface_opcua", "InteractionMetadata", "properties", "Module_State")
     assert at(state, "forms", "href")["value"] == "/0:Objects/1:Stoppering/1:Module/1:State"
 
@@ -120,25 +120,26 @@ def test_skills_are_arsos_skills_with_what_reconfiguration_needs(stoppering, sto
     skills = at(described, "Skills")
     offered = [n for n, s in [*spec.skills.items(), *spec.composites.items()] if s.offered]
     assert names(skills) == ["Occupy", "Release", *offered]
-    primitive = at(skills, "RaisePiston")
-    decl = spec.skills["RaisePiston"]
-    assert at(primitive, "SemanticId")["value"] == f"{BASE}/skills/RaisePiston"
-    assert at(primitive, "InterfaceReference")["value"]["keys"][-1]["value"] == "RaisePiston_Start"
-    operation = at(primitive, "RaisePiston")                        # the Operation is named like the skill
+    primitive = at(skills, "MoveAxis")
+    decl = spec.skills["MoveAxis"]
+    assert at(primitive, "SemanticId")["value"] == f"{BASE}/skills/MoveAxis"
+    assert at(primitive, "InterfaceReference")["value"]["keys"][-1]["value"] == "MoveAxis_Start"
+    operation = at(primitive, "MoveAxis")                        # the Operation is named like the skill
     assert operation["modelType"] == "Operation"
-    assert [v["value"]["idShort"] for v in operation["inputVariables"]] == ["Session", "Duration"]
+    assert [v["value"]["idShort"] for v in operation["inputVariables"]] == ["Session", "Position"]
     assert [v["value"]["idShort"] for v in operation["outputVariables"]] == ["Accepted", "ErrorID"]
     assert at(primitive, "Kind")["value"] == "Primitive"
-    assert at(primitive, "Contract", "After")["value"] == decl.after
-    duration = at(primitive, "Parameters", "Duration")
-    declared = {q["type"]: q["value"] for q in duration["qualifiers"]}
-    assert float(duration["value"]) == decl.parameters["Duration"].default
-    assert float(declared["Maximum"]) == decl.parameters["Duration"].maximum and declared["Unit"] == "s"
+    assert at(primitive, "Contract", "Requires")["value"] == "Homed"       # an axis that knows where it is
+    assert at(primitive, "Contract", "Ensures")["value"] == decl.ensures
+    position = at(primitive, "Parameters", "Position")
+    declared = {q["type"]: q["value"] for q in position["qualifiers"]}
+    assert float(position["value"]) == decl.parameters["Position"].default
+    assert float(declared["Maximum"]) == decl.parameters["Position"].maximum and declared["Unit"] == "mm"
     assert [r["value"]["keys"][-1]["value"] for r in children(at(primitive, "Occupies"))] == [decl.equipment]
-    assert at(primitive, "StateReference")["value"]["keys"][-1]["value"] == "RaisePiston_State"
+    assert at(primitive, "StateReference")["value"]["keys"][-1]["value"] == "MoveAxis_State"
     # The block type a step of the primitive would be an instance of, known without reading the module.
-    assert at(primitive, "Implementation", "FBType")["value"] == f"{spec.package}::SK_RaisePiston"
-    assert at(primitive, "Implementation", "InstancePath")["value"] == "RaisePiston"
+    assert at(primitive, "Implementation", "FBType")["value"] == f"{spec.package}::SK_MoveAxis"
+    assert at(primitive, "Implementation", "InstancePath")["value"] == "MoveAxis"
     assert "TypeHash" not in names(at(primitive, "Implementation"))          # only a module that was read has it
     name, composite = next(iter(spec.composites.items()))
     sequence = at(skills, name)
@@ -234,7 +235,7 @@ def test_the_procedures_of_the_module_are_sequences_of_steps(stoppering, stopper
     spec, _ = stoppering
     values = expected_values(spec, expected(spec, "pi"))
     procedures = at(submodel(stoppering_aas, "Skills"), "Procedures")
-    assert names(procedures) == list(spec.procedures) == ["Resetting"]          # it stops without one
+    assert names(procedures) == list(spec.procedures) == ["Resetting", "Stopping"]
     for proc, steps in spec.procedures.items():
         described = children(at(procedures, proc))
         assert [at(s, "InstancePath")["value"] for s in described] == [f"{proc}.{s.name}" for s in steps]
@@ -334,14 +335,14 @@ def href(env: dict, reference: dict) -> str:
 def test_a_skill_refers_to_every_action_and_property_of_its_interface(stoppering, stoppering_aas):
     spec, _ = stoppering
     root = "/0:Objects/1:Stoppering"
-    skill = at(submodel(stoppering_aas, "Skills"), "Skills", "RaisePiston")
+    skill = at(submodel(stoppering_aas, "Skills"), "Skills", "MoveAxis")
     methods = {m["idShort"]: href(stoppering_aas, m["value"]) for m in children(at(skill, "Methods"))}
-    assert methods == {m: f"{root}/1:Skills/1:RaisePiston/1:{m}" for m in ("Start", "Stop", "Abort", "Reset")}
-    assert href(stoppering_aas, at(skill, "StateReference")["value"]) == f"{root}/1:Skills/1:RaisePiston/1:State"
-    assert href(stoppering_aas, at(skill, "ErrorReference")["value"]) == f"{root}/1:Skills/1:RaisePiston/1:ErrorID"
+    assert methods == {m: f"{root}/1:Skills/1:MoveAxis/1:{m}" for m in ("Start", "Stop", "Abort", "Reset")}
+    assert href(stoppering_aas, at(skill, "StateReference")["value"]) == f"{root}/1:Skills/1:MoveAxis/1:State"
+    assert href(stoppering_aas, at(skill, "ErrorReference")["value"]) == f"{root}/1:Skills/1:MoveAxis/1:ErrorID"
     # One Operation per command; the skill's own (Start) is named like the skill.
     operations = [c["idShort"] for c in children(skill) if c["modelType"] == "Operation"]
-    assert operations == ["RaisePiston", "RaisePiston_Stop", "RaisePiston_Abort", "RaisePiston_Reset"]
+    assert operations == ["MoveAxis", "MoveAxis_Stop", "MoveAxis_Abort", "MoveAxis_Reset"]
     filling = model.build(profiles.describe(load(SPECS / "filling.yaml"), "pi"))
     results = at(submodel(filling, "Skills"), "Skills", "Dispensing", "Results")
     assert href(filling, at(results, "Weight")["value"]) == "/0:Objects/1:Filling/1:Skills/1:Dispensing/1:Results/1:Weight"
@@ -373,9 +374,9 @@ def test_the_aimc_maps_every_action_and_property_onto_a_submodel(stoppering_aas)
     assert all(len(ops) == 1 for ops in invoked.values())
     # A parameter, result or state feeds its data point, an action is invoked by its Operation in
     # the Skills submodel.
-    assert fed["RaisePiston_Parameter_Duration"][0]["idShort"] == "RaisePiston_Parameter_Duration"
-    assert fed["Stoppering_Execute_ArmIn_Parameter_Angle"][0]["idShort"] == "Stoppering_Execute_ArmIn_Parameter_Angle"
-    assert invoked["RaisePiston_Stop"][0]["idShort"] == "RaisePiston_Stop"
+    assert fed["MoveAxis_Parameter_Position"][0]["idShort"] == "MoveAxis_Parameter_Position"
+    assert fed["Stoppering_Execute_HeadDown_Parameter_Position"][0]["idShort"] == "Stoppering_Execute_HeadDown_Parameter_Position"
+    assert invoked["MoveAxis_Stop"][0]["idShort"] == "MoveAxis_Stop"
     assert invoked["Module_Reset"][0]["idShort"] == "Module_Reset"
     assert invoked["Occupation_Occupy"][0]["idShort"] == "Occupy"
 
@@ -396,8 +397,8 @@ def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
     # Every data point has a source: the property of the interface that publishes it.
     assert len(children(at(feed, "Sinks"))) == len(children(at(feed, "Sources"))) == len(names(data))
     # A skill parameter of the current or last run is a data point as well, not a Parameters entry.
-    assert at(data, "RaisePiston_Parameter_Duration")["semanticId"]["keys"][0]["value"] == \
-        f"{BASE}/skills/RaisePiston/Parameters/Duration"
+    assert at(data, "MoveAxis_Parameter_Position")["semanticId"]["keys"][0]["value"] == \
+        f"{BASE}/skills/MoveAxis/Parameters/Position"
     assert "Parameters" not in [s["idShort"] for s in stoppering_aas["submodels"]]
 
 
@@ -412,7 +413,7 @@ def test_a_module_that_was_read_shows_what_runs_there():
     values = expected_values(spec, app)
     snap = Snapshot("192.168.0.50", 61499, fbs=dict(app.fbs), hashes={t: f"v2:{t}" for t in set(app.fbs.values())},
                     connections=set(app.event_connections + app.data_connections),
-                    values={**values, "RaisePiston.Duration": "5.5"}, read_at="2026-10-02T10:00:00+00:00")
+                    values={**values, "MoveAxis.Position": "5.5"}, read_at="2026-10-02T10:00:00+00:00")
     drift = compare(app, values, snap, set())
     profile = profiles.describe(spec, "pi", snap, drift, "cell/modules/stoppering.yaml", "opc.tcp://192.168.0.50:4840")
     env = model.build(profile)
@@ -421,10 +422,10 @@ def test_a_module_that_was_read_shows_what_runs_there():
     assert at(config, "Rules")["value"] == f"{BASE}/rules/module/1"          # docs/module-rules.md
     assert at(config, "Runtime", "ManagementEndpoint")["value"] == "192.168.0.50:61499"
     assert len(names(at(config, "Types"))) == len(set(app.fbs.values()))
-    assert float(at(submodel(env, "Skills"), "Skills", "RaisePiston", "Parameters", "Duration")["value"]) == 5.5
-    implementation = at(submodel(env, "Skills"), "Skills", "RaisePiston", "Implementation")
-    assert at(implementation, "FBType")["value"] == app.fbs["RaisePiston"]
-    assert at(implementation, "TypeHash")["value"] == f"v2:{app.fbs['RaisePiston']}"
+    assert float(at(submodel(env, "Skills"), "Skills", "MoveAxis", "Parameters", "Position")["value"]) == 5.5
+    implementation = at(submodel(env, "Skills"), "Skills", "MoveAxis", "Implementation")
+    assert at(implementation, "FBType")["value"] == app.fbs["MoveAxis"]
+    assert at(implementation, "TypeHash")["value"] == f"v2:{app.fbs['MoveAxis']}"
     # The program digest is of the spec, not of what was read.
     assert at(config, "ProgramDigest")["value"] == profiles.program_digest(spec, "pi")
 

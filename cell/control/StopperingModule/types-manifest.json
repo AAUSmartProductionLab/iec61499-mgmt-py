@@ -270,6 +270,30 @@
     "exported": false
   },
   {
+    "type": "stoppering::EL_LinearAxis",
+    "kind": "BasicFB",
+    "file": "Equipment/Base/EL_LinearAxis.fbt",
+    "exported": true
+  },
+  {
+    "type": "stoppering::EQ_LinearAxis",
+    "kind": "CompositeFB",
+    "file": "Equipment/EQ_LinearAxis.fbt",
+    "exported": true
+  },
+  {
+    "type": "stoppering::EC_LinearAxis",
+    "kind": "BasicFB",
+    "file": "Equipment/Commands/EC_LinearAxis.fbt",
+    "exported": true
+  },
+  {
+    "type": "stoppering::EV_LinearAxis",
+    "kind": "SimpleFB",
+    "file": "Equipment/Base/EV_LinearAxis.fbt",
+    "exported": true
+  },
+  {
     "type": "stoppering::EL_Piston",
     "kind": "BasicFB",
     "file": "Equipment/Base/EL_Piston.fbt",
@@ -294,111 +318,51 @@
     "exported": true
   },
   {
-    "type": "stoppering::EL_Plunger",
+    "type": "stoppering::SL_Home",
     "kind": "BasicFB",
-    "file": "Equipment/Base/EL_Plunger.fbt",
+    "file": "Skills/Logic/SL_Home.fbt",
     "exported": true
   },
   {
-    "type": "stoppering::EQ_Plunger",
+    "type": "stoppering::SK_Home",
     "kind": "CompositeFB",
-    "file": "Equipment/EQ_Plunger.fbt",
+    "file": "Skills/SK_Home.fbt",
     "exported": true
   },
   {
-    "type": "stoppering::EC_Plunger",
+    "type": "stoppering::SL_MoveAxis",
     "kind": "BasicFB",
-    "file": "Equipment/Commands/EC_Plunger.fbt",
+    "file": "Skills/Logic/SL_MoveAxis.fbt",
     "exported": true
   },
   {
-    "type": "stoppering::EV_Plunger",
-    "kind": "SimpleFB",
-    "file": "Equipment/Base/EV_Plunger.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::EL_StopperArm",
-    "kind": "BasicFB",
-    "file": "Equipment/Base/EL_StopperArm.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::EQ_StopperArm",
+    "type": "stoppering::SK_MoveAxis",
     "kind": "CompositeFB",
-    "file": "Equipment/EQ_StopperArm.fbt",
+    "file": "Skills/SK_MoveAxis.fbt",
     "exported": true
   },
   {
-    "type": "stoppering::EC_StopperArm",
+    "type": "stoppering::SL_PressStopper",
     "kind": "BasicFB",
-    "file": "Equipment/Commands/EC_StopperArm.fbt",
+    "file": "Skills/Logic/SL_PressStopper.fbt",
     "exported": true
   },
   {
-    "type": "stoppering::EV_StopperArm",
-    "kind": "SimpleFB",
-    "file": "Equipment/Base/EV_StopperArm.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::SL_LowerPiston",
-    "kind": "BasicFB",
-    "file": "Skills/Logic/SL_LowerPiston.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::SK_LowerPiston",
+    "type": "stoppering::SK_PressStopper",
     "kind": "CompositeFB",
-    "file": "Skills/SK_LowerPiston.fbt",
+    "file": "Skills/SK_PressStopper.fbt",
     "exported": true
   },
   {
-    "type": "stoppering::SL_RaisePiston",
+    "type": "stoppering::SL_RetractPiston",
     "kind": "BasicFB",
-    "file": "Skills/Logic/SL_RaisePiston.fbt",
+    "file": "Skills/Logic/SL_RetractPiston.fbt",
     "exported": true
   },
   {
-    "type": "stoppering::SK_RaisePiston",
+    "type": "stoppering::SK_RetractPiston",
     "kind": "CompositeFB",
-    "file": "Skills/SK_RaisePiston.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::SL_ExtendPlunger",
-    "kind": "BasicFB",
-    "file": "Skills/Logic/SL_ExtendPlunger.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::SK_ExtendPlunger",
-    "kind": "CompositeFB",
-    "file": "Skills/SK_ExtendPlunger.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::SL_RetractPlunger",
-    "kind": "BasicFB",
-    "file": "Skills/Logic/SL_RetractPlunger.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::SK_RetractPlunger",
-    "kind": "CompositeFB",
-    "file": "Skills/SK_RetractPlunger.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::SL_MoveArm",
-    "kind": "BasicFB",
-    "file": "Skills/Logic/SL_MoveArm.fbt",
-    "exported": true
-  },
-  {
-    "type": "stoppering::SK_MoveArm",
-    "kind": "CompositeFB",
-    "file": "Skills/SK_MoveArm.fbt",
+    "file": "Skills/SK_RetractPiston.fbt",
     "exported": true
   },
   {
@@ -426,9 +390,15 @@
     "exported": false
   },
   {
-    "type": "iec61499::net::PUBLISH_6",
+    "type": "iec61499::net::PUBLISH_5",
     "kind": "GenericComm",
-    "file": "Generic/PUBLISH_6.fbt",
+    "file": "Generic/PUBLISH_5.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::PUBLISH_8",
+    "kind": "GenericComm",
+    "file": "Generic/PUBLISH_8.fbt",
     "exported": false
   },
   {
@@ -444,12 +414,6 @@
     "exported": false
   },
   {
-    "type": "iec61499::net::SERVER_2_3",
-    "kind": "GenericComm",
-    "file": "Generic/SERVER_2_3.fbt",
-    "exported": false
-  },
-  {
     "type": "iec61499::net::SUBSCRIBE_0",
     "kind": "GenericComm",
     "file": "Generic/SUBSCRIBE_0.fbt",
@@ -462,21 +426,21 @@
     "exported": false
   },
   {
-    "type": "iec61499::net::SUBSCRIBE_2",
-    "kind": "GenericComm",
-    "file": "Generic/SUBSCRIBE_2.fbt",
-    "exported": false
-  },
-  {
     "type": "iec61499::net::SUBSCRIBE_4",
     "kind": "GenericComm",
     "file": "Generic/SUBSCRIBE_4.fbt",
     "exported": false
   },
   {
-    "type": "iec61499::net::SUBSCRIBE_6",
+    "type": "iec61499::net::SUBSCRIBE_5",
     "kind": "GenericComm",
-    "file": "Generic/SUBSCRIBE_6.fbt",
+    "file": "Generic/SUBSCRIBE_5.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::SUBSCRIBE_8",
+    "kind": "GenericComm",
+    "file": "Generic/SUBSCRIBE_8.fbt",
     "exported": false
   }
 ]
