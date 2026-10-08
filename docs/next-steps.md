@@ -18,7 +18,7 @@ That is four deliverables:
 | --- | --- | --- | --- |
 | D1 | Module rules | How a module is built: the module library (module state machine, occupation, skill state machine), the fixed pattern of a module level skill, what may change online ([module-rules.md](module-rules.md)) | Built |
 | D2 | Information model | The resource AAS in ARSO 0.7: the line, each module and each component, checked by a closed validation ([aas-models.md](aas-models.md)) | Built |
-| D3 | Method and tools | Register, verify, operate, reconfigure, record | Register and operate are built. Verify and reconfigure work from the module spec (YAML), not from the AAS |
+| D3 | Method and tools | Register, verify, operate, reconfigure, record | Register and operate are built. Verify, reconfigure and record from the AAS work since 8 Oct for a value and for a new skill (`modsync verify`, `reconfigure`); an editor for the description and a run on the Pi are missing |
 | D4 | Evaluation | The same changes online and by full redeployment, timed, on a Raspberry Pi | Not built |
 
 Agents are not part of the paper; they are its future work ([after the paper](#after-the-paper)).
@@ -30,18 +30,22 @@ Agents are not part of the paper; they are its future work ([after the paper](#a
 | Nameplate, asset type | `modreg` | the checker | Which kind of resource this is (line, module, component), so which rules apply |
 | Hierarchical Structures | `modreg` | plan check | The line's modules and a module's components |
 | Capability Description | `modreg` | plan check, `modlink.run_capability` | What a module offers and within which ranges; names the skill that realizes it |
-| Skills (in a module's and in each component's AAS) | `modreg` | `modlink`; the reconfiguration (step A2) | How a skill is called (commands, variables with limits) and what it is composed of (steps, constants) |
+| Skills (in a module's and in each component's AAS) | `modreg` | `modlink`; `modsync verify` and `reconfigure` | How a skill is called (commands, variables with limits) and what it is composed of (steps, constants) |
 | Module | `modreg` | `modlink` | The module's own commands (Reset, Start, Stop, Abort, Clear, Occupy, Release) |
 | Asset Interfaces Description | `modreg` | `modlink` | The OPC UA endpoint and the browse path of every action and property |
 | Asset Interfaces Mapping Configuration | `modreg` | `modlink` | Which interface element carries a skill's state, error and results |
-| Control Configuration | `modreg` | nothing yet; verification (step A1) | Block type, instance and type hash of every skill and step; the rule set; the record of a change |
+| Control Configuration | `modreg`; `modsync reconfigure` (the record) | `modsync verify` | Block type, instance and type hash of every skill and step; the rule set; the record of a change |
 | Operational Data | `modreg` | `modlink`, through the mapping | What a value at the interface means (a skill's state, its error, a result). No live values are written into it |
 | Product AAS: bill of material, required capabilities, plan | `modreg` (product) | plan check | What a product needs; today the plan names a resource and a skill per step |
 
-The Steps of a skill and the Control Configuration are what the claim stands on, and they are
-the two parts no tool reads yet. Steps A1 and A2 change that.
+The Steps of a skill and the Control Configuration are what the claim stands on. Since 8 Oct
+`modsync` reads both: the Skills submodel says what is wanted, the Control Configuration what was
+built.
 
-## Where a reconfiguration comes from (proposal, to be confirmed)
+## Where a reconfiguration comes from
+
+Confirmed on 8 Oct, with the changeover as its scope, and tried the same day
+([work.md](work.md), *The AAS as the desired state*).
 
 **The AAS is the desired state.** A reconfiguration is a change to the module's AAS that the
 tools then carry into the running program. Who made the change is a separate matter.
@@ -80,11 +84,11 @@ Later a resource agent calls the same function when a bid that needs a reconfigu
 
 | # | Step | Where | Done when |
 | --- | --- | --- | --- |
-| A0 | **Mock-up.** A skill described but not built (DoubleDose) in the filling module's AAS on the local server, and what the Control Configuration records after it is created | scratch, local AAS server | You have confirmed the structure |
-| A1 | **Verify against the AAS.** Compare the running program with what the AAS states (instances, block types, hashes, steps, constants), not with the module spec | `modsync` | A program that differs from its AAS is reported with the difference; no module spec is read |
-| A2 | **Reconfigure from the AAS.** Create a module level skill from its description in the AAS; change a constant; both verified by read-back and recorded | `modsync`, `modreg` | The live test that creates DoubleDose passes when it starts from the AAS; the Control Configuration shows the change |
+| A0 | **Try-out.** **Done 8 Oct:** instead of a mock-up, the idea was built as far as it runs: DoubleDose described but not built, created on FORTE, recorded | `modsync/desired.py` | You have confirmed the structure |
+| A1 | **Verify against the AAS.** Compare the running program with what the AAS states (instances, block types, hashes, steps, constants), not with the module spec. **Done 8 Oct** (`modsync verify`); hashes are verified once they are recorded | `modsync` | A program that differs from its AAS is reported with the difference; no module spec is read |
+| A2 | **Reconfigure from the AAS.** Create a module level skill from its description in the AAS; change a constant; both verified by read-back and recorded. **Done 8 Oct** on FORTE on the PC (`modsync reconfigure`), with the change added to the boot file. **Left:** a way to write the description (the tests take it from `modreg`), with the interface description of the new skill; the same on the Pi | `modsync`, `modreg` | The live test that creates DoubleDose passes when it starts from the AAS; the Control Configuration shows the change |
 | A3 | **Operate what was created.** A client that reads the registered AAS again finds and runs the new skill | `modlink` (HMI repository) | `modlink` runs DoubleDose on FORTE from the AAS alone |
-| A4 | **Callable functions.** Verify, create a skill, set a value: one Python interface, so a script, the HMI or later an agent calls the same thing | `modsync` | The scenario runner (B1) uses only these |
+| A4 | **Callable functions.** Verify, create a skill, set a value: one Python interface, so a script, the HMI or later an agent calls the same thing. **Started 8 Oct:** `desired.load`, `read`, `reconfigure`, `record`, `store` | `modsync` | The scenario runner (B1) uses only these |
 
 Step 1.2 of the old plan (a whole profile read from the running program) is no longer on the
 path: the AAS is delivered with the module, the program is only compared with it.
@@ -115,8 +119,8 @@ Outline and figures by 1 Nov; experiment runs and text from 2 Nov; submission 18
 
 | Week | Work |
 | --- | --- |
-| 9 to 18 Oct | A0, A1, A2 |
-| 19 to 25 Oct | A3, A4, B1, B2 |
+| 9 to 18 Oct | A2 (writing a description, the Pi), A3 |
+| 19 to 25 Oct | A4, B1, B2 |
 | 26 Oct to 1 Nov | B3 (when the driver is in), C as needed, outline and figures |
 | 2 to 18 Nov | Experiment runs, writing |
 
@@ -154,8 +158,9 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 
 | Question | Blocks |
 | --- | --- |
-| Is "the AAS is the desired state" the way a reconfiguration is described (the proposal above)? | A0 |
-| A skill that is described but not built: is the missing instance in the Control Configuration enough to tell it, or does it get a state of its own (described, deployed)? | A0 |
+| Who writes the description of a new skill, and with what? In the try-out `modreg` builds it from a module spec. An engineer needs an editor (the AAS server's own UI, the HMI, the planner), and the interface description of the new skill has to come with it or be derived by rule | A2 |
+| A skill that is described but not built is told by its missing instance in the Control Configuration (as tried). Does it also get a state of its own that a client can read (described, deployed)? | A3 |
+| A change that needs a restart (a sequence changed, a skill removed) is refused. For the baseline a boot file is needed, and the AAS does not hold the wiring: is the vendor's boot file part of what is delivered? | B2 |
 | Which changes does the paper show: a constant and a new skill, or more? | B1 |
 | Two components of one kind in a module (the two cameras) need one skill name twice | later |
 | What a component's AAS holds besides its skills (a nameplate?) | later |
