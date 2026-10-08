@@ -49,7 +49,19 @@ python -m modsync pull --host 192.168.0.191                    # which module ru
 
 ## Install on a Raspberry Pi
 
-One command each, run on the Pi (64-bit Linux with Docker; the login in the `docker` group):
+A fresh Raspberry Pi 4 or 5 with a 64-bit Linux (Raspberry Pi OS, Ubuntu) becomes an IEC 61499
+PLC with one command, run on the Pi by a user with sudo:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/runtime/install.sh | bash
+```
+
+It installs Docker if it is missing, starts FORTE (with the block types of every module) in a
+container that comes back after a reboot, gives it the GPIO lines of the 40-pin header and enables
+the two hardware PWM channels (GPIO18 and GPIO19; reboot once for them). Afterwards the Pi answers
+on the management port 61499, and on OPC UA port 4840 once it runs a program.
+
+The other installers, one command each:
 
 ```bash
 # everything: the tools, FORTE in Docker, and the filling module's program
@@ -69,9 +81,14 @@ modsync push filling --target pi --host localhost             # bring the module
 ```
 
 Running an installer again updates it; the module's program (`~/forte/boot/forte.fboot`) is kept.
-The runtime installer downloads FORTE as the asset `forte-aarch64` of the latest GitHub release:
-publish a new build with `runtime/package-release.ps1` (or set `FORTE_FILE` to a binary copied
-to the Pi). Settings are listed at the top of each script.
+The runtime installer takes FORTE from this repository (`runtime/bin/forte-aarch64`, with its
+checksum). A Pi can only run a program whose block types its FORTE was built with, so after a
+change of block types: build (`runtime/build-modules.ps1 -Config pi/modules-pi`), put the result
+into the repository (`runtime/package-runtime.ps1`), commit, and run the installer on the Pi again.
+Settings are listed at the top of each script.
+
+On a Raspberry Pi 5 the PWM channels have other numbers than on a Pi 4: GPIO18 is channel 2 and
+GPIO19 channel 3 of `pwmchip0` (Pi 4: channels 0 and 1). A module description names the channel.
 
 ## Registering a module
 
