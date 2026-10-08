@@ -5,7 +5,7 @@ Eclipse 4diac FORTE programs on Raspberry Pis, are described by their Asset Admi
 Shells, and are reconfigured from product, process and resource models.
 
 Each top-level folder is a future repository; for now they share this one, with one Python
-project (`pyproject.toml`) for the three packages. `docs/` and the build and modelling plan are
+project (`pyproject.toml`) for the three packages. The files in `docs/` are
 working documents (notes, plans, learnings), in the repository for now so they can be shared
 between computers; they are not finished documentation and will be cleaned up or removed. So
 is `ontology/` (the product, process and resource ontologies; ARSO is what `modreg` generates

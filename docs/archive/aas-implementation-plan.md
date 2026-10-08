@@ -1,6 +1,6 @@
 # AAS models: implementation plan and example structures
 
-How the [conceptual model](conceptual-model.md) is carried in the product, process and resource
+How the [conceptual model](../../ontology/conceptual-model.md) is carried in the product, process and resource
 AAS, shown on the filling line (the Filling module, the HGH vial), and the plan to get there.
 Drafted 30 Sep 2026; the manifest, backlog and plan sections brought up to date on 5 Oct 2026
 with what `modreg` built (see `docs/work.md`, Registration). The example structures are the

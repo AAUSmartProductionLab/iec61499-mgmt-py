@@ -12,7 +12,7 @@ It describes what is **built**, and says where a model exists only on paper. Sou
 | Resource AASs: line, module, component | `modreg` in this repository and the AASs it builds for the example line; ARSO 0.7 (`ontology/ARSO`) |
 | Product AAS, plan, stations of the planner | the demo data on the local AAS server (37 AASs, 31 sequences), which a newer planner than the pushed one wrote; and the planner's process sequence module (fork `basyx-aas-web-ui`, branch `feat/process-sequence-pharma`, commit `058a03e`) for its README and readers |
 | Product AAS and plan as built here | `modreg` (`product.py`), the templates in `aas61499-tools/modreg/templates`, and the vial of the example line |
-| Intended product and process models | APSO 0.2, AProSO 0.1 and PPRL 0.1 (`ontology/`), [aas-implementation-plan.md](../ontology/aas-implementation-plan.md) |
+| Intended product and process models | APSO 0.2, AProSO 0.1 and PPRL 0.1 (`ontology/`), [aas-implementation-plan.md](archive/aas-implementation-plan.md) (30 Sep, the product and process parts) |
 | Deviations of the generator's resource AAS from IDTA | [IDTA_CONFORMANCE.md](../ontology/ARSO/IDTA_CONFORMANCE.md) |
 
 Not seen: AASs on the lab's server, and the source of the planner version that is running locally.
