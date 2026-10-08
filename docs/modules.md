@@ -53,8 +53,12 @@ the module's equipment item connects to it:
 | 3 | Step | `Step` | one step per pulse: the Pi's PWM at 1 kHz while the axis moves |
 | 4 | Dir | `Down` | high is "forward"; which way that is depends on how the motor is connected |
 | 5 | !Enable | `Enable` | inverted and pulled high on the board: the motor is on while the line is low, so the Pi's line is set active low |
-| 6 | Min | `AtHome` | the endstop's signal, passed through; its level at the switch depends on the endstop |
-| 7 | Max | not used | a second endstop |
+| 6, 7 | Min, Max | not used | the board only passes the signals of its own endstop sockets through to these pins; it does not act on them |
+
+The home switch is an ordinary limit switch at the top, wired straight to the Pi: between GPIO23
+(Pi pin 16) and GND, closing when pressed. The Pi's pull-up holds the line high otherwise, and the
+line is set active low, so `AtHome` is true while the switch is pressed. The trimpot on the board
+sets the motor current, not the step size.
 
 To check before wiring (not stated on that page; from the A3982's data sheet as I remember it, so
 verify): the board feeds its logic and the endstops with 5 V from its own regulator. A high input
@@ -94,12 +98,15 @@ again. A blocked axis is noticed only when it is to find the switch: nothing mea
 
 | Skill | Sequence |
 | --- | --- |
-| `Dispensing(Volume = 1 mL)` | MoveAxis(40 mm) → Dispense(Volume) → MoveAxis(0 mm) → Weigh; when stopped: Home |
+| `Dispensing(Volume = 1 mL)` | MoveAxis(40 mm) → Dispense(Volume) → Home → Weigh; when stopped: Home |
 | Module procedure Resetting | Home → Tare |
 | Module procedure Stopping | Home |
 
-`MoveAxis` is used twice in Dispensing, as the steps `NeedleDown` and `NeedleUp`; where each goes
-is a constant of the step that reconfiguration can change, like the flow rate of `Dispense`. The
+The needle goes back up by homing, after every operation: a position that is counted, not
+measured, drifts a little with every move, and the switch takes that out again. Where `MoveAxis`
+goes (the step `NeedleDown`) is a constant of the step that reconfiguration can change, like the
+flow rate of `Dispense`. The speed in the description (20 mm/s) assumes a screw of 8 mm per turn
+and half steps at 1 kHz; measure a move and correct it. The
 Filling capability's FillVolume is set by Dispensing's Volume. Gone with the DC motor: the skills
 `MoveNeedleUp`, `MoveNeedleDown` and `AttachNeedle`, and the start boost and brake pulses. A plain
 wait (`Dwell`) was removed on 8 Oct 2026: no skill used it.
@@ -135,7 +142,7 @@ is for that case and runs first when the module resets.
 
 | Skill | Sequence |
 | --- | --- |
-| `Stoppering` | MoveAxis(40 mm) → PressStopper → MoveAxis(0 mm); when stopped: Home |
+| `Stoppering` | MoveAxis(40 mm) → PressStopper → Home; when stopped: Home |
 | Module procedure Resetting | RetractPiston → Home |
 | Module procedure Stopping | Home |
 

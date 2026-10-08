@@ -46,10 +46,10 @@ def test_what_a_module_is_made_of():
     dispensing = found["composites"]["Dispensing"]
     assert dispensing["offered"] and dispensing["results"] == {"Weight": "Weigh.Weight"}
     assert dispensing["parameters"] == {"Volume": {"type": "LREAL", "default": 1.0, "minimum": 0.5, "maximum": 10.0}}
-    assert [s["skill"] for s in dispensing["execute"]] == ["MoveAxis", "Dispense", "MoveAxis", "Weigh"]
-    # One skill used twice: each step has its own name and its own position, a constant of the step.
+    assert [s["skill"] for s in dispensing["execute"]] == ["MoveAxis", "Dispense", "Home", "Weigh"]
+    # The step has a name of its own and where it goes, a constant of the step.
     assert [(s["name"], s["bind"]) for s in dispensing["execute"] if s["skill"] == "MoveAxis"] == \
-        [("NeedleDown", {"Position": 40.0}), ("NeedleUp", {"Position": 0.0})]
+        [("NeedleDown", {"Position": 40.0})]
     # The volume is the skill's parameter, the flow rate a constant of the step.
     assert dispensing["execute"][1]["bind"] == {"Volume": "Volume", "FlowRate": 1.0}
     assert [s["skill"] for s in dispensing["stop"]] == ["Home"]

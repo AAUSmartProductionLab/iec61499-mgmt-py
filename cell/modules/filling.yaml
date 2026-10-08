@@ -19,11 +19,13 @@ equipment:
     kind: LinearAxis
     description: Needle lift, a stepper motor through a step and direction driver, with a limit switch at the top (home)
     # The driver is a RepRap Stepper Motor Driver v2.3 (Allegro A3982, https://reprap.org/wiki/Stepper_Motor_Driver_2.3).
-    # Its 10-pin interface: 2 GND, 3 Step, 4 Dir, 5 !Enable, 6 Min, 7 Max (the endstops, passed through).
-    # The board's logic runs on its own 5 V: the Pi's 3.3 V outputs and inputs need a level shifter.
+    # Its 10-pin interface: 2 GND, 3 Step, 4 Dir, 5 !Enable (6 Min and 7 Max only pass its own endstop
+    # sockets through and are not used). The board's logic runs on its own 5 V: check that it takes the
+    # Pi's 3.3 V as high, or put a level shifter in between.
     inputs:
-      # The board's Min (pin 6): the endstop at the top. Which level means "at the switch" depends on the endstop.
-      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up}}        # Pi pin 16
+      # An ordinary limit switch at the top, straight to the Pi: between the line and GND, closing when
+      # pressed (the Pi's pull-up holds the line high otherwise).
+      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up, active_low: true}}   # Pi pin 16
     outputs:
       # !Enable (pin 5) is inverted and pulled high on the board: the motor is on while the line is low.
       Enable: {modbus: c0, gpio: {line: 17, active_low: true}}     # Pi pin 11
@@ -35,8 +37,9 @@ equipment:
       Stop: {}
       Up:   {Enable: true, Step: 50}
       Down: {Enable: true, Down: true, Step: 50}
-    # No encoder: the controller counts the time it steps, as a 3D printer counts its steps. The speed
-    # (mm per second at the step rate above) and the travel are placeholders until the axis is measured.
+    # No encoder: the controller counts the time it steps. The speed assumes the most common screw (8 mm
+    # per turn) and half steps (400 per turn) at the 1 kHz above: 20 mm/s. Measure a move and correct it;
+    # the travel is a placeholder too. What error remains is taken out by homing after every operation.
     position: {unit: mm, speed: 20.0, increase: Down, decrease: Up, home: AtHome, minimum: 0.0, maximum: 60.0}
     sim: {stepper: {step: Step, direction: Down, enable: Enable, speed: 20.0, travel: 60.0, start: 15.0,
                     switches: {AtHome: 0.0}}}
@@ -92,9 +95,8 @@ composites:
     parameters:
       Volume: {unit: mL, minimum: 0.5, maximum: 10.0, default: 1.0, description: Fill volume}
     # The filling position and the flow rate are the station's: constants of the steps, changed by
-    # reconfiguration.
-    execute: [{MoveAxis: {Position: 40.0}, as: NeedleDown}, {Dispense: {Volume: Volume, FlowRate: 1.0}},
-              {MoveAxis: {Position: 0.0}, as: NeedleUp}, Weigh]
+    # reconfiguration. The needle goes back up by homing, so every cycle starts from the switch again.
+    execute: [{MoveAxis: {Position: 40.0}, as: NeedleDown}, {Dispense: {Volume: Volume, FlowRate: 1.0}}, Home, Weigh]
     stop: [Home]                     # after an interruption the switch is what is certain
     results: {Weight: Weigh.Weight}
 

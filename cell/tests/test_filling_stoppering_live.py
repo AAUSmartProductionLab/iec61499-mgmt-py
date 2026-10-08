@@ -283,7 +283,7 @@ def test_filling_the_volume_decides_how_long_it_dispenses(filling):
         started = time.monotonic()
         assert ua.value("Skills/Dispensing/Parameters/Volume") == volume
         assert ua.value("Skills/Dispensing/Execute/Dispense/Parameters/Volume") == volume
-        ua.expect("Skills/Dispensing/Execute/NeedleUp/State", S["Running"], timeout=6)
+        ua.expect("Skills/Dispensing/Execute/Home/State", S["Running"], timeout=6)
         took[volume] = time.monotonic() - started
         ua.expect("Skills/Dispensing/State", S["Succeeded"], timeout=8)
     assert 0.7 <= took[1.0] <= 1.5 and 2.2 <= took[2.5] <= 3.0, took
@@ -294,13 +294,13 @@ def test_filling_dispensing_runs_its_steps_in_order_and_holds_the_needle(filling
     sim, ua = filling
     a = str(uuid.uuid4())
     ready(sim, ua, a)
-    steps = {s: ua.record(f"Skills/Dispensing/Execute/{s}/State") for s in ["NeedleDown", "Dispense", "NeedleUp", "Weigh"]}
+    steps = {s: ua.record(f"Skills/Dispensing/Execute/{s}/State") for s in ["NeedleDown", "Dispense", "Home", "Weigh"]}
     assert ua.call("Skills/Dispensing/Start", a, 1.0) == [True, 0]
     ua.expect("Skills/Dispensing/Execute/Dispense/State", S["Running"], timeout=6)
     assert at(sim, ua, 40.0)                                                # dispensing at the filling position
     assert ua.value("Skills/Dispensing/Execute/NeedleDown/Parameters/Position") == 40.0
     assert ua.value("Skills/Dispensing/Execute/NeedleDown/State") in DONE
-    assert ua.value("Skills/Dispensing/Execute/NeedleUp/State") == S["Idle"]
+    assert ua.value("Skills/Dispensing/Execute/Home/State") == S["Idle"]
     assert ua.call("Skills/MoveAxis/Start", a, 0.0) == [False, E["Busy"]]   # Dispensing holds the needle
     assert ua.call("Skills/Dispensing/Start", a, 1.0) == [False, E["Busy"]]
     ua.expect("Skills/Dispensing/State", S["Succeeded"], timeout=8)
@@ -464,7 +464,7 @@ def test_stoppering_runs_its_steps_in_order_and_holds_its_equipment(stoppering):
     sim, ua = stoppering
     a = str(uuid.uuid4())
     ready(sim, ua, a)
-    steps = {s: ua.record(f"Skills/Stoppering/Execute/{s}/State") for s in ["HeadDown", "PressStopper", "HeadUp"]}
+    steps = {s: ua.record(f"Skills/Stoppering/Execute/{s}/State") for s in ["HeadDown", "PressStopper", "Home"]}
     assert ua.call("Skills/Stoppering/Start", a) == [True, 0]
     ua.expect("Skills/Stoppering/Execute/PressStopper/State", S["Running"], timeout=6)
     assert ua.value("Equipment/LinearAxis/ActualPosition") == 40.0           # pressing at the working position
