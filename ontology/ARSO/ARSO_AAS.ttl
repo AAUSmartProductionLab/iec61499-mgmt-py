@@ -112,13 +112,20 @@ arso:ResourceAAS rdf:type owl:Class ;
   rdfs:label "Resource AAS" ;
   rdfs:comment "Asset Administration Shell of a resource (line, module, component). v0.5: the restrictions below apply to this class, not to every aas:AssetAdministrationShell, so ARSO can be loaded together with the product (APSO) and process (AProSO) blueprints without every shell having to represent a css:Resource. The JSON-to-RDF projection types a shell as ResourceAAS when it represents a resource, e.g. when its derivedFrom is the lab's resource template (https://smartproductionlab.aau.dk/aas/templates/resource)." .
 
+arso:ResourceShell rdf:type owl:Class ;
+  rdfs:subClassOf aas:AssetAdministrationShell ;
+  rdfs:label "AAS of a resource" ;
+  rdfs:comment "The Asset Administration Shell of any resource: a module (arso:ResourceAAS), a component of one (arso:ComponentAAS) or a system of modules (arso:SystemAAS). What each has to hold is on those classes (v0.7)." .
+
+arso:ResourceAAS rdfs:subClassOf arso:ResourceShell .
+
 arso:hasAAS rdf:type owl:ObjectProperty ;
   rdfs:domain css:Resource ;
-  rdfs:range arso:ResourceAAS ;
+  rdfs:range arso:ResourceShell ;
   rdfs:comment "Connects a CSS Resource to the AAS that represents it." .
 
 arso:representsResource rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
-  rdfs:domain arso:ResourceAAS ;
+  rdfs:domain arso:ResourceShell ;
   rdfs:range css:Resource ;
   owl:inverseOf arso:hasAAS ;
   rdfs:comment "The CSS Resource this AAS represents." .
@@ -128,10 +135,10 @@ css:Resource rdfs:subClassOf [
   rdf:type owl:Restriction ;
   owl:onProperty arso:hasAAS ;
   owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
-  owl:onClass arso:ResourceAAS ] .
+  owl:onClass arso:ResourceShell ] .
 
 # Each resource AAS represents exactly one Resource
-arso:ResourceAAS rdfs:subClassOf [
+arso:ResourceShell rdfs:subClassOf [
   rdf:type owl:Restriction ;
   owl:onProperty arso:representsResource ;
   owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
@@ -203,24 +210,12 @@ arso:hasControlConfigurationSubmodel rdf:type owl:ObjectProperty , owl:Functiona
 arso:usesSkill rdf:type owl:ObjectProperty ;
   rdfs:domain arso:SkillSMC ;
   rdfs:range arso:SkillSMC ;
-  arso:resolvedFrom arso:SkillUsesSML ;
-  rdfs:comment "Resolved Uses entry: a composite skill uses this skill (same AAS or an AAS that is a part of it)." .
-
-arso:occupies rdf:type owl:ObjectProperty ;
-  rdfs:domain arso:SkillSMC ;
-  rdfs:range [ rdf:type owl:Class ; owl:unionOf ( arso:EntryNodeEntity arso:NodeEntity ) ] ;
-  rdfs:comment "Resolved Component entry: the HierarchicalStructures node (a component of the resource) a primitive skill moves, and so locks while it runs." .
-
-arso:realizesProperty rdf:type owl:ObjectProperty ;
-  rdfs:domain arso:SkillParameterProperty ;
-  rdfs:range arso:PropertyContainerSMC ;
-  rdfs:comment "Resolved RealizesProperty: the capability property a skill parameter realizes." .
+  rdfs:comment "A skill runs this skill: a step of one of its commands refers to it (same AAS or an AAS that is a part of it). Since v0.7 the steps say so themselves (arso:StepSkillRef); the projection does not resolve them into this link." .
 
 arso:realizedBySkill rdf:type owl:ObjectProperty ;
   rdfs:domain arso:CapabilityContainerSMC ;
   rdfs:range arso:SkillSMC ;
   rdfs:comment "Resolved CapabilityRealizedBy: the skill that realizes an offered capability (same AAS)." .
-
 
 #################################################################
 #################################################################
@@ -336,7 +331,7 @@ arso:ResourceAAS rdfs:subClassOf [
   owl:onClass arso:ModuleSubmodel ] .
 
 arso:ComponentAAS rdf:type owl:Class ;
-  rdfs:subClassOf aas:AssetAdministrationShell ;
+  rdfs:subClassOf arso:ResourceShell ;
   rdfs:label "Component AAS" ;
   arso:assetType "https://smartproductionlab.aau.dk/Resource/Component" ;
   rdfs:comment "Asset Administration Shell of a component of a module: a part that acts and so has skills of its own (v0.7). It needs its Skills; a nameplate is optional. Its interface is the module's: the commands of its skills refer to actions of the module's interface description." .
@@ -349,7 +344,7 @@ arso:ComponentAAS rdfs:subClassOf
     owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:DigitalNameplateSubmodel ] .
 
 arso:SystemAAS rdf:type owl:Class ;
-  rdfs:subClassOf aas:AssetAdministrationShell ;
+  rdfs:subClassOf arso:ResourceShell ;
   rdfs:label "System AAS" ;
   arso:assetType "https://smartproductionlab.aau.dk/Resource/System" ;
   rdfs:comment "Asset Administration Shell of a production system made of modules (v0.7). It needs its Hierarchical Structures: the modules, each found by its asset id." .
