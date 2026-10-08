@@ -9,6 +9,10 @@ equipment item (``sim`` in cell/modules/*.yaml):
            starts moving only after an output has been on for ``dead_s`` (so brake pulses do not
            move it); ``switches`` are inputs that are TRUE at their end position (0 or 1);
            ``position: {input, span}`` publishes the position as an LREAL input (0..span).
+``stepper`` a position in the item's own unit, moved at ``speed`` units per second while the
+           ``step`` output (an LREAL: the pulses) is on and, if named, ``enable``; with the
+           ``direction`` output on it increases, else it decreases; it stays within 0..``travel``;
+           ``switches`` are inputs that are TRUE at their position (an end of the travel).
 ``servo``  records the angle of an LREAL output (None while it is off).
 ``values`` constant values of inputs.
 
@@ -39,6 +43,15 @@ class Axis:
         self.direction = 0
 
 
+class Stepper:
+    """One simulated stepper axis: its position is in the item's unit, not 0..1."""
+    def __init__(self, cfg):
+        self.step, self.direction, self.enable = cfg["step"], cfg["direction"], cfg.get("enable")
+        self.speed, self.travel = float(cfg["speed"]), float(cfg["travel"])
+        self.position = float(cfg.get("start", 0.0))
+        self.switches = {name: float(at) for name, at in cfg.get("switches", {}).items()}
+
+
 class ModuleSim:
     """Register image and kinematics of one module."""
     def __init__(self, spec: ModuleSpec):
@@ -47,7 +60,7 @@ class ModuleSim:
         self.bits = {}        # ("c"|"d", address) -> bool
         self.regs = {}        # ("h"|"i", address) -> int
         self.points = {}      # "<Equipment>.<Point>" -> (table, address)
-        self.axes: dict[str, Axis] = {}
+        self.axes: dict[str, Axis | Stepper] = {}
         self.servos: dict[str, str] = {}
         self.values: dict[str, float] = {}
         self.trace: list[tuple[float, str, object]] = []   # (time, "<Eq>.<Output>", value) of every output change
@@ -61,6 +74,8 @@ class ModuleSim:
             sim = eq.sim or {}
             if "axis" in sim:
                 self.axes[eq_name] = Axis(sim["axis"])
+            if "stepper" in sim:
+                self.axes[eq_name] = Stepper(sim["stepper"])
             if "servo" in sim:
                 self.servos[eq_name] = sim["servo"]["output"]
             for name, value in sim.get("values", {}).items():
@@ -90,7 +105,7 @@ class ModuleSim:
             self.regs[(table, address)] = max(0, min(65535, int(round(float(value) / scale))))
 
     def position(self, eq: str) -> float:
-        """Axis position 0..1."""
+        """Axis position: 0..1, or in its own unit for a stepper."""
         with self.lock:
             return self.axes[eq].position
 
@@ -131,7 +146,7 @@ class ModuleSim:
                 self._record("c", address, value)
             self.bits[("c", address)] = value
             for eq, axis in self.axes.items():
-                if self.output(eq, axis.forward) and self.output(eq, axis.backward):
+                if isinstance(axis, Axis) and self.output(eq, axis.forward) and self.output(eq, axis.backward):
                     self.shoot_through += 1
 
     def write_reg(self, address, value):
@@ -146,6 +161,15 @@ class ModuleSim:
         with self.lock:
             now = time.monotonic()
             for eq, axis in self.axes.items():
+                if isinstance(axis, Stepper):
+                    stepping = self.output(eq, axis.step) and (axis.enable is None or self.output(eq, axis.enable))
+                    if stepping:
+                        way = 1 if self.output(eq, axis.direction) else -1
+                        axis.position = min(axis.travel, max(0.0, axis.position + way * axis.speed * dt))
+                    for name, at in axis.switches.items():
+                        near = axis.position >= at - 1e-6 if at > axis.travel / 2 else axis.position <= at + 1e-6
+                        self.set_input(eq, name, near)
+                    continue
                 fwd, bwd = self.output(eq, axis.forward), self.output(eq, axis.backward)
                 direction = (1 if fwd else 0) - (1 if bwd else 0)
                 if direction != axis.direction:
