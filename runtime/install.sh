@@ -7,8 +7,8 @@
 #   curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/runtime/install.sh | bash
 #
 # FORTE then runs as the container "forte" in ~/forte, restarts after a reboot, and loads the
-# program in ~/forte/boot/forte.fboot (empty at first: deploy one with modsync push, see
-# aas61499-tools/install.sh). Management port 61499 (no authentication: lab network only),
+# program in ~/forte/boot/forte.fboot (empty at first: deploy one from a PC with deploy/pi.py
+# module or modsync push). Management port 61499 (no authentication: lab network only),
 # OPC UA port 4840. Run the script again to update FORTE; the program is kept.
 #
 # Settings (environment variables):
