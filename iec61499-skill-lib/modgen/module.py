@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ET
 from .fbxml import (STD, Basic, Composite, Project, Simple, SubNet, Wiring, arrange, connections, elem, fb, publish,
                     save, server, subapp, subscribe, wstr)
 from .library import ERRORS, cat, lit, q, ua
-from .spec import BACKENDS, Equipment, ModuleSpec, Output, Parameter, Skill, Step, ms, names
+from .spec import ACTUAL, BACKENDS, HOMED, MOVE, MOVING, Equipment, ModuleSpec, Output, Parameter, Skill, Step, ms, names
 
 IO_TYPE = {("in", "BOOL"): "DI", ("in", "LREAL"): "AI", ("out", "BOOL"): "DO", ("out", "LREAL"): "AO"}
 # GPIOChip BiasMode. FORTE 3.3.0 indexes {as is, disable, pull-up, pull-down} with an enum
@@ -50,16 +50,38 @@ def value_lit(value, typ: str) -> str:
 # Equipment IO (generic) and the equipment's commands (used inside the skills)
 # --------------------------------------------------------------------------------------------
 
-def message(eq: Equipment, prefix: str, enable: str) -> list[str]:
+def message(eq: Equipment, prefix: str, enable: str, move: bool = True) -> list[str]:
     """Variables of the equipment's command message after (Holder, Release): one value per output,
-    then one enable per analog output (off is no signal at all, not the value 0)."""
-    return [f"{prefix}{o}" for o in eq.outputs] + [f"{enable}{o}" for o, x in eq.outputs.items() if x.type == "LREAL"]
+    then one enable per analog output (off is no signal at all, not the value 0); for an item with a
+    position (``move``) also whether it is to move, and where to."""
+    values = [f"{prefix}{o}" for o in eq.outputs] + [f"{enable}{o}" for o, x in eq.outputs.items() if x.type == "LREAL"]
+    return values + ([f"{prefix}Move", f"{prefix}Goal"] if move and eq.position else [])
+
+
+def message_types(eq: Equipment, move: bool = True) -> list[str]:
+    """Types of the variables ``message`` names."""
+    types = [x.type for x in eq.outputs.values()] + ["BOOL"] * sum(x.type == "LREAL" for x in eq.outputs.values())
+    return types + (["BOOL", "LREAL"] if move and eq.position else [])
+
+
+def output_values(eq: Equipment, command: str | None, pad: str = "") -> list[str]:
+    """ST setting the wanted output values N_*/NE_* to those of a command of one phase (None: all off)."""
+    values = eq.commands[command][0].values() if command else {}
+    lines = []
+    for o, x in eq.outputs.items():
+        if x.type == "BOOL":
+            lines.append(f"{pad}N_{o} := {'TRUE' if values.get(o) else 'FALSE'};")
+        else:
+            lines += [f"{pad}N_{o} := {num(values.get(o, 0.0))};", f"{pad}NE_{o} := {'TRUE' if o in values else 'FALSE'};"]
+    return lines
 
 
 def targets_code(eq: Equipment) -> str:
     """ST computing the output values N_*/NE_* and the phase timing of (Command, Phase)."""
     outs = eq.outputs
     lines = [f"N_{o} := FALSE;" if x.type == "BOOL" else f"N_{o} := 0.0;\nNE_{o} := FALSE;" for o, x in outs.items()]
+    if eq.position:
+        lines.append("N_Move := FALSE;\nN_Goal := 0.0;")
     lines.append("Timed := FALSE;\nPhaseDT := T#0ms;")
 
     def phase_code(phase, indent):
@@ -77,11 +99,15 @@ def targets_code(eq: Equipment) -> str:
 
     first = True
     # Command 0 is all off, like any command whose phases set nothing and take no time.
-    active = [(c, st) for c, st in list(eq.commands.items())[1:] if any(ph.values() or ph.duration for ph in st)]
+    active = [(c, st) for c, st in list(eq.commands.items())[1:]
+              if any(ph.values() or ph.duration for ph in st) or eq.position and c == MOVE]
     for cmd, steps in active:
         lines.append(f"{'IF' if first else 'ELSIF'} Command = {eq.code(cmd)} THEN")
         first = False
-        if len(steps) == 1:
+        if eq.position and cmd == MOVE:
+            # The equipment knows where it is: it chooses the outputs and the time itself.
+            lines += ["  N_Move := TRUE;", "  N_Goal := Arg;"]
+        elif len(steps) == 1:
             lines += phase_code(steps[0], 2)
         else:
             for i, phase in enumerate(steps):
@@ -95,8 +121,9 @@ def targets_code(eq: Equipment) -> str:
 
 
 def takes_arg(eq: Equipment) -> bool:
-    """A command of the equipment passes its argument to an output (``Angle: Arg``)."""
-    return any(v == "Arg" for steps in eq.commands.values() for phase in steps for v in phase.values().values())
+    """A command of the equipment passes its argument to an output (``Angle: Arg``), or it is where to move to."""
+    return eq.position is not None or any(
+        v == "Arg" for steps in eq.commands.values() for phase in steps for v in phase.values().values())
 
 
 def make_equipment_commands(p: Project, pkg: str, name: str, eq: Equipment):
@@ -108,7 +135,7 @@ def make_equipment_commands(p: Project, pkg: str, name: str, eq: Equipment):
     """
     values = message(eq, "N_", "NE_")
     arg = ["Arg"] if takes_arg(eq) else []
-    types = {**{f"N_{o}": x.type for o, x in eq.outputs.items()}, **{v: "BOOL" for v in values if v.startswith("NE_")}}
+    types = dict(zip(values, message_types(eq)))
     b = Basic(p, pkg, f"EC_{name}", f"Commands of {name} as output values, in timed phases: "
               + ", ".join(f"{k}={eq.code(k)}" for k in eq.commands),
               {"PLAY": ["Holder", "Command", *arg, "Release"], "PHASE_T": []},
@@ -139,13 +166,17 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
     It writes the output values its holder sends (break before make), reads the inputs every cycle
     and reports them when they change, lets one holder at a time write, and switches everything
     off when the holder gives up or the module aborts.
+
+    An item with a position also keeps that position: told to move to a goal, it drives towards it
+    for the time the distance takes (timer MoveT) and is there; at its home switch the position is
+    known; a command that drives it otherwise leaves it unknown until it is home again.
     """
-    ins, outs = eq.inputs, eq.outputs
+    ins, outs, pos = eq.inputs, eq.outputs, eq.position
+    wired = {s: i for s, i in ins.items() if not i.computed}        # inputs with an IO point
     bools = [o for o, x in outs.items() if x.type == "BOOL"]
-    reals = [o for o, x in outs.items() if x.type == "LREAL"]
     received, wanted = message(eq, "C_", "CE_"), message(eq, "N_", "NE_")
-    drive = message(eq, "O_", "E_")
-    types = [x.type for x in outs.values()] + ["BOOL"] * len(reals)
+    drive = message(eq, "O_", "E_", move=False)
+    types, drive_types = message_types(eq), message_types(eq, move=False)
     pub = []
     for i, s in enumerate(ins):
         pub += ["UaRoot", lit("/Equipment/"), "Name", lit(f"/{s}" + (";" if i < len(ins) - 1 else ""))]
@@ -154,17 +185,50 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
               "all off on release or when the module aborts; inputs -> state channel when they change",
               {"INIT": (["Module", "Name", *(["UaRoot"] if ins else [])], "EInit"),
                "CMD": ["C_Holder", "C_Release", *received], "RELEASE": ["R_Holder"],
-               "SAMPLE": [f"I_{s}" for s in ins], "REFRESH": [], "DRIVEN": [], "MOD_CHG": ["ModState"]},
+               "SAMPLE": [f"I_{s}" for s in wired], "REFRESH": [], "DRIVEN": [], "MOD_CHG": ["ModState"],
+               **({"MOVE_T": []} if pos else {})},
               {"INITO": (["IdCmd", "IdRelease", "IdState", "IdPub"], "EInit"), "DRIVE": drive,
-               "STATE": [*ins, "Holder"]},
+               "STATE": [*ins, "Holder"], **({"MOVE_START": ["MoveDT"], "MOVE_STOP": []} if pos else {})},
               {"Module": "WSTRING", "Name": "WSTRING", **({"UaRoot": "WSTRING"} if ins else {}),
                "C_Holder": "WSTRING", "C_Release": "BOOL", **dict(zip(received, types)), "R_Holder": "WSTRING",
-               **{f"I_{s}": i.type for s, i in ins.items()}, "ModState": "USINT"},
+               **{f"I_{s}": i.type for s, i in wired.items()}, "ModState": "USINT"},
               {"IdCmd": "WSTRING", "IdRelease": "WSTRING", "IdState": "WSTRING", "IdPub": "WSTRING",
-               **dict(zip(drive, types)), **{s: i.type for s, i in ins.items()}, "Holder": "WSTRING"},
+               **dict(zip(drive, drive_types)), **{s: i.type for s, i in ins.items()}, "Holder": "WSTRING",
+               **({"MoveDT": "TIME"} if pos else {})},
               {"Publish": "BOOL", "Beat": "USINT", "LastHolder": "WSTRING", "Pending": "BOOL", "OffPending": "BOOL",
-               **{f"L_{s}": i.type for s, i in ins.items()}, **dict(zip(wanted, types))},
+               **{f"L_{s}": i.type for s, i in ins.items() if s != ACTUAL}, **dict(zip(wanted, types)),
+               **({"MoveGoal": "LREAL", "MoveFrom": "LREAL", "MoveDir": "LREAL", "MoveSince": "TIME",
+                   "MoveStart": "BOOL", "Uncounted": "BOOL"} if pos else {})},
               folder="Equipment/Base")
+    # Position (an item that has one). A move runs from MoveFrom towards MoveGoal since MoveSince;
+    # MoveStart: it has been told to, and begins once the outputs are written.
+    where, stop_move, move, sample_position, driven = [], [], [], [], []
+    if pos:
+        where = [f"{ACTUAL} := MoveFrom + MoveDir * {num(pos.speed)} * TIME_IN_MS_TO_LREAL(NOW_MONOTONIC() - MoveSince) / 1000.0;",
+                 f"IF MoveDir * ({ACTUAL} - MoveGoal) > 0.0 THEN", f"  {ACTUAL} := MoveGoal;", "END_IF;"]
+        # A command or a release while moving: the item is where the elapsed time puts it.
+        stop_move = [f"IF {MOVING} AND NOT MoveStart THEN", *["  " + line for line in where], "END_IF;",
+                     f"{MOVING} := FALSE;", "MoveStart := FALSE;"]
+        on = " OR ".join([f"N_{o}" for o in bools] + [f"NE_{o}" for o, x in outs.items() if x.type == "LREAL"]) or "FALSE"
+        if pos.hold:
+            held = eq.commands[pos.hold][0].values()
+            same = " AND ".join([f"(N_{o} = {'TRUE' if held.get(o) else 'FALSE'})" for o in bools]
+                                + [f"(NE_{o} = {'TRUE' if o in held else 'FALSE'})" for o, x in outs.items() if x.type == "LREAL"])
+            on = f"({on}) AND NOT ({same})"
+        move = [
+            "IF N_Move THEN",
+            f"  IF {HOMED} AND (ABS(N_Goal - {ACTUAL}) >= 0.0005) THEN",
+            f"    MoveGoal := N_Goal;\n    MoveFrom := {ACTUAL};",
+            f"    MoveDT := MUL_TIME(T#1s, ABS(N_Goal - {ACTUAL}) / {num(pos.speed)});",
+            f"    IF N_Goal > {ACTUAL} THEN", "      MoveDir := 1.0;", *output_values(eq, pos.increase, "      "),
+            "    ELSE", "      MoveDir := -1.0;", *output_values(eq, pos.decrease, "      "), "    END_IF;",
+            f"    {MOVING} := TRUE;\n    MoveStart := TRUE;",
+            "  ELSE", *output_values(eq, pos.hold, "    "), "  END_IF;",       # there already, or not knowing where it is
+            "  Uncounted := FALSE;", "ELSE", f"  Uncounted := {on};", "END_IF;"]
+        # While it is driven by another command it is home only at the switch.
+        sample_position = [f"IF {MOVING} AND NOT MoveStart THEN", *["  " + line for line in where],
+                           f"ELSIF {pos.home} THEN", f"  {ACTUAL} := {num(pos.home_at)};", f"  {HOMED} := TRUE;",
+                           "ELSIF Uncounted THEN", f"  {HOMED} := FALSE;", "END_IF;"]
     channel = lambda part: cat(lit("loc["), "Module", lit("/"), "Name", lit(f"/{part}]"))  # noqa: E731
     free = '(Holder = "") OR (C_Holder = Holder)'
     off = "(ModState = 8) OR (ModState = 9)"                                  # the module Aborting or Aborted
@@ -174,16 +238,22 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
     # The state is published only when an input or the holder changed, and every 20 samples as a
     # heartbeat (for skills added online): every Modbus poll delivers a sample, and publishing each
     # to every skill overran FORTE's external event queue.
-    changed = " OR ".join([*[f"({s} <> L_{s})" for s in ins], "(Holder <> LastHolder)", "(Beat >= 20)"])
-    b.state("Sample", "\n".join([*[f"{s} := I_{s};" for s in ins], f"Publish := {changed};", "Beat := Beat + 1;"]))
-    b.state("Publish", "\n".join([*[f"L_{s} := {s};" for s in ins], "LastHolder := Holder;", "Beat := 0;"]), "STATE")
+    # The position changes with every sample of a move: it is published five times a second then.
+    changed = " OR ".join([*[f"({s} <> L_{s})" for s in ins if s != ACTUAL], "(Holder <> LastHolder)", "(Beat >= 20)",
+                           *([f"({MOVING} AND (Beat >= 4))"] if pos else [])])
+    b.state("Sample", "\n".join([*[f"{s} := I_{s};" for s in wired], *sample_position, f"Publish := {changed};",
+                                 "Beat := Beat + 1;"]))
+    b.state("Publish", "\n".join([*[f"L_{s} := {s};" for s in ins if s != ACTUAL], "LastHolder := Holder;", "Beat := 0;"]),
+            "STATE")
     # Like a PLC scan, the output image is rewritten every cycle: FORTE's Modbus client drops a
     # write sent while it is not connected, and a cyclic write heals that and reconnects.
     b.state("Refresh", None, "DRIVE")
     b.state("Cmd", "\n".join(["Holder := C_Holder;", *[f"{n} := {c};" for n, c in zip(wanted, received)],
-                              'IF C_Release THEN\n  Holder := "";\nEND_IF;']))
+                              *stop_move, *move, 'IF C_Release THEN\n  Holder := "";\nEND_IF;']),
+            "MOVE_STOP" if pos else None)
     b.state("Off", "\n".join([*[f"{n} := {'FALSE' if t == 'BOOL' else '0.0'};" for n, t in zip(wanted, types)],
-                              'Holder := "";', "OffPending := FALSE;"]))
+                              *stop_move, *(["Uncounted := FALSE;"] if pos else []), 'Holder := "";', "OffPending := FALSE;"]),
+            "MOVE_STOP" if pos else None)
     # Outputs that stay on are kept, all others switched off first; then the new set is switched on.
     b.state("Break", "\n".join(f"O_{o} := O_{o} AND N_{o};" for o in bools) or None, "DRIVE")
     b.state("Make", "\n".join(f"{o} := {n};" for o, n in zip(drive, wanted)) or None, "DRIVE")
@@ -197,6 +267,10 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
         b.state(f"Off{w}", "OffPending := TRUE;")
     b.state("CmdPend", "Pending := FALSE;")
     b.state("Settled")
+    if pos:
+        # The time of a move runs from when its outputs are on; when it is over the item is at the goal.
+        b.state("MoveGo", "MoveStart := FALSE;\nMoveSince := NOW_MONOTONIC();", "MOVE_START")
+        b.state("MoveEnd", "\n".join([f"{ACTUAL} := MoveGoal;", f"{MOVING} := FALSE;", *output_values(eq, pos.hold)]))
     b.state("Report", "LastHolder := Holder;\nBeat := 0;", "STATE")
     b.trans("START", "Init", "INIT")
     b.trans("START", "Sample", "SAMPLE")
@@ -204,6 +278,9 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
     b.trans("START", "Cmd", f"CMD[{free}]")
     b.trans("START", "Off", 'RELEASE[(R_Holder = Holder) AND (Holder <> "")]')
     b.trans("START", "Off", f"MOD_CHG[{off}]")
+    if pos:
+        b.trans("START", "MoveEnd", f"MOVE_T[{MOVING} AND NOT MoveStart]")
+        b.trans("MoveEnd", "Break", "1")
     b.trans("Init", "START", "1")
     b.trans("Sample", "Publish", "Publish")
     b.trans("Sample", "START", "1")
@@ -224,6 +301,10 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
     b.trans("Settled", "Off", "OffPending")
     b.trans("Settled", "CmdPend", "Pending")
     b.trans("CmdPend", "Cmd", free)
+    if pos:
+        b.trans("CmdPend", "MoveGo", "MoveStart")
+        b.trans("Settled", "MoveGo", "MoveStart")
+        b.trans("MoveGo", "Report", "1")
     b.trans("CmdPend", "Report", "1")
     b.trans("Settled", "Report", "1")
     b.trans("Report", "START", "1")
@@ -232,7 +313,7 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
     iv = {"Module": "WSTRING", "Name": ("WSTRING", wstr(name)), "UaRoot": "WSTRING", "UaEnable": "BOOL",
           "CycleTime": ("TIME", "T#50ms")}
     # Per IO point: backend (0 simulated, 1 local IO handle, 2 Modbus), Modbus ID, IO handle name.
-    for s, i in ins.items():
+    for s, i in wired.items():
         iv[f"{s}_Backend"], iv[f"{s}_Modbus"], iv[f"{s}_Io"] = ("USINT", "2"), "WSTRING", "STRING"
         iv[f"{s}_Sim"] = (i.type, ("TRUE" if i.sim else "FALSE") if i.type == "BOOL" else num(i.sim))
         if i.type == "LREAL":
@@ -244,21 +325,28 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
     c = Composite(p, pkg, f"EQ_{name}", (eq.description or name) + "; equipment IO: owns its IO points, writes the "
                   "output values its holder sends, reads its inputs every cycle and reports changes",
                   {"INIT": (list(iv), "EInit")}, {"INITO": ([], "EInit")}, iv, {}, folder="Equipment")
-    reads, writes = [f"In_{s}" for s in ins], [f"Out_{o}" for o in outs]
+    reads, writes = [f"In_{s}" for s in wired], [f"Out_{o}" for o in outs]
     c.fb("Logic", f"{pkg}::EL_{name}")
     c.fb("Cycle", STD["E_CYCLE"])
+    if pos:
+        c.fb("MoveT", STD["E_DELAY"])                     # how long a move to a position takes
+        c.ev("Logic.MOVE_START", "MoveT.START")
+        c.da("Logic.MoveDT", "MoveT.DT")
+        c.ev("Logic.MOVE_STOP", "MoveT.STOP")
+        c.ev("MoveT.EO", "Logic.MOVE_T")
     c.fb("Mode", q("MOD_StateView"))
     c.fb("SubCmd", subscribe(2 + len(received)), QI="TRUE")
     c.fb("SubRelease", subscribe(1), QI="TRUE")
     c.fb("PubState", publish(len(ins) + 1), QI="TRUE")
     if ins:
         c.fb("PubUa", publish(len(ins)))
-    for s, i in ins.items():
+    for s, i in wired.items():
         c.fb(f"In_{s}", q("IO_" + IO_TYPE[("in", i.type)]))
     for o, x in outs.items():
         c.fb(f"Out_{o}", q("IO_" + IO_TYPE[("out", x.type)]))
     c.group("Core", "One holder at a time, break before make, all off on release or abort; scanned every CycleTime",
-            ["Logic", "Cycle"], dx=7500, dy=1800 + 260 * max(len(received) + len(ins) + 8, len(drive) + len(ins) + 6))
+            ["Logic", "Cycle", *(["MoveT"] if pos else [])], dx=7500,
+            dy=1800 + 260 * max(len(received) + len(ins) + 8, len(drive) + len(ins) + 6))
     c.group("Channels", "Local channels to and from the skills (cmd, release, state), the module's state, and the "
             "inputs over OPC UA", ["SubCmd", "SubRelease", "PubState", "PubUa", "Mode"],
             dy=1800 + 260 * (len(received) + 6))
@@ -293,11 +381,13 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
     else:
         c.ev("Cycle.EO", "Logic.SAMPLE")
     for k, (s, i) in enumerate(ins.items(), 1):
-        for v, pin in [("Backend", "Backend"), ("Modbus", "ModbusId"), ("Io", "IoName"), ("Sim", "SimValue")]:
+        for v, pin in [] if i.computed else [("Backend", "Backend"), ("Modbus", "ModbusId"), ("Io", "IoName"),
+                                             ("Sim", "SimValue")]:
             c.da(f"{s}_{v}", f"In_{s}.{pin}")
-        if i.type == "LREAL":
+        if i.type == "LREAL" and not i.computed:
             c.da(f"{s}_Scale", f"In_{s}.Scale")
-        c.da(f"In_{s}.IN", f"Logic.I_{s}")
+        if not i.computed:
+            c.da(f"In_{s}.IN", f"Logic.I_{s}")
         c.da(f"Logic.{s}", f"PubState.SD_{k}", f"PubUa.SD_{k}")
     c.da("Logic.Holder", f"PubState.SD_{len(ins) + 1}")
     c.ev("Logic.STATE", "PubState.REQ", *(["PubUa.REQ"] if ins else []))
@@ -891,6 +981,8 @@ def application(root, spec: ModuleSpec, target: str):
     for i, (name, eq) in enumerate(spec.equipment.items()):
         io = {}
         for s, point in [*eq.inputs.items(), *eq.outputs.items()]:
+            if getattr(point, "computed", False):
+                continue
             backend = spec.backend(target, point)
             io[f"{s}_Backend"] = str(BACKENDS[backend])
             if backend == "modbus":

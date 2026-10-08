@@ -34,6 +34,9 @@ PROCEDURES = Literal["Resetting", "Stopping"]
 BACKENDS = {"sim": 0, "gpio": 1, "pwm": 1, "modbus": 2}
 # Blocks and pins of a module level skill's subapp (IEC names are case-insensitive).
 RESERVED = {"CONTROL", "UASTART", "PUBPARAMS", "PUBRESULTS", "RELEASE", "EXECUTE", "STOP", "INIT", "INITO"}
+# What an equipment item with a position adds itself: where it is, whether that is known (it has
+# been at its home switch) and whether a move is under way; and the command that moves it to its argument.
+ACTUAL, HOMED, MOVING, MOVE = "ActualPosition", "Homed", "Moving", "MoveTo"
 
 
 class Model(BaseModel):
@@ -80,12 +83,15 @@ class Input(Model):
     scale: float = 1.0                                                # analog: engineering value per raw count
     sim: float | bool = 0                                             # value when simulated (backend sim)
     unit: str | None = None
+    computed: bool = False            # worked out by the equipment itself (its position): no IO point
 
     short_gpio = field_validator("gpio", mode="before")(line_only)
 
     @model_validator(mode="after")
     def kinds(self):
         """Digital inputs read discrete inputs, analog inputs read registers; GPIO lines are digital."""
+        if self.computed and (self.modbus or self.gpio):
+            raise ValueError("A computed signal has no IO point")
         if self.modbus and (self.type == "BOOL") != self.modbus.startswith("d"):
             raise ValueError("BOOL inputs use d<n>, LREAL inputs i<n>")
         if self.gpio and self.type != "BOOL":
@@ -142,17 +148,56 @@ def phases(value):
     return value
 
 
+class Position(Model):
+    """An axis whose position the controller keeps itself, as a 3D printer does: a stepper motor
+    moves at a known speed while a command is on, and a limit switch says where home is.
+
+    The item then has the signals ``ActualPosition``, ``Homed`` (the position is known: it has been
+    at the switch) and ``Moving``, and the command ``MoveTo``, which takes a position as its
+    argument: the item drives towards it (``increase`` or ``decrease``, by where it is), stops after
+    the time the distance takes, and is there. A move that is cut short leaves the position the
+    elapsed time gives.
+    """
+    unit: str = "mm"
+    speed: float = Field(gt=0)            # units per second while ``increase`` or ``decrease`` is on
+    increase: str                         # command that moves away from home
+    decrease: str                         # command that moves towards home
+    home: str                             # BOOL input: the limit switch
+    home_at: float = 0.0                  # the position at the switch
+    minimum: float = 0.0
+    maximum: float
+    hold: str | None = None               # command when a move has ended (default: the safe command)
+
+
 class Equipment(Model):
     """Physical equipment item: sole owner of its IO points and of the command table."""
     description: str = ""
+    # What kind of component it is (LinearAxis): items of one kind offer the same skills, in any module.
+    kind: str | None = Field(default=None, pattern=IDENT)
     inputs: dict[str, Input] = Field(default_factory=dict)
     outputs: dict[str, Output] = Field(default_factory=dict)
     # Command name -> phases; the first command is the safe state (all off).
     commands: dict[str, list[Phase]]
+    position: Position | None = None
     sim: dict = Field(default_factory=dict)   # kinematics for cell/sim/module_sim.py (not used by the generator)
 
     short_commands = field_validator("commands", mode="before")(
         classmethod(lambda cls, v: {k: phases(c) for k, c in v.items()}))
+
+    @model_validator(mode="before")
+    @classmethod
+    def positioned(cls, data):
+        """An item with a position gets its position signals and the move command."""
+        if not isinstance(data, dict) or not data.get("position"):
+            return data
+        unit = data["position"].get("unit", "mm") if isinstance(data["position"], dict) else data["position"].unit
+        inputs, commands = dict(data.get("inputs") or {}), dict(data.get("commands") or {})
+        if taken := {ACTUAL, HOMED, MOVING} & set(inputs) | {MOVE} & set(commands):
+            raise ValueError(f"An item with a position has these itself: {sorted(taken)}")
+        inputs.update({ACTUAL: {"type": "LREAL", "unit": unit, "computed": True},
+                       HOMED: {"computed": True}, MOVING: {"computed": True}})
+        commands[MOVE] = {}
+        return {**data, "inputs": inputs, "commands": commands}
 
     @model_validator(mode="after")
     def check(self):
@@ -160,6 +205,22 @@ class Equipment(Model):
         for name in [*self.inputs, *self.outputs, *self.commands]:
             if not re.match(IDENT, name):
                 raise ValueError(f"Not an identifier: {name}")
+        if any(i.computed for i in self.inputs.values()) != (self.position is not None):
+            raise ValueError("Only an item with a position has computed signals")
+        if (pos := self.position) is not None:
+            for command in filter(None, [pos.increase, pos.decrease, pos.hold]):
+                held = self.commands.get(command)
+                if command == MOVE or held is None or len(held) != 1:
+                    raise ValueError(f"position: {command} is not a command of one phase")
+            if not self.commands[pos.increase][0].values() or not self.commands[pos.decrease][0].values():
+                raise ValueError("position: increase and decrease have to drive the item")
+            switch = self.inputs.get(pos.home)
+            if switch is None or switch.type != "BOOL" or switch.computed:
+                raise ValueError(f"position: {pos.home} is not a digital input")
+            if not pos.minimum <= pos.home_at <= pos.maximum or pos.minimum >= pos.maximum:
+                raise ValueError("position: minimum <= home_at <= maximum, and a range to move in")
+            if taken := {"Move", "Goal"} & set(self.outputs):
+                raise ValueError(f"position: output names taken by the move command {sorted(taken)}")
         if set(self.inputs) & set(self.outputs):
             raise ValueError("Input and output names overlap")
         if not self.commands:
@@ -226,9 +287,13 @@ class Skill(Model):
 
     Without equipment it only waits (``after``). ``stop`` is the command sent at the end (default:
     the safe command); an abort always sends the safe command.
+
+    ``move_to: <parameter>`` on an item with a position is short for: the command ``MoveTo`` with
+    that parameter as its argument, requiring that the position is known, until the item is there.
     """
     description: str = ""
     equipment: str | None = None
+    move_to: str | None = None                 # parameter holding the position to move to
     command: str | None = None
     arg: str | float | None = None             # ST expression over parameters -> the command's argument
     stop: str | None = None
@@ -242,6 +307,19 @@ class Skill(Model):
     timeout: str = Field(default="10s", pattern=DURATION)
     results: dict[str, str] = Field(default_factory=dict)   # result name -> equipment input
     offered: bool = True                       # OPC UA methods for the orchestrator
+
+    @model_validator(mode="before")
+    @classmethod
+    def move(cls, data):
+        """Write a move out as the command, argument and conditions it stands for."""
+        if not isinstance(data, dict) or not data.get("move_to"):
+            return data
+        goal = data["move_to"]
+        if given := [k for k in ("command", "arg", "ensures", "after") if data.get(k) is not None]:
+            raise ValueError(f"move_to sets these itself: {given}")
+        known = f"{HOMED} AND ({data['requires']})" if data.get("requires") else HOMED
+        return {**data, "command": MOVE, "arg": goal, "requires": known,
+                "ensures": f"NOT {MOVING} AND ABS({ACTUAL} - {goal}) < 0.001"}
 
     @model_validator(mode="after")
     def ends(self):
@@ -440,6 +518,8 @@ class ModuleSpec(Model):
             eq = self.equipment.get(skill.equipment)
             if eq is None:
                 raise ValueError(f"{name}: unknown equipment {skill.equipment}")
+            if skill.move_to is not None and eq.position is None:
+                raise ValueError(f"{name}.move_to: {skill.equipment} has no position")
             if skill.command not in eq.commands or eq.code(skill.command) == 0:
                 raise ValueError(f"{name}: {skill.command} is not a driving command of {skill.equipment}")
             if skill.stop is not None and skill.stop not in eq.commands:
@@ -449,6 +529,17 @@ class ModuleSpec(Model):
             if unknown := set(skill.results.values()) - set(eq.inputs):
                 raise ValueError(f"{name}: results from unknown inputs {sorted(unknown)}")
             known |= set(eq.inputs)
+            if eq.position is not None and (skill.command == MOVE) != (skill.move_to is not None):
+                raise ValueError(f"{name}: {MOVE} is commanded by move_to")
+            if skill.move_to is not None:
+                goal = skill.parameters.get(skill.move_to)
+                if goal is None or goal.type != "LREAL":
+                    raise ValueError(f"{name}.move_to: {skill.move_to} is not an LREAL parameter")
+                # The item goes where it is told: only the parameter's range keeps it within its travel.
+                if (goal.minimum is None or goal.maximum is None or goal.minimum < eq.position.minimum
+                        or goal.maximum > eq.position.maximum):
+                    raise ValueError(f"{name}.{skill.move_to}: its range has to lie within the travel of "
+                                     f"{skill.equipment} ({eq.position.minimum} to {eq.position.maximum})")
         for field in ("requires", "ensures", "invariant", "arg"):
             value = getattr(skill, field)
             if isinstance(value, str) and (unknown := names(value) - known):
@@ -506,10 +597,11 @@ class ModuleSpec(Model):
                                      f"{step.skill}.{param} ({takes.minimum} to {takes.maximum})")
 
     def points(self):
-        """(``<Equipment>.<Signal>``, Input or Output) for every IO point."""
+        """(``<Equipment>.<Signal>``, Input or Output) for every IO point (a computed signal is none)."""
         for eq_name, eq in self.equipment.items():
             for s, io in [*eq.inputs.items(), *eq.outputs.items()]:
-                yield f"{eq_name}.{s}", io
+                if not getattr(io, "computed", False):
+                    yield f"{eq_name}.{s}", io
 
     def backend(self, target: str, io: Input | Output) -> str:
         """``sim``, ``gpio``, ``pwm`` or ``modbus``: how ``io`` is reached on ``target``."""
