@@ -12,67 +12,63 @@ modbus: {host: 127.0.0.1, port: 1504, unit: 1, poll_ms: 10}
 targets:
   pc: {host: localhost, io: modbus}
 
+# Components as named on 8 Oct 2026: a linear axis (as in the filling and stoppering modules) and the
+# cap crimper. How the crimper is driven is a guess.
 equipment:
-  CapFeeder:
-    description: Pusher that brings one cap under the head, with a sensor for the cap in place
+  LinearAxis:
+    kind: LinearAxis
+    description: Lift of the crimping head, a stepper motor through a step and direction driver, with a limit switch at the top (home)
     inputs:
-      CapInPlace: {modbus: d0}
+      AtHome: {modbus: d0}
     outputs:
-      Push: {modbus: c0}
-    commands:
-      Idle: {}
-      Push: [Push]
-  CrimpHead:
-    description: Head that presses the cap on and crimps it, end switches top and bottom
-    inputs:
-      AtTop:    {modbus: d1}
-      AtBottom: {modbus: d2}
-    outputs:
-      Up:   {modbus: c1}
-      Down: {modbus: c2}
+      Enable: {modbus: c0}
+      Down:   {modbus: c1}
+      Step:   {type: LREAL, modbus: h0, gain: 655.35, minimum: 0, maximum: 100, unit: "%"}
     commands:
       Stop: {}
-      Up: [Up]
-      Down: [Down]
+      Up:   {Enable: true, Step: 50}
+      Down: {Enable: true, Down: true, Step: 50}
+    position: {unit: mm, speed: 20.0, increase: Down, decrease: Up, home: AtHome, minimum: 0.0, maximum: 60.0}
+  Crimper:
+    kind: CapCrimper
+    description: Crimping head that closes around the cap
+    outputs:
+      Close: {modbus: c2}
+    commands:
+      Open: {}
+      Close: [Close]
 
 skills:
-  FeedCap:
-    description: Push a cap under the head
-    equipment: CapFeeder
-    command: Push
-    ensures: CapInPlace
-    timeout: 5s
-  LowerHead:
-    description: Head down onto the cap
-    equipment: CrimpHead
-    command: Down
-    ensures: AtBottom
-    invariant: NOT (AtTop AND AtBottom)
-    timeout: 5s
+  Home:
+    description: Head up to the limit switch; from there its position is known
+    equipment: LinearAxis
+    command: Up
+    ensures: AtHome
+    timeout: 8s
+  MoveAxis:
+    description: Head to Position, measured down from the limit switch; the direction follows from where it is
+    equipment: LinearAxis
+    move_to: Position
+    parameters:
+      Position: {unit: mm, minimum: 0.0, maximum: 60.0, default: 0.0, description: Where to move to}
+    timeout: 8s
   Crimp:
-    description: Hold the head down for Duration to crimp the cap
-    equipment: CrimpHead
-    command: Down
+    description: Close the crimper for Duration, then open it
+    equipment: Crimper
+    command: Close
     parameters:
       Duration: {unit: s, minimum: 0.0, maximum: 5.0, default: 1.5}
     after: Duration
-  RaiseHead:
-    description: Head up to the top end switch
-    equipment: CrimpHead
-    command: Up
-    ensures: AtTop
-    invariant: NOT (AtTop AND AtBottom)
-    timeout: 5s
 
 composites:
   Capping:
-    description: Feed a cap, lower the head, crimp, raise the head
-    execute: [FeedCap, LowerHead, Crimp, RaiseHead]
-    stop: [RaiseHead]
+    description: Head down onto the cap, crimp, head up again
+    execute: [{MoveAxis: {Position: 40.0}, as: HeadDown}, Crimp, {MoveAxis: {Position: 0.0}, as: HeadUp}]
+    stop: [Home]
 
 procedures:
-  Resetting: [RaiseHead]
-  Stopping: [RaiseHead]
+  Resetting: [Home]
+  Stopping: [Home]
 
 capabilities:
   Capping:
