@@ -1,13 +1,15 @@
 """Generate 4diac projects from module specifications (``cell/modules/*.yaml``).
 
 Each module gets its own project (``cell/control/<project>``: equipment IO, skill primitives,
-module level skills, system). The module-independent types (package ``modlib``) are declared in
+module level skills, system). The generator's own test module is not part of the cell: its
+specification and project are with this library's tests (``tests/modules``, ``tests/control``). The module-independent types (package ``modlib``) are declared in
 every project so the IDE can open it on its own, but compiled once, from the ``ModLib`` project
 of this library (``iec61499-skill-lib/ModLib``). Every project carries its type manifest
 (``types-manifest.json``, read by ``runtime/validate.ps1``).
 """
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
@@ -21,13 +23,24 @@ REPO = LIBRARY_ROOT.parent
 CELL = REPO / "cell"                                     # the line's modules: specs and generated control
 SPECS = CELL / "modules"
 PROJECTS = CELL / "control"
+LIBRARY_SPECS = LIBRARY_ROOT / "tests" / "modules"         # the generator's test module (filler)
+LIBRARY_PROJECTS = LIBRARY_ROOT / "tests" / "control"
 LIBRARY_PROJECT = "ModLib"
 MANIFEST = "types-manifest.json"
 
 
+@lru_cache
+def library_projects() -> frozenset[str]:
+    """The projects of the generator's test modules."""
+    return frozenset(load(path).project for path in library_specs())
+
+
 def project_dir(project: str) -> Path:
-    """Folder of a generated 4diac project: ModLib in this library, modules in the cell."""
-    return LIBRARY_ROOT / project if project == LIBRARY_PROJECT else PROJECTS / project
+    """Folder of a generated 4diac project: ModLib in this library, a test module with its tests,
+    the modules in the cell."""
+    if project == LIBRARY_PROJECT:
+        return LIBRARY_ROOT / project
+    return (LIBRARY_PROJECTS if project in library_projects() else PROJECTS) / project
 
 
 def generate(spec: ModuleSpec, root: Path | None = None, manifest: Path | None = None) -> Project:
@@ -83,5 +96,17 @@ def specs() -> list[Path]:
     return sorted(SPECS.glob("*.yaml"))
 
 
-__all__ = ["ModuleSpec", "generate", "generate_library", "load", "manifest_path", "project_dir", "specs",
-           "system_file", "LIBRARY_PROJECT", "SPECS", "PROJECTS"]
+def library_specs() -> list[Path]:
+    """The specifications of the generator's test modules: generated and compiled into FORTE
+    like the cell's, but no module of the line."""
+    return sorted(LIBRARY_SPECS.glob("*.yaml"))
+
+
+def spec_file(name: str) -> Path:
+    """A module's specification by its file name: the cell's, else a test module's."""
+    path = SPECS / f"{name}.yaml"
+    return path if path.exists() else LIBRARY_SPECS / f"{name}.yaml"
+
+
+__all__ = ["ModuleSpec", "generate", "generate_library", "load", "manifest_path", "project_dir", "spec_file",
+           "specs", "system_file", "library_specs", "LIBRARY_PROJECT", "SPECS", "PROJECTS", "LIBRARY_SPECS"]

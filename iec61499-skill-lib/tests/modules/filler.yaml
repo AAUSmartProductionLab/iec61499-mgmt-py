@@ -1,20 +1,22 @@
 # Test module for the generator ("baby case", iterations 1 and 2), run against the needle
-# simulator: one equipment item with a position sensor, two skill
+# simulator. No module of the line: it is generated and compiled into FORTE with the others so the
+# generator and the module library are tested on something small: one equipment item with a position sensor, two skill
 # primitives, one module level skill with a stop sequence, Resetting and Stopping procedures.
-# The simulator (4diac/tools/module_sim.py) moves the needle 50 mm in 2 s (25 mm/s).
+# The simulator (cell/sim/module_sim.py) moves the needle 50 mm in 2 s (25 mm/s).
 # Regenerate: python -m modgen
 module: Filler
 project: FillerModule
 package: filler
 opcua_root: /Objects/Filler
-modbus: {host: 127.0.0.1, port: 1504, unit: 1, poll_ms: 10}   # 4diac/tools/module_sim.py
+modbus: {host: 127.0.0.1, port: 1504, unit: 1, poll_ms: 10}   # cell/sim/module_sim.py
 
 # Where the module runs. pc: FORTE on this machine against the Modbus simulator (run_module.py,
-# live tests). pi: FORTE on a Raspberry Pi 4 (4diac/tools/pi.py); points with a GPIO line use it,
-# the others are simulated (constant) because the Pi has no analog inputs.
+# live tests). pi: what the generator makes for a Raspberry Pi; points with a GPIO line use it,
+# the others are simulated (constant) because the Pi has no analog inputs. The address is no
+# real one on purpose: the lines below are wired to other things on the line's Pis.
 targets:
   pc: {host: localhost, io: modbus}
-  pi: {host: 192.168.0.191, user: iiot_gateway, io: gpio}
+  pi: {host: filler-pi.invalid, io: gpio}
 
 equipment:
   NeedleAxis:

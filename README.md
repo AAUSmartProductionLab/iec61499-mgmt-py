@@ -16,11 +16,11 @@ classes from and checks every resource AAS against), until the repository is spl
 | Folder | Future repository | What |
 | --- | --- | --- |
 | `iec61499-mgmt-py/` | iec61499-mgmt-py | `iec61499_mgmt`: FORTE management library (typed commands, client, networks and plans, `.sys` flattening, boot files, type library, read-back verification) |
-| `iec61499-skill-lib/` | iec61499-skill-lib | `modgen`: generator from module specs to 4diac projects; `ModLib`: the generated module library (occupation, PackML module state manager, skill state machine, composite control, IO primitives for sim, GPIO, PWM, Modbus); `stdtypes`: IDE declarations of standard FBs |
+| `iec61499-skill-lib/` | iec61499-skill-lib | `modgen`: generator from module specs to 4diac projects; `ModLib`: the generated module library (occupation, PackML module state manager, skill state machine, composite control, IO primitives for sim, GPIO, PWM, Modbus); `stdtypes`: IDE declarations of standard FBs; `tests/modules`, `tests/control`: the generator's own small test module (`filler`), built into FORTE with the others |
 | `aas61499-tools/` | aas61499-tools | `modsync`: module ⇄ spec ⇄ AAS (read what runs, report drift, describe as AAS, push changes); `modreg`: a module's profile on the lab's shared AAS model, the ontology check and the registration service |
 | `runtime/` | runtime | FORTE build: FBE configurations (PC, Pi), FORTE patches (IO handle fix, sysfs PWM module), header shims, IDE validation and export (`validate.ps1`), `build-modules.ps1`, `build-runtime.ps1` |
 | `deploy/` | deploy | Raspberry Pi: FORTE in Docker (`pi/`), install and deployment (`pi.py`) |
-| `cell/` | the filling line | `modules/`: module specs (`planned/`: capping and inspection, described but not built); `control/`: generated 4diac projects (FillingModule, StopperingModule, FillerModule); `sim/`: Modbus simulator, `run_module.py`, OPC UA client; `examples/`: a product planned on the four resources, and the builder that puts all five AASs on an AAS server |
+| `cell/` | the filling line | `modules/`: module specs (`planned/`: capping and inspection, described but not built); `control/`: generated 4diac projects (FillingModule, StopperingModule); `sim/`: Modbus simulator, `run_module.py`, OPC UA client; `examples/`: a product planned on the four resources, and the builder that puts all five AASs on an AAS server |
 | `aas-model/` | (submodule) | The lab's shared pydantic AAS model; `modreg` builds on it and uses its generator |
 | `ontology/` | (working copy) | The product, process, resource and link ontologies with their notes; ARSO is the blueprint of the resource AAS |
 | `docs/` | (working notes) | `work.md`: what is built, how, learnings; `next-steps.md`: the plan; `aas-models.md`: the product, plan and resource AAS, their submodels and how they connect; `aas-examples.md`: the example line's five AASs with class diagrams; `module-rules.md`: the rules a module is built by; `modules.md`: the two modules and what was ported; `repositories.md`: how the work divides into repositories; `archive/`: superseded plans and figures |
@@ -126,7 +126,7 @@ The templates of Process Parameters and Production Sequence are files in `modreg
 (IDTA's with the lab's extension; the planner's); `modreg generate` makes their classes too.
 
 In the 4diac IDE (a workspace outside the repository), import `iec61499-skill-lib/ModLib` and
-the projects in `cell/control/` without copying them.
+the projects in `cell/control/` (and `iec61499-skill-lib/tests/control/`) without copying them.
 
 Live tests start their own FORTE on free local ports and stop it afterwards; without the
 FORTE options they are skipped. `cell/tests/test_module_live.py` also runs against a Pi

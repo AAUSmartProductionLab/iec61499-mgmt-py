@@ -5,17 +5,17 @@
 import argparse
 from pathlib import Path
 
-from . import LIBRARY_PROJECT, generate, generate_library, load, manifest_path, project_dir, specs
+from . import LIBRARY_PROJECT, generate, generate_library, load, manifest_path, project_dir, specs, library_specs
 from .library import LIB
 
 
 def main():
     """Validate module specifications and regenerate the library and module projects."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("spec", nargs="*", help="Module specifications (default: all cell/modules/*.yaml)")
+    parser.add_argument("spec", nargs="*", help="Module specifications (default: all cell/modules/*.yaml and the test module)")
     parser.add_argument("--list", action="store_true", help="Only list the projects, generate nothing")
     args = parser.parse_args()
-    paths = [Path(p) for p in args.spec] or specs()
+    paths = [Path(p) for p in args.spec] or [*specs(), *library_specs()]
     if args.list:
         rows = [(LIBRARY_PROJECT, LIB)] + [(s.project, s.package) for s in map(load, paths)]
         for project, package in rows:

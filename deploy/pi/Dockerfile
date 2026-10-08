@@ -1,4 +1,4 @@
-# 4diac FORTE for a Raspberry Pi (aarch64): the static binary from build-runtime.ps1 -Config pi/filler-pi.
+# 4diac FORTE for a Raspberry Pi (aarch64): the static binary from build-modules.ps1 -Config pi/modules-pi.
 # Alpine only for a shell when debugging; FORTE itself needs no libraries.
 FROM alpine:3.20
 COPY forte /usr/local/bin/forte
