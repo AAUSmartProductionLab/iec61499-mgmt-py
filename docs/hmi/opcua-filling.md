@@ -233,6 +233,18 @@ Needle down to the attachment position (bottom switch), without the start boost.
 - **Uses equipment:** NeedleAxis
 - **Ends:** sensor condition `AtBottom`; fails with Timeout (3) after 8s
 
+#### `Dispense`
+
+Dispense a volume at the station's flow rate (open loop, by time, until there is a pump).
+
+- **Start:** `Skills/Dispense/Start(Session: String, Volume: Double, FlowRate: Double)`
+- **Ends:** after Volume / FlowRate seconds
+
+| Parameter (argument order) | Type | Unit | Range | Default | Node with the value |
+| --- | --- | --- | --- | --- | --- |
+| Volume | Double | mL | 0.5 .. 10 | 1 | `Skills/Dispense/Parameters/Volume` |
+| FlowRate | Double | mL/s | 0.1 .. 5 | 1 | `Skills/Dispense/Parameters/FlowRate` |
+
 #### `Tare`
 
 Tare the scale.
@@ -252,8 +264,6 @@ Read the weight.
 | Result | Type | Node |
 | --- | --- | --- |
 | Weight | Double | `Skills/Weigh/Results/Weight` |
-
-Not callable on their own (used only as steps): `Dwell` (Wait at the current position (stands in for dispensing until there is a pump)), `Dispense` (Dispense a volume at the station's flow rate (open loop, by time, until there is a pump)).
 
 ### 8.2 Module level skills (a sequence of steps)
 
@@ -386,6 +396,16 @@ Every node of the module as browsed from the running controller (initial values 
 | `/Filling/Skills/AttachNeedle/State` | Variable | Byte | 0 |
 | `/Filling/Skills/AttachNeedle/ErrorID` | Variable | UInt16 | 0 |
 | `/Filling/Skills/AttachNeedle/Start` | Method | (String) -> (Boolean, UInt16) | |
+| `/Filling/Skills/Dispense` | Object | | |
+| `/Filling/Skills/Dispense/Stop` | Method | (String) -> (Boolean, UInt16) | |
+| `/Filling/Skills/Dispense/Abort` | Method | (String) -> (Boolean, UInt16) | |
+| `/Filling/Skills/Dispense/Reset` | Method | (String) -> (Boolean, UInt16) | |
+| `/Filling/Skills/Dispense/State` | Variable | Byte | 0 |
+| `/Filling/Skills/Dispense/ErrorID` | Variable | UInt16 | 0 |
+| `/Filling/Skills/Dispense/Start` | Method | (String, Double, Double) -> (Boolean, UInt16) | |
+| `/Filling/Skills/Dispense/Parameters` | Object | | |
+| `/Filling/Skills/Dispense/Parameters/Volume` | Variable | Double | 1.0 |
+| `/Filling/Skills/Dispense/Parameters/FlowRate` | Variable | Double | 1.0 |
 | `/Filling/Skills/Tare` | Object | | |
 | `/Filling/Skills/Tare/Stop` | Method | (String) -> (Boolean, UInt16) | |
 | `/Filling/Skills/Tare/Abort` | Method | (String) -> (Boolean, UInt16) | |

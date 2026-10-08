@@ -346,12 +346,9 @@ flowchart BT
     FillingModuleAASMoveNeedleUp["MoveNeedleUp"]
     FillingModuleAASMoveNeedleDown["MoveNeedleDown"]
     FillingModuleAASAttachNeedle["AttachNeedle"]
+    FillingModuleAASDispense["Dispense"]
     FillingModuleAASTare["Tare"]
     FillingModuleAASWeigh["Weigh"]
-  end
-  subgraph BB_FillingModuleAAS["Building blocks (not offered)"]
-    FillingModuleAASDwell["Dwell"]
-    FillingModuleAASDispense["Dispense"]
   end
   subgraph CO_FillingModuleAAS["Module level skills (Skills, kind Composite)"]
     FillingModuleAASDispensing["Dispensing"]
@@ -378,15 +375,14 @@ flowchart BT
 | MoveNeedleUp | Primitive | – | NeedleAxis | – |
 | MoveNeedleDown | Primitive | – | NeedleAxis | – |
 | AttachNeedle | Primitive | – | NeedleAxis | – |
+| Dispense | Primitive | Volume = 1.0 mL, FlowRate = 1.0 mL/s | – | – |
 | Tare | Primitive | – | Scale | – |
 | Weigh | Primitive | – | Scale | – |
 | Dispensing | Composite | Volume = 1.0 mL | NeedleAxis, Scale | MoveNeedleDown → Dispense (FlowRate = 1.0, Volume ← Volume) → MoveNeedleUp → Weigh |
-| Dwell | Primitive, building block | Duration = 1.0 s | – | – |
-| Dispense | Primitive, building block | Volume = 1.0 mL, FlowRate = 1.0 mL/s | – | – |
 
 - **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; FillVolume 0.5 to 10.0 mL; AbsoluteFillError 0.05 mL.
 - **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (MoveNeedleUp), Stopping (MoveNeedleUp).
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 37 properties; 37 data points; 32 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 35 actions and 41 properties; 41 data points; 36 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/filling.yaml`, sync state NotRead.
 
 ### StopperingModuleAAS

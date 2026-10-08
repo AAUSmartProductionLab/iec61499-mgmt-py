@@ -141,10 +141,10 @@ FillingModuleAAS  (arso:ResourceAAS; derivedFrom lab:aas/templates/resource)
 │    │         │    └─ Volume              1.0 (running value); Unit mL, Minimum 0.1, Maximum 2.0, Default 1.0
 │    │         │                            InputOf → AID …/actions/Dispensing_Start/input/properties/RD_2   [new]
 │    │         ├─ RealizesProperty         [ first: Parameters/Volume, second: CapabilityDescription/…/Volume ]
-│    │         ├─ Uses                     → MoveNeedleDown, Dwell, MoveNeedleUp, Weigh
+│    │         ├─ Uses                     → MoveNeedleDown, Dispense, MoveNeedleUp, Weigh
 │    │         ├─ Execute
 │    │         │    ├─ Step { Skill → MoveNeedleDown }
-│    │         │    ├─ Step { Skill → Dwell, Bindings { Duration = Volume / FlowRate } }
+│    │         │    ├─ Step { Skill → Dispense, Bindings { Volume = Volume, FlowRate = 1.0 } }
 │    │         │    ├─ Step { Skill → MoveNeedleUp }
 │    │         │    └─ Step { Skill → Weigh }
 │    │         ├─ Stop                      Step { Skill → MoveNeedleUp }
