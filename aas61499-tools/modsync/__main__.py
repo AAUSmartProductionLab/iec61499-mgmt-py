@@ -46,25 +46,27 @@ def publish(status: Status | None, args, spec=None, target=None, path=None):
 
 
 def register(status: Status | None, args, spec=None, target=None, path=None):
-    """Send the module's profile to the registration service; a refusal is reported, not raised."""
+    """Send the profiles of the module and of its components to the registration service; a refusal
+    is reported, not raised."""
     from modreg import profile as profiles          # needs the registration extra (aas-model)
     from modreg.service import send
     if status is not None:
         c, snap = status.candidate, status.snapshot
-        profile = profiles.describe(c.spec, c.target, snap, status.drift, relative(c.path), f"opc.tcp://{snap.host}:4840")
+        found = profiles.describe_all(c.spec, c.target, snap, status.drift, relative(c.path), f"opc.tcp://{snap.host}:4840")
     else:
-        profile = profiles.describe(spec, target, spec_path=relative(path))
-    try:
-        code, answer = send(args.register, profile)
-    except OSError as e:
-        print(f"  registration: {args.register} not reached ({e})")
-        return
-    if code >= 400:
-        print(f"  registration refused at {answer.get('step')} (HTTP {code})")
-        for line in answer.get("reasons", [])[:20]:
-            print(f"    {line}")
-    else:
-        print(f"  registration: {'unchanged' if answer['unchanged'] else 'registered'} {answer['id_short']} at {args.register}")
+        found = profiles.describe_all(spec, target, spec_path=relative(path))
+    for profile in found:
+        try:
+            code, answer = send(args.register, profile)
+        except OSError as e:
+            print(f"  registration: {args.register} not reached ({e})")
+            return
+        if code >= 400:
+            print(f"  registration of {profile['id_short']} refused at {answer.get('step')} (HTTP {code})")
+            for line in answer.get("reasons", [])[:20]:
+                print(f"    {line}")
+        else:
+            print(f"  registration: {'unchanged' if answer['unchanged'] else 'registered'} {answer['id_short']} at {args.register}")
 
 
 def report(status: Status):

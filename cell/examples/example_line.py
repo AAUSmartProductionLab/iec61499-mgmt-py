@@ -125,8 +125,8 @@ def main(argv=None) -> int:
         (out / f"{name}.json").write_text(json.dumps(env, indent=1), encoding="utf-8")
         print(f"{name}: {len(env['submodels'])} submodels -> {out / (name + '.json')}")
     for name, found in broken.items():
-        for line in found:
-            print(f"  {name}: {line}")
+        for told in found:
+            print(f"  {name}: {told}")
     if broken:
         print("not published: a plan does not fit its resources" if args.publish else "a plan does not fit its resources")
         return 1
