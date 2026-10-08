@@ -10,7 +10,9 @@ services:
     # port (61499, no authentication: lab network only) and Modbus clients need no mapping.
     network_mode: host
     devices:
-      - /dev/gpiochip0:/dev/gpiochip0  # GPIO lines for GPIOChip (the container runs as root)
+      # GPIO lines for GPIOChip (the container runs as root): the chip of the 40-pin header, as
+      # chip 0. runtime/install.sh writes which one it is to .env (4 on a Pi 5 with an older kernel).
+      - ${GPIOCHIP:-/dev/gpiochip0}:/dev/gpiochip0
     volumes:
       - ./boot:/forte                  # forte.fboot: the program FORTE loads at start
       # PWM channels for FORTE's pwmsysfs module (PWMChip SysfsRoot /hostsys/class/pwm). Outside
