@@ -611,9 +611,9 @@ toolchains, 4diac IDE 3.2.x.
 
 ## Next steps
 
-The plan is in [next-steps.md](next-steps.md): the integrated architecture as the target, the
-aim (a vendor's module, taken in and reconfigured from its AAS alone), four phases with their
-checks, the timeline against the paper and the decisions that block it. Done so far towards it:
+The plan is in [next-steps.md](next-steps.md) (rewritten 8 Oct): what the paper delivers, which
+part of the model each tool uses, the steps to reconfigure a module from its AAS, the evaluation,
+and what the agents need after the paper. Done so far towards it:
 a module level skill created online (1 Oct), registration through `modreg` (2 to 4 Oct),
 capabilities, skill links and mappings in the AAS (6 Oct), the closed validation of the generation
 project repaired and both module AAS passing it, building blocks and the module rules (7 Oct).

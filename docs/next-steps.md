@@ -1,160 +1,173 @@
 # Next steps
 
-Plan of 6 Oct 2026. The guiding star is the integrated architecture in *Plug and produce
-architecture: components, flow and status* (the ten-step loop: connect, identify, discover,
-verify, register, match, plan and bind, execute, monitor, reconfigure). What is built and how is
-in [work.md](work.md); what each AAS holds and how the submodels connect in
-[aas-models.md](aas-models.md); how the work divides into repositories in
-[repositories.md](repositories.md).
+Plan of 8 Oct 2026; it replaces the plan of 6 Oct ([archive](archive/next-steps-2026-10-06.md)).
+What is built and how is in [work.md](work.md); what each AAS holds in
+[aas-models.md](aas-models.md); what was decided in [decisions.md](decisions.md); how the work
+divides into repositories in [repositories.md](repositories.md).
 
-## What we are aiming at
+## What the paper delivers
 
-The work specifies three things: how a module is built, what its AAS holds, and how the AAS is
-used to control and reconfigure it. The test is a module we did not generate:
+The CIRP CMS full paper is due 18 Nov 2026. Its claim:
 
-> A vendor builds a module in an IEC 61499 IDE inside our module shell, describes it with the AAS
-> generator from its spec sheets, and delivers the program and the AAS. We plug it in. From the
-> AAS and the running program alone it is verified, registered, matched to a product's process,
-> operated, and given a new skill or new parameter values online.
+> A module that is delivered with an IEC 61499 program and an AAS can be verified, operated and
+> changed online from those two alone, without the files it was generated from.
 
-Today the bottom of the loop works (spec → FORTE → AAS on the server → HMI and `modlink`), but
-the integrator's tools still lean on our own module spec, and the middle of the loop (match,
-bind, execute across modules) is missing. The CIRP full paper is due 18 Nov 2026.
+That is four deliverables:
 
-## The phases
+| # | Deliverable | What it is | State |
+| --- | --- | --- | --- |
+| D1 | Module rules | How a module is built: the module library (module state machine, occupation, skill state machine), the fixed pattern of a module level skill, what may change online ([module-rules.md](module-rules.md)) | Built |
+| D2 | Information model | The resource AAS in ARSO 0.7: the line, each module and each component, checked by a closed validation ([aas-models.md](aas-models.md)) | Built |
+| D3 | Method and tools | Register, verify, operate, reconfigure, record | Register and operate are built. Verify and reconfigure work from the module spec (YAML), not from the AAS |
+| D4 | Evaluation | The same changes online and by full redeployment, timed, on a Raspberry Pi | Not built |
 
-Each step names where the work lands and how we know it is done. Days are working days and
-rough.
+Agents are not part of the paper; they are its future work ([after the paper](#after-the-paper)).
 
-### Phase 0: one vocabulary, one ontology, a volume to fill (about 3 days)
+## Which part of the model is used for what
 
-Small things everything else stands on.
+| Submodel | Written by | Read by | Used for |
+| --- | --- | --- | --- |
+| Nameplate, asset type | `modreg` | the checker | Which kind of resource this is (line, module, component), so which rules apply |
+| Hierarchical Structures | `modreg` | plan check | The line's modules and a module's components |
+| Capability Description | `modreg` | plan check, `modlink.run_capability` | What a module offers and within which ranges; names the skill that realizes it |
+| Skills (in a module's and in each component's AAS) | `modreg` | `modlink`; the reconfiguration (step A2) | How a skill is called (commands, variables with limits) and what it is composed of (steps, constants) |
+| Module | `modreg` | `modlink` | The module's own commands (Reset, Start, Stop, Abort, Clear, Occupy, Release) |
+| Asset Interfaces Description | `modreg` | `modlink` | The OPC UA endpoint and the browse path of every action and property |
+| Asset Interfaces Mapping Configuration | `modreg` | `modlink` | Which interface element carries a skill's state, error and results |
+| Control Configuration | `modreg` | nothing yet; verification (step A1) | Block type, instance and type hash of every skill and step; the rule set; the record of a change |
+| Operational Data | `modreg` | `modlink`, through the mapping | What a value at the interface means (a skill's state, its error, a result). No live values are written into it |
+| Product AAS: bill of material, required capabilities, plan | `modreg` (product) | plan check | What a product needs; today the plan names a resource and a skill per step |
 
-| # | Step | Where | Done when | Days |
-| --- | --- | --- | --- | --- |
-| 0.1 | **One ARSO, one closed validator.** Bring the generation project's copy up to this repository's (reconfiguration elements of a skill, Control Configuration, parameter entry) and validate with its closed SHACL shapes. **Done 6 Oct (generation project, `main`, `fca2e76` to `04a38bd`):** its closed validation had not passed since the shapes were regenerated with the closed ruleset on 11 Sep (its own valid example: 2,962 violations), because nothing gathered `sh:ignoredProperties` into the list SHACL requires. Now a finishing step does; the valid example conforms, the regression suite requires that, and each invalid fixture has to fail for its own reason. Generating the shapes takes two minutes instead of hours. The projection takes an element for a class only where ARSO places that class, knows every AAS value type, keeps every class of a place and resolves a skill's Uses into `arso:usesSkill`. Rules as decided on 6 Oct: a mapping source may be a skill Operation whose skill references the sink's action; a Capability may follow IDTA 02020; a composite skill needs a capability, a primitive is a building block and needs none, Occupy and Release are access control and need none. Both projects hold the same ARSO 0.5 and CSS 2.0.2. On this side: a parameter entry's Value is optional, a skill's parameters are with the skill (no Parameters submodel is written), and an interface action names the command it carries out as a supplemental semantic id. **The filling and the stoppering module AAS conform (203 issues before)** | `ontology/`, generation project | The generation project's valid example passes its closed validation; both projects load the same ARSO; a module AAS passes | 1.5 |
-| 0.2 | **Capability vocabulary.** **Done 6 Oct on this side:** `ontology/Vocabulary/capabilities.ttl` (8 capabilities, 7 properties with units, below CSS, IRIs `.../semantics/<Name>`); the module specs are tested against it. The planner's recipes and stations use the same IRIs since 6 Oct (fork, `058a03e`); demo data already on a server has to be seeded again | `ontology/`, `cell/modules`, planner | A required capability of a recipe and the offered one of a module carry the same IRI | 1 |
-| 0.3 | **Fill volume.** **Done 6 Oct:** Dispensing takes a Volume (0.5 to 10 mL); the new building block Dispense waits Volume / FlowRate (1 mL/s, a constant of the step that reconfiguration can change); FillVolume of the Filling capability names the parameter; live test on the rebuilt FORTE | module spec format, `cell/modules/filling.yaml`, FORTE rebuild | `Dispensing.Start(Session, 2.5)` dispenses for 2.5 s on FORTE; the AAS links FillVolume to the parameter | 1.5 |
+The Steps of a skill and the Control Configuration are what the claim stands on, and they are
+the two parts no tool reads yet. Steps A1 and A2 change that.
 
-### Phase 1: the AAS is all the integrator needs (about 8 days)
+## Where a reconfiguration comes from (proposal, to be confirmed)
 
-This is the paper's core claim, and where this repository does not yet match the aim.
+**The AAS is the desired state.** A reconfiguration is a change to the module's AAS that the
+tools then carry into the running program. Who made the change is a separate matter.
 
-| # | Step | Where | Done when | Days |
-| --- | --- | --- | --- | --- |
-| 1.1 | **The model says what a skill can be built from.** Building blocks that are not offered (Dwell) with their block type, parameters and equipment; the fixed pattern of a module level skill written down as a rule of the module, not only as generator code. Declared in ARSO, classes regenerated. **Done 7 Oct:** the Skills submodel has `BuildingBlocks` (Dwell and Dispense in the filling module: block type, parameters with unit, limits and default, contract, equipment); steps and `Uses` refer to them. Every listed skill names its block type without the module being read. ARSO 0.6 also says what an Implementation and a Contract hold. The rules are in [module-rules.md](module-rules.md) (the shell, a primitive's interface, the pattern of a module level skill, what changes online), and the Control Configuration names the rule set. Both module AAS conform to the generation project's closed validation, which holds the same ARSO 0.6 | `ontology/ARSO`, `modreg`, module library notes | The AAS of the filling module lists Dwell as a building block; `modreg check` still passes | 1.5 |
-| 1.2 | **Structure from the running module.** The structural half of a profile (skills, parameters, sequences, equipment, interface, type hashes) read from FORTE alone; the descriptive half (nameplate, capabilities, units, descriptions) from a description file; merged. **Started 7 Oct:** `modsync.structure` reads the structure back from a program by the module rules (equipment, offered primitives, building blocks, module level skills with parameters, sequences and bindings, procedures) and gives the same as the spec states, for every module and for a skill added online. Not from FORTE alone: what a primitive takes, and a primitive that is not offered, are only in its type file. What is bound to a step's parameter is now checked against its limits and type when a module is built (the controller does not check a value a parent hands down). **Left:** merging the structure with the vendor's manifest (descriptions, units, contracts, capabilities) instead of a spec, reading a live module | `modreg`, `modsync` | The profile built without the module spec equals the one built from it, for both modules | 2.5 |
-| 1.3 | **Identify and verify against the AAS.** The module publishes its identity (asset id, AAS id, program digest); `modsync` compares the running program with what the AAS states, not with the spec | module library (one block, FORTE rebuild), `modsync` | A program that differs from its AAS is reported; loop steps 2 and 4 hold without a spec | 1.5 |
-| 1.4 | **Reconfigure from the AAS.** A new module level skill described as steps and bindings (as the AAS describes one) is created online from that description; a parameter value is changed; the change is recorded in Control Configuration and the AAS is registered again | `modsync`, `modreg` | The live test that creates DoubleDose online passes when driven by a skill description instead of a module spec; the change log shows it | 2 |
-| 1.5 | **Conformance.** One command checks a module against the rules: the library blocks are present with their hashes, the address space equals the one the AAS describes, the AAS passes the ontology check | `modsync`, `modreg` | Both modules pass; a module with a missing block or an undescribed node fails with the reason | 0.5 |
+What can change online is fixed by the module rules: the value of a parameter or of a step's
+constant, and a module level skill (instances and connections of primitives the module already
+has). Anything that needs a new block type or new IO is a new FORTE build and a redeployment.
 
-### Phase 2: the middle of the loop (about 7 days)
+| Change | When it is needed | Where the new content comes from |
+| --- | --- | --- |
+| A parameter value inside the offered range | Another order of the same product family | The product AAS; the value is handed over when the skill is called. No reconfiguration |
+| A step's constant or a limit (flow rate, largest volume) | The required value is outside what the module's skill offers, but inside what its component can do | The limits in the component's AAS and the product's requirement; an engineer sets the new value in the module's AAS |
+| A new module level skill | No skill realizes the required capability, or the process needs another sequence of the same primitives | A skill description in the form the AAS already has (commands, variables, steps that name the module's primitives). Written by the vendor as a variant delivered with the module, by the integrator's engineer, by the AAS generator, later by an agent |
 
-| # | Step | Where | Done when | Days |
-| --- | --- | --- | --- | --- |
-| 2.1 | **Matcher.** Required against offered capability on the RDF projection of the Capability Descriptions (the generation project's projection), SHACL rules for values and ranges; the planner's and `modlink`'s matching stay as cross-checks | `ontology/`, validation code | The pharma recipes give the same verdicts as the planner's matcher, or the differences are explained | 2 |
-| 2.2 | **Planner on our modules.** The planner reads ARSO's Skills submodel and the shared vocabulary, and binds a step's parameter to a skill parameter (FillVolume → Volume) | planner (TypeScript) | A recipe step binds to Dispensing of the registered filling module in the planner | 1.5 |
-| 2.3 | **Execution by agents.** Decided 6 Oct: plans are executed by a multi-agent system, not a central executor. One agent per product and one per resource; I4.0 bidding (VDI/VDE 2193) assigns steps. A resource agent has three sets of tools: run its skills (`modlink`), look up its capabilities (its AAS), and reconfigure its IEC 61499 program (`modsync`); with an accepted bid it runs the task, rewiring or reconfiguring first if needed. What this repository owes it: the reconfiguration functions as a callable interface (create a skill from a description, set a parameter, verify) | a new agents component, `modlink`, `modsync` | A product agent gets Dispense and Close done by the two resource agents, on the simulators and on FORTE | 4 |
-| 2.4 | **Check before running.** A plan is refused when a step has no candidate, a bound value is outside the skill's range, or a module's AAS no longer matches its program | executor, matcher | Three broken plans are refused with the reason | 1 |
+A skill that is described in the Skills submodel but has no instance in the Control
+Configuration is a skill the module can get. Its capability is listed like the others. Matching
+then has three answers: offered now, offered after a reconfiguration (and by which description),
+not offered.
 
-### Phase 3: experiments and the paper (the last three weeks)
+When it happens, for the paper: at a changeover, on the engineer's request. One function takes the
+module's AAS and its running program and does the following:
+
+1. Compare: which described skills and values differ from the program.
+2. Check: the steps name primitives the module has, bound values are inside their limits, the AAS
+   passes the validation.
+3. Guard: the module is not executing and not occupied by someone else.
+4. Apply: online where the rules allow it, otherwise say that a restart is needed.
+5. Verify: read the program back, compare type hashes.
+6. Record: instances and the change in the Control Configuration; register the AAS again.
+
+Later a resource agent calls the same function when a bid that needs a reconfiguration is accepted.
+
+## The plan to 18 Nov
+
+### A. Reconfigure from the AAS (deliverable D3)
+
+| # | Step | Where | Done when |
+| --- | --- | --- | --- |
+| A0 | **Mock-up.** A skill described but not built (DoubleDose) in the filling module's AAS on the local server, and what the Control Configuration records after it is created | scratch, local AAS server | You have confirmed the structure |
+| A1 | **Verify against the AAS.** Compare the running program with what the AAS states (instances, block types, hashes, steps, constants), not with the module spec | `modsync` | A program that differs from its AAS is reported with the difference; no module spec is read |
+| A2 | **Reconfigure from the AAS.** Create a module level skill from its description in the AAS; change a constant; both verified by read-back and recorded | `modsync`, `modreg` | The live test that creates DoubleDose passes when it starts from the AAS; the Control Configuration shows the change |
+| A3 | **Operate what was created.** A client that reads the registered AAS again finds and runs the new skill | `modlink` (HMI repository) | `modlink` runs DoubleDose on FORTE from the AAS alone |
+| A4 | **Callable functions.** Verify, create a skill, set a value: one Python interface, so a script, the HMI or later an agent calls the same thing | `modsync` | The scenario runner (B1) uses only these |
+
+Step 1.2 of the old plan (a whole profile read from the running program) is no longer on the
+path: the AAS is delivered with the module, the program is only compared with it.
+
+### B. Evaluation (deliverable D4)
 
 | # | Step | Done when |
 | --- | --- | --- |
-| 3.1 | **Scenario runner.** Plug in a module (register → match → bind → run); change a parameter (new fill volume); change the flow (inspection every fifth product: plan only); change the composition (a new skill created online). Each timed: downtime, commands sent, verification | The four scenarios run unattended and write their numbers |
-| 3.2 | **Baseline.** The same changes by full redeployment (boot file and restart) | Numbers side by side |
-| 3.3 | **Hardware.** The same scenarios on the two Pis once they are wired; until then FORTE on the Pi with simulated IO | Depends on the wiring |
-| 3.4 | **Writing.** | 18 Nov |
+| B1 | **Scenario runner.** Plug in a module (register, verify, operate); change a constant; create a new skill. Each timed: downtime, commands sent, time to verify | The scenarios run unattended and write their numbers |
+| B2 | **Baseline.** The same changes by a new boot file and a restart | Numbers side by side |
+| B3 | **Hardware.** The filling module on the Raspberry Pi 5 with the stepper (TB6600 driver, ordered); the stoppering module on the Pi 4 if time allows | The scenarios run on the Pi with the axis moving; until then on the Pi's FORTE with simulated IO |
 
-### After the paper, or beside it when the lab answers
+### C. Keeping the clients in step
 
-- **Module shell.** A 4diac template project with the fixed parts in place; one skill written by
-  hand in the IDE goes through phase 1 like a generated one.
-- **Generator on the pydantic profile.** The LLM writes the descriptive half of a profile; the
-  generation project uses the shared model and validator.
-- **Live side of the AAS.** Mapping execution into Operational Data (the lab's node or a small
-  bridge), history, a registry.
-- **Lab deployment.** Registration on the lab's AAS server; `modreg` beside or inside the lab's
-  registration.
-- **Repository split**, CI, retiring `modsync/aas.py`, agents.
+| # | Step | Where |
+| --- | --- | --- |
+| C1 | The HMI's own AAS reader, its built-in module descriptions and its stand-in module still describe the modules before 8 Oct. Read ARSO 0.7 through `modlink`'s reader and drop the built-ins | HMI repository |
+| C2 | The scale's weight follows the dispensed volume (it is a constant 2.0 g) | module spec, simulator |
+| C3 | The Pi 4: new host name (`stoppering-module`), new runtime | Pi 4 (needs its password) |
 
-## Timeline against 18 Nov
+C1 to C3 are not needed for the paper's claim; they go in when they block a figure or a run.
+
+### D. Writing
+
+Outline and figures by 1 Nov; experiment runs and text from 2 Nov; submission 18 Nov.
+
+### Timeline
 
 | Week | Work |
 | --- | --- |
-| 6 to 12 Oct | Phase 0; 1.1, 1.2 |
-| 13 to 19 Oct | 1.3 to 1.5 |
-| 20 to 26 Oct | 2.1 to 2.4 |
-| 27 Oct to 2 Nov | 3.1, 3.2; hardware if wired; paper outline and figures |
-| 3 to 18 Nov | Experiment runs, writing |
+| 9 to 18 Oct | A0, A1, A2 |
+| 19 to 25 Oct | A3, A4, B1, B2 |
+| 26 Oct to 1 Nov | B3 (when the driver is in), C as needed, outline and figures |
+| 2 to 18 Nov | Experiment runs, writing |
 
-That is about 18 days of building in three weeks: it fits only if nothing slips. If it does, cut
-in this order:
+If time runs out, cut in this order: C, then B3 on real hardware (keep the Pi with simulated IO),
+then A3. Not to be cut: A1, A2, B1, B2.
 
-1. 1.5 Conformance (the tests already show it).
-2. 2.1 The ontology matcher (the planner's matcher carries the demonstration; the ontology one
-   becomes future work).
-3. 1.2 for the stoppering module (show it on the filling module only).
-4. 3.3 Hardware (FORTE on the Pi with simulated IO).
+## After the paper
 
-Not to be cut: 0.2, 0.3, 1.3, 1.4, 2.3 and 3.1. Without them there is no loop to show.
+**Decentralized, order-driven production.** A product agent per order asks for each process step,
+resource agents answer with bids, the product agent chooses. What exists: `modlink` (occupy, run a
+skill or a capability), capabilities with ranges, the range check of
+[plan_check.py](../cell/examples/plan_check.py), occupation as the lock at execution time, and,
+after step A4, the reconfiguration as functions. What is missing:
 
-## What I need from you
+| # | Part | Why |
+| --- | --- | --- |
+| 1 | An unbound process | The plan names a resource and a skill per step. With bidding the product type holds required capabilities and their order; the binding is the result of a negotiation, per order. AProSO already describes it this way (candidates, then the chosen one) |
+| 2 | An order | Nothing says "20 vials of 2.5 mL" and starts a product agent |
+| 3 | Messages and protocol | Call for proposals, proposal, accept or reject, result (VDI/VDE 2193), and what carries them (the lab runs MQTT; SPADE needs an XMPP server) |
+| 4 | A resource agent per module | Matches a request against its own AAS; answers yes, yes after a reconfiguration, or no, with a time; on acceptance reconfigures and runs the skill |
+| 5 | A product agent | Walks the process, compares bids, records what was done to the product |
+| 6 | Transport agents | A vial moves between the modules on the shuttles of the ACOPOS 6D table. Their control is Python code, not IEC 61499: the table needs a resource AAS (a Transport capability, an interface the agent can call) and an agent like a module's. It also shows the model on a resource that is not IEC 61499 |
+| 7 | Reservation | A module can be occupied now, not booked for later |
+| 8 | A matcher both sides use | Required against offered capability, including "after a reconfiguration" |
+| 9 | Failure handling | A skill that fails, a module that goes away: ask again |
 
-Decisions, each blocking a step:
+A first slice: one product agent, two resource agents (filling, stoppering) and the simulators;
+one call for proposals per step; then a bid that needs a reconfiguration.
 
-Decided on 6 Oct 2026:
+**Also after the paper:** the planner reading a module's skills; a module shell for the 4diac IDE
+so a hand-written module goes the same way; the AAS generator writing profiles; live values and
+history in the AAS; registration on the lab's AAS server; the repository split and CI.
 
-| Decision | Answer |
-| --- | --- |
-| May ARSO be extended for building blocks and for what a skill's Contract, Step and Implementation contain? | Yes |
-| Validator closed or open? | Closed, as the SHACL validation of the generation project is |
-| Fill volume | A time at a fixed flow rate; the volume decides the time |
-| Who executes plans | A multi-agent system: an agent per product and per resource, I4.0 bidding; resource agents use the skills, the AAS and the reconfiguration tools |
-| Products | Prefilled syringe, cartridge or vial, as in the planner's examples |
-| Planning | By hand in the planner's web UI for now; an automatic planner may write the same submodels later |
-| Which skills need a capability? (7 Oct) | A composite skill does; a primitive is a building block and needs none; Occupy and Release are access control and need none |
-| Where are a skill's parameters? (6 Oct) | With the skill: the inputs of its Operation. The Parameters submodel is optional and does not hold them |
-| Capability element (6 Oct) | As IDTA 02020: the template's id, the meaning as a supplemental id |
-| What does a step's binding hold? (7 Oct) | The smallest change: a parameter the skill hands down is a reference to that parameter of the skill (it was its name as a string); a constant stays a value. What a step runs with shows at the interface anyway; the planner's own bindings and the HMI are unchanged |
-| Where do a contract's terms come from when there is no spec? (7 Oct) | From the AAS manifest the module's vendor provides: the descriptive half of step 1.2 is that manifest, not a file of our own |
-| How is a product or a plan described? (7 Oct) | Like a module: an AAS type on the pydantic model (aas-model) and a profile that is its dump, built by the same tool. No description format of our own. Done for the product with its plan (`ProductTypeAAS`); the vial of the example line is such a profile |
-| What does a module carry as its manifest? (7 Oct) | The pydantic dump (the profile). It is what `modreg profile` writes today, from the module spec (the YAML file a module's program is generated from) and the running program; storing it on the module is not built (step 1.3) |
-| The planner reads its own skill catalog, the modules publish ARSO Skills. Which holds? (7 Oct) | The resource's skill definition. The web UI and the planner are adjusted to read it (step 2.2) |
-| Is a plain wait (Dwell) kept, and is Dispense a skill of its own? (8 Oct) | Dwell is removed for now (its block types stay in the history); Dispense is offered like every other primitive |
-| What has an AAS? (8 Oct) | The production system, each of its six modules (Loading, Filling, Stoppering, Capping, Inspection, Unloading) and every active component of a module: filling pump and linear axis; stoppering piston and linear axis; cap crimper and linear axis; top and side camera; Kuka robot and gripper (loading and unloading). The bill of material of the resources and the hierarchy of skills follow from these |
-| What does a linear axis offer? (8 Oct) | The same two skills in every module: `MoveAxis(Position)` and `Home`. The axes are stepper motors with a limit switch, as on a 3D printer: the controller keeps the position itself (home at the switch, then the time it steps), and the direction follows from where the axis is and where it is to go. **Done 8 Oct** in the generator and in the filling and stoppering modules, run on FORTE with the simulator |
-| Which way do capabilities and skills refer? (8 Oct) | One way: a capability names the skill that realizes it. A skill does not refer back |
-| What is the stoppering module made of? (8 Oct) | As the others: a linear axis and one small linear actuator (the piston). **Done 8 Oct** |
-| Is there a scale? (8 Oct) | Not physically. It is a part of the filling module with a simulated weight; it is tared when the module resets (**done**). The weight following what was dispensed is not built |
-| How many robots? (8 Oct) | One Kuka for loading and one for unloading, each with a Raspberry Pi of its own. How 4diac controls them comes later (likely: start program 1, 2 or 3) |
-| How is a component's AAS named? (8 Oct) | One per component as built in, with an id of its own (filling linear axis); what kind it is, is shared by all of that kind |
-| How does a Raspberry Pi get its runtime? (8 Oct) | By one script, `runtime/install.sh`: Docker if missing, FORTE from the repository (`runtime/bin`), GPIO and PWM. **Done 8 Oct**, run on a Raspberry Pi 5 |
-| Which Pi runs which module? (8 Oct) | The Raspberry Pi 5 (192.168.0.134) the filling module, the Raspberry Pi 4 (192.168.0.191) the stoppering module. The Pi 4 still has to be renamed and to get the new runtime |
-| How are the axes driven and kept right? (8 Oct) | RepRap Stepper Motor Driver v2.3 (A3982): Step, Dir and an inverted Enable. An ordinary limit switch at the top goes straight to the Pi. The position is counted, so every operation ends by homing (**done 8 Oct**). Speed assumes an 8 mm screw and half steps until measured |
-| Where do a skill's block type, instance and contract go? (8 Oct) | "Do what you need to make it work": block type, instance and hash are in the Control Configuration (Instances, each pointing at its skill or step); the contract stays with the primitive; what a primitive occupies is its component |
-| How does a product's value reach a skill's parameter? (8 Oct) | No link from skill to capability. The parameter carries the meaning of the capability property it sets (a semantic id), as the product's parameter does; the plan's step binds the value |
-| The Skills structure (7 and 8 Oct) | **Built 8 Oct as ARSO 0.7:** a skill is its commands (Start, Stop, Abort, Reset), each with its interface reference, an Operation named like it and its steps; the module's own commands are a submodel (Module); primitives are in the AAS of their component; the line, each module and each component is an AAS, told apart by its asset type. Published on the local AAS server |
-
-Still open:
+## Open questions
 
 | Question | Blocks |
 | --- | --- |
-| Occupy and Release are access control, not production. Do they stay in the list of skills, and are they called skills at all? (The rule leaves them out by their semantic id for now) | later |
-| Interface actions name their command as a supplemental semantic id. Should it be the semanticId instead? | later |
-| What belongs in the Parameters submodel (optional; not a skill's parameters)? A station constant such as the flow rate is a candidate | later |
-| Elements ARSO does not describe pass both validators. Describe those the interface and the control need (operation type, browse path, owning object, data type, key, an action's input and output; a skill's Methods, ErrorReference and Results, the module's commands) and leave the descriptive ones (title, unit, observable, synchronous, security)? Not done with 1.1 | 1.4 |
-| The generation tool's builder still writes a Capability's meaning as its semanticId and no Kind; change it to the form of IDTA 02020 (both are accepted now)? | later |
-| A running program does not tell a constant that was bound to a step from a default that was left. When the profile is made from the program (1.2), does a step list every parameter of its skill, or only those that differ from the default? | 1.2 |
-| The module specs (YAML) hold what the AAS does not: which output or input of the controller an equipment item is wired to, per target. Without them a program cannot be generated. **7 Oct: they stay for now.** Describing the wiring in the AAS is an idea to work out later (there are sources that do it) | later |
-| ARSO 0.7 is in this repository and in the AAS generation project (identical files; its validation accepts the new form of a skill and the short one, and the three kinds of resource; its builder still writes the short form). `modlink` reads both forms (HMI repository, 9 Oct). To follow: the HMI itself (its AAS reader, its built-in descriptions and its simulator are the modules before 8 Oct: needle skills, servo arm); the planner, which is to read a module's skills (step 2.2). Open in the structure: two components of one kind in one module (the cameras) need one skill name twice; what a component's AAS holds besides its skills (a nameplate?); leaving step values out of the interface description; Operational Data in groups | 1.2, 2.2 |
-| The steppers' wiring and numbers: driver type and pins, steps per millimetre and step rate (the specs assume 20 mm/s and 60 mm of travel), which end the limit switch is at; and whether the Raspberry Pi 5 set up on 8 Oct replaces the Pi 4 as the filling module's target (on a Pi 5 GPIO18 is PWM channel 2, not 0) | wiring a module |
-| The documents for an HMI (`docs/hmi/opcua-*.md`) describe the modules before 8 Oct in their sections on equipment and skills; the script that wrote them is not in the repository. Write it anew, from the module description and the running controller? | later |
-| The plan is a submodel of the product AAS, as the planner writes it. Does it become an AAS of its own (a process AAS per product and line, as AProSO describes)? | 2.2 |
-| Later, if needed: a binding whose value is an expression over the skill's parameters; a station setting (such as the flow rate) held once in the Parameters submodel and bound by every step that uses it | later |
-| The agents are software agents in a framework such as SPADE; their inner structure (BDI, fixed plans) is not settled | 2.3 |
-| Which changes does the paper show? | 3.1 |
+| Is "the AAS is the desired state" the way a reconfiguration is described (the proposal above)? | A0 |
+| A skill that is described but not built: is the missing instance in the Control Configuration enough to tell it, or does it get a state of its own (described, deployed)? | A0 |
+| Which changes does the paper show: a constant and a new skill, or more? | B1 |
+| Two components of one kind in a module (the two cameras) need one skill name twice | later |
+| What a component's AAS holds besides its skills (a nameplate?) | later |
+| Step values are also in the interface description; leave them out there? Operational Data in groups? | later |
+| Occupy and Release are access control: are they called skills at all? | later |
+| An interface action names its command as a supplemental semantic id; should it be the semanticId? | later |
+| What belongs in the Parameters submodel (it does not hold a skill's parameters)? | later |
+| Does the plan become an AAS of its own, per product and line? (With bidding it becomes per order) | agents |
+| The ACOPOS 6D table: where is its Python code, and which interface does it offer (OPC UA, MQTT, a library)? | transport agents |
+| The agents' framework and inner structure (SPADE or plain asyncio over MQTT; fixed plans or BDI) | agents |
+| The module specs (YAML) still hold the wiring of each IO point per target; describing it in the AAS is an idea for later | later |
 
 Facts only you or the lab have: the measured values of each station (fill range and accuracy,
-diameters) and the flow rate; whether we may publish to the lab's AAS server. One module is being
-wired to its Pi now.
+diameters, flow rate, the real speed of the axes), and whether we may publish to the lab's AAS
+server.
