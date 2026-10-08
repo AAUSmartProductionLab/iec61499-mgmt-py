@@ -65,8 +65,8 @@ flowchart LR
 
 | AAS | One per | Built by | Checked against |
 | --- | --- | --- | --- |
-| Module, component | module; component as built into one | `modreg` from the module spec or the running module | ARSO 0.7: `modreg check` (the generator's closed SHACL validation still has ARSO 0.6) |
-| Line | line | `modreg` from a profile (`cell/examples/example_line.py`) | ARSO 0.7: `modreg check` |
+| Module, component | module; component as built into one | `modreg` from the module spec or the running module | ARSO 0.7: `modreg check`, and the closed SHACL validation of the generator (all fourteen resource AASs of the example line conform, 9 Oct) |
+| Line | line | `modreg` from a profile (`cell/examples/example_line.py`) | ARSO 0.7: `modreg check`, and the generator's validation |
 | Product | product, and each part that has its own plan | the planner (demo data), and `modreg` from the product's profile | its pydantic type (`ProductTypeAAS`); no ontology (APSO is not applied to it) |
 | Plan | product (a submodel of the product AAS, not an AAS of its own) | the planner, and `modreg` as part of the product | its pydantic class; against the resources by following its links (`cell/examples/plan_check.py`); AProSO is not applied to it |
 
@@ -375,9 +375,12 @@ Inside the resource the chain continues with section 2.2: capability â†’ skill â
    modules and the planner follow IDTA 02020 (decided 6 Oct). Both are accepted by the validator.
 6. **The interface terms aas-model writes that ARSO does not declare** (key, type, title,
    operation type, browse path). Skills, Module and Control Configuration are declared in full.
-7. **Two versions of ARSO.** This repository has 0.7; the AAS generation project still has 0.6 and
-   builds and validates the short form of a skill. And two readers still expect the 0.6 shape:
-   `modlink` and the HMI's AAS reader, both in the HMI repository.
+7. **Two forms of a skill, one ARSO.** Both repositories have ARSO 0.7 (identical files). The AAS
+   generation project still builds the short form of a skill, which 0.7 keeps valid; its validation
+   accepts both forms, and tells a module, a component and a system apart by the asset type.
+   `modlink` (HMI repository) reads both forms, the new one with the component AASs. The HMI's own
+   reader, its built-in module descriptions and its simulator are still those of the modules before
+   8 Oct.
 8. **Live values.** The mapping into Operational Data is described but nothing runs it, so the
    data points in the AAS hold no values.
 
