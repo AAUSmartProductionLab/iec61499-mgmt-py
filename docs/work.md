@@ -231,6 +231,13 @@ with, and aas-model itself is changed as little as possible.
   the AAS describes (35 variables, 31 methods). Not run against the lab's AAS server, and the lab's
   data mapping service has not been tried with the OPC UA mappings.
 
+**Since 8 Oct 2026 (ARSO 0.7)** the AAS is built differently from what the rest of this section
+says: a skill is its commands, each with its interface reference, its Operation and its steps;
+the module's own commands are the Module submodel; a primitive is in the AAS of its component
+(`modreg profile <module>` writes the module's profile and one per component); block type and
+instance are in the Control Configuration. [aas-models.md](aas-models.md) section 2 describes it.
+What follows is how it was until then.
+
 Consequences of following ARSO strictly:
 
 - A primitive that is not offered is not listed as a skill, because ARSO asks every

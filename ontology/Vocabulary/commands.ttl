@@ -1,0 +1,53 @@
+@prefix cmd:  <https://smartproductionlab.aau.dk/skill/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#################################################################
+# The commands of a skill.
+#
+# A skill of a resource is told to start, stop, abort or reset. The
+# command means the same on every skill, so it is named once, by an
+# IRI below https://smartproductionlab.aau.dk/skill/. In a resource's
+# AAS the command element of a skill (Skills submodel: Start, Stop,
+# Abort, Reset) carries the IRI as its semanticId, and the action of
+# the interface description that calls it as a supplemental
+# semanticId. What a command does to one skill is in that skill.
+#################################################################
+
+<https://smartproductionlab.aau.dk/skill>
+  rdf:type owl:Ontology ;
+  owl:versionInfo "0.1" ;
+  rdfs:comment "The commands a skill of a resource takes (AAU Smart Production Lab)." .
+
+cmd:Command rdf:type owl:Class ;
+  rdfs:label "Command" ; rdfs:comment "Something a skill can be told to do." .
+
+cmd:Start rdf:type owl:Class ; rdfs:subClassOf cmd:Command ;
+  rdfs:label "Start" ; rdfs:comment "Run the skill with the parameters given. The answer says whether it was accepted; the skill's state says how it went." .
+
+cmd:Stop rdf:type owl:Class ; rdfs:subClassOf cmd:Command ;
+  rdfs:label "Stop" ; rdfs:comment "End a running skill in an orderly way: it runs what it has to run to stop (its stop steps)." .
+
+cmd:Abort rdf:type owl:Class ; rdfs:subClassOf cmd:Command ;
+  rdfs:label "Abort" ; rdfs:comment "End a running skill at once: its components go to their safe state." .
+
+cmd:Reset rdf:type owl:Class ; rdfs:subClassOf cmd:Command ;
+  rdfs:label "Reset" ; rdfs:comment "Take a skill that has ended (succeeded, failed or aborted) back to idle." .
+
+#################################################################
+# The kinds of skill.
+#
+# The element that describes a skill carries one of these as its
+# semanticId: it says what may be in the element. What the skill
+# does is its own id (the element's SemanticId property).
+#################################################################
+
+cmd:Skill rdf:type owl:Class ;
+  rdfs:label "Skill" ; rdfs:comment "Something a resource can do, described by its commands." .
+
+cmd:Primitive rdf:type owl:Class ; rdfs:subClassOf cmd:Skill ;
+  rdfs:label "Primitive" ; rdfs:comment "A skill of one component: its commands run no other skill. It states what starts, ends and bounds it (Contract)." .
+
+cmd:Composite rdf:type owl:Class ; rdfs:subClassOf cmd:Skill ;
+  rdfs:label "Composite" ; rdfs:comment "A skill made of other skills: its Start (and, if it has to tidy up, its Stop) runs them step by step." .
