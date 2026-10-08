@@ -201,5 +201,7 @@ def test_modsync_registers_the_module_it_describes(service, aas_server, tmp_path
                                      "--register", url])
     modsync()
     assert f"registration: registered StopperingModuleAAS at {url}" in capsys.readouterr().out
-    assert [r["id_short"] for r in registry.registrations()] == ["StopperingModuleAAS"]
+    # The module and, with it, the components whose skills it carries out.
+    assert sorted(r["id_short"] for r in registry.registrations()) == [
+        "StopperingLinearAxisAAS", "StopperingModuleAAS", "StopperingPistonAAS"]
     assert aas_server.calls[-1] == "POST shells"

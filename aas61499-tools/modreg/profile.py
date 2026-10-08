@@ -142,7 +142,9 @@ def contract(decl) -> arso.Contract:
     """What starts, ends and bounds a primitive, as the module spec states it. A condition that is
     plainly true is left out."""
     done = {"Ensures": decl.ensures} if decl.ensures is not None else {"After": decl.after}
-    terms = {"Requires": decl.requires, **done, "Invariant": decl.invariant, "Timeout": decl.timeout}
+    # A time ends it by itself: the longest it may run is said only where a sensor ends it.
+    terms = {"Requires": decl.requires, **done, "Invariant": decl.invariant,
+             "Timeout": decl.timeout if decl.ensures is not None else None}
     return arso.Contract(**{k: prop(v) for k, v in terms.items() if v is not None and v != "TRUE"})
 
 
