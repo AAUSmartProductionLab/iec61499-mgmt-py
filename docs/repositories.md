@@ -1,12 +1,13 @@
 # Repositories: how the work divides
 
-Proposal of 6 Oct 2026; nothing is split yet. Everything built so far sits in four places:
+Proposal of 6 Oct 2026, facts brought up to date on 8 Oct; nothing is split yet. Everything built
+so far sits in four places:
 
 | Where | What |
 | --- | --- |
 | [iec61499-mgmt-py](https://github.com/AAUSmartProductionLab/iec61499-mgmt-py) (this repository) | Runtime, module library and generator, management client, `modsync`, `modreg`, the ontologies, the two modules |
 | [iec61499-opcua-hmi](https://github.com/AAUSmartProductionLab/iec61499-opcua-hmi) | `modlink`, the HMI, an OPC UA stand-in for a module (`sim/`), the Linux FORTE build (`tools/forte`), the end-to-end test |
-| [ARSO_Ontology_AAS_Generation](https://github.com/MartinJensen37/ARSO_Ontology_AAS_Generation) | The LLM generator with its editor, an AAS builder, AAS → RDF, SHACL validation, a copy of ARSO |
+| [ARSO_Ontology_AAS_Generation](https://github.com/MartinJensen37/ARSO_Ontology_AAS_Generation) | The LLM generator with its editor, an AAS builder, AAS → RDF, SHACL validation, a copy of ARSO (the same files as here since 6 Oct, updated by hand) |
 | [basyx-aas-web-ui](https://github.com/MartinJensen37/basyx-aas-web-ui), branch `feat/process-sequence-pharma` | The process sequence planner: one module folder (`aas-web-ui/src/pages/modules/ProcessSequence`) in a fork of the BaSyx web UI |
  Several parts
 exist twice (the ontology, the AAS validation, the AAS builder) and several are bundled with
@@ -67,7 +68,7 @@ step only when its trigger holds:
 
 | Step | Split | Trigger |
 | --- | --- | --- |
-| 1 | **ontologies** out of this repository and the generation project | First of all, because the two copies of ARSO already differ. Until then: this repository's copy is the one that is edited, and the generation project's is updated from it by hand |
+| 1 | **ontologies** out of this repository and the generation project | First of all, because ARSO lives in two places. Until then: this repository's copy is the one that is edited, and the generation project's is updated from it by hand (identical since 6 Oct, ARSO 0.7 on 8 Oct) |
 | 2 | **aas-resource-tools** out of `modreg` | The generator switches to the pydantic profile, so two projects need the model and the validator |
 | 3 | **module-clients**: nothing to do | It is the HMI repository; split `modlink` out of it only when a project outside needs it |
 | 4 | **iec61499-modules** and **filling-line** | A second line, or a vendor, uses the module library without our two modules. What remains here is the line |
@@ -81,7 +82,7 @@ Each could be a repository of its own; the recommendation above groups them.
 
 | # | Part | Holds | Comes from | Depends on |
 | --- | --- | --- | --- | --- |
-| 1 | **ontologies** | ARSO, APSO, AProSO, PPRL; the copies of the AAS and CSS ontologies they import; the SHACL shapes generated from them and the hand-written rules; the capability vocabulary (proposed); the consistency checks | `ontology/` here and `Ontology/` in the generation project (two diverged copies of ARSO) | – |
+| 1 | **ontologies** | ARSO, APSO, AProSO, PPRL; the copies of the AAS and CSS ontologies they import; the SHACL shapes generated from them and the hand-written rules; the capability and command vocabulary; the consistency checks | `ontology/` here and `Ontology/` in the generation project (two copies of ARSO, kept the same by hand) | – |
 | 2 | **aas-model** (the lab's) | The pydantic base classes, the classes of the IDTA templates, the template-to-class generator | Lab repository, a submodule here | – |
 | 3 | **aas-resource-model** | The resource AAS as pydantic models in ARSO's structure: the templates and classes of ARSO's own submodels generated from the ontology, the resource type, profile ⇄ model ⇄ AAS | `modreg/model.py`, `templates.py`, `templates/`, `generated/` here; replaces `Transformation/AAS_Builder` of the generation project | 1, 2 |
 | 4 | **aas-validation** | AAS → RDF projection, SHACL validation against the ontologies, the quick structural check; later the capability matcher (required against offered) on the same projection | `Transformation/AAS_to_RDF`, `Validation/` of the generation project; `modreg/ontology.py` here | 1 |
@@ -101,9 +102,16 @@ Each could be a repository of its own; the recommendation above groups them.
 | 8 | **iec61499-mgmt-py** | The FORTE management protocol client: typed commands, networks and plans, boot files, type library, read-back | `iec61499-mgmt-py/` here | – |
 | 9 | **aas61499-tools** | `modsync` (read a running module, compare, push changes, create skills online, watch) and the IEC 61499 side of the AAS: the profile from a module spec and a running program; later the module's identity and the reconfiguration manager | `aas61499-tools/modsync`, `modreg/profile.py` here | 3, 5, 8 |
 | 10 | **aas-registration** | The registration service: read a profile, build the AAS, validate it, publish it to the AAS server | `modreg/service.py` and its command line here | 3, 4 |
-| 11 | **modlink** | The OPC UA client library every client shares: link, module client, AAS reader that follows capability → skill → interface, `run_capability`; later the plan executor | `modlink/` of iec61499-opcua-hmi | – (only `asyncua`; reads the AAS as plain JSON) |
+| 11 | **modlink** | The OPC UA client library every client shares: link, module client, AAS reader that follows capability → skill → interface, `run_capability`; later what an agent runs a skill with | `modlink/` of iec61499-opcua-hmi | – (only `asyncua`; reads the AAS as plain JSON) |
 | 12 | **module-hmi** | The operator pages built from the AAS (FastAPI); an OPC UA stand-in for a module | `hmi/`, `sim/` of iec61499-opcua-hmi | 11 |
 | 13 | **process-planner** | Products, production sequences, required capabilities, binding of steps to skills; its own Production Sequence and Skills templates and a matcher in TypeScript | The ProcessSequence module of the basyx-aas-web-ui fork | The AAS server; later 4 (matcher) and 1 (vocabulary) |
+
+### After the paper
+
+| # | Part | Holds | Comes from | Depends on |
+| --- | --- | --- | --- | --- |
+| 15 | **agents** | A product agent per order and a resource agent per module or transport system: call for proposals, bids, execution through `modlink`, reconfiguration through `modsync` ([next-steps.md](next-steps.md), after the paper) | Not started | 3, 4, 9, 11 |
+| 16 | **transport** | The shuttles of the ACOPOS 6D table that carry a vial between the modules. Controlled by Python code, not IEC 61499; it needs a resource AAS and an agent like a module | The lab's code, outside these repositories | 3 |
 
 ### The line itself
 
@@ -189,10 +197,10 @@ module's OPC UA address space.
 
 Settled by the split:
 
-- One ARSO. The two copies have diverged (this repository has the reconfiguration elements of a
-  skill, Control Configuration and the parameter additions; the generation project has none).
-- One validator. A module AAS built here does not pass the generation project's SHACL
-  validation today (its shapes are closed and older); with one repository there is one answer.
+- One ARSO. Two copies exist; they are the same files since 6 Oct only because each change is
+  carried over by hand.
+- One validator. Since 6 Oct the AASs built here pass the generation project's closed SHACL
+  validation; the quick check in `modreg` is a second implementation of part of it.
 - One profile format: the pydantic dump, written partly by the generator (from spec sheets) and
   partly from the program.
 - The registration service and the resource model are independent of IEC 61499, so the lab's
@@ -206,8 +214,8 @@ Duplicates between the repositories that sharing has to remove (found 6 Oct):
   the ones read from the AAS; its AAS test data are written from this repository.
 - **The Linux FORTE build** (`tools/forte` of the HMI repository) beside the Windows and Pi
   builds here.
-- **Capability vocabulary**: the planner's demo uses `.../demo/pharma/semantics/<Name>`, the
-  module specs `.../semantics/<Name>`, so required and offered capabilities do not meet yet.
+- **Capability vocabulary**: settled on 6 Oct; the planner's recipes and the modules use
+  `.../semantics/<Name>` (`ontology/Vocabulary`).
 - **Skills template**: the planner reads its own Application Skills 1.0, the modules publish
   ARSO's Skills submodel.
 - **Matching**: in the planner (TypeScript) and in `modlink`; the ontology matcher is proposed
@@ -215,8 +223,6 @@ Duplicates between the repositories that sharing has to remove (found 6 Oct):
 
 Still to decide:
 
-- Whether the shared validator is closed (refuses what the ontology does not describe) or open
-  (reports it). It decides how much of aas-model's output ARSO has to describe.
 - Whether the matcher is part of **aas-validation** or a repository of its own.
 - Where `modgen` belongs once vendors author in the IDE: with the library (as here), or with the
   line as our own way of producing module projects.
