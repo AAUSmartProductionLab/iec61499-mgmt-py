@@ -430,3 +430,14 @@ def test_stop_sequence_nodes_do_not_collide_with_the_stop_method():
     app = flatten(application(ET.Element("System"), spec, "pc").find("SubAppNetwork"))
     paths = {k: v for k, v in app.parameters.items() if k.startswith("Dispensing.Stop.") and k.endswith(".UaPath")}
     assert paths == {"Dispensing.Stop.Home.UaPath": '"/Skills/Dispensing/Stopping/Home"'}
+
+
+def test_a_module_names_its_pwm_channels_as_a_pi_4_does():
+    """Channel 0 is GPIO18 on every board; a Raspberry Pi 5 numbers that pin 2. The stepper driver's
+    enable is inverted: the line is low while the motor is on."""
+    assert load(SPECS / "filling.yaml").targets["pi"].board == "pi5"
+    written = flat("FillingModule", "Filling_pi")[2]
+    assert written["PwmLines.LinearAxis_Step.Channel"] == "2" and written["PwmLines.LinearAxis_Step.PeriodNs"] == "1000000"
+    assert written["GpioLines.LinearAxis_Enable.ActiveLow"] == "TRUE"
+    assert written["GpioLines.LinearAxis_Down.ActiveLow"] == "FALSE"
+    assert flat("StopperingModule", "Stoppering_pi")[2]["PwmLines.LinearAxis_Step.Channel"] == "0"      # a Pi 4

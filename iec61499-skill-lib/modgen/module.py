@@ -947,13 +947,15 @@ def pwm_lines(net, spec: ModuleSpec, target: str, x, y):
         return None
     _, inner = subapp(net, "PwmLines", x, y, "PWM channels of the equipment's analog outputs (Linux /sys/class/pwm)",
                       {"INIT": ([], "EInit")}, {"INITO": ([], "EInit")})
-    root = spec.targets[target].pwm_root
+    board = spec.targets[target]
+    root = board.pwm_root
     names = []
     for i, (point, io) in enumerate(channels):
         handle = point.replace(".", "_")
         extra = {} if root == "/sys/class/pwm" else {"SysfsRoot": wstr(root)}
         fb(inner, handle, STD["PWMChip"], 1000 + i * 3000, 1000, QI="TRUE", VALUE=wstr(handle),
-           ChipNumber=str(io.pwm.chip), Channel=str(io.pwm.channel), PeriodNs=str(io.pwm.period_ns), **extra)
+           ChipNumber=str(io.pwm.chip), Channel=str(board.pwm_channel(io.pwm.channel)), PeriodNs=str(io.pwm.period_ns),
+           **extra)
         names.append(handle)
     events = [("INIT", names[0] + ".INIT"), (names[-1] + ".INITO", "INITO")]
     events += [(a + ".INITO", z + ".INIT") for a, z in zip(names, names[1:])]

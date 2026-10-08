@@ -398,6 +398,13 @@ class Target(Model):
     # Where FORTE finds the PWM channels; FORTE in Docker (deploy/pi/compose.yaml) sees the
     # host's /sys/class/pwm at /hostsys/class/pwm.
     pwm_root: str = "/sys/class/pwm"
+    # A module names its PWM outputs as a Raspberry Pi 4 numbers them: channel 0 is GPIO18, 1 is
+    # GPIO19. A Raspberry Pi 5 numbers the same pins 2 and 3.
+    board: Literal["pi4", "pi5"] = "pi4"
+
+    def pwm_channel(self, channel: int) -> int:
+        """The number of a module's PWM channel on this target's board."""
+        return channel + (2 if self.board == "pi5" else 0)
 
 
 class Aas(Model):
