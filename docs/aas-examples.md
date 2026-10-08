@@ -363,7 +363,7 @@ flowchart BT
   FillingModuleAASWeigh -- occupies --> FillingModuleAASScale
   FillingModuleAASDispensing -- "1" --> FillingModuleAASMoveAxis
   FillingModuleAASDispensing -- "2" --> FillingModuleAASDispense
-  FillingModuleAASDispensing -- "3" --> FillingModuleAASMoveAxis
+  FillingModuleAASDispensing -- "3" --> FillingModuleAASHome
   FillingModuleAASDispensing -- "4" --> FillingModuleAASWeigh
   FillingModuleAAScapFilling -- realized by --> FillingModuleAASDispensing
 ```
@@ -377,11 +377,11 @@ flowchart BT
 | Dispense | Primitive | Volume = 1.0 mL, FlowRate = 1.0 mL/s | Pump | – |
 | Tare | Primitive | – | Scale | – |
 | Weigh | Primitive | – | Scale | – |
-| Dispensing | Composite | Volume = 1.0 mL | LinearAxis, Pump, Scale | MoveAxis (Position = 40.0) → Dispense (FlowRate = 1.0, Volume ← Volume) → MoveAxis (Position = 0.0) → Weigh |
+| Dispensing | Composite | Volume = 1.0 mL | LinearAxis, Pump, Scale | MoveAxis (Position = 40.0) → Dispense (FlowRate = 1.0, Volume ← Volume) → Home → Weigh |
 
 - **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; FillVolume 0.5 to 10.0 mL; AbsoluteFillError 0.05 mL.
 - **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (Home → Tare), Stopping (Home).
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 46 properties; 46 data points; 32 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 45 data points; 32 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/filling.yaml`, sync state NotRead.
 
 ### StopperingModuleAAS
@@ -412,7 +412,7 @@ flowchart BT
   StopperingModuleAASRetractPiston -- occupies --> StopperingModuleAASPiston
   StopperingModuleAASStoppering -- "1" --> StopperingModuleAASMoveAxis
   StopperingModuleAASStoppering -- "2" --> StopperingModuleAASPressStopper
-  StopperingModuleAASStoppering -- "3" --> StopperingModuleAASMoveAxis
+  StopperingModuleAASStoppering -- "3" --> StopperingModuleAASHome
   StopperingModuleAAScapStoppering -- realized by --> StopperingModuleAASStoppering
 ```
 
@@ -424,11 +424,11 @@ flowchart BT
 | MoveAxis | Primitive | Position = 0.0 mm | LinearAxis | – |
 | PressStopper | Primitive | – | Piston | – |
 | RetractPiston | Primitive | – | Piston | – |
-| Stoppering | Composite | – | LinearAxis, Piston | MoveAxis (Position = 40.0) → PressStopper → MoveAxis (Position = 0.0) |
+| Stoppering | Composite | – | LinearAxis, Piston | MoveAxis (Position = 40.0) → PressStopper → Home |
 
 - **Capability Stoppering** (`https://smartproductionlab.aau.dk/semantics/Stoppering`), realized by Stoppering: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; StopperDiameter 6.0 to 20.0 mm.
 - **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (RetractPiston → Home), Stopping (Home).
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 33 properties; 33 data points; 28 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 32 data points; 28 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/stoppering.yaml`, sync state NotRead.
 
 ### CappingModuleAAS
@@ -457,7 +457,7 @@ flowchart BT
   CappingModuleAASCrimp -- occupies --> CappingModuleAASCrimper
   CappingModuleAASCapping -- "1" --> CappingModuleAASMoveAxis
   CappingModuleAASCapping -- "2" --> CappingModuleAASCrimp
-  CappingModuleAASCapping -- "3" --> CappingModuleAASMoveAxis
+  CappingModuleAASCapping -- "3" --> CappingModuleAASHome
   CappingModuleAAScapCapping -- realized by --> CappingModuleAASCapping
 ```
 
@@ -468,11 +468,11 @@ flowchart BT
 | Home | Primitive | – | LinearAxis | – |
 | MoveAxis | Primitive | Position = 0.0 mm | LinearAxis | – |
 | Crimp | Primitive | Duration = 1.5 s | Crimper | – |
-| Capping | Composite | – | LinearAxis, Crimper | MoveAxis (Position = 40.0) → Crimp → MoveAxis (Position = 0.0) |
+| Capping | Composite | – | LinearAxis, Crimper | MoveAxis (Position = 40.0) → Crimp → Home |
 
 - **Capability Capping** (`https://smartproductionlab.aau.dk/semantics/Capping`), realized by Capping: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; CapDiameter 13.0 to 20.0 mm.
 - **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (Home), Stopping (Home).
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 31 properties; 31 data points; 24 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 data points; 24 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/planned/capping.yaml`, sync state NotRead.
 
 ### InspectionModuleAAS

@@ -176,10 +176,10 @@ def test_values_read_at_init_and_structure_need_a_restart():
     forte = FakeForte(filling())
     forte.values["MoveAxis.UaPath"] = "/Skills/Other"
     assert status(forte).drift.restart and not status(forte).drift.structural
-    forte.connections.discard(("Dispensing.Execute.Dispense.SUCCESS", "Dispensing.Execute.NeedleUp.START"))
+    forte.connections.discard(("Dispensing.Execute.Dispense.SUCCESS", "Dispensing.Execute.Home.START"))
     drift = status(forte).drift
     assert drift.structural
-    assert drift.missing_connections == [("Dispensing.Execute.Dispense.SUCCESS", "Dispensing.Execute.NeedleUp.START")]
+    assert drift.missing_connections == [("Dispensing.Execute.Dispense.SUCCESS", "Dispensing.Execute.Home.START")]
     with pytest.raises(Refused, match="deployer"):
         push(forte, "pi", 61499, filling())
     assert push(forte, "pi", 61499, filling(), dry_run=True)[0].startswith("redeploy: ")
@@ -295,8 +295,7 @@ def test_aas_shows_what_runs_on_the_module(tmp_path):
     st = status(forte)
     objects = read_back(aas.build(st.candidate.spec, st.candidate.target, st.snapshot, st.drift), tmp_path)
     execute = objects["Skills"].get_referable("Dispensing").get_referable("Execute")
-    assert [p.value for p in execute.value] == ["MoveAxis(Position=40.0)", "Dispense(Volume=Volume, FlowRate=2.5)",
-                                             "MoveAxis(Position=0.0)", "Weigh"]
+    assert [p.value for p in execute.value] == ["MoveAxis(Position=40.0)", "Dispense(Volume=Volume, FlowRate=2.5)", "Home", "Weigh"]
     control = objects["ControlSoftware"]
     assert control.get_referable("SyncState").value == "Drift"
     assert "Dispense.FlowRate = 2.5" in control.get_referable("Differences").get_referable("D001").value

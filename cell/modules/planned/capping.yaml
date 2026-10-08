@@ -63,7 +63,7 @@ skills:
 composites:
   Capping:
     description: Head down onto the cap, crimp, head up again
-    execute: [{MoveAxis: {Position: 40.0}, as: HeadDown}, Crimp, {MoveAxis: {Position: 0.0}, as: HeadUp}]
+    execute: [{MoveAxis: {Position: 40.0}, as: HeadDown}, Crimp, Home]
     stop: [Home]
 
 procedures:

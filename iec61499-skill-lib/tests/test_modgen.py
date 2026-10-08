@@ -77,7 +77,7 @@ def test_a_capability_is_realized_by_an_offered_skill():
 
 def test_repeated_steps_get_their_own_instance_names():
     spec = load(SPECS / "stoppering.yaml")
-    assert [s.name for s in spec.composites["Stoppering"].execute] == ["HeadDown", "PressStopper", "HeadUp"]
+    assert [s.name for s in spec.composites["Stoppering"].execute] == ["HeadDown", "PressStopper", "Home"]
     data = raw()
     data["composites"]["Fill"]["execute"] = ["MoveNeedleUp", "MoveNeedleUp"]
     assert [s.name for s in ModuleSpec.model_validate(data).composites["Fill"].execute] == ["MoveNeedleUp",
@@ -189,8 +189,9 @@ def test_filler_flattens_to_module_level_equipment_skills_and_procedures():
 def test_stoppering_binds_constants_per_instance():
     created, wired, written = flat("StopperingModule", "Stoppering")
     assert written["Stoppering.Execute.HeadDown.Position"] == "40.0"
-    assert written["Stoppering.Execute.HeadUp.Position"] == "0.0"
-    assert created["Stoppering.Execute.HeadDown"] == created["Stoppering.Execute.HeadUp"] == "stoppering::SK_MoveAxis"
+    assert "Stoppering.Execute.Home.Position" not in written              # homing takes no position
+    assert created["Stoppering.Execute.HeadDown"] == "stoppering::SK_MoveAxis"
+    assert created["Stoppering.Execute.Home"] == created["Stoppering.Stop.Home"] == "stoppering::SK_Home"
 
 
 def st(project, folder, name):
@@ -440,4 +441,5 @@ def test_a_module_names_its_pwm_channels_as_a_pi_4_does():
     assert written["PwmLines.LinearAxis_Step.Channel"] == "2" and written["PwmLines.LinearAxis_Step.PeriodNs"] == "1000000"
     assert written["GpioLines.LinearAxis_Enable.ActiveLow"] == "TRUE"
     assert written["GpioLines.LinearAxis_Down.ActiveLow"] == "FALSE"
+    assert written["GpioLines.LinearAxis_AtHome.ActiveLow"] == "TRUE"       # a switch to GND: low when pressed
     assert flat("StopperingModule", "Stoppering_pi")[2]["PwmLines.LinearAxis_Step.Channel"] == "0"      # a Pi 4
