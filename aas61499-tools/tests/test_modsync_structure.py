@@ -33,25 +33,28 @@ def test_the_program_tells_what_the_spec_states(path):
 def test_what_a_module_is_made_of():
     found = read(load(FILLING))
     assert (found["module"], found["package"], found["opcua_root"]) == ("Filling", "filling", "/Objects/Filling")
-    assert found["equipment"] == ["NeedleAxis", "Scale"]
-    # Every primitive is offered. One without equipment only waits: Dispense, until there is a pump.
+    assert found["equipment"] == ["LinearAxis", "Pump", "Scale"]
     assert all(s["offered"] for s in found["skills"].values())
     dispense = found["skills"]["Dispense"]
     assert dispense["parameters"] == {"Volume": {"type": "LREAL", "default": 1.0, "minimum": 0.5, "maximum": 10.0},
                                       "FlowRate": {"type": "LREAL", "default": 1.0, "minimum": 0.1, "maximum": 5.0}}
-    assert dispense["equipment"] is None
-    up = found["skills"]["MoveNeedleUp"]
-    assert up["offered"] and up["equipment"] == "NeedleAxis" and up["timeout"] == 8000
+    assert dispense["equipment"] == "Pump"                   # no output yet: dispensing is a time
+    move = found["skills"]["MoveAxis"]
+    assert move["offered"] and move["equipment"] == "LinearAxis" and move["timeout"] == 8000
+    assert move["parameters"] == {"Position": {"type": "LREAL", "default": 0.0, "minimum": 0.0, "maximum": 60.0}}
     assert found["skills"]["Weigh"]["results"] == ["Weight"]
     dispensing = found["composites"]["Dispensing"]
     assert dispensing["offered"] and dispensing["results"] == {"Weight": "Weigh.Weight"}
     assert dispensing["parameters"] == {"Volume": {"type": "LREAL", "default": 1.0, "minimum": 0.5, "maximum": 10.0}}
-    assert [s["skill"] for s in dispensing["execute"]] == ["MoveNeedleDown", "Dispense", "MoveNeedleUp", "Weigh"]
+    assert [s["skill"] for s in dispensing["execute"]] == ["MoveAxis", "Dispense", "MoveAxis", "Weigh"]
+    # One skill used twice: each step has its own name and its own position, a constant of the step.
+    assert [(s["name"], s["bind"]) for s in dispensing["execute"] if s["skill"] == "MoveAxis"] == \
+        [("NeedleDown", {"Position": 40.0}), ("NeedleUp", {"Position": 0.0})]
     # The volume is the skill's parameter, the flow rate a constant of the step.
     assert dispensing["execute"][1]["bind"] == {"Volume": "Volume", "FlowRate": 1.0}
-    assert [s["skill"] for s in dispensing["stop"]] == ["MoveNeedleUp"]
+    assert [s["skill"] for s in dispensing["stop"]] == ["Home"]
     assert {n: [s["skill"] for s in p] for n, p in found["procedures"].items()} == \
-        {"Resetting": ["MoveNeedleUp"], "Stopping": ["MoveNeedleUp"]}
+        {"Resetting": ["Home", "Tare"], "Stopping": ["Home"]}
 
 
 def test_a_skill_added_to_the_program_is_read_like_the_others():
@@ -59,9 +62,10 @@ def test_a_skill_added_to_the_program_is_read_like_the_others():
     data = yaml.safe_load(FILLING.read_text(encoding="utf-8"))
     data["composites"]["DoubleDose"] = {
         "parameters": {"Dose": {"unit": "mL", "minimum": 0.5, "maximum": 10.0, "default": 0.5}},
-        "execute": ["MoveNeedleDown", {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}},
-                    {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}}, "MoveNeedleUp", "Weigh"],
-        "stop": ["MoveNeedleUp"], "results": {"Weight": "Weigh.Weight"}}
+        "execute": [{"MoveAxis": {"Position": 40.0}, "as": "NeedleDown"}, {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}},
+                    {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}}, {"MoveAxis": {"Position": 0.0}, "as": "NeedleUp"},
+                    "Weigh"],
+        "stop": ["Home"], "results": {"Weight": "Weigh.Weight"}}
     spec = ModuleSpec.model_validate(data)
     found = read(spec)
     assert found == stated(spec) and list(found["composites"]) == ["Dispensing", "DoubleDose"]

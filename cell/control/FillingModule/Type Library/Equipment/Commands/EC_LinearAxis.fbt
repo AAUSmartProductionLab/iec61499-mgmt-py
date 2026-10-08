@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EC_NeedleAxis" Comment="Commands of NeedleAxis as output values, in timed phases: Stop=0, Up=1, Down=2, BrakeUp=3, BrakeDown=4, Attach=5">
+<FBType Name="EC_LinearAxis" Comment="Commands of LinearAxis as output values, in timed phases: Stop=0, Up=1, Down=2, MoveTo=3">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filling" />
@@ -8,6 +8,7 @@
       <Event Name="PLAY" Type="Event">
         <With Var="Holder" />
         <With Var="Command" />
+        <With Var="Arg" />
         <With Var="Release" />
       </Event>
       <Event Name="PHASE_T" Type="Event" />
@@ -16,10 +17,12 @@
       <Event Name="OUT" Type="Event">
         <With Var="O_Holder" />
         <With Var="O_Release" />
-        <With Var="N_Up" />
+        <With Var="N_Enable" />
         <With Var="N_Down" />
-        <With Var="N_Speed" />
-        <With Var="NE_Speed" />
+        <With Var="N_Step" />
+        <With Var="NE_Step" />
+        <With Var="N_Move" />
+        <With Var="N_Goal" />
       </Event>
       <Event Name="PHASE_START" Type="Event">
         <With Var="PhaseDT" />
@@ -30,15 +33,18 @@
     <InputVars>
       <VarDeclaration Name="Holder" Type="WSTRING" />
       <VarDeclaration Name="Command" Type="USINT" />
+      <VarDeclaration Name="Arg" Type="LREAL" />
       <VarDeclaration Name="Release" Type="BOOL" />
     </InputVars>
     <OutputVars>
       <VarDeclaration Name="O_Holder" Type="WSTRING" />
       <VarDeclaration Name="O_Release" Type="BOOL" />
-      <VarDeclaration Name="N_Up" Type="BOOL" />
+      <VarDeclaration Name="N_Enable" Type="BOOL" />
       <VarDeclaration Name="N_Down" Type="BOOL" />
-      <VarDeclaration Name="N_Speed" Type="LREAL" />
-      <VarDeclaration Name="NE_Speed" Type="BOOL" />
+      <VarDeclaration Name="N_Step" Type="LREAL" />
+      <VarDeclaration Name="NE_Step" Type="BOOL" />
+      <VarDeclaration Name="N_Move" Type="BOOL" />
+      <VarDeclaration Name="N_Goal" Type="LREAL" />
       <VarDeclaration Name="PhaseDT" Type="TIME" />
     </OutputVars>
   </InterfaceList>
@@ -80,58 +86,26 @@
       <ST>Phase := Phase + 1;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Send">
-      <ST>N_Up := FALSE;
+      <ST>N_Enable := FALSE;
 N_Down := FALSE;
-N_Speed := 0.0;
-NE_Speed := FALSE;
+N_Step := 0.0;
+NE_Step := FALSE;
+N_Move := FALSE;
+N_Goal := 0.0;
 Timed := FALSE;
 PhaseDT := T#0ms;
 IF Command = 1 THEN
-  IF Phase = 0 THEN
-    N_Up := TRUE;
-    N_Speed := 190.0;
-    NE_Speed := TRUE;
-    PhaseDT := T#200ms;
-    Timed := TRUE;
-  ELSE
-    N_Up := TRUE;
-    N_Speed := 140.0;
-    NE_Speed := TRUE;
-  END_IF;
+  N_Enable := TRUE;
+  N_Step := 50.0;
+  NE_Step := TRUE;
 ELSIF Command = 2 THEN
-  IF Phase = 0 THEN
-    N_Down := TRUE;
-    N_Speed := 190.0;
-    NE_Speed := TRUE;
-    PhaseDT := T#200ms;
-    Timed := TRUE;
-  ELSE
-    N_Down := TRUE;
-    N_Speed := 140.0;
-    NE_Speed := TRUE;
-  END_IF;
-ELSIF Command = 3 THEN
-  IF Phase = 0 THEN
-    N_Down := TRUE;
-    N_Speed := 190.0;
-    NE_Speed := TRUE;
-    PhaseDT := T#100ms;
-    Timed := TRUE;
-  ELSE
-  END_IF;
-ELSIF Command = 4 THEN
-  IF Phase = 0 THEN
-    N_Up := TRUE;
-    N_Speed := 140.0;
-    NE_Speed := TRUE;
-    PhaseDT := T#100ms;
-    Timed := TRUE;
-  ELSE
-  END_IF;
-ELSIF Command = 5 THEN
+  N_Enable := TRUE;
   N_Down := TRUE;
-  N_Speed := 140.0;
-  NE_Speed := TRUE;
+  N_Step := 50.0;
+  NE_Step := TRUE;
+ELSIF Command = 3 THEN
+  N_Move := TRUE;
+  N_Goal := Arg;
 END_IF;
 O_Holder := Holder;
 O_Release := Release AND NOT Timed;</ST>

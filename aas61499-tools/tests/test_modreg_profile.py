@@ -178,7 +178,7 @@ def test_a_skill_that_only_runs_as_a_step_is_a_building_block():
     declared = {q["type"]: q["value"] for q in rate["qualifiers"]}
     assert float(rate["value"]) == 1.0 and declared["Unit"] == "mL/s" and float(declared["Maximum"]) == 5.0
     assert at(block, "Contract", "After")["value"] == "Volume / FlowRate"
-    assert "Occupies" not in names(block)                           # it commands no equipment
+    assert "Occupies" in names(block)                               # the pump, which has no output yet
     # A step and the skill's Uses refer to the building block.
     reference = {"type": "ModelReference", "keys": [
         {"type": "Submodel", "value": submodel(env, "Skills")["id"]},
@@ -223,11 +223,11 @@ def test_steps_publish_like_skills_where_the_program_puts_them():
     properties = at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", "properties")
     assert at(properties, "Dispensing_Execute_Dispense_Parameter_FlowRate", "unit")["value"] == "mL/s"
     assert at(properties, "Dispensing_Execute_Weigh_Result_Weight", "unit")["value"] == "g"
-    assert at(properties, "Dispensing_Stopping_MoveNeedleUp_ErrorID", "forms", "href")["value"].endswith(
-        "/1:Dispensing/1:Stopping/1:MoveNeedleUp/1:ErrorID")
+    assert at(properties, "Dispensing_Stopping_Home_ErrorID", "forms", "href")["value"].endswith(
+        "/1:Dispensing/1:Stopping/1:Home/1:ErrorID")
     # Their State and ErrorID are data points, fed like those of the skills.
     data = names(submodel(env, "OperationalData"))
-    assert {"Dispensing_Execute_Weigh_State", "Dispensing_Stopping_MoveNeedleUp_ErrorID"} <= set(data)
+    assert {"Dispensing_Execute_Weigh_State", "Dispensing_Stopping_Home_ErrorID"} <= set(data)
 
 
 def test_the_procedures_of_the_module_are_sequences_of_steps(stoppering, stoppering_aas):

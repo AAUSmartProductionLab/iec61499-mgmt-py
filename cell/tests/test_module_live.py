@@ -249,15 +249,14 @@ def test_timeout_fails_the_skill_and_abort_switches_everything_off(filler):
 def test_filling_module_dispenses_and_weighs(request, tmp_path):
     with running(request, tmp_path, "filling") as (sim, ua):
         a = str(uuid.uuid4())
-        ready(sim, ua, a)                                     # Resetting: needle already at the top
+        ready(sim, ua, a)                                     # Resetting: the needle finds its limit switch
         assert ua.call("Skills/Dispensing/Start", a, 1.0) == [True, 0]
         ua.expect("Skills/Dispensing/State", S["Succeeded"], timeout=10)
         assert ua.value("Skills/Dispensing/Results/Weight") == pytest.approx(2.0)
-        assert ua.value("Equipment/NeedleAxis/AtTop") is True
-        speed = [v for n, v in outputs(sim, "NeedleAxis.Speed")]
-        # Start boost then the working speed, for both moves; the brake pulses in between.
-        assert speed[:2] == [190.0, 140.0] and 190.0 in speed[2:] and speed[-1] is None
-        assert sim.shoot_through == 0
+        assert ua.value("Equipment/LinearAxis/ActualPosition") == 0.0
+        # Down to the filling position and back: stepping twice, the direction output on for the way down.
+        assert [v for n, v in outputs(sim, "LinearAxis.Step")] == [50.0, None, 50.0, None]
+        assert outputs(sim, "LinearAxis.Down") == [("LinearAxis.Down", True), ("LinearAxis.Down", False)]
         assert ua.call("Skills/Tare/Start", a) == [True, 0]
         ua.expect("Skills/Tare/State", S["Succeeded"], timeout=4)
 

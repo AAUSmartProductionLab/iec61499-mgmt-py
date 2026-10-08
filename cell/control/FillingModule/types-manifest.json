@@ -270,27 +270,51 @@
     "exported": false
   },
   {
-    "type": "filling::EL_NeedleAxis",
+    "type": "filling::EL_LinearAxis",
     "kind": "BasicFB",
-    "file": "Equipment/Base/EL_NeedleAxis.fbt",
+    "file": "Equipment/Base/EL_LinearAxis.fbt",
     "exported": true
   },
   {
-    "type": "filling::EQ_NeedleAxis",
+    "type": "filling::EQ_LinearAxis",
     "kind": "CompositeFB",
-    "file": "Equipment/EQ_NeedleAxis.fbt",
+    "file": "Equipment/EQ_LinearAxis.fbt",
     "exported": true
   },
   {
-    "type": "filling::EC_NeedleAxis",
+    "type": "filling::EC_LinearAxis",
     "kind": "BasicFB",
-    "file": "Equipment/Commands/EC_NeedleAxis.fbt",
+    "file": "Equipment/Commands/EC_LinearAxis.fbt",
     "exported": true
   },
   {
-    "type": "filling::EV_NeedleAxis",
+    "type": "filling::EV_LinearAxis",
     "kind": "SimpleFB",
-    "file": "Equipment/Base/EV_NeedleAxis.fbt",
+    "file": "Equipment/Base/EV_LinearAxis.fbt",
+    "exported": true
+  },
+  {
+    "type": "filling::EL_Pump",
+    "kind": "BasicFB",
+    "file": "Equipment/Base/EL_Pump.fbt",
+    "exported": true
+  },
+  {
+    "type": "filling::EQ_Pump",
+    "kind": "CompositeFB",
+    "file": "Equipment/EQ_Pump.fbt",
+    "exported": true
+  },
+  {
+    "type": "filling::EC_Pump",
+    "kind": "BasicFB",
+    "file": "Equipment/Commands/EC_Pump.fbt",
+    "exported": true
+  },
+  {
+    "type": "filling::EV_Pump",
+    "kind": "SimpleFB",
+    "file": "Equipment/Base/EV_Pump.fbt",
     "exported": true
   },
   {
@@ -318,39 +342,27 @@
     "exported": true
   },
   {
-    "type": "filling::SL_MoveNeedleUp",
+    "type": "filling::SL_Home",
     "kind": "BasicFB",
-    "file": "Skills/Logic/SL_MoveNeedleUp.fbt",
+    "file": "Skills/Logic/SL_Home.fbt",
     "exported": true
   },
   {
-    "type": "filling::SK_MoveNeedleUp",
+    "type": "filling::SK_Home",
     "kind": "CompositeFB",
-    "file": "Skills/SK_MoveNeedleUp.fbt",
+    "file": "Skills/SK_Home.fbt",
     "exported": true
   },
   {
-    "type": "filling::SL_MoveNeedleDown",
+    "type": "filling::SL_MoveAxis",
     "kind": "BasicFB",
-    "file": "Skills/Logic/SL_MoveNeedleDown.fbt",
+    "file": "Skills/Logic/SL_MoveAxis.fbt",
     "exported": true
   },
   {
-    "type": "filling::SK_MoveNeedleDown",
+    "type": "filling::SK_MoveAxis",
     "kind": "CompositeFB",
-    "file": "Skills/SK_MoveNeedleDown.fbt",
-    "exported": true
-  },
-  {
-    "type": "filling::SL_AttachNeedle",
-    "kind": "BasicFB",
-    "file": "Skills/Logic/SL_AttachNeedle.fbt",
-    "exported": true
-  },
-  {
-    "type": "filling::SK_AttachNeedle",
-    "kind": "CompositeFB",
-    "file": "Skills/SK_AttachNeedle.fbt",
+    "file": "Skills/SK_MoveAxis.fbt",
     "exported": true
   },
   {
@@ -408,15 +420,21 @@
     "exported": false
   },
   {
-    "type": "iec61499::net::PUBLISH_3",
+    "type": "iec61499::net::PUBLISH_4",
     "kind": "GenericComm",
-    "file": "Generic/PUBLISH_3.fbt",
+    "file": "Generic/PUBLISH_4.fbt",
     "exported": false
   },
   {
-    "type": "iec61499::net::PUBLISH_6",
+    "type": "iec61499::net::PUBLISH_5",
     "kind": "GenericComm",
-    "file": "Generic/PUBLISH_6.fbt",
+    "file": "Generic/PUBLISH_5.fbt",
+    "exported": false
+  },
+  {
+    "type": "iec61499::net::PUBLISH_8",
+    "kind": "GenericComm",
+    "file": "Generic/PUBLISH_8.fbt",
     "exported": false
   },
   {
@@ -456,15 +474,15 @@
     "exported": false
   },
   {
-    "type": "iec61499::net::SUBSCRIBE_3",
+    "type": "iec61499::net::SUBSCRIBE_5",
     "kind": "GenericComm",
-    "file": "Generic/SUBSCRIBE_3.fbt",
+    "file": "Generic/SUBSCRIBE_5.fbt",
     "exported": false
   },
   {
-    "type": "iec61499::net::SUBSCRIBE_6",
+    "type": "iec61499::net::SUBSCRIBE_8",
     "kind": "GenericComm",
-    "file": "Generic/SUBSCRIBE_6.fbt",
+    "file": "Generic/SUBSCRIBE_8.fbt",
     "exported": false
   }
 ]

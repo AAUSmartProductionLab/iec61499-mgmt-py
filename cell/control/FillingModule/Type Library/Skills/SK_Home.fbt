@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SK_AttachNeedle" Comment="Skill primitive AttachNeedle: Needle down to the attachment position (bottom switch), without the start boost (parameters: none). OPC UA Start(Session, parameters...)/Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID]; START/HALT/ABORT/RESET from a parent -&gt; SUCCESS or FAILURE(ErrorID)">
+<FBType Name="SK_Home" Comment="Skill primitive Home: Needle up to the limit switch; from there its position is known (parameters: none). OPC UA Start(Session, parameters...)/Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID]; START/HALT/ABORT/RESET from a parent -&gt; SUCCESS or FAILURE(ErrorID)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filling" />
@@ -45,35 +45,35 @@
   <FBNetwork>
     <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="12000" height="5500" locked="false" />
     <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="1000" y="7700" width="23800" height="6080" locked="false" />
-    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="14980" width="28800" height="5820" locked="false" />
+    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="14980" width="28800" height="6860" locked="false" />
     <FB Name="Control" Type="modlib::SKILL_Core" x="2800" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="Logic" Type="filling::SL_AttachNeedle" x="2800" y="900">
-      <Parameter Name="Equipment" Value="&quot;NeedleAxis&quot;" />
+    <FB Name="Logic" Type="filling::SL_Home" x="2800" y="900">
+      <Parameter Name="Equipment" Value="&quot;LinearAxis&quot;" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
     <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="7400" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_3" x="2800" y="900">
+    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_5" x="2800" y="900">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqView" Type="filling::EV_NeedleAxis" x="8000" y="900">
+    <FB Name="EqView" Type="filling::EV_LinearAxis" x="8000" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
     <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="16800" y="900">
       <Parameter Name="DT" Value="T#500ms" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="Driver" Type="filling::EC_NeedleAxis" x="13200" y="900">
+    <FB Name="Driver" Type="filling::EC_LinearAxis" x="13200" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
     <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="18400" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_6" x="23600" y="900">
+    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_8" x="23600" y="900">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
@@ -137,21 +137,26 @@
       <Connection Source="Logic.ErrorID" Destination="Control.ExecError" />
       <Connection Source="Logic.EqFree" Destination="Control.EqFree" />
       <Connection Source="Logic.IdEqState" Destination="EqState.ID" />
-      <Connection Source="EqState.RD_1" Destination="EqView.I_AtTop" />
-      <Connection Source="EqState.RD_2" Destination="EqView.I_AtBottom" />
-      <Connection Source="EqState.RD_3" Destination="EqView.I_Holder" />
-      <Connection Source="EqView.AtBottom" Destination="Logic.AtBottom" />
+      <Connection Source="EqState.RD_1" Destination="EqView.I_AtHome" />
+      <Connection Source="EqState.RD_2" Destination="EqView.I_ActualPosition" />
+      <Connection Source="EqState.RD_3" Destination="EqView.I_Homed" />
+      <Connection Source="EqState.RD_4" Destination="EqView.I_Moving" />
+      <Connection Source="EqState.RD_5" Destination="EqView.I_Holder" />
+      <Connection Source="EqView.AtHome" Destination="Logic.AtHome" />
       <Connection Source="EqView.Holder" Destination="Logic.Holder" />
       <Connection Source="Logic.IdEqCmd" Destination="EqCmd.ID" />
       <Connection Source="Logic.C_Holder" Destination="Driver.Holder" />
       <Connection Source="Logic.C_Command" Destination="Driver.Command" />
+      <Connection Source="Logic.C_Arg" Destination="Driver.Arg" />
       <Connection Source="Logic.C_Release" Destination="Driver.Release" />
       <Connection Source="Driver.O_Holder" Destination="EqCmd.SD_1" />
       <Connection Source="Driver.O_Release" Destination="EqCmd.SD_2" />
-      <Connection Source="Driver.N_Up" Destination="EqCmd.SD_3" />
+      <Connection Source="Driver.N_Enable" Destination="EqCmd.SD_3" />
       <Connection Source="Driver.N_Down" Destination="EqCmd.SD_4" />
-      <Connection Source="Driver.N_Speed" Destination="EqCmd.SD_5" />
-      <Connection Source="Driver.NE_Speed" Destination="EqCmd.SD_6" />
+      <Connection Source="Driver.N_Step" Destination="EqCmd.SD_5" />
+      <Connection Source="Driver.NE_Step" Destination="EqCmd.SD_6" />
+      <Connection Source="Driver.N_Move" Destination="EqCmd.SD_7" />
+      <Connection Source="Driver.N_Goal" Destination="EqCmd.SD_8" />
       <Connection Source="Driver.PhaseDT" Destination="PhaseT.DT" />
       <Connection Source="Logic.TimerDT" Destination="Timer.DT" />
     </DataConnections>
