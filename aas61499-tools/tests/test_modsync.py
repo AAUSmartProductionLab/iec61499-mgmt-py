@@ -104,9 +104,9 @@ def filling(target="pi") -> Candidate:
 
 # A new module level skill composed of the filling module's primitives: two doses.
 DOUBLE_DOSE = {"description": "Needle down, two doses, needle up, weigh",
-               "parameters": {"Dose": {"unit": "s", "minimum": 0.0, "maximum": 10.0, "default": 0.5}},
-               "execute": ["MoveNeedleDown", {"Dwell": {"Duration": "Dose"}}, {"Dwell": {"Duration": "Dose"}},
-                           "MoveNeedleUp", "Weigh"],
+               "parameters": {"Dose": {"unit": "mL", "minimum": 0.5, "maximum": 10.0, "default": 0.5}},
+               "execute": ["MoveNeedleDown", {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}},
+                           {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}}, "MoveNeedleUp", "Weigh"],
                "stop": ["MoveNeedleUp"], "results": {"Weight": "Weigh.Weight"}}
 
 

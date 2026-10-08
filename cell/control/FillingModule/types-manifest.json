@@ -354,18 +354,6 @@
     "exported": true
   },
   {
-    "type": "filling::SL_Dwell",
-    "kind": "BasicFB",
-    "file": "Skills/Logic/SL_Dwell.fbt",
-    "exported": true
-  },
-  {
-    "type": "filling::SK_Dwell",
-    "kind": "CompositeFB",
-    "file": "Skills/SK_Dwell.fbt",
-    "exported": true
-  },
-  {
     "type": "filling::SL_Dispense",
     "kind": "BasicFB",
     "file": "Skills/Logic/SL_Dispense.fbt",

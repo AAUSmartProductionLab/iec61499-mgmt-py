@@ -78,7 +78,17 @@
         <Parameter Name="LastUse" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="Tare" Type="filling::SK_Tare" x="19300" y="900">
+      <FB Name="Dispense" Type="filling::SK_Dispense" x="19300" y="900">
+        <Parameter Name="Module" Value="&quot;Filling&quot;" />
+        <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
+        <Parameter Name="UaPath" Value="&quot;/Skills/Dispense&quot;" />
+        <Parameter Name="UaEnable" Value="TRUE" />
+        <Parameter Name="Methods" Value="TRUE" />
+        <Parameter Name="Token" Value="&quot;Dispense&quot;" />
+        <Parameter Name="LastUse" Value="TRUE" />
+        <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
+      </FB>
+      <FB Name="Tare" Type="filling::SK_Tare" x="2800" y="4700">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/Tare&quot;" />
@@ -88,7 +98,7 @@
         <Parameter Name="LastUse" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="Weigh" Type="filling::SK_Weigh" x="2800" y="4700">
+      <FB Name="Weigh" Type="filling::SK_Weigh" x="8300" y="4700">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/Weigh&quot;" />
@@ -508,7 +518,10 @@
         <Connection Source="MoveNeedleDown.INITO" Destination="AttachNeedle.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="AttachNeedle.INITO" Destination="Tare.INIT">
+        <Connection Source="AttachNeedle.INITO" Destination="Dispense.INIT">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Dispense.INITO" Destination="Tare.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
         <Connection Source="Tare.INITO" Destination="Weigh.INIT">
@@ -694,6 +707,16 @@
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
         <Parameter Name="Token" Value="&quot;AttachNeedle&quot;" />
+        <Parameter Name="LastUse" Value="TRUE" />
+        <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
+      </FB>
+      <FB Name="Dispense" Type="filling::SK_Dispense" x="19300" y="900">
+        <Parameter Name="Module" Value="&quot;Filling&quot;" />
+        <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
+        <Parameter Name="UaPath" Value="&quot;/Skills/Dispense&quot;" />
+        <Parameter Name="UaEnable" Value="TRUE" />
+        <Parameter Name="Methods" Value="TRUE" />
+        <Parameter Name="Token" Value="&quot;Dispense&quot;" />
         <Parameter Name="LastUse" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
@@ -1133,7 +1156,10 @@
         <Connection Source="MoveNeedleDown.INITO" Destination="AttachNeedle.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="AttachNeedle.INITO" Destination="Tare.INIT">
+        <Connection Source="AttachNeedle.INITO" Destination="Dispense.INIT">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Dispense.INITO" Destination="Tare.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
         <Connection Source="Tare.INITO" Destination="Weigh.INIT">
@@ -1175,6 +1201,7 @@
   <Mapping From="Filling.MoveNeedleUp" To="FORTE_PC.RES" />
   <Mapping From="Filling.MoveNeedleDown" To="FORTE_PC.RES" />
   <Mapping From="Filling.AttachNeedle" To="FORTE_PC.RES" />
+  <Mapping From="Filling.Dispense" To="FORTE_PC.RES" />
   <Mapping From="Filling.Tare" To="FORTE_PC.RES" />
   <Mapping From="Filling.Weigh" To="FORTE_PC.RES" />
   <Mapping From="Filling.Resetting" To="FORTE_PC.RES" />
@@ -1190,6 +1217,7 @@
   <Mapping From="Filling_pi.MoveNeedleUp" To="FORTE_PI.RES" />
   <Mapping From="Filling_pi.MoveNeedleDown" To="FORTE_PI.RES" />
   <Mapping From="Filling_pi.AttachNeedle" To="FORTE_PI.RES" />
+  <Mapping From="Filling_pi.Dispense" To="FORTE_PI.RES" />
   <Mapping From="Filling_pi.Tare" To="FORTE_PI.RES" />
   <Mapping From="Filling_pi.Weigh" To="FORTE_PI.RES" />
   <Mapping From="Filling_pi.Resetting" To="FORTE_PI.RES" />

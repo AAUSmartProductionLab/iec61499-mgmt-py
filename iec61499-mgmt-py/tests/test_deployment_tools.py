@@ -32,18 +32,18 @@ def library():
 def change(library):
     """A wait step added online: the module state manager's Resetting runs it."""
     return Network.model_validate({"resource": "RES", "instances": [
-        {"name": "PROC.Wait", "type": "filling::SK_Dwell", "type_hash": HASH,
-         "parameters": {"Duration": {"type": "LREAL", "value": 0.5}}}], "connections": [
+        {"name": "PROC.Wait", "type": "filling::SK_Dispense", "type_hash": HASH,
+         "parameters": {"Volume": {"type": "LREAL", "value": 0.5}}}], "connections": [
         {"source": "Module.RUN_RESETTING", "destination": "PROC.Wait.START"},
         {"source": "PROC.Wait.SUCCESS", "destination": "Module.RESETTING_DONE"}]}).validate_library(library)
 
 
 def test_read_fbt_ports():
     """Interface ports are read with kind, direction, type and writability."""
-    name, ports = read_fbt(TYPES / "Skills" / "SK_Dwell.fbt")
-    assert name == "filling::SK_Dwell"
+    name, ports = read_fbt(TYPES / "Skills" / "SK_Dispense.fbt")
+    assert name == "filling::SK_Dispense"
     assert ports["START"].kind == "event" and ports["START"].direction == "input"
-    assert ports["Duration"].writable and ports["Duration"].data_type == "LREAL"
+    assert ports["Volume"].writable and ports["Volume"].data_type == "LREAL"
     assert not ports["State"].writable and ports["State"].direction == "output"
 
 
@@ -62,7 +62,7 @@ def test_boot_file_order_and_format(library):
     assert all(line.split(";", 1)[0] in ("", "RES") for line in lines)
     ops = [c.op for c in commands]
     assert "stop" not in ops and ops.count("start") == 1
-    assert any(c.op == "create_fb" and c.type == f"filling::SK_Dwell#{HASH}" for c in commands)
+    assert any(c.op == "create_fb" and c.type == f"filling::SK_Dispense#{HASH}" for c in commands)
 
 
 def test_same_value_and_time():
@@ -92,13 +92,13 @@ def test_verify_reports_drift(library):
     """Missing edges, extra instances, wrong values and stopped FBs are all reported."""
     network = change(library)
     edges = [(c.source, c.destination) for c in network.connections]
-    good = FakeClient({"PROC.Wait": ("filling::SK_Dwell", "RUNNING"), "Module": ("modlib::MOD_StateManager", "RUNNING")},
-                      edges, {"PROC.Wait.Duration": "0.5"})
+    good = FakeClient({"PROC.Wait": ("filling::SK_Dispense", "RUNNING"), "Module": ("modlib::MOD_StateManager", "RUNNING")},
+                      edges, {"PROC.Wait.Volume": "0.5"})
     assert verify(good, network) == []
-    bad = FakeClient({"PROC.Wait": ("filling::SK_Dwell", "STOPPED"), "PROC.Extra": ("filling::SK_Tare", "RUNNING")},
-                     edges[1:], {"PROC.Wait.Duration": "0.25"})
+    bad = FakeClient({"PROC.Wait": ("filling::SK_Dispense", "STOPPED"), "PROC.Extra": ("filling::SK_Tare", "RUNNING")},
+                     edges[1:], {"PROC.Wait.Volume": "0.25"})
     problems = verify(bad, network)
     assert "unexpected instance PROC.Extra" in problems
     assert "missing connection Module.RUN_RESETTING -> PROC.Wait.START" in problems
     assert "PROC.Wait is STOPPED, expected RUNNING" in problems
-    assert "PROC.Wait.Duration = 0.25, expected 0.5" in problems
+    assert "PROC.Wait.Volume = 0.25, expected 0.5" in problems

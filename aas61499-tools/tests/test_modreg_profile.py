@@ -159,24 +159,26 @@ def test_skills_are_arsos_skills_with_what_reconfiguration_needs(stoppering, sto
 
 
 def test_a_skill_that_only_runs_as_a_step_is_a_building_block():
-    """ARSO asks every skill for an Operation and an action of the interface; Dispense and Dwell have
-    neither. They are building blocks: what a step is an instance of, takes and needs."""
-    spec = load(SPECS / "filling.yaml")
-    assert not spec.skills["Dispense"].offered and not spec.skills["Dwell"].offered
+    """ARSO asks every skill for an Operation and an action of the interface; a primitive a module
+    does not offer has neither (here: the filling module with Dispense not offered). It is a building
+    block: what a step is an instance of, takes and needs."""
+    data = yaml.safe_load((SPECS / "filling.yaml").read_text(encoding="utf-8"))
+    data["skills"]["Dispense"]["offered"] = False
+    spec = ModuleSpec.model_validate(data)
+    assert load(SPECS / "filling.yaml").skills["Dispense"].offered          # the module itself offers it
     env = model.build(profiles.describe(spec, "pi"))
     skills = at(submodel(env, "Skills"), "Skills")
     blocks = at(submodel(env, "Skills"), "BuildingBlocks")
-    assert names(blocks) == ["Dwell", "Dispense"] and not set(names(blocks)) & set(names(skills))
-    # Dwell is used by no skill of the module: it is there for new ones.
-    dwell = at(blocks, "Dwell")
-    assert at(dwell, "SemanticId")["value"] == f"{BASE}/skills/Dwell" and at(dwell, "Kind")["value"] == "Primitive"
-    assert at(dwell, "Implementation", "FBType")["value"] == f"{spec.package}::SK_Dwell" == "filling::SK_Dwell"
-    assert "InstancePath" not in names(at(dwell, "Implementation"))
-    duration = at(dwell, "Parameters", "Duration")
-    declared = {q["type"]: q["value"] for q in duration["qualifiers"]}
-    assert float(duration["value"]) == 1.0 and declared["Unit"] == "s" and float(declared["Maximum"]) == 60.0
-    assert at(dwell, "Contract", "After")["value"] == "Duration"
-    assert "Occupies" not in names(dwell)                           # it commands no equipment
+    assert names(blocks) == ["Dispense"] and not set(names(blocks)) & set(names(skills))
+    block = at(blocks, "Dispense")
+    assert at(block, "SemanticId")["value"] == f"{BASE}/skills/Dispense" and at(block, "Kind")["value"] == "Primitive"
+    assert at(block, "Implementation", "FBType")["value"] == f"{spec.package}::SK_Dispense" == "filling::SK_Dispense"
+    assert "InstancePath" not in names(at(block, "Implementation"))
+    rate = at(block, "Parameters", "FlowRate")
+    declared = {q["type"]: q["value"] for q in rate["qualifiers"]}
+    assert float(rate["value"]) == 1.0 and declared["Unit"] == "mL/s" and float(declared["Maximum"]) == 5.0
+    assert at(block, "Contract", "After")["value"] == "Volume / FlowRate"
+    assert "Occupies" not in names(block)                           # it commands no equipment
     # A step and the skill's Uses refer to the building block.
     reference = {"type": "ModelReference", "keys": [
         {"type": "Submodel", "value": submodel(env, "Skills")["id"]},
