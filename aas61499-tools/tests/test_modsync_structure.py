@@ -7,7 +7,7 @@ of the committed project.
 import pytest
 import yaml
 
-from modgen import SPECS, load, project_dir, specs
+from modgen import SPECS, library_specs, load, project_dir, specs
 from modgen.spec import ModuleSpec
 from modsync.compare import expected
 from modsync.structure import read_primitives, stated, structure
@@ -24,7 +24,7 @@ def read(spec: ModuleSpec, values: dict | None = None) -> dict:
                      read_primitives(project_dir(spec.project) / "Type Library"))
 
 
-@pytest.mark.parametrize("path", specs(), ids=lambda p: p.stem)
+@pytest.mark.parametrize("path", [*specs(), *library_specs()], ids=lambda p: p.stem)
 def test_the_program_tells_what_the_spec_states(path):
     spec = load(path)
     assert read(spec) == stated(spec)

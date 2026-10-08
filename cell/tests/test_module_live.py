@@ -21,7 +21,7 @@ from conftest import free_port, launch_forte
 from iec61499_mgmt.bootfile import deployment
 from iec61499_mgmt.protocol import Client
 from iec61499_mgmt.sysfile import load_application
-from modgen import SPECS, load, system_file
+from modgen import SPECS, load, spec_file, system_file
 from modgen.library import ERRORS, SKILL_STATES, STATES
 from modgen.module import app_name
 
@@ -48,7 +48,7 @@ def running(request, tmp_path, spec_name, overrides=None):
     if not exe:
         pytest.skip("Pass --module-forte-exe to run the generated modules against FORTE")
     exe = Path(exe).resolve(strict=True)
-    spec = load(SPECS / f"{spec_name}.yaml")
+    spec = load(spec_file(spec_name))
     sim = ModuleSim(spec)
     modbus, ua_port = free_port(), free_port()
     app = load_application(system_file(spec.project), app_name(spec, "pc"))
@@ -75,7 +75,7 @@ def running_on_pi(request, host, spec_name, overrides=None):
     sim_host = request.config.getoption("--sim-host")
     if not sim_host:
         pytest.skip("Pass --sim-host (this machine's address as the Pi sees it) with --pi-host")
-    spec = load(SPECS / f"{spec_name}.yaml")
+    spec = load(spec_file(spec_name))
     sim = ModuleSim(spec)
     modbus = free_port()
     app = load_application(system_file(spec.project), app_name(spec, "pc"))
@@ -115,7 +115,7 @@ def ready(sim, ua, session):
 
 
 # --------------------------------------------------------------------------------------------
-# Filler: the generator's test module
+# Filler: the generator's test module (iec61499-skill-lib/tests/modules)
 # --------------------------------------------------------------------------------------------
 
 @pytest.fixture

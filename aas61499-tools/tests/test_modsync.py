@@ -13,7 +13,7 @@ import yaml
 from iec61499_mgmt.bootfile import boot_file, deployment
 from iec61499_mgmt.protocol import ManagementError, Response
 from iec61499_mgmt.sysfile import FlatApplication, load_application
-from modgen import SPECS, load, specs, system_file
+from modgen import SPECS, library_specs, load, specs, system_file
 from modgen.library import STATES
 from modgen.module import app_name
 from modgen.spec import ModuleSpec
@@ -123,7 +123,7 @@ def status(forte, cands=None):
     return inspect(forte, "pi", 61499, cands or candidates(specs()))
 
 
-@pytest.mark.parametrize("path", specs(), ids=lambda p: p.stem)
+@pytest.mark.parametrize("path", [*specs(), *library_specs()], ids=lambda p: p.stem)
 def test_the_compared_program_is_what_the_projects_deploy(path):
     spec = load(path)
     for target in spec.targets:

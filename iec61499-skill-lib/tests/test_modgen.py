@@ -6,12 +6,13 @@ import pytest
 import yaml
 
 from iec61499_mgmt.sysfile import load_application
-from modgen import (LIBRARY_PROJECT, SPECS, generate, generate_library, load, manifest_path, project_dir, specs,
-                    system_file)
+from modgen import (LIBRARY_PROJECT, LIBRARY_SPECS, SPECS, generate, generate_library, library_specs, load,
+                    manifest_path, project_dir, specs, system_file)
 from modgen.module import app_name
 from modgen.spec import ModuleSpec
 
-FILLER = SPECS / "filler.yaml"
+FILLER = LIBRARY_SPECS / "filler.yaml"
+ALL = [*specs(), *library_specs()]                 # the line's modules and the generator's test module
 
 
 def raw(path=FILLER):
@@ -115,7 +116,7 @@ def committed(project):
     return project_dir(project), manifest_path(project)
 
 
-@pytest.mark.parametrize("spec_path", specs(), ids=lambda p: p.stem)
+@pytest.mark.parametrize("spec_path", ALL, ids=lambda p: p.stem)
 def test_committed_module_projects_match_the_generator(tmp_path, spec_path):
     spec = load(spec_path)
     generate(spec, tmp_path / spec.project)       # the type manifest is part of the project
@@ -130,7 +131,7 @@ def test_committed_library_project_matches_the_generator(tmp_path):
 def test_library_types_are_compiled_once():
     """Module projects declare the library types (so the IDE opens them) but do not export them."""
     import json
-    for spec_path in specs():
+    for spec_path in ALL:
         spec = load(spec_path)
         entries = json.loads(committed(spec.project)[1].read_text())
         assert {e["type"].split("::")[0] for e in entries if e["exported"]} == {spec.package}
@@ -212,7 +213,7 @@ def test_skill_logic_carries_contract_range_and_lock():
     assert {p.get("Name"): p.get("Value") for p in latch.iter("Parameter")} == {"Lower": "0.0", "Upper": "50.0"}
 
 
-@pytest.mark.parametrize("spec_path", specs(), ids=lambda p: p.stem)
+@pytest.mark.parametrize("spec_path", ALL, ids=lambda p: p.stem)
 def test_module_level_skills_need_no_type_of_their_own(spec_path):
     """A module level skill is only instances of library types, generic comm FBs and the module's
     skill primitives, so FORTE can create a new one online without being rebuilt."""
@@ -353,7 +354,7 @@ def test_blocks_inside_equipment_skills_and_module_level_skills_are_grouped():
     assert all(len(g) for g in groups(inner).values())
 
 
-@pytest.mark.parametrize("project", [LIBRARY_PROJECT, *[load(p).project for p in specs()]])
+@pytest.mark.parametrize("project", [LIBRARY_PROJECT, *[load(p).project for p in ALL]])
 def test_projects_follow_the_ide_conventions(project):
     """What the IDE's system editor needs, which its headless checks did not catch."""
     folder = project_dir(project)

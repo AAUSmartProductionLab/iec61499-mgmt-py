@@ -12,7 +12,7 @@ the way and what comes next. The repository map and the commands are in the
 | --- | --- | --- |
 | Management library (`iec61499_mgmt`): FORTE protocol client, typed commands, networks and plans, `.sys` flattening, boot files, type library, read-back | `iec61499-mgmt-py/` | Done, tested offline and live |
 | Module generator (`modgen`) and module library (`ModLib`, package `modlib`): occupation, PackML module state manager, skill state machine, parameters, IO for simulator, GPIO, PWM and Modbus | `iec61499-skill-lib/` | Done |
-| Filling and stoppering modules from their specs, a small test module (`filler`), simulator, OPC UA test client | `cell/` | Run on the PC and on the lab Pi's FORTE against the simulator; hardware not wired |
+| Filling and stoppering modules from their specs, simulator, OPC UA test client; a small test module (`filler`) with the generator's tests | `cell/`, `iec61499-skill-lib/tests` | Run on the PC and on the lab Pi's FORTE against the simulator; hardware not wired |
 | FORTE builds for Windows and the Raspberry Pi (aarch64, static), FORTE patches (IO handle fix, sysfs PWM module) | `runtime/` | Done |
 | Raspberry Pi: FORTE in Docker, install and deployment | `deploy/`, `runtime/install.sh` | Done on the filling Pi; the stoppering Pi has no address yet |
 | `modsync`: read what runs on a module, compare it with its spec, push changes (online where possible) | `aas61499-tools/modsync` | Done |
@@ -625,4 +625,4 @@ Smaller open items that are in no phase of that plan:
 - Wire both modules; give the stoppering Pi its address.
 - Split the work into repositories once one product runs end to end on two modules: six
   repositories, the ontologies first ([repositories.md](repositories.md)). Until then keep the
-  folders independent. Move the test module `filler` into the skill library; CI.
+  folders independent. CI.

@@ -7,7 +7,7 @@ include=${FBE_MAIN}/configurations/inc/default.txt
 CMAKE_BUILD_TYPE=RelWithDebInfo
 ARCH=aarch64-linux-musl
 FBE_EXTERNAL_MODULES_DIR=${FBE_ROOT}/../.cache/modules
-// See filler-win.txt: open62541 single-threaded, or a PUBLISH during a method call deadlocks.
+// See modules-win.txt: open62541 single-threaded, or a PUBLISH during a method call deadlocks.
 UA_MULTITHREADING:STRING=0
 // POWERLINK is off in FORTE 3.x, but its dependency libpcap still builds and fails in the
 // cross build (flex.exe: pipe failed).
