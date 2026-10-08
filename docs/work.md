@@ -14,7 +14,7 @@ the way and what comes next. The repository map and the commands are in the
 | Module generator (`modgen`) and module library (`ModLib`, package `modlib`): occupation, PackML module state manager, skill state machine, parameters, IO for simulator, GPIO, PWM and Modbus | `iec61499-skill-lib/` | Done |
 | Filling and stoppering modules from their specs, a small test module (`filler`), simulator, OPC UA test client | `cell/` | Run on the PC and on the lab Pi's FORTE against the simulator; hardware not wired |
 | FORTE builds for Windows and the Raspberry Pi (aarch64, static), FORTE patches (IO handle fix, sysfs PWM module) | `runtime/` | Done |
-| Raspberry Pi: FORTE in Docker, install and deployment | `deploy/`, the `install.sh` scripts | Done on the filling Pi; the stoppering Pi has no address yet |
+| Raspberry Pi: FORTE in Docker, install and deployment | `deploy/`, `runtime/install.sh` | Done on the filling Pi; the stoppering Pi has no address yet |
 | `modsync`: read what runs on a module, compare it with its spec, push changes (online where possible) | `aas61499-tools/modsync` | Done |
 | `modreg`: a module's AAS in the structure of the resource ontology, as a profile on the lab's shared model; ontology check; registration service | `aas61499-tools/modreg`, `aas-model/` (submodule), `ontology/` | Done; not yet used against the lab's AAS server |
 | Product and process AAS, capability matching and binding, the model-driven change cycle, the experiment runner | – | Not started (see Next steps) |
@@ -116,9 +116,8 @@ container (`deploy/pi/`): the static binary in Alpine, host networking (manageme
 4840), `/dev/gpiochip0` and the PWM folders passed in, the boot file in `~/forte/boot`.
 
 ```bash
-# on the Pi: the tools, FORTE in Docker and a module's program (see the README)
-curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/deploy/install.sh | bash -s -- filling
-modsync pull --host localhost
+# on the Pi: Docker if missing and FORTE in it (see the README)
+curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/runtime/install.sh | bash
 ```
 
 ```powershell

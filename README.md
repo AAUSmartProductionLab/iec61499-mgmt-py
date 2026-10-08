@@ -61,31 +61,15 @@ container that comes back after a reboot, gives it the GPIO lines of the 40-pin 
 the two hardware PWM channels (GPIO18 and GPIO19; reboot once for them). Afterwards the Pi answers
 on the management port 61499, and on OPC UA port 4840 once it runs a program.
 
-The other installers, one command each:
+A module's program is put on the Pi from the PC (`python deploy/pi.py module`, or `modsync push`
+with the Pi's address); the tools themselves are not installed on the Pi.
 
-```bash
-# everything: the tools, FORTE in Docker, and the filling module's program
-curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/deploy/install.sh | bash -s -- filling
-
-# or the parts on their own
-curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/runtime/install.sh | bash          # FORTE runtime
-curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/aas61499-tools/install.sh | bash   # modsync, modgen, iec61499
-```
-
-Then, on the Pi:
-
-```bash
-modsync pull --host localhost                                 # which module runs here, drift from its spec, its AAS
-modsync push filling --target pi --host localhost --dry-run   # what would change
-modsync push filling --target pi --host localhost             # bring the module to its spec (online where possible)
-```
-
-Running an installer again updates it; the module's program (`~/forte/boot/forte.fboot`) is kept.
-The runtime installer takes FORTE from this repository (`runtime/bin/forte-aarch64`, with its
+Running the installer again updates FORTE; the module's program (`~/forte/boot/forte.fboot`) is
+kept. It takes FORTE from this repository (`runtime/bin/forte-aarch64`, with its
 checksum). A Pi can only run a program whose block types its FORTE was built with, so after a
 change of block types: build (`runtime/build-modules.ps1 -Config pi/modules-pi`), put the result
 into the repository (`runtime/package-runtime.ps1`), commit, and run the installer on the Pi again.
-Settings are listed at the top of each script.
+Settings are listed at the top of the script.
 
 On a Raspberry Pi 5 the PWM channels have other numbers than on a Pi 4: GPIO18 is channel 2 and
 GPIO19 channel 3 of `pwmchip0` (Pi 4: channels 0 and 1). A module description names the channel.
