@@ -117,6 +117,12 @@ class PiDeployer:
         spec.loader.exec_module(self.pi)
         self.args = type("Args", (), {"host": host, "user": user, "port": port})()
 
+    def load(self) -> str:
+        """The boot file FORTE starts with."""
+        found = subprocess.run(["ssh", f"{self.args.user}@{self.args.host}", "cat ~/forte/boot/forte.fboot"],
+                               capture_output=True, check=True)
+        return found.stdout.decode("utf-8")
+
     def save(self, boot: str):
         """Replace the boot file; the running program is not touched."""
         self.pi.ssh(self.args, "cat > ~/forte/boot/forte.fboot", stdin=boot)
@@ -132,6 +138,10 @@ class LocalDeployer:
 
     def __init__(self, folder: Path | None = None, port: int = 61499):
         self.folder, self.port = Path(folder or Path.home() / "forte"), port
+
+    def load(self) -> str:
+        """The boot file FORTE starts with."""
+        return (self.folder / "boot" / "forte.fboot").read_text(encoding="utf-8")
 
     def save(self, boot: str):
         """Replace the boot file; the running program is not touched."""
