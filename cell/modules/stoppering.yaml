@@ -11,19 +11,24 @@ modbus: {host: 127.0.0.1, port: 1503, unit: 1, poll_ms: 10}   # 4diac/tools/modu
 
 targets:
   pc: {host: localhost, io: modbus}
-  pi: {host: stoppering-pi, user: iiot_gateway, io: gpio,
-       pwm_root: /hostsys/class/pwm}    # the stoppering Pi (set its address)
+  pi: {host: 192.168.0.191, user: iiot_gateway, io: gpio,
+       pwm_root: /hostsys/class/pwm}    # the stoppering Pi, a Raspberry Pi 4
 
 equipment:
   LinearAxis:
     kind: LinearAxis
     description: Lift of the stoppering head, a stepper motor through a step and direction driver, with a limit switch at the top (home)
+    # As the filling module's axis. The driver is a RepRap Stepper Motor Driver v2.3 (Allegro A3982, https://reprap.org/wiki/Stepper_Motor_Driver_2.3).
+    # Its 10-pin interface: 2 GND, 3 Step, 4 Dir, 5 !Enable, 6 Min, 7 Max (the endstops, passed through).
+    # The board's logic runs on its own 5 V: the Pi's 3.3 V outputs and inputs need a level shifter.
     inputs:
-      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up}}        # pin 16
+      # The board's Min (pin 6): the endstop at the top. Which level means "at the switch" depends on the endstop.
+      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up}}        # Pi pin 16
     outputs:
-      Enable: {modbus: c0, gpio: 17}                               # pin 11, the driver's enable
-      Down:   {modbus: c1, gpio: 27}                               # pin 13, the driver's DIR: on is down, away from the switch
-      # The driver's STEP: PWM0 on GPIO18 (pin 12), one step per period (1 kHz); 50 % duty while it moves.
+      # !Enable (pin 5) is inverted and pulled high on the board: the motor is on while the line is low.
+      Enable: {modbus: c0, gpio: {line: 17, active_low: true}}     # Pi pin 11
+      Down:   {modbus: c1, gpio: 27}                               # Pi pin 13, Dir (pin 4): on is down, away from the switch
+      # Step (pin 3): PWM0 on GPIO18 (Pi pin 12), one step per period (1 kHz); 50 % duty while it moves.
       Step:   {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 1000000}, gain: 655.35,
                minimum: 0, maximum: 100, unit: "%"}
     commands:

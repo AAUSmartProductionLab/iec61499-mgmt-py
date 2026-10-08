@@ -281,7 +281,7 @@ def test_aas_from_the_spec(tmp_path):
     offered = [n for n, s in spec.skills.items() if s.offered] + list(spec.composites)
     assert [e.id_short for e in skills.submodel_element] == offered
     interface = objects["AssetInterfacesDescription"].get_referable("InterfaceOPCUA")
-    assert interface.get_referable("EndpointMetadata").get_referable("base").value == "opc.tcp://192.168.0.191:4840"
+    assert interface.get_referable("EndpointMetadata").get_referable("base").value == "opc.tcp://192.168.0.134:4840"
     start = interface.get_referable("InteractionMetadata").get_referable("actions").get_referable("Dispensing_Start")
     assert start.get_referable("Forms").get_referable("href").value == "/0:Objects/1:Filling/1:Skills/1:Dispensing/1:Start"
     ref = skills.get_referable("Dispensing").get_referable("InterfaceReference").value
