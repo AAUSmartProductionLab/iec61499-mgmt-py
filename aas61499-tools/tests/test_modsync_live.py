@@ -162,11 +162,11 @@ def test_a_new_module_level_skill_is_created_online_while_another_runs(module, t
     assert S["Succeeded"] in dispensing and S["Failed"] not in dispensing, dispensing
     assert ua.value("Skills/DoubleDose/Parameters/Dose") == 0.5
     assert ua.call("Skills/DoubleDose/Start", a, 20.0) == [False, ERRORS["OutOfRange"]]
-    assert ua.call("Skills/DoubleDose/Start", a, 0.3) == [True, 0]
+    assert ua.call("Skills/DoubleDose/Start", a, 0.6) == [True, 0]
     ua.expect("Skills/DoubleDose/State", S["Succeeded"], timeout=10)
     assert ua.value("Skills/DoubleDose/Results/Weight") == pytest.approx(2.0)
-    assert ua.value("Skills/DoubleDose/Parameters/Dose") == 0.3
-    assert ua.value("Skills/DoubleDose/Execute/Dwell_2/State") in DONE
+    assert ua.value("Skills/DoubleDose/Parameters/Dose") == 0.6
+    assert ua.value("Skills/DoubleDose/Execute/Dispense_2/State") in DONE
     # A FORTE started from the saved boot file runs the same program.
     module.client.close()
     with module.fresh(deployer.saved[0]) as (client, port):

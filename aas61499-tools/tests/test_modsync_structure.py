@@ -34,11 +34,12 @@ def test_what_a_module_is_made_of():
     found = read(load(FILLING))
     assert (found["module"], found["package"], found["opcua_root"]) == ("Filling", "filling", "/Objects/Filling")
     assert found["equipment"] == ["NeedleAxis", "Scale"]
-    # A primitive that is not offered has no instance: only its type file tells of it.
-    assert [n for n, s in found["skills"].items() if not s["offered"]] == ["Dispense", "Dwell"]
-    dwell = found["skills"]["Dwell"]
-    assert dwell["parameters"] == {"Duration": {"type": "LREAL", "default": 1.0, "minimum": 0.0, "maximum": 60.0}}
-    assert dwell["equipment"] is None and dwell["timeout"] is None
+    # Every primitive is offered. One without equipment only waits: Dispense, until there is a pump.
+    assert all(s["offered"] for s in found["skills"].values())
+    dispense = found["skills"]["Dispense"]
+    assert dispense["parameters"] == {"Volume": {"type": "LREAL", "default": 1.0, "minimum": 0.5, "maximum": 10.0},
+                                      "FlowRate": {"type": "LREAL", "default": 1.0, "minimum": 0.1, "maximum": 5.0}}
+    assert dispense["equipment"] is None
     up = found["skills"]["MoveNeedleUp"]
     assert up["offered"] and up["equipment"] == "NeedleAxis" and up["timeout"] == 8000
     assert found["skills"]["Weigh"]["results"] == ["Weight"]
@@ -57,15 +58,26 @@ def test_a_skill_added_to_the_program_is_read_like_the_others():
     """A module level skill is instances and connections only, so the type files stay as they are."""
     data = yaml.safe_load(FILLING.read_text(encoding="utf-8"))
     data["composites"]["DoubleDose"] = {
-        "parameters": {"Dose": {"unit": "s", "minimum": 0.0, "maximum": 10.0, "default": 0.5}},
-        "execute": ["MoveNeedleDown", {"Dwell": {"Duration": "Dose"}}, {"Dwell": {"Duration": "Dose"}}, "MoveNeedleUp",
-                    "Weigh"],
+        "parameters": {"Dose": {"unit": "mL", "minimum": 0.5, "maximum": 10.0, "default": 0.5}},
+        "execute": ["MoveNeedleDown", {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}},
+                    {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}}, "MoveNeedleUp", "Weigh"],
         "stop": ["MoveNeedleUp"], "results": {"Weight": "Weigh.Weight"}}
     spec = ModuleSpec.model_validate(data)
     found = read(spec)
     assert found == stated(spec) and list(found["composites"]) == ["Dispensing", "DoubleDose"]
-    doses = [s for s in found["composites"]["DoubleDose"]["execute"] if s["skill"] == "Dwell"]
-    assert [s["name"] for s in doses] == ["Dwell", "Dwell_2"] and all(s["bind"] == {"Duration": "Dose"} for s in doses)
+    doses = [s for s in found["composites"]["DoubleDose"]["execute"] if s["skill"] == "Dispense"]
+    assert [s["name"] for s in doses] == ["Dispense", "Dispense_2"]
+    assert all(s["bind"] == {"Volume": "Dose", "FlowRate": 1.0} for s in doses)
+
+
+def test_a_primitive_the_module_does_not_offer_is_read_from_its_type_file():
+    """It has no instance of its own in the program: only its type file tells of it."""
+    data = yaml.safe_load(FILLING.read_text(encoding="utf-8"))
+    data["skills"]["Dispense"]["offered"] = False
+    spec = ModuleSpec.model_validate(data)
+    found = read(spec)
+    assert found == stated(spec) and not found["skills"]["Dispense"]["offered"]
+    assert found["skills"]["Dispense"]["timeout"] is None
 
 
 def test_values_are_the_ones_the_module_runs_with():
