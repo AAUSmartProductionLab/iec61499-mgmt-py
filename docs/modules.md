@@ -38,14 +38,36 @@ The ESP32 code has three layers. Only the bottom one is module-specific.
 
 Since 8 Oct 2026 the module is built from the components every module of the line is built from
 (a linear axis and one process component), no longer as the ESP32 station was: the needle is lifted
-by a stepper motor with a limit switch, as on a 3D printer. The pins below are a proposal until the
-driver is wired; the speed and the travel are placeholders until the axis is measured.
+by a stepper motor with a limit switch, as on a 3D printer. It runs on a Raspberry Pi 5
+(192.168.0.134), the stoppering module on the Raspberry Pi 4 (192.168.0.191). The Pi pins below
+are a proposal until the driver is wired; the speed and the travel are placeholders until the axis
+is measured.
+
+**The stepper driver** is a RepRap Stepper Motor Driver v2.3 with an Allegro A3982
+([reprap.org](https://reprap.org/wiki/Stepper_Motor_Driver_2.3)). Its 10-pin interface, and what
+the module's equipment item connects to it:
+
+| Board pin | Signal | Equipment signal | Note |
+| --- | --- | --- | --- |
+| 2, 8–10 | GND | – | common ground with the Pi |
+| 3 | Step | `Step` | one step per pulse: the Pi's PWM at 1 kHz while the axis moves |
+| 4 | Dir | `Down` | high is "forward"; which way that is depends on how the motor is connected |
+| 5 | !Enable | `Enable` | inverted and pulled high on the board: the motor is on while the line is low, so the Pi's line is set active low |
+| 6 | Min | `AtHome` | the endstop's signal, passed through; its level at the switch depends on the endstop |
+| 7 | Max | not used | a second endstop |
+
+To check before wiring (not stated on that page; from the A3982's data sheet as I remember it, so
+verify): the board feeds its logic and the endstops with 5 V from its own regulator. A high input
+then needs 3.5 V, more than the Pi's 3.3 V gives for certain, and the endstop signal is 5 V, more
+than a Pi input tolerates. A level shifter between the Pi and the board solves both. The A3982 does
+full or half steps (its MS1 input); which one the board is set to decides the steps per millimetre
+together with the screw.
 
 **Equipment IO** (each item is a component of the module, of a kind that other modules have too)
 
 | Equipment (kind) | IO (Pi pin) | Commands |
 | --- | --- | --- |
-| `LinearAxis` (LinearAxis): stepper motor through a step and direction driver | out `Enable` (GPIO17, pin 11), `Down` (the driver's DIR, GPIO27, pin 13), `Step` (PWM0 on GPIO18, pin 12: 1 kHz, 50 % while it moves); in `AtHome` (limit switch at the top, GPIO23, pin 16) | `Stop`: all off. `Up`, `Down`: enabled and stepping, with the direction. `MoveTo(position)`: see below |
+| `LinearAxis` (LinearAxis): stepper motor through the driver board above | out `Enable` (GPIO17, Pi pin 11, active low), `Down` (GPIO27, Pi pin 13), `Step` (PWM0 on GPIO18, Pi pin 12: 1 kHz, 50 % while it moves); in `AtHome` (GPIO23, Pi pin 16) | `Stop`: all off. `Up`, `Down`: enabled and stepping, with the direction. `MoveTo(position)`: see below |
 | `Pump` (FillingPump) | none yet | `Run`: nothing to switch, so dispensing is a time |
 | `Scale` (Scale) | none: the weight is simulated | simulated equipment with a value `Weight` |
 
