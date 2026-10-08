@@ -9,11 +9,12 @@
 
 Run on the module's own computer with --host localhost: push then writes the boot file in ~/forte
 and restarts the FORTE container there (elsewhere it does so over SSH).
-The AAS goes to aas/<idShort>.json; --basyx http://<host>:8081 also uploads it to an AAS server.
---register http://<host>:8090 sends the module's profile to the registration service (modreg), which
-builds the AAS on the lab's shared model, checks it against the ontology and publishes it.
+The AASs of the module and of its components go to aas/<idShort>.json, built by modreg (which needs
+the registration extra). --register http://<host>:8090 sends their profiles to the registration
+service (modreg serve), which checks each AAS against the ontology and publishes it.
 """
 import argparse
+import json
 from pathlib import Path
 import sys
 import time
@@ -21,7 +22,6 @@ import time
 from iec61499_mgmt.protocol import Client
 from modgen import SPECS, load, specs
 
-from . import aas
 from .compare import Candidate
 from .sync import LocalDeployer, PiDeployer, Refused, Status, candidates, inspect, is_local, push, relative, watch
 
@@ -29,32 +29,32 @@ OUT = Path("aas")
 
 
 def publish(status: Status | None, args, spec=None, target=None, path=None):
-    """Write the AAS (and upload it with --basyx); from a status, the values are the running ones."""
-    if status is not None:
-        c, snap = status.candidate, status.snapshot
-        store = aas.build(c.spec, c.target, snap, status.drift, relative(c.path), f"opc.tcp://{snap.host}:4840")
-        spec = c.spec
-    else:
-        store = aas.build(spec, target, spec_path=relative(path))
-    out = aas.write(store, Path(args.out) / f"{aas.identity(spec)[0]}.json")
-    print(f"  AAS: {out}")
-    if args.basyx:
-        for line in aas.upload(store, args.basyx):
-            print(f"  {line}")
-    if args.register:
-        register(status, args, spec, target, path)
-
-
-def register(status: Status | None, args, spec=None, target=None, path=None):
-    """Send the profiles of the module and of its components to the registration service; a refusal
-    is reported, not raised."""
-    from modreg import profile as profiles          # needs the registration extra (aas-model)
-    from modreg.service import send
+    """Write the AASs of the module and of its components as modreg builds them, and with
+    --register send their profiles to the registration service; from a status, the values are the
+    running ones."""
+    try:
+        from modreg import model, profile as profiles          # needs the registration extra (aas-model)
+    except ImportError as e:
+        print(f"  no AAS written: modreg needs the registration extra ({e})")
+        return
     if status is not None:
         c, snap = status.candidate, status.snapshot
         found = profiles.describe_all(c.spec, c.target, snap, status.drift, relative(c.path), f"opc.tcp://{snap.host}:4840")
     else:
         found = profiles.describe_all(spec, target, spec_path=relative(path))
+    for profile in found:
+        out = Path(args.out) / f"{profile['id_short']}.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(model.build(profile), indent=1), encoding="utf-8")
+        print(f"  AAS: {out}")
+    if args.register:
+        register(found, args)
+
+
+def register(found: list[dict], args):
+    """Send the profiles of the module and of its components to the registration service; a refusal
+    is reported, not raised."""
+    from modreg.service import send
     for profile in found:
         try:
             code, answer = send(args.register, profile)
@@ -107,7 +107,6 @@ def main():
     for name in ("describe", "pull", "push", "watch"):
         p = sub.add_parser(name)
         p.add_argument("--out", default=str(OUT), help="Folder for the AAS JSON files")
-        p.add_argument("--basyx", help="Also upload the AAS to this AAS server, e.g. http://192.168.0.104:8081")
         p.add_argument("--register", metavar="URL", help="Also send the module's profile to this registration service (modreg serve)")
         if name in ("describe", "push"):
             p.add_argument("spec", help="Module spec: a file, or a module's name (filling)")

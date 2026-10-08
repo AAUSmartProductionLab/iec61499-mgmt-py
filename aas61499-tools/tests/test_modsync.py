@@ -1,12 +1,10 @@
-"""modsync offline: compare a running program with its module spec, push changes, describe the module (AAS).
+"""modsync offline: compare a running program with its module spec, push changes.
 
 FORTE is replaced by FakeForte, which answers the management requests from a program
 (instances, connections, values), the way FORTE 3.3 answers them (tests/test_modsync_live.py).
 """
 from pathlib import Path
 
-from basyx.aas import model
-from basyx.aas.adapter.json import read_aas_json_file
 import pytest
 import yaml
 
@@ -17,7 +15,7 @@ from modgen import SPECS, library_specs, load, specs, system_file
 from modgen.library import STATES
 from modgen.module import app_name
 from modgen.spec import ModuleSpec
-from modsync import aas, sync
+from modsync import sync
 from modsync.compare import Candidate, expected, expected_values, same
 from modsync.device import literal
 from modsync.sync import MODULE_STATE, OCCUPIED, Refused, candidates, inspect, push, watch
@@ -262,47 +260,6 @@ def test_on_the_modules_own_computer_the_boot_file_is_written_locally(tmp_path, 
     assert (tmp_path / "boot" / "forte.fboot").read_bytes() == b"RES;b\n"
     assert calls == [(["docker", "compose", "restart"], tmp_path)]
     assert sync.is_local("127.0.0.1") and not sync.is_local("192.0.2.1")           # a documentation address
-
-
-def read_back(store, tmp_path):
-    path = aas.write(store, tmp_path / "aas.json")
-    with path.open(encoding="utf-8") as f:
-        objects = read_aas_json_file(f, failsafe=False)          # strict: every element valid
-    return {o.id_short: o for o in objects}
-
-
-def test_aas_from_the_spec(tmp_path):
-    spec = load(FILLING)
-    objects = read_back(aas.build(spec, "pi", spec_path="cell/modules/filling.yaml"), tmp_path)
-    shell = objects["FillingModuleAAS"]
-    assert shell.id == "https://smartproductionlab.aau.dk/aas/FillingModuleAAS"
-    assert len(shell.submodel) == 4
-    skills = objects["Skills"]
-    offered = [n for n, s in spec.skills.items() if s.offered] + list(spec.composites)
-    assert [e.id_short for e in skills.submodel_element] == offered
-    interface = objects["AssetInterfacesDescription"].get_referable("InterfaceOPCUA")
-    assert interface.get_referable("EndpointMetadata").get_referable("base").value == "opc.tcp://192.168.0.134:4840"
-    start = interface.get_referable("InteractionMetadata").get_referable("actions").get_referable("Dispensing_Start")
-    assert start.get_referable("Forms").get_referable("href").value == "/0:Objects/1:Filling/1:Skills/1:Dispensing/1:Start"
-    ref = skills.get_referable("Dispensing").get_referable("InterfaceReference").value
-    assert ref.key[-1].value == "Dispensing_Start"
-    assert objects["ControlSoftware"].get_referable("SyncState").value == "NotRead"
-
-
-def test_aas_shows_what_runs_on_the_module(tmp_path):
-    forte = FakeForte(filling())
-    forte.values["Dispensing.Execute.Dispense.FlowRate"] = "2.5"
-    st = status(forte)
-    objects = read_back(aas.build(st.candidate.spec, st.candidate.target, st.snapshot, st.drift), tmp_path)
-    execute = objects["Skills"].get_referable("Dispensing").get_referable("Execute")
-    assert [p.value for p in execute.value] == ["MoveAxis(Position=40.0)", "Dispense(Volume=Volume, FlowRate=2.5)", "Home", "Weigh"]
-    control = objects["ControlSoftware"]
-    assert control.get_referable("SyncState").value == "Drift"
-    assert "Dispense.FlowRate = 2.5" in control.get_referable("Differences").get_referable("D001").value
-    types = {t.get_referable("Name").value: t.get_referable("Hash").value for t in control.get_referable("Types").value}
-    assert types["filling::SK_Dispense"].startswith("v2:SHA3-512:")
-    impl = objects["Skills"].get_referable("MoveAxis").get_referable("Implementation")
-    assert impl.get_referable("FBType").value == "filling::SK_MoveAxis"
 
 
 def test_watch_reports_a_module_when_it_comes_online_and_when_it_changes(monkeypatch):

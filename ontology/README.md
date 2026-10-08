@@ -114,5 +114,3 @@ still differs:
 4. Operational Data: ARSO's data point is a decimal Property, so Booleans are 0 or 1.
 5. Capabilities, Technical Data and the active procedure and change log of Control
    Configuration are not written yet.
-6. The AAS `modsync` writes itself (`modsync/aas.py`, from before `modreg`) does not follow ARSO
-   and is to be retired.
