@@ -94,8 +94,8 @@ The same four layers in every module, each described in a different submodel:
 equipment          NeedleAxis, Scale                         Hierarchical Structures (parts of the module)
    ▲ occupies
 skill primitives   MoveNeedleUp, MoveNeedleDown,             Skills/Skills (kind Primitive): offered, own
-                   AttachNeedle, Tare, Weigh                  Operation and actions, contract, equipment
-                   Dwell, Dispense                           Skills/BuildingBlocks: not offered, only steps
+                   AttachNeedle, Dispense, Tare, Weigh        Operation and actions, contract, equipment
+                   (none since 8 Oct)                        Skills/BuildingBlocks: not offered, only steps
    ▲ uses, in sequence
 module level       Dispensing(Volume) =                      Skills/Skills (kind Composite): Execute and
 skill              MoveNeedleDown → Dispense(Volume,          Stop sequences of steps, each with what is

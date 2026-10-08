@@ -228,9 +228,10 @@ with, and aas-model itself is changed as little as possible.
 
 Consequences of following ARSO strictly:
 
-- A primitive that is not offered (Dwell) is not listed as a skill, because ARSO asks every
+- A primitive that is not offered is not listed as a skill, because ARSO asks every
   skill for an Operation and an interface action. It is a building block
-  (`Skills/BuildingBlocks`), which steps and `Uses` refer to.
+  (`Skills/BuildingBlocks`), which steps and `Uses` refer to. Since 8 Oct no module has one:
+  Dwell (a plain wait no skill used) was removed and Dispense is offered like every other primitive.
 - Booleans are 0 or 1 and states their number in data points (ARSO's data point is a decimal).
 - About 500 (filling) and 650 (stoppering) elements are reported as not described: the Web of
   Things terms aas-model writes into the interface description (key, type, title, op, input,

@@ -37,7 +37,6 @@ The ESP32 code has three layers. Only the bottom one is module-specific.
 | --- | --- | --- | --- |
 | `MoveNeedleUp` | NeedleAxis `Up` | `AtTop` | 8 s |
 | `MoveNeedleDown` | NeedleAxis `Down` | `AtBottom` | 8 s |
-| `Dwell(Duration = 1 s)` | none | time | – |
 | `Dispense(Volume, FlowRate = 1 mL/s)` | none (a pump later) | time: Volume / FlowRate | – |
 | `Tare` | Scale | done | 3 s |
 | `Weigh` | Scale, publishes `Weight` | done | 3 s |
@@ -53,8 +52,8 @@ The ESP32 code has three layers. Only the bottom one is module-specific.
 
 There is no pump yet: `Dispense` waits for the volume divided by the station's flow rate, a
 constant of the step that reconfiguration can change. With a pump it becomes a command on a
-pump item. The Filling capability's FillVolume is set by Dispensing's Volume. `Dwell` stays as
-a building block for new skills.
+pump item. The Filling capability's FillVolume is set by Dispensing's Volume. A plain wait
+(`Dwell`) was removed on 8 Oct 2026: no skill used it, and `Dispense` can be called on its own now.
 
 ## Stoppering module (stoppering Pi)
 
