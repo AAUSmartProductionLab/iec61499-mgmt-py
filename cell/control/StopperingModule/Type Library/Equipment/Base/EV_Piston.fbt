@@ -6,22 +6,18 @@
   <InterfaceList>
     <EventInputs>
       <Event Name="REQ" Type="Event">
-        <With Var="I_AtLimit" />
         <With Var="I_Holder" />
       </Event>
     </EventInputs>
     <EventOutputs>
       <Event Name="CNF" Type="Event">
-        <With Var="AtLimit" />
         <With Var="Holder" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="I_AtLimit" Type="BOOL" />
       <VarDeclaration Name="I_Holder" Type="WSTRING" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="AtLimit" Type="BOOL" />
       <VarDeclaration Name="Holder" Type="WSTRING" />
     </OutputVars>
   </InterfaceList>
@@ -30,8 +26,7 @@
       <ECAction Algorithm="REQ" Output="CNF" />
     </ECState>
     <Algorithm Name="REQ">
-      <ST>AtLimit := I_AtLimit;
-Holder := I_Holder;</ST>
+      <ST>Holder := I_Holder;</ST>
     </Algorithm>
   </SimpleFB>
 </FBType>

@@ -8,22 +8,17 @@
       <Event Name="INIT" Type="EInit">
         <With Var="Module" />
         <With Var="Name" />
-        <With Var="UaRoot" />
       </Event>
       <Event Name="CMD" Type="Event">
         <With Var="C_Holder" />
         <With Var="C_Release" />
-        <With Var="C_Up" />
-        <With Var="C_Down" />
-        <With Var="C_Speed" />
-        <With Var="CE_Speed" />
+        <With Var="C_Retract" />
+        <With Var="C_Extend" />
       </Event>
       <Event Name="RELEASE" Type="Event">
         <With Var="R_Holder" />
       </Event>
-      <Event Name="SAMPLE" Type="Event">
-        <With Var="I_AtLimit" />
-      </Event>
+      <Event Name="SAMPLE" Type="Event" />
       <Event Name="REFRESH" Type="Event" />
       <Event Name="DRIVEN" Type="Event" />
       <Event Name="MOD_CHG" Type="Event">
@@ -38,28 +33,21 @@
         <With Var="IdPub" />
       </Event>
       <Event Name="DRIVE" Type="Event">
-        <With Var="O_Up" />
-        <With Var="O_Down" />
-        <With Var="O_Speed" />
-        <With Var="E_Speed" />
+        <With Var="O_Retract" />
+        <With Var="O_Extend" />
       </Event>
       <Event Name="STATE" Type="Event">
-        <With Var="AtLimit" />
         <With Var="Holder" />
       </Event>
     </EventOutputs>
     <InputVars>
       <VarDeclaration Name="Module" Type="WSTRING" />
       <VarDeclaration Name="Name" Type="WSTRING" />
-      <VarDeclaration Name="UaRoot" Type="WSTRING" />
       <VarDeclaration Name="C_Holder" Type="WSTRING" />
       <VarDeclaration Name="C_Release" Type="BOOL" />
-      <VarDeclaration Name="C_Up" Type="BOOL" />
-      <VarDeclaration Name="C_Down" Type="BOOL" />
-      <VarDeclaration Name="C_Speed" Type="LREAL" />
-      <VarDeclaration Name="CE_Speed" Type="BOOL" />
+      <VarDeclaration Name="C_Retract" Type="BOOL" />
+      <VarDeclaration Name="C_Extend" Type="BOOL" />
       <VarDeclaration Name="R_Holder" Type="WSTRING" />
-      <VarDeclaration Name="I_AtLimit" Type="BOOL" />
       <VarDeclaration Name="ModState" Type="USINT" />
     </InputVars>
     <OutputVars>
@@ -67,11 +55,8 @@
       <VarDeclaration Name="IdRelease" Type="WSTRING" />
       <VarDeclaration Name="IdState" Type="WSTRING" />
       <VarDeclaration Name="IdPub" Type="WSTRING" />
-      <VarDeclaration Name="O_Up" Type="BOOL" />
-      <VarDeclaration Name="O_Down" Type="BOOL" />
-      <VarDeclaration Name="O_Speed" Type="LREAL" />
-      <VarDeclaration Name="E_Speed" Type="BOOL" />
-      <VarDeclaration Name="AtLimit" Type="BOOL" />
+      <VarDeclaration Name="O_Retract" Type="BOOL" />
+      <VarDeclaration Name="O_Extend" Type="BOOL" />
       <VarDeclaration Name="Holder" Type="WSTRING" />
     </OutputVars>
   </InterfaceList>
@@ -82,11 +67,8 @@
       <VarDeclaration Name="LastHolder" Type="WSTRING" />
       <VarDeclaration Name="Pending" Type="BOOL" />
       <VarDeclaration Name="OffPending" Type="BOOL" />
-      <VarDeclaration Name="L_AtLimit" Type="BOOL" />
-      <VarDeclaration Name="N_Up" Type="BOOL" />
-      <VarDeclaration Name="N_Down" Type="BOOL" />
-      <VarDeclaration Name="N_Speed" Type="LREAL" />
-      <VarDeclaration Name="NE_Speed" Type="BOOL" />
+      <VarDeclaration Name="N_Retract" Type="BOOL" />
+      <VarDeclaration Name="N_Extend" Type="BOOL" />
     </InternalVars>
     <ECC>
       <ECState Name="START" x="150" y="100" />
@@ -173,45 +155,37 @@
       <ST>IdCmd := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/cmd]");
 IdRelease := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/release]");
 IdState := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/state]");
-IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", UaRoot), "/Equipment/"), Name), "/AtLimit"), "]");</ST>
+IdPub := "";</ST>
     </Algorithm>
     <Algorithm Name="Alg_Sample">
-      <ST>AtLimit := I_AtLimit;
-Publish := (AtLimit &lt;&gt; L_AtLimit) OR (Holder &lt;&gt; LastHolder) OR (Beat &gt;= 20);
+      <ST>Publish := (Holder &lt;&gt; LastHolder) OR (Beat &gt;= 20);
 Beat := Beat + 1;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Publish">
-      <ST>L_AtLimit := AtLimit;
-LastHolder := Holder;
+      <ST>LastHolder := Holder;
 Beat := 0;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Cmd">
       <ST>Holder := C_Holder;
-N_Up := C_Up;
-N_Down := C_Down;
-N_Speed := C_Speed;
-NE_Speed := CE_Speed;
+N_Retract := C_Retract;
+N_Extend := C_Extend;
 IF C_Release THEN
   Holder := "";
 END_IF;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Off">
-      <ST>N_Up := FALSE;
-N_Down := FALSE;
-N_Speed := 0.0;
-NE_Speed := FALSE;
+      <ST>N_Retract := FALSE;
+N_Extend := FALSE;
 Holder := "";
 OffPending := FALSE;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Break">
-      <ST>O_Up := O_Up AND N_Up;
-O_Down := O_Down AND N_Down;</ST>
+      <ST>O_Retract := O_Retract AND N_Retract;
+O_Extend := O_Extend AND N_Extend;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Make">
-      <ST>O_Up := N_Up;
-O_Down := N_Down;
-O_Speed := N_Speed;
-E_Speed := NE_Speed;</ST>
+      <ST>O_Retract := N_Retract;
+O_Extend := N_Extend;</ST>
     </Algorithm>
     <Algorithm Name="Alg_QueueB">
       <ST>Pending := TRUE;</ST>

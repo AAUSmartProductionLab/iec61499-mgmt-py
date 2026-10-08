@@ -1,0 +1,184 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EQ_LinearAxis" Comment="Lift of the stoppering head, a stepper motor through a step and direction driver, with a limit switch at the top (home); equipment IO: owns its IO points, writes the output values its holder sends, reads its inputs every cycle and reports changes">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="stoppering" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit">
+        <With Var="Module" />
+        <With Var="Name" />
+        <With Var="UaRoot" />
+        <With Var="UaEnable" />
+        <With Var="CycleTime" />
+        <With Var="AtHome_Backend" />
+        <With Var="AtHome_Modbus" />
+        <With Var="AtHome_Io" />
+        <With Var="AtHome_Sim" />
+        <With Var="Enable_Backend" />
+        <With Var="Enable_Modbus" />
+        <With Var="Enable_Io" />
+        <With Var="Down_Backend" />
+        <With Var="Down_Modbus" />
+        <With Var="Down_Io" />
+        <With Var="Step_Backend" />
+        <With Var="Step_Modbus" />
+        <With Var="Step_Io" />
+        <With Var="Step_Gain" />
+        <With Var="Step_Bias" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" />
+      <VarDeclaration Name="Name" Type="WSTRING" InitialValue="&quot;LinearAxis&quot;" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" />
+      <VarDeclaration Name="CycleTime" Type="TIME" InitialValue="T#50ms" />
+      <VarDeclaration Name="AtHome_Backend" Type="USINT" InitialValue="2" />
+      <VarDeclaration Name="AtHome_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="AtHome_Io" Type="STRING" />
+      <VarDeclaration Name="AtHome_Sim" Type="BOOL" InitialValue="FALSE" />
+      <VarDeclaration Name="Enable_Backend" Type="USINT" InitialValue="2" />
+      <VarDeclaration Name="Enable_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="Enable_Io" Type="STRING" />
+      <VarDeclaration Name="Down_Backend" Type="USINT" InitialValue="2" />
+      <VarDeclaration Name="Down_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="Down_Io" Type="STRING" />
+      <VarDeclaration Name="Step_Backend" Type="USINT" InitialValue="2" />
+      <VarDeclaration Name="Step_Modbus" Type="WSTRING" />
+      <VarDeclaration Name="Step_Io" Type="STRING" />
+      <VarDeclaration Name="Step_Gain" Type="LREAL" InitialValue="655.35" />
+      <VarDeclaration Name="Step_Bias" Type="LREAL" InitialValue="0.0" />
+    </InputVars>
+    <OutputVars />
+  </InterfaceList>
+  <FBNetwork>
+    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="25300" height="7380" locked="false" />
+    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="1000" y="9580" width="25800" height="5820" locked="false" />
+    <Group Name="Inputs" Comment="The equipment's sensors: read every cycle, one block per IO point" x="1000" y="16600" width="7400" height="4700" locked="false" />
+    <Group Name="Outputs" Comment="The equipment's actuators: written on a change and every cycle, one block per IO point" x="1000" y="22500" width="16600" height="4700" locked="false" />
+    <FB Name="Logic" Type="stoppering::EL_LinearAxis" x="2800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Core" />
+    </FB>
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="10300" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Core" />
+    </FB>
+    <FB Name="MoveT" Type="iec61499::events::E_DELAY" x="17800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Core" />
+    </FB>
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="21200" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_8" x="2800" y="900">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="7400" y="900">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_5" x="12000" y="900">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_4" x="16600" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="In_AtHome" Type="modlib::IO_DI" x="2800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Inputs" />
+    </FB>
+    <FB Name="Out_Enable" Type="modlib::IO_DO" x="2800" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
+    </FB>
+    <FB Name="Out_Down" Type="modlib::IO_DO" x="7400" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
+    </FB>
+    <FB Name="Out_Step" Type="modlib::IO_AO" x="12000" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
+    </FB>
+    <EventConnections>
+      <Connection Source="Logic.MOVE_START" Destination="MoveT.START" />
+      <Connection Source="Logic.MOVE_STOP" Destination="MoveT.STOP" />
+      <Connection Source="MoveT.EO" Destination="Logic.MOVE_T" />
+      <Connection Source="INIT" Destination="Logic.INIT" />
+      <Connection Source="Logic.INITO" Destination="Mode.INIT" />
+      <Connection Source="Mode.INITO" Destination="SubCmd.INIT" />
+      <Connection Source="SubCmd.INITO" Destination="SubRelease.INIT" />
+      <Connection Source="SubRelease.INITO" Destination="PubState.INIT" />
+      <Connection Source="PubState.INITO" Destination="PubUa.INIT" />
+      <Connection Source="PubUa.INITO" Destination="In_AtHome.INIT" />
+      <Connection Source="In_AtHome.INITO" Destination="Out_Enable.INIT" />
+      <Connection Source="Out_Enable.INITO" Destination="Out_Down.INIT" />
+      <Connection Source="Out_Down.INITO" Destination="Out_Step.INIT" />
+      <Connection Source="Out_Step.INITO" Destination="Cycle.START" />
+      <Connection Source="Out_Step.INITO" Destination="INITO" />
+      <Connection Source="SubCmd.IND" Destination="Logic.CMD" />
+      <Connection Source="SubRelease.IND" Destination="Logic.RELEASE" />
+      <Connection Source="Mode.CHG" Destination="Logic.MOD_CHG" />
+      <Connection Source="Cycle.EO" Destination="Logic.REFRESH" />
+      <Connection Source="Cycle.EO" Destination="In_AtHome.REQ" />
+      <Connection Source="In_AtHome.CNF" Destination="Logic.SAMPLE" />
+      <Connection Source="Logic.STATE" Destination="PubState.REQ" />
+      <Connection Source="Logic.STATE" Destination="PubUa.REQ" />
+      <Connection Source="Logic.DRIVE" Destination="Out_Enable.REQ" />
+      <Connection Source="Out_Enable.CNF" Destination="Out_Down.REQ" />
+      <Connection Source="Out_Down.CNF" Destination="Out_Step.REQ" />
+      <Connection Source="Out_Step.CNF" Destination="Logic.DRIVEN" />
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Logic.MoveDT" Destination="MoveT.DT" />
+      <Connection Source="Module" Destination="Logic.Module" />
+      <Connection Source="Name" Destination="Logic.Name" />
+      <Connection Source="UaRoot" Destination="Logic.UaRoot" />
+      <Connection Source="Module" Destination="Mode.Module" />
+      <Connection Source="Logic.IdCmd" Destination="SubCmd.ID" />
+      <Connection Source="Logic.IdRelease" Destination="SubRelease.ID" />
+      <Connection Source="Logic.IdState" Destination="PubState.ID" />
+      <Connection Source="Logic.IdPub" Destination="PubUa.ID" />
+      <Connection Source="UaEnable" Destination="PubUa.QI" />
+      <Connection Source="CycleTime" Destination="Cycle.DT" />
+      <Connection Source="SubCmd.RD_1" Destination="Logic.C_Holder" />
+      <Connection Source="SubCmd.RD_2" Destination="Logic.C_Release" />
+      <Connection Source="SubCmd.RD_3" Destination="Logic.C_Enable" />
+      <Connection Source="SubCmd.RD_4" Destination="Logic.C_Down" />
+      <Connection Source="SubCmd.RD_5" Destination="Logic.C_Step" />
+      <Connection Source="SubCmd.RD_6" Destination="Logic.CE_Step" />
+      <Connection Source="SubCmd.RD_7" Destination="Logic.C_Move" />
+      <Connection Source="SubCmd.RD_8" Destination="Logic.C_Goal" />
+      <Connection Source="SubRelease.RD_1" Destination="Logic.R_Holder" />
+      <Connection Source="Mode.State" Destination="Logic.ModState" />
+      <Connection Source="AtHome_Backend" Destination="In_AtHome.Backend" />
+      <Connection Source="AtHome_Modbus" Destination="In_AtHome.ModbusId" />
+      <Connection Source="AtHome_Io" Destination="In_AtHome.IoName" />
+      <Connection Source="AtHome_Sim" Destination="In_AtHome.SimValue" />
+      <Connection Source="In_AtHome.IN" Destination="Logic.I_AtHome" />
+      <Connection Source="Logic.AtHome" Destination="PubState.SD_1" />
+      <Connection Source="Logic.AtHome" Destination="PubUa.SD_1" />
+      <Connection Source="Logic.ActualPosition" Destination="PubState.SD_2" />
+      <Connection Source="Logic.ActualPosition" Destination="PubUa.SD_2" />
+      <Connection Source="Logic.Homed" Destination="PubState.SD_3" />
+      <Connection Source="Logic.Homed" Destination="PubUa.SD_3" />
+      <Connection Source="Logic.Moving" Destination="PubState.SD_4" />
+      <Connection Source="Logic.Moving" Destination="PubUa.SD_4" />
+      <Connection Source="Logic.Holder" Destination="PubState.SD_5" />
+      <Connection Source="Enable_Backend" Destination="Out_Enable.Backend" />
+      <Connection Source="Enable_Modbus" Destination="Out_Enable.ModbusId" />
+      <Connection Source="Enable_Io" Destination="Out_Enable.IoName" />
+      <Connection Source="Logic.O_Enable" Destination="Out_Enable.OUT" />
+      <Connection Source="Down_Backend" Destination="Out_Down.Backend" />
+      <Connection Source="Down_Modbus" Destination="Out_Down.ModbusId" />
+      <Connection Source="Down_Io" Destination="Out_Down.IoName" />
+      <Connection Source="Logic.O_Down" Destination="Out_Down.OUT" />
+      <Connection Source="Step_Backend" Destination="Out_Step.Backend" />
+      <Connection Source="Step_Modbus" Destination="Out_Step.ModbusId" />
+      <Connection Source="Step_Io" Destination="Out_Step.IoName" />
+      <Connection Source="Logic.O_Step" Destination="Out_Step.OUT" />
+      <Connection Source="Logic.E_Step" Destination="Out_Step.EN" />
+      <Connection Source="Step_Gain" Destination="Out_Step.Gain" />
+      <Connection Source="Step_Bias" Destination="Out_Step.Bias" />
+    </DataConnections>
+  </FBNetwork>
+</FBType>

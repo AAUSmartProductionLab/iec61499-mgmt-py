@@ -261,32 +261,22 @@ def test_filling_module_dispenses_and_weighs(request, tmp_path):
         ua.expect("Skills/Tare/State", S["Succeeded"], timeout=4)
 
 
-STOPPERING_FAST = {"Stoppering.Execute.ArmIn.Settle": "0.3", "Stoppering.Execute.ArmOut.Settle": "0.3",
-                   "Stoppering.Execute.ExtendPlunger.Duration": "1.0",
-                   "Stoppering.Execute.RetractPlunger.Duration": "1.0",
-                   "Stoppering.Execute.RaisePiston.Duration": "0.5",
-                   "Resetting.ArmMiddle.Settle": "0.3", "Resetting.ArmHome.Settle": "0.3",
-                   "Resetting.RetractPlunger.Duration": "0.5", "Resetting.RaisePiston.Duration": "0.5"}
-
-
 def test_stoppering_module_homes_and_stoppers(request, tmp_path):
-    with running(request, tmp_path, "stoppering", STOPPERING_FAST) as (sim, ua):
+    with running(request, tmp_path, "stoppering") as (sim, ua):
         a = str(uuid.uuid4())
         assert ua.call("Occupation/Occupy", a) == [True, 0]
         assert ua.call("Module/Reset", a) == [True, 0]
         ua.expect("Module/State", M["Idle"], timeout=15)
-        angles = [v for n, v in outputs(sim, "StopperArm.Angle")]
-        assert [round(v) for v in angles if v is not None][:2] == [90, 120]   # homing: servo 90 then 120
+        # Resetting: the piston in first, then the head up to its limit switch.
+        assert [n for n, v in outputs(sim, "Piston.Retract", "LinearAxis.Enable") if v] == ["Piston.Retract", "LinearAxis.Enable"]
+        assert ua.value("Equipment/LinearAxis/Homed") is True and sim.position("LinearAxis") == 0.0
         assert ua.call("Module/Start", a) == [True, 0]
         ua.expect("Module/State", M["Execute"])
+        sim.trace.clear()
         assert ua.call("Skills/Stoppering/Start", a) == [True, 0]
         ua.expect("Skills/Stoppering/State", S["Succeeded"], timeout=15)
-        angles = [round(v) for n, v in outputs(sim, "StopperArm.Angle") if v is not None]
-        assert angles[-2:] == [1, 121]
-        order = [n for n, v in outputs(sim, "Piston.Down", "Piston.Up", "Plunger.Extend", "Plunger.Retract") if v]
-        assert order[-4:] == ["Piston.Down", "Plunger.Extend", "Plunger.Retract", "Piston.Up"]
+        # Head down, piston out and back in, head up.
+        order = [n for n, v in outputs(sim, "LinearAxis.Down", "Piston.Extend", "Piston.Retract", "LinearAxis.Step") if v]
+        assert order == ["LinearAxis.Down", "LinearAxis.Step", "Piston.Extend", "Piston.Retract", "LinearAxis.Step"]
+        assert ua.value("Equipment/LinearAxis/ActualPosition") == 0.0 and sim.position("Piston") == 0.0
         assert sim.shoot_through == 0
-        # A skill primitive with an argument, called directly.
-        assert ua.call("Skills/MoveArm/Start", a, 45.0, 0.2) == [True, 0]
-        ua.expect("Skills/MoveArm/State", S["Succeeded"], timeout=3)
-        assert round([v for n, v in outputs(sim, "StopperArm.Angle") if v is not None][-1]) == 45

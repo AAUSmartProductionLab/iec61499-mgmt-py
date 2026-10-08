@@ -77,8 +77,7 @@ def test_a_capability_is_realized_by_an_offered_skill():
 
 def test_repeated_steps_get_their_own_instance_names():
     spec = load(SPECS / "stoppering.yaml")
-    assert [s.name for s in spec.composites["Stoppering"].execute] == [
-        "LowerPiston", "ArmIn", "ArmOut", "ExtendPlunger", "RetractPlunger", "RaisePiston"]
+    assert [s.name for s in spec.composites["Stoppering"].execute] == ["HeadDown", "PressStopper", "HeadUp"]
     data = raw()
     data["composites"]["Fill"]["execute"] = ["MoveNeedleUp", "MoveNeedleUp"]
     assert [s.name for s in ModuleSpec.model_validate(data).composites["Fill"].execute] == ["MoveNeedleUp",
@@ -189,10 +188,9 @@ def test_filler_flattens_to_module_level_equipment_skills_and_procedures():
 
 def test_stoppering_binds_constants_per_instance():
     created, wired, written = flat("StopperingModule", "Stoppering")
-    assert written["Stoppering.Execute.ArmIn.Angle"] == "1.0"
-    assert written["Stoppering.Execute.ArmOut.Angle"] == "121.0"
-    assert written["Resetting.RaisePiston.Duration"] == "1.5"
-    assert created["Stoppering.Execute.ArmIn"] == "stoppering::SK_MoveArm"
+    assert written["Stoppering.Execute.HeadDown.Position"] == "40.0"
+    assert written["Stoppering.Execute.HeadUp.Position"] == "0.0"
+    assert created["Stoppering.Execute.HeadDown"] == created["Stoppering.Execute.HeadUp"] == "stoppering::SK_MoveAxis"
 
 
 def st(project, folder, name):
@@ -232,30 +230,46 @@ def test_composite_parameters_must_not_take_the_names_of_its_blocks():
         ModuleSpec.model_validate(data)
 
 
-def test_open_loop_skill_ends_by_time_and_passes_its_argument():
-    root, code = st("StopperingModule", "Skills/Logic", "SL_MoveArm")
+def servo(tmp_path):
+    """The test module with a servo: a command that passes its argument to an output."""
+    data = raw()
+    data["equipment"]["Arm"] = {"outputs": {"Angle": {"type": "LREAL", "modbus": "h1", "minimum": 0, "maximum": 180}},
+                                "commands": {"Detach": {}, "Turn": {"Angle": "Arg"}}}
+    data["skills"]["MoveArm"] = {"equipment": "Arm", "command": "Turn", "arg": "Angle", "after": "Settle",
+                                 "parameters": {"Angle": {"minimum": 0.0, "maximum": 180.0, "default": 90.0},
+                                                "Settle": {"minimum": 0.0, "maximum": 5.0, "default": 1.0}}}
+    spec = ModuleSpec.model_validate(data)
+    generate(spec, tmp_path / spec.project)
+    return tmp_path / spec.project / "Type Library"
+
+
+def code_of(path):
+    root = ET.parse(path).getroot()
+    return root, "\n".join(s.text or "" for s in root.iter("ST"))
+
+
+def test_open_loop_skill_ends_by_time_and_passes_its_argument(tmp_path):
+    types = servo(tmp_path)
+    root, code = code_of(types / "Skills" / "Logic" / "SL_MoveArm.fbt")
     assert "TimerDT := MUL_TIME(T#1s, Settle);" in code
     assert "C_Arg := Angle;" in code
     conditions = {(t.get("Source"), t.get("Condition")) for t in root.iter("ECTransition")}
     assert ("Running", "TIMER") in conditions
+    assert "N_Angle := Arg;" in code_of(types / "Equipment" / "Commands" / "EC_Arm.fbt")[1]
+    # A press of a fixed time: no argument, and a final command that takes time itself.
+    _, code = st("StopperingModule", "Skills/Logic", "SL_PressStopper")
+    assert "TimerDT := MUL_TIME(T#1s, 3.0);" in code and "C_Command := 3;" in code       # Back, when it ends
 
 
-def test_the_command_table_is_in_the_skills_not_in_the_equipment_io(tmp_path):
+def test_the_command_table_is_in_the_skills_not_in_the_equipment_io():
     """EC_ (inside every skill of the equipment) turns a command into output values, phase by phase;
     the equipment IO only writes the values its holder sends."""
-    data = raw()
-    data["equipment"]["NeedleAxis"]["commands"]["Down"] = [{"Down": True, "for": "200ms"}, {"Down": True}]   # a start phase
-    spec = ModuleSpec.model_validate(data)
-    generate(spec, tmp_path / spec.project)
-    code = "\n".join(s.text or "" for s in ET.parse(
-        tmp_path / spec.project / "Type Library" / "Equipment" / "Commands" / "EC_NeedleAxis.fbt").getroot().iter("ST"))
-    assert "IF Phase = 0 THEN\n    N_Down := TRUE;\n    PhaseDT := T#200ms;" in code
+    _, code = st("StopperingModule", "Equipment/Commands", "EC_Piston")
+    assert "IF Phase = 0 THEN\n    N_Retract := TRUE;\n    PhaseDT := T#3000ms;" in code   # Back: in for the stroke, then off
     assert "O_Release := Release AND NOT Timed;" in code                                 # released with the last phase
-    _, code = st("StopperingModule", "Equipment/Commands", "EC_StopperArm")
-    assert "N_Angle := Arg;" in code
     logic, code = st("StopperingModule", "Equipment/Base", "EL_Piston")
-    assert "Command" not in code and "Phase" not in code and "200" not in code
-    assert "N_Up := C_Up;" in code and "O_Up := O_Up AND N_Up;" in code                  # break before make
+    assert "Command" not in code and "Phase" not in code and "3000" not in code
+    assert "N_Extend := C_Extend;" in code and "O_Extend := O_Extend AND N_Extend;" in code   # break before make
     skill, _ = st("FillingModule", "Skills", "SK_Home")
     assert {fb.get("Name"): fb.get("Type") for fb in skill.iter("FB")}["Driver"] == "filling::EC_LinearAxis"
     assert ("Ending", "EndDone", "PLAYED[Outcome = 1]") in {
@@ -322,9 +336,13 @@ def groups(net):
 def test_blocks_inside_equipment_skills_and_module_level_skills_are_grouped():
     eq, _ = st("StopperingModule", "Equipment", "EQ_Piston")
     assert groups(eq.find("FBNetwork")) == {
-        "Core": ["Logic", "Cycle"], "Channels": ["Mode", "SubCmd", "SubRelease", "PubState", "PubUa"],
-        "Inputs": ["In_AtLimit"], "Outputs": ["Out_Up", "Out_Down", "Out_Speed"]}
-    skill, _ = st("StopperingModule", "Skills", "SK_RaisePiston")
+        "Core": ["Logic", "Cycle"], "Channels": ["Mode", "SubCmd", "SubRelease", "PubState"],
+        "Outputs": ["Out_Retract", "Out_Extend"]}
+    axis, _ = st("StopperingModule", "Equipment", "EQ_LinearAxis")
+    assert groups(axis.find("FBNetwork")) == {
+        "Core": ["Logic", "Cycle", "MoveT"], "Channels": ["Mode", "SubCmd", "SubRelease", "PubState", "PubUa"],
+        "Inputs": ["In_AtHome"], "Outputs": ["Out_Enable", "Out_Down", "Out_Step"]}
+    skill, _ = st("StopperingModule", "Skills", "SK_PressStopper")
     assert list(groups(skill.find("FBNetwork"))) == ["SkillControl", "Execution", "Equipment"]
     system = ET.parse(system_file("FillingModule")).getroot()
     app = next(a for a in system.iter("Application") if a.get("Name") == "Filling").find("SubAppNetwork")

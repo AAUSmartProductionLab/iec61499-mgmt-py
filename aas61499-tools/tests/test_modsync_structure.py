@@ -86,11 +86,11 @@ def test_a_primitive_the_module_does_not_offer_is_read_from_its_type_file():
 
 def test_values_are_the_ones_the_module_runs_with():
     spec = load(SPECS / "stoppering.yaml")
-    step = spec.composites["Stoppering"].execute[1]
-    assert step.skill == "MoveArm" and step.bind
+    step = spec.composites["Stoppering"].execute[0]
+    assert step.skill == "MoveAxis" and step.bind
     # A constant changed online shows; a limit that was never declared reads as the type's own.
-    found = read(spec, {f"Stoppering.Execute.{step.name}.Angle": "5.0"})
-    assert found["composites"]["Stoppering"]["execute"][1]["bind"]["Angle"] == 5.0
+    found = read(spec, {f"Stoppering.Execute.{step.name}.Position": "35.0"})
+    assert found["composites"]["Stoppering"]["execute"][0]["bind"]["Position"] == 35.0
     data = yaml.safe_load(FILLING.read_text(encoding="utf-8"))
     data["composites"]["Settle"] = {"parameters": {"Rounds": {"minimum": 0.0, "default": 1.0}}, "execute": ["Tare"]}
     unlimited = ModuleSpec.model_validate(data)
