@@ -3,8 +3,8 @@
 State on 5 Oct 2026, branch `main`. What is built, how it is put together, what was learned on
 the way and what comes next. The repository map and the commands are in the
 [README](../README.md); the modules themselves (what was ported from the ESP32 stations) in
-[modules.md](modules.md); the OPC UA interface of each module in [hmi/](hmi/); the plan this
-work started from in the [build and modelling plan](archive/build-and-modelling-plan.md).
+[modules.md](modules.md); the OPC UA interface of each module is described by its AAS
+([aas-models.md](aas-models.md)); the plan this work started from in the [build and modelling plan](archive/build-and-modelling-plan.md).
 
 ## What exists
 
