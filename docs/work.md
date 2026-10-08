@@ -164,8 +164,9 @@ The module spec is the one source. `modsync` checks it against what really runs 
   pushed back or put into the spec. Taking running values into the spec is not built.
 - On the module's own computer (`--host localhost`) push writes the boot file there and restarts
   the container; from elsewhere it does so over SSH.
-- **Describe.** `modsync` still writes its own AAS (`aas/<idShort>.json`, `--basyx` uploads it):
-  the builder from before `modreg`, to be retired once the profile path is accepted.
+- **Describe.** `modsync` writes the AASs of the module and of its components as `modreg` builds
+  them (`aas/<idShort>.json`), and with `--register` sends their profiles to the registration
+  service. Its own builder from before `modreg` was removed on 8 Oct.
 
 ## Registration: the AAS of a module (modreg)
 
@@ -619,7 +620,6 @@ project repaired and both module AAS passing it, building blocks and the module 
 
 Smaller open items that are in no phase of that plan:
 
-- Retire `modsync/aas.py` once the profile path is accepted.
 - Publish the FORTE binary as a release asset so the `curl` installer works; test the installers
   and the time synchronisation on the real Pi; install the rebuilt FORTE (Succeeded → Idle) there.
 - Wire both modules; give the stoppering Pi its address.

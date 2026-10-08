@@ -11,7 +11,6 @@ dependencies = ["pydantic>=2.9,<3", "defusedxml>=0.7,<1", "pyyaml>=6,<7"]
 
 [project.optional-dependencies]
 opcua = ["asyncua>=1.1"]
-aas = ["basyx-python-sdk>=2,<3"]
 # The registration service (modreg): the lab's shared AAS model and the ontology check.
 registration = [
     # The archive, not git+: pip would fetch the submodules, whose paths are too long for Windows.

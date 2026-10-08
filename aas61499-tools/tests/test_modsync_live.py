@@ -15,7 +15,8 @@ import sys
 import time
 from types import SimpleNamespace
 
-from basyx.aas.adapter.json import read_aas_json_file
+import json
+
 import pytest
 
 from conftest import free_port, launch_forte
@@ -23,7 +24,6 @@ from iec61499_mgmt.bootfile import boot_file, deployment
 from iec61499_mgmt.protocol import Client, Command
 from modgen import SPECS, load, specs
 from modgen.library import ERRORS, SKILL_STATES, STATES
-from modsync import aas
 from modsync.compare import Candidate
 from modsync.sync import PiDeployer, Refused, candidates, inspect, push
 
@@ -34,6 +34,21 @@ from module_ua import ModuleUa  # noqa: E402
 from test_modsync import Recorder, composed  # noqa: E402
 
 FILLING = SPECS / "filling.yaml"
+
+
+def children(element: dict) -> list[dict]:
+    kids = element.get("submodelElements") or element.get("value") or []
+    return [k for k in kids if isinstance(k, dict)] if isinstance(kids, list) else []
+
+
+def submodel(env: dict, id_short: str) -> dict:
+    return next(s for s in env["submodels"] if s["idShort"] == id_short)
+
+
+def at(element: dict, *path: str) -> dict:
+    for step in path:
+        element = next(c for c in children(element) if c.get("idShort") == step)
+    return element
 DWELL = "Dispensing.Execute.Dispense.FlowRate"
 
 
@@ -118,11 +133,11 @@ def test_a_parameter_changed_online_is_reported_described_and_pushed_back(module
     module.client.execute(Command(op="write", resource="RES", destination=DWELL, value="2.5"))
     st = check(module)
     assert st.drift.values == {DWELL: ("1.0", "2.5")} and not st.drift.restart
-    store = aas.build(st.candidate.spec, "pc", st.snapshot, st.drift)
-    path = aas.write(store, tmp_path / "aas.json")
-    with path.open(encoding="utf-8") as f:
-        skills = next(o for o in read_aas_json_file(f, failsafe=False) if o.id_short == "Skills")
-    assert skills.get_referable("Dispensing").get_referable("Execute").get_referable("Step02").value == "Dispense(Volume=Volume, FlowRate=2.5)"
+    profiles = pytest.importorskip("modreg.profile")           # the registration extra
+    from modreg import model
+    env = model.build(profiles.describe(st.candidate.spec, "pc", st.snapshot, st.drift))
+    dispense = at(submodel(env, "Skills"), "Skills", "Dispensing", "Start", "Steps", "P2")
+    assert float(at(dispense, "FlowRate")["value"]) == 2.5
     done = push(module.client, module.host, module.port, module.cand, overrides=module.overrides)
     assert done[0] == f"write {DWELL} := 1.0 (was 2.5)"
     assert check(module).drift.empty
@@ -183,7 +198,7 @@ def test_cli_pull_writes_the_aas(module, tmp_path):
     # The test's Modbus endpoint differs from the spec's: reported as drift, needing a restart.
     assert (f"Filling ({len(module.cand.app.fbs)} instances), {len(module.overrides)} differences from "
             "cell/modules/filling.yaml target pc" in run.stdout)
-    with (tmp_path / "FillingModuleAAS.json").open(encoding="utf-8") as f:
-        objects = {o.id_short: o for o in read_aas_json_file(f, failsafe=False)}
-    assert objects["ControlSoftware"].get_referable("SyncState").value == "Drift"
-    assert objects["ControlSoftware"].get_referable("ManagementEndpoint").value == f"{module.host}:{module.port}"
+    config = submodel(json.loads((tmp_path / "FillingModuleAAS.json").read_text(encoding="utf-8")), "ControlConfiguration")
+    assert at(config, "SyncState")["value"] == "Drift"
+    assert at(config, "Runtime", "ManagementEndpoint")["value"] == f"{module.host}:{module.port}"
+    assert (tmp_path / "FillingPumpAAS.json").exists()          # the components' AASs are written with it

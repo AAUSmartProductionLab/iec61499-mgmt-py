@@ -15,7 +15,6 @@ from modgen import SPECS, load                                              # no
 from modgen.spec import ModuleSpec                                          # noqa: E402
 from modreg import model, profile as profiles                               # noqa: E402
 from modreg.ontology import Blueprint, check                                # noqa: E402
-from modsync.aas import browse_path                                         # noqa: E402
 from modsync.compare import compare, expected, expected_values              # noqa: E402
 from modsync.device import Snapshot                                         # noqa: E402
 
@@ -288,7 +287,7 @@ def test_steps_publish_like_skills_where_the_program_puts_them():
         instance = at(by_step[id(step)], "InstancePath")["value"]
         ua_path = values[instance + ".UaPath"].strip('"')
         state = at(properties, instance.replace(".Stop.", ".Stopping.").replace(".", "_") + "_State")
-        assert at(state, "forms", "href")["value"] == browse_path(spec, f"{ua_path}/State")
+        assert at(state, "forms", "href")["value"] == profiles.browse_path(spec, f"{ua_path}/State")
     assert at(instances["Dispensing_Execute_NeedleDown"], "FBType")["value"] == "filling::SK_MoveAxis"
     # A module level skill has no type of its own: it is its Control block. A primitive is its instance.
     control = instances["Dispensing_Control"]

@@ -46,9 +46,8 @@ from aas_pydantic.submodel_templates.nameplate import ManufacturerProductDesigna
 from modgen.library import q
 from modgen.module import parameter_port
 from modgen.spec import ModuleSpec, Parameter
-from modsync.aas import MODULE_METHODS, browse_path, current, identity
 from modsync.compare import Drift, expected, expected_values
-from modsync.device import Snapshot
+from modsync.device import Snapshot, literal
 
 from . import model
 from .generated import control_configuration as cc, module as arso_module, skills as arso
@@ -146,6 +145,29 @@ def contract(decl) -> arso.Contract:
     terms = {"Requires": decl.requires, **done, "Invariant": decl.invariant,
              "Timeout": decl.timeout if decl.ensures is not None else None}
     return arso.Contract(**{k: prop(v) for k, v in terms.items() if v is not None and v != "TRUE"})
+
+
+MODULE_METHODS = ["Reset", "Start", "Stop", "Abort", "Clear"]
+
+
+def identity(spec: ModuleSpec) -> tuple[str, str, str]:
+    """(idShort, id, globalAssetId) of the module's shell."""
+    id_short = spec.aas.id_short or f"{spec.module}ModuleAAS"
+    return (id_short, spec.aas.id or f"{BASE_URL}/aas/{id_short}",
+            spec.aas.global_asset_id or f"{BASE_URL}/assets/{spec.module}Module")
+
+
+def browse_path(spec: ModuleSpec, path: str) -> str:
+    """OPC UA RelativePath text of a node below the module's root (FORTE's nodes are in namespace 1)."""
+    parts = [p for p in spec.opcua_root.split("/") if p][1:] + [p for p in path.split("/") if p]
+    return "/0:Objects" + "".join(f"/1:{p}" for p in parts)
+
+
+def current(port: str, pr: Parameter, snap: Snapshot | None):
+    """The parameter's value on the module if it was read, else the spec's default."""
+    read = snap.values.get(port) if snap else None
+    value = pr.default if read is None else literal(read)
+    return bool(value) if pr.type == "BOOL" else float(value) if pr.type == "LREAL" else int(value)
 
 
 def component_identity(spec: ModuleSpec, item: str) -> tuple[str, str, str, str]:
