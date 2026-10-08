@@ -129,9 +129,14 @@ python deploy/pi.py blink [--line 17]      # on-board LED, or an LED on a pin
 python deploy/pi.py status | log | stop | start
 ```
 
-- The `curl` installer downloads FORTE as the asset `forte-aarch64` of the latest GitHub release;
-  none is published yet (`runtime/package-release.ps1` prepares it), so set `FORTE_FILE` to a
-  binary copied to the Pi, or use `pi.py install`.
+- The `curl` installer (`runtime/install.sh`) sets a fresh Pi up in one run: Docker if it is
+  missing, FORTE from the repository (`runtime/bin/forte-aarch64`, stripped, 14 MB;
+  `runtime/package-runtime.ps1` puts a new build there), the header's GPIO chip, the PWM overlay.
+  Run on 8 Oct 2026 on a Raspberry Pi 5 with Ubuntu 26.04 (kernel 7.0): Docker 29 from Ubuntu's
+  own packages; the header is `/dev/gpiochip0` there as on a Pi 4 (older Pi 5 kernels number it 4,
+  which the installer looks up); after the reboot `pwmchip0` has four channels, GPIO18 being
+  channel 2 and GPIO19 channel 3 (Pi 4: 0 and 1); FORTE came back by itself. The filling module ran
+  on it with its IO on the simulator; no pin has been driven yet.
 - The lab Pi (192.168.0.191) has `dtoverlay=pwm-2chan` (PWM0 on GPIO18, PWM1 on GPIO19) and time
   synchronisation repaired (chrony); the fix has not been tested across a reboot.
 - On the Pi's real pins, with nothing wired, the stoppering module's homing and cycle ran with
