@@ -240,22 +240,73 @@ def test_open_loop_skill_ends_by_time_and_passes_its_argument():
     assert ("Running", "TIMER") in conditions
 
 
-def test_the_command_table_is_in_the_skills_not_in_the_equipment_io():
+def test_the_command_table_is_in_the_skills_not_in_the_equipment_io(tmp_path):
     """EC_ (inside every skill of the equipment) turns a command into output values, phase by phase;
     the equipment IO only writes the values its holder sends."""
-    _, code = st("FillingModule", "Equipment/Commands", "EC_NeedleAxis")
-    assert "N_Speed := 190.0;\n    NE_Speed := TRUE;\n    PhaseDT := T#200ms;" in code   # start boost
-    assert "N_Speed := 140.0;" in code and "O_Release := Release AND NOT Timed;" in code   # released with the last phase
+    data = raw()
+    data["equipment"]["NeedleAxis"]["commands"]["Down"] = [{"Down": True, "for": "200ms"}, {"Down": True}]   # a start phase
+    spec = ModuleSpec.model_validate(data)
+    generate(spec, tmp_path / spec.project)
+    code = "\n".join(s.text or "" for s in ET.parse(
+        tmp_path / spec.project / "Type Library" / "Equipment" / "Commands" / "EC_NeedleAxis.fbt").getroot().iter("ST"))
+    assert "IF Phase = 0 THEN\n    N_Down := TRUE;\n    PhaseDT := T#200ms;" in code
+    assert "O_Release := Release AND NOT Timed;" in code                                 # released with the last phase
     _, code = st("StopperingModule", "Equipment/Commands", "EC_StopperArm")
     assert "N_Angle := Arg;" in code
-    logic, code = st("FillingModule", "Equipment/Base", "EL_NeedleAxis")
-    assert "Command" not in code and "Phase" not in code and "190" not in code
+    logic, code = st("StopperingModule", "Equipment/Base", "EL_Piston")
+    assert "Command" not in code and "Phase" not in code and "200" not in code
     assert "N_Up := C_Up;" in code and "O_Up := O_Up AND N_Up;" in code                  # break before make
-    skill, _ = st("FillingModule", "Skills", "SK_MoveNeedleUp")
-    assert {fb.get("Name"): fb.get("Type") for fb in skill.iter("FB")}["Driver"] == "filling::EC_NeedleAxis"
+    skill, _ = st("FillingModule", "Skills", "SK_Home")
+    assert {fb.get("Name"): fb.get("Type") for fb in skill.iter("FB")}["Driver"] == "filling::EC_LinearAxis"
     assert ("Ending", "EndDone", "PLAYED[Outcome = 1]") in {
         (x.get("Source"), x.get("Destination"), x.get("Condition"))
-        for x in st("FillingModule", "Skills/Logic", "SL_MoveNeedleUp")[0].iter("ECTransition")}
+        for x in st("FillingModule", "Skills/Logic", "SL_Home")[0].iter("ECTransition")}
+
+
+def test_an_axis_with_a_position_moves_itself_to_where_it_is_told():
+    """A stepper axis has no position sensor: the equipment keeps the position (home at the limit
+    switch, then the time it steps), and a skill only says where to go."""
+    axis = load(SPECS / "filling.yaml").equipment["LinearAxis"]
+    assert [s for s, i in axis.inputs.items() if i.computed] == ["ActualPosition", "Homed", "Moving"]
+    assert list(axis.commands) == ["Stop", "Up", "Down", "MoveTo"]
+    # The skill: where to, as the command's argument; it needs the position to be known and ends there.
+    move = load(SPECS / "filling.yaml").skills["MoveAxis"]
+    assert (move.command, move.arg, move.requires) == ("MoveTo", "Position", "Homed")
+    assert move.ensures == "NOT Moving AND ABS(ActualPosition - Position) < 0.001"
+    _, code = st("FillingModule", "Equipment/Commands", "EC_LinearAxis")
+    assert "N_Move := TRUE;\n  N_Goal := Arg;" in code
+    # The equipment: the direction from where it is, the time from the distance, then it is there.
+    logic, code = st("FillingModule", "Equipment/Base", "EL_LinearAxis")
+    assert "IF N_Goal > ActualPosition THEN\n      MoveDir := 1.0;\n      N_Enable := TRUE;\n      N_Down := TRUE;" in code
+    assert "MoveDT := MUL_TIME(T#1s, ABS(N_Goal - ActualPosition) / 20.0);" in code
+    assert "ActualPosition := MoveGoal;\nMoving := FALSE;\nN_Enable := FALSE;" in code
+    assert "ELSIF AtHome THEN\n  ActualPosition := 0.0;\n  Homed := TRUE;" in code       # the reference
+    transitions = {(x.get("Source"), x.get("Destination"), x.get("Condition")) for x in logic.iter("ECTransition")}
+    assert ("START", "MoveEnd", "MOVE_T[Moving AND NOT MoveStart]") in transitions
+    assert ("Settled", "MoveGo", "MoveStart") in transitions                              # timed from when the outputs are on
+    eq, _ = st("FillingModule", "Equipment", "EQ_LinearAxis")
+    blocks = {fb.get("Name"): fb.get("Type") for fb in eq.iter("FB")}
+    assert blocks["MoveT"] == "iec61499::events::E_DELAY" and "In_AtHome" in blocks
+    assert not {"In_ActualPosition", "In_Homed", "In_Moving"} & set(blocks)               # no IO point behind them
+    wired = {(c.get("Source"), c.get("Destination")) for c in eq.iter("Connection")}
+    assert {("Logic.MOVE_START", "MoveT.START"), ("MoveT.EO", "Logic.MOVE_T"), ("Logic.ActualPosition", "PubUa.SD_2")} <= wired
+
+
+@pytest.mark.parametrize("mutate, message", [
+    (lambda d: d["skills"]["MoveAxis"]["parameters"]["Position"].update(maximum=80.0), "within the travel"),
+    (lambda d: d["skills"]["MoveAxis"].update(command="Down"), "move_to sets these itself"),
+    (lambda d: d["skills"]["Home"].update(command="MoveTo"), "is commanded by move_to"),
+    (lambda d: d["skills"].update(Lift={"equipment": "Scale", "move_to": "Position",
+                                        "parameters": {"Position": {"default": 0.0}}}), "Scale has no position"),
+    (lambda d: d["equipment"]["LinearAxis"]["position"].update(home="Weight"), "not a digital input"),
+    (lambda d: d["equipment"]["LinearAxis"]["position"].update(increase="Stop"), "have to drive"),
+    (lambda d: d["equipment"]["LinearAxis"]["inputs"].update(Homed={}), "has these itself"),
+])
+def test_invalid_positions_are_rejected(mutate, message):
+    data = raw(SPECS / "filling.yaml")
+    mutate(data)
+    with pytest.raises(ValueError, match=message):
+        ModuleSpec.model_validate(data)
 
 
 def groups(net):
@@ -279,7 +330,7 @@ def test_blocks_inside_equipment_skills_and_module_level_skills_are_grouped():
     app = next(a for a in system.iter("Application") if a.get("Name") == "Filling").find("SubAppNetwork")
     inner = next(s for s in app.findall("SubApp") if s.get("Name") == "Dispensing").find("SubAppNetwork")
     assert groups(inner) == {"SkillControl": ["Control", "UaStart", "Volume", "PubParams", "PubResults"], "Sequences": ["Execute", "Stop"],
-                             "Releasing": ["Release", "Rel_NeedleAxis", "Rel_Scale"]}
+                             "Releasing": ["Release", "Rel_LinearAxis", "Rel_Pump", "Rel_Scale"]}
     assert all(len(g) for g in groups(inner).values())
 
 
@@ -344,8 +395,8 @@ def test_application_is_grouped_and_init_chains_are_hidden():
     assert groups == ["ModuleLevel", "ModuleLevelSkills", "Procedures", "SkillPrimitives", "EquipmentIO"]
     member = {el.get("Name"): el.find("Attribute[@Name='GroupName']").get("Value")
               for el in net if el.tag in ("FB", "SubApp")}
-    assert member["Dispensing"] == "ModuleLevelSkills" and member["MoveNeedleUp"] == "SkillPrimitives"
-    assert member["NeedleAxis"] == "EquipmentIO" and member["Resetting"] == "Procedures"
+    assert member["Dispensing"] == "ModuleLevelSkills" and member["MoveAxis"] == "SkillPrimitives"
+    assert member["LinearAxis"] == "EquipmentIO" and member["Resetting"] == "Procedures"
     for conn in net.find("EventConnections"):
         hidden = conn.find("Attribute[@Name='Visible']") is not None
         init = conn.get("Destination").endswith(".INIT") or conn.get("Source").startswith("Boot.")
@@ -360,4 +411,4 @@ def test_stop_sequence_nodes_do_not_collide_with_the_stop_method():
     spec = load(SPECS / "filling.yaml")
     app = flatten(application(ET.Element("System"), spec, "pc").find("SubAppNetwork"))
     paths = {k: v for k, v in app.parameters.items() if k.startswith("Dispensing.Stop.") and k.endswith(".UaPath")}
-    assert paths == {"Dispensing.Stop.MoveNeedleUp.UaPath": '"/Skills/Dispensing/Stopping/MoveNeedleUp"'}
+    assert paths == {"Dispensing.Stop.Home.UaPath": '"/Skills/Dispensing/Stopping/Home"'}

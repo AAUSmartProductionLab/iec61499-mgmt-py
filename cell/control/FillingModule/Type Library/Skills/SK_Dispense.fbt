@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SK_Dispense" Comment="Skill primitive Dispense: Dispense a volume at the station's flow rate (open loop, by time, until there is a pump) (parameters: Volume [mL] 0.5..10.0, default 1.0; FlowRate [mL/s] 0.1..5.0, default 1.0). OPC UA Start(Session, parameters...)/Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID]; START/HALT/ABORT/RESET from a parent -&gt; SUCCESS or FAILURE(ErrorID)">
+<FBType Name="SK_Dispense" Comment="Skill primitive Dispense: Dispense a volume at the station's flow rate (open loop, by time, until a pump is wired) (parameters: Volume [mL] 0.5..10.0, default 1.0; FlowRate [mL/s] 0.1..5.0, default 1.0). OPC UA Start(Session, parameters...)/Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID]; START/HALT/ABORT/RESET from a parent -&gt; SUCCESS or FAILURE(ErrorID)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filling" />
@@ -49,11 +49,13 @@
   </InterfaceList>
   <FBNetwork>
     <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="25800" height="5500" locked="false" />
-    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="1000" y="7700" width="16800" height="6340" locked="false" />
+    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="1000" y="7700" width="23800" height="6340" locked="false" />
+    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="15240" width="28800" height="4260" locked="false" />
     <FB Name="Control" Type="modlib::SKILL_Core" x="2800" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
     <FB Name="Logic" Type="filling::SL_Dispense" x="2800" y="900">
+      <Parameter Name="Equipment" Value="&quot;Pump&quot;" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
     <FB Name="UaStart" Type="iec61499::net::SERVER_2_3" x="7400" y="900">
@@ -71,6 +73,27 @@
     </FB>
     <FB Name="PubParams" Type="iec61499::net::PUBLISH_2" x="21200" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+    </FB>
+    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_1" x="2800" y="900">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
+    </FB>
+    <FB Name="EqView" Type="filling::EV_Pump" x="8000" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
+    </FB>
+    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="16800" y="900">
+      <Parameter Name="DT" Value="T#500ms" />
+      <Attribute Name="GroupName" Type="STRING" Value="Execution" />
+    </FB>
+    <FB Name="Driver" Type="filling::EC_Pump" x="13200" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
+    </FB>
+    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="18400" y="900">
+      <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
+    </FB>
+    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_2" x="23600" y="900">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
     <FB Name="Timer" Type="iec61499::events::E_DELAY" x="9800" y="900">
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
@@ -90,7 +113,9 @@
       <Connection Source="UaStart.INITO" Destination="Par_Volume.INIT" />
       <Connection Source="Par_Volume.INITO" Destination="Par_FlowRate.INIT" />
       <Connection Source="Par_FlowRate.INITO" Destination="PubParams.INIT" />
-      <Connection Source="PubParams.INITO" Destination="INITO" />
+      <Connection Source="PubParams.INITO" Destination="EqState.INIT" />
+      <Connection Source="EqState.INITO" Destination="EqCmd.INIT" />
+      <Connection Source="EqCmd.INITO" Destination="INITO" />
       <Connection Source="START" Destination="Control.START" />
       <Connection Source="HALT" Destination="Control.HALT" />
       <Connection Source="ABORT" Destination="Control.ABORT" />
@@ -104,6 +129,17 @@
       <Connection Source="Logic.DONE" Destination="Control.EXEC_DONE" />
       <Connection Source="Logic.FAILED" Destination="Control.EXEC_FAILED" />
       <Connection Source="Logic.HALTED" Destination="Control.EXEC_FAILED" />
+      <Connection Source="EqState.IND" Destination="EqView.REQ" />
+      <Connection Source="EqView.CNF" Destination="Logic.SAMPLE" />
+      <Connection Source="Logic.CMD" Destination="Driver.PLAY" />
+      <Connection Source="Driver.OUT" Destination="EqCmd.REQ" />
+      <Connection Source="Driver.PHASE_START" Destination="PhaseT.START" />
+      <Connection Source="Driver.PHASE_STOP" Destination="PhaseT.STOP" />
+      <Connection Source="PhaseT.EO" Destination="Driver.PHASE_T" />
+      <Connection Source="Driver.PLAYED" Destination="Logic.PLAYED" />
+      <Connection Source="Logic.WAIT_START" Destination="WaitT.START" />
+      <Connection Source="Logic.WAIT_STOP" Destination="WaitT.STOP" />
+      <Connection Source="WaitT.EO" Destination="Logic.WAIT_OVER" />
       <Connection Source="Logic.TIMER_START" Destination="Timer.START" />
       <Connection Source="Logic.TIMER_STOP" Destination="Timer.STOP" />
       <Connection Source="Timer.EO" Destination="Logic.TIMER" />
@@ -129,6 +165,9 @@
       <Connection Source="Methods" Destination="UaStart.QI" />
       <Connection Source="Control.State" Destination="State" />
       <Connection Source="Control.ErrorID" Destination="ErrorID" />
+      <Connection Source="Module" Destination="Logic.Module" />
+      <Connection Source="Token" Destination="Logic.Token" />
+      <Connection Source="LastUse" Destination="Logic.LastUse" />
       <Connection Source="UaRoot" Destination="Logic.UaRoot" />
       <Connection Source="UaPath" Destination="Logic.UaPath" />
       <Connection Source="UaEnable" Destination="PubParams.QI" />
@@ -138,6 +177,17 @@
       <Connection Source="FlowRate" Destination="Par_FlowRate.Default" />
       <Connection Source="Par_FlowRate.P" Destination="Logic.FlowRate" />
       <Connection Source="Logic.ErrorID" Destination="Control.ExecError" />
+      <Connection Source="Logic.EqFree" Destination="Control.EqFree" />
+      <Connection Source="Logic.IdEqState" Destination="EqState.ID" />
+      <Connection Source="EqState.RD_1" Destination="EqView.I_Holder" />
+      <Connection Source="EqView.Holder" Destination="Logic.Holder" />
+      <Connection Source="Logic.IdEqCmd" Destination="EqCmd.ID" />
+      <Connection Source="Logic.C_Holder" Destination="Driver.Holder" />
+      <Connection Source="Logic.C_Command" Destination="Driver.Command" />
+      <Connection Source="Logic.C_Release" Destination="Driver.Release" />
+      <Connection Source="Driver.O_Holder" Destination="EqCmd.SD_1" />
+      <Connection Source="Driver.O_Release" Destination="EqCmd.SD_2" />
+      <Connection Source="Driver.PhaseDT" Destination="PhaseT.DT" />
       <Connection Source="Logic.TimerDT" Destination="Timer.DT" />
     </DataConnections>
   </FBNetwork>

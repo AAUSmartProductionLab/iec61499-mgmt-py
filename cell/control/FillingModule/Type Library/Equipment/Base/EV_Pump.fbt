@@ -1,31 +1,23 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EV_NeedleAxis" Comment="Typed view of NeedleAxis's state channel (inputs and holder)">
+<FBType Name="EV_Pump" Comment="Typed view of Pump's state channel (inputs and holder)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filling" />
   <InterfaceList>
     <EventInputs>
       <Event Name="REQ" Type="Event">
-        <With Var="I_AtTop" />
-        <With Var="I_AtBottom" />
         <With Var="I_Holder" />
       </Event>
     </EventInputs>
     <EventOutputs>
       <Event Name="CNF" Type="Event">
-        <With Var="AtTop" />
-        <With Var="AtBottom" />
         <With Var="Holder" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="I_AtTop" Type="BOOL" />
-      <VarDeclaration Name="I_AtBottom" Type="BOOL" />
       <VarDeclaration Name="I_Holder" Type="WSTRING" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="AtTop" Type="BOOL" />
-      <VarDeclaration Name="AtBottom" Type="BOOL" />
       <VarDeclaration Name="Holder" Type="WSTRING" />
     </OutputVars>
   </InterfaceList>
@@ -34,9 +26,7 @@
       <ECAction Algorithm="REQ" Output="CNF" />
     </ECState>
     <Algorithm Name="REQ">
-      <ST>AtTop := I_AtTop;
-AtBottom := I_AtBottom;
-Holder := I_Holder;</ST>
+      <ST>Holder := I_Holder;</ST>
     </Algorithm>
   </SimpleFB>
 </FBType>

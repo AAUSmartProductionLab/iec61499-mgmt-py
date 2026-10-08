@@ -1,8 +1,7 @@
-# Filling module ("Dispensing"), ported from arduino_cpp_examples/Physical-Stations
-# (FillingModule.cpp, ESP32). The ESP32's PackML, occupation and MQTT code is not ported: the
-# generated module level (occupation, module state manager, skill state machine, OPC UA)
-# replaces it. What is ported: the pins and motor behaviour (equipment IO), each motion with its
-# stop condition (skill primitives) and the MQTT actions as module level skills.
+# Filling module ("Dispensing"). It began as a port of the ESP32 station
+# (arduino_cpp_examples/Physical-Stations, FillingModule.cpp); since 8 Oct 2026 it is built from the
+# components every module of the line is built from: a linear axis (a stepper motor with a limit
+# switch, moved to a position), the filling pump, and a scale that is simulated.
 # Regenerate: python -m modgen
 module: Filling
 project: FillingModule
@@ -16,63 +15,57 @@ targets:
        pwm_root: /hostsys/class/pwm}   # the filling Pi
 
 equipment:
-  NeedleAxis:
-    description: Needle lift, DC motor through an L298N (IN3 up, IN4 down, ENB speed), end switches top and bottom
+  LinearAxis:
+    kind: LinearAxis
+    description: Needle lift, a stepper motor through a step and direction driver, with a limit switch at the top (home)
     inputs:
-      # The ESP32 reads the switches with INPUT_PULLUP and HIGH when pressed; same wiring on the Pi.
-      AtTop:    {modbus: d0, gpio: {line: 23, bias: pull_up}}      # pin 16 (ESP32 pin 39)
-      AtBottom: {modbus: d1, gpio: {line: 24, bias: pull_up}}      # pin 18 (ESP32 pin 36)
+      # The switch closes to GND when pressed (pull-up), as the ESP32 station's did.
+      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up}}        # pin 16
     outputs:
-      Up:    {modbus: c0, gpio: 17}                                # pin 11, L298N IN3 (ESP32 pin 18)
-      Down:  {modbus: c1, gpio: 27}                                # pin 13, L298N IN4 (ESP32 pin 5)
-      # L298N ENB (ESP32 pin 19, analogWrite 0..255): PWM0 on GPIO18 (pin 12), 1 kHz.
-      Speed: {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 1000000}, gain: 257.0,
-              minimum: 0, maximum: 255, unit: duty}
+      Enable: {modbus: c0, gpio: 17}                               # pin 11, the driver's enable
+      Down:   {modbus: c1, gpio: 27}                               # pin 13, the driver's DIR: on is down, away from the switch
+      # The driver's STEP: PWM0 on GPIO18 (pin 12), one step per period (1 kHz); 50 % duty while it moves.
+      Step:   {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 1000000}, gain: 655.35,
+               minimum: 0, maximum: 100, unit: "%"}
     commands:
       Stop: {}
-      # moveToTop/moveToBottom: start with a boost (MOTOR_SPEED + MOTOR_SPEED_BOOST) for 200 ms.
-      Up:   [{Up: true, Speed: 190, for: 200ms}, {Up: true, Speed: 140}]
-      Down: [{Down: true, Speed: 190, for: 200ms}, {Down: true, Speed: 140}]
-      # Stopping after a move: a 100 ms reverse pulse, then off.
-      BrakeUp:   [{Down: true, Speed: 190, for: 100ms}, {}]
-      BrakeDown: [{Up: true, Speed: 140, for: 100ms}, {}]
-      # attachNeedle: down without boost.
-      Attach: {Down: true, Speed: 140}
-    sim: {axis: {forward: Down, backward: Up, speed: Speed, nominal: 140, travel_s: 2.0, dead_s: 0.15,
-                 start: 0.0, switches: {AtTop: 0.0, AtBottom: 1.0}}}
+      Up:   {Enable: true, Step: 50}
+      Down: {Enable: true, Down: true, Step: 50}
+    # No encoder: the controller counts the time it steps, as a 3D printer counts its steps. The speed
+    # (mm per second at the step rate above) and the travel are placeholders until the axis is measured.
+    position: {unit: mm, speed: 20.0, increase: Down, decrease: Up, home: AtHome, minimum: 0.0, maximum: 60.0}
+    sim: {stepper: {step: Step, direction: Down, enable: Enable, speed: 20.0, travel: 60.0, start: 15.0,
+                    switches: {AtHome: 0.0}}}
+  Pump:
+    kind: FillingPump
+    description: Filling pump; none is wired yet, so it has no outputs and dispensing is a time at the station's flow rate
+    commands: {Idle: {}, Run: {}}
   Scale:
-    description: Scale; the hardware has none yet (the ESP32 publishes a random weight), so it is simulated
+    kind: Scale
+    description: Scale; the hardware has none, so the weight is simulated
     inputs:
       Weight: {type: LREAL, modbus: i0, scale: 0.001, sim: 2.0, unit: g}
     commands: {Idle: {}, Tare: {}, Measure: {}}
     sim: {values: {Weight: 2.0}}
 
 skills:
-  MoveNeedleUp:
-    description: Needle up to the top end switch
-    equipment: NeedleAxis
+  Home:
+    description: Needle up to the limit switch; from there its position is known
+    equipment: LinearAxis
     command: Up
-    stop: BrakeUp
-    ensures: AtTop
-    invariant: NOT (AtTop AND AtBottom)
+    ensures: AtHome
     timeout: 8s
-  MoveNeedleDown:
-    description: Needle down to the bottom end switch
-    equipment: NeedleAxis
-    command: Down
-    stop: BrakeDown
-    ensures: AtBottom
-    invariant: NOT (AtTop AND AtBottom)
-    timeout: 8s
-  AttachNeedle:
-    description: Needle down to the attachment position (bottom switch), without the start boost
-    equipment: NeedleAxis
-    command: Attach
-    stop: BrakeDown
-    ensures: AtBottom
+  MoveAxis:
+    description: Needle to Position, measured down from the limit switch; the direction follows from where it is
+    equipment: LinearAxis
+    move_to: Position
+    parameters:
+      Position: {unit: mm, minimum: 0.0, maximum: 60.0, default: 0.0, description: Where to move to}
     timeout: 8s
   Dispense:
-    description: Dispense a volume at the station's flow rate (open loop, by time, until there is a pump)
+    description: Dispense a volume at the station's flow rate (open loop, by time, until a pump is wired)
+    equipment: Pump
+    command: Run
     parameters:
       Volume: {unit: mL, minimum: 0.5, maximum: 10.0, default: 1.0, description: Volume to dispense}
       FlowRate: {unit: mL/s, minimum: 0.1, maximum: 5.0, default: 1.0, description: Flow rate of the station (calibration)}
@@ -94,14 +87,16 @@ composites:
     description: Needle down, dispense the volume, needle up, weigh (runFillingCycle)
     parameters:
       Volume: {unit: mL, minimum: 0.5, maximum: 10.0, default: 1.0, description: Fill volume}
-    # The flow rate is the station's: a constant of this step, changed by reconfiguration.
-    execute: [MoveNeedleDown, {Dispense: {Volume: Volume, FlowRate: 1.0}}, MoveNeedleUp, Weigh]
-    stop: [MoveNeedleUp]
+    # The filling position and the flow rate are the station's: constants of the steps, changed by
+    # reconfiguration.
+    execute: [{MoveAxis: {Position: 40.0}, as: NeedleDown}, {Dispense: {Volume: Volume, FlowRate: 1.0}},
+              {MoveAxis: {Position: 0.0}, as: NeedleUp}, Weigh]
+    stop: [Home]                     # after an interruption the switch is what is certain
     results: {Weight: Weigh.Weight}
 
 procedures:
-  Resetting: [MoveNeedleUp]        # initHardware: move to the top
-  Stopping: [MoveNeedleUp]
+  Resetting: [Home, Tare]          # find the reference, tare the scale
+  Stopping: [Home]
 
 # What the module offers to a product's processes: its AAS's Capability Description (IDTA 02020,
 # role Offered), each capability realized by an offered skill (CapabilityRealizedBy). Meanings

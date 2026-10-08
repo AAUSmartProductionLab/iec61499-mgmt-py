@@ -87,57 +87,123 @@ def filling(request, tmp_path):
         yield sim, ua
 
 
-def test_filling_resetting_and_stopping_bring_the_needle_to_the_top(filling):
+AXIS = "Equipment/LinearAxis"
+
+
+def at(sim, ua, position, tolerance=1.5):
+    """The axis says it is at ``position``, and the simulated one is there too (it is not measured:
+    the difference is what starting and stopping late costs at 20 mm/s)."""
+    return (ua.value(f"{AXIS}/ActualPosition") == pytest.approx(position, abs=0.001)
+            and sim.position("LinearAxis") == pytest.approx(position, abs=tolerance))
+
+
+def test_filling_resetting_finds_home_and_stopping_returns_there(filling):
     sim, ua = filling
     a = str(uuid.uuid4())
-    sim.axes["NeedleAxis"].position = 0.6                                    # left somewhere in between
-    ua.expect("Equipment/NeedleAxis/AtTop", False)
+    assert sim.position("LinearAxis") == 15.0                                # left somewhere in between
+    ua.expect(f"{AXIS}/AtHome", False)
+    assert ua.value(f"{AXIS}/Homed") is False                                # the controller does not know where
     states = ua.record("Module/State")
     assert ua.call("Occupation/Occupy", a) == [True, 0]
     assert ua.call("Module/Reset", a) == [True, 0]
-    ua.expect("Module/State", M["Idle"], timeout=8)
-    assert ua.value("Equipment/NeedleAxis/AtTop") is True
-    assert ua.value("Procedures/Resetting/MoveNeedleUp/State") in DONE
+    ua.expect("Module/State", M["Idle"], timeout=10)
+    assert ua.value(f"{AXIS}/AtHome") is True and ua.value(f"{AXIS}/Homed") is True
+    assert ua.value(f"{AXIS}/ActualPosition") == 0.0 and sim.position("LinearAxis") == 0.0
+    assert ua.value("Procedures/Resetting/Home/State") in DONE
+    assert ua.value("Procedures/Resetting/Tare/State") in DONE               # the scale is tared with it
     assert ua.call("Module/Start", a) == [True, 0]
-    assert ua.call("Skills/MoveNeedleDown/Start", a) == [True, 0]
-    ua.expect("Skills/MoveNeedleDown/State", S["Succeeded"], timeout=6)
-    assert ua.call("Module/Stop", a) == [True, 0]                            # the Stopping procedure lifts it
+    assert ua.call("Skills/MoveAxis/Start", a, 30.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    assert at(sim, ua, 30.0)
+    assert ua.call("Module/Stop", a) == [True, 0]                            # the Stopping procedure homes it
     ua.expect("Module/State", M["Stopped"], timeout=8)
-    assert ua.value("Equipment/NeedleAxis/AtTop") is True
+    assert ua.value(f"{AXIS}/AtHome") is True and sim.position("LinearAxis") == 0.0
     assert in_order(states, M["Resetting"], M["Idle"], M["Execute"], M["Stopping"], M["Stopped"]), states
-    assert settled(sim) == [] and sim.shoot_through == 0
+    assert settled(sim) == []
 
 
-def test_filling_needle_skills_drive_boost_brake_and_end_switches(filling):
+def test_filling_the_axis_moves_to_a_position_from_either_side(filling):
+    """A stepper with a limit switch: the controller knows the position from the time it has stepped."""
     sim, ua = filling
     a = str(uuid.uuid4())
     ready(sim, ua, a)
-    # Already at the top: succeeds without driving.
-    assert ua.call("Skills/MoveNeedleUp/Start", a) == [True, 0]
-    ua.expect("Skills/MoveNeedleUp/State", S["Succeeded"])
+    # Already there: succeeds without driving.
+    assert ua.call("Skills/MoveAxis/Start", a, 0.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"])
     assert outputs(sim) == []
-    # Down: boost 190, then 140 until the bottom switch, then a short reverse (brake) pulse, then off.
-    states = ua.record("Skills/MoveNeedleDown/State")
-    assert ua.call("Skills/MoveNeedleDown/Start", a) == [True, 0]
-    ua.expect("Skills/MoveNeedleDown/State", S["Succeeded"], timeout=6)
-    assert in_order(states, S["Running"], S["Succeeded"]), states
-    assert ua.value("Equipment/NeedleAxis/AtBottom") is True and ua.value("Equipment/NeedleAxis/AtTop") is False
-    assert sim.position("NeedleAxis") == 1.0
-    assert [v for n, v in outputs(sim, "NeedleAxis.Speed")] == [190.0, 140.0, None]
-    assert outputs(sim, "NeedleAxis.Down", "NeedleAxis.Up") == [
-        ("NeedleAxis.Down", True), ("NeedleAxis.Down", False), ("NeedleAxis.Up", True), ("NeedleAxis.Up", False)]
-    assert 0.05 <= on_time(sim, "NeedleAxis.Up") <= 0.3                      # the 100 ms brake pulse
+    assert ua.call("Skills/MoveAxis/Start", a, 80.0) == [False, E["OutOfRange"]]       # beyond its travel
+    # Down to 40 mm: enabled, direction down, stepping; then everything off.
+    states, moving = ua.record("Skills/MoveAxis/State"), ua.record(f"{AXIS}/Moving")
+    started = time.monotonic()
+    assert ua.call("Skills/MoveAxis/Start", a, 40.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    assert 1.7 <= time.monotonic() - started <= 2.8                          # 40 mm at 20 mm/s
+    assert in_order(states, S["Running"], S["Succeeded"]) and in_order(moving, True, False)
+    assert at(sim, ua, 40.0)
+    assert ua.value("Skills/MoveAxis/Parameters/Position") == 40.0
+    assert outputs(sim, "LinearAxis.Down") == [("LinearAxis.Down", True), ("LinearAxis.Down", False)]
+    assert [v for n, v in outputs(sim, "LinearAxis.Step")] == [50.0, None]
     assert settled(sim) == []
-    # Up again, then down without boost (AttachNeedle).
-    assert ua.call("Skills/MoveNeedleUp/Start", a) == [True, 0]
-    ua.expect("Skills/MoveNeedleUp/State", S["Succeeded"], timeout=6)
-    assert ua.value("Equipment/NeedleAxis/AtTop") is True
+    # Back up to 10 mm: the same skill, the other direction.
     sim.trace.clear()
-    assert ua.call("Skills/AttachNeedle/Start", a) == [True, 0]
-    ua.expect("Skills/AttachNeedle/State", S["Succeeded"], timeout=6)
-    assert 190.0 not in [v for n, v in outputs(sim, "NeedleAxis.Speed")]
-    assert ua.value("Equipment/NeedleAxis/AtBottom") is True
-    assert settled(sim) == [] and sim.shoot_through == 0
+    assert ua.call("Skills/MoveAxis/Start", a, 10.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    assert at(sim, ua, 10.0)
+    assert outputs(sim, "LinearAxis.Down") == [] and [v for n, v in outputs(sim, "LinearAxis.Step")] == [50.0, None]
+    # While it moves, the position on the way is published.
+    seen = ua.record(f"{AXIS}/ActualPosition")
+    assert ua.call("Skills/MoveAxis/Start", a, 50.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    between = [v for v in seen if 10.0 < v < 50.0]
+    assert len(between) >= 3 and between == sorted(between), seen
+    assert settled(sim) == []
+
+
+def test_filling_a_move_cut_short_leaves_the_axis_where_the_time_puts_it(filling):
+    sim, ua = filling
+    a = str(uuid.uuid4())
+    ready(sim, ua, a)
+    assert ua.call("Skills/MoveAxis/Start", a, 50.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Running"], timeout=1)
+    time.sleep(1.0)
+    assert ua.call("Skills/MoveAxis/Stop", a) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Failed"], timeout=3)
+    assert ua.value("Skills/MoveAxis/ErrorID") == E["Interrupted"]
+    assert settled(sim) == []
+    stopped = sim.position("LinearAxis")
+    assert 12.0 < stopped < 35.0
+    ua.expect(f"{AXIS}/Moving", False)
+    assert ua.value(f"{AXIS}/ActualPosition") == pytest.approx(stopped, abs=2.0)        # by time, not measured
+    assert ua.value(f"{AXIS}/Homed") is True
+    # From there on to a position, as from any other.
+    assert ua.call("Skills/MoveAxis/Start", a, 5.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    assert at(sim, ua, 5.0, tolerance=3.0)
+
+
+def test_filling_an_axis_that_lost_its_reference_has_to_home_first(filling):
+    sim, ua = filling
+    a = str(uuid.uuid4())
+    ready(sim, ua, a)
+    assert ua.call("Skills/MoveAxis/Start", a, 40.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    # Homing cut short: it was driven without counting, so where it is is no longer known.
+    assert ua.call("Skills/Home/Start", a) == [True, 0]
+    ua.expect("Skills/Home/State", S["Running"], timeout=1)
+    time.sleep(0.5)
+    assert ua.call("Skills/Home/Stop", a) == [True, 0]
+    ua.expect("Skills/Home/State", S["Failed"], timeout=3)
+    ua.expect(f"{AXIS}/Homed", False)
+    assert ua.call("Skills/MoveAxis/Start", a, 10.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Failed"], timeout=3)
+    assert ua.value("Skills/MoveAxis/ErrorID") == E["PreconditionViolated"]
+    assert settled(sim) == [] and sim.position("LinearAxis") > 20.0          # it did not move
+    assert ua.call("Skills/Home/Start", a) == [True, 0]
+    ua.expect("Skills/Home/State", S["Succeeded"], timeout=6)
+    assert ua.value(f"{AXIS}/Homed") is True and ua.value(f"{AXIS}/ActualPosition") == 0.0
+    assert ua.call("Skills/MoveAxis/Start", a, 10.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    assert at(sim, ua, 10.0)
 
 
 def test_a_skill_shows_succeeded_for_a_moment_then_is_idle_again(filling):
@@ -162,12 +228,12 @@ def test_a_skill_shows_succeeded_for_a_moment_then_is_idle_again(filling):
     ua.expect("Skills/Tare/State", S["Succeeded"], timeout=2)
     ua.expect("Skills/Tare/State", S["Idle"], timeout=3)
     # A failure stays until the next start.
-    assert ua.call("Skills/MoveNeedleDown/Start", a) == [True, 0]
-    ua.expect("Skills/MoveNeedleDown/State", S["Running"], timeout=1)
-    assert ua.call("Skills/MoveNeedleDown/Stop", a) == [True, 0]
-    ua.expect("Skills/MoveNeedleDown/State", S["Failed"], timeout=3)
+    assert ua.call("Skills/MoveAxis/Start", a, 50.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Running"], timeout=1)
+    assert ua.call("Skills/MoveAxis/Stop", a) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Failed"], timeout=3)
     time.sleep(2.0)
-    assert ua.value("Skills/MoveNeedleDown/State") == S["Failed"]
+    assert ua.value("Skills/MoveAxis/State") == S["Failed"]
 
 
 def test_filling_scale_skills(filling):
@@ -188,8 +254,23 @@ def test_filling_scale_skills(filling):
     assert outputs(sim) == []                                                # the scale has no outputs
 
 
+def test_filling_the_pump_dispenses_on_its_own_and_for_the_volume(filling):
+    """Dispense is a skill like any other. No pump is wired yet: the volume is a time at the flow rate."""
+    sim, ua = filling
+    a = str(uuid.uuid4())
+    ready(sim, ua, a)
+    assert ua.call("Skills/Dispense/Start", a, 20.0, 1.0) == [False, E["OutOfRange"]]
+    started = time.monotonic()
+    assert ua.call("Skills/Dispense/Start", a, 3.0, 2.0) == [True, 0]        # 3 mL at 2 mL/s
+    ua.expect("Skills/Dispense/State", S["Running"], timeout=1)
+    assert ua.call("Skills/Dispensing/Start", a, 1.0) == [True, 0]           # its needle goes down meanwhile
+    ua.expect("Skills/Dispense/State", S["Succeeded"], timeout=4)
+    assert 1.2 <= time.monotonic() - started <= 2.2
+    assert (ua.value("Skills/Dispense/Parameters/Volume"), ua.value("Skills/Dispense/Parameters/FlowRate")) == (3.0, 2.0)
+    assert outputs(sim, "LinearAxis.Step") != []                             # only the needle moved meanwhile
+
+
 def test_filling_the_volume_decides_how_long_it_dispenses(filling):
-    """Without a pump the volume is a time at the flow rate of the station (1 mL/s)."""
     sim, ua = filling
     a = str(uuid.uuid4())
     ready(sim, ua, a)
@@ -202,36 +283,38 @@ def test_filling_the_volume_decides_how_long_it_dispenses(filling):
         started = time.monotonic()
         assert ua.value("Skills/Dispensing/Parameters/Volume") == volume
         assert ua.value("Skills/Dispensing/Execute/Dispense/Parameters/Volume") == volume
-        ua.expect("Skills/Dispensing/Execute/MoveNeedleUp/State", S["Running"], timeout=6)
+        ua.expect("Skills/Dispensing/Execute/NeedleUp/State", S["Running"], timeout=6)
         took[volume] = time.monotonic() - started
         ua.expect("Skills/Dispensing/State", S["Succeeded"], timeout=8)
     assert 0.7 <= took[1.0] <= 1.5 and 2.2 <= took[2.5] <= 3.0, took
-    assert settled(sim) == [] and sim.shoot_through == 0
+    assert settled(sim) == []
 
 
 def test_filling_dispensing_runs_its_steps_in_order_and_holds_the_needle(filling):
     sim, ua = filling
     a = str(uuid.uuid4())
     ready(sim, ua, a)
-    steps = {s: ua.record(f"Skills/Dispensing/Execute/{s}/State") for s in ["MoveNeedleDown", "Dispense", "MoveNeedleUp", "Weigh"]}
+    steps = {s: ua.record(f"Skills/Dispensing/Execute/{s}/State") for s in ["NeedleDown", "Dispense", "NeedleUp", "Weigh"]}
     assert ua.call("Skills/Dispensing/Start", a, 1.0) == [True, 0]
     ua.expect("Skills/Dispensing/Execute/Dispense/State", S["Running"], timeout=6)
-    assert ua.value("Equipment/NeedleAxis/AtBottom") is True                # dwelling at the bottom
-    assert ua.value("Skills/Dispensing/Execute/MoveNeedleDown/State") in DONE
-    assert ua.value("Skills/Dispensing/Execute/MoveNeedleUp/State") == S["Idle"]
-    assert ua.call("Skills/MoveNeedleUp/Start", a) == [False, E["Busy"]]    # Dispensing holds the needle
+    assert at(sim, ua, 40.0)                                                # dispensing at the filling position
+    assert ua.value("Skills/Dispensing/Execute/NeedleDown/Parameters/Position") == 40.0
+    assert ua.value("Skills/Dispensing/Execute/NeedleDown/State") in DONE
+    assert ua.value("Skills/Dispensing/Execute/NeedleUp/State") == S["Idle"]
+    assert ua.call("Skills/MoveAxis/Start", a, 0.0) == [False, E["Busy"]]   # Dispensing holds the needle
     assert ua.call("Skills/Dispensing/Start", a, 1.0) == [False, E["Busy"]]
     ua.expect("Skills/Dispensing/State", S["Succeeded"], timeout=8)
     assert all(in_order(h, S["Running"], S["Succeeded"]) for h in steps.values()), steps
     assert ua.value("Skills/Dispensing/Results/Weight") == pytest.approx(2.0)
+    assert at(sim, ua, 0.0)
     assert ua.value("Module/State") == M["Execute"]                         # the module stays in Execute
     # The needle is free again, and the skill runs a second time.
     assert ua.call("Skills/Dispensing/Start", a, 1.0) == [True, 0]
     ua.expect("Skills/Dispensing/State", S["Succeeded"], timeout=10)
-    assert settled(sim) == [] and sim.shoot_through == 0
+    assert settled(sim) == []
 
 
-def test_filling_stop_of_dispensing_lifts_the_needle(filling):
+def test_filling_stop_of_dispensing_homes_the_needle(filling):
     sim, ua = filling
     a = str(uuid.uuid4())
     ready(sim, ua, a)
@@ -243,11 +326,12 @@ def test_filling_stop_of_dispensing_lifts_the_needle(filling):
     assert ua.value("Skills/Dispensing/ErrorID") == E["Interrupted"]
     assert in_order(states, S["Running"], S["Stopping"], S["Failed"]), states
     assert ua.value("Skills/Dispensing/Execute/Dispense/ErrorID") == E["Interrupted"]
-    assert ua.value("Skills/Dispensing/Stopping/MoveNeedleUp/State") in DONE
-    assert ua.value("Equipment/NeedleAxis/AtTop") is True
+    assert ua.value("Skills/Dispensing/Stopping/Home/State") in DONE
+    assert ua.value(f"{AXIS}/AtHome") is True and sim.position("LinearAxis") == 0.0
     assert ua.value("Module/State") == M["Execute"]
-    assert ua.call("Skills/MoveNeedleDown/Start", a) == [True, 0]            # the needle was released
-    ua.expect("Skills/MoveNeedleDown/State", S["Succeeded"], timeout=6)
+    assert ua.call("Skills/MoveAxis/Start", a, 20.0) == [True, 0]           # the needle was released
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    assert at(sim, ua, 20.0)
 
 
 def test_filling_abort_switches_off_and_the_module_recovers(filling):
@@ -261,45 +345,45 @@ def test_filling_abort_switches_off_and_the_module_recovers(filling):
     assert ua.call("Module/Abort", a) == [True, 0]
     ua.expect("Module/State", M["Aborted"])
     ua.expect("Skills/Dispensing/State", S["Aborted"])
-    ua.expect("Skills/Dispensing/Execute/MoveNeedleDown/State", S["Aborted"])
+    ua.expect("Skills/Dispensing/Execute/NeedleDown/State", S["Aborted"])
     assert settled(sim) == []
-    assert 0.0 < sim.position("NeedleAxis") < 1.0                            # stopped where it was
+    stopped = sim.position("LinearAxis")
+    assert 5.0 < stopped < 35.0                                              # stopped where it was
+    ua.expect(f"{AXIS}/Moving", False)
+    assert ua.value(f"{AXIS}/ActualPosition") == pytest.approx(stopped, abs=2.0)
     assert ua.call("Skills/Dispensing/Start", a, 1.0) == [False, E["NotReady"]]
-    # Clear, reset (the needle goes back up) and run again.
+    # Clear, reset (the needle goes home) and run again.
     assert ua.call("Module/Clear", a) == [True, 0]
     ua.expect("Module/State", M["Stopped"])
     ua.expect("Skills/Dispensing/State", S["Idle"])
     assert ua.call("Module/Reset", a) == [True, 0]
-    ua.expect("Module/State", M["Idle"], timeout=8)
-    assert ua.value("Equipment/NeedleAxis/AtTop") is True
+    ua.expect("Module/State", M["Idle"], timeout=10)
+    assert ua.value(f"{AXIS}/AtHome") is True
     assert ua.call("Module/Start", a) == [True, 0]
     ua.expect("Module/State", M["Execute"])
     assert ua.call("Skills/Dispensing/Start", a, 1.0) == [True, 0]
     ua.expect("Skills/Dispensing/State", S["Succeeded"], timeout=10)
-    assert sim.shoot_through == 0
 
 
-@pytest.mark.parametrize("filling", [{"MoveNeedleDown.Timeout": "T#3s", "Dispensing.Execute.MoveNeedleDown.Timeout": "T#3s"}],
-                         indirect=True)
-def test_filling_a_needle_that_never_arrives_fails_the_skill_and_frees_the_needle(filling):
+@pytest.mark.parametrize("filling", [{"Home.Timeout": "T#3s"}], indirect=True)
+def test_filling_an_axis_that_never_reaches_its_switch_fails_homing_and_is_freed(filling):
+    """Only the limit switch is a sensor: a blocked axis shows when it is to find it. A move to a
+    position is not measured, so a blocked axis is not noticed there."""
     sim, ua = filling
     a = str(uuid.uuid4())
     ready(sim, ua, a)
-    sim.axes["NeedleAxis"].travel_s = 1e9                                    # e.g. a blocked axis
-    assert ua.call("Skills/MoveNeedleDown/Start", a) == [True, 0]
-    ua.expect("Skills/MoveNeedleDown/State", S["Failed"], timeout=5)
-    assert ua.value("Skills/MoveNeedleDown/ErrorID") == E["Timeout"]
-    assert settled(sim) == []
-    # Inside the module level skill: it fails with the step's error and gives the needle up.
-    assert ua.call("Skills/Dispensing/Start", a, 1.0) == [True, 0]
-    ua.expect("Skills/Dispensing/State", S["Failed"], timeout=5)
-    assert ua.value("Skills/Dispensing/ErrorID") == E["Timeout"]
-    assert ua.value("Skills/Dispensing/Execute/Dispense/State") == S["Idle"]   # the later steps did not run
-    assert settled(sim) == []
+    assert ua.call("Skills/MoveAxis/Start", a, 30.0) == [True, 0]
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    sim.axes["LinearAxis"].speed = 0.0                                       # blocked
+    assert ua.call("Skills/Home/Start", a) == [True, 0]
+    ua.expect("Skills/Home/State", S["Failed"], timeout=5)
+    assert ua.value("Skills/Home/ErrorID") == E["Timeout"]
+    assert settled(sim) == [] and ua.value(f"{AXIS}/Homed") is False
     assert ua.value("Module/State") == M["Execute"]
-    sim.axes["NeedleAxis"].travel_s = 2.0
-    assert ua.call("Skills/MoveNeedleDown/Start", a) == [True, 0]            # free again
-    ua.expect("Skills/MoveNeedleDown/State", S["Succeeded"], timeout=6)
+    sim.axes["LinearAxis"].speed = 20.0
+    assert ua.call("Skills/Home/Start", a) == [True, 0]                      # free again
+    ua.expect("Skills/Home/State", S["Succeeded"], timeout=6)
+    assert ua.value(f"{AXIS}/Homed") is True
 
 
 # --------------------------------------------------------------------------------------------

@@ -7,7 +7,7 @@
       <Group Name="ModuleLevelSkills" Comment="Module level skills: Control, Sequences (Execute, Stop) of skill primitives and Release; OPC UA /Skills/&lt;name&gt;" x="1000" y="6100" width="7800" height="3100" locked="false" />
       <Group Name="Procedures" Comment="Procedures the module state manager runs while Resetting and Stopping" x="1000" y="10400" width="12800" height="3100" locked="false" />
       <Group Name="SkillPrimitives" Comment="Skill primitives: one equipment command until a sensor or a time; OPC UA /Skills/&lt;name&gt;" x="1000" y="14700" width="24800" height="8500" locked="false" />
-      <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="1000" y="24400" width="15800" height="5900" locked="false" />
+      <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="1000" y="24400" width="22300" height="5900" locked="false" />
       <FB Name="Boot" Type="iec61499::events::E_RESTART" x="2800" y="900">
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
@@ -24,23 +24,27 @@
         <Parameter Name="StopTimeout" Value="T#10000ms" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="NeedleAxis" Type="filling::EQ_NeedleAxis" x="2800" y="900">
+      <FB Name="LinearAxis" Type="filling::EQ_LinearAxis" x="2800" y="900">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="AtTop_Backend" Value="2" />
-        <Parameter Name="AtTop_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:10:d0:]&quot;" />
-        <Parameter Name="AtBottom_Backend" Value="2" />
-        <Parameter Name="AtBottom_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:10:d1:]&quot;" />
-        <Parameter Name="Up_Backend" Value="2" />
-        <Parameter Name="Up_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c0]&quot;" />
+        <Parameter Name="AtHome_Backend" Value="2" />
+        <Parameter Name="AtHome_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:10:d0:]&quot;" />
+        <Parameter Name="Enable_Backend" Value="2" />
+        <Parameter Name="Enable_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c0]&quot;" />
         <Parameter Name="Down_Backend" Value="2" />
         <Parameter Name="Down_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c1]&quot;" />
-        <Parameter Name="Speed_Backend" Value="2" />
-        <Parameter Name="Speed_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:0::h0]&quot;" />
+        <Parameter Name="Step_Backend" Value="2" />
+        <Parameter Name="Step_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:0::h0]&quot;" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
-      <FB Name="Scale" Type="filling::EQ_Scale" x="9300" y="900">
+      <FB Name="Pump" Type="filling::EQ_Pump" x="9300" y="900">
+        <Parameter Name="Module" Value="&quot;Filling&quot;" />
+        <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
+        <Parameter Name="UaEnable" Value="TRUE" />
+        <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
+      </FB>
+      <FB Name="Scale" Type="filling::EQ_Scale" x="15800" y="900">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
@@ -48,37 +52,27 @@
         <Parameter Name="Weight_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:10:i0:]&quot;" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
-      <FB Name="MoveNeedleUp" Type="filling::SK_MoveNeedleUp" x="2800" y="900">
+      <FB Name="Home" Type="filling::SK_Home" x="2800" y="900">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-        <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleUp&quot;" />
+        <Parameter Name="UaPath" Value="&quot;/Skills/Home&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveNeedleUp&quot;" />
+        <Parameter Name="Token" Value="&quot;Home&quot;" />
         <Parameter Name="LastUse" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="MoveNeedleDown" Type="filling::SK_MoveNeedleDown" x="8300" y="900">
+      <FB Name="MoveAxis" Type="filling::SK_MoveAxis" x="8300" y="900">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-        <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleDown&quot;" />
+        <Parameter Name="UaPath" Value="&quot;/Skills/MoveAxis&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveNeedleDown&quot;" />
+        <Parameter Name="Token" Value="&quot;MoveAxis&quot;" />
         <Parameter Name="LastUse" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="AttachNeedle" Type="filling::SK_AttachNeedle" x="13800" y="900">
-        <Parameter Name="Module" Value="&quot;Filling&quot;" />
-        <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-        <Parameter Name="UaPath" Value="&quot;/Skills/AttachNeedle&quot;" />
-        <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;AttachNeedle&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
-        <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
-      </FB>
-      <FB Name="Dispense" Type="filling::SK_Dispense" x="19300" y="900">
+      <FB Name="Dispense" Type="filling::SK_Dispense" x="13800" y="900">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/Dispense&quot;" />
@@ -88,7 +82,7 @@
         <Parameter Name="LastUse" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="Tare" Type="filling::SK_Tare" x="2800" y="4700">
+      <FB Name="Tare" Type="filling::SK_Tare" x="19300" y="900">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/Tare&quot;" />
@@ -98,7 +92,7 @@
         <Parameter Name="LastUse" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="Weigh" Type="filling::SK_Weigh" x="8300" y="4700">
+      <FB Name="Weigh" Type="filling::SK_Weigh" x="2800" y="4700">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/Weigh&quot;" />
@@ -124,28 +118,46 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="MoveNeedleUp" Type="filling::SK_MoveNeedleUp" x="1000" y="1000">
+          <FB Name="Home" Type="filling::SK_Home" x="1000" y="1000">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-            <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/MoveNeedleUp&quot;" />
+            <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
             <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
             <Parameter Name="LastUse" Value="TRUE" />
           </FB>
+          <FB Name="Tare" Type="filling::SK_Tare" x="6000" y="1000">
+            <Parameter Name="Module" Value="&quot;Filling&quot;" />
+            <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
+            <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Tare&quot;" />
+            <Parameter Name="UaEnable" Value="TRUE" />
+            <Parameter Name="Methods" Value="FALSE" />
+            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="LastUse" Value="TRUE" />
+          </FB>
+          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6000" y="4000" />
           <EventConnections>
-            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+            <Connection Source="INIT" Destination="Home.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
+            <Connection Source="Tare.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="START" Destination="MoveNeedleUp.START" />
-            <Connection Source="MoveNeedleUp.SUCCESS" Destination="DONE" />
-            <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED" />
+            <Connection Source="START" Destination="Home.START" />
+            <Connection Source="Tare.SUCCESS" Destination="DONE" />
+            <Connection Source="Home.INITO" Destination="Tare.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.SUCCESS" Destination="Tare.START" />
+            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_A" />
+            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_B" />
+            <Connection Source="Fail1.FAIL" Destination="FAILED" />
           </EventConnections>
           <DataConnections>
-            <Connection Source="MoveNeedleUp.ErrorID" Destination="ErrorID" />
+            <Connection Source="Home.ErrorID" Destination="Fail1.ErrA" />
+            <Connection Source="Tare.ErrorID" Destination="Fail1.ErrB" />
+            <Connection Source="Fail1.Err" Destination="ErrorID" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -166,28 +178,28 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="MoveNeedleUp" Type="filling::SK_MoveNeedleUp" x="1000" y="1000">
+          <FB Name="Home" Type="filling::SK_Home" x="1000" y="1000">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-            <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/MoveNeedleUp&quot;" />
+            <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
             <Parameter Name="Token" Value="&quot;Procedures/Stopping&quot;" />
             <Parameter Name="LastUse" Value="TRUE" />
           </FB>
           <EventConnections>
-            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+            <Connection Source="INIT" Destination="Home.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
+            <Connection Source="Home.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="START" Destination="MoveNeedleUp.START" />
-            <Connection Source="MoveNeedleUp.SUCCESS" Destination="DONE" />
-            <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED" />
+            <Connection Source="START" Destination="Home.START" />
+            <Connection Source="Home.SUCCESS" Destination="DONE" />
+            <Connection Source="Home.FAILURE" Destination="FAILED" />
           </EventConnections>
           <DataConnections>
-            <Connection Source="MoveNeedleUp.ErrorID" Destination="ErrorID" />
+            <Connection Source="Home.ErrorID" Destination="ErrorID" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -204,7 +216,7 @@
         <SubAppNetwork>
           <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="25800" height="5500" locked="false" />
           <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="1000" y="7700" width="14800" height="4100" locked="false" />
-          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="13000" width="16600" height="3500" locked="false" />
+          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="13000" width="21200" height="3500" locked="false" />
           <FB Name="Control" Type="modlib::SKILL_Core" x="2800" y="900">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
@@ -237,12 +249,17 @@
             <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
           </FB>
-          <FB Name="Rel_NeedleAxis" Type="iec61499::net::PUBLISH_1" x="7400" y="900">
+          <FB Name="Rel_LinearAxis" Type="iec61499::net::PUBLISH_1" x="7400" y="900">
             <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Filling/NeedleAxis/release]&quot;" />
+            <Parameter Name="ID" Value="&quot;loc[Filling/LinearAxis/release]&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
           </FB>
-          <FB Name="Rel_Scale" Type="iec61499::net::PUBLISH_1" x="12000" y="900">
+          <FB Name="Rel_Pump" Type="iec61499::net::PUBLISH_1" x="12000" y="900">
+            <Parameter Name="QI" Value="TRUE" />
+            <Parameter Name="ID" Value="&quot;loc[Filling/Pump/release]&quot;" />
+            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
+          </FB>
+          <FB Name="Rel_Scale" Type="iec61499::net::PUBLISH_1" x="16600" y="900">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;loc[Filling/Scale/release]&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
@@ -270,14 +287,15 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="MoveNeedleDown" Type="filling::SK_MoveNeedleDown" x="1000" y="1000">
+              <FB Name="NeedleDown" Type="filling::SK_MoveAxis" x="1000" y="1000">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/MoveNeedleDown&quot;" />
+                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/NeedleDown&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
                 <Parameter Name="LastUse" Value="FALSE" />
+                <Parameter Name="Position" Value="40.0" />
               </FB>
               <FB Name="Dispense" Type="filling::SK_Dispense" x="6000" y="1000">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
@@ -289,14 +307,15 @@
                 <Parameter Name="LastUse" Value="TRUE" />
                 <Parameter Name="FlowRate" Value="1.0" />
               </FB>
-              <FB Name="MoveNeedleUp" Type="filling::SK_MoveNeedleUp" x="11000" y="1000">
+              <FB Name="NeedleUp" Type="filling::SK_MoveAxis" x="11000" y="1000">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/MoveNeedleUp&quot;" />
+                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/NeedleUp&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
                 <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Position" Value="0.0" />
               </FB>
               <FB Name="Weigh" Type="filling::SK_Weigh" x="16000" y="1000">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
@@ -311,51 +330,51 @@
               <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="11000" y="4000" />
               <FB Name="Fail3" Type="modlib::SKILL_FailMerge" x="16000" y="4000" />
               <EventConnections>
-                <Connection Source="INIT" Destination="MoveNeedleDown.INIT">
+                <Connection Source="INIT" Destination="NeedleDown.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="Weigh.INITO" Destination="INITO">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="START" Destination="MoveNeedleDown.START" />
+                <Connection Source="START" Destination="NeedleDown.START" />
                 <Connection Source="Weigh.SUCCESS" Destination="DONE" />
-                <Connection Source="MoveNeedleDown.INITO" Destination="Dispense.INIT">
+                <Connection Source="NeedleDown.INITO" Destination="Dispense.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleDown.SUCCESS" Destination="Dispense.START" />
-                <Connection Source="Dispense.INITO" Destination="MoveNeedleUp.INIT">
+                <Connection Source="NeedleDown.SUCCESS" Destination="Dispense.START" />
+                <Connection Source="Dispense.INITO" Destination="NeedleUp.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Dispense.SUCCESS" Destination="MoveNeedleUp.START" />
-                <Connection Source="MoveNeedleUp.INITO" Destination="Weigh.INIT">
+                <Connection Source="Dispense.SUCCESS" Destination="NeedleUp.START" />
+                <Connection Source="NeedleUp.INITO" Destination="Weigh.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleUp.SUCCESS" Destination="Weigh.START" />
-                <Connection Source="HALT" Destination="MoveNeedleDown.HALT" />
+                <Connection Source="NeedleUp.SUCCESS" Destination="Weigh.START" />
+                <Connection Source="HALT" Destination="NeedleDown.HALT" />
                 <Connection Source="HALT" Destination="Dispense.HALT" />
-                <Connection Source="HALT" Destination="MoveNeedleUp.HALT" />
+                <Connection Source="HALT" Destination="NeedleUp.HALT" />
                 <Connection Source="HALT" Destination="Weigh.HALT" />
-                <Connection Source="ABORT" Destination="MoveNeedleDown.ABORT" />
+                <Connection Source="ABORT" Destination="NeedleDown.ABORT" />
                 <Connection Source="ABORT" Destination="Dispense.ABORT" />
-                <Connection Source="ABORT" Destination="MoveNeedleUp.ABORT" />
+                <Connection Source="ABORT" Destination="NeedleUp.ABORT" />
                 <Connection Source="ABORT" Destination="Weigh.ABORT" />
-                <Connection Source="RESET" Destination="MoveNeedleDown.RESET" />
+                <Connection Source="RESET" Destination="NeedleDown.RESET" />
                 <Connection Source="RESET" Destination="Dispense.RESET" />
-                <Connection Source="RESET" Destination="MoveNeedleUp.RESET" />
+                <Connection Source="RESET" Destination="NeedleUp.RESET" />
                 <Connection Source="RESET" Destination="Weigh.RESET" />
-                <Connection Source="MoveNeedleDown.FAILURE" Destination="Fail1.FAIL_A" />
+                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_A" />
                 <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_B" />
                 <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_A" />
-                <Connection Source="MoveNeedleUp.FAILURE" Destination="Fail2.FAIL_B" />
+                <Connection Source="NeedleUp.FAILURE" Destination="Fail2.FAIL_B" />
                 <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_A" />
                 <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_B" />
                 <Connection Source="Fail3.FAIL" Destination="FAILED" />
               </EventConnections>
               <DataConnections>
-                <Connection Source="MoveNeedleDown.ErrorID" Destination="Fail1.ErrA" />
+                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.ErrA" />
                 <Connection Source="Dispense.ErrorID" Destination="Fail1.ErrB" />
                 <Connection Source="Fail1.Err" Destination="Fail2.ErrA" />
-                <Connection Source="MoveNeedleUp.ErrorID" Destination="Fail2.ErrB" />
+                <Connection Source="NeedleUp.ErrorID" Destination="Fail2.ErrB" />
                 <Connection Source="Fail2.Err" Destination="Fail3.ErrA" />
                 <Connection Source="Weigh.ErrorID" Destination="Fail3.ErrB" />
                 <Connection Source="Fail3.Err" Destination="ErrorID" />
@@ -384,31 +403,31 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="MoveNeedleUp" Type="filling::SK_MoveNeedleUp" x="1000" y="1000">
+              <FB Name="Home" Type="filling::SK_Home" x="1000" y="1000">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Stopping/MoveNeedleUp&quot;" />
+                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Stopping/Home&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
                 <Parameter Name="LastUse" Value="TRUE" />
               </FB>
               <EventConnections>
-                <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+                <Connection Source="INIT" Destination="Home.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
+                <Connection Source="Home.INITO" Destination="INITO">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="START" Destination="MoveNeedleUp.START" />
-                <Connection Source="MoveNeedleUp.SUCCESS" Destination="DONE" />
-                <Connection Source="HALT" Destination="MoveNeedleUp.HALT" />
-                <Connection Source="ABORT" Destination="MoveNeedleUp.ABORT" />
-                <Connection Source="RESET" Destination="MoveNeedleUp.RESET" />
-                <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED" />
+                <Connection Source="START" Destination="Home.START" />
+                <Connection Source="Home.SUCCESS" Destination="DONE" />
+                <Connection Source="HALT" Destination="Home.HALT" />
+                <Connection Source="ABORT" Destination="Home.ABORT" />
+                <Connection Source="RESET" Destination="Home.RESET" />
+                <Connection Source="Home.FAILURE" Destination="FAILED" />
               </EventConnections>
               <DataConnections>
-                <Connection Source="MoveNeedleUp.ErrorID" Destination="ErrorID" />
+                <Connection Source="Home.ErrorID" Destination="ErrorID" />
               </DataConnections>
             </SubAppNetwork>
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
@@ -425,7 +444,8 @@
             <Connection Source="Execute.DONE" Destination="PubResults.REQ" />
             <Connection Source="Control.FAILURE" Destination="Release.REQ" />
             <Connection Source="Control.ABORT_O" Destination="Release.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_NeedleAxis.REQ" />
+            <Connection Source="Release.CNF" Destination="Rel_LinearAxis.REQ" />
+            <Connection Source="Release.CNF" Destination="Rel_Pump.REQ" />
             <Connection Source="Release.CNF" Destination="Rel_Scale.REQ" />
             <Connection Source="Volume.LATCHED" Destination="Execute.START" />
             <Connection Source="Control.HALT_O" Destination="Execute.HALT" />
@@ -453,10 +473,13 @@
             <Connection Source="PubParams.INITO" Destination="PubResults.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="PubResults.INITO" Destination="Rel_NeedleAxis.INIT">
+            <Connection Source="PubResults.INITO" Destination="Rel_LinearAxis.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Rel_NeedleAxis.INITO" Destination="Rel_Scale.INIT">
+            <Connection Source="Rel_LinearAxis.INITO" Destination="Rel_Pump.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Rel_Pump.INITO" Destination="Rel_Scale.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Rel_Scale.INITO" Destination="Execute.INIT">
@@ -479,7 +502,8 @@
             <Connection Source="Volume.P" Destination="PubParams.SD_1" />
             <Connection Source="Volume.InRange" Destination="Control.InRange" />
             <Connection Source="Execute.Weight" Destination="PubResults.SD_1" />
-            <Connection Source="Release.Holder" Destination="Rel_NeedleAxis.SD_1" />
+            <Connection Source="Release.Holder" Destination="Rel_LinearAxis.SD_1" />
+            <Connection Source="Release.Holder" Destination="Rel_Pump.SD_1" />
             <Connection Source="Release.Holder" Destination="Rel_Scale.SD_1" />
             <Connection Source="Volume.P" Destination="Execute.Volume" />
             <Connection Source="Execute.ErrorID" Destination="Control.ExecError" />
@@ -503,22 +527,22 @@
         <Connection Source="Occupation.INITO" Destination="Module.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Module.INITO" Destination="NeedleAxis.INIT">
+        <Connection Source="Module.INITO" Destination="LinearAxis.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="NeedleAxis.INITO" Destination="Scale.INIT">
+        <Connection Source="LinearAxis.INITO" Destination="Pump.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Scale.INITO" Destination="MoveNeedleUp.INIT">
+        <Connection Source="Pump.INITO" Destination="Scale.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="MoveNeedleUp.INITO" Destination="MoveNeedleDown.INIT">
+        <Connection Source="Scale.INITO" Destination="Home.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="MoveNeedleDown.INITO" Destination="AttachNeedle.INIT">
+        <Connection Source="Home.INITO" Destination="MoveAxis.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="AttachNeedle.INITO" Destination="Dispense.INIT">
+        <Connection Source="MoveAxis.INITO" Destination="Dispense.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
         <Connection Source="Dispense.INITO" Destination="Tare.INIT">
@@ -545,7 +569,7 @@
       <Group Name="ModuleLevelSkills" Comment="Module level skills: Control, Sequences (Execute, Stop) of skill primitives and Release; OPC UA /Skills/&lt;name&gt;" x="1000" y="6100" width="7800" height="3100" locked="false" />
       <Group Name="Procedures" Comment="Procedures the module state manager runs while Resetting and Stopping" x="1000" y="10400" width="12800" height="3100" locked="false" />
       <Group Name="SkillPrimitives" Comment="Skill primitives: one equipment command until a sensor or a time; OPC UA /Skills/&lt;name&gt;" x="1000" y="14700" width="24800" height="8500" locked="false" />
-      <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="1000" y="24400" width="15800" height="5900" locked="false" />
+      <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="1000" y="24400" width="22300" height="5900" locked="false" />
       <FB Name="Boot" Type="iec61499::events::E_RESTART" x="2800" y="900">
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
@@ -572,36 +596,27 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="NeedleAxis_AtTop" Type="eclipse4diac::io::gpiochip::GPIOChip" x="1000" y="1000">
+          <FB Name="LinearAxis_AtHome" Type="eclipse4diac::io::gpiochip::GPIOChip" x="1000" y="1000">
             <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;NeedleAxis_AtTop&quot;" />
+            <Parameter Name="VALUE" Value="&quot;LinearAxis_AtHome&quot;" />
             <Parameter Name="ChipNumber" Value="0" />
             <Parameter Name="LineNumber" Value="23" />
             <Parameter Name="ReadWriteMode" Value="0" />
             <Parameter Name="BiasMode" Value="2" />
             <Parameter Name="ActiveLow" Value="FALSE" />
           </FB>
-          <FB Name="NeedleAxis_AtBottom" Type="eclipse4diac::io::gpiochip::GPIOChip" x="4000" y="1000">
+          <FB Name="LinearAxis_Enable" Type="eclipse4diac::io::gpiochip::GPIOChip" x="4000" y="1000">
             <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;NeedleAxis_AtBottom&quot;" />
-            <Parameter Name="ChipNumber" Value="0" />
-            <Parameter Name="LineNumber" Value="24" />
-            <Parameter Name="ReadWriteMode" Value="0" />
-            <Parameter Name="BiasMode" Value="2" />
-            <Parameter Name="ActiveLow" Value="FALSE" />
-          </FB>
-          <FB Name="NeedleAxis_Up" Type="eclipse4diac::io::gpiochip::GPIOChip" x="7000" y="1000">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;NeedleAxis_Up&quot;" />
+            <Parameter Name="VALUE" Value="&quot;LinearAxis_Enable&quot;" />
             <Parameter Name="ChipNumber" Value="0" />
             <Parameter Name="LineNumber" Value="17" />
             <Parameter Name="ReadWriteMode" Value="1" />
             <Parameter Name="BiasMode" Value="0" />
             <Parameter Name="ActiveLow" Value="FALSE" />
           </FB>
-          <FB Name="NeedleAxis_Down" Type="eclipse4diac::io::gpiochip::GPIOChip" x="10000" y="1000">
+          <FB Name="LinearAxis_Down" Type="eclipse4diac::io::gpiochip::GPIOChip" x="7000" y="1000">
             <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;NeedleAxis_Down&quot;" />
+            <Parameter Name="VALUE" Value="&quot;LinearAxis_Down&quot;" />
             <Parameter Name="ChipNumber" Value="0" />
             <Parameter Name="LineNumber" Value="27" />
             <Parameter Name="ReadWriteMode" Value="1" />
@@ -609,19 +624,16 @@
             <Parameter Name="ActiveLow" Value="FALSE" />
           </FB>
           <EventConnections>
-            <Connection Source="INIT" Destination="NeedleAxis_AtTop.INIT">
+            <Connection Source="INIT" Destination="LinearAxis_AtHome.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="NeedleAxis_Down.INITO" Destination="INITO">
+            <Connection Source="LinearAxis_Down.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="NeedleAxis_AtTop.INITO" Destination="NeedleAxis_AtBottom.INIT">
+            <Connection Source="LinearAxis_AtHome.INITO" Destination="LinearAxis_Enable.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="NeedleAxis_AtBottom.INITO" Destination="NeedleAxis_Up.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="NeedleAxis_Up.INITO" Destination="NeedleAxis_Down.INIT">
+            <Connection Source="LinearAxis_Enable.INITO" Destination="LinearAxis_Down.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
@@ -638,39 +650,43 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="NeedleAxis_Speed" Type="eclipse4diac::io::pwmsysfs::PWMChip" x="1000" y="1000">
+          <FB Name="LinearAxis_Step" Type="eclipse4diac::io::pwmsysfs::PWMChip" x="1000" y="1000">
             <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;NeedleAxis_Speed&quot;" />
+            <Parameter Name="VALUE" Value="&quot;LinearAxis_Step&quot;" />
             <Parameter Name="ChipNumber" Value="0" />
             <Parameter Name="Channel" Value="0" />
             <Parameter Name="PeriodNs" Value="1000000" />
             <Parameter Name="SysfsRoot" Value="&quot;/hostsys/class/pwm&quot;" />
           </FB>
           <EventConnections>
-            <Connection Source="INIT" Destination="NeedleAxis_Speed.INIT">
+            <Connection Source="INIT" Destination="LinearAxis_Step.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="NeedleAxis_Speed.INITO" Destination="INITO">
+            <Connection Source="LinearAxis_Step.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </SubApp>
-      <FB Name="NeedleAxis" Type="filling::EQ_NeedleAxis" x="2800" y="900">
+      <FB Name="LinearAxis" Type="filling::EQ_LinearAxis" x="2800" y="900">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="AtTop_Backend" Value="1" />
-        <Parameter Name="AtTop_Io" Value="'NeedleAxis_AtTop'" />
-        <Parameter Name="AtBottom_Backend" Value="1" />
-        <Parameter Name="AtBottom_Io" Value="'NeedleAxis_AtBottom'" />
-        <Parameter Name="Up_Backend" Value="1" />
-        <Parameter Name="Up_Io" Value="'NeedleAxis_Up'" />
+        <Parameter Name="AtHome_Backend" Value="1" />
+        <Parameter Name="AtHome_Io" Value="'LinearAxis_AtHome'" />
+        <Parameter Name="Enable_Backend" Value="1" />
+        <Parameter Name="Enable_Io" Value="'LinearAxis_Enable'" />
         <Parameter Name="Down_Backend" Value="1" />
-        <Parameter Name="Down_Io" Value="'NeedleAxis_Down'" />
-        <Parameter Name="Speed_Backend" Value="1" />
-        <Parameter Name="Speed_Io" Value="'NeedleAxis_Speed'" />
+        <Parameter Name="Down_Io" Value="'LinearAxis_Down'" />
+        <Parameter Name="Step_Backend" Value="1" />
+        <Parameter Name="Step_Io" Value="'LinearAxis_Step'" />
+        <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
+      </FB>
+      <FB Name="Pump" Type="filling::EQ_Pump" x="9300" y="900">
+        <Parameter Name="Module" Value="&quot;Filling&quot;" />
+        <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
+        <Parameter Name="UaEnable" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="Scale" Type="filling::EQ_Scale" x="9300" y="900">
@@ -680,33 +696,23 @@
         <Parameter Name="Weight_Backend" Value="0" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
-      <FB Name="MoveNeedleUp" Type="filling::SK_MoveNeedleUp" x="2800" y="900">
+      <FB Name="Home" Type="filling::SK_Home" x="2800" y="900">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-        <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleUp&quot;" />
+        <Parameter Name="UaPath" Value="&quot;/Skills/Home&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveNeedleUp&quot;" />
+        <Parameter Name="Token" Value="&quot;Home&quot;" />
         <Parameter Name="LastUse" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="MoveNeedleDown" Type="filling::SK_MoveNeedleDown" x="8300" y="900">
+      <FB Name="MoveAxis" Type="filling::SK_MoveAxis" x="8300" y="900">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-        <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleDown&quot;" />
+        <Parameter Name="UaPath" Value="&quot;/Skills/MoveAxis&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveNeedleDown&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
-        <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
-      </FB>
-      <FB Name="AttachNeedle" Type="filling::SK_AttachNeedle" x="13800" y="900">
-        <Parameter Name="Module" Value="&quot;Filling&quot;" />
-        <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-        <Parameter Name="UaPath" Value="&quot;/Skills/AttachNeedle&quot;" />
-        <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;AttachNeedle&quot;" />
+        <Parameter Name="Token" Value="&quot;MoveAxis&quot;" />
         <Parameter Name="LastUse" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
@@ -756,28 +762,46 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="MoveNeedleUp" Type="filling::SK_MoveNeedleUp" x="1000" y="1000">
+          <FB Name="Home" Type="filling::SK_Home" x="1000" y="1000">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-            <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/MoveNeedleUp&quot;" />
+            <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
             <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
             <Parameter Name="LastUse" Value="TRUE" />
           </FB>
+          <FB Name="Tare" Type="filling::SK_Tare" x="6000" y="1000">
+            <Parameter Name="Module" Value="&quot;Filling&quot;" />
+            <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
+            <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Tare&quot;" />
+            <Parameter Name="UaEnable" Value="TRUE" />
+            <Parameter Name="Methods" Value="FALSE" />
+            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="LastUse" Value="TRUE" />
+          </FB>
+          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6000" y="4000" />
           <EventConnections>
-            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+            <Connection Source="INIT" Destination="Home.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
+            <Connection Source="Tare.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="START" Destination="MoveNeedleUp.START" />
-            <Connection Source="MoveNeedleUp.SUCCESS" Destination="DONE" />
-            <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED" />
+            <Connection Source="START" Destination="Home.START" />
+            <Connection Source="Tare.SUCCESS" Destination="DONE" />
+            <Connection Source="Home.INITO" Destination="Tare.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.SUCCESS" Destination="Tare.START" />
+            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_A" />
+            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_B" />
+            <Connection Source="Fail1.FAIL" Destination="FAILED" />
           </EventConnections>
           <DataConnections>
-            <Connection Source="MoveNeedleUp.ErrorID" Destination="ErrorID" />
+            <Connection Source="Home.ErrorID" Destination="Fail1.ErrA" />
+            <Connection Source="Tare.ErrorID" Destination="Fail1.ErrB" />
+            <Connection Source="Fail1.Err" Destination="ErrorID" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -798,28 +822,28 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="MoveNeedleUp" Type="filling::SK_MoveNeedleUp" x="1000" y="1000">
+          <FB Name="Home" Type="filling::SK_Home" x="1000" y="1000">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-            <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/MoveNeedleUp&quot;" />
+            <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
             <Parameter Name="Token" Value="&quot;Procedures/Stopping&quot;" />
             <Parameter Name="LastUse" Value="TRUE" />
           </FB>
           <EventConnections>
-            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+            <Connection Source="INIT" Destination="Home.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
+            <Connection Source="Home.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="START" Destination="MoveNeedleUp.START" />
-            <Connection Source="MoveNeedleUp.SUCCESS" Destination="DONE" />
-            <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED" />
+            <Connection Source="START" Destination="Home.START" />
+            <Connection Source="Home.SUCCESS" Destination="DONE" />
+            <Connection Source="Home.FAILURE" Destination="FAILED" />
           </EventConnections>
           <DataConnections>
-            <Connection Source="MoveNeedleUp.ErrorID" Destination="ErrorID" />
+            <Connection Source="Home.ErrorID" Destination="ErrorID" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -836,7 +860,7 @@
         <SubAppNetwork>
           <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="25800" height="5500" locked="false" />
           <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="1000" y="7700" width="14800" height="4100" locked="false" />
-          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="13000" width="16600" height="3500" locked="false" />
+          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="13000" width="21200" height="3500" locked="false" />
           <FB Name="Control" Type="modlib::SKILL_Core" x="2800" y="900">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
@@ -869,9 +893,14 @@
             <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
           </FB>
-          <FB Name="Rel_NeedleAxis" Type="iec61499::net::PUBLISH_1" x="7400" y="900">
+          <FB Name="Rel_LinearAxis" Type="iec61499::net::PUBLISH_1" x="7400" y="900">
             <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Filling/NeedleAxis/release]&quot;" />
+            <Parameter Name="ID" Value="&quot;loc[Filling/LinearAxis/release]&quot;" />
+            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
+          </FB>
+          <FB Name="Rel_Pump" Type="iec61499::net::PUBLISH_1" x="12000" y="900">
+            <Parameter Name="QI" Value="TRUE" />
+            <Parameter Name="ID" Value="&quot;loc[Filling/Pump/release]&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
           </FB>
           <FB Name="Rel_Scale" Type="iec61499::net::PUBLISH_1" x="12000" y="900">
@@ -902,14 +931,15 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="MoveNeedleDown" Type="filling::SK_MoveNeedleDown" x="1000" y="1000">
+              <FB Name="NeedleDown" Type="filling::SK_MoveAxis" x="1000" y="1000">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/MoveNeedleDown&quot;" />
+                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/NeedleDown&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
                 <Parameter Name="LastUse" Value="FALSE" />
+                <Parameter Name="Position" Value="40.0" />
               </FB>
               <FB Name="Dispense" Type="filling::SK_Dispense" x="6000" y="1000">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
@@ -921,14 +951,15 @@
                 <Parameter Name="LastUse" Value="TRUE" />
                 <Parameter Name="FlowRate" Value="1.0" />
               </FB>
-              <FB Name="MoveNeedleUp" Type="filling::SK_MoveNeedleUp" x="11000" y="1000">
+              <FB Name="NeedleUp" Type="filling::SK_MoveAxis" x="11000" y="1000">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/MoveNeedleUp&quot;" />
+                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/NeedleUp&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
                 <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Position" Value="0.0" />
               </FB>
               <FB Name="Weigh" Type="filling::SK_Weigh" x="16000" y="1000">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
@@ -943,51 +974,51 @@
               <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="11000" y="4000" />
               <FB Name="Fail3" Type="modlib::SKILL_FailMerge" x="16000" y="4000" />
               <EventConnections>
-                <Connection Source="INIT" Destination="MoveNeedleDown.INIT">
+                <Connection Source="INIT" Destination="NeedleDown.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="Weigh.INITO" Destination="INITO">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="START" Destination="MoveNeedleDown.START" />
+                <Connection Source="START" Destination="NeedleDown.START" />
                 <Connection Source="Weigh.SUCCESS" Destination="DONE" />
-                <Connection Source="MoveNeedleDown.INITO" Destination="Dispense.INIT">
+                <Connection Source="NeedleDown.INITO" Destination="Dispense.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleDown.SUCCESS" Destination="Dispense.START" />
-                <Connection Source="Dispense.INITO" Destination="MoveNeedleUp.INIT">
+                <Connection Source="NeedleDown.SUCCESS" Destination="Dispense.START" />
+                <Connection Source="Dispense.INITO" Destination="NeedleUp.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Dispense.SUCCESS" Destination="MoveNeedleUp.START" />
-                <Connection Source="MoveNeedleUp.INITO" Destination="Weigh.INIT">
+                <Connection Source="Dispense.SUCCESS" Destination="NeedleUp.START" />
+                <Connection Source="NeedleUp.INITO" Destination="Weigh.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleUp.SUCCESS" Destination="Weigh.START" />
-                <Connection Source="HALT" Destination="MoveNeedleDown.HALT" />
+                <Connection Source="NeedleUp.SUCCESS" Destination="Weigh.START" />
+                <Connection Source="HALT" Destination="NeedleDown.HALT" />
                 <Connection Source="HALT" Destination="Dispense.HALT" />
-                <Connection Source="HALT" Destination="MoveNeedleUp.HALT" />
+                <Connection Source="HALT" Destination="NeedleUp.HALT" />
                 <Connection Source="HALT" Destination="Weigh.HALT" />
-                <Connection Source="ABORT" Destination="MoveNeedleDown.ABORT" />
+                <Connection Source="ABORT" Destination="NeedleDown.ABORT" />
                 <Connection Source="ABORT" Destination="Dispense.ABORT" />
-                <Connection Source="ABORT" Destination="MoveNeedleUp.ABORT" />
+                <Connection Source="ABORT" Destination="NeedleUp.ABORT" />
                 <Connection Source="ABORT" Destination="Weigh.ABORT" />
-                <Connection Source="RESET" Destination="MoveNeedleDown.RESET" />
+                <Connection Source="RESET" Destination="NeedleDown.RESET" />
                 <Connection Source="RESET" Destination="Dispense.RESET" />
-                <Connection Source="RESET" Destination="MoveNeedleUp.RESET" />
+                <Connection Source="RESET" Destination="NeedleUp.RESET" />
                 <Connection Source="RESET" Destination="Weigh.RESET" />
-                <Connection Source="MoveNeedleDown.FAILURE" Destination="Fail1.FAIL_A" />
+                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_A" />
                 <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_B" />
                 <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_A" />
-                <Connection Source="MoveNeedleUp.FAILURE" Destination="Fail2.FAIL_B" />
+                <Connection Source="NeedleUp.FAILURE" Destination="Fail2.FAIL_B" />
                 <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_A" />
                 <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_B" />
                 <Connection Source="Fail3.FAIL" Destination="FAILED" />
               </EventConnections>
               <DataConnections>
-                <Connection Source="MoveNeedleDown.ErrorID" Destination="Fail1.ErrA" />
+                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.ErrA" />
                 <Connection Source="Dispense.ErrorID" Destination="Fail1.ErrB" />
                 <Connection Source="Fail1.Err" Destination="Fail2.ErrA" />
-                <Connection Source="MoveNeedleUp.ErrorID" Destination="Fail2.ErrB" />
+                <Connection Source="NeedleUp.ErrorID" Destination="Fail2.ErrB" />
                 <Connection Source="Fail2.Err" Destination="Fail3.ErrA" />
                 <Connection Source="Weigh.ErrorID" Destination="Fail3.ErrB" />
                 <Connection Source="Fail3.Err" Destination="ErrorID" />
@@ -1016,31 +1047,31 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="MoveNeedleUp" Type="filling::SK_MoveNeedleUp" x="1000" y="1000">
+              <FB Name="Home" Type="filling::SK_Home" x="1000" y="1000">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
-                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Stopping/MoveNeedleUp&quot;" />
+                <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Stopping/Home&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
                 <Parameter Name="LastUse" Value="TRUE" />
               </FB>
               <EventConnections>
-                <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+                <Connection Source="INIT" Destination="Home.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
+                <Connection Source="Home.INITO" Destination="INITO">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="START" Destination="MoveNeedleUp.START" />
-                <Connection Source="MoveNeedleUp.SUCCESS" Destination="DONE" />
-                <Connection Source="HALT" Destination="MoveNeedleUp.HALT" />
-                <Connection Source="ABORT" Destination="MoveNeedleUp.ABORT" />
-                <Connection Source="RESET" Destination="MoveNeedleUp.RESET" />
-                <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED" />
+                <Connection Source="START" Destination="Home.START" />
+                <Connection Source="Home.SUCCESS" Destination="DONE" />
+                <Connection Source="HALT" Destination="Home.HALT" />
+                <Connection Source="ABORT" Destination="Home.ABORT" />
+                <Connection Source="RESET" Destination="Home.RESET" />
+                <Connection Source="Home.FAILURE" Destination="FAILED" />
               </EventConnections>
               <DataConnections>
-                <Connection Source="MoveNeedleUp.ErrorID" Destination="ErrorID" />
+                <Connection Source="Home.ErrorID" Destination="ErrorID" />
               </DataConnections>
             </SubAppNetwork>
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
@@ -1057,7 +1088,8 @@
             <Connection Source="Execute.DONE" Destination="PubResults.REQ" />
             <Connection Source="Control.FAILURE" Destination="Release.REQ" />
             <Connection Source="Control.ABORT_O" Destination="Release.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_NeedleAxis.REQ" />
+            <Connection Source="Release.CNF" Destination="Rel_LinearAxis.REQ" />
+            <Connection Source="Release.CNF" Destination="Rel_Pump.REQ" />
             <Connection Source="Release.CNF" Destination="Rel_Scale.REQ" />
             <Connection Source="Volume.LATCHED" Destination="Execute.START" />
             <Connection Source="Control.HALT_O" Destination="Execute.HALT" />
@@ -1085,10 +1117,13 @@
             <Connection Source="PubParams.INITO" Destination="PubResults.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="PubResults.INITO" Destination="Rel_NeedleAxis.INIT">
+            <Connection Source="PubResults.INITO" Destination="Rel_LinearAxis.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Rel_NeedleAxis.INITO" Destination="Rel_Scale.INIT">
+            <Connection Source="Rel_LinearAxis.INITO" Destination="Rel_Pump.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Rel_Pump.INITO" Destination="Rel_Scale.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Rel_Scale.INITO" Destination="Execute.INIT">
@@ -1111,7 +1146,8 @@
             <Connection Source="Volume.P" Destination="PubParams.SD_1" />
             <Connection Source="Volume.InRange" Destination="Control.InRange" />
             <Connection Source="Execute.Weight" Destination="PubResults.SD_1" />
-            <Connection Source="Release.Holder" Destination="Rel_NeedleAxis.SD_1" />
+            <Connection Source="Release.Holder" Destination="Rel_LinearAxis.SD_1" />
+            <Connection Source="Release.Holder" Destination="Rel_Pump.SD_1" />
             <Connection Source="Release.Holder" Destination="Rel_Scale.SD_1" />
             <Connection Source="Volume.P" Destination="Execute.Volume" />
             <Connection Source="Execute.ErrorID" Destination="Control.ExecError" />
@@ -1141,22 +1177,22 @@
         <Connection Source="Occupation.INITO" Destination="Module.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Module.INITO" Destination="NeedleAxis.INIT">
+        <Connection Source="Module.INITO" Destination="LinearAxis.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="NeedleAxis.INITO" Destination="Scale.INIT">
+        <Connection Source="LinearAxis.INITO" Destination="Pump.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Scale.INITO" Destination="MoveNeedleUp.INIT">
+        <Connection Source="Pump.INITO" Destination="Scale.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="MoveNeedleUp.INITO" Destination="MoveNeedleDown.INIT">
+        <Connection Source="Scale.INITO" Destination="Home.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="MoveNeedleDown.INITO" Destination="AttachNeedle.INIT">
+        <Connection Source="Home.INITO" Destination="MoveAxis.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="AttachNeedle.INITO" Destination="Dispense.INIT">
+        <Connection Source="MoveAxis.INITO" Destination="Dispense.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
         <Connection Source="Dispense.INITO" Destination="Tare.INIT">
@@ -1196,11 +1232,11 @@
   <Mapping From="Filling.Boot" To="FORTE_PC.RES" />
   <Mapping From="Filling.Occupation" To="FORTE_PC.RES" />
   <Mapping From="Filling.Module" To="FORTE_PC.RES" />
-  <Mapping From="Filling.NeedleAxis" To="FORTE_PC.RES" />
+  <Mapping From="Filling.LinearAxis" To="FORTE_PC.RES" />
+  <Mapping From="Filling.Pump" To="FORTE_PC.RES" />
   <Mapping From="Filling.Scale" To="FORTE_PC.RES" />
-  <Mapping From="Filling.MoveNeedleUp" To="FORTE_PC.RES" />
-  <Mapping From="Filling.MoveNeedleDown" To="FORTE_PC.RES" />
-  <Mapping From="Filling.AttachNeedle" To="FORTE_PC.RES" />
+  <Mapping From="Filling.Home" To="FORTE_PC.RES" />
+  <Mapping From="Filling.MoveAxis" To="FORTE_PC.RES" />
   <Mapping From="Filling.Dispense" To="FORTE_PC.RES" />
   <Mapping From="Filling.Tare" To="FORTE_PC.RES" />
   <Mapping From="Filling.Weigh" To="FORTE_PC.RES" />
@@ -1212,11 +1248,11 @@
   <Mapping From="Filling_pi.Module" To="FORTE_PI.RES" />
   <Mapping From="Filling_pi.GpioLines" To="FORTE_PI.RES" />
   <Mapping From="Filling_pi.PwmLines" To="FORTE_PI.RES" />
-  <Mapping From="Filling_pi.NeedleAxis" To="FORTE_PI.RES" />
+  <Mapping From="Filling_pi.LinearAxis" To="FORTE_PI.RES" />
+  <Mapping From="Filling_pi.Pump" To="FORTE_PI.RES" />
   <Mapping From="Filling_pi.Scale" To="FORTE_PI.RES" />
-  <Mapping From="Filling_pi.MoveNeedleUp" To="FORTE_PI.RES" />
-  <Mapping From="Filling_pi.MoveNeedleDown" To="FORTE_PI.RES" />
-  <Mapping From="Filling_pi.AttachNeedle" To="FORTE_PI.RES" />
+  <Mapping From="Filling_pi.Home" To="FORTE_PI.RES" />
+  <Mapping From="Filling_pi.MoveAxis" To="FORTE_PI.RES" />
   <Mapping From="Filling_pi.Dispense" To="FORTE_PI.RES" />
   <Mapping From="Filling_pi.Tare" To="FORTE_PI.RES" />
   <Mapping From="Filling_pi.Weigh" To="FORTE_PI.RES" />

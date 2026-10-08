@@ -105,9 +105,10 @@ def filling(target="pi") -> Candidate:
 # A new module level skill composed of the filling module's primitives: two doses.
 DOUBLE_DOSE = {"description": "Needle down, two doses, needle up, weigh",
                "parameters": {"Dose": {"unit": "mL", "minimum": 0.5, "maximum": 10.0, "default": 0.5}},
-               "execute": ["MoveNeedleDown", {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}},
-                           {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}}, "MoveNeedleUp", "Weigh"],
-               "stop": ["MoveNeedleUp"], "results": {"Weight": "Weigh.Weight"}}
+               "execute": [{"MoveAxis": {"Position": 40.0}, "as": "NeedleDown"}, {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}},
+                           {"Dispense": {"Volume": "Dose", "FlowRate": 1.0}},
+                           {"MoveAxis": {"Position": 0.0}, "as": "NeedleUp"}, "Weigh"],
+               "stop": ["Home"], "results": {"Weight": "Weigh.Weight"}}
 
 
 def composed(target="pi", first=False) -> Candidate:
@@ -133,7 +134,7 @@ def test_the_compared_program_is_what_the_projects_deploy(path):
 
 
 def test_values_compare_as_iec_values():
-    assert same('"Filling"', "Filling") and same("'NeedleAxis_Up'", "NeedleAxis_Up")
+    assert same('"Filling"', "Filling") and same("'LinearAxis_Down'", "LinearAxis_Down")
     assert same("T#1s", "T#1000ms") and same("LREAL#1.0", "1") and same("TRUE", "TRUE")
     assert not same("1.0", "2.5") and not same("TRUE", "FALSE") and not same("T#1s", "T#2s")
 
@@ -173,12 +174,12 @@ def test_a_changed_skill_parameter_is_drift_pushed_online_and_saved():
 
 def test_values_read_at_init_and_structure_need_a_restart():
     forte = FakeForte(filling())
-    forte.values["MoveNeedleUp.UaPath"] = "/Skills/Other"
+    forte.values["MoveAxis.UaPath"] = "/Skills/Other"
     assert status(forte).drift.restart and not status(forte).drift.structural
-    forte.connections.discard(("Dispensing.Execute.Dispense.SUCCESS", "Dispensing.Execute.MoveNeedleUp.START"))
+    forte.connections.discard(("Dispensing.Execute.Dispense.SUCCESS", "Dispensing.Execute.NeedleUp.START"))
     drift = status(forte).drift
     assert drift.structural
-    assert drift.missing_connections == [("Dispensing.Execute.Dispense.SUCCESS", "Dispensing.Execute.MoveNeedleUp.START")]
+    assert drift.missing_connections == [("Dispensing.Execute.Dispense.SUCCESS", "Dispensing.Execute.NeedleUp.START")]
     with pytest.raises(Refused, match="deployer"):
         push(forte, "pi", 61499, filling())
     assert push(forte, "pi", 61499, filling(), dry_run=True)[0].startswith("redeploy: ")
@@ -199,8 +200,9 @@ def test_push_leaves_a_busy_module_alone_unless_forced(state, occupied):
 
 
 def test_push_needs_the_types_in_the_runtime():
-    forte = FakeForte(filling(), lacking={"filling::SK_AttachNeedle"})      # a type only one instance uses
-    del forte.fbs["AttachNeedle"]
+    forte = FakeForte(filling(), lacking={"filling::SK_Tare"})           # a type the program uses
+    for name in [n for n, t in forte.fbs.items() if t == "filling::SK_Tare"]:
+        del forte.fbs[name]
     with pytest.raises(Refused, match="rebuild"):
         push(forte, "pi", 61499, filling(), Recorder())
 
@@ -227,7 +229,7 @@ def test_a_skill_added_before_another_moves_the_init_chain_online():
     forte = FakeForte(filling())
     new = composed(first=True)
     drift = inspect(forte, "pi", 61499, [new]).drift
-    assert drift.additive and drift.unexpected_connections == [("Stopping.MoveNeedleUp.INITO", "Dispensing.Control.INIT")]
+    assert drift.additive and drift.unexpected_connections == [("Stopping.Home.INITO", "Dispensing.Control.INIT")]
     done = push(forte, "pi", 61499, new, Recorder())
     assert "1 INIT links moved" in done[0] and forte.triggered == ["DoubleDose.Control.INIT"]
 
@@ -293,14 +295,15 @@ def test_aas_shows_what_runs_on_the_module(tmp_path):
     st = status(forte)
     objects = read_back(aas.build(st.candidate.spec, st.candidate.target, st.snapshot, st.drift), tmp_path)
     execute = objects["Skills"].get_referable("Dispensing").get_referable("Execute")
-    assert [p.value for p in execute.value] == ["MoveNeedleDown", "Dispense(Volume=Volume, FlowRate=2.5)", "MoveNeedleUp", "Weigh"]
+    assert [p.value for p in execute.value] == ["MoveAxis(Position=40.0)", "Dispense(Volume=Volume, FlowRate=2.5)",
+                                             "MoveAxis(Position=0.0)", "Weigh"]
     control = objects["ControlSoftware"]
     assert control.get_referable("SyncState").value == "Drift"
     assert "Dispense.FlowRate = 2.5" in control.get_referable("Differences").get_referable("D001").value
     types = {t.get_referable("Name").value: t.get_referable("Hash").value for t in control.get_referable("Types").value}
     assert types["filling::SK_Dispense"].startswith("v2:SHA3-512:")
-    impl = objects["Skills"].get_referable("MoveNeedleUp").get_referable("Implementation")
-    assert impl.get_referable("FBType").value == "filling::SK_MoveNeedleUp"
+    impl = objects["Skills"].get_referable("MoveAxis").get_referable("Implementation")
+    assert impl.get_referable("FBType").value == "filling::SK_MoveAxis"
 
 
 def test_watch_reports_a_module_when_it_comes_online_and_when_it_changes(monkeypatch):

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EL_NeedleAxis" Comment="NeedleAxis: output values from its holder -&gt; outputs (break before make); one holder at a time; all off on release or when the module aborts; inputs -&gt; state channel when they change">
+<FBType Name="EL_LinearAxis" Comment="LinearAxis: output values from its holder -&gt; outputs (break before make); one holder at a time; all off on release or when the module aborts; inputs -&gt; state channel when they change">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filling" />
@@ -13,23 +13,25 @@
       <Event Name="CMD" Type="Event">
         <With Var="C_Holder" />
         <With Var="C_Release" />
-        <With Var="C_Up" />
+        <With Var="C_Enable" />
         <With Var="C_Down" />
-        <With Var="C_Speed" />
-        <With Var="CE_Speed" />
+        <With Var="C_Step" />
+        <With Var="CE_Step" />
+        <With Var="C_Move" />
+        <With Var="C_Goal" />
       </Event>
       <Event Name="RELEASE" Type="Event">
         <With Var="R_Holder" />
       </Event>
       <Event Name="SAMPLE" Type="Event">
-        <With Var="I_AtTop" />
-        <With Var="I_AtBottom" />
+        <With Var="I_AtHome" />
       </Event>
       <Event Name="REFRESH" Type="Event" />
       <Event Name="DRIVEN" Type="Event" />
       <Event Name="MOD_CHG" Type="Event">
         <With Var="ModState" />
       </Event>
+      <Event Name="MOVE_T" Type="Event" />
     </EventInputs>
     <EventOutputs>
       <Event Name="INITO" Type="EInit">
@@ -39,16 +41,22 @@
         <With Var="IdPub" />
       </Event>
       <Event Name="DRIVE" Type="Event">
-        <With Var="O_Up" />
+        <With Var="O_Enable" />
         <With Var="O_Down" />
-        <With Var="O_Speed" />
-        <With Var="E_Speed" />
+        <With Var="O_Step" />
+        <With Var="E_Step" />
       </Event>
       <Event Name="STATE" Type="Event">
-        <With Var="AtTop" />
-        <With Var="AtBottom" />
+        <With Var="AtHome" />
+        <With Var="ActualPosition" />
+        <With Var="Homed" />
+        <With Var="Moving" />
         <With Var="Holder" />
       </Event>
+      <Event Name="MOVE_START" Type="Event">
+        <With Var="MoveDT" />
+      </Event>
+      <Event Name="MOVE_STOP" Type="Event" />
     </EventOutputs>
     <InputVars>
       <VarDeclaration Name="Module" Type="WSTRING" />
@@ -56,13 +64,14 @@
       <VarDeclaration Name="UaRoot" Type="WSTRING" />
       <VarDeclaration Name="C_Holder" Type="WSTRING" />
       <VarDeclaration Name="C_Release" Type="BOOL" />
-      <VarDeclaration Name="C_Up" Type="BOOL" />
+      <VarDeclaration Name="C_Enable" Type="BOOL" />
       <VarDeclaration Name="C_Down" Type="BOOL" />
-      <VarDeclaration Name="C_Speed" Type="LREAL" />
-      <VarDeclaration Name="CE_Speed" Type="BOOL" />
+      <VarDeclaration Name="C_Step" Type="LREAL" />
+      <VarDeclaration Name="CE_Step" Type="BOOL" />
+      <VarDeclaration Name="C_Move" Type="BOOL" />
+      <VarDeclaration Name="C_Goal" Type="LREAL" />
       <VarDeclaration Name="R_Holder" Type="WSTRING" />
-      <VarDeclaration Name="I_AtTop" Type="BOOL" />
-      <VarDeclaration Name="I_AtBottom" Type="BOOL" />
+      <VarDeclaration Name="I_AtHome" Type="BOOL" />
       <VarDeclaration Name="ModState" Type="USINT" />
     </InputVars>
     <OutputVars>
@@ -70,13 +79,16 @@
       <VarDeclaration Name="IdRelease" Type="WSTRING" />
       <VarDeclaration Name="IdState" Type="WSTRING" />
       <VarDeclaration Name="IdPub" Type="WSTRING" />
-      <VarDeclaration Name="O_Up" Type="BOOL" />
+      <VarDeclaration Name="O_Enable" Type="BOOL" />
       <VarDeclaration Name="O_Down" Type="BOOL" />
-      <VarDeclaration Name="O_Speed" Type="LREAL" />
-      <VarDeclaration Name="E_Speed" Type="BOOL" />
-      <VarDeclaration Name="AtTop" Type="BOOL" />
-      <VarDeclaration Name="AtBottom" Type="BOOL" />
+      <VarDeclaration Name="O_Step" Type="LREAL" />
+      <VarDeclaration Name="E_Step" Type="BOOL" />
+      <VarDeclaration Name="AtHome" Type="BOOL" />
+      <VarDeclaration Name="ActualPosition" Type="LREAL" />
+      <VarDeclaration Name="Homed" Type="BOOL" />
+      <VarDeclaration Name="Moving" Type="BOOL" />
       <VarDeclaration Name="Holder" Type="WSTRING" />
+      <VarDeclaration Name="MoveDT" Type="TIME" />
     </OutputVars>
   </InterfaceList>
   <BasicFB>
@@ -86,12 +98,21 @@
       <VarDeclaration Name="LastHolder" Type="WSTRING" />
       <VarDeclaration Name="Pending" Type="BOOL" />
       <VarDeclaration Name="OffPending" Type="BOOL" />
-      <VarDeclaration Name="L_AtTop" Type="BOOL" />
-      <VarDeclaration Name="L_AtBottom" Type="BOOL" />
-      <VarDeclaration Name="N_Up" Type="BOOL" />
+      <VarDeclaration Name="L_AtHome" Type="BOOL" />
+      <VarDeclaration Name="L_Homed" Type="BOOL" />
+      <VarDeclaration Name="L_Moving" Type="BOOL" />
+      <VarDeclaration Name="N_Enable" Type="BOOL" />
       <VarDeclaration Name="N_Down" Type="BOOL" />
-      <VarDeclaration Name="N_Speed" Type="LREAL" />
-      <VarDeclaration Name="NE_Speed" Type="BOOL" />
+      <VarDeclaration Name="N_Step" Type="LREAL" />
+      <VarDeclaration Name="NE_Step" Type="BOOL" />
+      <VarDeclaration Name="N_Move" Type="BOOL" />
+      <VarDeclaration Name="N_Goal" Type="LREAL" />
+      <VarDeclaration Name="MoveGoal" Type="LREAL" />
+      <VarDeclaration Name="MoveFrom" Type="LREAL" />
+      <VarDeclaration Name="MoveDir" Type="LREAL" />
+      <VarDeclaration Name="MoveSince" Type="TIME" />
+      <VarDeclaration Name="MoveStart" Type="BOOL" />
+      <VarDeclaration Name="Uncounted" Type="BOOL" />
     </InternalVars>
     <ECC>
       <ECState Name="START" x="150" y="100" />
@@ -107,11 +128,11 @@
       <ECState Name="Refresh" x="150" y="330">
         <ECAction Output="DRIVE" />
       </ECState>
-      <ECState Name="Cmd" x="1410" y="100">
-        <ECAction Algorithm="Alg_Cmd" />
+      <ECState Name="Cmd" x="570" y="330">
+        <ECAction Algorithm="Alg_Cmd" Output="MOVE_STOP" />
       </ECState>
       <ECState Name="Off" x="990" y="330">
-        <ECAction Algorithm="Alg_Off" />
+        <ECAction Algorithm="Alg_Off" Output="MOVE_STOP" />
       </ECState>
       <ECState Name="Break" x="1410" y="330">
         <ECAction Algorithm="Alg_Break" Output="DRIVE" />
@@ -119,25 +140,31 @@
       <ECState Name="Make" x="150" y="560">
         <ECAction Algorithm="Alg_Make" Output="DRIVE" />
       </ECState>
-      <ECState Name="BreakW" x="1410" y="560" />
-      <ECState Name="MakeW" x="150" y="790" />
-      <ECState Name="QueueB" x="570" y="790">
+      <ECState Name="BreakW" x="570" y="560" />
+      <ECState Name="MakeW" x="990" y="560" />
+      <ECState Name="QueueB" x="1410" y="560">
         <ECAction Algorithm="Alg_QueueB" />
       </ECState>
       <ECState Name="OffB" x="150" y="790">
         <ECAction Algorithm="Alg_OffB" />
       </ECState>
-      <ECState Name="QueueM" x="1410" y="790">
+      <ECState Name="QueueM" x="570" y="790">
         <ECAction Algorithm="Alg_QueueM" />
       </ECState>
       <ECState Name="OffM" x="990" y="790">
         <ECAction Algorithm="Alg_OffM" />
       </ECState>
-      <ECState Name="CmdPend" x="570" y="1020">
+      <ECState Name="CmdPend" x="1410" y="790">
         <ECAction Algorithm="Alg_CmdPend" />
       </ECState>
-      <ECState Name="Settled" x="570" y="560" />
-      <ECState Name="Report" x="150" y="330">
+      <ECState Name="Settled" x="150" y="1020" />
+      <ECState Name="MoveGo" x="570" y="1020">
+        <ECAction Algorithm="Alg_MoveGo" Output="MOVE_START" />
+      </ECState>
+      <ECState Name="MoveEnd" x="990" y="1020">
+        <ECAction Algorithm="Alg_MoveEnd" />
+      </ECState>
+      <ECState Name="Report" x="1410" y="1020">
         <ECAction Algorithm="Alg_Report" Output="STATE" />
       </ECState>
       <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
@@ -146,6 +173,8 @@
       <ECTransition Source="START" Destination="Cmd" Condition="CMD[(Holder = &quot;&quot;) OR (C_Holder = Holder)]" x="0" y="0" />
       <ECTransition Source="START" Destination="Off" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="0" y="0" />
       <ECTransition Source="START" Destination="Off" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="START" Destination="MoveEnd" Condition="MOVE_T[Moving AND NOT MoveStart]" x="0" y="0" />
+      <ECTransition Source="MoveEnd" Destination="Break" Condition="1" x="0" y="0" />
       <ECTransition Source="Init" Destination="START" Condition="1" x="0" y="0" />
       <ECTransition Source="Sample" Destination="Publish" Condition="Publish" x="0" y="0" />
       <ECTransition Source="Sample" Destination="START" Condition="1" x="0" y="0" />
@@ -170,6 +199,9 @@
       <ECTransition Source="Settled" Destination="Off" Condition="OffPending" x="0" y="0" />
       <ECTransition Source="Settled" Destination="CmdPend" Condition="Pending" x="0" y="0" />
       <ECTransition Source="CmdPend" Destination="Cmd" Condition="(Holder = &quot;&quot;) OR (C_Holder = Holder)" x="0" y="0" />
+      <ECTransition Source="CmdPend" Destination="MoveGo" Condition="MoveStart" x="0" y="0" />
+      <ECTransition Source="Settled" Destination="MoveGo" Condition="MoveStart" x="0" y="0" />
+      <ECTransition Source="MoveGo" Destination="Report" Condition="1" x="0" y="0" />
       <ECTransition Source="CmdPend" Destination="Report" Condition="1" x="0" y="0" />
       <ECTransition Source="Settled" Destination="Report" Condition="1" x="0" y="0" />
       <ECTransition Source="Report" Destination="START" Condition="1" x="0" y="0" />
@@ -178,47 +210,109 @@
       <ST>IdCmd := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/cmd]");
 IdRelease := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/release]");
 IdState := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/state]");
-IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", UaRoot), "/Equipment/"), Name), "/AtTop;"), UaRoot), "/Equipment/"), Name), "/AtBottom"), "]");</ST>
+IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", UaRoot), "/Equipment/"), Name), "/AtHome;"), UaRoot), "/Equipment/"), Name), "/ActualPosition;"), UaRoot), "/Equipment/"), Name), "/Homed;"), UaRoot), "/Equipment/"), Name), "/Moving"), "]");</ST>
     </Algorithm>
     <Algorithm Name="Alg_Sample">
-      <ST>AtTop := I_AtTop;
-AtBottom := I_AtBottom;
-Publish := (AtTop &lt;&gt; L_AtTop) OR (AtBottom &lt;&gt; L_AtBottom) OR (Holder &lt;&gt; LastHolder) OR (Beat &gt;= 20);
+      <ST>AtHome := I_AtHome;
+IF Moving AND NOT MoveStart THEN
+  ActualPosition := MoveFrom + MoveDir * 20.0 * TIME_IN_MS_TO_LREAL(NOW_MONOTONIC() - MoveSince) / 1000.0;
+  IF MoveDir * (ActualPosition - MoveGoal) &gt; 0.0 THEN
+    ActualPosition := MoveGoal;
+  END_IF;
+ELSIF AtHome THEN
+  ActualPosition := 0.0;
+  Homed := TRUE;
+ELSIF Uncounted THEN
+  Homed := FALSE;
+END_IF;
+Publish := (AtHome &lt;&gt; L_AtHome) OR (Homed &lt;&gt; L_Homed) OR (Moving &lt;&gt; L_Moving) OR (Holder &lt;&gt; LastHolder) OR (Beat &gt;= 20) OR (Moving AND (Beat &gt;= 4));
 Beat := Beat + 1;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Publish">
-      <ST>L_AtTop := AtTop;
-L_AtBottom := AtBottom;
+      <ST>L_AtHome := AtHome;
+L_Homed := Homed;
+L_Moving := Moving;
 LastHolder := Holder;
 Beat := 0;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Cmd">
       <ST>Holder := C_Holder;
-N_Up := C_Up;
+N_Enable := C_Enable;
 N_Down := C_Down;
-N_Speed := C_Speed;
-NE_Speed := CE_Speed;
+N_Step := C_Step;
+NE_Step := CE_Step;
+N_Move := C_Move;
+N_Goal := C_Goal;
+IF Moving AND NOT MoveStart THEN
+  ActualPosition := MoveFrom + MoveDir * 20.0 * TIME_IN_MS_TO_LREAL(NOW_MONOTONIC() - MoveSince) / 1000.0;
+  IF MoveDir * (ActualPosition - MoveGoal) &gt; 0.0 THEN
+    ActualPosition := MoveGoal;
+  END_IF;
+END_IF;
+Moving := FALSE;
+MoveStart := FALSE;
+IF N_Move THEN
+  IF Homed AND (ABS(N_Goal - ActualPosition) &gt;= 0.0005) THEN
+    MoveGoal := N_Goal;
+    MoveFrom := ActualPosition;
+    MoveDT := MUL_TIME(T#1s, ABS(N_Goal - ActualPosition) / 20.0);
+    IF N_Goal &gt; ActualPosition THEN
+      MoveDir := 1.0;
+      N_Enable := TRUE;
+      N_Down := TRUE;
+      N_Step := 50.0;
+      NE_Step := TRUE;
+    ELSE
+      MoveDir := -1.0;
+      N_Enable := TRUE;
+      N_Down := FALSE;
+      N_Step := 50.0;
+      NE_Step := TRUE;
+    END_IF;
+    Moving := TRUE;
+    MoveStart := TRUE;
+  ELSE
+    N_Enable := FALSE;
+    N_Down := FALSE;
+    N_Step := 0.0;
+    NE_Step := FALSE;
+  END_IF;
+  Uncounted := FALSE;
+ELSE
+  Uncounted := N_Enable OR N_Down OR NE_Step;
+END_IF;
 IF C_Release THEN
   Holder := "";
 END_IF;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Off">
-      <ST>N_Up := FALSE;
+      <ST>N_Enable := FALSE;
 N_Down := FALSE;
-N_Speed := 0.0;
-NE_Speed := FALSE;
+N_Step := 0.0;
+NE_Step := FALSE;
+N_Move := FALSE;
+N_Goal := 0.0;
+IF Moving AND NOT MoveStart THEN
+  ActualPosition := MoveFrom + MoveDir * 20.0 * TIME_IN_MS_TO_LREAL(NOW_MONOTONIC() - MoveSince) / 1000.0;
+  IF MoveDir * (ActualPosition - MoveGoal) &gt; 0.0 THEN
+    ActualPosition := MoveGoal;
+  END_IF;
+END_IF;
+Moving := FALSE;
+MoveStart := FALSE;
+Uncounted := FALSE;
 Holder := "";
 OffPending := FALSE;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Break">
-      <ST>O_Up := O_Up AND N_Up;
+      <ST>O_Enable := O_Enable AND N_Enable;
 O_Down := O_Down AND N_Down;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Make">
-      <ST>O_Up := N_Up;
+      <ST>O_Enable := N_Enable;
 O_Down := N_Down;
-O_Speed := N_Speed;
-E_Speed := NE_Speed;</ST>
+O_Step := N_Step;
+E_Step := NE_Step;</ST>
     </Algorithm>
     <Algorithm Name="Alg_QueueB">
       <ST>Pending := TRUE;</ST>
@@ -234,6 +328,18 @@ E_Speed := NE_Speed;</ST>
     </Algorithm>
     <Algorithm Name="Alg_CmdPend">
       <ST>Pending := FALSE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_MoveGo">
+      <ST>MoveStart := FALSE;
+MoveSince := NOW_MONOTONIC();</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_MoveEnd">
+      <ST>ActualPosition := MoveGoal;
+Moving := FALSE;
+N_Enable := FALSE;
+N_Down := FALSE;
+N_Step := 0.0;
+NE_Step := FALSE;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Report">
       <ST>LastHolder := Holder;
