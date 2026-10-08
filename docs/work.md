@@ -168,6 +168,45 @@ The module spec is the one source. `modsync` checks it against what really runs 
   them (`aas/<idShort>.json`), and with `--register` sends their profiles to the registration
   service. Its own builder from before `modreg` was removed on 8 Oct.
 
+## The AAS as the desired state (modsync verify, reconfigure)
+
+Tried on 8 Oct 2026 (`modsync/desired.py`). A module is compared with its AAS and brought to it
+without the module spec:
+
+- **What the AAS describes** is read from the AASs of the module and of its components as plain
+  JSON, from a folder of AAS files or from an AAS server: the components (Hierarchical Structures)
+  are the equipment; a component's skills are the primitives with their parameters, limits and
+  results; a skill of the module with steps is a module level skill (which primitive each step
+  runs, what it is handed, which step gives a result); the steps of the module's Reset and Stop
+  are the procedures. For every module spec this gives what the spec states (a test).
+- **What runs** is read from FORTE by the module rules (`structure`, with the primitives the AAS
+  describes instead of type files), plus the module's name and OPC UA root, which the program
+  states itself.
+- **Differences** are of three kinds: a described skill the program lacks (create it), a value
+  that differs (a step's constant, a parameter's default or limits: write it), and anything else
+  (another order of steps, a skill the AAS does not describe, other equipment: a restart, so it is
+  refused). A description the module cannot carry out is refused before anything is sent: a step
+  that runs a skill no component has, a constant outside the primitive's limits, a module level
+  skill that offers more than the component it hands the value to can do.
+- **Creating a skill** uses the generator's own pattern (`modgen.module.module_skill`) on what the
+  AAS describes, appended to the end of the program's INIT chain. The program that results is the
+  one the generator makes from a module spec with that skill (a test compares them).
+- **The record.** The Skills submodel says what is wanted, the Control Configuration what was
+  built: `record` adds the new instances with block type and the hash FORTE reports, sets when the
+  module was read, and appends to the change log. Once hashes are recorded they are verified too.
+  The change is added to the module's boot file, so a restart keeps it.
+- On FORTE: DoubleDose (19 instances, 84 connections, 190 management commands) was created from
+  its description while Dispensing ran, in 0.04 s on this PC including reading the program before
+  and after; it ran, and a FORTE started from the amended boot file was what the AAS describes.
+  A limit lowered and a constant raised in the AAS held at the next start. The same with the AAS
+  read from the local AAS server.
+
+Not built: an editor for the description (in the tests the AAS with the new skill is the one
+`modreg` builds from a module spec that has it, with the Control Configuration of the delivered
+module); the interface description and mapping of a new skill are therefore not derived here;
+removing a skill or changing a sequence (a restart, and a boot file cannot be made from the AAS,
+which does not hold the wiring); a run on the Raspberry Pi.
+
 ## Registration: the AAS of a module (modreg)
 
 Decided on 2 Oct 2026: the resource ontology (ARSO, `ontology/ARSO`) says what a resource AAS
