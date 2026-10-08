@@ -4,6 +4,8 @@ This document describes everything an HMI needs to show and operate the **Stoppe
 
 Generated from the module specification and checked against the address space of the running controller (Eclipse 4diac FORTE 3.3, IEC 61499). If the module changes, regenerate this file.
 
+> **Out of date since 8 Oct 2026 in sections 7, 8, 9 and 11.** The module is now a linear axis and one small actuator. The equipment items are `LinearAxis` with `AtHome`, `ActualPosition` (mm), `Homed` and `Moving`, and `Piston` (no values); `Plunger` and `StopperArm` are gone. The skill primitives are `Home`, `MoveAxis(Position: Double, 0 to 60 mm)`, `PressStopper` and `RetractPiston`. Stoppering's steps are `HeadDown`, `PressStopper` and `HeadUp`, its stop sequence is `Home`; Resetting runs `RetractPiston` then `Home`, Stopping runs `Home`. Sections 1 to 6 and 10 (connection, rules, occupation, the two state machines, error codes, what an HMI offers) hold as written. What the module is now: [modules.md](../modules.md).
+
 ## 1. Connection
 
 | | |
