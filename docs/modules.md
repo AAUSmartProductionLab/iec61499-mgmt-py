@@ -24,36 +24,51 @@ The ESP32 code has three layers. Only the bottom one is module-specific.
 
 ## Filling module ("Dispensing", filling Pi)
 
-**Equipment IO**
+Since 8 Oct 2026 the module is built from the components every module of the line is built from
+(a linear axis and one process component), no longer as the ESP32 station was: the needle is lifted
+by a stepper motor with a limit switch, as on a 3D printer. The pins below are a proposal until the
+driver is wired; the speed and the travel are placeholders until the axis is measured.
 
-| Equipment | IO (ESP32 pin) | Commands |
+**Equipment IO** (each item is a component of the module, of a kind that other modules have too)
+
+| Equipment (kind) | IO (Pi pin) | Commands |
 | --- | --- | --- |
-| `NeedleAxis`: DC motor through an L298N | out `Up` (IN3, 18), `Down` (IN4, 5), `Speed` PWM duty 0–255 (ENB, 19); in `AtTop` (39), `AtBottom` (36), both HIGH when pressed | `Stop`: all off. `Up`, `Down`: direction bit and `Speed` (140), starting with a boost (+50 for 200 ms). Stopping after a move: 100 ms reverse pulse, then off (brake) |
-| `Scale` | none: the code draws a random weight (1.8–2.2 g) and fakes tare with a 2 s wait | simulated equipment with an output `Weight` |
+| `LinearAxis` (LinearAxis): stepper motor through a step and direction driver | out `Enable` (GPIO17, pin 11), `Down` (the driver's DIR, GPIO27, pin 13), `Step` (PWM0 on GPIO18, pin 12: 1 kHz, 50 % while it moves); in `AtHome` (limit switch at the top, GPIO23, pin 16) | `Stop`: all off. `Up`, `Down`: enabled and stepping, with the direction. `MoveTo(position)`: see below |
+| `Pump` (FillingPump) | none yet | `Run`: nothing to switch, so dispensing is a time |
+| `Scale` (Scale) | none: the weight is simulated | simulated equipment with a value `Weight` |
+
+**The axis knows its position without measuring it.** A stepper moves a known distance per step,
+so the controller keeps the position itself: at the limit switch it is 0 (`Homed`), and while the
+axis is stepping it changes at the axis' speed (20 mm/s here). The equipment block publishes
+`ActualPosition`, `Homed` and `Moving`. Told to move to a position, it compares that with where it
+is, drives up or down, stops after the time the distance takes and is there. A move that is cut
+short leaves the position the elapsed time gives (to about a millimetre); driving the axis any
+other way (homing that is cut short) leaves the position unknown until it has been at the switch
+again. A blocked axis is noticed only when it is to find the switch: nothing measures a move.
 
 **Skill primitives**
 
 | Primitive | Equipment, command | Ends when | Timeout |
 | --- | --- | --- | --- |
-| `MoveNeedleUp` | NeedleAxis `Up` | `AtTop` | 8 s |
-| `MoveNeedleDown` | NeedleAxis `Down` | `AtBottom` | 8 s |
-| `Dispense(Volume, FlowRate = 1 mL/s)` | none (a pump later) | time: Volume / FlowRate | – |
-| `Tare` | Scale | done | 3 s |
-| `Weigh` | Scale, publishes `Weight` | done | 3 s |
+| `Home` | LinearAxis `Up` | `AtHome` | 8 s |
+| `MoveAxis(Position = 0..60 mm)` | LinearAxis `MoveTo`; needs `Homed` | it is there | 8 s |
+| `Dispense(Volume, FlowRate = 1 mL/s)` | Pump `Run` | time: Volume / FlowRate | – |
+| `Tare` | Scale | after 2 s | – |
+| `Weigh` | Scale, publishes `Weight` | after 0.2 s | – |
 
 **Module level skills and procedures**
 
-| Skill | Sequence | Today (MQTT action) |
-| --- | --- | --- |
-| `Dispensing(Volume = 1 mL)` | MoveNeedleDown → Dispense(Volume) → MoveNeedleUp → Weigh | `/CMD/Dispensing` |
-| `AttachNeedle` | MoveNeedleDown (the code does it without boost) | `/CMD/Needle` |
-| `Tare` | the primitive itself | `/CMD/Tare` |
-| Module procedure Resetting | MoveNeedleUp | `initHardware()` |
+| Skill | Sequence |
+| --- | --- |
+| `Dispensing(Volume = 1 mL)` | MoveAxis(40 mm) → Dispense(Volume) → MoveAxis(0 mm) → Weigh; when stopped: Home |
+| Module procedure Resetting | Home → Tare |
+| Module procedure Stopping | Home |
 
-There is no pump yet: `Dispense` waits for the volume divided by the station's flow rate, a
-constant of the step that reconfiguration can change. With a pump it becomes a command on a
-pump item. The Filling capability's FillVolume is set by Dispensing's Volume. A plain wait
-(`Dwell`) was removed on 8 Oct 2026: no skill used it, and `Dispense` can be called on its own now.
+`MoveAxis` is used twice in Dispensing, as the steps `NeedleDown` and `NeedleUp`; where each goes
+is a constant of the step that reconfiguration can change, like the flow rate of `Dispense`. The
+Filling capability's FillVolume is set by Dispensing's Volume. Gone with the DC motor: the skills
+`MoveNeedleUp`, `MoveNeedleDown` and `AttachNeedle`, and the start boost and brake pulses. A plain
+wait (`Dwell`) was removed on 8 Oct 2026: no skill used it.
 
 ## Stoppering module (stoppering Pi)
 

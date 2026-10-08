@@ -51,6 +51,25 @@ An offered primitive is an instance `<Skill>` of its type in the application, wi
 `UaPath = /Skills/<Skill>`, `Methods = TRUE`, `Token = <Skill>` and `LastUse = TRUE`. A primitive
 that is not offered has no instance of its own: it only runs as a step (a building block).
 
+### An equipment item that keeps its position
+
+An axis without a position sensor (a stepper motor with a limit switch) keeps its position itself.
+Its equipment block `EQ_<Item>` then
+
+1. publishes three more signals beside its inputs: `ActualPosition`, `Homed` (the position is
+   known) and `Moving`. No IO point is behind them;
+2. sets `ActualPosition` to the home position and `Homed` whenever its limit switch is on;
+3. has the command `MoveTo`, whose argument is a position. It chooses the direction from where it
+   is, drives for the time the distance takes at the axis' speed (the timer `MoveT`), switches off
+   and is at the position. Without `Homed` it does not move;
+4. when a move is cut short, is where the elapsed time puts it; when it is driven by any other
+   command away from the switch, clears `Homed`.
+
+A primitive that moves the axis to a position names the parameter that holds it (`move_to` in the
+module description). It requires `Homed`, sends `MoveTo` with the parameter as the argument, and
+ends when the item is no longer `Moving` and at the position. The parameter's limits lie within
+the axis' travel: nothing else keeps the axis inside it.
+
 ## 3. A module level skill
 
 A module level skill has no type of its own. It is a subapplication `<Skill>` that holds only

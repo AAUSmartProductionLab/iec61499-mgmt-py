@@ -339,13 +339,13 @@ blocks in order, and a capability is realized by a module level skill.
 ```mermaid
 flowchart BT
   subgraph EQ_FillingModuleAAS["Equipment (Hierarchical Structures)"]
-    FillingModuleAASNeedleAxis["NeedleAxis"]
+    FillingModuleAASLinearAxis["LinearAxis"]
+    FillingModuleAASPump["Pump"]
     FillingModuleAASScale["Scale"]
   end
   subgraph PR_FillingModuleAAS["Skill primitives (Skills, kind Primitive)"]
-    FillingModuleAASMoveNeedleUp["MoveNeedleUp"]
-    FillingModuleAASMoveNeedleDown["MoveNeedleDown"]
-    FillingModuleAASAttachNeedle["AttachNeedle"]
+    FillingModuleAASHome["Home"]
+    FillingModuleAASMoveAxis["MoveAxis"]
     FillingModuleAASDispense["Dispense"]
     FillingModuleAASTare["Tare"]
     FillingModuleAASWeigh["Weigh"]
@@ -356,14 +356,14 @@ flowchart BT
   subgraph CA_FillingModuleAAS["Capabilities (Capability Description, offered)"]
     FillingModuleAAScapFilling(["Filling"])
   end
-  FillingModuleAASMoveNeedleUp -- occupies --> FillingModuleAASNeedleAxis
-  FillingModuleAASMoveNeedleDown -- occupies --> FillingModuleAASNeedleAxis
-  FillingModuleAASAttachNeedle -- occupies --> FillingModuleAASNeedleAxis
+  FillingModuleAASHome -- occupies --> FillingModuleAASLinearAxis
+  FillingModuleAASMoveAxis -- occupies --> FillingModuleAASLinearAxis
+  FillingModuleAASDispense -- occupies --> FillingModuleAASPump
   FillingModuleAASTare -- occupies --> FillingModuleAASScale
   FillingModuleAASWeigh -- occupies --> FillingModuleAASScale
-  FillingModuleAASDispensing -- "1" --> FillingModuleAASMoveNeedleDown
+  FillingModuleAASDispensing -- "1" --> FillingModuleAASMoveAxis
   FillingModuleAASDispensing -- "2" --> FillingModuleAASDispense
-  FillingModuleAASDispensing -- "3" --> FillingModuleAASMoveNeedleUp
+  FillingModuleAASDispensing -- "3" --> FillingModuleAASMoveAxis
   FillingModuleAASDispensing -- "4" --> FillingModuleAASWeigh
   FillingModuleAAScapFilling -- realized by --> FillingModuleAASDispensing
 ```
@@ -372,17 +372,16 @@ flowchart BT
 | --- | --- | --- | --- | --- |
 | Occupy | access control | – | – | – |
 | Release | access control | – | – | – |
-| MoveNeedleUp | Primitive | – | NeedleAxis | – |
-| MoveNeedleDown | Primitive | – | NeedleAxis | – |
-| AttachNeedle | Primitive | – | NeedleAxis | – |
-| Dispense | Primitive | Volume = 1.0 mL, FlowRate = 1.0 mL/s | – | – |
+| Home | Primitive | – | LinearAxis | – |
+| MoveAxis | Primitive | Position = 0.0 mm | LinearAxis | – |
+| Dispense | Primitive | Volume = 1.0 mL, FlowRate = 1.0 mL/s | Pump | – |
 | Tare | Primitive | – | Scale | – |
 | Weigh | Primitive | – | Scale | – |
-| Dispensing | Composite | Volume = 1.0 mL | NeedleAxis, Scale | MoveNeedleDown → Dispense (FlowRate = 1.0, Volume ← Volume) → MoveNeedleUp → Weigh |
+| Dispensing | Composite | Volume = 1.0 mL | LinearAxis, Pump, Scale | MoveAxis (Position = 40.0) → Dispense (FlowRate = 1.0, Volume ← Volume) → MoveAxis (Position = 0.0) → Weigh |
 
 - **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; FillVolume 0.5 to 10.0 mL; AbsoluteFillError 0.05 mL.
-- **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (MoveNeedleUp), Stopping (MoveNeedleUp).
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 35 actions and 41 properties; 41 data points; 36 mappings.
+- **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (Home → Tare), Stopping (Home).
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 46 properties; 46 data points; 32 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/filling.yaml`, sync state NotRead.
 
 ### StopperingModuleAAS

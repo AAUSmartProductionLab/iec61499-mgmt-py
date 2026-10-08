@@ -4,6 +4,8 @@ This document describes everything an HMI needs to show and operate the **Fillin
 
 Generated from the module specification and checked against the address space of the running controller (Eclipse 4diac FORTE 3.3, IEC 61499). If the module changes, regenerate this file.
 
+> **Out of date since 8 Oct 2026 in sections 7, 8, 9 and 11.** The needle is now lifted by a stepper axis that is moved to a position. The equipment item is `LinearAxis` with `AtHome`, `ActualPosition` (mm), `Homed` and `Moving`; beside it there is `Pump` (no values) and `Scale`. The skill primitives are `Home`, `MoveAxis(Position: Double, 0 to 60 mm)`, `Dispense`, `Tare` and `Weigh`; `MoveNeedleUp`, `MoveNeedleDown` and `AttachNeedle` are gone. Dispensing's steps are `NeedleDown`, `Dispense`, `NeedleUp` and `Weigh`, its stop sequence is `Home`; Resetting runs `Home` then `Tare`, Stopping runs `Home`. Sections 1 to 6 and 10 (connection, rules, occupation, the two state machines, error codes, what an HMI offers) hold as written. What the module is now: [modules.md](../modules.md).
+
 ## 1. Connection
 
 | | |
