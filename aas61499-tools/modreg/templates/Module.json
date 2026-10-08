@@ -1,0 +1,1594 @@
+{
+ "assetAdministrationShells": [],
+ "submodels": [
+  {
+   "modelType": "Submodel",
+   "kind": "Template",
+   "idShort": "Module",
+   "id": "https://smartproductionlab.aau.dk/ARSO/Module/1/0/Submodel",
+   "semanticId": {
+    "type": "ExternalReference",
+    "keys": [
+     {
+      "type": "GlobalReference",
+      "value": "https://smartproductionlab.aau.dk/ARSO/Module/1/0/Submodel"
+     }
+    ]
+   },
+   "administration": {
+    "version": "1",
+    "revision": "0"
+   },
+   "description": [
+    {
+     "language": "en",
+     "text": "The resource's own commands: its state machine (Reset, Start, Stop, Abort, Clear) and who may use it (Occupy, Release), each described like a command of a skill."
+    }
+   ],
+   "submodelElements": [
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Occupy",
+     "description": [
+      {
+       "language": "en",
+       "text": "One command of the resource: the action that calls it, its Operation, and what the resource runs on it."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "ReferenceElement",
+       "idShort": "InterfaceReference",
+       "description": [
+        {
+         "language": "en",
+         "text": "The AID action (arso:InterfaceSMC/InteractionMetadata/actions/{action}) that calls the command; in the short form, the action that starts the skill."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "Operation",
+       "idShort": "SkillOperation__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "Operation — the invocable Operation of a command (named like it), or in the short form of a skill (named like the skill)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "Steps",
+       "description": [
+        {
+         "language": "en",
+         "text": "What a command runs, one step after the other in the order of their names (P1, P2, ...)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "SubmodelElementCollection",
+         "idShort": "SkillStep__00__",
+         "description": [
+          {
+           "language": "en",
+           "text": "One use of a skill by a command."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToMany",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "value": [
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "Skill",
+           "description": [
+            {
+             "language": "en",
+             "text": "The skill the step runs, the whole of it: running it is its Start, and its other commands are what ends it early."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "One",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          },
+          {
+           "modelType": "Property",
+           "idShort": "StepConstant__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "A constant handed to the input of the step's skill that is named like it (the value as it runs)."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "valueType": "xs:string"
+          },
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "StepVariable__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "The variable of the command's Operation that the variable of the step's skill named like it is connected to: an input that is handed down, or an output that the step's result becomes."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Release",
+     "description": [
+      {
+       "language": "en",
+       "text": "One command of the resource: the action that calls it, its Operation, and what the resource runs on it."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "ReferenceElement",
+       "idShort": "InterfaceReference",
+       "description": [
+        {
+         "language": "en",
+         "text": "The AID action (arso:InterfaceSMC/InteractionMetadata/actions/{action}) that calls the command; in the short form, the action that starts the skill."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "Operation",
+       "idShort": "SkillOperation__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "Operation — the invocable Operation of a command (named like it), or in the short form of a skill (named like the skill)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "Steps",
+       "description": [
+        {
+         "language": "en",
+         "text": "What a command runs, one step after the other in the order of their names (P1, P2, ...)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "SubmodelElementCollection",
+         "idShort": "SkillStep__00__",
+         "description": [
+          {
+           "language": "en",
+           "text": "One use of a skill by a command."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToMany",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "value": [
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "Skill",
+           "description": [
+            {
+             "language": "en",
+             "text": "The skill the step runs, the whole of it: running it is its Start, and its other commands are what ends it early."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "One",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          },
+          {
+           "modelType": "Property",
+           "idShort": "StepConstant__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "A constant handed to the input of the step's skill that is named like it (the value as it runs)."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "valueType": "xs:string"
+          },
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "StepVariable__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "The variable of the command's Operation that the variable of the step's skill named like it is connected to: an input that is handed down, or an output that the step's result becomes."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Reset",
+     "description": [
+      {
+       "language": "en",
+       "text": "One command of the resource: the action that calls it, its Operation, and what the resource runs on it."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "ReferenceElement",
+       "idShort": "InterfaceReference",
+       "description": [
+        {
+         "language": "en",
+         "text": "The AID action (arso:InterfaceSMC/InteractionMetadata/actions/{action}) that calls the command; in the short form, the action that starts the skill."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "Operation",
+       "idShort": "SkillOperation__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "Operation — the invocable Operation of a command (named like it), or in the short form of a skill (named like the skill)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "Steps",
+       "description": [
+        {
+         "language": "en",
+         "text": "What a command runs, one step after the other in the order of their names (P1, P2, ...)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "SubmodelElementCollection",
+         "idShort": "SkillStep__00__",
+         "description": [
+          {
+           "language": "en",
+           "text": "One use of a skill by a command."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToMany",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "value": [
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "Skill",
+           "description": [
+            {
+             "language": "en",
+             "text": "The skill the step runs, the whole of it: running it is its Start, and its other commands are what ends it early."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "One",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          },
+          {
+           "modelType": "Property",
+           "idShort": "StepConstant__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "A constant handed to the input of the step's skill that is named like it (the value as it runs)."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "valueType": "xs:string"
+          },
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "StepVariable__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "The variable of the command's Operation that the variable of the step's skill named like it is connected to: an input that is handed down, or an output that the step's result becomes."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Start",
+     "description": [
+      {
+       "language": "en",
+       "text": "One command of the resource: the action that calls it, its Operation, and what the resource runs on it."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "ReferenceElement",
+       "idShort": "InterfaceReference",
+       "description": [
+        {
+         "language": "en",
+         "text": "The AID action (arso:InterfaceSMC/InteractionMetadata/actions/{action}) that calls the command; in the short form, the action that starts the skill."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "Operation",
+       "idShort": "SkillOperation__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "Operation — the invocable Operation of a command (named like it), or in the short form of a skill (named like the skill)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "Steps",
+       "description": [
+        {
+         "language": "en",
+         "text": "What a command runs, one step after the other in the order of their names (P1, P2, ...)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "SubmodelElementCollection",
+         "idShort": "SkillStep__00__",
+         "description": [
+          {
+           "language": "en",
+           "text": "One use of a skill by a command."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToMany",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "value": [
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "Skill",
+           "description": [
+            {
+             "language": "en",
+             "text": "The skill the step runs, the whole of it: running it is its Start, and its other commands are what ends it early."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "One",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          },
+          {
+           "modelType": "Property",
+           "idShort": "StepConstant__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "A constant handed to the input of the step's skill that is named like it (the value as it runs)."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "valueType": "xs:string"
+          },
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "StepVariable__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "The variable of the command's Operation that the variable of the step's skill named like it is connected to: an input that is handed down, or an output that the step's result becomes."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Stop",
+     "description": [
+      {
+       "language": "en",
+       "text": "One command of the resource: the action that calls it, its Operation, and what the resource runs on it."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "ReferenceElement",
+       "idShort": "InterfaceReference",
+       "description": [
+        {
+         "language": "en",
+         "text": "The AID action (arso:InterfaceSMC/InteractionMetadata/actions/{action}) that calls the command; in the short form, the action that starts the skill."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "Operation",
+       "idShort": "SkillOperation__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "Operation — the invocable Operation of a command (named like it), or in the short form of a skill (named like the skill)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "Steps",
+       "description": [
+        {
+         "language": "en",
+         "text": "What a command runs, one step after the other in the order of their names (P1, P2, ...)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "SubmodelElementCollection",
+         "idShort": "SkillStep__00__",
+         "description": [
+          {
+           "language": "en",
+           "text": "One use of a skill by a command."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToMany",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "value": [
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "Skill",
+           "description": [
+            {
+             "language": "en",
+             "text": "The skill the step runs, the whole of it: running it is its Start, and its other commands are what ends it early."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "One",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          },
+          {
+           "modelType": "Property",
+           "idShort": "StepConstant__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "A constant handed to the input of the step's skill that is named like it (the value as it runs)."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "valueType": "xs:string"
+          },
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "StepVariable__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "The variable of the command's Operation that the variable of the step's skill named like it is connected to: an input that is handed down, or an output that the step's result becomes."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Abort",
+     "description": [
+      {
+       "language": "en",
+       "text": "One command of the resource: the action that calls it, its Operation, and what the resource runs on it."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "ReferenceElement",
+       "idShort": "InterfaceReference",
+       "description": [
+        {
+         "language": "en",
+         "text": "The AID action (arso:InterfaceSMC/InteractionMetadata/actions/{action}) that calls the command; in the short form, the action that starts the skill."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "Operation",
+       "idShort": "SkillOperation__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "Operation — the invocable Operation of a command (named like it), or in the short form of a skill (named like the skill)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "Steps",
+       "description": [
+        {
+         "language": "en",
+         "text": "What a command runs, one step after the other in the order of their names (P1, P2, ...)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "SubmodelElementCollection",
+         "idShort": "SkillStep__00__",
+         "description": [
+          {
+           "language": "en",
+           "text": "One use of a skill by a command."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToMany",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "value": [
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "Skill",
+           "description": [
+            {
+             "language": "en",
+             "text": "The skill the step runs, the whole of it: running it is its Start, and its other commands are what ends it early."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "One",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          },
+          {
+           "modelType": "Property",
+           "idShort": "StepConstant__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "A constant handed to the input of the step's skill that is named like it (the value as it runs)."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "valueType": "xs:string"
+          },
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "StepVariable__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "The variable of the command's Operation that the variable of the step's skill named like it is connected to: an input that is handed down, or an output that the step's result becomes."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Clear",
+     "description": [
+      {
+       "language": "en",
+       "text": "One command of the resource: the action that calls it, its Operation, and what the resource runs on it."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "ReferenceElement",
+       "idShort": "InterfaceReference",
+       "description": [
+        {
+         "language": "en",
+         "text": "The AID action (arso:InterfaceSMC/InteractionMetadata/actions/{action}) that calls the command; in the short form, the action that starts the skill."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "Operation",
+       "idShort": "SkillOperation__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "Operation — the invocable Operation of a command (named like it), or in the short form of a skill (named like the skill)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "Steps",
+       "description": [
+        {
+         "language": "en",
+         "text": "What a command runs, one step after the other in the order of their names (P1, P2, ...)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "SubmodelElementCollection",
+         "idShort": "SkillStep__00__",
+         "description": [
+          {
+           "language": "en",
+           "text": "One use of a skill by a command."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToMany",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "value": [
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "Skill",
+           "description": [
+            {
+             "language": "en",
+             "text": "The skill the step runs, the whole of it: running it is its Start, and its other commands are what ends it early."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "One",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          },
+          {
+           "modelType": "Property",
+           "idShort": "StepConstant__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "A constant handed to the input of the step's skill that is named like it (the value as it runs)."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ],
+           "valueType": "xs:string"
+          },
+          {
+           "modelType": "ReferenceElement",
+           "idShort": "StepVariable__00__",
+           "description": [
+            {
+             "language": "en",
+             "text": "The variable of the command's Operation that the variable of the step's skill named like it is connected to: an input that is handed down, or an output that the step's result becomes."
+            }
+           ],
+           "qualifiers": [
+            {
+             "type": "SMT/Cardinality",
+             "valueType": "xs:string",
+             "kind": "TemplateQualifier",
+             "value": "ZeroToMany",
+             "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+               {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+               }
+              ]
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "conceptDescriptions": []
+}

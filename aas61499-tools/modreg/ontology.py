@@ -125,6 +125,8 @@ class Blueprint:
         self.model_type = {c: next((name(s) for s in self.supers[c] if str(s).startswith(AAS)), None) for c in named}
         self.restrictions = {c: self._restrictions(c) for c in named}
         self.classes = named
+        # The kinds of resource, each recognised by how the asset type of its AAS begins.
+        self.asset_types = {str(o): c for c in named for o in g.objects(c, ARSO.assetType)}
         # Classes with children the ontology describes: only there is an unrecognised child a finding.
         self.described = {p for c in named for p in self.parents[c] | self.above[c]}
         # Classes recognised by a fixed value (an Entity whose entityType is SelfManagedEntity).
@@ -188,6 +190,13 @@ class Blueprint:
         return [r for k in (c, *sorted(self.supers[c])) if k in self.restrictions for r in self.restrictions[k]]
 
     # Recognising members ---------------------------------------------------------------------
+
+    def shell_class(self, shell: dict) -> URIRef:
+        """The kind of resource an AAS is, by its asset type (the longest beginning that fits); a
+        resource as such if it states none that is known."""
+        stated = (shell.get("assetInformation") or {}).get("assetType") or ""
+        fitting = [start for start in self.asset_types if stated == start or stated.startswith(start + "/")]
+        return self.asset_types[max(fitting, key=len)] if fitting else RESOURCE_AAS
 
     def fits(self, c: URIRef, model_type: str) -> bool:
         return self.model_type.get(c) in (None, model_type)
@@ -342,8 +351,9 @@ class Check:
                     own.append(submodels[key])
                 else:
                     self.add("error", path, f"submodel {key} is referenced but not in the environment")
-            self.report.classes[path] = [name(RESOURCE_AAS)]
-            self.restrictions(path, shell, {RESOURCE_AAS} & b.classes, {"submodels": own})
+            kind = b.shell_class(shell)
+            self.report.classes[path] = [name(kind)]
+            self.restrictions(path, shell, {kind} & b.classes, {"submodels": own})
         return self.report
 
 

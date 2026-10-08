@@ -3,6 +3,8 @@ from the product's AAS into the resources' AASs, the way an executor would.
 
     step -> process -> required capability -> offered capability -> skill -> bound parameter
 
+A parameter of a skill is an input variable of the Operation of its Start command.
+
 Works on AAS environments (the JSON an AAS server holds), whoever built them.
 """
 from __future__ import annotations
@@ -11,8 +13,12 @@ from __future__ import annotations
 # What an AAS environment holds ------------------------------------------------------------------
 
 def children(element: dict | None) -> list[dict]:
-    """The elements an element holds; none for an element that is not there."""
+    """The elements an element holds (of an Operation: its variables); none for an element that is
+    not there."""
     element = element or {}
+    if element.get("modelType") == "Operation":
+        return [v["value"] for kind in ("inputVariables", "inoutputVariables", "outputVariables")
+                for v in element.get(kind) or []]
     held = element.get("submodelElements") or element.get("statements") or element.get("value")
     return [c for c in held if isinstance(c, dict) and "modelType" in c] if isinstance(held, list) else []
 
@@ -117,7 +123,7 @@ def check(product: dict, resources: dict[str, dict]) -> list[str]:
 
         # What is bound reaches a parameter of the skill, within its limits.
         for binding in children(at(step, "Bindings")):
-            parameter = at(skill, "Parameters", at(binding, "Name")["value"])
+            parameter = at(skill, "Start", "Start", at(binding, "Name")["value"])
             given = at(binding, "SourceElement")
             # A binding without a source is a constant: its own Value.
             source = resolve(envs, given["value"]) if given else at(binding, "Value")
