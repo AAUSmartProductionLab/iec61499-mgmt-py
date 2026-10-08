@@ -5,7 +5,7 @@ manner of the CSS reference model figure: one area per layer, associations named
 multiplicities at both ends. Iterated here in mermaid; once it settles it is redrawn in draw.io
 as the formal figure. Drafted 30 Sep 2026; second iteration the same day after reviewing
 CaSk/CaSkMan (below). How the concepts are carried in AAS, with example structures and the
-implementation plan: [aas-implementation-plan.md](aas-implementation-plan.md).
+implementation plan (30 Sep, archived): [aas-implementation-plan.md](../docs/archive/aas-implementation-plan.md).
 
 **Legend.** Fill = layer: services / agents (pink) and product and process (yellow),
 capabilities (blue) and skills (orange) as in the CSS figure; resources (green), interface

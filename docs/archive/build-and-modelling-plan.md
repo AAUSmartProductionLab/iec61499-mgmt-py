@@ -3,7 +3,7 @@
 Sep 25, 2026 · @Martin Jensen
 
 > **Status on 5 Oct 2026: where the work has moved away from this plan.** The plan is kept as
-> written; the current state is in [docs/work.md](docs/work.md). Read the sections below with
+> written; the current state is in [docs/work.md](../work.md). Read the sections below with
 > these changes in mind:
 >
 > - **"Unit" is now "module"**, and the unit structure described under *Standard unit structure

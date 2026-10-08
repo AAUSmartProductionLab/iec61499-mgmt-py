@@ -1,10 +1,10 @@
 # Ontologies
 
 The ontologies behind the product, process and resource AAS, and the links between them.
-The class diagrams in the build and modelling plan ("AAS models at a glance") draw the same
-model. The conceptual picture across all layers, including what is not formalised yet, is
-in [conceptual-model.md](conceptual-model.md); how it is carried in the AAS, with example structures and
-the implementation plan, in [aas-implementation-plan.md](aas-implementation-plan.md).
+The conceptual picture across all layers, including what is not formalised yet, is
+in [conceptual-model.md](conceptual-model.md). What the AASs hold as built is in
+[docs/aas-models.md](../docs/aas-models.md); the first target structures (30 Sep) are in
+[docs/archive](../docs/archive/aas-implementation-plan.md).
 
 ```
                           PPRL  (links, on CSS; + PPRL-rules.shacl.ttl)
