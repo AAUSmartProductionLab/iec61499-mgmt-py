@@ -49,11 +49,14 @@ def step(profile: dict, order: int) -> dict:
     return profile["production_sequence"]["Steps"]["Step"][f"Step_{order:04d}"]
 
 
-def assign(profile: dict, order: int, skill: str, resource: str | None = None) -> None:
-    """Give a step to another skill, of another resource if one is named."""
+def assign(profile: dict, order: int, skill: str, resource: str | None = None, held_by: str | None = None) -> None:
+    """Give a step to another skill, of another resource if one is named; ``held_by``: the AAS
+    whose Skills describe it (a component of the resource)."""
     planned = step(profile, order)
     planned["SkillId"]["value"] = skill
     planned["Skill"]["value"]["key"][-1]["value"] = skill
+    if held_by:
+        planned["Skill"]["value"]["key"][0]["value"] = f"{BASE}/aas/{held_by}/submodels/Skills"
     if resource:
         planned["Resource"]["value"]["key"][0]["value"] = f"{BASE}/aas/{resource}"
         planned["Skill"]["value"]["key"][0]["value"] = f"{BASE}/aas/{resource}/submodels/Skills"
@@ -113,8 +116,10 @@ def test_the_plan_can_be_followed_into_the_resources(line):
     assert at(binding, "Name")["value"] == "Volume"
     source = resolve(envs, at(binding, "SourceElement")["value"])
     assert (source["idShort"], float(source["value"])) == ("FillVolume", 2.0)
+    # It is an input of the skill's Start, and means what the capability's property means.
     skill = resolve(envs, at(steps[0], "Skill")["value"])
-    assert at(skill, "Parameters", "Volume") is not None
+    volume = at(skill, "Start", "Start", "Volume")
+    assert f"{BASE}/semantics/FillVolume" in plan_check.semantic_ids(volume) and plan_check.unit_of(volume) == "mL"
     # The liquid a filling uses is as much as that parameter says.
     liquid = at(resolve(envs, at(steps[0], "ProcessReference")["value"]), "ProcessBoM", "Liquid")
     assert resolve(envs, at(liquid, "QuantityParameterReference")["value"]) is source
@@ -128,7 +133,7 @@ def test_the_plan_can_be_followed_into_the_resources(line):
     (lambda p: process(p, "Filling")["ProductParameters"]["Parameter"]["FillVolume"]["qualifiers"][0].update(value="L"), "is in mL, FillVolume in L"),
     (lambda p: required(p, "Capping", "CapDiameter").update(value="28.0"), "CapDiameter = 28.0 is not covered"),
     (lambda p: required(p, "Inspection", "InspectionMethod").update(value="xray"), "InspectionMethod = xray is not covered"),
-    (lambda p: assign(p, 0, "Weigh"), "is not realized by Weigh"),
+    (lambda p: assign(p, 0, "Weigh", held_by="FillingScaleAAS"), "is not realized by Weigh"),
     (lambda p: step(p, 0)["Bindings"]["Binding"]["Binding_0000"]["Name"].update(value="Speed"), "Dispensing.Speed is not a parameter of the skill"),
     (lambda p: step(p, 0)["Bindings"]["Binding"].update(Binding_0000={"Name": {"value": "Volume"}, "Value": {"value": "12.5"}}),
      "the constant = 12.5 is outside 0.5 to 10.0"),
@@ -137,5 +142,44 @@ def test_the_plan_can_be_followed_into_the_resources(line):
 ])
 def test_a_plan_that_does_not_fit_is_told(line, change, told):
     resources, _ = line
-    found = plan_check.check(planned(change), resources)
+    found = plan_check.check(planned(change), {**resources, **example_line.components()})
     assert any(told in f for f in found), found
+
+
+def test_every_component_has_an_aas_of_its_own_and_the_line_names_its_modules(line):
+    """The bill of material of the resources: line -> modules -> components, each part found by its
+    asset id; and the hierarchy of skills: a module's skill runs the skills of its components."""
+    resources, _ = line
+    components = example_line.components()
+    assert list(components) == [
+        "FillingLinearAxisAAS", "FillingPumpAAS", "FillingScaleAAS", "StopperingLinearAxisAAS", "StopperingPistonAAS",
+        "CappingLinearAxisAAS", "CappingCrimperAAS", "InspectionTopCameraAAS", "InspectionSideCameraAAS"]
+    blueprint = Blueprint(ARSO)
+    kinds = {}
+    for name, env in components.items():
+        assert ontology_check(env, blueprint).ok, name
+        read_aas_json_file(io.StringIO(json.dumps(env)), failsafe=False)
+        kinds.setdefault(plan_check.shell_of(env)["assetInformation"]["assetType"].rsplit("/", 1)[-1], []).append(name)
+    # What kind a component is, is shared: three axes, with the same two skills.
+    assert kinds["LinearAxis"] == ["FillingLinearAxisAAS", "StopperingLinearAxisAAS", "CappingLinearAxisAAS"]
+    for name in kinds["LinearAxis"]:
+        held = next(s for s in components[name]["submodels"] if s["idShort"] == "Skills")
+        assert [s["idShort"] for s in children(at(held, "Skills"))] == ["Home", "MoveAxis"]
+    assets = {plan_check.shell_of(env)["assetInformation"]["globalAssetId"]: name for name, env in {**resources, **components}.items()}
+    # A module's parts are its components ...
+    filling = next(s for s in resources["FillingModuleAAS"]["submodels"] if s["idShort"] == "HierarchicalStructures")
+    assert [assets[n["globalAssetId"]] for n in children(at(filling, "EntryNode"))] == [
+        "FillingLinearAxisAAS", "FillingPumpAAS", "FillingScaleAAS"]
+    # ... and the line's parts are the modules, with the two that are not described yet at its ends.
+    system = example_line.line(resources)
+    assert plan_check.shell_of(system)["assetInformation"]["assetType"] == f"{BASE}/Resource/System"
+    assert ontology_check(system, blueprint).ok
+    nodes = children(at(system["submodels"][0], "EntryNode"))
+    assert [n["idShort"] for n in nodes] == ["LoadingModule", "FillingModule", "StopperingModule", "CappingModule",
+                                             "InspectionModule", "UnloadingModule"]
+    assert [assets.get(n["globalAssetId"]) for n in nodes][1:5] == list(resources)
+    # The steps of a module's skill run skills of its components.
+    envs = [*resources.values(), *components.values()]
+    dispensing = at(next(s for s in resources["FillingModuleAAS"]["submodels"] if s["idShort"] == "Skills"), "Skills", "Dispensing")
+    ran = [resolve(envs, at(step, "Skill")["value"]) for step in children(at(dispensing, "Start", "Steps"))]
+    assert [s["idShort"] for s in ran] == ["MoveAxis", "Dispense", "Home", "Weigh"]

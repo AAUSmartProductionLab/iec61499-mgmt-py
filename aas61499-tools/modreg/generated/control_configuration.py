@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Any, ClassVar, List, Dict, Optional, TypeAlias
 from aas_pydantic import (
-    Property, Submodel, SubmodelElement, SubmodelElementCollection, SubmodelElementList,
+    Property, ReferenceElement, Submodel, SubmodelElement, SubmodelElementCollection, SubmodelElementList,
 )
 
 class Runtime(SubmodelElementCollection):
     semantic_id: str = ""
     description: str = "The controller runtime: Name, ManagementEndpoint, Resource."
-    ManagementEndpoint: Optional[Property] = None
     Name: Optional[Property] = None
+    ManagementEndpoint: Optional[Property] = None
     Resource: Optional[Property] = None
 
 class Differences(SubmodelElementCollection):
@@ -22,8 +22,8 @@ class Differences(SubmodelElementCollection):
 class CCfgType(SubmodelElementCollection):
     semantic_id: str = ""
     description: str = "One function block type in use."
-    Hash: Optional[Property] = None
     Name: Optional[Property] = None
+    Hash: Optional[Property] = None
 
 # alias so field ``CCfgType_t`` can name a class of the same id_short
 CCfgType_t: TypeAlias = CCfgType
@@ -31,6 +31,21 @@ class Types(SubmodelElementCollection):
     semantic_id: str = ""
     description: str = "The function block types in use, each with Name and Hash as the runtime reports them."
     CCfgType: Dict[str, CCfgType_t] = {}
+
+class CCfgInstance(SubmodelElementCollection):
+    semantic_id: str = ""
+    description: str = "One block of the program, named like its instance path with underscores."
+    InstancePath: Optional[Property] = None
+    FBType: Optional[Property] = None
+    TypeHash: Optional[Property] = None
+    Skill: Optional[ReferenceElement] = None
+
+# alias so field ``CCfgInstance_t`` can name a class of the same id_short
+CCfgInstance_t: TypeAlias = CCfgInstance
+class Instances(SubmodelElementCollection):
+    semantic_id: str = ""
+    description: str = "The blocks of the program that are the resource's skills and the steps of their commands: which block, of which type, is which skill."
+    CCfgInstance: Dict[str, CCfgInstance_t] = {}
 
 class ActiveProcedure(SubmodelElementCollection):
     semantic_id: str = ""
@@ -54,6 +69,8 @@ Runtime_t: TypeAlias = Runtime
 Differences_t: TypeAlias = Differences
 # alias so field ``Types_t`` can name a class of the same id_short
 Types_t: TypeAlias = Types
+# alias so field ``Instances_t`` can name a class of the same id_short
+Instances_t: TypeAlias = Instances
 # alias so field ``ActiveProcedure_t`` can name a class of the same id_short
 ActiveProcedure_t: TypeAlias = ActiveProcedure
 # alias so field ``ChangeLog_t`` can name a class of the same id_short
@@ -65,14 +82,15 @@ class ControlConfiguration(Submodel):
     REVISION: ClassVar[str] = "0"
     Runtime: Optional[Runtime_t] = None
     Rules: Optional[Property] = None
-    Generator: Optional[Property] = None
     ModuleSpec: Optional[Property] = None
+    Target: Optional[Property] = None
+    Generator: Optional[Property] = None
     ProgramDigest: Optional[Property] = None
     ReadAt: Optional[Property] = None
-    Target: Optional[Property] = None
     SyncState: Property
     Differences: Optional[Differences_t] = None
     Types: Optional[Types_t] = None
+    Instances: Optional[Instances_t] = None
     ActiveProcedure: Optional[ActiveProcedure_t] = None
     ChangeLog: Optional[ChangeLog_t] = None
 
@@ -81,6 +99,8 @@ Runtime.model_rebuild()
 Differences.model_rebuild()
 CCfgType.model_rebuild()
 Types.model_rebuild()
+CCfgInstance.model_rebuild()
+Instances.model_rebuild()
 ActiveProcedure.model_rebuild()
 CCfgChange.model_rebuild()
 ChangeLog.model_rebuild()

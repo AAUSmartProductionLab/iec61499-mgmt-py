@@ -1,28 +1,28 @@
 """A module's AAS in the structure of the resource ontology (ARSO), from its module spec and, when
 read, what runs on it.
 
-``describe`` fills a ``ModuleTypeAAS``; ``model.profile`` turns it into the profile the module carries
-and registers with (its manifest), ``model.environment`` into the AAS.
+``describe`` fills a ``ModuleTypeAAS``, and ``describe_all`` also a ``ComponentTypeAAS`` for every
+part of the module that has skills; ``model.profile`` turns each into the profile it is registered
+with (its manifest), ``model.environment`` into the AAS.
 
 - **Asset Interfaces Description**: the OPC UA server; every method as an action (browse path,
   arguments in call order) and every published variable as a property.
-- **Skills**: Occupy, Release and every skill the module offers, each with its SemanticId, its
-  Operation (the parameters as inputs) and the reference to its Start action; and its kind,
-  parameters, contract or sequences, occupied equipment, state reference and implementing function
-  block. A primitive that is not offered only runs as a step of a module level skill: it is a
-  building block (its block type, parameters, contract and equipment), which the steps refer to.
-  The skills of kind Primitive and the building blocks are what a new skill can be built from.
-  Every step refers to the State it publishes (with its ErrorID, parameters and results beside
-  it). The procedures the module runs while Resetting and Stopping are sequences of steps as well.
+- **Skills**: what the module offers. A skill is its commands (Start, Stop, Abort, Reset): each
+  holds the action that calls it, its Operation (the session and the parameters in; whether it was
+  accepted, why not and the results out) and, for a module level skill, the steps it runs. A step
+  refers to the skill it runs and says what is connected to that skill's variables: a constant, or
+  a variable of the command's own Operation. The primitives are in the AAS of the component they
+  move; one without a component is the module's own.
+- **Module**: the module's own commands in the same shape: Occupy, Release and its state machine.
+  What it runs while resetting and stopping are the steps of Reset and Stop.
 - **Operational Data** with the mapping that feeds it (Asset Interfaces Mapping Configuration):
   module state, occupation, skill and step states, parameters and results, equipment inputs, as
-  decimal data points.
-- No **Parameters** submodel: a skill's parameters are with the skill (the inputs of its Operation,
-  and declared with unit, limits and deployed value in its Parameters). The submodel is optional
-  in ARSO; what belongs in it is open.
-- **Hierarchical Structures**: the equipment as parts of the module.
-- **Control Configuration**: spec, target and program digest; from a module that was read also the
-  synchronisation state, the differences and the type hashes.
+  decimal data points. A data point means what the Operation variable it shows means (the same
+  semantic id); nothing in Skills refers to it.
+- **Hierarchical Structures**: the components, each with an AAS of its own, found by its asset id.
+- **Control Configuration**: spec, target and program digest, and which block of the program each
+  skill and each step is (Instances); from a module that was read also the synchronisation state,
+  the differences and the type hashes.
 """
 from __future__ import annotations
 
@@ -37,9 +37,7 @@ from aas_model.resource_template.asset_interfaces_mapping_configuration import m
 from aas_model.submodel_templates import (
     Aimc, AimcMappingConfigurations, DmpActionInput, DmpActionOutput, OpcuaAction, OpcuaProperty, OperationVariableProp,
 )
-from aas_pydantic import (
-    Capability, Key, ModelReference, Property, Qualifier, ReferenceElement, RelationshipElement,
-)
+from aas_pydantic import Capability, Key, ModelReference, Property, Qualifier, ReferenceElement
 from aas_pydantic.submodel_templates import asset_interfaces_description as wot
 from aas_pydantic.submodel_templates import capability_description as cd
 from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures, Node
@@ -48,17 +46,17 @@ from aas_pydantic.submodel_templates.nameplate import ManufacturerProductDesigna
 from modgen.library import q
 from modgen.module import parameter_port
 from modgen.spec import ModuleSpec, Parameter
-from modsync.aas import MODULE_METHODS, SKILL_METHODS, browse_path, current, identity
+from modsync.aas import MODULE_METHODS, browse_path, current, identity
 from modsync.compare import Drift, expected, expected_values
 from modsync.device import Snapshot
 
 from . import model
-from .generated import control_configuration as cc, skills as arso
-from .generated.operational_data import OperationalData
-from .model import ModuleSkill, ModuleTypeAAS
+from .generated import control_configuration as cc, module as arso_module, skills as arso
+from .model import ComponentTypeAAS, ModuleTypeAAS
 
 AID = "{aas_id}/submodels/AssetInterfacesDescription"
 SKILLS = "{aas_id}/submodels/Skills"
+MODULE = "{aas_id}/submodels/Module"
 STRUCTURE = "{aas_id}/submodels/HierarchicalStructures"
 DATA = "{aas_id}/submodels/OperationalData"
 CAPABILITIES = "{aas_id}/submodels/CapabilityDescription"
@@ -82,6 +80,8 @@ MODULE_STATE = "https://w3id.org/2026/apex/semantic/state/operational"
 # The rules a generated module is built by (docs/module-rules.md).
 RULES = f"{BASE_URL}/rules/module/1"
 OCCUPIED = "https://w3id.org/2026/apex/semantic/state/occupied"
+# What a skill can be told: a command means the same on every skill (ontology/Vocabulary/commands.ttl).
+COMMAND = f"{BASE_URL}/skill"
 
 
 def text(value) -> str:
@@ -125,9 +125,6 @@ def schema(parameters: dict[str, Parameter]) -> dict:
     return {"type": "object", "properties": fields}
 
 
-CONTROL_TYPE = q("SKILL_Core")
-
-
 def block_type(spec: ModuleSpec, skill: str) -> str:
     """The function block type of a skill primitive, as modgen names it."""
     return f"{spec.package}::SK_{skill}"
@@ -142,10 +139,19 @@ def declared_parameter(name: str, pr: Parameter, value) -> Property:
 
 
 def contract(decl) -> arso.Contract:
-    """A primitive's contract, as the module spec states it."""
-    ends = {"Ensures": decl.ensures} if decl.ensures is not None else {"After": decl.after}
-    terms = {"Requires": decl.requires, **ends, "Invariant": decl.invariant, "Timeout": decl.timeout}
-    return arso.Contract(**{k: prop(v) for k, v in terms.items() if v is not None})
+    """What starts, ends and bounds a primitive, as the module spec states it. A condition that is
+    plainly true is left out."""
+    done = {"Ensures": decl.ensures} if decl.ensures is not None else {"After": decl.after}
+    terms = {"Requires": decl.requires, **done, "Invariant": decl.invariant, "Timeout": decl.timeout}
+    return arso.Contract(**{k: prop(v) for k, v in terms.items() if v is not None and v != "TRUE"})
+
+
+def component_identity(spec: ModuleSpec, item: str) -> tuple[str, str, str, str]:
+    """(idShort, id, globalAssetId, assetType) of the AAS of a component: named after the module and
+    the item, of the kind every component like it shares."""
+    name = f"{spec.module}{item}"
+    return (f"{name}AAS", f"{BASE_URL}/aas/{name}AAS", f"{BASE_URL}/assets/{name}",
+            f"{model.RESOURCE}/Component/{spec.equipment[item].kind or item}")
 
 
 def result_input(spec: ModuleSpec, skill: str, result: str):
@@ -169,6 +175,10 @@ def program_digest(spec: ModuleSpec, target: str) -> str:
     return hashlib.sha256(json.dumps(program, separators=(",", ":")).encode()).hexdigest()
 
 
+# A module level skill has no type of its own: it is its Control block.
+CONTROL_TYPE = q("SKILL_Core")
+
+
 class Describer:
     """Collects the interface while the skills and data points are described, then builds the model."""
 
@@ -179,10 +189,16 @@ class Describer:
         self.actions: dict[str, OpcuaAction] = {}
         self.properties: dict[str, OpcuaProperty] = {}
         self.datapoints: dict[str, tuple[str, str, str]] = {}    # data point -> (interface property, concept, title)
-        # Operation -> (where it is, the interface action it invokes, its arguments in call order)
-        self.operations: dict[str, tuple[ModelReference, str, list[str]]] = {}
-        # The skills the AAS lists: those with an interface of their own.
-        self.listed = [n for n, s in [*spec.skills.items(), *spec.composites.items()] if s.offered]
+        # Action of the interface -> (the Operation that invokes it, its arguments in call order)
+        self.operations: dict[str, tuple[ModelReference, list[str]]] = {}
+        # Block of the program -> (its type as the module's rules name it, the skill or step it is)
+        self.instances: dict[str, tuple[str, ModelReference]] = {}
+        self.module_id = identity(spec)[1]
+        # The components: every item of equipment that a skill moves.
+        self.components = [item for item in spec.equipment if any(d.equipment == item for d in spec.skills.values())]
+        # What a parameter of a skill means in a product's terms: the capability property it sets.
+        self.means = {(cap.realized_by, value.parameter): meaning(prop_name, value.semantic_id)
+                      for cap in spec.capabilities.values() for prop_name, value in cap.properties.items() if value.parameter}
 
     # Interface -------------------------------------------------------------------------------
 
@@ -224,70 +240,104 @@ class Describer:
 
     # Skills ----------------------------------------------------------------------------------
 
-    def skill_reference(self, name: str, id_short: str = "Skill") -> ReferenceElement:
-        """A skill of this submodel, or its building block if the module does not offer it."""
-        held = "Skills" if name in self.listed else "BuildingBlocks"
-        return ReferenceElement(id_short=id_short, value=path(SKILLS, (SMC, held), (SMC, name)))
+    def home(self, name: str, inside: str | None = None) -> str:
+        """The Skills submodel a skill is described in, as seen from the AAS of ``inside`` (a
+        component; None: the module): the component's it moves, else the module's."""
+        decl = self.spec.skills.get(name)
+        item = decl.equipment if decl is not None and decl.equipment in self.components else None
+        if item == inside:
+            return SKILLS
+        return f"{component_identity(self.spec, item)[1] if item else self.module_id}/submodels/Skills"
 
-    def operation(self, name: str, action: str, parameters: dict[str, Parameter], about: str, meaning_id: str,
-                  at: ModelReference):
-        """A delegated Operation that invokes an action of the interface (the AIMC maps it there):
-        the session and the parameters in, Accepted and ErrorID out. ``at`` is where it lives."""
-        def var(id_short, value_type, text_):
-            return OperationVariableProp(id_short=id_short, value_type=value_type, description=text_)
+    def skill_reference(self, name: str) -> ReferenceElement:
+        return ReferenceElement(value=path(self.home(name), (SMC, "Skills"), (SMC, name)))
 
-        op = skill_operation(name, synchronous=True)
+    def variable(self, name: str, value_type: str, about: str, concept: str | None = None, pr: Parameter | None = None,
+                 value=None, unit: str | None = None, means: str | None = None) -> OperationVariableProp:
+        """A variable of an Operation. A parameter carries its value (the default, or what the module
+        runs with), its unit and its limits; ``concept`` is what the data point showing it means too,
+        ``means`` what it is in a product's terms."""
+        declared = [("Unit", pr.unit if pr else unit), ("Minimum", pr.minimum if pr else None),
+                    ("Maximum", pr.maximum if pr else None), ("Default", pr.default if pr else None)]
+        made = OperationVariableProp(
+            id_short=name, value_type=value_type, description=about,
+            qualifiers=[Qualifier(type_=k, value=text(v), kind="ConceptQualifier") for k, v in declared if v is not None])
+        if value is not None:
+            made.value = text(value)
+        if concept:
+            made.semantic_id = concept
+        if means:
+            made.supplemental_semantic_ids = [means]
+        return made
+
+    def operation(self, key: str | None, at: ModelReference, about: str, meaning_id: str, inputs=(), outputs=()):
+        """The Operation of a command: the session and ``inputs`` in; Accepted, ErrorID and
+        ``outputs`` out. With ``key`` it invokes that action of the interface (the AIMC maps it
+        there, and the lab's delegation service calls it)."""
+        op = skill_operation(key or "local", synchronous=True)
+        if not key:
+            op.qualifiers = []                      # nothing calls it: it only declares the variables
         op.semantic_id = meaning_id
         op.description = about
         op.in_output_variable = []
-        op.input_variable = [var("Session", "xs:string", "Occupation session of the caller"),
-                             *[var(p, XSD[pr.type], pr.description or p) for p, pr in parameters.items()]]
-        op.output_variable = [var("Accepted", "xs:boolean", "The command was accepted"),
-                              var("ErrorID", "xs:unsignedShort", f"Why it was refused: {ERRORS}")]
-        self.operations[name] = (at, action, ["Session", *parameters])
-        # The action says which command it carries out, beside the id every action has. Open:
-        # whether this should be its semanticId instead (6 Oct 2026).
-        self.actions[action].supplemental_semantic_ids = [meaning_id]
+        op.input_variable = [self.variable("Session", "xs:string", "Occupation session of the caller"), *inputs]
+        op.output_variable = [self.variable("Accepted", "xs:boolean", "The command was accepted"),
+                              self.variable("ErrorID", "xs:unsignedShort", f"Why it was refused or failed: {ERRORS}"),
+                              *outputs]
+        if key:
+            self.operations[key] = (at, [v.id_short for v in op.input_variable])
         return op
 
-    def entry(self, name: str, action: str, parameters: dict[str, Parameter], description: str) -> ModuleSkill:
-        """What ARSO asks of every skill: SemanticId, Operation and the reference to its action."""
-        op = self.operation(name, action, parameters,
-                            f"Start {name}; the answer says whether it was accepted, its State how it went.",
-                            skill_id(name), path(SKILLS, (SMC, "Skills"), (SMC, name), ("Operation", name)))
-        return ModuleSkill(description=description, SemanticId=prop(skill_id(name)), SkillOperation={name: op},
-                           InterfaceReference=ReferenceElement(value=affordance("actions", action)))
+    def command(self, made, name: str, where: str, at: tuple, meaning_id: str, about: str, key: str | None = None,
+                node: str = "", parameters: dict[str, Parameter] | None = None, inputs=(), outputs=(),
+                says: list[str] | None = None, interface: str = AID):
+        """One command of a skill or of the module: ``made``, named ``name``, at ``at`` in the
+        submodel ``where``. With ``key`` it is callable: an action of the interface (the method
+        ``node``), the Operation that invokes it, and the reference to that action."""
+        made.semantic_id = meaning_id
+        made.description = about
+        if key:
+            self.action(key, node, about.partition(";")[0], parameters)
+            # The action says which command it carries out, beside the id every action has.
+            self.actions[key].supplemental_semantic_ids = says or [meaning_id]
+            made.InterfaceReference = ReferenceElement(value=path(
+                interface, (SMC, "interface_opcua"), (SMC, "InteractionMetadata"), (SMC, "actions"), (SMC, key)))
+        put(made.SkillOperation, name, self.operation(key, path(where, *at, ("Operation", name)), about, meaning_id,
+                                                      inputs, outputs))
+        return made
 
-    def links(self, kind: str, keys: dict[str, str]) -> model.InterfaceLinks:
-        """References to actions or properties of the interface, by the name they go by."""
-        found = {}
-        for name, key in keys.items():
-            put(found, name, ReferenceElement(value=affordance(kind, key)))
-        return model.InterfaceLinks(Link=found)
-
-    def sequence(self, owner: str, steps, node: str, key: str, concept: str) -> model.ModuleSkillSequence:
-        """A sequence with each step's bindings (a constant as it runs on the module, or the
-        reference to the parameter of the module level skill that is handed down) and the variables
-        each step publishes below ``node``."""
-        items = []
-        for i, step in enumerate(steps, 1):
+    def steps(self, ns, owner: str, sequence, node: str, key: str, concept: str, where: str, at: tuple, command: str,
+              results: dict[str, str] | None = None):
+        """What a command runs: steps P1, P2, ... in order (``ns``: the generated classes of the
+        submodel). A step refers to the skill it runs and holds what is connected, each element
+        named like a variable of that skill's Start: a constant as it runs on the module, or a
+        reference to a variable of the command's Operation (an input handed down, or the output a
+        result becomes: ``results``, output -> "<step>.<its result>"). A step means what its
+        instance in the program is called (``concept``/<step>): its state and what it publishes
+        below ``node`` are data points named from there."""
+        held = ns.Steps()
+        variable = lambda v: ReferenceElement(value=path(where, *at, ("Operation", command), ("Property", v)))    # noqa: E731
+        for order, step in enumerate(sequence, 1):
             declared = self.spec.skills[step.skill].parameters
-            bindings = model.StepBindings()
+            made = ns.SkillStep(Skill=self.skill_reference(step.skill), semantic_id=f"{concept}/{step.name}",
+                                description=f"{step.name}: runs {step.skill}")
             for p, v in step.bind.items():
                 if isinstance(v, str):
-                    put(bindings.Source, p, ReferenceElement(value=path(
-                        SKILLS, (SMC, "Skills"), (SMC, owner.partition(".")[0]), (SMC, "Parameters"), ("Property", v))))
+                    put(made.StepVariable, p, variable(v))
                 else:
                     # As the module runs it, else as bound (not the skill's default).
-                    put(bindings.Binding, p, prop(
+                    put(made.StepConstant, p, prop(
                         current(f"{owner}.{step.name}.{p}", declared[p].model_copy(update={"default": v}), self.snap),
                         XSD[declared[p].type]))
-            state = self.step_variables(step, f"{node}/{step.name}", f"{key}_{step.name}", f"{concept}/{step.name}")
-            items.append(model.ModuleSkillStep(
-                id_short=f"Step{i:02d}", Skill=self.skill_reference(step.skill), InstancePath=prop(f"{owner}.{step.name}"),
-                Bindings=bindings if bindings.Binding or bindings.Source else None,
-                StateReference=ReferenceElement(value=affordance("properties", state))))
-        return model.ModuleSkillSequence(value=items)
+            for output, source in (results or {}).items():
+                of, _, inner = source.partition(".")
+                if of == step.name:
+                    put(made.StepVariable, inner, variable(output))
+            self.step_variables(step, f"{node}/{step.name}", f"{key}_{step.name}", f"{concept}/{step.name}")
+            self.instances[f"{owner}.{step.name}"] = (block_type(self.spec, step.skill),
+                                                      path(where, *at, (SMC, "Steps"), (SMC, f"P{order}")))
+            put(held.SkillStep, f"P{order}", made)
+        return held if held.SkillStep else None
 
     def step_variables(self, step, node: str, key: str, concept: str) -> str:
         """What a step publishes, as for a skill: State and ErrorID (both data points), and the
@@ -308,108 +358,102 @@ class Describer:
             self.observe(found, found, f"{concept}/Results/{r}", f"Result {r} of {title}")
         return state
 
-    def implementation(self, typ: str, instance: str | None = None) -> arso.Implementation:
-        """The block behind a skill: its type (``typ`` as the module's rules name it; from a module
-        that was read, the type its instance has there, with the hash) and the instance that is the
-        skill (a building block has none)."""
-        typ = (self.snap.fbs.get(instance) if self.snap and instance else None) or typ
-        known = self.snap.hashes.get(typ) if self.snap else None
-        return arso.Implementation(FBType=prop(typ), TypeHash=prop(known) if known else None,
-                                   InstancePath=prop(instance) if instance else None)
-
-    def occupies(self, name: str) -> model.SkillOccupies | None:
-        """The equipment a skill locks while it runs, as nodes of the Hierarchical Structures."""
-        occupied = [ReferenceElement(id_short=item, value=path(STRUCTURE, ("Entity", "EntryNode"), ("Entity", item)))
-                    for item in self.spec.uses(name)]
-        return model.SkillOccupies(value=occupied) if occupied else None
-
-    def building_block(self, name: str) -> model.ModuleBuildingBlock:
-        """A primitive the module does not offer: the block type a step of it is an instance of,
-        what it takes (the values are the type's defaults; a step's own are its Bindings), what it
-        gives back, its contract and the equipment it locks."""
-        spec, decl = self.spec, self.spec.skills[name]
-        block = model.ModuleBuildingBlock(
-            description=decl.description or f"Skill {name}", SemanticId=prop(skill_id(name)), Kind=prop("Primitive"),
-            Contract=contract(decl), Occupies=self.occupies(name),
-            Implementation=self.implementation(block_type(spec, name)))
-        if decl.parameters:
-            block.Parameters = arso.Parameters()
-            for p, pr in decl.parameters.items():
-                put(block.Parameters.SkillParameter, p, declared_parameter(p, pr, pr.default))
-        if decl.results:
-            block.Results = arso.Results()
-            for r in decl.results:
-                source = result_input(spec, name, r)
-                put(block.Results.BuildingBlockResult, r, Property(
-                    value_type=XSD[source.type], description=f"Result {r}",
-                    qualifiers=[Qualifier(type_="Unit", value=source.unit, kind="ConceptQualifier")] if source.unit else []))
-        return block
-
-    def skill(self, name: str) -> ModuleSkill:
+    def skill(self, name: str) -> model.ModuleSkill:
+        """A skill with its commands. A module level skill (composite) runs steps on Start and on
+        Stop; a primitive runs nothing and states what ends it (Contract). A skill the module offers
+        has an action per command and publishes its state, why it last failed, its parameters and
+        its results as data points; one that only runs as a step has a Start that nothing calls."""
         spec = self.spec
         composite = name in spec.composites
         decl = spec.composites[name] if composite else spec.skills[name]
-        node = f"/Skills/{name}"
-        start = self.action(f"{name}_Start", f"{node}/Start", f"Start {name}", decl.parameters)
-        for method in SKILL_METHODS[1:]:
-            self.action(f"{name}_{method}", f"{node}/{method}", f"{method} {name}")
-        skill = self.entry(name, start, decl.parameters, decl.description or f"Skill {name}")
-        for method in SKILL_METHODS[1:]:
-            command = f"{name}_{method}"
-            put(skill.SkillOperation, command, self.operation(
-                command, command, {}, f"{method} {name}; the answer says whether it was accepted.",
-                f"{skill_id(name)}/{method}", path(SKILLS, (SMC, "Skills"), (SMC, name), ("Operation", command))))
-        skill.Methods = self.links("actions", {m: f"{name}_{m}" for m in SKILL_METHODS})
-        skill.Kind = prop("Composite" if composite else "Primitive")
-        if decl.parameters:
-            skill.Parameters = arso.Parameters()
-            for p, pr in decl.parameters.items():
-                put(skill.Parameters.SkillParameter, p,
-                    declared_parameter(p, pr, current(parameter_port(spec, name, p), pr, self.snap)))
+        item = decl.equipment if not composite and decl.equipment in self.components else None
+        offered, node, here = decl.offered, f"/Skills/{name}", ((SMC, "Skills"), (SMC, name))
+        where = self.home(name)                         # as the module sees it (the mapping is the module's)
+        interface = AID if item is None else f"{self.module_id}/submodels/AssetInterfacesDescription"
+        skill = model.ModuleSkill(description=decl.description or f"Skill {name}", SemanticId=prop(skill_id(name)),
+                           semantic_id=f"{COMMAND}/{'Composite' if composite else 'Primitive'}")
+
+        def told(command: str, about: str, **more):
+            says = [f"{COMMAND}/{command}", skill_id(name)]
+            return self.command(getattr(arso, command)(), command, where, (*here, (SMC, command)), f"{COMMAND}/{command}",
+                                about, f"{name}_{command}" if offered else None, f"{node}/{command}", says=says,
+                                interface=interface, **more)
+
+        inputs, outputs = [], []
+        for p, pr in decl.parameters.items():
+            # Of an offered skill the value as deployed; of one that only runs as a step the type's default.
+            value = current(parameter_port(spec, name, p), pr, self.snap) if offered else pr.default
+            inputs.append(self.variable(p, XSD[pr.type], pr.description or f"Parameter {p}", f"{skill_id(name)}/Parameters/{p}",
+                                        pr, value, means=self.means.get((name, p))))
+            if offered:
                 key = self.property(f"{name}_Parameter_{p}", f"{node}/Parameters/{p}", pr.type,
                                     f"{name} {p} of the current or last run", pr.unit)
                 self.observe(key, key, f"{skill_id(name)}/Parameters/{p}", f"{name} {p} of the current or last run")
-        if composite:
-            put(skill.SkillSequence, "Execute", self.sequence(f"{name}.Execute", decl.execute, f"{node}/Execute",
-                                                              f"{name}_Execute", f"{skill_id(name)}/Execute"))
-            if decl.stop:
-                # Published below .../Stopping: a "Stop" object would collide with the Stop method.
-                put(skill.SkillSequence, "Stop", self.sequence(f"{name}.Stop", decl.stop, f"{node}/Stopping",
-                                                               f"{name}_Stopping", f"{skill_id(name)}/Stopping"))
-            used = dict.fromkeys(s.skill for s in [*decl.execute, *decl.stop])
-            skill.Uses = model.SkillUses(value=[self.skill_reference(u, u) for u in used])
-        else:
-            skill.Contract = contract(decl)
-        skill.Occupies = self.occupies(name)
-        # A module level skill has no type of its own: it is its Control block, a SKILL_Core.
-        skill.Implementation = (self.implementation(CONTROL_TYPE, f"{name}.Control") if composite
-                                else self.implementation(block_type(spec, name), name))
-        state = self.property(f"{name}_State", f"{node}/State", "USINT", f"{name} state: {SKILL_STATES}")
-        self.observe(f"{name}_State", state, f"{skill_id(name)}/State", f"State of {name}: {SKILL_STATES}")
-        skill.StateReference = ReferenceElement(value=affordance("properties", state))
-        error = self.property(f"{name}_ErrorID", f"{node}/ErrorID", "UINT", f"{name} error: {ERRORS}")
-        self.observe(f"{name}_ErrorID", error, f"{skill_id(name)}/ErrorID", f"Why {name} last failed: {ERRORS}")
-        skill.ErrorReference = ReferenceElement(value=affordance("properties", error))
-        results = {}
         for r in decl.results:
             source = result_input(spec, name, r)
-            results[r] = self.property(f"{name}_Result_{r}", f"{node}/Results/{r}", source.type, f"{name} result {r}",
-                                       source.unit)
-            self.observe(f"{name}_Result_{r}", results[r], f"{skill_id(name)}/Results/{r}", f"Result {r} of {name}")
-        skill.Results = self.links("properties", results) if results else None
+            outputs.append(self.variable(r, XSD[source.type], f"Result {r}", f"{skill_id(name)}/Results/{r}", unit=source.unit))
+            if offered:
+                key = self.property(f"{name}_Result_{r}", f"{node}/Results/{r}", source.type, f"{name} result {r}", source.unit)
+                self.observe(f"{name}_Result_{r}", key, f"{skill_id(name)}/Results/{r}", f"Result {r} of {name}")
+        start = told("Start", f"Start {name}; the answer says whether it was accepted, its state how it went.",
+                     parameters=decl.parameters, inputs=inputs, outputs=outputs)
+        skill.Start = start
+        if composite:
+            start.Steps = self.steps(arso, f"{name}.Execute", decl.execute, f"{node}/Execute", f"{name}_Execute",
+                                     f"{skill_id(name)}/Execute", where, (*here, (SMC, "Start")), "Start", decl.results)
+            # A module level skill has no type of its own: it is its Control block, a SKILL_Core.
+            self.instances[f"{name}.Control"] = (CONTROL_TYPE, path(where, *here))
+        else:
+            skill.Contract = contract(decl)
+            if offered:
+                self.instances[name] = (block_type(spec, name), path(where, *here))
+        if offered or (composite and decl.stop):
+            stop = told("Stop", f"Stop {name}; the answer says whether it was accepted.")
+            if composite and decl.stop:
+                # Published below .../Stopping: a "Stop" object would collide with the Stop method.
+                stop.Steps = self.steps(arso, f"{name}.Stop", decl.stop, f"{node}/Stopping", f"{name}_Stopping",
+                                        f"{skill_id(name)}/Stopping", where, (*here, (SMC, "Stop")), "Stop")
+            skill.Stop = stop
+        if offered:
+            skill.Abort = told("Abort", f"Abort {name}; the answer says whether it was accepted.")
+            skill.Reset = told("Reset", f"Reset {name}; the answer says whether it was accepted.")
+            state = self.property(f"{name}_State", f"{node}/State", "USINT", f"{name} state: {SKILL_STATES}")
+            self.observe(f"{name}_State", state, f"{skill_id(name)}/State", f"State of {name}: {SKILL_STATES}")
+            error = self.property(f"{name}_ErrorID", f"{node}/ErrorID", "UINT", f"{name} error: {ERRORS}")
+            self.observe(f"{name}_ErrorID", error, f"{skill_id(name)}/ErrorID", f"Why {name} last failed: {ERRORS}")
         return skill
 
-    def occupation(self, name: str) -> ModuleSkill:
-        """Occupy and Release, the two skills every resource of the lab has."""
-        key = self.action(f"Occupation_{name}", f"/Occupation/{name}", f"{name} the module")
-        return self.entry(name, key, {}, f"{name} the module for one client (its session)")
+    def module(self) -> arso_module.Module:
+        """The module's own commands: who may use it (Occupy, Release) and its state machine. What
+        it runs itself while resetting and stopping are the steps of Reset and Stop. Its state and
+        its occupation are data points."""
+        machine, spec = arso_module.Module(id_short="Module"), self.spec
+        for name in ("Occupy", "Release"):
+            setattr(machine, name, self.command(
+                getattr(arso_module, name)(), name, MODULE, ((SMC, name),), skill_id(name),
+                f"{name} the module for one client (its session)", f"Occupation_{name}", f"/Occupation/{name}"))
+        occupied = self.property("Occupation_Occupied", "/Occupation/Occupied", "BOOL", "Occupied by a session")
+        self.observe("OccupationState", occupied, OCCUPIED, "Occupied by a session: 0 free, 1 occupied")
+        procedures = {"Reset": "Resetting", "Stop": "Stopping"}
+        for m in MODULE_METHODS:
+            made = self.command(getattr(arso_module, m)(), m, MODULE, ((SMC, m),), f"{MODULE_STATE}/{m}",
+                                f"{m} the module (PackML); the answer says whether it was accepted.", f"Module_{m}",
+                                f"/Module/{m}")
+            proc = procedures.get(m)
+            if proc in spec.procedures:
+                made.Steps = self.steps(arso_module, proc, spec.procedures[proc], f"/Procedures/{proc}", f"Procedure_{proc}",
+                                        f"{BASE_URL}/procedures/{proc}", MODULE, ((SMC, m),), m)
+            setattr(machine, m, made)
+        state = self.property("Module_State", "/Module/State", "USINT", f"PackML state: {MODULE_STATES}")
+        self.observe("PackMLState", state, MODULE_STATE, f"PackML state of the module: {MODULE_STATES}")
+        return machine
 
     # Submodels -------------------------------------------------------------------------------
 
     def mappings(self) -> Aimc:
         """How the interface reaches the other submodels (AIMC): every property of the interface
         feeds its Operational Data point, and every action of the interface is invoked by one
-        Operation of the Skills submodel (a skill's command, Occupy or Release, a module command)."""
+        Operation (a command of a skill, in this AAS or in a component's; a command of the module)."""
         def identity(id_short: str, feeds: dict[str, ModelReference]) -> object:
             lines = "\n".join(f"        {key} = sources.{key}," for key in feeds)
             return mapping_configuration(
@@ -419,12 +463,12 @@ class Describer:
 
         data = {key: path(DATA, ("Property", point)) for point, (key, _, _) in self.datapoints.items()}
         mappings = [identity("OPCUA", data)]
-        for name, (at, action, arguments) in self.operations.items():
+        for action, (at, arguments) in self.operations.items():
             fields = "\n".join(f"            {a} = op.{a}," for a in arguments)
             mappings.append(mapping_configuration(
-                id_short=name, sources=[source(name, at)], sinks=[sink(name, affordance("actions", action))],
-                transformation=(f"-- {name}: the invocation's inputs become the arguments of the OPC UA method, in this order\n"
-                                f"function aimc_main(sources)\n    local op = sources.{name}\n    return {{\n"
+                id_short=action, sources=[source(action, at)], sinks=[sink(action, affordance("actions", action))],
+                transformation=(f"-- {action}: the invocation's inputs become the arguments of the OPC UA method, in this order\n"
+                                f"function aimc_main(sources)\n    local op = sources.{action}\n    return {{\n"
                                 f"        {action} = {{\n{fields}\n        }},\n    }}\nend\n")))
         return Aimc(id_short="AssetInterfacesMappingConfiguration",
                     MappingConfigurations=AimcMappingConfigurations(value=mappings))
@@ -432,7 +476,8 @@ class Describer:
     def capabilities(self) -> model.ModuleCapabilityDescription | None:
         """The capabilities the module offers (IDTA 02020): each with its meaning, its properties
         (a value or a range, with a unit) and the skill realizing it (CapabilityRealizedBy, a
-        reference into the Skills submodel)."""
+        reference into the Skills submodel). The skill does not refer back: a parameter of it that
+        sets a property of the capability means what that property means (``variable``)."""
         containers = {}
         for name, cap in self.spec.capabilities.items():
             capability = Capability(
@@ -455,7 +500,7 @@ class Describer:
                         value=text(value.value), value_type=kind, **about)})
                 put(properties, prop, element)
             realized = model.RealizedBySkill(
-                id_short="RealizedBy", first=capability_path(name), second=path(SKILLS, (SMC, "Skills"), (SMC, cap.realized_by)))
+                id_short="RealizedBy", first=capability_path(name), second=path(self.home(cap.realized_by), (SMC, "Skills"), (SMC, cap.realized_by)))
             containers[name] = model.ModuleCapabilityContainer(
                 id_short=name, Capability=capability,
                 PropertySet={"PropertySet": cd.PropertySet(id_short="PropertySet", PropertyContainer=properties)} if properties else {},
@@ -465,20 +510,6 @@ class Describer:
             return None
         return model.ModuleCapabilityDescription(id_short="CapabilityDescription", CapabilitySet={
             OFFERED_SET: model.ModuleCapabilitySet(id_short=OFFERED_SET, CapabilityContainer=containers)})
-
-    def realizes(self, skills: dict[str, ModuleSkill]) -> None:
-        """A capability property a skill parameter sets: the skill's RealizesProperty (ARSO)."""
-        for name, cap in self.spec.capabilities.items():
-            for prop, value in cap.properties.items():
-                if value.parameter is None:
-                    continue
-                skill = skills[cap.realized_by]
-                if skill.RealizesProperty is not None:
-                    raise model.ProfileError(f"{cap.realized_by}: ARSO holds one RealizesProperty per skill")
-                skill.RealizesProperty = RelationshipElement(
-                    id_short="RealizesProperty",
-                    first=path(SKILLS, (SMC, "Skills"), (SMC, cap.realized_by), (SMC, "Parameters"), ("Property", value.parameter)),
-                    second=path(CAPABILITIES, (SMC, OFFERED_SET), (SMC, name), (SMC, "PropertySet"), (SMC, prop), ("Range" if value.value is None else "Property", "Value")))
 
     def control_configuration(self) -> model.ModuleControlConfiguration:
         snap, drift, t = self.snap, self.drift, self.spec.targets[self.target]
@@ -491,6 +522,14 @@ class Describer:
         differences = {f"D{i:03d}": prop(line) for i, line in enumerate(drift.lines()[:100] if drift else [], 1)}
         types = {f"T{i:03d}": cc.CCfgType(Name=prop(typ), Hash=prop(snap.hashes.get(typ, "")))
                  for i, typ in enumerate(sorted(set(snap.fbs.values())) if snap else [], 1)}
+        instances = {}
+        for instance, (typ, what) in self.instances.items():
+            # The type its instance has on a module that was read, else as the module's rules name it.
+            typ = (snap.fbs.get(instance) if snap else None) or typ
+            known = snap.hashes.get(typ) if snap else None
+            instances[instance.replace(".", "_")] = cc.CCfgInstance(
+                InstancePath=prop(instance), FBType=prop(typ), TypeHash=prop(known) if known else None,
+                Skill=ReferenceElement(value=what))
         return model.ModuleControlConfiguration(
             id_short="ControlConfiguration",
             Runtime=cc.Runtime(Name=prop("Eclipse 4diac FORTE"), Resource=prop(snap.resource if snap else "RES"),
@@ -503,12 +542,17 @@ class Describer:
             SyncState=prop(sync, description="InSync: the running program is the one the module spec generates; Drift: "
                            "it differs (see Differences); NoProgram: the runtime has none; NotRead: from the spec only."),
             ReadAt=prop(snap.read_at if snap else ""), Differences=cc.Differences(CCfgDifference=differences),
-            Types=cc.Types(CCfgType=types))
+            Types=cc.Types(CCfgType=types), Instances=cc.Instances(CCfgInstance=instances))
 
-    def build(self) -> tuple[ModuleTypeAAS, str]:
+    def errors(self, held: arso.Errors) -> None:
+        for name, code in ERROR_CODES.items():
+            put(held.Error, name, arso.Error(ErrorCode=prop(code, "xs:integer")))
+
+    def build(self) -> list[tuple[ModuleTypeAAS | ComponentTypeAAS, str]]:
+        """The module and its components, each with the id of its asset."""
         spec = self.spec
         id_short, aas_id, asset_id = identity(spec)
-        asset = ModuleTypeAAS(id_short=id_short, id=aas_id, asset_type=spec.aas.asset_type or "",
+        asset = ModuleTypeAAS(id_short=id_short, id=aas_id, asset_type=spec.aas.asset_type or f"{model.RESOURCE}/Module",
                               derived_from=model.RESOURCE_TEMPLATE)
         asset.specific_asset_ids = {k: v for k, v in (("serialNumber", spec.aas.serial_number),
                                                       ("location", spec.aas.location)) if v}
@@ -520,41 +564,22 @@ class Describer:
         asset.nameplate = plate
 
         # Module level first, so the interface lists it first.
-        skills = asset.skills.Skills.Skill
-        for name in ("Occupy", "Release"):
-            put(skills, name, self.occupation(name))
-        occupied = self.property("Occupation_Occupied", "/Occupation/Occupied", "BOOL", "Occupied by a session")
-        self.observe("OccupationState", occupied, OCCUPIED, "Occupied by a session: 0 free, 1 occupied")
-        machine = model.ModuleStateMachine(id_short="Module")
-        for m in MODULE_METHODS:
-            command = self.action(f"Module_{m}", f"/Module/{m}", f"Module {m}")
-            put(machine.Command, command, self.operation(
-                command, command, {}, f"{m} the module (PackML); the answer says whether it was accepted.",
-                f"{MODULE_STATE}/{m}", path(SKILLS, (SMC, "Module"), ("Operation", command))))
-        state = self.property("Module_State", "/Module/State", "USINT", f"PackML state: {MODULE_STATES}")
-        self.observe("PackMLState", state, MODULE_STATE, f"PackML state of the module: {MODULE_STATES}")
-        machine.Methods = self.links("actions", {m: f"Module_{m}" for m in MODULE_METHODS})
-        machine.StateReference = ReferenceElement(value=affordance("properties", state))
-        machine.OccupiedReference = ReferenceElement(value=affordance("properties", occupied))
-        asset.skills.Module = machine
-        for name in self.listed:
-            put(skills, name, self.skill(name))
-        blocks = model.ModuleBuildingBlockSet()
-        for name, decl in spec.skills.items():
-            if not decl.offered:
-                put(blocks.BuildingBlock, name, self.building_block(name))
-        asset.skills.BuildingBlocks = blocks if blocks.BuildingBlock else None
-        if spec.procedures:
-            procedures = model.ModuleProcedures()
-            for proc, steps in spec.procedures.items():
-                put(procedures.Procedure, proc, self.sequence(proc, steps, f"/Procedures/{proc}", f"Procedure_{proc}",
-                                                              f"{BASE_URL}/procedures/{proc}"))
-            asset.skills.Procedures = procedures
-        for name, code in ERROR_CODES.items():
-            put(asset.skills.Errors.Error, name, arso.Error(ErrorCode=prop(code, "xs:integer")))
+        asset.module = self.module()
+        parts = {item: ComponentTypeAAS(
+            id_short=found[0], id=found[1], asset_type=found[3],
+            description=f"{spec.equipment[item].description or item}: a component of the {spec.module} module, which carries out its skills")
+            for item in self.components for found in [component_identity(spec, item)]}
+        for name in [*spec.composites, *spec.skills]:
+            decl = spec.skills.get(name)
+            item = decl.equipment if decl is not None and decl.equipment in parts else None
+            put((parts[item] if item else asset).skills.Skills.Skill, name, self.skill(name))
+        for held in (asset, *parts.values()):
+            self.errors(held.skills.Errors)
         nodes = {}
         for item, eq in spec.equipment.items():
-            nodes[item] = Node(entity_type="CoManagedEntity", global_asset_id="",
+            # A component is found by its asset id; an item no skill moves is only a part.
+            nodes[item] = Node(entity_type="SelfManagedEntity" if item in parts else "CoManagedEntity",
+                               global_asset_id=component_identity(spec, item)[2] if item in parts else "",
                                description=eq.description or f"Equipment {item}")
             for s, io in eq.inputs.items():
                 key = self.property(f"Equipment_{item}_{s}", f"/Equipment/{item}/{s}", io.type, f"{item} {s}", io.unit)
@@ -577,15 +602,23 @@ class Describer:
         for name, (_, concept, title) in self.datapoints.items():
             put(asset.operational_data.Datapoint, name,
                 Property(value="0", value_type="xs:decimal", semantic_id=concept, description=title))
-        self.realizes(skills)
         asset.capability_description = self.capabilities()
         asset.asset_interfaces_mapping_configuration = self.mappings()
         asset.control_configuration = self.control_configuration()
-        return ModuleTypeAAS.model_validate(asset.model_dump()), asset_id
+        return [(ModuleTypeAAS.model_validate(asset.model_dump()), asset_id),
+                *[(ComponentTypeAAS.model_validate(part.model_dump()), component_identity(spec, item)[2])
+                  for item, part in parts.items()]]
+
+
+def describe_all(spec: ModuleSpec, target: str, snap: Snapshot | None = None, drift: Drift | None = None,
+                 spec_path: str | None = None, opcua: str | None = None) -> list[dict]:
+    """The profiles of the module (the first) and of its components; with a snapshot, values, hashes
+    and the sync state are the running ones."""
+    return [model.profile(asset, global_asset_id=asset_id)
+            for asset, asset_id in Describer(spec, target, snap, drift, spec_path, opcua).build()]
 
 
 def describe(spec: ModuleSpec, target: str, snap: Snapshot | None = None, drift: Drift | None = None,
              spec_path: str | None = None, opcua: str | None = None) -> dict:
-    """The module's profile; with a snapshot, values, hashes and the sync state are the running ones."""
-    asset, asset_id = Describer(spec, target, snap, drift, spec_path, opcua).build()
-    return model.profile(asset, global_asset_id=asset_id)
+    """The module's own profile (its components have theirs: ``describe_all``)."""
+    return describe_all(spec, target, snap, drift, spec_path, opcua)[0]

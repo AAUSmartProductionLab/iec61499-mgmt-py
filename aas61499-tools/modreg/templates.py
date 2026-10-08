@@ -2,7 +2,7 @@
 
 The lab's shared AAS model (aas-model) makes its pydantic classes from submodel templates: AAS
 JSON in which every element carries its cardinality (``SMT/Cardinality``). It has the IDTA
-templates; the submodels that are the resource ontology's own (Skills, Operational Data,
+templates; the submodels that are the resource ontology's own (Skills, Module, Operational Data,
 Parameters, Control Configuration) have no template. This module writes one for each from what
 the ontology states, and has aas-model's generator make the classes from them:
 
@@ -39,7 +39,8 @@ TEMPLATES = HERE / "templates"
 GENERATED = HERE / "generated"
 AAS_MODEL = HERE.parents[1] / "aas-model"
 # The submodels of the ontology that aas-model has no template of.
-SUBMODELS = ("SkillsSubmodel", "OperationalDataSubmodel", "ParametersSubmodel", "ControlConfigurationSubmodel")
+SUBMODELS = ("SkillsSubmodel", "ModuleSubmodel", "OperationalDataSubmodel", "ParametersSubmodel",
+             "ControlConfigurationSubmodel")
 # Templates kept as files in ``templates``: not written from the ontology.
 GIVEN = ("ProcessParameters", "ProductionSequence")
 CARDINALITY = "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
@@ -65,9 +66,13 @@ class Templates:
         self.position: dict[URIRef, int] = {}
         text = "\n".join(p.read_text(encoding="utf-8") for p in sorted(blueprint.folder.rglob("*.ttl")))
         local = {name(c): c for c in blueprint.classes}
+        # The idShorts of a class in the order it names them (the commands of a skill: Start, Stop, ...).
+        self.named: dict[URIRef, list[str]] = {}
         for match in re.finditer(r"^\w*:(\w+)\s+(?:rdf:type|a)\s+owl:Class", text, re.MULTILINE):
-            if match.group(1) in local:
-                self.position.setdefault(local[match.group(1)], match.start())
+            if match.group(1) in local and local[match.group(1)] not in self.position:
+                self.position[local[match.group(1)]] = match.start()
+                stated = re.search(r"\w*:idShort\s+([^;\n]+)", text[match.start():text.find("\n\n", match.start())])
+                self.named[local[match.group(1)]] = re.findall(r'"([^"]+)"', stated.group(1)) if stated else []
 
     def semantic_id(self, cls: URIRef) -> str:
         """The class's semanticId; of several, the lab's own (the others are ids it also accepts)."""
@@ -115,7 +120,8 @@ class Templates:
         for the elements a user names."""
         b = self.b
         model_type = b.model_type[cls]
-        id_shorts = sorted(b.id_short[cls])
+        order = self.named.get(cls, [])
+        id_shorts = sorted(b.id_short[cls], key=lambda i: (order.index(i) if i in order else len(order), i))
         made = []
         for id_short in id_shorts or [f"{stem(cls)}__00__"]:
             element = {"modelType": model_type, "idShort": id_short}

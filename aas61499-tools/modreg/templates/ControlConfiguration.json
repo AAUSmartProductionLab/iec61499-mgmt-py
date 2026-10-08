@@ -55,7 +55,7 @@
      "value": [
       {
        "modelType": "Property",
-       "idShort": "ManagementEndpoint",
+       "idShort": "Name",
        "description": [
         {
          "language": "en",
@@ -83,7 +83,7 @@
       },
       {
        "modelType": "Property",
-       "idShort": "Name",
+       "idShort": "ManagementEndpoint",
        "description": [
         {
          "language": "en",
@@ -169,7 +169,7 @@
     },
     {
      "modelType": "Property",
-     "idShort": "Generator",
+     "idShort": "ModuleSpec",
      "description": [
       {
        "language": "en",
@@ -197,7 +197,35 @@
     },
     {
      "modelType": "Property",
-     "idShort": "ModuleSpec",
+     "idShort": "Target",
+     "description": [
+      {
+       "language": "en",
+       "text": "Property ModuleSpec, Target, Generator (what the program was generated from and by), ProgramDigest (SHA-256 of the generated program: instances, types, connections, values) or ReadAt (when the controller was read)."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "valueType": "xs:string"
+    },
+    {
+     "modelType": "Property",
+     "idShort": "Generator",
      "description": [
       {
        "language": "en",
@@ -254,34 +282,6 @@
     {
      "modelType": "Property",
      "idShort": "ReadAt",
-     "description": [
-      {
-       "language": "en",
-       "text": "Property ModuleSpec, Target, Generator (what the program was generated from and by), ProgramDigest (SHA-256 of the generated program: instances, types, connections, values) or ReadAt (when the controller was read)."
-      }
-     ],
-     "qualifiers": [
-      {
-       "type": "SMT/Cardinality",
-       "valueType": "xs:string",
-       "kind": "TemplateQualifier",
-       "value": "ZeroToOne",
-       "semanticId": {
-        "type": "ExternalReference",
-        "keys": [
-         {
-          "type": "GlobalReference",
-          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
-         }
-        ]
-       }
-      }
-     ],
-     "valueType": "xs:string"
-    },
-    {
-     "modelType": "Property",
-     "idShort": "Target",
      "description": [
       {
        "language": "en",
@@ -448,7 +448,7 @@
        "value": [
         {
          "modelType": "Property",
-         "idShort": "Hash",
+         "idShort": "Name",
          "description": [
           {
            "language": "en",
@@ -476,7 +476,7 @@
         },
         {
          "modelType": "Property",
-         "idShort": "Name",
+         "idShort": "Hash",
          "description": [
           {
            "language": "en",
@@ -501,6 +501,175 @@
           }
          ],
          "valueType": "xs:string"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "modelType": "SubmodelElementCollection",
+     "idShort": "Instances",
+     "description": [
+      {
+       "language": "en",
+       "text": "The blocks of the program that are the resource's skills and the steps of their commands: which block, of which type, is which skill."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "CCfgInstance__00__",
+       "description": [
+        {
+         "language": "en",
+         "text": "One block of the program, named like its instance path with underscores."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToMany",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "Property",
+         "idShort": "InstancePath",
+         "description": [
+          {
+           "language": "en",
+           "text": "Property InstancePath (the dotted name of the instance), FBType (its qualified IEC 61499 type) or TypeHash (the hash of that type as the runtime reports it)."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "valueType": "xs:string"
+        },
+        {
+         "modelType": "Property",
+         "idShort": "FBType",
+         "description": [
+          {
+           "language": "en",
+           "text": "Property InstancePath (the dotted name of the instance), FBType (its qualified IEC 61499 type) or TypeHash (the hash of that type as the runtime reports it)."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "valueType": "xs:string"
+        },
+        {
+         "modelType": "Property",
+         "idShort": "TypeHash",
+         "description": [
+          {
+           "language": "en",
+           "text": "Property InstancePath (the dotted name of the instance), FBType (its qualified IEC 61499 type) or TypeHash (the hash of that type as the runtime reports it)."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "valueType": "xs:string"
+        },
+        {
+         "modelType": "ReferenceElement",
+         "idShort": "Skill",
+         "description": [
+          {
+           "language": "en",
+           "text": "What the block is: a skill (in the Skills submodel of this AAS or of a component), or the step of a command that runs one."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ]
         }
        ]
       }

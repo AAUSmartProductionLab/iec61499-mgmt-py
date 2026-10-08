@@ -17,6 +17,7 @@ replaced if it is there already).
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 from pathlib import Path
 import sys
@@ -25,6 +26,9 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from modgen import SPECS, load                          # noqa: E402
+from aas_model.constants import BASE_URL                                  # noqa: E402
+from aas_pydantic.submodel_templates.hierarchical_structures import (     # noqa: E402
+    ArcheType, EntryNode, HierarchicalStructures, Node)
 from modreg import model, profile as profiles           # noqa: E402
 from modreg.service import AasServer                    # noqa: E402
 
@@ -35,10 +39,54 @@ RESOURCES = [SPECS / "filling.yaml", SPECS / "stoppering.yaml", SPECS / "planned
              SPECS / "planned" / "inspection.yaml"]
 
 
-def resource(path: Path) -> dict:
-    """The AAS of a module, from its spec (for its first target; the module is not read)."""
+# The line: what it is called, and the modules a vial passes that are not described yet (each has a
+# Kuka robot and a gripper, and a Raspberry Pi of its own).
+LINE = "FillingLine"
+BEFORE, AFTER = ["LoadingModule"], ["UnloadingModule"]
+
+
+@functools.lru_cache(maxsize=None)
+def described(path: Path) -> tuple[dict, ...]:
+    """The AASs of a module and of its components, from its spec (for its first target; the module
+    is not read). The module's is the first."""
     spec = load(path)
-    return model.build(profiles.describe(spec, next(iter(spec.targets)), spec_path=path.relative_to(HERE.parents[1]).as_posix()))
+    found = profiles.describe_all(spec, next(iter(spec.targets)), spec_path=path.relative_to(HERE.parents[1]).as_posix())
+    return tuple(model.build(profile) for profile in found)
+
+
+def resource(path: Path) -> dict:
+    """The AAS of a module."""
+    return described(path)[0]
+
+
+def components() -> dict[str, dict]:
+    """The AASs of the components of every module of the line, by idShort."""
+    return {plan_check.shell_of(env)["idShort"]: env for path in RESOURCES for env in described(path)[1:]}
+
+
+def line_profile(resources: dict[str, dict]) -> dict:
+    """The profile of the line: a system made of its modules, each found by its asset id."""
+    asset = lambda name: f"{BASE_URL}/assets/{name}"                                       # noqa: E731
+    nodes = {name: Node(entity_type="SelfManagedEntity", global_asset_id=asset(name), description=f"{name}: not described yet")
+             for name in BEFORE}
+    for env in resources.values():
+        shell = plan_check.shell_of(env)
+        name = shell["assetInformation"]["globalAssetId"].rsplit("/", 1)[-1]
+        nodes[name] = Node(entity_type="SelfManagedEntity", global_asset_id=shell["assetInformation"]["globalAssetId"],
+                           description=shell["idShort"])
+    nodes.update({name: Node(entity_type="SelfManagedEntity", global_asset_id=asset(name), description=f"{name}: not described yet")
+                  for name in AFTER})
+    system = model.SystemTypeAAS(id_short=f"{LINE}AAS", id=f"{BASE_URL}/aas/{LINE}AAS", asset_type=f"{model.RESOURCE}/System",
+                                 description="The line a vial passes: loading, filling, stoppering, capping, inspection, unloading")
+    system.hierarchical_structures = HierarchicalStructures(
+        id_short="HierarchicalStructures", ArcheType=ArcheType(value="OneDown"),
+        EntryNode=EntryNode(global_asset_id=asset(LINE), description="The line", Node=nodes))
+    return model.profile(model.SystemTypeAAS.model_validate(system.model_dump()), global_asset_id=asset(LINE))
+
+
+def line(resources: dict[str, dict]) -> dict:
+    """The AAS of the line."""
+    return model.build(line_profile(resources))
 
 
 def product_profiles() -> dict[str, dict]:
@@ -69,9 +117,11 @@ def main(argv=None) -> int:
 
     resources, products = build()
     broken = {name: found for name, env in products.items() if (found := plan_check.check(env, resources))}
+    system = line(resources)
+    everything = {plan_check.shell_of(system)["idShort"]: system, **resources, **components(), **products}
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    for name, env in {**resources, **products}.items():
+    for name, env in everything.items():
         (out / f"{name}.json").write_text(json.dumps(env, indent=1), encoding="utf-8")
         print(f"{name}: {len(env['submodels'])} submodels -> {out / (name + '.json')}")
     for name, found in broken.items():
@@ -80,10 +130,11 @@ def main(argv=None) -> int:
     if broken:
         print("not published: a plan does not fit its resources" if args.publish else "a plan does not fit its resources")
         return 1
-    print(f"every plan fits its resources ({len(products)} product(s), {len(resources)} resources)")
+    print(f"every plan fits its resources ({len(products)} product(s), {len(resources)} modules, "
+          f"{len(components())} components, 1 line)")
     if args.publish:
         server = AasServer(args.publish)
-        for name, env in {**resources, **products}.items():
+        for name, env in everything.items():
             done = server.publish(env)
             print(f"{name}: {sum(d.startswith('POST') for d in done)} created, {sum(d.startswith('PUT') for d in done)} replaced")
     return 0

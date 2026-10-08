@@ -7,8 +7,8 @@ module that speaks OPC UA only:
 
 - **Nameplate**, **Hierarchical Structures** (the equipment), **Asset Interfaces Description**
   (one OPC UA interface) and **Asset Interfaces Mapping Configuration**: the shared model's classes;
-- **Skills** (ARSO's control component: Interfaces, Skills, Errors, and the module's procedures) instead of the Control
-  Component Instance, **Operational Data** instead of Variables, **Parameters** and **Control
+- **Skills** (ARSO's control component: the skills with their commands, the module's own commands,
+  the errors) instead of the Control Component Instance, **Operational Data** instead of Variables, **Parameters** and **Control
   Configuration**: ARSO's own submodels. Their classes are generated from the ontology by
   aas-model's generator (``modreg.generated``, see ``templates``); only what the ontology leaves
   open inside them is declared here.
@@ -46,6 +46,7 @@ from pydantic_core import to_jsonable_python
 
 from .generated import skills
 from .generated.control_configuration import ControlConfiguration
+from .generated.module import Module
 from .generated.operational_data import OperationalData
 from .generated.parameters import Parameters
 from .product import ProductTypeAAS
@@ -76,112 +77,25 @@ RESOURCE_TEMPLATE = f"{BASE_URL}/aas/templates/resource"
 DelegatedOperation = SkillOperation         # a field cannot be named like its type
 
 
-# What the ontology leaves open ---------------------------------------------------------------------
+# ARSO's own submodels ------------------------------------------------------------------------------
 #
-# The classes of ARSO's own submodels are generated (``modreg.generated``, see ``templates``). The
-# ontology names some containers without declaring what is in them; a module fills those, and
-# what it puts there is declared here.
-
-class StepBindings(SubmodelElementCollection):
-    """Named like the parameters of the step's skill. ``Binding``: the constants; ``Source``: the
-    parameters the module level skill hands down, each a reference to that parameter of it."""
-    description: str = ("What is bound to the parameters of the step's skill: a constant (its value), or a parameter "
-                        "of the module level skill (a reference to it).")
-    Binding: Dict[str, Property] = {}
-    Source: Dict[str, ReferenceElement] = {}
-
-
-class ModuleSkillStep(skills.SkillStep):
-    """``Skill`` refers to the skill in this submodel, or names it (an external reference) if it
-    only runs as a step and so is not listed. ``StateReference`` refers to the step's own State
-    in the interface description, as a skill's does (its ErrorID, parameters and results are
-    published beside it)."""
-    Skill: ReferenceElement = ReferenceElement(description="The skill this step runs.")
-    InstancePath: Optional[Property] = None
-    Bindings: Optional[StepBindings] = None
-    StateReference: Optional[ReferenceElement] = None
-
-
-class ModuleSkillSequence(skills.SkillSequence):
-    item_type: typing.ClassVar = ModuleSkillStep
-    value: List[ModuleSkillStep] = []
-    type_value_list_element: Optional[str] = "SubmodelElementCollection"
-
-
-class SkillUses(skills.Uses):
-    item_type: typing.ClassVar = ReferenceElement
-    value: List[ReferenceElement] = []
-    type_value_list_element: Optional[str] = "ReferenceElement"
-
-
-class SkillOccupies(skills.Occupies):
-    item_type: typing.ClassVar = ReferenceElement
-    value: List[ReferenceElement] = []
-    type_value_list_element: Optional[str] = "ReferenceElement"
-
-
-class InterfaceLinks(SubmodelElementCollection):
-    """References into the Asset Interfaces Description: where a client finds what this element
-    names (an action to call or a property to read, with its browse path)."""
-    Link: Dict[str, ReferenceElement] = {}
-
+# Their classes are generated (``modreg.generated``, see ``templates``): a skill with its commands
+# (Start, Stop, Abort, Reset), each with the action that calls it, its Operation and its steps; the
+# module's own commands (Module); the errors; the Control Configuration.
 
 class ModuleSkill(skills.Skill):
-    """The ontology's skill with a module's contract, sequences (Execute, Stop), lists and
-    implementation, and the lab's delegated Operations: the skill's own (Start) and one per further
-    command (``<Skill>_Stop``, ``_Abort``, ``_Reset``), which the AIMC maps onto the interface's
-    actions. ``Methods`` refers to the action of every command, ``ErrorReference`` and ``Results``
-    to the properties publishing the ErrorID and the results."""
-    SkillOperation: Dict[str, DelegatedOperation] = {}
-    Methods: Optional[InterfaceLinks] = None
-    ErrorReference: Optional[ReferenceElement] = None
-    Results: Optional[InterfaceLinks] = None
-    Uses: Optional[SkillUses] = None
-    SkillSequence: Dict[str, ModuleSkillSequence] = {}
-    Occupies: Optional[SkillOccupies] = None
+    """The ontology's skill, under a name of its own: the shared model has a class called Skill too,
+    and an element is read back as the class its name says."""
 
 
 class ModuleSkillSet(skills.Skills_2):
     Skill: Dict[str, ModuleSkill] = {}
 
 
-class ModuleBuildingBlock(skills.BuildingBlock):
-    """The ontology's building block (a primitive the module does not offer) with the equipment a
-    step of it locks."""
-    Occupies: Optional[SkillOccupies] = None
-
-
-class ModuleBuildingBlockSet(skills.BuildingBlocks):
-    BuildingBlock: Dict[str, ModuleBuildingBlock] = {}
-
-
-class ModuleProcedures(SubmodelElementCollection):
-    """What the module's state machine runs itself: a sequence of steps while Resetting and one
-    while Stopping, published below ``/Procedures/<name>`` like the steps of a module level skill."""
-    description: str = "The procedures the module's state machine runs while Resetting and while Stopping."
-    Procedure: Dict[str, ModuleSkillSequence] = {}
-
-
-class ModuleStateMachine(SubmodelElementCollection):
-    """The module's own PackML state machine: one delegated Operation per command
-    (``Module_Reset`` ...), which the AIMC maps onto the interface's actions, the references to
-    those actions (``Methods``), and the properties publishing its state and its occupation."""
-    description: str = "The module's PackML commands, their actions, its state and its occupation."
-    Command: Dict[str, DelegatedOperation] = {}
-    Methods: Optional[InterfaceLinks] = None
-    StateReference: Optional[ReferenceElement] = None
-    OccupiedReference: Optional[ReferenceElement] = None
-
-
 class ModuleSkills(skills.Skills):
     Skills: ModuleSkillSet = ModuleSkillSet()
     Interfaces: skills.Interfaces = skills.Interfaces()
     Errors: skills.Errors = skills.Errors()
-    Module: Optional[ModuleStateMachine] = None
-    # A module without procedures has none.
-    Procedures: Optional[ModuleProcedures] = None
-    # A module that offers every primitive has none.
-    BuildingBlocks: Optional[ModuleBuildingBlockSet] = None
 
 
 class RealizedBySkill(cd.CapabilityRealizedBy):
@@ -231,6 +145,7 @@ class ModuleTypeAAS(AAS):
     nameplate: Nameplate = nameplate()
     hierarchical_structures: HierarchicalStructures = structure()
     asset_interfaces_description: ModuleInterfaces = ModuleInterfaces(id_short="AssetInterfacesDescription")
+    module: Module = Module(id_short="Module")
     skills: ModuleSkills = ModuleSkills(id_short="Skills")
     operational_data: OperationalData = OperationalData(id_short="OperationalData")
     asset_interfaces_mapping_configuration: Aimc = Aimc(
@@ -241,8 +156,27 @@ class ModuleTypeAAS(AAS):
     capability_description: Optional[ModuleCapabilityDescription] = None
 
 
+class ComponentTypeAAS(AAS):
+    """AAS of a component of a module: a part that acts (an axis, a pump) and so has skills of its
+    own. The module it is built into carries them out, so their commands refer to actions of the
+    module's interface description."""
+    model_config = {"extra": "forbid"}
+
+    skills: ModuleSkills = ModuleSkills(id_short="Skills")
+
+
+class SystemTypeAAS(AAS):
+    """AAS of a production system: the modules it is made of, each found by its asset id."""
+    model_config = {"extra": "forbid"}
+
+    hierarchical_structures: HierarchicalStructures = structure()
+
+
 TYPES: dict[str, type[AAS]] = {"ResourceTypeAAS": ResourceTypeAAS, "ModuleTypeAAS": ModuleTypeAAS,
+                               "ComponentTypeAAS": ComponentTypeAAS, "SystemTypeAAS": SystemTypeAAS,
                                "ProductTypeAAS": ProductTypeAAS}
+# What a resource is, is its asset type; a component's ends in its kind (.../Component/LinearAxis).
+RESOURCE = f"{BASE_URL}/Resource"
 # Keys of a profile that are about building the AAS, not part of it.
 BUILD_KEYS = ("aas_type", "delegation_base", "global_asset_id")
 
@@ -342,6 +276,9 @@ def profile(asset: AAS, **build) -> dict:
     changed = slim(asset, full, defaults(aas_type, full))
     result = {"aas_type": aas_type, "id_short": asset.id_short, "id": asset.id,
               **({} if changed is SAME else changed), **{k: v for k, v in build.items() if v}}
+    # What kind of resource it is, is not the type's to say (``defaults`` starts from what is stated).
+    if full.get("asset_type") and full["asset_type"] != type(asset).model_fields["asset_type"].default:
+        result["asset_type"] = full["asset_type"]
     lost = difference(full, validated(result).model_dump(mode="json"))
     if lost:
         raise ProfileError(f"the profile does not give the asset back; {lost}")
