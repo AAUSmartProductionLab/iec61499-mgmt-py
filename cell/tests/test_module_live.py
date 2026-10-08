@@ -278,5 +278,6 @@ def test_stoppering_module_homes_and_stoppers(request, tmp_path):
         # Head down, piston out and back in, head up.
         order = [n for n, v in outputs(sim, "LinearAxis.Down", "Piston.Extend", "Piston.Retract", "LinearAxis.Step") if v]
         assert order == ["LinearAxis.Down", "LinearAxis.Step", "Piston.Extend", "Piston.Retract", "LinearAxis.Step"]
-        assert ua.value("Equipment/LinearAxis/ActualPosition") == 0.0 and sim.position("Piston") == 0.0
+        assert ua.value("Equipment/LinearAxis/ActualPosition") == 0.0
+        assert sim.position("Piston") == pytest.approx(0.0, abs=0.05)     # in for as long as out, to a few ms
         assert sim.shoot_through == 0
