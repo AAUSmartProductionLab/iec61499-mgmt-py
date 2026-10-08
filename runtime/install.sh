@@ -68,7 +68,7 @@ if ! have_docker; then
         curl -fsSL https://get.docker.com | $SUDO sh
     fi
 fi
-$SUDO systemctl enable --now docker >/dev/null 2>&1 || true
+systemctl is-active --quiet docker 2>/dev/null || $SUDO systemctl enable --now docker >/dev/null 2>&1 || true
 user="$(id -un)"
 if [ "$(id -u)" != 0 ] && ! id -nG "$user" | tr ' ' '\n' | grep -qx docker; then
     say "Adding $user to the group docker (in effect at the next login)"
