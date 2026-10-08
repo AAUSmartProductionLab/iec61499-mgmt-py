@@ -1,11 +1,23 @@
-# Filling and stoppering modules: from the ESP32 code to generated modules
+# Filling and stoppering modules
 
-Source: `arduino_cpp_examples/Physical-Stations` (PlatformIO; `FillingModule.cpp` on an ESP32,
-`StopperingModule.cpp` on an ESP32-S3; a local reference copy, not in the repository). The
-specs are `cell/modules/filling.yaml` and `cell/modules/stoppering.yaml`, the generated 4diac
+The specs are `cell/modules/filling.yaml` and `cell/modules/stoppering.yaml`, the generated 4diac
 projects `cell/control/FillingModule` and `cell/control/StopperingModule`. Both run against the
-simulator (`cell/sim/module_sim.py`) in `cell/tests/`, and on the lab Pi's FORTE with the
-simulator as IO; the motors, switches and servo are not wired yet.
+simulator (`cell/sim/module_sim.py`) in `cell/tests/`; the motors and switches are not wired yet.
+
+Both began as ports of ESP32 stations (`arduino_cpp_examples/Physical-Stations`: `FillingModule.cpp`,
+`StopperingModule.cpp`; a local reference copy, not in the repository). Since 8 Oct 2026 they are
+built from the components every module of the line is built from: a **linear axis** (a stepper
+motor with a limit switch, moved to a position, with the same two skills in every module) and one
+process component (the filling pump, the stoppering piston). The line is six modules:
+
+| Module | Components | State |
+| --- | --- | --- |
+| Loading | Kuka robot, gripper | not described yet; the robot has its own Raspberry Pi |
+| Filling | filling pump, linear axis (and a simulated scale) | generated, runs on FORTE with the simulator |
+| Stoppering | stoppering piston, linear axis | generated, runs on FORTE with the simulator |
+| Capping | cap crimper, linear axis | planned: `cell/modules/planned/capping.yaml`, no program |
+| Inspection | top camera, side camera | planned: `cell/modules/planned/inspection.yaml`, no program |
+| Unloading | Kuka robot, gripper | not described yet; the robot has its own Raspberry Pi |
 
 We call them **modules** (not stations or units). Each module runs on its own Raspberry Pi 4 and
 is deployed on its own; it is orchestrated only through OPC UA methods and variables (MQTT may
@@ -72,30 +84,38 @@ wait (`Dwell`) was removed on 8 Oct 2026: no skill used it.
 
 ## Stoppering module (stoppering Pi)
 
+Built like the filling module since 8 Oct 2026: the head is brought down onto the vial by a linear
+axis, and one small linear actuator presses the stopper in. The ESP32 station's three drives (a
+piston on a DC motor, a servo arm, a plunger) are gone. Pins, speed, travel and stroke times are
+placeholders until the hardware is wired and measured.
+
 **Equipment IO**
 
-| Equipment | IO (ESP32-S3 pin) | Commands |
+| Equipment (kind) | IO (Pi pin) | Commands |
 | --- | --- | --- |
-| `Piston`: DC motor through an L298N | out `Up` (IN3, 39), `Down` (IN4, 40), `Speed` PWM 200/255 (ENB, 41); in `AtLimit` (4, limit switch at the working position) | `Stop`, `Up`, `Down` |
-| `Plunger`: linear actuator through an L298N | out `Extend` (IN2, 16), `Retract` (IN1, 17), `Speed` PWM 200/255 (ENA, 18); no sensors | `Stop`, `Extend`, `Retract` |
-| `StopperArm`: servo | out `Angle` 0–180° (pin 2, 50 Hz PWM); no feedback | `MoveTo(Angle)`, `Release` (detach, no holding torque) |
+| `LinearAxis` (LinearAxis): stepper motor through a step and direction driver | as the filling module's axis: out `Enable` (GPIO17), `Down` (GPIO27), `Step` (PWM0, GPIO18); in `AtHome` (GPIO23) | `Stop`, `Up`, `Down`, `MoveTo(position)` |
+| `Piston` (StopperingPiston): small linear actuator through an L298N | out `Retract` (IN1, GPIO5, pin 29), `Extend` (IN2, GPIO6, pin 31); no sensors | `Stop`, `Extend`, `Retract`, `Back`: in for the stroke (3 s), then off |
 
 **Skill primitives**
 
 | Primitive | Equipment, command | Ends when | Timeout |
 | --- | --- | --- | --- |
-| `LowerPiston` | Piston `Down` | `AtLimit` | 10 s |
-| `RaisePiston(Duration = 2 s)` | Piston `Up` | time (open loop) | – |
-| `ExtendPlunger(Duration = 10 s)` | Plunger `Extend` | time | – |
-| `RetractPlunger(Duration = 6.5 s)` | Plunger `Retract` | time | – |
-| `MoveArm(Angle, Settle = 2 s)` | StopperArm `MoveTo(Angle)` | time | – |
+| `Home` | LinearAxis `Up` | `AtHome` | 8 s |
+| `MoveAxis(Position = 0..60 mm)` | LinearAxis `MoveTo`; needs `Homed` | it is there | 8 s |
+| `PressStopper` | Piston `Extend`, then `Back` | time: 3 s out, 3 s back in | – |
+| `RetractPiston` | Piston `Retract` | time: 3 s | – |
+
+`PressStopper` ends with the command `Back` whether it finishes or is stopped, so a press that is
+cut short still draws the piston in. An abort switches everything off where it is; `RetractPiston`
+is for that case and runs first when the module resets.
 
 **Module level skills and procedures**
 
-| Skill | Sequence | Today |
-| --- | --- | --- |
-| `Stoppering` | LowerPiston → MoveArm(1°) → MoveArm(121°) → ExtendPlunger(10 s) → RetractPlunger(6.5 s) → RaisePiston(2 s) | `/CMD/Stoppering` |
-| Module procedure Resetting | MoveArm(90°) → MoveArm(120°) → RetractPlunger(6.5 s) → LowerPiston → RaisePiston(1.5 s) | `initHardware()` |
+| Skill | Sequence |
+| --- | --- |
+| `Stoppering` | MoveAxis(40 mm) → PressStopper → MoveAxis(0 mm); when stopped: Home |
+| Module procedure Resetting | RetractPiston → Home |
+| Module procedure Stopping | Home |
 
 ## IO on the Raspberry Pi
 
@@ -106,9 +126,12 @@ wait (`Dwell`) was removed on 8 Oct 2026: no skill used it.
   converted by the generated IO block). It drives the Pi's two hardware channels
   (`dtoverlay=pwm-2chan`, PWM0 on GPIO18, PWM1 on GPIO19) and would drive a PCA9685 board through
   the kernel `pwm-pca9685` driver. Tested on the aarch64 binary under emulation and on the lab Pi.
-- **Channel count** (one Pi per module): filling needs 1 PWM channel (needle speed); stoppering
-  3 outputs (servo, piston and plunger enables), but both enables run at 200/255, so one channel
-  drives both and the Pi's 2 hardware channels suffice.
+- **Channel count** (one Pi per module): each module needs 1 PWM channel, for the step pulses of
+  its linear axis (PWM0 at 1 kHz, one step per period, 50 % duty while it moves). The piston's
+  L298N enable is tied high. A pump on a stepper would take the Pi's second hardware channel.
+- **Step pulses by PWM**: the controller does not count pulses, it counts the time the PWM is on.
+  A step rate of 1 kHz and the 1 ms it takes to switch give a position to a few steps; how many
+  millimetres that is depends on the driver's microstepping and the screw, which are not known yet.
 - **Analog inputs**: none needed by these two modules (the weight is simulated). Later: an ADC
   with a Linux IIO driver (ADS1115, MCP3008) read by the same kind of module (`IW`).
 - **Wiring**: L298N logic inputs accept 3.3 V. The end switches are wired as on the ESP32

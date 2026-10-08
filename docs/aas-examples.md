@@ -391,16 +391,14 @@ flowchart BT
 ```mermaid
 flowchart BT
   subgraph EQ_StopperingModuleAAS["Equipment (Hierarchical Structures)"]
+    StopperingModuleAASLinearAxis["LinearAxis"]
     StopperingModuleAASPiston["Piston"]
-    StopperingModuleAASPlunger["Plunger"]
-    StopperingModuleAASStopperArm["StopperArm"]
   end
   subgraph PR_StopperingModuleAAS["Skill primitives (Skills, kind Primitive)"]
-    StopperingModuleAASLowerPiston["LowerPiston"]
-    StopperingModuleAASRaisePiston["RaisePiston"]
-    StopperingModuleAASExtendPlunger["ExtendPlunger"]
-    StopperingModuleAASRetractPlunger["RetractPlunger"]
-    StopperingModuleAASMoveArm["MoveArm"]
+    StopperingModuleAASHome["Home"]
+    StopperingModuleAASMoveAxis["MoveAxis"]
+    StopperingModuleAASPressStopper["PressStopper"]
+    StopperingModuleAASRetractPiston["RetractPiston"]
   end
   subgraph CO_StopperingModuleAAS["Module level skills (Skills, kind Composite)"]
     StopperingModuleAASStoppering["Stoppering"]
@@ -408,17 +406,13 @@ flowchart BT
   subgraph CA_StopperingModuleAAS["Capabilities (Capability Description, offered)"]
     StopperingModuleAAScapStoppering(["Stoppering"])
   end
-  StopperingModuleAASLowerPiston -- occupies --> StopperingModuleAASPiston
-  StopperingModuleAASRaisePiston -- occupies --> StopperingModuleAASPiston
-  StopperingModuleAASExtendPlunger -- occupies --> StopperingModuleAASPlunger
-  StopperingModuleAASRetractPlunger -- occupies --> StopperingModuleAASPlunger
-  StopperingModuleAASMoveArm -- occupies --> StopperingModuleAASStopperArm
-  StopperingModuleAASStoppering -- "1" --> StopperingModuleAASLowerPiston
-  StopperingModuleAASStoppering -- "2" --> StopperingModuleAASMoveArm
-  StopperingModuleAASStoppering -- "3" --> StopperingModuleAASMoveArm
-  StopperingModuleAASStoppering -- "4" --> StopperingModuleAASExtendPlunger
-  StopperingModuleAASStoppering -- "5" --> StopperingModuleAASRetractPlunger
-  StopperingModuleAASStoppering -- "6" --> StopperingModuleAASRaisePiston
+  StopperingModuleAASHome -- occupies --> StopperingModuleAASLinearAxis
+  StopperingModuleAASMoveAxis -- occupies --> StopperingModuleAASLinearAxis
+  StopperingModuleAASPressStopper -- occupies --> StopperingModuleAASPiston
+  StopperingModuleAASRetractPiston -- occupies --> StopperingModuleAASPiston
+  StopperingModuleAASStoppering -- "1" --> StopperingModuleAASMoveAxis
+  StopperingModuleAASStoppering -- "2" --> StopperingModuleAASPressStopper
+  StopperingModuleAASStoppering -- "3" --> StopperingModuleAASMoveAxis
   StopperingModuleAAScapStoppering -- realized by --> StopperingModuleAASStoppering
 ```
 
@@ -426,16 +420,15 @@ flowchart BT
 | --- | --- | --- | --- | --- |
 | Occupy | access control | – | – | – |
 | Release | access control | – | – | – |
-| LowerPiston | Primitive | – | Piston | – |
-| RaisePiston | Primitive | Duration = 2.0 s | Piston | – |
-| ExtendPlunger | Primitive | Duration = 10.0 s | Plunger | – |
-| RetractPlunger | Primitive | Duration = 6.5 s | Plunger | – |
-| MoveArm | Primitive | Angle = 120.0 deg, Settle = 2.0 s | StopperArm | – |
-| Stoppering | Composite | – | Piston, StopperArm, Plunger | LowerPiston → MoveArm (Angle = 1.0) → MoveArm (Angle = 121.0) → ExtendPlunger → RetractPlunger → RaisePiston |
+| Home | Primitive | – | LinearAxis | – |
+| MoveAxis | Primitive | Position = 0.0 mm | LinearAxis | – |
+| PressStopper | Primitive | – | Piston | – |
+| RetractPiston | Primitive | – | Piston | – |
+| Stoppering | Composite | – | LinearAxis, Piston | MoveAxis (Position = 40.0) → PressStopper → MoveAxis (Position = 0.0) |
 
 - **Capability Stoppering** (`https://smartproductionlab.aau.dk/semantics/Stoppering`), realized by Stoppering: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; StopperDiameter 6.0 to 20.0 mm.
-- **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (MoveArm → MoveArm → RetractPlunger → LowerPiston → RaisePiston).
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 55 properties; 55 data points; 32 mappings.
+- **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (RetractPiston → Home), Stopping (Home).
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 33 properties; 33 data points; 28 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/stoppering.yaml`, sync state NotRead.
 
 ### CappingModuleAAS
@@ -445,14 +438,13 @@ flowchart BT
 ```mermaid
 flowchart BT
   subgraph EQ_CappingModuleAAS["Equipment (Hierarchical Structures)"]
-    CappingModuleAASCapFeeder["CapFeeder"]
-    CappingModuleAASCrimpHead["CrimpHead"]
+    CappingModuleAASLinearAxis["LinearAxis"]
+    CappingModuleAASCrimper["Crimper"]
   end
   subgraph PR_CappingModuleAAS["Skill primitives (Skills, kind Primitive)"]
-    CappingModuleAASFeedCap["FeedCap"]
-    CappingModuleAASLowerHead["LowerHead"]
+    CappingModuleAASHome["Home"]
+    CappingModuleAASMoveAxis["MoveAxis"]
     CappingModuleAASCrimp["Crimp"]
-    CappingModuleAASRaiseHead["RaiseHead"]
   end
   subgraph CO_CappingModuleAAS["Module level skills (Skills, kind Composite)"]
     CappingModuleAASCapping["Capping"]
@@ -460,14 +452,12 @@ flowchart BT
   subgraph CA_CappingModuleAAS["Capabilities (Capability Description, offered)"]
     CappingModuleAAScapCapping(["Capping"])
   end
-  CappingModuleAASFeedCap -- occupies --> CappingModuleAASCapFeeder
-  CappingModuleAASLowerHead -- occupies --> CappingModuleAASCrimpHead
-  CappingModuleAASCrimp -- occupies --> CappingModuleAASCrimpHead
-  CappingModuleAASRaiseHead -- occupies --> CappingModuleAASCrimpHead
-  CappingModuleAASCapping -- "1" --> CappingModuleAASFeedCap
-  CappingModuleAASCapping -- "2" --> CappingModuleAASLowerHead
-  CappingModuleAASCapping -- "3" --> CappingModuleAASCrimp
-  CappingModuleAASCapping -- "4" --> CappingModuleAASRaiseHead
+  CappingModuleAASHome -- occupies --> CappingModuleAASLinearAxis
+  CappingModuleAASMoveAxis -- occupies --> CappingModuleAASLinearAxis
+  CappingModuleAASCrimp -- occupies --> CappingModuleAASCrimper
+  CappingModuleAASCapping -- "1" --> CappingModuleAASMoveAxis
+  CappingModuleAASCapping -- "2" --> CappingModuleAASCrimp
+  CappingModuleAASCapping -- "3" --> CappingModuleAASMoveAxis
   CappingModuleAAScapCapping -- realized by --> CappingModuleAASCapping
 ```
 
@@ -475,15 +465,14 @@ flowchart BT
 | --- | --- | --- | --- | --- |
 | Occupy | access control | – | – | – |
 | Release | access control | – | – | – |
-| FeedCap | Primitive | – | CapFeeder | – |
-| LowerHead | Primitive | – | CrimpHead | – |
-| Crimp | Primitive | Duration = 1.5 s | CrimpHead | – |
-| RaiseHead | Primitive | – | CrimpHead | – |
-| Capping | Composite | – | CapFeeder, CrimpHead | FeedCap → LowerHead → Crimp → RaiseHead |
+| Home | Primitive | – | LinearAxis | – |
+| MoveAxis | Primitive | Position = 0.0 mm | LinearAxis | – |
+| Crimp | Primitive | Duration = 1.5 s | Crimper | – |
+| Capping | Composite | – | LinearAxis, Crimper | MoveAxis (Position = 40.0) → Crimp → MoveAxis (Position = 0.0) |
 
 - **Capability Capping** (`https://smartproductionlab.aau.dk/semantics/Capping`), realized by Capping: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; CapDiameter 13.0 to 20.0 mm.
-- **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (RaiseHead), Stopping (RaiseHead).
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 31 properties; 31 data points; 28 mappings.
+- **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (Home), Stopping (Home).
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 31 properties; 31 data points; 24 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/planned/capping.yaml`, sync state NotRead.
 
 ### InspectionModuleAAS
@@ -493,11 +482,12 @@ flowchart BT
 ```mermaid
 flowchart BT
   subgraph EQ_InspectionModuleAAS["Equipment (Hierarchical Structures)"]
-    InspectionModuleAASCamera["Camera"]
+    InspectionModuleAASTopCamera["TopCamera"]
+    InspectionModuleAASSideCamera["SideCamera"]
   end
   subgraph PR_InspectionModuleAAS["Skill primitives (Skills, kind Primitive)"]
-    InspectionModuleAASIlluminate["Illuminate"]
-    InspectionModuleAASCapture["Capture"]
+    InspectionModuleAASCaptureTop["CaptureTop"]
+    InspectionModuleAASCaptureSide["CaptureSide"]
   end
   subgraph CO_InspectionModuleAAS["Module level skills (Skills, kind Composite)"]
     InspectionModuleAASInspection["Inspection"]
@@ -505,10 +495,10 @@ flowchart BT
   subgraph CA_InspectionModuleAAS["Capabilities (Capability Description, offered)"]
     InspectionModuleAAScapInspection(["Inspection"])
   end
-  InspectionModuleAASIlluminate -- occupies --> InspectionModuleAASCamera
-  InspectionModuleAASCapture -- occupies --> InspectionModuleAASCamera
-  InspectionModuleAASInspection -- "1" --> InspectionModuleAASIlluminate
-  InspectionModuleAASInspection -- "2" --> InspectionModuleAASCapture
+  InspectionModuleAASCaptureTop -- occupies --> InspectionModuleAASTopCamera
+  InspectionModuleAASCaptureSide -- occupies --> InspectionModuleAASSideCamera
+  InspectionModuleAASInspection -- "1" --> InspectionModuleAASCaptureTop
+  InspectionModuleAASInspection -- "2" --> InspectionModuleAASCaptureSide
   InspectionModuleAAScapInspection -- realized by --> InspectionModuleAASInspection
 ```
 
@@ -516,13 +506,13 @@ flowchart BT
 | --- | --- | --- | --- | --- |
 | Occupy | access control | – | – | – |
 | Release | access control | – | – | – |
-| Illuminate | Primitive | Settle = 0.2 s | Camera | – |
-| Capture | Primitive | – | Camera | – |
-| Inspection | Composite | – | Camera | Illuminate → Capture |
+| CaptureTop | Primitive | – | TopCamera | – |
+| CaptureSide | Primitive | – | SideCamera | – |
+| Inspection | Composite | – | TopCamera, SideCamera | CaptureTop → CaptureSide |
 
 - **Capability Inspection** (`https://smartproductionlab.aau.dk/semantics/Inspection`), realized by Inspection: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; InspectionMethod vision.
 - **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: none.
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 19 properties; 19 data points; 20 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 22 data points; 20 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/planned/inspection.yaml`, sync state NotRead.
 
 ## The product
