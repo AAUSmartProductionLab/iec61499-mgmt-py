@@ -154,13 +154,17 @@ and gives up its equipment itself. `Module.RUN_<NAME>` starts it, and its `DONE`
 
 ## 5. What the AAS states of this
 
-| In the program | In the AAS (Skills submodel unless noted) |
+| In the program | In the AAS |
 | --- | --- |
-| Offered skill primitive | `Skills/<Skill>` with `Kind = Primitive`; `Implementation`: `FBType`, `InstancePath` |
-| Skill primitive that is not offered | `BuildingBlocks/<Skill>`; `Implementation`: `FBType` |
-| Its parameters, contract, equipment | `Parameters` (unit, limits, default), `Contract`, `Occupies` |
-| Module level skill | `Skills/<Skill>` with `Kind = Composite`; `Implementation` is its `Control` |
-| Its sequences | `Execute`, `Stop`: per step the `Skill` it runs, its `InstancePath` and `Bindings` |
-| Procedures | `Procedures/<name>`, steps as above |
+| Equipment item that a skill moves | A component: an AAS of its own (`<Module><Item>AAS`), a part in the module's Hierarchical Structures |
+| Skill primitive | In its component's Skills: `Skills/<Skill>` with the semantic id `skill/Primitive`, its commands and its `Contract` |
+| Module level skill | In the module's Skills: `Skills/<Skill>` with the semantic id `skill/Composite` and its commands |
+| A command (the method, what it takes and answers) | `<Skill>/<Command>`: `InterfaceReference` to the action, the Operation named like the command |
+| A parameter, a result | An input or output variable of the Start Operation, with value, unit and limits |
+| `Execute` and `Stop` sequences | `Start/Steps` and `Stop/Steps`: `P1`, `P2`, ...; per step the `Skill` it runs and what is connected to it |
+| A step's constant; a value handed down | In the step, named like the parameter: a Property; a reference to the command's variable |
+| Procedures `Resetting`, `Stopping` | Module submodel: the steps of `Reset` and of `Stop` |
+| Module commands, Occupy and Release | Module submodel, one command each |
+| Which block is which skill or step | Control Configuration, `Instances`: `InstancePath`, `FBType`, `TypeHash`, `Skill` |
 | Block types and their hashes, as read | Control Configuration, `Types` |
 | The rule set | Control Configuration, `Rules` |

@@ -1,51 +1,129 @@
 # The example line: its AASs
 
-Five AASs built to the framework: four resources (filling, stoppering, capping, inspection) and
-one product planned on them (a 2 mL vial). Each product's plan is followed into the resources when
-they are built; a plan that does not fit is refused. What the submodels are and how they link is
-in [aas-models.md](aas-models.md).
+15 AASs built to the framework: the line, its modules (filling, stoppering, capping, inspection; loading
+and unloading are named but not described yet), the components of each module, and one product
+planned on them (a 2 mL vial). Each product's plan is followed into the resources when they are
+built; a plan that does not fit is refused. What the submodels are and how they link is in
+[aas-models.md](aas-models.md).
 
 This file is written by `python cell/examples/describe.py`. Every AAS is built by `modreg` from a
-profile, the pydantic dump of its type: a resource's profile is made from its module spec
-(`cell/modules`, `cell/modules/planned`), a product's profile is a file (`cell/examples/Vial2mLAAS.json`).
-`python cell/examples/example_line.py --out <folder> --publish <server>` builds the AASs and puts
-them on an AAS server.
+profile, the pydantic dump of its type: the profiles of a module and of its components are made
+from the module spec (`cell/modules`, `cell/modules/planned`), a product's profile is a file
+(`cell/examples/Vial2mLAAS.json`). `python cell/examples/example_line.py --out <folder> --publish
+<server>` builds the AASs and puts them on an AAS server.
+
+## The line: what it is made of
+
+```
+FillingLineAAS
+  LoadingModule (not described yet)
+  FillingModuleAAS
+    skill Dispensing(Volume = 1.0 mL) → Weight [g]
+    FillingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
+    FillingPumpAAS: Dispense(Volume = 1.0 mL, FlowRate = 1.0 mL/s)
+    FillingScaleAAS: Tare(), Weigh() → Weight [g]
+  StopperingModuleAAS
+    skill Stoppering()
+    StopperingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
+    StopperingPistonAAS: PressStopper(), RetractPiston()
+  CappingModuleAAS
+    skill Capping()
+    CappingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
+    CappingCrimperAAS: Crimp(Duration = 1.5 s)
+  InspectionModuleAAS
+    skill Inspection() → TopPassed, SidePassed
+    InspectionTopCameraAAS: CaptureTop() → Passed
+    InspectionSideCameraAAS: CaptureSide() → Passed
+  UnloadingModule (not described yet)
+```
 
 | AAS | Kind | Submodels |
 | --- | --- | --- |
-| `FillingModuleAAS` | resource | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
-| `StopperingModuleAAS` | resource | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
-| `CappingModuleAAS` | resource | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
-| `InspectionModuleAAS` | resource | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
+| `FillingLineAAS` | system | HierarchicalStructures |
+| `FillingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Module, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
+| `StopperingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Module, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
+| `CappingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Module, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
+| `InspectionModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Module, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
+| `FillingLinearAxisAAS` | component/linearaxis | Skills |
+| `FillingPumpAAS` | component/fillingpump | Skills |
+| `FillingScaleAAS` | component/scale | Skills |
+| `StopperingLinearAxisAAS` | component/linearaxis | Skills |
+| `StopperingPistonAAS` | component/stopperingpiston | Skills |
+| `CappingLinearAxisAAS` | component/linearaxis | Skills |
+| `CappingCrimperAAS` | component/capcrimper | Skills |
+| `InspectionTopCameraAAS` | component/camera | Skills |
+| `InspectionSideCameraAAS` | component/camera | Skills |
 | `Vial2mLAAS` | product | Nameplate, HierarchicalStructures, ProcessParameters, CapabilityDescription, ProductionSequence |
 
-## Class diagram: a resource AAS
+## Class diagram: the resources
 
-All four resources have this structure. First what the AAS holds: its submodels and their main
-elements.
+A line is made of modules and a module of components. What kind of resource an AAS is, is its
+asset type; a component's ends in its kind, which every component like it shares (the three
+linear axes). A part is found by its asset id.
 
 ```mermaid
 classDiagram
   direction LR
-  class ResourceAAS {
+  class SystemAAS {
+    assetType = .../Resource/System
+    the line
+  }
+  class ModuleAAS {
+    assetType = .../Resource/Module
+    one per module
+  }
+  class ComponentAAS {
+    assetType = .../Resource/Component/<Kind>
+    one per component as built in
+  }
+  class HierarchicalStructures {
+    <<IDTA 02011>>
+    ArcheType = OneDown
+    parts by their asset id
+  }
+  class Skills {
+    <<ARSO, from IDTA 02015>>
+  }
+  class Skill {
+    kind: Primitive or Composite
+    SemanticId: what it does
+  }
+  SystemAAS *-- HierarchicalStructures
+  ModuleAAS *-- HierarchicalStructures
+  ModuleAAS *-- Skills : its composites
+  ComponentAAS *-- Skills : its primitives
+  Skills *-- "0..*" Skill
+  SystemAAS ..> ModuleAAS : part (asset id)
+  ModuleAAS ..> ComponentAAS : part (asset id)
+  Skill --> Skill : a step runs it
+```
+
+## Class diagram: a module AAS
+
+What the AAS holds: its submodels and their main elements. A component's AAS holds only Skills,
+with the same Skill, Command, Operation and Contract.
+
+```mermaid
+classDiagram
+  direction LR
+  class ModuleAAS {
     id, idShort
     globalAssetId
-    derivedFrom resource template
+    assetType = .../Resource/Module
   }
   class Nameplate {
     <<IDTA 02006>>
     ManufacturerName
     ManufacturerProductDesignation
-    AddressInformation
   }
   class HierarchicalStructures {
     <<IDTA 02011>>
     ArcheType = OneDown
   }
-  class Equipment {
+  class Part {
     <<Entity>>
     idShort
-    description
+    globalAssetId of its AAS
   }
   class AssetInterfacesDescription {
     <<IDTA 02017>>
@@ -58,7 +136,7 @@ classDiagram
     title, synchronous
     input, output
     forms href, browse path
-    command id: supplemental
+    command and skill: supplemental ids
   }
   class InterfaceProperty {
     key, title, type, unit
@@ -80,141 +158,126 @@ classDiagram
     role = Offered
   }
   class CapabilityProperty {
-    Value or Range
-    unit
     meaning: supplemental id
+    value or range, unit
+  }
+  class Module {
+    <<ARSO>>
+    the module's own commands
   }
   class Skills {
-    <<ARSO>>
-    Interfaces
-    Errors with ErrorCode
+    <<ARSO, from IDTA 02015>>
+    Interfaces (empty)
+    Errors: name, ErrorCode
   }
   class Skill {
-    SemanticId
-    Kind = Primitive or Composite
-    Operation per command
+    semanticId = skill/Primitive or skill/Composite
+    SemanticId: what it does
   }
-  class SkillParameter {
-    value: deployed
-    Unit, Minimum, Maximum, Default
+  class Command {
+    Start, Stop, Abort, Reset
+    of the module: Occupy, Release, Reset, Start, Stop, Abort, Clear
+    semanticId = skill/Start ...
+  }
+  class Operation {
+    named like the command
+    in: Session, parameters
+    out: Accepted, ErrorID, results
+  }
+  class Variable {
+    value, unit, limits
+    semanticId of its data point
+    meaning of a capability property
+  }
+  class Step {
+    P1, P2, ...
+    semanticId: its instance in the program
+    constants: Property per variable
   }
   class Contract {
+    of a primitive
     Requires
     Ensures or After
     Invariant, Timeout
-  }
-  class Step {
-    InstancePath
-    Bindings constant or reference
-  }
-  class BuildingBlock {
-    SemanticId
-    Kind = Primitive
-    Parameters, Contract
-  }
-  class Implementation {
-    FBType
-    TypeHash
-    InstancePath
-  }
-  class ModuleCommands {
-    Operation per command
-    Methods
-    StateReference, OccupiedReference
-  }
-  class Procedure {
-    name Resetting or Stopping
   }
   class OperationalData {
     <<ARSO>>
   }
   class DataPoint {
-    value decimal
-    meaning: semantic id
+    value (decimal)
+    semanticId
   }
   class ControlConfiguration {
     <<ARSO>>
-    Rules
-    ModuleSpec, Target, Generator
-    ProgramDigest
-    SyncState, Differences
+    Rules, ModuleSpec, Target
+    ProgramDigest, SyncState
+    Differences, Types (name, hash)
   }
-  class Runtime {
-    Name
-    ManagementEndpoint
-    Resource
-  }
-  class BlockType {
-    Name
-    Hash
+  class Instance {
+    InstancePath
+    FBType, TypeHash
   }
 
-  ResourceAAS *-- Nameplate
-  ResourceAAS *-- HierarchicalStructures
-  ResourceAAS *-- AssetInterfacesDescription
-  ResourceAAS *-- MappingConfiguration
-  ResourceAAS *-- CapabilityDescription
-  ResourceAAS *-- Skills
-  ResourceAAS *-- OperationalData
-  ResourceAAS *-- ControlConfiguration
-  HierarchicalStructures *-- "0..*" Equipment
+  ModuleAAS *-- Nameplate
+  ModuleAAS *-- HierarchicalStructures
+  ModuleAAS *-- AssetInterfacesDescription
+  ModuleAAS *-- MappingConfiguration
+  ModuleAAS *-- CapabilityDescription
+  ModuleAAS *-- Module
+  ModuleAAS *-- Skills
+  ModuleAAS *-- OperationalData
+  ModuleAAS *-- ControlConfiguration
+  HierarchicalStructures *-- "0..*" Part
   AssetInterfacesDescription *-- "1" Interface
   Interface *-- "0..*" Action
   Interface *-- "0..*" InterfaceProperty
   MappingConfiguration *-- "1..*" Mapping
   CapabilityDescription *-- "1..*" Capability
   Capability *-- "0..*" CapabilityProperty
+  Module *-- "1..*" Command
   Skills *-- "0..*" Skill
-  Skills *-- "0..*" BuildingBlock
-  Skills *-- "0..1" ModuleCommands
-  Skills *-- "0..*" Procedure
-  Skill *-- "0..*" SkillParameter
+  Skill *-- "1..4" Command
   Skill *-- "0..1" Contract
-  Skill *-- "0..*" Step : Execute, Stop
-  Skill *-- "0..1" Implementation
-  BuildingBlock *-- "1" Implementation
-  Procedure *-- "1..*" Step
+  Command *-- "1" Operation
+  Operation *-- "2..*" Variable
+  Command *-- "0..*" Step : Steps
   OperationalData *-- "1..*" DataPoint
-  ControlConfiguration *-- "0..1" Runtime
-  ControlConfiguration *-- "0..*" BlockType
-
+  ControlConfiguration *-- "0..*" Instance : Instances
 ```
 
-Then how those elements refer to each other. Every arrow is a reference stored in the AAS, named
-like the element that carries it.
+Then how those elements refer to each other. Every solid arrow is a reference stored in the AAS,
+named like the element that carries it; a dashed arrow is a link by a shared id.
 
 ```mermaid
 classDiagram
   direction LR
   class Capability
-  class CapabilityProperty
   class Skill
-  class SkillParameter
+  class Command
+  class Operation
+  class Variable
   class Step
-  class BuildingBlock
-  class ModuleCommands
   class Action
   class InterfaceProperty
-  class Equipment
+  class Part
+  class ComponentAAS
   class Mapping
   class DataPoint
+  class Instance
 
   Capability --> Skill : RealizedBy
-  SkillParameter --> CapabilityProperty : RealizesProperty
-  Skill --> Action : InterfaceReference, Methods
-  Skill --> InterfaceProperty : State, Error, Results
-  Skill --> Equipment : Occupies
-  Skill --> Skill : Uses
-  Skill --> BuildingBlock : Uses
-  Step --> Skill : Skill
-  Step --> BuildingBlock : Skill
-  Step --> SkillParameter : Bindings (handed down)
-  Step --> InterfaceProperty : StateReference
-  ModuleCommands --> Action : Methods
+  Command --> Action : InterfaceReference
+  Step --> Skill : Skill (of this AAS or of a component's)
+  Step --> Variable : a variable of the command's Operation
   Mapping --> InterfaceProperty : Source
   Mapping --> DataPoint : Sink
-  Mapping --> Skill : Source (its Operation)
+  Mapping --> Operation : Source
   Mapping --> Action : Sink
+  Instance --> Skill : Skill
+  Instance --> Step : Skill
+  Part ..> ComponentAAS : globalAssetId
+  Variable ..> DataPoint : same semanticId
+  Variable ..> Capability : same meaning as its property
 ```
 
 ## Class diagram: a product AAS
@@ -319,18 +382,18 @@ classDiagram
   MaterialUse --> ProductParameter : QuantityParameterReference
   Process --> RequiredCapability : RequiredCapability
   Step --> Process : ProcessReference
-  Step --> ResourceAAS : Resource
+  Step --> ModuleAAS : Resource
   Step --> Skill : Skill
   Binding --> ProductParameter : SourceElement
-  Binding ..> SkillParameter : Name
+  Binding ..> Variable : Name (an input of the skill's Start)
   RequiredCapability ..> OfferedCapability : matches (same meaning, values covered)
   OfferedCapability --> Skill : RealizedBy
 ```
 
-## The resources
+## The modules
 
-Read upwards: a primitive occupies equipment, a module level skill runs primitives and building
-blocks in order, and a capability is realized by a module level skill.
+Read upwards: a module level skill runs skills of the module's components in order, and a
+capability is realized by a module level skill.
 
 ### FillingModuleAAS
 
@@ -338,51 +401,44 @@ blocks in order, and a capability is realized by a module level skill.
 
 ```mermaid
 flowchart BT
-  subgraph EQ_FillingModuleAAS["Equipment (Hierarchical Structures)"]
-    FillingModuleAASLinearAxis["LinearAxis"]
-    FillingModuleAASPump["Pump"]
-    FillingModuleAASScale["Scale"]
+  subgraph FillingLinearAxisAAS["FillingLinearAxisAAS (component, LinearAxis)"]
+    FillingLinearAxisAASHome["Home"]
+    FillingLinearAxisAASMoveAxis["MoveAxis"]
   end
-  subgraph PR_FillingModuleAAS["Skill primitives (Skills, kind Primitive)"]
-    FillingModuleAASHome["Home"]
-    FillingModuleAASMoveAxis["MoveAxis"]
-    FillingModuleAASDispense["Dispense"]
-    FillingModuleAASTare["Tare"]
-    FillingModuleAASWeigh["Weigh"]
+  subgraph FillingPumpAAS["FillingPumpAAS (component, FillingPump)"]
+    FillingPumpAASDispense["Dispense"]
   end
-  subgraph CO_FillingModuleAAS["Module level skills (Skills, kind Composite)"]
+  subgraph FillingScaleAAS["FillingScaleAAS (component, Scale)"]
+    FillingScaleAASTare["Tare"]
+    FillingScaleAASWeigh["Weigh"]
+  end
+  subgraph CO_FillingModuleAAS["FillingModuleAAS: module level skills"]
     FillingModuleAASDispensing["Dispensing"]
   end
-  subgraph CA_FillingModuleAAS["Capabilities (Capability Description, offered)"]
+  subgraph CA_FillingModuleAAS["FillingModuleAAS: capabilities (offered)"]
     FillingModuleAAScapFilling(["Filling"])
   end
-  FillingModuleAASHome -- occupies --> FillingModuleAASLinearAxis
-  FillingModuleAASMoveAxis -- occupies --> FillingModuleAASLinearAxis
-  FillingModuleAASDispense -- occupies --> FillingModuleAASPump
-  FillingModuleAASTare -- occupies --> FillingModuleAASScale
-  FillingModuleAASWeigh -- occupies --> FillingModuleAASScale
-  FillingModuleAASDispensing -- "1" --> FillingModuleAASMoveAxis
-  FillingModuleAASDispensing -- "2" --> FillingModuleAASDispense
-  FillingModuleAASDispensing -- "3" --> FillingModuleAASHome
-  FillingModuleAASDispensing -- "4" --> FillingModuleAASWeigh
+  FillingModuleAASDispensing -- "1" --> FillingLinearAxisAASMoveAxis
+  FillingModuleAASDispensing -- "2" --> FillingPumpAASDispense
+  FillingModuleAASDispensing -- "3" --> FillingLinearAxisAASHome
+  FillingModuleAASDispensing -- "4" --> FillingScaleAASWeigh
   FillingModuleAAScapFilling -- realized by --> FillingModuleAASDispensing
 ```
 
-| Skill | Kind | Parameters | Equipment | Sequence |
+| Skill | Held by | Kind | Start runs | Stop runs |
 | --- | --- | --- | --- | --- |
-| Occupy | access control | – | – | – |
-| Release | access control | – | – | – |
-| Home | Primitive | – | LinearAxis | – |
-| MoveAxis | Primitive | Position = 0.0 mm | LinearAxis | – |
-| Dispense | Primitive | Volume = 1.0 mL, FlowRate = 1.0 mL/s | Pump | – |
-| Tare | Primitive | – | Scale | – |
-| Weigh | Primitive | – | Scale | – |
-| Dispensing | Composite | Volume = 1.0 mL | LinearAxis, Pump, Scale | MoveAxis (Position = 40.0) → Dispense (FlowRate = 1.0, Volume ← Volume) → Home → Weigh |
+| Dispensing(Volume = 1.0 mL) → Weight [g] | the module | Composite | MoveAxis (Position = 40.0) → Dispense (FlowRate = 1.0, Volume ← Volume) → Home → Weigh (Weight → Weight) | Home |
+| Home() | FillingLinearAxisAAS | Primitive | – (Ensures AtHome; Timeout 8s) | – |
+| MoveAxis(Position = 0.0 mm) | FillingLinearAxisAAS | Primitive | – (Requires Homed; Ensures NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 8s) | – |
+| Dispense(Volume = 1.0 mL, FlowRate = 1.0 mL/s) | FillingPumpAAS | Primitive | – (After Volume / FlowRate) | – |
+| Tare() | FillingScaleAAS | Primitive | – (After 2.0) | – |
+| Weigh() → Weight [g] | FillingScaleAAS | Primitive | – (After 0.2) | – |
 
 - **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; FillVolume 0.5 to 10.0 mL; AbsoluteFillError 0.05 mL.
-- **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (Home → Tare), Stopping (Home).
+- **Module commands:** Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
+- **Components:** LinearAxis → `FillingLinearAxisAAS`, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 45 data points; 32 mappings.
-- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/filling.yaml`, sync state NotRead.
+- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/filling.yaml`, sync state NotRead, 14 blocks named as skills and steps.
 
 ### StopperingModuleAAS
 
@@ -390,46 +446,39 @@ flowchart BT
 
 ```mermaid
 flowchart BT
-  subgraph EQ_StopperingModuleAAS["Equipment (Hierarchical Structures)"]
-    StopperingModuleAASLinearAxis["LinearAxis"]
-    StopperingModuleAASPiston["Piston"]
+  subgraph StopperingLinearAxisAAS["StopperingLinearAxisAAS (component, LinearAxis)"]
+    StopperingLinearAxisAASHome["Home"]
+    StopperingLinearAxisAASMoveAxis["MoveAxis"]
   end
-  subgraph PR_StopperingModuleAAS["Skill primitives (Skills, kind Primitive)"]
-    StopperingModuleAASHome["Home"]
-    StopperingModuleAASMoveAxis["MoveAxis"]
-    StopperingModuleAASPressStopper["PressStopper"]
-    StopperingModuleAASRetractPiston["RetractPiston"]
+  subgraph StopperingPistonAAS["StopperingPistonAAS (component, StopperingPiston)"]
+    StopperingPistonAASPressStopper["PressStopper"]
+    StopperingPistonAASRetractPiston["RetractPiston"]
   end
-  subgraph CO_StopperingModuleAAS["Module level skills (Skills, kind Composite)"]
+  subgraph CO_StopperingModuleAAS["StopperingModuleAAS: module level skills"]
     StopperingModuleAASStoppering["Stoppering"]
   end
-  subgraph CA_StopperingModuleAAS["Capabilities (Capability Description, offered)"]
+  subgraph CA_StopperingModuleAAS["StopperingModuleAAS: capabilities (offered)"]
     StopperingModuleAAScapStoppering(["Stoppering"])
   end
-  StopperingModuleAASHome -- occupies --> StopperingModuleAASLinearAxis
-  StopperingModuleAASMoveAxis -- occupies --> StopperingModuleAASLinearAxis
-  StopperingModuleAASPressStopper -- occupies --> StopperingModuleAASPiston
-  StopperingModuleAASRetractPiston -- occupies --> StopperingModuleAASPiston
-  StopperingModuleAASStoppering -- "1" --> StopperingModuleAASMoveAxis
-  StopperingModuleAASStoppering -- "2" --> StopperingModuleAASPressStopper
-  StopperingModuleAASStoppering -- "3" --> StopperingModuleAASHome
+  StopperingModuleAASStoppering -- "1" --> StopperingLinearAxisAASMoveAxis
+  StopperingModuleAASStoppering -- "2" --> StopperingPistonAASPressStopper
+  StopperingModuleAASStoppering -- "3" --> StopperingLinearAxisAASHome
   StopperingModuleAAScapStoppering -- realized by --> StopperingModuleAASStoppering
 ```
 
-| Skill | Kind | Parameters | Equipment | Sequence |
+| Skill | Held by | Kind | Start runs | Stop runs |
 | --- | --- | --- | --- | --- |
-| Occupy | access control | – | – | – |
-| Release | access control | – | – | – |
-| Home | Primitive | – | LinearAxis | – |
-| MoveAxis | Primitive | Position = 0.0 mm | LinearAxis | – |
-| PressStopper | Primitive | – | Piston | – |
-| RetractPiston | Primitive | – | Piston | – |
-| Stoppering | Composite | – | LinearAxis, Piston | MoveAxis (Position = 40.0) → PressStopper → Home |
+| Stoppering() | the module | Composite | MoveAxis (Position = 40.0) → PressStopper → Home | Home |
+| Home() | StopperingLinearAxisAAS | Primitive | – (Ensures AtHome; Timeout 8s) | – |
+| MoveAxis(Position = 0.0 mm) | StopperingLinearAxisAAS | Primitive | – (Requires Homed; Ensures NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 8s) | – |
+| PressStopper() | StopperingPistonAAS | Primitive | – (After 3.0) | – |
+| RetractPiston() | StopperingPistonAAS | Primitive | – (After 3.0) | – |
 
 - **Capability Stoppering** (`https://smartproductionlab.aau.dk/semantics/Stoppering`), realized by Stoppering: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; StopperDiameter 6.0 to 20.0 mm.
-- **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (RetractPiston → Home), Stopping (Home).
+- **Module commands:** Occupy, Release, Reset (RetractPiston → Home), Start, Stop (Home), Abort, Clear.
+- **Components:** LinearAxis → `StopperingLinearAxisAAS`, Piston → `StopperingPistonAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 32 data points; 28 mappings.
-- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/stoppering.yaml`, sync state NotRead.
+- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/stoppering.yaml`, sync state NotRead, 12 blocks named as skills and steps.
 
 ### CappingModuleAAS
 
@@ -437,43 +486,37 @@ flowchart BT
 
 ```mermaid
 flowchart BT
-  subgraph EQ_CappingModuleAAS["Equipment (Hierarchical Structures)"]
-    CappingModuleAASLinearAxis["LinearAxis"]
-    CappingModuleAASCrimper["Crimper"]
+  subgraph CappingLinearAxisAAS["CappingLinearAxisAAS (component, LinearAxis)"]
+    CappingLinearAxisAASHome["Home"]
+    CappingLinearAxisAASMoveAxis["MoveAxis"]
   end
-  subgraph PR_CappingModuleAAS["Skill primitives (Skills, kind Primitive)"]
-    CappingModuleAASHome["Home"]
-    CappingModuleAASMoveAxis["MoveAxis"]
-    CappingModuleAASCrimp["Crimp"]
+  subgraph CappingCrimperAAS["CappingCrimperAAS (component, CapCrimper)"]
+    CappingCrimperAASCrimp["Crimp"]
   end
-  subgraph CO_CappingModuleAAS["Module level skills (Skills, kind Composite)"]
+  subgraph CO_CappingModuleAAS["CappingModuleAAS: module level skills"]
     CappingModuleAASCapping["Capping"]
   end
-  subgraph CA_CappingModuleAAS["Capabilities (Capability Description, offered)"]
+  subgraph CA_CappingModuleAAS["CappingModuleAAS: capabilities (offered)"]
     CappingModuleAAScapCapping(["Capping"])
   end
-  CappingModuleAASHome -- occupies --> CappingModuleAASLinearAxis
-  CappingModuleAASMoveAxis -- occupies --> CappingModuleAASLinearAxis
-  CappingModuleAASCrimp -- occupies --> CappingModuleAASCrimper
-  CappingModuleAASCapping -- "1" --> CappingModuleAASMoveAxis
-  CappingModuleAASCapping -- "2" --> CappingModuleAASCrimp
-  CappingModuleAASCapping -- "3" --> CappingModuleAASHome
+  CappingModuleAASCapping -- "1" --> CappingLinearAxisAASMoveAxis
+  CappingModuleAASCapping -- "2" --> CappingCrimperAASCrimp
+  CappingModuleAASCapping -- "3" --> CappingLinearAxisAASHome
   CappingModuleAAScapCapping -- realized by --> CappingModuleAASCapping
 ```
 
-| Skill | Kind | Parameters | Equipment | Sequence |
+| Skill | Held by | Kind | Start runs | Stop runs |
 | --- | --- | --- | --- | --- |
-| Occupy | access control | – | – | – |
-| Release | access control | – | – | – |
-| Home | Primitive | – | LinearAxis | – |
-| MoveAxis | Primitive | Position = 0.0 mm | LinearAxis | – |
-| Crimp | Primitive | Duration = 1.5 s | Crimper | – |
-| Capping | Composite | – | LinearAxis, Crimper | MoveAxis (Position = 40.0) → Crimp → Home |
+| Capping() | the module | Composite | MoveAxis (Position = 40.0) → Crimp → Home | Home |
+| Home() | CappingLinearAxisAAS | Primitive | – (Ensures AtHome; Timeout 8s) | – |
+| MoveAxis(Position = 0.0 mm) | CappingLinearAxisAAS | Primitive | – (Requires Homed; Ensures NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 8s) | – |
+| Crimp(Duration = 1.5 s) | CappingCrimperAAS | Primitive | – (After Duration) | – |
 
 - **Capability Capping** (`https://smartproductionlab.aau.dk/semantics/Capping`), realized by Capping: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; CapDiameter 13.0 to 20.0 mm.
-- **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: Resetting (Home), Stopping (Home).
+- **Module commands:** Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
+- **Components:** LinearAxis → `CappingLinearAxisAAS`, Crimper → `CappingCrimperAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 data points; 24 mappings.
-- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/planned/capping.yaml`, sync state NotRead.
+- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/planned/capping.yaml`, sync state NotRead, 10 blocks named as skills and steps.
 
 ### InspectionModuleAAS
 
@@ -481,39 +524,34 @@ flowchart BT
 
 ```mermaid
 flowchart BT
-  subgraph EQ_InspectionModuleAAS["Equipment (Hierarchical Structures)"]
-    InspectionModuleAASTopCamera["TopCamera"]
-    InspectionModuleAASSideCamera["SideCamera"]
+  subgraph InspectionTopCameraAAS["InspectionTopCameraAAS (component, Camera)"]
+    InspectionTopCameraAASCaptureTop["CaptureTop"]
   end
-  subgraph PR_InspectionModuleAAS["Skill primitives (Skills, kind Primitive)"]
-    InspectionModuleAASCaptureTop["CaptureTop"]
-    InspectionModuleAASCaptureSide["CaptureSide"]
+  subgraph InspectionSideCameraAAS["InspectionSideCameraAAS (component, Camera)"]
+    InspectionSideCameraAASCaptureSide["CaptureSide"]
   end
-  subgraph CO_InspectionModuleAAS["Module level skills (Skills, kind Composite)"]
+  subgraph CO_InspectionModuleAAS["InspectionModuleAAS: module level skills"]
     InspectionModuleAASInspection["Inspection"]
   end
-  subgraph CA_InspectionModuleAAS["Capabilities (Capability Description, offered)"]
+  subgraph CA_InspectionModuleAAS["InspectionModuleAAS: capabilities (offered)"]
     InspectionModuleAAScapInspection(["Inspection"])
   end
-  InspectionModuleAASCaptureTop -- occupies --> InspectionModuleAASTopCamera
-  InspectionModuleAASCaptureSide -- occupies --> InspectionModuleAASSideCamera
-  InspectionModuleAASInspection -- "1" --> InspectionModuleAASCaptureTop
-  InspectionModuleAASInspection -- "2" --> InspectionModuleAASCaptureSide
+  InspectionModuleAASInspection -- "1" --> InspectionTopCameraAASCaptureTop
+  InspectionModuleAASInspection -- "2" --> InspectionSideCameraAASCaptureSide
   InspectionModuleAAScapInspection -- realized by --> InspectionModuleAASInspection
 ```
 
-| Skill | Kind | Parameters | Equipment | Sequence |
+| Skill | Held by | Kind | Start runs | Stop runs |
 | --- | --- | --- | --- | --- |
-| Occupy | access control | – | – | – |
-| Release | access control | – | – | – |
-| CaptureTop | Primitive | – | TopCamera | – |
-| CaptureSide | Primitive | – | SideCamera | – |
-| Inspection | Composite | – | TopCamera, SideCamera | CaptureTop → CaptureSide |
+| Inspection() → TopPassed, SidePassed | the module | Composite | CaptureTop (Passed → TopPassed) → CaptureSide (Passed → SidePassed) | – |
+| CaptureTop() → Passed | InspectionTopCameraAAS | Primitive | – (Ensures Done; Timeout 3s) | – |
+| CaptureSide() → Passed | InspectionSideCameraAAS | Primitive | – (Ensures Done; Timeout 3s) | – |
 
 - **Capability Inspection** (`https://smartproductionlab.aau.dk/semantics/Inspection`), realized by Inspection: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; InspectionMethod vision.
-- **Module:** commands Reset, Start, Stop, Abort, Clear; access control Occupy, Release; procedures: none.
+- **Module commands:** Occupy, Release, Reset, Start, Stop, Abort, Clear.
+- **Components:** TopCamera → `InspectionTopCameraAAS`, SideCamera → `InspectionSideCameraAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 22 data points; 20 mappings.
-- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/planned/inspection.yaml`, sync state NotRead.
+- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/planned/inspection.yaml`, sync state NotRead, 5 blocks named as skills and steps.
 
 ## The product
 
