@@ -25,9 +25,13 @@ them.
 """
 from __future__ import annotations
 
+import base64
 import copy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+import json
+from pathlib import Path
+import urllib.request
 import xml.etree.ElementTree as ET
 
 from iec61499_mgmt.protocol import Client, Command
@@ -44,6 +48,7 @@ from .sync import Refused, guard, lacking, online, summary
 BASE = "https://smartproductionlab.aau.dk"
 PRIMITIVE, COMPOSITE = f"{BASE}/skill/Primitive", f"{BASE}/skill/Composite"
 IEC = {"xs:double": "LREAL", "xs:boolean": "BOOL", "xs:short": "INT", "xs:int": "DINT", "xs:unsignedShort": "UINT"}
+MODULE_TYPE = f"{BASE}/Resource/Module"
 # The variables every command has; a command's other variables are its parameters and results.
 OWN = ("Session", "Accepted", "ErrorID")
 # What a module's program says about itself (rule 1): its name and where its OPC UA nodes are.
@@ -114,6 +119,78 @@ def inside(inner: Parameter, outer: Parameter) -> bool:
     component it hands the value to can do."""
     return ((outer.minimum is None or (inner.minimum is not None and inner.minimum >= outer.minimum))
             and (outer.maximum is None or (inner.maximum is not None and inner.maximum <= outer.maximum)))
+
+
+# Where the AASs are ------------------------------------------------------------------------------
+
+def b64(identifier: str) -> str:
+    """An identifier as the AAS HTTP API expects it in a path (base64url, no padding)."""
+    return base64.urlsafe_b64encode(identifier.encode()).decode().rstrip("=")
+
+
+def is_server(source: str) -> bool:
+    return source.startswith(("http://", "https://"))
+
+
+def fetch(url: str):
+    with urllib.request.urlopen(url, timeout=30) as response:
+        return json.loads(response.read())
+
+
+def load(source: str, shell: str | None = None) -> tuple[dict, list[dict]]:
+    """The AAS of a module and those of its components, each as an environment (shell and
+    submodels), from ``source``: a folder of AAS files (one environment per ``.json``) or the
+    address of an AAS server. ``shell``: the module's idShort, when the source holds several."""
+    if is_server(source):
+        base, shells, cursor = source.rstrip("/"), [], None
+        while True:
+            page = fetch(f"{base}/shells?limit=100" + (f"&cursor={cursor}" if cursor else ""))
+            shells += page["result"]
+            cursor = (page.get("paging_metadata") or {}).get("cursor")
+            if not cursor or not page["result"]:
+                break
+
+        def environment(found: dict) -> dict:
+            return {"assetAdministrationShells": [found],
+                    "submodels": [fetch(f"{base}/submodels/{b64(r['keys'][0]['value'])}") for r in found.get("submodels", [])]}
+    else:
+        files = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(Path(source).glob("*.json"))]
+        whole = {env["assetAdministrationShells"][0]["id"]: env for env in files if env.get("assetAdministrationShells")}
+        shells = [env["assetAdministrationShells"][0] for env in whole.values()]
+
+        def environment(found: dict) -> dict:
+            return whole[found["id"]]
+
+    modules = [s for s in shells if s["assetInformation"].get("assetType") == MODULE_TYPE
+               and shell in (None, s["idShort"], s["id"])]
+    if len(modules) != 1:
+        raise NotDescribed(f"{source} holds {len(modules)} module AASs" + (f" named {shell}" if shell else "")
+                           + (": name one of " + ", ".join(s["idShort"] for s in modules) if modules else ""))
+    module = environment(modules[0])
+    parts = {node.get("globalAssetId") for node in children(at(submodel(module, "HierarchicalStructures"), "EntryNode"))}
+    return module, [environment(s) for s in shells if s["assetInformation"].get("globalAssetId") in parts]
+
+
+def store(source: str, module: dict) -> str:
+    """Put the module's Control Configuration (the record of what was built) back where its AAS
+    came from; returns where it went."""
+    config, shell = submodel(module, "ControlConfiguration"), module["assetAdministrationShells"][0]
+    if is_server(source):
+        url = f"{source.rstrip('/')}/submodels/{b64(config['id'])}"
+        request = urllib.request.Request(url, json.dumps(config).encode(), method="PUT",
+                                         headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(request, timeout=30):
+            return url
+    path = Path(source) / f"{shell['idShort']}.json"
+    path.write_text(json.dumps(module, indent=1), encoding="utf-8")
+    return str(path)
+
+
+def endpoint(module: dict) -> tuple[str | None, int | None]:
+    """Where the Control Configuration says the module's FORTE is managed: (host, port)."""
+    stated_ = (at(submodel(module, "ControlConfiguration"), "Runtime", "ManagementEndpoint") or {}).get("value") or ""
+    host, _, port = stated_.rpartition(":")
+    return (host or None, int(port)) if port.isdigit() else (stated_ or None, None)
 
 
 # What the AAS describes ------------------------------------------------------------------------

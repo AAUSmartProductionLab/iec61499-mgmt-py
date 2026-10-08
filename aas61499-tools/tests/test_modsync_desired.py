@@ -156,6 +156,39 @@ def test_what_was_built_is_recorded_in_the_control_configuration(with_double_dos
                for line in read(forte, "pi", 61499, recorded, components).differences.built)
 
 
+def test_from_the_command_line_with_the_aas_in_a_folder(with_double_dose, tmp_path, monkeypatch, capsys):
+    """verify, then reconfigure: the AASs are files, the module is where its AAS says it is."""
+    import json
+
+    import modsync.__main__ as cli
+    module, components = with_double_dose
+    for env in (module, *components):
+        (tmp_path / f"{env['assetAdministrationShells'][0]['idShort']}.json").write_text(json.dumps(env), encoding="utf-8")
+    assert desired.endpoint(module) == ("192.168.0.134", 61499)
+    forte, asked = FakeForte(filling()), []
+    monkeypatch.setattr(cli, "Client", lambda host, port, timeout: asked.append((host, port)) or forte)
+    monkeypatch.setattr(cli, "is_local", lambda host: False)
+
+    def run(*argv) -> tuple[int, str]:
+        monkeypatch.setattr("sys.argv", ["modsync", *argv])
+        with pytest.raises(SystemExit) as exit_:
+            cli.main()
+        return exit_.value.code, capsys.readouterr().out
+
+    code, out = run("verify", str(tmp_path))
+    assert code == 1 and "1 differences from its AAS (FillingModuleAAS)" in out
+    assert "described, not in the program: DoubleDose" in out and asked == [("192.168.0.134", 61499)]
+    code, out = run("reconfigure", str(tmp_path), "--dry-run")
+    assert code == 0 and "create DoubleDose: " in out and "DoubleDose.Control" not in forte.fbs
+    code, out = run("reconfigure", str(tmp_path), "--trigger", "two doses")
+    assert code == 0 and "as its AAS describes it" in out and "recorded in" in out
+    # The file now records what was built, and the module verifies against it.
+    written = desired.load(str(tmp_path))[0]
+    assert any(path == "DoubleDose.Control" and digest for path, _, digest in instances(written))
+    assert at(at(submodel(written, "ControlConfiguration"), "ChangeLog")["value"][-1], "Trigger")["value"] == "two doses"
+    assert run("verify", str(tmp_path))[0] == 0
+
+
 def test_a_description_the_module_cannot_carry_out_is_refused(delivered):
     module, components = copy.deepcopy(delivered)
     step = at(submodel(module, "Skills"), "Skills", "Dispensing", "Start", "Steps", "P1")

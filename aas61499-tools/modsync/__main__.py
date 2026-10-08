@@ -7,6 +7,12 @@
     python -m modsync push cell/modules/filling.yaml --target pi           # bring the module to its spec
     python -m modsync watch                                                # pull whenever a module comes online or changes
 
+The AAS as the desired state (no module spec is read; the AASs are a folder of AAS files or an AAS server):
+
+    python -m modsync verify aas --host 192.168.0.134                      # is the module what its AAS describes?
+    python -m modsync reconfigure http://localhost:8081 --shell FillingModuleAAS --dry-run   # what would change
+    python -m modsync reconfigure aas --host 192.168.0.134                 # bring the module to its AAS, record it
+
 Run on the module's own computer with --host localhost: push then writes the boot file in ~/forte
 and restarts the FORTE container there (elsewhere it does so over SSH).
 The AASs of the module and of its components go to aas/<idShort>.json, built by modreg (which needs
@@ -19,9 +25,10 @@ from pathlib import Path
 import sys
 import time
 
-from iec61499_mgmt.protocol import Client
+from iec61499_mgmt.protocol import Client, Command, ManagementError
 from modgen import SPECS, load, specs
 
+from . import desired
 from .compare import Candidate
 from .sync import LocalDeployer, PiDeployer, Refused, Status, candidates, inspect, is_local, push, relative, watch
 
@@ -101,9 +108,59 @@ def chosen(args) -> Candidate | None:
     return Candidate(path, spec, args.target or next(iter(spec.targets)))
 
 
+def against_the_aas(args) -> int:
+    """verify and reconfigure: the module against the AASs in ``args.aas``."""
+    try:
+        module, components = desired.load(args.aas, args.shell)
+    except (desired.NotDescribed, OSError) as exc:
+        sys.exit(f"{args.aas}: {exc}")
+    stated_host, stated_port = desired.endpoint(module)
+    host, port = args.host or stated_host, args.port or stated_port or 61499
+    if host is None:
+        sys.exit("Give --host: the AAS states no management endpoint")
+    name = module["assetAdministrationShells"][0]["idShort"]
+    with Client(host, port, timeout=5) as client:
+        try:
+            client.execute(Command(op="query_fbs", resource=""))          # is anybody there?
+        except OSError as exc:
+            sys.exit(f"{name}: its module at {host}:{port} is not reached ({exc})")
+        except ManagementError:
+            pass
+        try:
+            if args.command == "verify":
+                reading, done = desired.read(client, host, port, module, components), None
+            else:
+                deployer = LocalDeployer(port=port) if is_local(host) else PiDeployer(host, args.user, port) if args.user else None
+                done, reading = desired.reconfigure(client, host, port, module, components, deployer,
+                                                    force=args.force, dry_run=args.dry_run)
+        except (desired.NotDescribed, Refused) as exc:
+            sys.exit(f"{name} at {host}:{port}: {exc}")
+    found = reading.differences
+    print(f"{host}:{port}: {reading.spec.module} ({len(reading.snapshot.fbs)} instances), "
+          + ("as its AAS describes it" if found.empty else f"{len(found.lines())} differences from its AAS") + f" ({name})")
+    for line in [*found.lines()[:40], *(done or [])]:
+        print(f"  {line}")
+    if found.empty and (args.command == "verify" and args.record or done and len(done) > 1 and not args.dry_run):
+        print(f"  recorded in {desired.store(args.aas, desired.record(module, reading, done, getattr(args, 'trigger', '')))}")
+    return 0 if found.empty or args.command == "reconfigure" and args.dry_run else 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
+    for name in ("verify", "reconfigure"):
+        p = sub.add_parser(name)
+        p.add_argument("aas", help="The AASs of the module and its components: a folder of AAS files, or an AAS server (http://<host>:8081)")
+        p.add_argument("--shell", help="The module's AAS (idShort), when there are several")
+        p.add_argument("--host", help="FORTE host (default: the management endpoint the AAS states)")
+        p.add_argument("--port", type=int, help="FORTE management port (default: the AAS's, else 61499)")
+        if name == "verify":
+            p.add_argument("--record", action="store_true", help="Write the block types and hashes found into the Control Configuration")
+        else:
+            p.add_argument("--user", help="SSH login of the module's computer, to add the change to its boot file")
+            p.add_argument("--dry-run", action="store_true", help="Only show what would change")
+            p.add_argument("--force", action="store_true", help="Write values even while the module runs or is occupied")
+            p.add_argument("--trigger", default="", help="Why: goes into the change log")
     for name in ("describe", "pull", "push", "watch"):
         p = sub.add_parser(name)
         p.add_argument("--out", default=str(OUT), help="Folder for the AAS JSON files")
@@ -126,6 +183,8 @@ def main():
             p.add_argument("--interval", type=float, default=5.0, help="Seconds between polls")
     args = parser.parse_args()
 
+    if args.command in ("verify", "reconfigure"):
+        sys.exit(against_the_aas(args))
     if args.command == "describe":
         spec = load(spec_path(args.spec))
         target = args.target or next(iter(spec.targets))
