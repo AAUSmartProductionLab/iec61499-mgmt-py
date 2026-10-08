@@ -1,1 +1,5 @@
 *.sh text eol=lf
+# The runtime for the Raspberry Pi: never converted.
+runtime/bin/forte-aarch64 binary
+*.sha256 text eol=lf
+deploy/pi/* text eol=lf

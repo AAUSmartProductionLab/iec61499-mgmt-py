@@ -232,5 +232,5 @@ arduino_cpp_examples/
 # modsync output (AAS JSON of the modules read)
 /aas/
 
-# FORTE prepared for a GitHub release (runtime/package-release.ps1)
+# Left from when FORTE was prepared for a GitHub release
 runtime/dist/
