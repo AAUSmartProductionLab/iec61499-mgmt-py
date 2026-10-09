@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Make a Raspberry Pi an IEC 61499 PLC, in one run: Docker if it is missing, the runtime (Eclipse
-# 4diac FORTE with the module types) in a container that starts with the machine, and the header's
-# GPIO lines and PWM channels for it. For a Raspberry Pi 4 or 5 with a 64-bit Linux (Raspberry Pi
+# 4diac FORTE with the module types) in a container that starts with the machine, the header's
+# GPIO lines and PWM channels for it, and a clock that survives a restart. For a Raspberry Pi 4 or 5 with a 64-bit Linux (Raspberry Pi
 # OS, Ubuntu); the user who runs it needs sudo.
 #
 #   curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt-py/main/runtime/install.sh | bash
@@ -78,6 +78,20 @@ fi
 if docker info >/dev/null 2>&1; then DOCKER="docker"; else DOCKER="$SUDO docker"; fi
 $DOCKER info >/dev/null 2>&1 || fail "Docker does not answer; see: sudo systemctl status docker"
 $DOCKER compose version >/dev/null 2>&1 || fail "the Docker compose plugin is missing (sudo apt install docker-compose-v2 or docker-compose-plugin)"
+
+# --- the clock -------------------------------------------------------------------------------
+# A Raspberry Pi 4 has no clock chip, and a Pi 5's forgets the time without its battery: after a
+# start the date is the one the operating system was built on, until a time server answers (never,
+# on a network without one). fake-hwclock saves the time every hour and at shutdown and starts
+# from it, so the clock does not go back.
+if command -v apt-get >/dev/null 2>&1 && ! dpkg -s fake-hwclock >/dev/null 2>&1; then
+    say "Keeping the clock across restarts (fake-hwclock)"
+    if $SUDO apt-get update -q && apt_install fake-hwclock; then
+        $SUDO fake-hwclock save || true
+    else
+        echo "  note        fake-hwclock was not installed: after a start without a time server the date is wrong"
+    fi
+fi
 
 # --- the header's IO -------------------------------------------------------------------------
 # The 40-pin header is the GPIO chip of the SoC on a Pi 4 and of the RP1 on a Pi 5, which older
