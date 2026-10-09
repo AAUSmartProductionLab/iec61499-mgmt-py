@@ -248,8 +248,36 @@ which does not hold the wiring).
 - The Skills submodel of the filling module has 176 elements. Both Pis' programs still verify
   against AASs built this way (the program did not change).
 
-Not followed yet: `modlink` and the HMI (HMI repository), the generation project's ARSO copy and
-validation, and the AASs on the local AAS server.
+Followed the same day: `modlink` (HMI repository) reads 0.8 and still 0.7; the example line on the
+local AAS server is published again in 0.8 (the four Module submodels of 0.7 were removed there).
+Not followed yet: the HMI's own reader, and the generation project, whose ARSO copy and closed
+validation are still 0.7 (the two copies of ARSO differ until that is done).
+
+## The skill editor (9 Oct)
+
+A plugin of the BaSyx web UI fork (`basyx-aas-web-ui`, branch `feat/process-sequence-pharma`,
+`aas-web-ui/src/pages/modules/ProcessSequence/skills`, entry
+`src/components/Plugins/Submodels/ArsoSkills_v1_0.vue`). It opens when a Skills submodel is
+selected and shows a skill as a flow, with the planner's graph layout:
+
+- the skills the module composes and its own Reset and Stop; per skill what Start and what Stop run;
+- steps added, removed and reordered; per step the component's skill it runs, its name in the
+  program, what each input is handed (a constant or a parameter of the skill) and which result it
+  gives; the default and limits of the skill's parameters;
+- a new skill described from an existing one (no action of the interface yet: described, not built);
+- what the module could not carry out is said before saving, in the terms `modsync` refuses it by.
+
+Saving writes the Skills submodel; steps that were not edited are left as they were. A skill
+written by the editor's own test (DoubleDose: a second dispensing step, other limits) is test data
+here (`aas61499-tools/tests/data/FillingSkills-edited.json.gz`): `modsync` reads it, builds it, and
+the program is the one the generator makes from the same skill in a module spec. A described skill
+that is not built yet counts as callable once built.
+
+Checked by unit tests and a test that mounts the editor on the filling module's AAS (lint and
+type-check clean). **Not looked at in a browser**, so layout and handling are unverified. Not in
+it: parallel, decision and conditional steps (the control cannot run them), adding or removing a
+skill's parameters, deleting a skill. The interface description of a new skill is still not
+written by anything.
 
 ## Registration: the AAS of a module (modreg)
 
