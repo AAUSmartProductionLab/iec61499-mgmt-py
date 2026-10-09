@@ -7,10 +7,10 @@ from:
 
 - the components (Hierarchical Structures) are the equipment;
 - a component's skills are the skill primitives, each with its parameters, limits and results;
-- a skill of the module with steps is a module level skill: its parameters, the primitives it
-  runs in order, what each step is handed (a constant, or a parameter of the skill) and which
-  step gives a result;
-- the steps of the module's Reset and Stop commands are the procedures;
+- a skill of the module of the kind Composite is a module level skill: its parameters, the
+  primitives it runs in order, what each step is handed (a constant, or a parameter of the skill)
+  and which step gives a result;
+- the steps of the module's own Reset and Stop (skills of the kind ModuleControl) are the procedures;
 - the Control Configuration records what was built: instance, block type and type hash.
 
 ``described`` gives that as a module spec without wiring, ``differences`` compares it with the
@@ -46,7 +46,9 @@ from .structure import driven_by, stated, structure
 from .sync import Refused, guard, lacking, online, summary
 
 BASE = "https://smartproductionlab.aau.dk"
-PRIMITIVE, COMPOSITE = f"{BASE}/skill/Primitive", f"{BASE}/skill/Composite"
+PRIMITIVE, COMPOSITE, CONTROL = (f"{BASE}/skill/{kind}" for kind in ("Primitive", "Composite", "ModuleControl"))
+# The kinds of step a module built by the module rules can run (ARSO knows more: parallel, decision, conditional).
+RUNS = ("step",)
 IEC = {"xs:double": "LREAL", "xs:boolean": "BOOL", "xs:short": "INT", "xs:int": "DINT", "xs:unsignedShort": "UINT"}
 MODULE_TYPE = f"{BASE}/Resource/Module"
 # The variables every command has; a command's other variables are its parameters and results.
@@ -81,6 +83,11 @@ def submodel(env: dict, id_short: str) -> dict | None:
 def meaning(element: dict) -> str:
     keys = (element.get("semanticId") or {}).get("keys") or []
     return keys[0]["value"] if keys else ""
+
+
+def also(element: dict) -> list[str]:
+    """The supplemental semanticIds of an element: the kind of a skill, what a step is called."""
+    return [k["value"] for ref in element.get("supplementalSemanticIds") or [] for k in ref.get("keys", [])[:1]]
 
 
 def target(reference: dict | None) -> list[str]:
@@ -203,7 +210,7 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
     ``name``, ``package`` and ``opcua_root`` are what the program says about itself; the AAS is not
     asked for them.
     """
-    structure_, skills_, commands = (submodel(module, n) for n in ("HierarchicalStructures", "Skills", "Module"))
+    structure_, skills_ = (submodel(module, n) for n in ("HierarchicalStructures", "Skills"))
     if skills_ is None:
         raise NotDescribed("the module's AAS has no Skills submodel")
     items = {node.get("globalAssetId"): node["idShort"] for node in children(at(structure_, "EntryNode"))}
@@ -227,50 +234,61 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
                 timeout=(at(contract, "Timeout") or {}).get("value") or "10s")
 
     def sequence(steps_: dict | None, operation: dict | None, results: dict[str, str] | None = None) -> list[Step]:
-        """The steps below ``steps_``; a step is handed a constant (Property) or a parameter of the
-        skill (a reference to the input variable of ``operation``); a reference to an output
-        variable says that this step gives that result."""
+        """The steps below ``steps_`` in their Order. A step's Bindings hand each input of its skill
+        a constant (Value) or a parameter of the skill it is a step of (SourceElement: an input
+        variable of ``operation``); its Outputs say which results of the command it gives."""
         inputs = {v["idShort"]: parameter(v) for v in variables(operation, "inputVariables")}
+        get = lambda element, name_: (at(element, name_) or {}).get("value")  # noqa: E731
         found = []
-        for step in children(steps_):
+        for step in sorted(children(steps_), key=lambda s: int(get(s, "Order") or 0)):
+            name_, kind = get(step, "NodeId") or step["idShort"], get(step, "Kind") or "step"
+            if kind not in RUNS:
+                raise NotDescribed(f"step {name_} is of the kind {kind}: the control of this module runs steps one after "
+                                   "the other only")
             skill = (target(at(step, "Skill")) or [None])[-1]
             if skill not in skills:
-                raise NotDescribed(f"step {step['idShort']} runs {skill}, which no component of the module has")
-            name_ = meaning(step).rpartition("/")[2] or step["idShort"]
+                raise NotDescribed(f"step {name_} runs {skill}, which no component of the module has")
             bind = {}
-            for given in children(step):
-                key = given["idShort"]
-                if key == "Skill":
-                    continue
-                if key in skills[skill].parameters:
-                    handed = (target(given) or [None])[-1] if given.get("modelType") == "ReferenceElement" else None
-                    if handed is not None and handed not in inputs:
-                        raise NotDescribed(f"step {name_}: {key} is handed {handed}, which the skill does not take")
-                    declared_ = skills[skill].parameters[key]
-                    constant = None if handed is not None else value_of(given.get("value"), declared_.type)
-                    if constant is not None and not isinstance(constant, bool) and (
-                            (declared_.minimum is not None and constant < declared_.minimum)
-                            or (declared_.maximum is not None and constant > declared_.maximum)):
-                        raise NotDescribed(f"step {name_}: {key} = {constant} is outside what {skill} takes "
-                                           f"({declared_.minimum} to {declared_.maximum})")
-                    if handed is not None and not inside(inputs[handed], declared_):
-                        raise NotDescribed(f"step {name_}: {key} is handed {handed} ({inputs[handed].minimum} to "
-                                           f"{inputs[handed].maximum}), more than {skill} takes ({declared_.minimum} "
-                                           f"to {declared_.maximum})")
-                    bind[key] = handed if handed is not None else constant
-                elif key in skills[skill].results and results is not None:
-                    results[(target(given) or [key])[-1]] = f"{name_}.{key}"
-                else:
-                    raise NotDescribed(f"step {name_}: {skill} has neither a parameter nor a result {key}")
+            for given in children(at(step, "Bindings")):
+                key = get(given, "Name")
+                if key not in skills[skill].parameters:
+                    raise NotDescribed(f"step {name_}: {skill} has no parameter {key}")
+                declared_ = skills[skill].parameters[key]
+                handed = (target(at(given, "SourceElement")) or [None])[-1]
+                if handed is not None and handed not in inputs:
+                    raise NotDescribed(f"step {name_}: {key} is handed {handed}, which the skill does not take")
+                constant = None if handed is not None else value_of(get(given, "Value"), declared_.type)
+                if constant is not None and not isinstance(constant, bool) and (
+                        (declared_.minimum is not None and constant < declared_.minimum)
+                        or (declared_.maximum is not None and constant > declared_.maximum)):
+                    raise NotDescribed(f"step {name_}: {key} = {constant} is outside what {skill} takes "
+                                       f"({declared_.minimum} to {declared_.maximum})")
+                if handed is not None and not inside(inputs[handed], declared_):
+                    raise NotDescribed(f"step {name_}: {key} is handed {handed} ({inputs[handed].minimum} to "
+                                       f"{inputs[handed].maximum}), more than {skill} takes ({declared_.minimum} "
+                                       f"to {declared_.maximum})")
+                bind[key] = handed if handed is not None else constant
+            for given in children(at(step, "Outputs")):
+                inner = (target(at(given, "ResultReference")) or [None])[-1]
+                if inner not in skills[skill].results:
+                    raise NotDescribed(f"step {name_}: {skill} has no result {inner}")
+                if results is not None:
+                    results[get(given, "OutputId")] = f"{name_}.{inner}"
             found.append(Step(skill=skill, name=name_, bind=bind))
         return found
 
-    composites = {}
+    composites, procedures = {}, {}
     for skill in children(at(skills_, "Skills")):
-        if at(skill, "Start", "Steps") is None:
+        kinds, steps_ = also(skill), at(skill, "Start", "Steps")
+        if CONTROL in kinds:
+            # What the module runs itself while resetting or stopping; a step is called <procedure>/<step>.
+            if children(steps_):
+                procedures[next(a for a in also(children(steps_)[0]) if "/procedures/" in a).split("/")[-2]] = sequence(steps_, None)
+            continue
+        if steps_ is None and COMPOSITE not in kinds:
             continue
         start, results = at(skill, "Start", "Start"), {}
-        execute = sequence(at(skill, "Start", "Steps"), start, results)
+        execute = sequence(steps_, start, results)
         declared_ = [v["idShort"] for v in variables(start, "outputVariables")]
         composites[skill["idShort"]] = Composite(
             description=next((d["text"] for d in skill.get("description") or []), ""),
@@ -278,12 +296,6 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
             execute=execute, stop=sequence(at(skill, "Stop", "Steps"), None),
             results={r: results[r] for r in declared_ if r in results},
             offered=at(skill, "Start", "InterfaceReference") is not None)
-
-    procedures = {}
-    for command in children(commands):
-        steps_ = at(command, "Steps")
-        if children(steps_):
-            procedures[meaning(children(steps_)[0]).split("/")[-2]] = sequence(steps_, None)
     return ModuleSpec.model_construct(module=name, package=package, opcua_root=opcua_root, equipment=equipment,
                                       skills=skills, composites=composites, procedures=procedures)
 
@@ -540,8 +552,8 @@ def record(module: dict, reading: Reading, done: list[str] | None = None, trigge
     for name, comp in spec.composites.items():
         note(f"{name}.Control", ["Skills", name])
         for command, branch, steps_ in (("Start", "Execute", comp.execute), ("Stop", "Stop", comp.stop)):
-            for k, step in enumerate(steps_, 1):
-                note(f"{name}.{branch}.{step.name}", ["Skills", name, command, "Steps", f"P{k}"])
+            for k, step in enumerate(steps_):
+                note(f"{name}.{branch}.{step.name}", ["Skills", name, command, "Steps", f"Step_{k:04d}"])
     for path, entry in known.items():                     # every recorded instance: what runs there now
         if (typ := snap.fbs.get(path)) is not None:
             entry["value"] = [e for e in entry["value"] if e["idShort"] not in ("FBType", "TypeHash")]

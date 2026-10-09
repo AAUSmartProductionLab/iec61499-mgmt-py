@@ -50,12 +50,11 @@ from modsync.compare import Drift, expected, expected_values
 from modsync.device import Snapshot, literal
 
 from . import model
-from .generated import control_configuration as cc, module as arso_module, skills as arso
+from .generated import control_configuration as cc, skills as arso
 from .model import ComponentTypeAAS, ModuleTypeAAS
 
 AID = "{aas_id}/submodels/AssetInterfacesDescription"
 SKILLS = "{aas_id}/submodels/Skills"
-MODULE = "{aas_id}/submodels/Module"
 STRUCTURE = "{aas_id}/submodels/HierarchicalStructures"
 DATA = "{aas_id}/submodels/OperationalData"
 CAPABILITIES = "{aas_id}/submodels/CapabilityDescription"
@@ -330,37 +329,60 @@ class Describer:
                                                       inputs, outputs))
         return made
 
-    def steps(self, ns, owner: str, sequence, node: str, key: str, concept: str, where: str, at: tuple, command: str,
+    def steps(self, owner: str, sequence, node: str, key: str, concept: str, where: str, at: tuple, command: str,
               results: dict[str, str] | None = None):
-        """What a command runs: steps P1, P2, ... in order (``ns``: the generated classes of the
-        submodel). A step refers to the skill it runs and holds what is connected, each element
-        named like a variable of that skill's Start: a constant as it runs on the module, or a
-        reference to a variable of the command's Operation (an input handed down, or the output a
-        result becomes: ``results``, output -> "<step>.<its result>"). A step means what its
-        instance in the program is called (``concept``/<step>): its state and what it publishes
+        """What a command runs, as a flow in the planner's elements: steps Step_0000, ... with their
+        NodeId (the name of the step's instance in the program), Kind, Name and Order. A step of
+        the kind ``step`` refers to the skill it runs. Its Bindings say what each input of that
+        skill is handed: a constant as it runs on the module (Value), or a variable of the
+        command's Operation (SourceElement). Its Outputs say which results of the command it gives
+        (``results``, output -> "<step>.<its result>"). A step means what its instance in the
+        program is called (``concept``/<step>, a supplemental id): its state and what it publishes
         below ``node`` are data points named from there."""
-        held = ns.Steps()
-        variable = lambda v: ReferenceElement(value=path(where, *at, ("Operation", command), ("Property", v)))    # noqa: E731
-        for order, step in enumerate(sequence, 1):
+        held = arso.Steps()
+        own = lambda v: path(where, *at, ("Operation", command), ("Property", v))    # noqa: E731
+
+        def of_skill(name: str, variable: str) -> ModelReference:
+            return path(self.home(name), (SMC, "Skills"), (SMC, name), (SMC, "Start"), ("Operation", "Start"),
+                        ("Property", variable))
+
+        for order, step in enumerate(sequence):
             declared = self.spec.skills[step.skill].parameters
-            made = ns.SkillStep(Skill=self.skill_reference(step.skill), semantic_id=f"{concept}/{step.name}",
-                                description=f"{step.name}: runs {step.skill}")
+            made = arso.SkillStep(
+                NodeId=arso.NodeId(value=step.name), Kind=arso.Kind(value="step"), Name=arso.Name(value=step.name),
+                Order=arso.Order(value=str(order), value_type="xs:nonNegativeInteger"),
+                Skill=arso.Skill_production_sequence(value=self.skill_reference(step.skill).value),
+                description=f"{step.name}: runs {step.skill}")
+            made.supplemental_semantic_ids = [f"{concept}/{step.name}"]
+            bindings = arso.Bindings()
             for p, v in step.bind.items():
+                bound = arso.StepBinding(Name=arso.Name(value=p), InputReference=arso.InputReference(value=of_skill(step.skill, p)))
                 if isinstance(v, str):
-                    put(made.StepVariable, p, variable(v))
+                    bound.SourceElement = arso.SourceElement(value=own(v))
                 else:
                     # As the module runs it, else as bound (not the skill's default).
-                    put(made.StepConstant, p, prop(
-                        current(f"{owner}.{step.name}.{p}", declared[p].model_copy(update={"default": v}), self.snap),
-                        XSD[declared[p].type]))
+                    bound.Value = arso.Value(
+                        value=text(current(f"{owner}.{step.name}.{p}", declared[p].model_copy(update={"default": v}), self.snap)),
+                        value_type=XSD[declared[p].type])
+                put(bindings.StepBinding, f"Binding_{len(bindings.StepBinding):04d}", bound)
+            if bindings.StepBinding:
+                made.Bindings = bindings
+            outputs = arso.Outputs()
             for output, source in (results or {}).items():
                 of, _, inner = source.partition(".")
                 if of == step.name:
-                    put(made.StepVariable, inner, variable(output))
+                    io = result_input(self.spec, step.skill, inner)
+                    put(outputs.StepOutput, f"Output_{len(outputs.StepOutput):04d}", arso.StepOutput(
+                        OutputId=arso.OutputId(value=output), Name=arso.Name(value=output),
+                        DataType=arso.DataType(value="boolean" if io.type == "BOOL" else "number"),
+                        Unit=arso.Unit(value=io.unit or ""), ResultReference=arso.ResultReference(value=of_skill(step.skill, inner))))
+            if outputs.StepOutput:
+                made.Outputs = outputs
             self.step_variables(step, f"{node}/{step.name}", f"{key}_{step.name}", f"{concept}/{step.name}")
+            id_short = f"Step_{order:04d}"
             self.instances[f"{owner}.{step.name}"] = (block_type(self.spec, step.skill),
-                                                      path(where, *at, (SMC, "Steps"), (SMC, f"P{order}")))
-            put(held.SkillStep, f"P{order}", made)
+                                                      path(where, *at, (SMC, "Steps"), (SMC, id_short)))
+            put(held.SkillStep, id_short, made)
         return held if held.SkillStep else None
 
     def step_variables(self, step, node: str, key: str, concept: str) -> str:
@@ -394,8 +416,9 @@ class Describer:
         offered, node, here = decl.offered, f"/Skills/{name}", ((SMC, "Skills"), (SMC, name))
         where = self.home(name)                         # as the module sees it (the mapping is the module's)
         interface = AID if item is None else f"{self.module_id}/submodels/AssetInterfacesDescription"
-        skill = model.ModuleSkill(description=decl.description or f"Skill {name}", SemanticId=prop(skill_id(name)),
-                           semantic_id=f"{COMMAND}/{'Composite' if composite else 'Primitive'}")
+        # Every skill is the same kind of element; what kind of skill it is, is said beside it.
+        skill = model.ModuleSkill(description=decl.description or f"Skill {name}", SemanticId=prop(skill_id(name)))
+        skill.supplemental_semantic_ids = [f"{COMMAND}/{'Composite' if composite else 'Primitive'}"]
 
         def told(command: str, about: str, **more):
             says = [f"{COMMAND}/{command}", skill_id(name)]
@@ -423,7 +446,7 @@ class Describer:
                      parameters=decl.parameters, inputs=inputs, outputs=outputs)
         skill.Start = start
         if composite:
-            start.Steps = self.steps(arso, f"{name}.Execute", decl.execute, f"{node}/Execute", f"{name}_Execute",
+            start.Steps = self.steps(f"{name}.Execute", decl.execute, f"{node}/Execute", f"{name}_Execute",
                                      f"{skill_id(name)}/Execute", where, (*here, (SMC, "Start")), "Start", decl.results)
             # A module level skill has no type of its own: it is its Control block, a SKILL_Core.
             self.instances[f"{name}.Control"] = (CONTROL_TYPE, path(where, *here))
@@ -435,7 +458,7 @@ class Describer:
             stop = told("Stop", f"Stop {name}; the answer says whether it was accepted.")
             if composite and decl.stop:
                 # Published below .../Stopping: a "Stop" object would collide with the Stop method.
-                stop.Steps = self.steps(arso, f"{name}.Stop", decl.stop, f"{node}/Stopping", f"{name}_Stopping",
+                stop.Steps = self.steps(f"{name}.Stop", decl.stop, f"{node}/Stopping", f"{name}_Stopping",
                                         f"{skill_id(name)}/Stopping", where, (*here, (SMC, "Stop")), "Stop")
             skill.Stop = stop
         if offered:
@@ -447,30 +470,38 @@ class Describer:
             self.observe(f"{name}_ErrorID", error, f"{skill_id(name)}/ErrorID", f"Why {name} last failed: {ERRORS}")
         return skill
 
-    def module(self) -> arso_module.Module:
-        """The module's own commands: who may use it (Occupy, Release) and its state machine. What
-        it runs itself while resetting and stopping are the steps of Reset and Stop. Its state and
-        its occupation are data points."""
-        machine, spec = arso_module.Module(id_short="Module"), self.spec
+    def module_control(self) -> dict[str, model.ModuleSkill]:
+        """The module's own commands, each a skill of the kind ModuleControl that is called by its
+        Start: who may use the module (Occupy, Release) and its state machine. What the module runs
+        itself while resetting and stopping are the steps of Reset and of Stop. Its state and its
+        occupation are data points."""
+        spec, made = self.spec, {}
+
+        def control(name: str, meaning: str, about: str, key: str, node: str, procedure: str | None = None):
+            here = ((SMC, "Skills"), (SMC, name))
+            skill = model.ModuleSkill(description=about, SemanticId=prop(meaning))
+            skill.supplemental_semantic_ids = [f"{COMMAND}/ModuleControl"]
+            start = self.command(arso.Start(), "Start", SKILLS, (*here, (SMC, "Start")), f"{COMMAND}/Start", about, key,
+                                 node, says=[meaning])
+            if procedure in spec.procedures:
+                start.Steps = self.steps(procedure, spec.procedures[procedure], f"/Procedures/{procedure}",
+                                         f"Procedure_{procedure}", f"{BASE_URL}/procedures/{procedure}", SKILLS,
+                                         (*here, (SMC, "Start")), "Start")
+            skill.Start = start
+            made[name] = skill
+
         for name in ("Occupy", "Release"):
-            setattr(machine, name, self.command(
-                getattr(arso_module, name)(), name, MODULE, ((SMC, name),), skill_id(name),
-                f"{name} the module for one client (its session)", f"Occupation_{name}", f"/Occupation/{name}"))
+            control(name, skill_id(name), f"{name} the module for one client (its session)", f"Occupation_{name}",
+                    f"/Occupation/{name}")
         occupied = self.property("Occupation_Occupied", "/Occupation/Occupied", "BOOL", "Occupied by a session")
         self.observe("OccupationState", occupied, OCCUPIED, "Occupied by a session: 0 free, 1 occupied")
         procedures = {"Reset": "Resetting", "Stop": "Stopping"}
         for m in MODULE_METHODS:
-            made = self.command(getattr(arso_module, m)(), m, MODULE, ((SMC, m),), f"{MODULE_STATE}/{m}",
-                                f"{m} the module (PackML); the answer says whether it was accepted.", f"Module_{m}",
-                                f"/Module/{m}")
-            proc = procedures.get(m)
-            if proc in spec.procedures:
-                made.Steps = self.steps(arso_module, proc, spec.procedures[proc], f"/Procedures/{proc}", f"Procedure_{proc}",
-                                        f"{BASE_URL}/procedures/{proc}", MODULE, ((SMC, m),), m)
-            setattr(machine, m, made)
+            control(m, f"{MODULE_STATE}/{m}", f"{m} the module (PackML); the answer says whether it was accepted.",
+                    f"Module_{m}", f"/Module/{m}", procedures.get(m))
         state = self.property("Module_State", "/Module/State", "USINT", f"PackML state: {MODULE_STATES}")
         self.observe("PackMLState", state, MODULE_STATE, f"PackML state of the module: {MODULE_STATES}")
-        return machine
+        return made
 
     # Submodels -------------------------------------------------------------------------------
 
@@ -588,7 +619,7 @@ class Describer:
         asset.nameplate = plate
 
         # Module level first, so the interface lists it first.
-        asset.module = self.module()
+        control = self.module_control()
         parts = {item: ComponentTypeAAS(
             id_short=found[0], id=found[1], asset_type=found[3],
             description=f"{spec.equipment[item].description or item}: a component of the {spec.module} module, which carries out its skills")
@@ -596,7 +627,11 @@ class Describer:
         for name in [*spec.composites, *spec.skills]:
             decl = spec.skills.get(name)
             item = decl.equipment if decl is not None and decl.equipment in parts else None
+            if name in control:
+                raise ValueError(f"{name} is a command of the module itself: a skill cannot be called that")
             put((parts[item] if item else asset).skills.Skills.Skill, name, self.skill(name))
+        for name, made in control.items():
+            put(asset.skills.Skills.Skill, name, made)
         for held in (asset, *parts.values()):
             self.errors(held.skills.Errors)
         nodes = {}

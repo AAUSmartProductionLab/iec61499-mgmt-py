@@ -2,7 +2,7 @@
 
 The lab's shared AAS model (aas-model) makes its pydantic classes from submodel templates: AAS
 JSON in which every element carries its cardinality (``SMT/Cardinality``). It has the IDTA
-templates; the submodels that are the resource ontology's own (Skills, Module, Operational Data,
+templates; the submodels that are the resource ontology's own (Skills, Operational Data,
 Parameters, Control Configuration) have no template. This module writes one for each from what
 the ontology states, and has aas-model's generator make the classes from them:
 
@@ -39,8 +39,7 @@ TEMPLATES = HERE / "templates"
 GENERATED = HERE / "generated"
 AAS_MODEL = HERE.parents[1] / "aas-model"
 # The submodels of the ontology that aas-model has no template of.
-SUBMODELS = ("SkillsSubmodel", "ModuleSubmodel", "OperationalDataSubmodel", "ParametersSubmodel",
-             "ControlConfigurationSubmodel")
+SUBMODELS = ("SkillsSubmodel", "OperationalDataSubmodel", "ParametersSubmodel", "ControlConfigurationSubmodel")
 # Templates kept as files in ``templates``: not written from the ontology.
 GIVEN = ("ProcessParameters", "ProductionSequence")
 CARDINALITY = "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
@@ -132,7 +131,10 @@ class Templates:
             element["qualifiers"] = [{"type": "SMT/Cardinality", "valueType": "xs:string", "kind": "TemplateQualifier",
                                       "value": self.cardinality(parent, cls, bool(id_shorts)),
                                       "semanticId": reference(CARDINALITY)}]
-            inside = [e for c in self.children(cls) if c not in seen for e in self.elements(cls, c, (*seen, cls))]
+            # A class that holds its own kind (the steps of a branch of a step) is named once
+            # more, without its content: the generator then refers to the class it already made.
+            inside = [e for c in self.children(cls)
+                      for e in (self.elements(cls, c, (*seen, cls)) if c not in seen else self.again(cls, c))]
             if model_type == "Property":
                 element["valueType"] = self.value_type(cls)
             elif model_type == "SubmodelElementCollection":
@@ -143,6 +145,15 @@ class Templates:
                 element["value"] = inside[:1]
             made.append(element)
         return made
+
+    def again(self, parent: URIRef, cls: URIRef) -> list[dict]:
+        """A class met again inside itself: its element without content."""
+        if self.b.model_type[cls] != "SubmodelElementCollection":
+            return []
+        return [{"modelType": "SubmodelElementCollection", "idShort": id_short, "semanticId": reference(self.semantic_id(cls)),
+                 "qualifiers": [{"type": "SMT/Cardinality", "valueType": "xs:string", "kind": "TemplateQualifier",
+                                 "value": self.cardinality(parent, cls, True), "semanticId": reference(CARDINALITY)}],
+                 "value": []} for id_short in sorted(self.b.id_short[cls])]
 
     def submodel(self, cls: URIRef) -> dict:
         """The template of a submodel class: an AAS environment with that one submodel."""

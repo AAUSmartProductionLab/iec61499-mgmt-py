@@ -110,22 +110,19 @@ classDiagram
     meaning: supplemental id
     value or range, unit
   }
-  class Module {
-    <<ARSO>>
-    the module's own commands
-  }
   class Skills {
     <<ARSO, from IDTA 02015>>
     Interfaces (empty)
     Errors: name, ErrorCode
   }
   class Skill {
-    semanticId = skill/Primitive or skill/Composite
+    semanticId = skill
+    kind, a supplemental id: Primitive,
+    Composite or ModuleControl
     SemanticId: what it does
   }
   class Command {
     Start, Stop, Abort, Reset
-    of the module: Occupy, Release, Reset, Start, Stop, Abort, Clear
     semanticId = skill/Start ...
   }
   class Operation {
@@ -139,9 +136,11 @@ classDiagram
     meaning of a capability property
   }
   class Step {
-    P1, P2, ...
-    semanticId: its instance in the program
-    constants: Property per variable
+    Step_0000, ... (the planner's elements)
+    NodeId, Kind, Name, Order
+    Kind step: Skill, Bindings, Outputs
+    parallel, decision: Branches
+    decision, conditional: Condition
   }
   class Contract {
     of a primitive
@@ -172,7 +171,6 @@ classDiagram
   ModuleAAS *-- AssetInterfacesDescription
   ModuleAAS *-- MappingConfiguration
   ModuleAAS *-- CapabilityDescription
-  ModuleAAS *-- Module
   ModuleAAS *-- Skills
   ModuleAAS *-- OperationalData
   ModuleAAS *-- ControlConfiguration
@@ -183,7 +181,6 @@ classDiagram
   MappingConfiguration *-- "1..*" Mapping
   CapabilityDescription *-- "1..*" Capability
   Capability *-- "0..*" CapabilityProperty
-  Module *-- "1..*" Command
   Skills *-- "0..*" Skill
   Skill *-- "1..4" Command
   Skill *-- "0..1" Contract
@@ -369,24 +366,21 @@ def signature(skill: dict) -> str:
 def ran(envs: list[dict], command: dict | None) -> list[str]:
     """The steps of a command, each as the skill it runs with what is connected to it."""
     found = []
-    for step in children(at(command, "Steps")):
+    for step in sorted(children(at(command, "Steps")), key=lambda s: int(at(s, "Order")["value"])):
         skill = resolve(envs, at(step, "Skill")["value"])
         wired = []
-        for c in children(step):
-            if c["idShort"] == "Skill":
-                continue
-            if c["modelType"] == "Property":
-                wired.append(f"{c['idShort']} = {c['value']}")
-            else:
-                given = last(c["value"])
-                inputs = [v["value"]["idShort"] for v in (start_of(skill) or {}).get("inputVariables", [])]
-                wired.append(f"{c['idShort']} ← {given}" if c["idShort"] in inputs else f"{c['idShort']} → {given}")
+        for bound in children(at(step, "Bindings")):
+            constant, handed = at(bound, "Value"), at(bound, "SourceElement")
+            wired.append(f"{at(bound, 'Name')['value']} " + (f"= {constant['value']}" if constant else f"← {last(handed['value'])}"))
+        for given in children(at(step, "Outputs")):
+            wired.append(f"{last(at(given, 'ResultReference')['value'])} → {at(given, 'OutputId')['value']}")
         found.append(skill["idShort"] + (f" ({', '.join(wired)})" if wired else ""))
     return found
 
 
 def kind_of(skill: dict) -> str:
-    return (semantic_ids(skill) or ["/"])[0].rsplit("/", 1)[-1]
+    """Primitive, Composite or ModuleControl: the supplemental id of a skill element."""
+    return (semantic_ids(skill)[1:] or ["/"])[0].rsplit("/", 1)[-1]
 
 
 def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
@@ -396,10 +390,11 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
     by_asset = {shell_of(c)["assetInformation"]["globalAssetId"]: c for c in components.values()}
     own = {p["idShort"]: by_asset[p["globalAssetId"]] for p in parts if p.get("globalAssetId") in by_asset}
     envs = [env, *own.values()]
-    composites = children(at(skills_sm, "Skills"))
+    composites = [s for s in children(at(skills_sm, "Skills")) if kind_of(s) != "ModuleControl"]
+    control = [s for s in children(at(skills_sm, "Skills")) if kind_of(s) == "ModuleControl"]
     capabilities = [c for capability_set in children(submodel(env, "CapabilityDescription")) for c in children(capability_set)]
     interface = at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata")
-    config, machine = submodel(env, "ControlConfiguration"), submodel(env, "Module")
+    config = submodel(env, "ControlConfiguration")
     built = "planned" not in at(config, "ModuleSpec")["value"]
     skills_of = lambda c: children(at(submodel(c, "Skills"), "Skills"))                   # noqa: E731
 
@@ -419,8 +414,8 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
     lines.append(f'  subgraph CA_{node(name)}["{name}: capabilities (offered)"]')
     lines += [f'    {node(name + "cap" + c["idShort"])}(["{c["idShort"]}"])' for c in capabilities] + ["  end"]
     for s in composites:
-        for order, step in enumerate(children(at(s, "Start", "Steps")), 1):
-            target = at(step, "Skill")["value"]["keys"]
+        for step in children(at(s, "Start", "Steps")):
+            target, order = at(step, "Skill")["value"]["keys"], int(at(step, "Order")["value"]) + 1
             owner = target[0]["value"].split("/aas/")[1].split("/submodels/")[0]
             lines.append(f"  {node(name + s['idShort'])} -- \"{order}\" --> {node(owner + target[-1]['value'])}")
     for c in capabilities:
@@ -441,8 +436,8 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
         properties = "; ".join(f"{p['idShort']} {shown(at(p, 'Value'))}" for p in children(at(c, "PropertySet")))
         realized = ", ".join(last(r["second"]) for r in children(at(c, "CapabilityRelations")))
         lines.append(f"- **Capability {c['idShort']}** (`{semantic_ids(at(c, 'Capability'))[1]}`), realized by {realized}: {properties}.")
-    commands = [c["idShort"] + (f" ({' → '.join(ran(envs, c))})" if ran(envs, c) else "") for c in children(machine)]
-    lines += [f"- **Module commands:** {', '.join(commands)}.",
+    commands = [c["idShort"] + (f" ({' → '.join(ran(envs, at(c, 'Start')))})" if ran(envs, at(c, "Start")) else "") for c in control]
+    lines += [f"- **The module's own commands** (skills of the kind ModuleControl): {', '.join(commands)}.",
               "- **Components:** " + (", ".join(part + " → `" + shell_of(c)["idShort"] + "`" for part, c in own.items()) or "none") + ".",
               f"- **Interface:** OPC UA at `{at(submodel(env, 'AssetInterfacesDescription'), 'interface_opcua', 'EndpointMetadata', 'base')['value']}`, "
               f"{len(children(at(interface, 'actions')))} actions and {len(children(at(interface, 'properties')))} properties; "
