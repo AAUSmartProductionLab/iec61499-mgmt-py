@@ -251,6 +251,30 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
     assert check(recorded, arso).ok and len(check(recorded, arso).unknown) == len(check(whole, arso).unknown)
     assert read(forte, "pi", 61499, recorded, components).differences.empty
     assert record(recorded, after) == record(record(recorded, after), after)          # nothing is added twice
+    # Stored on an AAS server, every submodel the record changed is put back, and no other.
+    import http.server
+    import threading
+    put = []
+
+    class Server(http.server.BaseHTTPRequestHandler):
+        def do_PUT(self):                                   # noqa: N802
+            body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+            put.append(body["idShort"])
+            self.send_response(204)
+            self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Server)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        where = desired.store(f"http://127.0.0.1:{server.server_address[1]}", recorded, module)
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert sorted(put) == ["AssetInterfacesDescription", "AssetInterfacesMappingConfiguration", "ControlConfiguration",
+                           "OperationalData", "Skills"] and "Skills" in where
     # A binding that hands nothing is refused.
     at(edited, "Skills", "DoubleDose", "Start", "Steps", "Step_0000", "Bindings", "Binding_0000", "Value")["value"] = ""
     with pytest.raises(desired.NotDescribed, match="is handed nothing"):

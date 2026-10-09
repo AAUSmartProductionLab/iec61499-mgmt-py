@@ -178,16 +178,23 @@ def load(source: str, shell: str | None = None) -> tuple[dict, list[dict]]:
     return module, [environment(s) for s in shells if s["assetInformation"].get("globalAssetId") in parts]
 
 
-def store(source: str, module: dict) -> str:
-    """Put the module's Control Configuration (the record of what was built) back where its AAS
-    came from; returns where it went."""
-    config, shell = submodel(module, "ControlConfiguration"), module["assetAdministrationShells"][0]
+def store(source: str, module: dict, loaded: dict | None = None) -> str:
+    """Put the recorded AAS of the module back where it came from; returns where it went. On a
+    server that is every submodel the record changed against ``loaded`` (the AAS as it was read):
+    the Control Configuration and, when a built skill got its interface, the interface description,
+    the data points, the mappings and the skills. Without ``loaded``, the Control Configuration."""
+    shell = module["assetAdministrationShells"][0]
     if is_server(source):
-        url = f"{source.rstrip('/')}/submodels/{b64(config['id'])}"
-        request = urllib.request.Request(url, json.dumps(config).encode(), method="PUT",
-                                         headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(request, timeout=30):
-            return url
+        before = {s["id"]: s for s in (loaded or {}).get("submodels", [])}
+        changed = [s for s in module["submodels"]
+                   if (s != before.get(s["id"]) if loaded else s["idShort"] == "ControlConfiguration")]
+        for model_ in changed:
+            url = f"{source.rstrip('/')}/submodels/{b64(model_['id'])}"
+            request = urllib.request.Request(url, json.dumps(model_).encode(), method="PUT",
+                                             headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(request, timeout=30):
+                pass
+        return f"{source.rstrip('/')}: " + ", ".join(s["idShort"] for s in changed)
     path = Path(source) / f"{shell['idShort']}.json"
     path.write_text(json.dumps(module, indent=1), encoding="utf-8")
     return str(path)
