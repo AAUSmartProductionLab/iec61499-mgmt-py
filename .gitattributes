@@ -3,3 +3,4 @@
 runtime/bin/forte-aarch64 binary
 *.sha256 text eol=lf
 deploy/pi/* text eol=lf
+*.gz binary
