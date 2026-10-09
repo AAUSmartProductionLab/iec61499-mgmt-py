@@ -85,6 +85,46 @@ def test_a_skill_described_in_the_aas_is_created_while_another_runs(module):   #
         assert read(client, module.host, port, recorded, components).differences.empty
 
 
+def test_a_skill_from_the_skill_editor_is_built_recorded_and_reached_through_its_aas(module):   # noqa: F811
+    """What the web UI's skill editor saved (tests/data/FillingSkills-edited.json.gz: DoubleDose, two
+    doses) is built on FORTE; recorded, the AAS says how the new skill is called and watched, and a
+    client that only follows the AAS runs it."""
+    import gzip
+    import json
+    from pathlib import Path
+    ua, a = module.ua, "agent"
+    delivered, components = aas(module.cand.spec, "pc")
+    edited = json.loads(gzip.decompress((Path(__file__).parent / "data" / "FillingSkills-edited.json.gz").read_bytes()))
+    delivered["submodels"] = [edited if s["idShort"] == "Skills" else s for s in delivered["submodels"]]
+    done, after = reconfigure(module.client, module.host, module.port, delivered, components)
+    assert done[0].startswith("create DoubleDose: "), done
+    recorded = record(delivered, after, done, "two doses, from the skill editor")
+
+    def node(reference: dict) -> str:
+        """The browse path below the module's root of the interface element a reference names."""
+        found = submodel(recorded, "AssetInterfacesDescription")
+        for key in reference["keys"][1:]:
+            found = at(found, key["value"])
+        return "/".join(part.split(":", 1)[1] for part in at(found, "forms", "href")["value"].split("/")[3:])
+
+    skill = at(submodel(recorded, "Skills"), "Skills", "DoubleDose")
+    start = node(at(skill, "Start", "InterfaceReference")["value"])
+    assert start == "Skills/DoubleDose/Start"
+    interface = at(submodel(recorded, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata")
+    state = node({"keys": [{}, *[{"value": v} for v in ("interface_opcua", "InteractionMetadata", "properties", "DoubleDose_State")]]})
+    assert at(interface, "properties", "DoubleDose_Result_Weight") is not None and state == "Skills/DoubleDose/State"
+    assert ua.call("Occupation/Occupy", a) == [True, 0]
+    assert ua.call("Module/Reset", a) == [True, 0]
+    ua.expect("Module/State", STATES["Idle"], timeout=15)
+    assert ua.call("Module/Start", a) == [True, 0]
+    ua.expect("Module/State", STATES["Execute"])
+    assert ua.call(start, a, 6.0) == [False, ERRORS["OutOfRange"]]            # the editor set the largest volume to 5 mL
+    assert ua.call(start, a, 0.6) == [True, 0]
+    ua.expect(state, SKILL_STATES["Succeeded"], timeout=15)
+    assert ua.value("Skills/DoubleDose/Execute/Dispense_2/State") in (SKILL_STATES["Succeeded"], SKILL_STATES["Idle"])
+    assert read(module.client, module.host, module.port, recorded, components).differences.empty
+
+
 def test_a_limit_and_a_constant_changed_in_the_aas_hold_at_the_next_start(module):   # noqa: F811
     """The largest volume is lowered to 8 mL and the dispensing step's flow rate doubled."""
     ua, a = module.ua, "orchestrator-1"
