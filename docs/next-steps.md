@@ -107,7 +107,7 @@ path: the AAS is delivered with the module, the program is only compared with it
 | --- | --- | --- |
 | C1 | The HMI's own AAS reader, its built-in module descriptions and its stand-in module still describe the modules before 8 Oct. Read ARSO 0.7 through `modlink`'s reader and drop the built-ins | HMI repository |
 | C2 | The scale's weight follows the dispensed volume (it is a constant 2.0 g) | module spec, simulator |
-| C3 | The Pi 4: new runtime and the stoppering program (**done 9 Oct**); new host name `stoppering-module` (left: needs its password) | Pi 4 |
+| C3 | The Pi 4: host name `stoppering-module`, the installer's setup, system updates, the stoppering program. **Done 9 Oct**, checked across a reboot | Pi 4 |
 
 C1 to C3 are not needed for the paper's claim; they go in when they block a figure or a run.
 

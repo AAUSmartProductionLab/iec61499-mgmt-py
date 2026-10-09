@@ -137,11 +137,14 @@ python deploy/pi.py status | log | stop | start
   channel 2 and GPIO19 channel 3 (Pi 4: 0 and 1); FORTE came back by itself. The filling module ran
   on it with its IO on the simulator; no pin has been driven yet.
 - The lab Pi (192.168.0.191, a Raspberry Pi 4) has `dtoverlay=pwm-2chan` (PWM0 on GPIO18, PWM1 on
-  GPIO19) and time synchronisation repaired (chrony); the fix has not been tested across a reboot.
-  Since 9 Oct it has the same FORTE as the Pi 5 (`runtime/bin/forte-aarch64`) and runs the
-  stoppering module: every GPIO line and the PWM channel acquired, the module Stopped. Its
-  program of July is kept as `~/forte/boot/forte.fboot.before-stoppering`. Its host name is still
-  `iiotgateway`. Nothing is known to be wired to its pins; no Reset was sent.
+  GPIO19) and time synchronisation repaired (chrony). Since 9 Oct it is `stoppering-module` (the
+  name is kept across reboots: cloud-init is told to preserve it), set up by `runtime/install.sh`
+  like the Pi 5, with the same FORTE (`runtime/bin/forte-aarch64`), Ubuntu 26.04.1 with its
+  updates and Docker 29.9, and it runs the stoppering module: every GPIO line and the PWM channel
+  acquired, the module Stopped, the program what its AAS describes. After a reboot all of that came
+  back by itself within 45 s, the clock synchronised. Its program of July is kept as
+  `~/forte/boot/forte.fboot.before-stoppering`. Nothing is known to be wired to its pins; no Reset
+  was sent.
 - On the Pi's real pins, with nothing wired, the stoppering module's homing and cycle ran with
   the right pulses and times. Wiring of motors, switches and servo is still to do.
 - The whole stack can be tested on a Pi without wiring: the PC application (Modbus IO) deployed
