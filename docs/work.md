@@ -223,11 +223,19 @@ without the module spec:
   boot file). The type hashes the Pi's FORTE reports are those of the Windows build. No skill was
   started, so nothing moved. The Pi 4 with the stoppering module verifies against its AAS too.
 
-Not built: an editor for the description (in the tests the AAS with the new skill is the one
-`modreg` builds from a module spec that has it, with the Control Configuration of the delivered
-module); the interface description and mapping of a new skill are therefore not derived here;
-removing a skill or changing a sequence (a restart, and a boot file cannot be made from the AAS,
-which does not hold the wiring).
+- **The interface of a built skill** (9 Oct, `modreg/offer.py`). A skill that was described and
+  then built has no action that calls it and no data point that shows it. `record` adds them: the
+  actions of its commands, the properties of its state, error, parameters and results and of each
+  of its steps, a data point for each property, the mappings, and in the skill the reference of
+  each command to its action. They are written by the code a module's AAS is written by, run on
+  the module as its AAS describes it, and are what a module delivered with that skill has (a test
+  compares them). On FORTE: the skill editor's DoubleDose was built, recorded, and then found
+  and run by `modlink` from the recorded AAS alone (Succeeded, weight 2.0); a test in the HMI
+  repository reads such an AAS.
+
+Not built: removing a skill or changing a sequence (a restart, and a boot file cannot be made
+from the AAS, which does not hold the wiring). The first tests took the AAS with the new skill
+from `modreg`; since 9 Oct the skill editor writes one (below).
 
 ## ARSO 0.8: steps as a flow, the module's commands as skills (9 Oct)
 
@@ -276,8 +284,8 @@ that is not built yet counts as callable once built.
 Checked by unit tests and a test that mounts the editor on the filling module's AAS (lint and
 type-check clean). **Not looked at in a browser**, so layout and handling are unverified. Not in
 it: parallel, decision and conditional steps (the control cannot run them), adding or removing a
-skill's parameters, deleting a skill. The interface description of a new skill is still not
-written by anything.
+skill's parameters, deleting a skill. The interface description of a new skill is written when the
+change is recorded (above).
 
 ## Registration: the AAS of a module (modreg)
 

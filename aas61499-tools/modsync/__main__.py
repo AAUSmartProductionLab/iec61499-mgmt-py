@@ -141,7 +141,7 @@ def against_the_aas(args) -> int:
     for line in [*found.lines()[:40], *(done or [])]:
         print(f"  {line}")
     if found.empty and (args.command == "verify" and args.record or done and len(done) > 1 and not args.dry_run):
-        print(f"  recorded in {desired.store(args.aas, desired.record(module, reading, done, getattr(args, 'trigger', '')))}")
+        print(f"  recorded in {desired.store(args.aas, desired.record(module, reading, done, getattr(args, 'trigger', '')), module)}")
     return 0 if found.empty or args.command == "reconfigure" and args.dry_run else 1
 
 
