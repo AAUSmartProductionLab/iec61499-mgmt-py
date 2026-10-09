@@ -229,6 +229,28 @@ module); the interface description and mapping of a new skill are therefore not 
 removing a skill or changing a sequence (a restart, and a boot file cannot be made from the AAS,
 which does not hold the wiring).
 
+## ARSO 0.8: steps as a flow, the module's commands as skills (9 Oct)
+
+- A command's `Steps` are a flow in the elements of the planner's Production Sequence, with the
+  same semantic ids (`.../ProductionSequence/<Name>/1/0`): `Step_0000, ...` with `NodeId` (the
+  instance name in the program), `Kind`, `Name`, `Order`; of the kind `step`: `Skill`, `Bindings`
+  (`Name`, and `Value` or `SourceElement`, `InputReference`) and `Outputs` (`OutputId`, `Name`,
+  `DataType`, `Unit`, `ResultReference`). ARSO also declares `Branches` and `Condition` for
+  parallel, decision and conditional steps; nothing writes or runs them yet, and `modsync`
+  refuses a description that uses them.
+- Every skill element has the semantic id `.../skill`; its kind (`Primitive`, `Composite`,
+  `ModuleControl`) is a supplemental id.
+- The Module submodel is gone. `Occupy`, `Release`, `Reset`, `Start`, `Stop`, `Abort` and `Clear`
+  are skills of the kind ModuleControl, each called by its `Start`; the procedures are the steps of
+  `Reset` and of `Stop`. A skill of the module cannot be called like one of them.
+- The template generator names a class that holds its own kind once more without content (the
+  steps of a branch of a step), as the planner's template does.
+- The Skills submodel of the filling module has 176 elements. Both Pis' programs still verify
+  against AASs built this way (the program did not change).
+
+Not followed yet: `modlink` and the HMI (HMI repository), the generation project's ARSO copy and
+validation, and the AASs on the local AAS server.
+
 ## Registration: the AAS of a module (modreg)
 
 Decided on 2 Oct 2026: the resource ontology (ARSO, `ontology/ARSO`) says what a resource AAS

@@ -19,19 +19,47 @@ FillingLineAAS
   LoadingModule (not described yet)
   FillingModuleAAS
     skill Dispensing(Volume = 1.0 mL) → Weight [g]
+    skill Occupy()
+    skill Release()
+    skill Reset()
+    skill Start()
+    skill Stop()
+    skill Abort()
+    skill Clear()
     FillingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
     FillingPumpAAS: Dispense(Volume = 1.0 mL, FlowRate = 1.0 mL/s)
     FillingScaleAAS: Tare(), Weigh() → Weight [g]
   StopperingModuleAAS
     skill Stoppering()
+    skill Occupy()
+    skill Release()
+    skill Reset()
+    skill Start()
+    skill Stop()
+    skill Abort()
+    skill Clear()
     StopperingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
     StopperingPistonAAS: PressStopper(), RetractPiston()
   CappingModuleAAS
     skill Capping()
+    skill Occupy()
+    skill Release()
+    skill Reset()
+    skill Start()
+    skill Stop()
+    skill Abort()
+    skill Clear()
     CappingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
     CappingCrimperAAS: Crimp(Duration = 1.5 s)
   InspectionModuleAAS
     skill Inspection() → TopPassed, SidePassed
+    skill Occupy()
+    skill Release()
+    skill Reset()
+    skill Start()
+    skill Stop()
+    skill Abort()
+    skill Clear()
     InspectionTopCameraAAS: CaptureTop() → Passed
     InspectionSideCameraAAS: CaptureSide() → Passed
   UnloadingModule (not described yet)
@@ -40,10 +68,10 @@ FillingLineAAS
 | AAS | Kind | Submodels |
 | --- | --- | --- |
 | `FillingLineAAS` | system | HierarchicalStructures |
-| `FillingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Module, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
-| `StopperingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Module, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
-| `CappingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Module, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
-| `InspectionModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Module, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
+| `FillingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
+| `StopperingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
+| `CappingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
+| `InspectionModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
 | `FillingLinearAxisAAS` | component/linearaxis | Skills |
 | `FillingPumpAAS` | component/fillingpump | Skills |
 | `FillingScaleAAS` | component/scale | Skills |
@@ -161,22 +189,19 @@ classDiagram
     meaning: supplemental id
     value or range, unit
   }
-  class Module {
-    <<ARSO>>
-    the module's own commands
-  }
   class Skills {
     <<ARSO, from IDTA 02015>>
     Interfaces (empty)
     Errors: name, ErrorCode
   }
   class Skill {
-    semanticId = skill/Primitive or skill/Composite
+    semanticId = skill
+    kind, a supplemental id: Primitive,
+    Composite or ModuleControl
     SemanticId: what it does
   }
   class Command {
     Start, Stop, Abort, Reset
-    of the module: Occupy, Release, Reset, Start, Stop, Abort, Clear
     semanticId = skill/Start ...
   }
   class Operation {
@@ -190,9 +215,11 @@ classDiagram
     meaning of a capability property
   }
   class Step {
-    P1, P2, ...
-    semanticId: its instance in the program
-    constants: Property per variable
+    Step_0000, ... (the planner's elements)
+    NodeId, Kind, Name, Order
+    Kind step: Skill, Bindings, Outputs
+    parallel, decision: Branches
+    decision, conditional: Condition
   }
   class Contract {
     of a primitive
@@ -223,7 +250,6 @@ classDiagram
   ModuleAAS *-- AssetInterfacesDescription
   ModuleAAS *-- MappingConfiguration
   ModuleAAS *-- CapabilityDescription
-  ModuleAAS *-- Module
   ModuleAAS *-- Skills
   ModuleAAS *-- OperationalData
   ModuleAAS *-- ControlConfiguration
@@ -234,7 +260,6 @@ classDiagram
   MappingConfiguration *-- "1..*" Mapping
   CapabilityDescription *-- "1..*" Capability
   Capability *-- "0..*" CapabilityProperty
-  Module *-- "1..*" Command
   Skills *-- "0..*" Skill
   Skill *-- "1..4" Command
   Skill *-- "0..1" Contract
@@ -427,7 +452,7 @@ flowchart BT
 
 | Skill | Held by | Kind | Start runs | Stop runs |
 | --- | --- | --- | --- | --- |
-| Dispensing(Volume = 1.0 mL) → Weight [g] | the module | Composite | MoveAxis (Position = 40.0) → Dispense (FlowRate = 1.0, Volume ← Volume) → Home → Weigh (Weight → Weight) | Home |
+| Dispensing(Volume = 1.0 mL) → Weight [g] | the module | Composite | MoveAxis (Position = 40.0) → Dispense (Volume ← Volume, FlowRate = 1.0) → Home → Weigh (Weight → Weight) | Home |
 | Home() | FillingLinearAxisAAS | Primitive | – (Ensures AtHome; Timeout 8s) | – |
 | MoveAxis(Position = 0.0 mm) | FillingLinearAxisAAS | Primitive | – (Requires Homed; Ensures NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 8s) | – |
 | Dispense(Volume = 1.0 mL, FlowRate = 1.0 mL/s) | FillingPumpAAS | Primitive | – (After Volume / FlowRate) | – |
@@ -435,7 +460,7 @@ flowchart BT
 | Weigh() → Weight [g] | FillingScaleAAS | Primitive | – (After 0.2) | – |
 
 - **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; FillVolume 0.5 to 10.0 mL; AbsoluteFillError 0.05 mL.
-- **Module commands:** Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
+- **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `FillingLinearAxisAAS`, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 45 data points; 32 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/filling.yaml`, sync state NotRead, 14 blocks named as skills and steps.
@@ -475,7 +500,7 @@ flowchart BT
 | RetractPiston() | StopperingPistonAAS | Primitive | – (After 3.0) | – |
 
 - **Capability Stoppering** (`https://smartproductionlab.aau.dk/semantics/Stoppering`), realized by Stoppering: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; StopperDiameter 6.0 to 20.0 mm.
-- **Module commands:** Occupy, Release, Reset (RetractPiston → Home), Start, Stop (Home), Abort, Clear.
+- **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (RetractPiston → Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `StopperingLinearAxisAAS`, Piston → `StopperingPistonAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 32 data points; 28 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/stoppering.yaml`, sync state NotRead, 12 blocks named as skills and steps.
@@ -513,7 +538,7 @@ flowchart BT
 | Crimp(Duration = 1.5 s) | CappingCrimperAAS | Primitive | – (After Duration) | – |
 
 - **Capability Capping** (`https://smartproductionlab.aau.dk/semantics/Capping`), realized by Capping: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; CapDiameter 13.0 to 20.0 mm.
-- **Module commands:** Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
+- **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `CappingLinearAxisAAS`, Crimper → `CappingCrimperAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 data points; 24 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/planned/capping.yaml`, sync state NotRead, 10 blocks named as skills and steps.
@@ -548,7 +573,7 @@ flowchart BT
 | CaptureSide() → Passed | InspectionSideCameraAAS | Primitive | – (Ensures Done; Timeout 3s) | – |
 
 - **Capability Inspection** (`https://smartproductionlab.aau.dk/semantics/Inspection`), realized by Inspection: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; InspectionMethod vision.
-- **Module commands:** Occupy, Release, Reset, Start, Stop, Abort, Clear.
+- **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset, Start, Stop, Abort, Clear.
 - **Components:** TopCamera → `InspectionTopCameraAAS`, SideCamera → `InspectionSideCameraAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 22 data points; 20 mappings.
 - **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/planned/inspection.yaml`, sync state NotRead, 5 blocks named as skills and steps.
