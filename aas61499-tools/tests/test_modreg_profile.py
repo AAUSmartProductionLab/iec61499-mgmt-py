@@ -32,6 +32,9 @@ def children(element: dict) -> list[dict]:
     return [c for c in held if isinstance(c, dict) and "modelType" in c] if isinstance(held, list) else []
 
 
+CONTROL = ["Occupy", "Release", "Reset", "Start", "Stop", "Abort", "Clear"]       # the module's own commands
+
+
 def submodel(env: dict, id_short: str) -> dict:
     return next(s for s in env["submodels"] if s["idShort"] == id_short)
 
@@ -143,10 +146,11 @@ def test_a_skill_is_its_commands(stoppering, stoppering_all):
     assert names(described_) == ["Interfaces", "Skills", "Errors"]
     assert described_["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/Skills/1/0/Submodel"
     assert at(described_, "Errors", "Timeout", "ErrorCode")["value"] == "3"
-    # The module's own skills are those it composes: the primitives are with their components.
-    assert names(at(described_, "Skills")) == list(spec.composites) == ["Stoppering"]
+    # The module's own skills are those it composes and its own commands: the primitives are with
+    # their components.
+    assert names(at(described_, "Skills")) == [*spec.composites, *CONTROL] == ["Stoppering", *CONTROL]
     stoppering_ = at(described_, "Skills", "Stoppering")
-    assert ids(stoppering_) == [f"{BASE}/skill/Composite"]                       # what kind of element it is
+    assert ids(stoppering_) == [f"{BASE}/skill", f"{BASE}/skill/Composite"]      # a skill, and what kind of skill
     assert at(stoppering_, "SemanticId")["value"] == f"{BASE}/skills/Stoppering"   # what it does
     assert names(stoppering_) == ["SemanticId", "Start", "Stop", "Abort", "Reset"]
     for command in ("Start", "Stop", "Abort", "Reset"):
@@ -160,14 +164,23 @@ def test_a_skill_is_its_commands(stoppering, stoppering_all):
     # Start and Stop run steps; Abort and Reset run nothing.
     assert names(at(stoppering_, "Start")) == ["InterfaceReference", "Start", "Steps"]
     assert names(at(stoppering_, "Abort")) == ["InterfaceReference", "Abort"]
+    # The steps are a flow in the planner's elements: identifier, kind, name and order, then the skill.
     steps = children(at(stoppering_, "Start", "Steps"))
-    assert [s["idShort"] for s in steps] == ["P1", "P2", "P3"]
+    assert [s["idShort"] for s in steps] == ["Step_0000", "Step_0001", "Step_0002"]
+    assert [(at(s, "NodeId")["value"], at(s, "Kind")["value"], at(s, "Order")["value"]) for s in steps] == \
+        [("HeadDown", "step", "0"), ("PressStopper", "step", "1"), ("Home", "step", "2")]
     assert [resolve(envs, at(s, "Skill")["value"])["idShort"] for s in steps] == ["MoveAxis", "PressStopper", "Home"]
-    # A step holds what is connected to its skill's variables: here a constant, as it was bound.
-    assert names(steps[0]) == ["Skill", "Position"] and float(at(steps[0], "Position")["value"]) == 40.0
-    assert names(steps[1]) == ["Skill"]
+    # A step's bindings say what its skill's inputs are handed: here a constant, as it was bound.
+    assert names(steps[0]) == ["NodeId", "Kind", "Name", "Order", "Skill", "Bindings"]
+    bound = at(steps[0], "Bindings", "Binding_0000")
+    assert at(bound, "Name")["value"] == "Position" and float(at(bound, "Value")["value"]) == 40.0
+    assert resolve(envs, at(bound, "InputReference")["value"])["idShort"] == "Position"
+    assert names(steps[1]) == ["NodeId", "Kind", "Name", "Order", "Skill"]
     # What a step is called in the program is its meaning: its state is the data point named from there.
-    assert ids(steps[0]) == [f"{BASE}/skills/Stoppering/Execute/HeadDown"]
+    PS = f"{BASE}/ProductionSequence"
+    assert ids(at(stoppering_, "Start", "Steps")) == [f"{PS}/Steps/1/0"]
+    assert ids(steps[0]) == [f"{PS}/Step/1/0", f"{BASE}/skills/Stoppering/Execute/HeadDown"]
+    assert ids(at(steps[0], "Kind")) == [f"{PS}/Kind/1/0"]
     data = submodel(stoppering_all["StopperingModuleAAS"], "OperationalData")
     assert ids(at(data, "Stoppering_Execute_HeadDown_State")) == [f"{BASE}/skills/Stoppering/Execute/HeadDown/State"]
     assert [resolve(envs, at(s, "Skill")["value"])["idShort"] for s in children(at(stoppering_, "Stop", "Steps"))] == ["Home"]
@@ -184,7 +197,7 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     assert [s["idShort"] for s in axis["submodels"]] == ["Skills"]
     assert names(at(submodel(axis, "Skills"), "Skills")) == ["Home", "MoveAxis"]
     move, decl = at(submodel(axis, "Skills"), "Skills", "MoveAxis"), spec.skills["MoveAxis"]
-    assert ids(move) == [f"{BASE}/skill/Primitive"] and "Steps" not in names(at(move, "Start"))
+    assert ids(move) == [f"{BASE}/skill", f"{BASE}/skill/Primitive"] and "Steps" not in names(at(move, "Start"))
     # The module carries the skill out: the command's action is in the module's interface.
     action = at(move, "Start", "InterfaceReference")["value"]
     assert action["keys"][0]["value"] == submodel(stoppering_all["StopperingModuleAAS"], "AssetInterfacesDescription")["id"]
@@ -230,12 +243,17 @@ def test_a_step_is_connected_to_the_variables_of_its_command():
     steps = children(at(dispensing, "Start", "Steps"))
     assert [resolve(envs, at(s, "Skill")["value"])["idShort"] for s in steps] == ["MoveAxis", "Dispense", "Home", "Weigh"]
     dispense = steps[1]
-    assert names(dispense) == ["Skill", "FlowRate", "Volume"]
-    assert at(dispense, "FlowRate")["modelType"] == "Property" and float(at(dispense, "FlowRate")["value"]) == 1.0
-    assert at(dispense, "Volume")["modelType"] == "ReferenceElement"
-    assert resolve(envs, at(dispense, "Volume")["value"]) is volume           # a variable of the Operation
-    assert [k["type"] for k in at(dispense, "Volume")["value"]["keys"]][-2:] == ["Operation", "Property"]
-    assert resolve(envs, at(steps[3], "Weight")["value"]) is weight
+    handed = {at(b, "Name")["value"]: b for b in children(at(dispense, "Bindings"))}
+    assert list(handed) == ["Volume", "FlowRate"]
+    assert float(at(handed["FlowRate"], "Value")["value"]) == 1.0 and "SourceElement" not in names(handed["FlowRate"])
+    source = at(handed["Volume"], "SourceElement")
+    assert resolve(envs, source["value"]) is volume                           # a variable of the Operation
+    assert [k["type"] for k in source["value"]["keys"]][-2:] == ["Operation", "Property"]
+    # The last step gives the command's result: the output is named, and where it comes from.
+    given = at(steps[3], "Outputs", "Output_0000")
+    assert at(given, "OutputId")["value"] == "Weight" == weight["idShort"] and at(given, "Unit")["value"] == "g"
+    assert resolve(envs, at(given, "ResultReference")["value"])["idShort"] == "Weight"
+    assert at(given, "ResultReference")["value"]["keys"][0]["value"].endswith("FillingScaleAAS/submodels/Skills")
     # The step's skill takes what it is handed under the same name.
     pump = at(submodel(found["FillingPumpAAS"], "Skills"), "Skills", "Dispense")
     assert variables(at(pump, "Start", "Start"), "inputVariables") == ["Session", "Volume", "FlowRate"]
@@ -303,30 +321,44 @@ def test_steps_publish_like_skills_where_the_program_puts_them():
     assert {"Dispensing_Execute_Weigh_State", "Dispensing_Stopping_Home_ErrorID"} <= set(data)
 
 
-def test_the_modules_own_commands_are_a_submodel_in_the_same_shape(stoppering, stoppering_all):
+def test_the_modules_own_commands_are_skills_of_a_kind_of_their_own(stoppering, stoppering_all):
+    """Occupy, Release and the commands of the state machine: skills like the others, of the kind
+    ModuleControl, each called by its Start. There is no Module submodel."""
     spec, _ = stoppering
     envs, env = list(stoppering_all.values()), stoppering_all["StopperingModuleAAS"]
-    machine = submodel(env, "Module")
-    assert machine["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/Module/1/0/Submodel"
-    assert names(machine) == ["Occupy", "Release", "Reset", "Start", "Stop", "Abort", "Clear"]
+    assert "Module" not in [s["idShort"] for s in env["submodels"]]
+    skills = at(submodel(env, "Skills"), "Skills")
     root = "/0:Objects/1:Stoppering"
-    for command in names(machine):
-        held = at(machine, command)
+    for command in CONTROL:
+        held = at(skills, command)
+        assert ids(held) == [f"{BASE}/skill", f"{BASE}/skill/ModuleControl"]
+        assert [n for n in names(held) if n != "SemanticId"] == ["Start"] and ids(at(held, "Start")) == [f"{BASE}/skill/Start"]
         node = f"Occupation/1:{command}" if command in ("Occupy", "Release") else f"Module/1:{command}"
-        assert at(resolve(envs, at(held, "InterfaceReference")["value"]), "forms", "href")["value"] == f"{root}/1:{node}"
-        assert variables(at(held, command), "outputVariables") == ["Accepted", "ErrorID"]
-    # What the module runs itself while resetting and stopping are the steps of Reset and Stop.
-    ran = {c: [resolve(envs, at(s, "Skill")["value"])["idShort"] for s in children(at(machine, c, "Steps"))] for c in ("Reset", "Stop")}
+        action = resolve(envs, at(held, "Start", "InterfaceReference")["value"])
+        assert at(action, "forms", "href")["value"] == f"{root}/1:{node}"
+        assert variables(at(held, "Start", "Start"), "outputVariables") == ["Accepted", "ErrorID"]
+    assert at(skills, "Reset", "SemanticId")["value"] == "https://w3id.org/2026/apex/semantic/state/operational/Reset"
+    assert at(skills, "Occupy", "SemanticId")["value"] == f"{BASE}/skills/Occupy"
+    # What the module runs itself while resetting and stopping are the steps of Reset and of Stop.
+    ran = {c: [resolve(envs, at(s, "Skill")["value"])["idShort"] for s in children(at(skills, c, "Start", "Steps"))]
+           for c in ("Reset", "Stop")}
     assert ran == {"Reset": [s.skill for s in spec.procedures["Resetting"]], "Stop": [s.skill for s in spec.procedures["Stopping"]]}
     assert ran == {"Reset": ["RetractPiston", "Home"], "Stop": ["Home"]}
-    assert "Steps" not in names(at(machine, "Start"))
+    assert "Steps" not in names(at(skills, "Start", "Start"))
+    assert ids(children(at(skills, "Reset", "Start", "Steps"))[0])[1] == f"{BASE}/procedures/Resetting/RetractPiston"
+    # A skill of the module cannot be called like one of its own commands.
+    data = yaml.safe_load((SPECS / "stoppering.yaml").read_text(encoding="utf-8"))
+    data["composites"]["Stop"] = data["composites"].pop("Stoppering")
+    data["capabilities"] = {}
+    with pytest.raises(ValueError, match="Stop is a command of the module itself"):
+        profiles.describe(ModuleSpec.model_validate(data), "pi")
     # Its state and its occupation are data points, as are the states of those steps.
     data = submodel(env, "OperationalData")
     assert {"PackMLState", "OccupationState", "Procedure_Resetting_RetractPiston_State", "Procedure_Stopping_Home_ErrorID"} <= set(names(data))
     values = expected_values(spec, expected(spec, "pi"))
     assert values["Resetting.RetractPiston.UaPath"].strip('"') == "/Procedures/Resetting/RetractPiston"
     instance = at(submodel(env, "ControlConfiguration"), "Instances", "Resetting_RetractPiston")
-    assert resolve(env, at(instance, "Skill")["value"]) is children(at(machine, "Reset", "Steps"))[0]
+    assert resolve(env, at(instance, "Skill")["value"]) is children(at(skills, "Reset", "Start", "Steps"))[0]
 
 
 IDTA_CAPABILITY = "https://admin-shell.io/idta/CapabilityDescription"
@@ -435,8 +467,8 @@ def test_the_aimc_maps_every_action_and_property_onto_an_element(stoppering_all)
     assert fed["Stoppering_Execute_HeadDown_Parameter_Position"][0]["idShort"] == "Stoppering_Execute_HeadDown_Parameter_Position"
     axis = at(submodel(stoppering_all["StopperingLinearAxisAAS"], "Skills"), "Skills", "MoveAxis")
     assert invoked["MoveAxis_Stop"][0] is at(axis, "Stop", "Stop")
-    assert invoked["Module_Reset"][0] is at(submodel(env, "Module"), "Reset", "Reset")
-    assert invoked["Occupation_Occupy"][0] is at(submodel(env, "Module"), "Occupy", "Occupy")
+    assert invoked["Module_Reset"][0] is at(submodel(env, "Skills"), "Skills", "Reset", "Start", "Start")
+    assert invoked["Occupation_Occupy"][0] is at(submodel(env, "Skills"), "Skills", "Occupy", "Start", "Start")
     assert invoked["Stoppering_Start"][0] is at(submodel(env, "Skills"), "Skills", "Stoppering", "Start", "Start")
 
 

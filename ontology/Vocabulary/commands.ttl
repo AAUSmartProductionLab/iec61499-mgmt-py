@@ -38,9 +38,11 @@ cmd:Reset rdf:type owl:Class ; rdfs:subClassOf cmd:Command ;
 #################################################################
 # The kinds of skill.
 #
-# The element that describes a skill carries one of these as its
-# semanticId: it says what may be in the element. What the skill
-# does is its own id (the element's SemanticId property).
+# The element that describes a skill carries the id of a skill as
+# its semanticId (https://smartproductionlab.aau.dk/skill, ARSO 0.8)
+# and one of these as a supplemental semanticId: it says what may be
+# in the element. What the skill does is its own id (the element's
+# SemanticId property).
 #################################################################
 
 cmd:Skill rdf:type owl:Class ;
@@ -48,6 +50,9 @@ cmd:Skill rdf:type owl:Class ;
 
 cmd:Primitive rdf:type owl:Class ; rdfs:subClassOf cmd:Skill ;
   rdfs:label "Primitive" ; rdfs:comment "A skill of one component: its commands run no other skill. It states what starts, ends and bounds it (Contract)." .
+
+cmd:ModuleControl rdf:type owl:Class ; rdfs:subClassOf cmd:Skill ;
+  rdfs:label "ModuleControl" ; rdfs:comment "A command of the resource itself, described as a skill: who may use it (Occupy, Release) and its state machine (Reset, Start, Stop, Abort, Clear). It is called by its Start; what the resource runs meanwhile are the steps of that Start." .
 
 cmd:Composite rdf:type owl:Class ; rdfs:subClassOf cmd:Skill ;
   rdfs:label "Composite" ; rdfs:comment "A skill made of other skills: its Start (and, if it has to tidy up, its Stop) runs them step by step." .

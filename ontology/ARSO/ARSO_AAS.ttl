@@ -12,7 +12,7 @@
 
 <https://w3id.org/2025/arso>
   rdf:type owl:Ontology ;
-  owl:versionIRI <https://w3id.org/2025/arso/0.7.0> ;
+  owl:versionIRI <https://w3id.org/2025/arso/0.8.0> ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://admin-shell.io/aas/3/1/> ;
   owl:imports <https://w3id.org/2025/arso/modules/nameplate> ;
@@ -25,7 +25,15 @@
   owl:imports <https://w3id.org/2025/arso/modules/technical-data> ;
   owl:imports <https://w3id.org/2025/arso/modules/aimc> ;
   owl:imports <https://w3id.org/2025/arso/modules/control-configuration> ;
-  rdfs:comment """ARSO v0.7 — Domain extension ontology for Resource AAS.
+  rdfs:comment """ARSO v0.8 — Domain extension ontology for Resource AAS.
+
+  v0.8 (9 Oct 2026): what a command of a skill runs is a flow in the elements of the process
+  planner's Production Sequence (a step has a NodeId, a Kind, a Name and an Order; Kind step runs
+  a skill with its Bindings and Outputs, parallel and decision have Branches, decision and
+  conditional a Condition), so a skill and a product's plan are read and edited the same way.
+  Every skill element has the semanticId https://smartproductionlab.aau.dk/skill, and its kind
+  (Primitive, Composite, ModuleControl) as a supplemental semanticId. The resource's own commands
+  are skills of the kind ModuleControl in the Skills submodel; the Module submodel is gone.
 
   v0.7 (8 Oct 2026): a skill is its commands (Start, Stop, Abort, Reset), each with the action
   that calls it, its Operation (parameters, results and the answer are its variables) and the steps
@@ -303,7 +311,7 @@ arso:ResourceAAS rdfs:subClassOf [
 
 
 #################################################################
-##  v0.7: the Module submodel, and the kinds of resource
+##  v0.7: the kinds of resource (the Module submodel of 0.7 is gone in 0.8)
 ##
 ##  What a resource is, is its asset type (arso:assetType: the AAS's
 ##  assetInformation.assetType begins with it). A module is the
@@ -318,17 +326,6 @@ arso:assetType rdf:type owl:AnnotationProperty ;
   rdfs:comment "The beginning of the asset type (assetInformation.assetType) by which an AAS is recognised as this kind of resource." .
 
 arso:ResourceAAS arso:assetType "https://smartproductionlab.aau.dk/Resource/Module" .
-
-arso:hasModuleSubmodel rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
-  rdfs:subPropertyOf arso:hasSubmodel ;
-  rdfs:range arso:ModuleSubmodel .
-
-# At most one Module submodel
-arso:ResourceAAS rdfs:subClassOf [
-  rdf:type owl:Restriction ;
-  owl:onProperty arso:hasModuleSubmodel ;
-  owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
-  owl:onClass arso:ModuleSubmodel ] .
 
 arso:ComponentAAS rdf:type owl:Class ;
   rdfs:subClassOf arso:ResourceShell ;

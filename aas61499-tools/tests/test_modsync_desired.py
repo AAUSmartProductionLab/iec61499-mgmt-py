@@ -87,7 +87,7 @@ def test_a_constant_and_a_limit_changed_in_the_aas_are_written_online(delivered)
     """The engineer raises the flow rate of the dispensing step and lowers the largest volume."""
     module, components = copy.deepcopy(delivered)
     dispensing = at(submodel(module, "Skills"), "Skills", "Dispensing")
-    at(dispensing, "Start", "Steps", "P2", "FlowRate")["value"] = "2.0"
+    at(dispensing, "Start", "Steps", "Step_0001", "Bindings", "Binding_0001", "Value")["value"] = "2.0"
     volume = next(v["value"] for v in at(dispensing, "Start", "Start")["inputVariables"] if v["value"]["idShort"] == "Volume")
     next(q for q in volume["qualifiers"] if q["type"] == "Maximum")["value"] = "8.0"
     forte = FakeForte(filling())
@@ -145,7 +145,7 @@ def test_what_was_built_is_recorded_in_the_control_configuration(with_double_dos
     assert built["Dispensing.Execute.Dispense"][1].startswith("v2:SHA3-512:")      # the delivered ones get their hash too
     config = submodel(recorded, "ControlConfiguration")
     step = at(config, "Instances", "DoubleDose_Execute_NeedleDown", "Skill")["value"]["keys"]
-    assert [k["value"] for k in step[1:]] == ["Skills", "DoubleDose", "Start", "Steps", "P1"]
+    assert [k["value"] for k in step[1:]] == ["Skills", "DoubleDose", "Start", "Steps", "Step_0000"]
     assert at(config, "SyncState")["value"] == "InSync"
     change = at(config, "ChangeLog")["value"][-1]
     assert at(change, "Trigger")["value"] == "changeover to two doses"
@@ -189,14 +189,18 @@ def test_from_the_command_line_with_the_aas_in_a_folder(with_double_dose, tmp_pa
     assert run("verify", str(tmp_path))[0] == 0
 
 
+def step_of(module: dict, step: str) -> dict:
+    return at(submodel(module, "Skills"), "Skills", "Dispensing", "Start", "Steps", step)
+
+
 def test_a_description_the_module_cannot_carry_out_is_refused(delivered):
     module, components = copy.deepcopy(delivered)
-    step = at(submodel(module, "Skills"), "Skills", "Dispensing", "Start", "Steps", "P1")
+    step = at(submodel(module, "Skills"), "Skills", "Dispensing", "Start", "Steps", "Step_0000")
     at(step, "Skill")["value"]["keys"][-1]["value"] = "Polish"
     with pytest.raises(desired.NotDescribed, match="Polish, which no component of the module has"):
         described(module, components)
     module, components = copy.deepcopy(delivered)
-    at(submodel(module, "Skills"), "Skills", "Dispensing", "Start", "Steps", "P1", "Position")["value"] = "75.0"
+    at(step_of(module, "Step_0000"), "Bindings", "Binding_0000", "Value")["value"] = "75.0"
     data = yaml.safe_load(FILLING.read_text(encoding="utf-8"))
     assert data["skills"]["MoveAxis"]["parameters"]["Position"]["maximum"] == 60.0
     with pytest.raises(desired.NotDescribed, match="outside"):
@@ -208,3 +212,14 @@ def test_a_description_the_module_cannot_carry_out_is_refused(delivered):
     next(q for q in volume["qualifiers"] if q["type"] == "Maximum")["value"] = "12.0"
     with pytest.raises(desired.NotDescribed, match="more than Dispense takes"):
         described(module, components)
+    # ARSO describes more kinds of step than this module's control runs.
+    module, components = copy.deepcopy(delivered)
+    at(step_of(module, "Step_0000"), "Kind")["value"] = "parallel"
+    with pytest.raises(desired.NotDescribed, match="of the kind parallel"):
+        described(module, components)
+    # The order of the steps is their Order, not their place in the collection.
+    module, components = copy.deepcopy(delivered)
+    steps = at(submodel(module, "Skills"), "Skills", "Dispensing", "Start", "Steps")
+    steps["value"].reverse()
+    assert [s.name for s in described(module, components).composites["Dispensing"].execute] == \
+        ["NeedleDown", "Dispense", "Home", "Weigh"]

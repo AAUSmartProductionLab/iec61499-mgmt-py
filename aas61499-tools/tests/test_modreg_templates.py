@@ -100,8 +100,7 @@ def test_the_committed_templates_and_classes_are_those_of_the_ontology(tmp_path)
 
     written = templates.write_templates(ARSO, tmp_path / "templates")
     made = templates.generate([*written, *templates.given()], tmp_path / "generated")
-    assert [p.name for p in written] == ["Skills.json", "Module.json", "OperationalData.json", "Parameters.json",
-                                         "ControlConfiguration.json"]
+    assert [p.name for p in written] == ["Skills.json", "OperationalData.json", "Parameters.json", "ControlConfiguration.json"]
     assert {p.name for p in made} >= {"process_parameters.py", "production_sequence.py"}
     stale = [p.name for p in written if not same(p, templates.TEMPLATES / p.name)]
     stale += [p.name for p in made if not same(p, templates.GENERATED / p.name)]

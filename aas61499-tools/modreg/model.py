@@ -46,7 +46,6 @@ from pydantic_core import to_jsonable_python
 
 from .generated import skills
 from .generated.control_configuration import ControlConfiguration
-from .generated.module import Module
 from .generated.operational_data import OperationalData
 from .generated.parameters import Parameters
 from .product import ProductTypeAAS
@@ -145,7 +144,6 @@ class ModuleTypeAAS(AAS):
     nameplate: Nameplate = nameplate()
     hierarchical_structures: HierarchicalStructures = structure()
     asset_interfaces_description: ModuleInterfaces = ModuleInterfaces(id_short="AssetInterfacesDescription")
-    module: Module = Module(id_short="Module")
     skills: ModuleSkills = ModuleSkills(id_short="Skills")
     operational_data: OperationalData = OperationalData(id_short="OperationalData")
     asset_interfaces_mapping_configuration: Aimc = Aimc(

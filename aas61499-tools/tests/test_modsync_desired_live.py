@@ -90,7 +90,7 @@ def test_a_limit_and_a_constant_changed_in_the_aas_hold_at_the_next_start(module
     ua, a = module.ua, "orchestrator-1"
     wanted, components = copy.deepcopy(aas(module.cand.spec, "pc"))
     dispensing = at(submodel(wanted, "Skills"), "Skills", "Dispensing")
-    at(dispensing, "Start", "Steps", "P2", "FlowRate")["value"] = "2.0"
+    at(dispensing, "Start", "Steps", "Step_0001", "Bindings", "Binding_0001", "Value")["value"] = "2.0"
     volume = next(v["value"] for v in at(dispensing, "Start", "Start")["inputVariables"] if v["value"]["idShort"] == "Volume")
     next(q for q in volume["qualifiers"] if q["type"] == "Maximum")["value"] = "8.0"
 
