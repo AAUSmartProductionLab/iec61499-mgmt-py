@@ -16,6 +16,7 @@ from modgen import SPECS, library_specs, load, specs                         # n
 from modgen.spec import ModuleSpec                                           # noqa: E402
 from modreg import model, profile as profiles                                # noqa: E402
 from modsync import desired                                                  # noqa: E402
+from modsync.compare import Candidate                                        # noqa: E402
 from modsync.desired import at, described, instances, read, reconfigure, record, submodel   # noqa: E402
 from modsync.structure import stated                                         # noqa: E402
 from modsync.sync import Refused                                             # noqa: E402
@@ -187,6 +188,42 @@ def test_from_the_command_line_with_the_aas_in_a_folder(with_double_dose, tmp_pa
     assert any(path == "DoubleDose.Control" and digest for path, _, digest in instances(written))
     assert at(at(submodel(written, "ControlConfiguration"), "ChangeLog")["value"][-1], "Trigger")["value"] == "two doses"
     assert run("verify", str(tmp_path))[0] == 0
+
+
+def test_a_skill_written_in_the_skill_editor_is_built(delivered):
+    """The web UI's skill editor (basyx-aas-web-ui fork, ProcessSequence/skills) saves the Skills
+    submodel. tests/data/FillingSkills-edited.json.gz is what it wrote in its own test: a new skill
+    DoubleDose made from Dispensing, with a second dispensing step and other limits. It has no
+    action of the interface yet; built, it is callable like the others."""
+    import gzip
+    import json
+    from pathlib import Path
+    edited = json.loads(gzip.decompress((Path(__file__).parent / "data" / "FillingSkills-edited.json.gz").read_bytes()))
+    module, components = copy.deepcopy(delivered)
+    module["submodels"] = [edited if s["idShort"] == "Skills" else s for s in module["submodels"]]
+    made = described(module, components).composites["DoubleDose"]
+    assert at(edited, "Skills", "DoubleDose", "Start", "InterfaceReference") is None and made.offered
+    assert [(s.name, s.skill) for s in made.execute] == [("NeedleDown", "MoveAxis"), ("Dispense", "Dispense"),
+                                                         ("Dispense_2", "Dispense"), ("Home", "Home"), ("Weigh", "Weigh")]
+    assert made.execute[2].bind == {"Volume": "Volume", "FlowRate": 1.0} and made.results == {"Weight": "Weigh.Weight"}
+    assert (made.parameters["Volume"].default, made.parameters["Volume"].maximum) == (0.5, 5.0)
+    forte = FakeForte(filling())
+    done, after = reconfigure(forte, "pi", 61499, module, components)
+    assert done[0].startswith("create DoubleDose: ") and after.differences.empty
+    # The program is the one the generator makes from the same skill in a module spec.
+    data = yaml.safe_load(FILLING.read_text(encoding="utf-8"))
+    data["composites"]["DoubleDose"] = {
+        "parameters": {"Volume": {"unit": "mL", "minimum": 0.5, "maximum": 5.0, "default": 0.5}},
+        "execute": [{"MoveAxis": {"Position": 40.0}, "as": "NeedleDown"}, {"Dispense": {"Volume": "Volume", "FlowRate": 1.0}},
+                    {"Dispense": {"Volume": "Volume", "FlowRate": 1.0}}, "Home", "Weigh"],
+        "stop": ["Home"], "results": {"Weight": "Weigh.Weight"}}
+    wanted = Candidate(None, ModuleSpec.model_validate(data), "pi").app
+    assert forte.fbs == wanted.fbs and forte.connections == set(wanted.event_connections + wanted.data_connections)
+    assert forte.values["DoubleDose.Control.Methods"] == "TRUE" and forte.values["DoubleDose.Volume.Upper"] == "5.0"
+    # A binding that hands nothing is refused.
+    at(edited, "Skills", "DoubleDose", "Start", "Steps", "Step_0000", "Bindings", "Binding_0000", "Value")["value"] = ""
+    with pytest.raises(desired.NotDescribed, match="is handed nothing"):
+        described(module, components)
 
 
 def step_of(module: dict, step: str) -> dict:

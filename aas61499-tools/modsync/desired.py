@@ -257,6 +257,8 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
                 handed = (target(at(given, "SourceElement")) or [None])[-1]
                 if handed is not None and handed not in inputs:
                     raise NotDescribed(f"step {name_}: {key} is handed {handed}, which the skill does not take")
+                if handed is None and str(get(given, "Value") or "").strip() == "":
+                    raise NotDescribed(f"step {name_}: {key} is handed nothing (neither a value nor a parameter of the skill)")
                 constant = None if handed is not None else value_of(get(given, "Value"), declared_.type)
                 if constant is not None and not isinstance(constant, bool) and (
                         (declared_.minimum is not None and constant < declared_.minimum)
@@ -278,6 +280,9 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
         return found
 
     composites, procedures = {}, {}
+    # A skill that is described and not built yet has no action that calls it; it gets one when it
+    # is built. One that is built is offered if a command of it names its action.
+    built = {path.split(".")[0] for path, _, _ in instances(module) if path}
     for skill in children(at(skills_, "Skills")):
         kinds, steps_ = also(skill), at(skill, "Start", "Steps")
         if CONTROL in kinds:
@@ -295,7 +300,7 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
             parameters={v["idShort"]: parameter(v) for v in variables(start, "inputVariables")},
             execute=execute, stop=sequence(at(skill, "Stop", "Steps"), None),
             results={r: results[r] for r in declared_ if r in results},
-            offered=at(skill, "Start", "InterfaceReference") is not None)
+            offered=at(skill, "Start", "InterfaceReference") is not None or skill["idShort"] not in built)
     return ModuleSpec.model_construct(module=name, package=package, opcua_root=opcua_root, equipment=equipment,
                                       skills=skills, composites=composites, procedures=procedures)
 
