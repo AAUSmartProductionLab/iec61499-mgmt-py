@@ -147,6 +147,15 @@ python deploy/pi.py status | log | stop | start
   was sent.
 - On the Pi's real pins, with nothing wired, the stoppering module's homing and cycle ran with
   the right pulses and times. Wiring of motors, switches and servo is still to do.
+- **The clock.** Neither Pi keeps time while it is off: a Pi 4 has no clock chip and the Pi 5's has
+  no battery. Every start began on 27 Jul 2026 22:44 (the date built into Ubuntu's systemd) until a
+  time server answered, and on a network without one the date stayed in July (files written then
+  carry it). Since 9 Oct both have `fake-hwclock`, which saves the time every hour and at shutdown
+  and starts from it; `runtime/install.sh` installs it. After a reboot the Pi 4 started 32 s
+  behind instead of 73 days, and chrony corrected that from the internet pools within a minute.
+  Not tested: a start with no time server at all (the clock then runs on from the last save, so
+  it is behind by as long as the Pi was off), and the Pi 5 across a restart (it was not
+  restarted, the filling module was in use). The router (192.168.0.1) does not answer NTP.
 - The whole stack can be tested on a Pi without wiring: the PC application (Modbus IO) deployed
   to the Pi with its Modbus ids pointed at the simulator on the PC (`--pi-host`, `--sim-host`).
 - Management port 61499 is open on the network without authentication: keep the Pi on the lab

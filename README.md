@@ -58,7 +58,8 @@ curl -fsSL https://raw.githubusercontent.com/AAUSmartProductionLab/iec61499-mgmt
 
 It installs Docker if it is missing, starts FORTE (with the block types of every module) in a
 container that comes back after a reboot, gives it the GPIO lines of the 40-pin header and enables
-the two hardware PWM channels (GPIO18 and GPIO19; reboot once for them). Afterwards the Pi answers
+the two hardware PWM channels (GPIO18 and GPIO19; reboot once for them). It also keeps the clock
+across restarts (`fake-hwclock`): a Pi has no battery-backed clock and would start in the past. Afterwards the Pi answers
 on the management port 61499, and on OPC UA port 4840 once it runs a program.
 
 A module's program is put on the Pi from the PC (`python deploy/pi.py module`, or `modsync push`
