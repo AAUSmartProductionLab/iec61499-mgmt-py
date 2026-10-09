@@ -89,7 +89,9 @@ def install(args):
     # Earlier installs ran FORTE as a systemd user service; it would hold the ports.
     ssh(args, "systemctl --user disable --now forte 2>/dev/null; rm -f ~/.config/systemd/user/forte.service; "
               "mkdir -p ~/forte/boot && touch ~/forte/boot/forte.fboot")
-    files = [forte] + [DOCKER / f for f in ("Dockerfile", "compose.yaml", ".dockerignore")]
+    # The image takes the binary as "forte", whatever the file is called here (runtime/bin/forte-aarch64).
+    subprocess.run(["scp", "-q", str(forte), f"{args.user}@{args.host}:forte/forte"], check=True)
+    files = [DOCKER / f for f in ("Dockerfile", "compose.yaml", ".dockerignore")]
     subprocess.run(["scp", "-q", *map(str, files), f"{args.user}@{args.host}:forte/"], check=True)
     compose(args, "up -d --build --force-recreate && docker compose ps")
 
