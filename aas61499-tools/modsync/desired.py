@@ -224,8 +224,9 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
             raise NotDescribed(f"{shell['idShort']} is no component the module's Hierarchical Structures name")
         for skill in children(at(submodel(env, "Skills"), "Skills")):
             start = at(skill, "Start", "Start")
-            results = {v["idShort"]: IEC[v["valueType"]] for v in variables(start, "outputVariables")}
-            equipment[item].inputs.update({r: Input.model_construct(type=t) for r, t in results.items()})
+            results = {v["idShort"]: v for v in variables(start, "outputVariables")}
+            equipment[item].inputs.update({r: Input.model_construct(type=IEC[v["valueType"]], unit=qualifier(v, "Unit"))
+                                           for r, v in results.items()})
             contract = at(skill, "Contract")
             skills[skill["idShort"]] = Skill.model_construct(
                 equipment=item, parameters={v["idShort"]: parameter(v) for v in variables(start, "inputVariables")},
@@ -531,7 +532,12 @@ def prop(id_short: str, value: str) -> dict:
 def record(module: dict, reading: Reading, done: list[str] | None = None, trigger: str = "") -> dict:
     """The module's AAS with its Control Configuration saying what runs: every described skill and
     step with its instance, block type and the hash FORTE reports, when it was read, and (with
-    ``done``, what a reconfiguration did) one more entry in the change log."""
+    ``done``, what a reconfiguration did) one more entry in the change log.
+
+    A skill that was built and has no action of the interface yet (it was described, then created
+    online) also gets its interface: actions, properties, data points and mappings, written by the
+    rules a module's AAS is written by (``modreg.offer``; without the registration extra the AAS
+    stays without them)."""
     module = copy.deepcopy(module)
     config, skills_ = submodel(module, "ControlConfiguration"), submodel(module, "Skills")
     if config is None:
@@ -576,4 +582,12 @@ def record(module: dict, reading: Reading, done: list[str] | None = None, trigge
         log["value"].append({"modelType": "SubmodelElementCollection", "value": [
             prop("Time", now), prop("Trigger", trigger or "the AAS describes what the program did not have"),
             prop("Result", "; ".join(done))]})
+    reachable = [name for name, comp in spec.composites.items() if comp.offered and f"{name}.Control" in snap.fbs
+                 and at(skills_, "Skills", name, "Start", "InterfaceReference") is None]
+    if reachable:
+        try:
+            from modreg.offer import offered                # needs the registration extra (aas-model)
+        except ImportError:
+            return module
+        module = offered(module, spec, reachable)
     return module

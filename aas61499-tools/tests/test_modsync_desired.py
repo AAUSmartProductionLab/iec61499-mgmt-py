@@ -220,6 +220,37 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
     wanted = Candidate(None, ModuleSpec.model_validate(data), "pi").app
     assert forte.fbs == wanted.fbs and forte.connections == set(wanted.event_connections + wanted.data_connections)
     assert forte.values["DoubleDose.Control.Methods"] == "TRUE" and forte.values["DoubleDose.Volume.Upper"] == "5.0"
+    # Recorded, the skill is reachable: its commands name their actions, and the interface, the data
+    # points and the mappings are those of a module that was delivered with this skill.
+    recorded = record(module, after, done, "two doses")
+    whole = model.build(profiles.describe(ModuleSpec.model_validate(data), "pi"))
+    def bare(element):
+        """Without the ids aas-model draws anew for every build."""
+        if isinstance(element, dict):
+            return {k: bare(v) for k, v in element.items() if k != "embeddedDataSpecifications"}
+        return [bare(v) for v in element] if isinstance(element, list) else element
+
+    own = lambda elements: {e["idShort"]: bare(e) for e in elements if "DoubleDose" in e["idShort"]}      # noqa: E731
+    for kind in ("actions", "properties"):
+        there = ("AssetInterfacesDescription", "interface_opcua", "InteractionMetadata", kind)
+        got = own(at(submodel(recorded, there[0]), *there[1:])["value"])
+        assert got == own(at(submodel(whole, there[0]), *there[1:])["value"]) and len(got) > 3
+    assert own(submodel(recorded, "OperationalData")["submodelElements"]) == own(submodel(whole, "OperationalData")["submodelElements"])
+    start = at(submodel(recorded, "Skills"), "Skills", "DoubleDose", "Start")
+    assert at(start, "InterfaceReference")["value"]["keys"][-1]["value"] == "DoubleDose_Start"
+    assert {q["type"] for q in at(start, "Start")["qualifiers"]} == {"invocationDelegation", "Synchronous"}
+    assert [c["idShort"] for c in at(submodel(recorded, "Skills"), "Skills", "DoubleDose")["value"]
+            if c["modelType"] == "SubmodelElementCollection"] == ["Start", "Stop", "Abort", "Reset"]
+    mappings = lambda env: at(submodel(env, "AssetInterfacesMappingConfiguration"), "MappingConfigurations")["value"]   # noqa: E731
+    assert len(mappings(recorded)) == len(mappings(whole)) == len(mappings(module)) + 4
+    from modreg.offer import lua
+    assert sorted(lua(mappings(recorded)[0]).splitlines()) == sorted(lua(mappings(whole)[0]).splitlines())
+    # It is what the ontology describes, and the module still is what the recorded AAS describes.
+    from modreg.ontology import Blueprint, check
+    arso = Blueprint(Path(__file__).resolve().parents[2] / "ontology" / "ARSO")
+    assert check(recorded, arso).ok and len(check(recorded, arso).unknown) == len(check(whole, arso).unknown)
+    assert read(forte, "pi", 61499, recorded, components).differences.empty
+    assert record(recorded, after) == record(record(recorded, after), after)          # nothing is added twice
     # A binding that hands nothing is refused.
     at(edited, "Skills", "DoubleDose", "Start", "Steps", "Step_0000", "Bindings", "Binding_0000", "Value")["value"] = ""
     with pytest.raises(desired.NotDescribed, match="is handed nothing"):
