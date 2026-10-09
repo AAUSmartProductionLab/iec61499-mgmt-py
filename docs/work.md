@@ -136,8 +136,12 @@ python deploy/pi.py status | log | stop | start
   which the installer looks up); after the reboot `pwmchip0` has four channels, GPIO18 being
   channel 2 and GPIO19 channel 3 (Pi 4: 0 and 1); FORTE came back by itself. The filling module ran
   on it with its IO on the simulator; no pin has been driven yet.
-- The lab Pi (192.168.0.191) has `dtoverlay=pwm-2chan` (PWM0 on GPIO18, PWM1 on GPIO19) and time
-  synchronisation repaired (chrony); the fix has not been tested across a reboot.
+- The lab Pi (192.168.0.191, a Raspberry Pi 4) has `dtoverlay=pwm-2chan` (PWM0 on GPIO18, PWM1 on
+  GPIO19) and time synchronisation repaired (chrony); the fix has not been tested across a reboot.
+  Since 9 Oct it has the same FORTE as the Pi 5 (`runtime/bin/forte-aarch64`) and runs the
+  stoppering module: every GPIO line and the PWM channel acquired, the module Stopped. Its
+  program of July is kept as `~/forte/boot/forte.fboot.before-stoppering`. Its host name is still
+  `iiotgateway`. Nothing is known to be wired to its pins; no Reset was sent.
 - On the Pi's real pins, with nothing wired, the stoppering module's homing and cycle ran with
   the right pulses and times. Wiring of motors, switches and servo is still to do.
 - The whole stack can be tested on a Pi without wiring: the PC application (Modbus IO) deployed
@@ -201,11 +205,17 @@ without the module spec:
   A limit lowered and a constant raised in the AAS held at the next start. The same with the AAS
   read from the local AAS server.
 
+- On the Raspberry Pi 5 (9 Oct, the filling module in Execute and occupied): verified against its
+  AAS in 0.15 s over the network; DoubleDose created from its description, verified, added to the
+  boot file on the Pi over SSH and recorded, 1.6 s in all (most of it the two SSH calls for the
+  boot file). The type hashes the Pi's FORTE reports are those of the Windows build. No skill was
+  started, so nothing moved. The Pi 4 with the stoppering module verifies against its AAS too.
+
 Not built: an editor for the description (in the tests the AAS with the new skill is the one
 `modreg` builds from a module spec that has it, with the Control Configuration of the delivered
 module); the interface description and mapping of a new skill are therefore not derived here;
 removing a skill or changing a sequence (a restart, and a boot file cannot be made from the AAS,
-which does not hold the wiring); a run on the Raspberry Pi.
+which does not hold the wiring).
 
 ## Registration: the AAS of a module (modreg)
 

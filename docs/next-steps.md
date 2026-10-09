@@ -86,7 +86,7 @@ Later a resource agent calls the same function when a bid that needs a reconfigu
 | --- | --- | --- | --- |
 | A0 | **Try-out.** **Done 8 Oct:** instead of a mock-up, the idea was built as far as it runs: DoubleDose described but not built, created on FORTE, recorded | `modsync/desired.py` | You have confirmed the structure |
 | A1 | **Verify against the AAS.** Compare the running program with what the AAS states (instances, block types, hashes, steps, constants), not with the module spec. **Done 8 Oct** (`modsync verify`); hashes are verified once they are recorded | `modsync` | A program that differs from its AAS is reported with the difference; no module spec is read |
-| A2 | **Reconfigure from the AAS.** Create a module level skill from its description in the AAS; change a constant; both verified by read-back and recorded. **Done 8 Oct** on FORTE on the PC (`modsync reconfigure`), with the change added to the boot file. **Left:** a way to write the description (the tests take it from `modreg`), with the interface description of the new skill; the same on the Pi | `modsync`, `modreg` | The live test that creates DoubleDose passes when it starts from the AAS; the Control Configuration shows the change |
+| A2 | **Reconfigure from the AAS.** Create a module level skill from its description in the AAS; change a constant; both verified by read-back and recorded. **Done 8 Oct** on FORTE on the PC (`modsync reconfigure`), with the change added to the boot file. On the Raspberry Pi 5 on 9 Oct (0.15 s to verify, 1.6 s to create DoubleDose, verify, amend the boot file over SSH and record). **Left:** a way to write the description (the tests take it from `modreg`), with the interface description of the new skill | `modsync`, `modreg` | The live test that creates DoubleDose passes when it starts from the AAS; the Control Configuration shows the change |
 | A3 | **Operate what was created.** A client that reads the registered AAS again finds and runs the new skill | `modlink` (HMI repository) | `modlink` runs DoubleDose on FORTE from the AAS alone |
 | A4 | **Callable functions.** Verify, create a skill, set a value: one Python interface, so a script, the HMI or later an agent calls the same thing. **Started 8 Oct:** `desired.load`, `read`, `reconfigure`, `record`, `store` | `modsync` | The scenario runner (B1) uses only these |
 
@@ -107,7 +107,7 @@ path: the AAS is delivered with the module, the program is only compared with it
 | --- | --- | --- |
 | C1 | The HMI's own AAS reader, its built-in module descriptions and its stand-in module still describe the modules before 8 Oct. Read ARSO 0.7 through `modlink`'s reader and drop the built-ins | HMI repository |
 | C2 | The scale's weight follows the dispensed volume (it is a constant 2.0 g) | module spec, simulator |
-| C3 | The Pi 4: new host name (`stoppering-module`), new runtime | Pi 4 (needs its password) |
+| C3 | The Pi 4: new runtime and the stoppering program (**done 9 Oct**); new host name `stoppering-module` (left: needs its password) | Pi 4 |
 
 C1 to C3 are not needed for the paper's claim; they go in when they block a figure or a run.
 
@@ -119,7 +119,7 @@ Outline and figures by 1 Nov; experiment runs and text from 2 Nov; submission 18
 
 | Week | Work |
 | --- | --- |
-| 9 to 18 Oct | A2 (writing a description, the Pi), A3 |
+| 9 to 18 Oct | A2 (writing a description), A3 |
 | 19 to 25 Oct | A4, B1, B2 |
 | 26 Oct to 1 Nov | B3 (when the driver is in), C as needed, outline and figures |
 | 2 to 18 Nov | Experiment runs, writing |
