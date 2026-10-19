@@ -22,6 +22,7 @@ from __future__ import annotations
 import copy
 import functools
 import json
+import threading
 import typing
 from typing import Dict, List, Optional
 
@@ -69,6 +70,33 @@ class _Typing:
 
 
 aas_pydantic.aas_model.typing = aas_pydantic.convert_aas_instance.typing = _Typing()
+
+
+class _Once(threading.local):
+    """aas_pydantic's serializer of an element dumps the element's children, and then once more to
+    keep their own classes; every level does that again for what is below it, so a dump takes time
+    exponential in the depth (10 s for a module). Within one dump an element is the same each time
+    it is reached, so it is serialized once. Per thread: the registration service dumps in several."""
+
+    def __init__(self, serialize):
+        self.serialize, self.depth, self.done = serialize, 0, {}
+
+    def __call__(self, element, handler):
+        if id(element) in self.done:
+            return self.done[id(element)]
+        self.depth += 1
+        try:
+            data = self.serialize(element, handler)
+        finally:
+            self.depth -= 1
+        if self.depth:
+            self.done[id(element)] = data
+        else:
+            self.done.clear()
+        return data
+
+
+aas_pydantic.aas_model._serialize_element_containers = _Once(aas_pydantic.aas_model._serialize_element_containers)
 
 
 ARSO = f"{BASE_URL}/ARSO"

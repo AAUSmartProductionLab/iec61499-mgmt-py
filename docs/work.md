@@ -390,6 +390,12 @@ resolved in the version of 18 Oct (`6a03f78`); the others are still to be checke
   `git submodule update --init` inside `aas-model` and `pip install -e ./aas-model` work.
 - Dumping is slow because type hints are resolved for every element (minutes for a module);
   `modreg` caches them.
+- (New 18 Oct.) The lossless serializer of an element dumps its children and then once more
+  through `_tag_dump`, at every level, so a dump takes time exponential in the depth: building a
+  module's AAS took 10 s. `modreg` lets an element be serialized once per dump (`_Once` in
+  `model.py`), which removes three quarters of the work. A long build in a process that also runs a
+  simulator held the simulated equipment up; the live tests now run the simulator in a process of
+  its own.
 - Validation fills the dictionaries it is given, so a profile must be copied before it is read.
 - The asset id is always the shell's id (`modreg` sets it after building).
 - The built AAS is large (about 1.9 MB per module: class and attribute names as embedded data
