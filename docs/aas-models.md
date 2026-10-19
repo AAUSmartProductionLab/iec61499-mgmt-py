@@ -202,9 +202,9 @@ mean. The mapping joins the two.
 
 | Submodel | Change | Why |
 | --- | --- | --- |
-| Asset Interfaces Description | OPC UA binding terms on forms (`uav_browsePath`, `uav_componentOf`); the owning object is named by its browse path, not a NodeId | FORTE gives its nodes new ids at every start |
-| | Actions with `input` and `output` schemas and `synchronous` (WoT terms; the IDTA template details only properties) | A caller needs the arguments in call order |
-| | Each action carries the command it carries out and the skill as supplemental semantic ids | Finding an action by meaning |
+| Asset Interfaces Description | OPC UA binding terms (`uav_browsePath` on the form, `uav_componentOf` on the action); the owning object is named by its browse path, not a NodeId | FORTE gives its nodes new ids at every start |
+| | Actions in aas-model's AID extension (since 19 Oct): semantic id `.../aid/ActionDefinition/1/0`, `input` and `output` schemas, `synchronous`; properties `readOnly` (WoT terms that AID 1.2 leaves external) | A caller needs the arguments in call order |
+| | Each action carries, after its `td#name`, the command it carries out and the skill as supplemental semantic ids | Finding an action by meaning |
 | Mapping Configuration | A source may be the Operation of a command, with an interface action as sink; the command has to reference that action itself | The template only maps interface elements onto submodel elements; invoking needs the other direction |
 | Capability Description | `CapabilityRealizedBy.second` is a model reference to the skill (the template has an external reference) | So the link can be followed and checked |
 | Skills | The whole submodel, see 2.1 | No template describes skills with parameters and composition |
@@ -398,10 +398,12 @@ Inside the resource the chain continues with section 2.2: capability â†’ skill â
    submodule here since 19 Oct) reads 0.8, 0.7 and the short form. The HMI's own reader, its
    built-in module descriptions and its simulator are still those of the modules before 8 Oct.
 8. **ARSO's resource AAS and aas-model's `Resource`.** Since 16 to 18 Oct aas-model authors
-   resources in Python as a `Resource` with Control Component Instance, Variables and Parameters,
-   and the lab's registration service loads only an export that validates as a plain `Resource`.
-   A module AAS here has Skills, Operational Data and Control Configuration instead, so the lab's
-   service would refuse it. Open (see [next-steps.md](next-steps.md)).
+   resources in Python as a `Resource` with Control Component Instance, Variables and Parameters.
+   **Decided 19 Oct:** a line, a module and a component are `Resource`s; ARSO's own submodels
+   (Skills, Operational Data, Control Configuration) are added to it, and what they replace
+   (Control Component Instance, Variables) is left out. Built the same day (`modreg/model.py`).
+   The registration service is `modreg serve`; it takes these types and a plain `Resource` export
+   of the lab's stations. Operational Data may become a Time Series Data submodel later.
 9. **Live values.** The mapping into Operational Data is described but nothing runs it, so the
    data points in the AAS hold no values.
 

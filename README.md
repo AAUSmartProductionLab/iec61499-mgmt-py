@@ -80,8 +80,11 @@ GPIO19 channel 3 of `pwmchip0` (Pi 4: channels 0 and 1). A module description na
 
 A module describes itself with a **profile**: its AAS on the lab's shared pydantic model
 ([aas-model](https://github.com/tristan-schwoerer/aas-model)) without what its type says anyway.
-The registration service reads the profile into the model, builds the AAS from it, checks the
-AAS against the ontology and publishes it to an AAS server.
+The types are aas-model's `Resource` with the resource ontology's own submodels (Skills,
+Operational Data, Control Configuration) added. The registration service reads the profile into
+the model, builds the AAS from it, checks the AAS against the ontology and publishes it to an AAS
+server. It also takes the plain `Resource` export of the lab's MQTT stations that aas-model
+authors.
 
 ```powershell
 python -m pip install -e ".[registration]"                     # aas-model, BaSyx SDK 2.1, rdflib
