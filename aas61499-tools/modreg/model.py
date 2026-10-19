@@ -1,17 +1,20 @@
-"""The AAS type of an IEC 61499 module: the structure of the resource ontology (ARSO), written with
-the lab's shared AAS model (``aas_model``, pydantic).
+"""The AAS types of the resources as the resource ontology (ARSO) describes them: a line, a module
+and a component, written with the lab's shared AAS model (``aas_model``, pydantic).
 
-``aas_model.ResourceTypeAAS`` is the lab's resource: an MQTT station with a Control Component
-Instance, Variables and a location. ``ModuleTypeAAS`` is a resource as ARSO describes it, for a
-module that speaks OPC UA only:
+Each is aas-model's ``Resource``, the type every resource of the lab is (its stations are subtypes
+of it too). ``ModuleTypeAAS`` is a resource for a module that speaks OPC UA only:
 
 - **Nameplate**, **Hierarchical Structures** (the equipment), **Asset Interfaces Description**
   (one OPC UA interface) and **Asset Interfaces Mapping Configuration**: the shared model's classes;
 - **Skills** (ARSO's control component: the skills with their commands, the module's own commands,
-  the errors) instead of the Control Component Instance, **Operational Data** instead of Variables, **Parameters** and **Control
+  the errors) instead of the Control Component Instance, **Operational Data** instead of Variables
+  (to be revisited: it may become a Time Series Data submodel), **Parameters** and **Control
   Configuration**: ARSO's own submodels. Their classes are generated from the ontology by
   aas-model's generator (``modreg.generated``, see ``templates``); only what the ontology leaves
   open inside them is declared here.
+
+A submodel of ``Resource`` that ARSO replaces is left out (``None``); a component has its Skills
+only, a line its Hierarchical Structures only.
 
 A profile is the dump of such a model without what the type already says (``profile``); ``asset``
 builds the model back from it and ``environment`` the AAS. ``TYPES`` names the types a profile may
@@ -31,10 +34,11 @@ import aas_pydantic.convert_aas_instance
 
 from aas_model.constants import BASE_URL, INVOCATION_ORIGIN
 from aas_model.id_injector import inject_ids
-from aas_model.resource_template import ResourceTypeAAS
+from aas_model.resource_template import Resource, ResourceControlComponentInstance, ResourceParameters
 from aas_model.submodel_templates import (
     Aimc, AimcMappingConfigurations, DmpAssetInterfacesDescription, DmpOpcuaInterface, MqttInterface, SkillOperation,
 )
+from aas_model.submodel_templates.variables import Variables
 from aas_pydantic import (
     AAS, ModelReference, Property, Qualifier, ReferenceElement, SubmodelElementCollection, convert_model_to_aas,
 )
@@ -194,10 +198,20 @@ def structure() -> HierarchicalStructures:
                                   ArcheType=ArcheType(value="OneDown"))
 
 
-class ModuleTypeAAS(AAS):
-    """Resource AAS of an IEC 61499 module, in ARSO's structure."""
-    model_config = {"extra": "forbid"}
+class ArsoResource(Resource):
+    """A resource as ARSO describes it: what ARSO's submodels replace is not there, and the rest only
+    where a kind of resource has it."""
+    nameplate: Optional[Nameplate] = None
+    asset_interfaces_description: Optional[DmpAssetInterfacesDescription] = None
+    control_component_instance: Optional[ResourceControlComponentInstance] = None     # Skills instead
+    capability_description: Optional[cd.CapabilityDescription] = None
+    variables: Optional[Variables] = None                                             # Operational Data instead
+    parameters: Optional[ResourceParameters] = None
+    asset_interfaces_mapping_configuration: Optional[Aimc] = None
 
+
+class ModuleTypeAAS(ArsoResource):
+    """Resource AAS of an IEC 61499 module, in ARSO's structure."""
     nameplate: Nameplate = nameplate()
     hierarchical_structures: HierarchicalStructures = structure()
     asset_interfaces_description: ModuleInterfaces = ModuleInterfaces(id_short="AssetInterfacesDescription")
@@ -211,23 +225,20 @@ class ModuleTypeAAS(AAS):
     capability_description: Optional[ModuleCapabilityDescription] = None
 
 
-class ComponentTypeAAS(AAS):
+class ComponentTypeAAS(ArsoResource):
     """AAS of a component of a module: a part that acts (an axis, a pump) and so has skills of its
     own. The module it is built into carries them out, so their commands refer to actions of the
     module's interface description."""
-    model_config = {"extra": "forbid"}
-
     skills: ModuleSkills = ModuleSkills(id_short="Skills")
 
 
-class SystemTypeAAS(AAS):
+class SystemTypeAAS(ArsoResource):
     """AAS of a production system: the modules it is made of, each found by its asset id."""
-    model_config = {"extra": "forbid"}
-
     hierarchical_structures: HierarchicalStructures = structure()
 
 
-TYPES: dict[str, type[AAS]] = {"ResourceTypeAAS": ResourceTypeAAS, "ModuleTypeAAS": ModuleTypeAAS,
+# A plain ``Resource`` is what the lab's stations export (aas-model authors them as its subtypes).
+TYPES: dict[str, type[AAS]] = {"ResourceTypeAAS": Resource, "ModuleTypeAAS": ModuleTypeAAS,
                                "ComponentTypeAAS": ComponentTypeAAS, "SystemTypeAAS": SystemTypeAAS,
                                "ProductTypeAAS": ProductTypeAAS}
 # What a resource is, is its asset type; a component's ends in its kind (.../Component/LinearAxis).

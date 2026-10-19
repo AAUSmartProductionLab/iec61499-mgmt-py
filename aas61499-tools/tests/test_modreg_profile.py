@@ -11,7 +11,7 @@ import yaml
 pytest.importorskip("aas_model")
 pytest.importorskip("rdflib")
 
-from aas_model.resource_template import MqttOperationalStation                # noqa: E402
+from aas_model.resource_template import MqttOperationalStation, Resource      # noqa: E402
 from modgen import SPECS, load                                              # noqa: E402
 from modgen.spec import ModuleSpec                                          # noqa: E402
 from modreg import model, profile as profiles                               # noqa: E402
@@ -531,6 +531,15 @@ def test_a_module_that_was_read_shows_what_runs_there():
     assert at(config, "ProgramDigest")["value"] == profiles.program_digest(spec, "pi")
 
 
+def test_every_resource_is_the_labs_resource(stoppering_all):
+    """A line, a module and a component are aas-model's Resource; what ARSO's submodels replace (the
+    Control Component Instance, the Variables) is not in their AAS."""
+    for cls in (model.ModuleTypeAAS, model.ComponentTypeAAS, model.SystemTypeAAS):
+        assert issubclass(cls, Resource)
+    for name, env in stoppering_all.items():
+        assert not {"ControlComponentInstance", "Variables"} & set(names({"submodelElements": env["submodels"]})), name
+
+
 def test_the_labs_own_resources_go_the_same_way():
     # A station as aas-model authors it, exported as the plain Resource the lab's stations register.
     station = MqttOperationalStation(id_short="SomeStationAAS", id=f"{BASE}/aas/SomeStationAAS")
@@ -545,7 +554,7 @@ def test_what_is_not_a_profile_is_refused():
     with pytest.raises(model.ProfileError, match="unknown AAS type"):
         model.asset({"aas_type": "Nothing", "id_short": "X"})
     with pytest.raises(model.ProfileError, match="[Ee]xtra"):
-        model.asset({"aas_type": "ModuleTypeAAS", "id_short": "X", "variables": {}})
+        model.asset({"aas_type": "ModuleTypeAAS", "id_short": "X", "control_software": {}})
 
 
 @pytest.mark.skipif(not ARSO.exists(), reason="the ontologies are a local working document (ontology/ARSO)")
