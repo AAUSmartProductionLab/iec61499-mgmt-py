@@ -22,6 +22,7 @@ classes from and checks every resource AAS against), until the repository is spl
 | `deploy/` | deploy | Raspberry Pi: FORTE in Docker (`pi/`), install and deployment (`pi.py`) |
 | `cell/` | the filling line | `modules/`: module specs (`planned/`: capping and inspection, described but not built); `control/`: generated 4diac projects (FillingModule, StopperingModule); `sim/`: Modbus simulator, `run_module.py`, OPC UA client; `examples/`: a product planned on the four resources, and the builder that puts all five AASs on an AAS server |
 | `aas-model/` | (submodule) | The lab's shared pydantic AAS model; `modreg` builds on it and uses its generator |
+| `iec61499-opcua-hmi/` | (submodule) | `modlink` (runs a module from its AAS over OPC UA), the HMI, an OPC UA stand-in for a module, the Linux FORTE build, the end-to-end test; here so both can change together. Its tests run in its own folder, not with this repository's |
 | `ontology/` | (working copy) | The product, process, resource and link ontologies with their notes; ARSO is the blueprint of the resource AAS |
 | `docs/` | (working notes) | `work.md`: what is built, how, learnings; `next-steps.md`: the plan; `decisions.md`: what was decided; `aas-models.md`: the product, plan and resource AAS, their submodels and how they connect; `aas-examples.md`: the example line's five AASs with class diagrams; `module-rules.md`: the rules a module is built by; `modules.md`: the two modules and what was ported; `repositories.md`: how the work divides into repositories; `archive/`: superseded plans and figures |
 
