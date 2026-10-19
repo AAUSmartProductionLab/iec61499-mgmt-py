@@ -157,14 +157,14 @@ and gives up its equipment itself. `Module.RUN_<NAME>` starts it, and its `DONE`
 | In the program | In the AAS |
 | --- | --- |
 | Equipment item that a skill moves | A component: an AAS of its own (`<Module><Item>AAS`), a part in the module's Hierarchical Structures |
-| Skill primitive | In its component's Skills: `Skills/<Skill>` with the semantic id `skill/Primitive`, its commands and its `Contract` |
-| Module level skill | In the module's Skills: `Skills/<Skill>` with the semantic id `skill/Composite` and its commands |
+| Skill primitive | In its component's Skills: `Skills/<Skill>` with the semantic id `skill` and the kind `skill/Primitive` as a supplemental id, its commands and its `Contract` |
+| Module level skill | In the module's Skills: `Skills/<Skill>` with the semantic id `skill`, the kind `skill/Composite`, and its commands |
 | A command (the method, what it takes and answers) | `<Skill>/<Command>`: `InterfaceReference` to the action, the Operation named like the command |
 | A parameter, a result | An input or output variable of the Start Operation, with value, unit and limits |
-| `Execute` and `Stop` sequences | `Start/Steps` and `Stop/Steps`: `P1`, `P2`, ...; per step the `Skill` it runs and what is connected to it |
-| A step's constant; a value handed down | In the step, named like the parameter: a Property; a reference to the command's variable |
-| Procedures `Resetting`, `Stopping` | Module submodel: the steps of `Reset` and of `Stop` |
-| Module commands, Occupy and Release | Module submodel, one command each |
+| `Execute` and `Stop` sequences | `Start/Steps` and `Stop/Steps`: `Step_0000`, ... in the elements of the planner's Production Sequence (`NodeId` = the instance name, `Kind` = `step`, `Order`), each with the `Skill` it runs |
+| A step's constant; a value handed down | The step's `Bindings`: a `Binding` with `Value`, or with `SourceElement` referring to the command's variable; a result is an `Output` with `ResultReference` |
+| Procedures `Resetting`, `Stopping` | The steps of the `Start` of the skills `Reset` and `Stop` (kind `skill/ModuleControl`) |
+| Module commands, Occupy and Release | Skills of the kind `skill/ModuleControl` in the module's Skills, each called by its `Start` |
 | Which block is which skill or step | Control Configuration, `Instances`: `InstancePath`, `FBType`, `TypeHash`, `Skill` |
 | Block types and their hashes, as read | Control Configuration, `Types` |
 | The rule set | Control Configuration, `Rules` |
