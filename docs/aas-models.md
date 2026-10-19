@@ -232,10 +232,10 @@ Skills, against IDTA 02015 Control Component Type:
 
 | | Modules here | Planner's stations | Generator's resource AAS | Lab's MQTT stations |
 | --- | --- | --- | --- | --- |
-| Built with | `modreg` on aas-model | demo data in the planner | the AAS generator's builder | aas-model |
-| Interface | OPC UA | none | MQTT, OPC UA, Modbus | MQTT |
-| Skills | ARSO Skills 0.7 (commands and steps) | "Application Skills 1.0" (the planner's own template) | ARSO Skills, short form (no parameters or composition) | IDTA 02015 Control Component Instance |
-| Capabilities | IDTA 02020, meaning as supplemental id | IDTA 02020, meaning as supplemental id | IDTA 02020, meaning as the main id | none |
+| Built with | `modreg` on aas-model | demo data in the planner | the AAS generator's builder | aas-model's `Resource`, authored in Python (since 16 Oct) |
+| Interface | OPC UA | none | MQTT, OPC UA, Modbus | MQTT (aas-model's AID extension also describes OPC UA, Modbus, HTTP and others) |
+| Skills | ARSO Skills 0.8 (commands, steps as a flow) | "Application Skills 1.0" (the planner's own template) | ARSO Skills, short form (no parameters or composition) | IDTA 02015 Control Component Instance |
+| Capabilities | IDTA 02020, meaning as supplemental id | IDTA 02020, meaning as supplemental id | IDTA 02020, meaning as the main id | IDTA 02020 (in the type since 16 Oct; content not compared yet) |
 | Live values | Operational Data | none | Operational Data | Variables |
 
 The first two agree on capabilities down to the semantic ids, the role qualifier and the shape of
@@ -391,13 +391,18 @@ Inside the resource the chain continues with section 2.2: capability â†’ skill â
    modules and the planner follow IDTA 02020 (decided 6 Oct). Both are accepted by the validator.
 6. **The interface terms aas-model writes that ARSO does not declare** (key, type, title,
    operation type, browse path). Skills and Control Configuration are declared in full.
-7. **Two forms of a skill, one ARSO.** Both repositories have ARSO 0.7 (identical files). The AAS
-   generation project still builds the short form of a skill, which 0.7 keeps valid; its validation
-   accepts both forms, and tells a module, a component and a system apart by the asset type.
-   `modlink` (HMI repository) reads both forms, the new one with the component AASs. The HMI's own
-   reader, its built-in module descriptions and its simulator are still those of the modules before
-   8 Oct.
-8. **Live values.** The mapping into Operational Data is described but nothing runs it, so the
+7. **Two forms of a skill, one ARSO.** This repository has ARSO 0.8; the AAS generation project's
+   pushed copy is still 0.7 (its update to 0.8 is in a working copy, not committed). It builds the
+   short form of a skill, which both versions keep valid; its validation accepts both forms, and
+   tells a module, a component and a system apart by the asset type. `modlink` (HMI repository, a
+   submodule here since 19 Oct) reads 0.8, 0.7 and the short form. The HMI's own reader, its
+   built-in module descriptions and its simulator are still those of the modules before 8 Oct.
+8. **ARSO's resource AAS and aas-model's `Resource`.** Since 16 to 18 Oct aas-model authors
+   resources in Python as a `Resource` with Control Component Instance, Variables and Parameters,
+   and the lab's registration service loads only an export that validates as a plain `Resource`.
+   A module AAS here has Skills, Operational Data and Control Configuration instead, so the lab's
+   service would refuse it. Open (see [next-steps.md](next-steps.md)).
+9. **Live values.** The mapping into Operational Data is described but nothing runs it, so the
    data points in the AAS hold no values.
 
 ## 8. What would complete this
