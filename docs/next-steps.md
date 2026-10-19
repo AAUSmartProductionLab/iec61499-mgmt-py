@@ -12,13 +12,12 @@ how the work divides into repositories in [repositories.md](repositories.md).
 | Reconfigure from the AAS (A) | Verify, create a skill, change a value, record, operate the result: on FORTE on the PC and on the Pi 5. A skill written by the skill editor is built and run from its AAS alone | The editor's fixes from its look in a browser are not committed to the fork; one Python interface for all of it (A4) is started |
 | Evaluation (B) | – | The scenario runner, the baseline by restart, the runs on the Pi. The stepper driver for motion is awaited |
 | Models (D2) | ARSO 0.8 for the line, module and component; product AAS with its plan; ontologies | The generation project's ARSO copy and closed validation at 0.8 (done in a working copy, not committed; the full run over the fourteen AASs to repeat) |
-| aas-model (E, new) | `modreg` builds on aas-model of 1 Oct (`3e73c15`) | aas-model of 18 Oct (`6a03f78`, 23 commits) changed the generator, the interface description and how resources are authored; `modreg` does not import with it. The submodule is moved forward in the working copy; the pin waits for the adaptation |
+| aas-model (E, new) | `modreg` builds on aas-model of 18 Oct (`6a03f78`, done 19 Oct); a line, a module and a component are its `Resource` with ARSO's submodels added; actions in its AID form; ARSO knows AID 1.2 | Registering one module on a disposable server (E3); the findings to raise with aas-model's author (E4) |
 | Clients (C) | `modlink` reads 0.8; the HMI is a submodule here since 19 Oct | The HMI's own reader (C1); the planner's skill list leaves out ModuleControl; the planner reading ARSO skills |
 | Hardware | Both Pis run their modules, verify against their AAS, keep their clock | Motion: the TB6600 driver |
 
-On the timeline the week of 19 to 25 Oct is A4, B1 and B2. E comes first because every test that
-builds an AAS depends on it; it should take one to two days if the registration question below is
-answered.
+On the timeline the week of 19 to 25 Oct is A4, B1 and B2. E came first because every test that
+builds an AAS depends on it; E1, E2 and the decision of E3 were done on 19 Oct.
 
 ## What the paper delivers
 
@@ -137,10 +136,10 @@ plain `Resource`.
 
 | # | Step | Done when |
 | --- | --- | --- |
-| E1 | **Move `modreg` to it.** Replace what is gone (`deep_merge`, `nameplate()`, `DELEGATION_BASE`, `OpcuaProperty`), regenerate the classes of ARSO's own submodels with the new generator, write actions in aas-model's action form | The submodule and the pin are both `6a03f78` (or later) and every test passes |
-| E2 | **ARSO follows the interface description.** Declare the new action, event and form terms in `aid.ttl`; the closed validation passes again | `modreg check` and the generation project's validation pass on the example line |
-| E3 | **Registration.** Decide how a module's AAS reaches the lab's AAS server: through the lab's registration service (then as a `Resource` it accepts) or through `modreg serve` | One module registered the decided way, on a disposable server |
-| E4 | **Findings.** Check the list of aas-model findings in [work.md](work.md) against the new version and raise what remains with its author | The list is current |
+| E1 | **Move `modreg` to it.** Replace what is gone (`deep_merge`, `nameplate()`, `DELEGATION_BASE`, `OpcuaProperty`), regenerate the classes of ARSO's own submodels with the new generator, write actions in aas-model's action form. **Done 19 Oct**; also a dump made linear (aas_pydantic's serializer dumped every level twice) and the live tests' simulator moved to a process of its own | The submodule and the pin are both `6a03f78` (or later) and every test passes |
+| E2 | **ARSO follows the interface description.** Declare the new action, event and form terms in `aid.ttl`; the closed validation passes again. **Done 19 Oct in this repository** (AID 1.2, the action and event definitions, `synchronous`, `input`, `output`, `uav_componentOf`, `readOnly`); the generation project's copy follows with its 0.8 update | `modreg check` and the generation project's validation pass on the example line |
+| E3 | **Registration.** **Decided 19 Oct:** our modules are AAS resources in the PPR sense, so a line, a module and a component are aas-model's `Resource` with ARSO's Skills, Operational Data and Control Configuration added (built the same day); the registration service is `modreg serve`, which also takes a plain `Resource` export of the lab's stations. Operational Data is left as it is; it may become Time Series Data | One module registered through `modreg serve` on a disposable server |
+| E4 | **Findings.** Check the list of aas-model findings in [work.md](work.md) against the new version and raise what remains with its author (one resolved; a new one: the serializer's double dump) | The list is current |
 
 
 ### D. Writing
@@ -192,7 +191,6 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 | --- | --- |
 | `modsync reconfigure` puts the recorded AAS back where it came from (a file, or every changed submodel on the AAS server). The registration service keeps its own copy of a module's profile and does not learn of the change | A4 |
 | The HMI's own reader still reads the modules of before 8 Oct; the generation project's pushed ARSO copy and closed validation are 0.7 (0.8 in a working copy); `modlink` reads 0.8 | C1, D2 |
-| A module AAS has Skills, Operational Data and Control Configuration (ARSO); aas-model's `Resource`, which the lab's registration service accepts, has Control Component Instance, Variables and Parameters. Does ARSO's module become a `Resource` subtype the service accepts, does the service accept ARSO's module, or does the module keep its own registration (`modreg serve`)? | E3 |
 | ARSO's Condition follows the planner's elements of 8 Oct; the planner got grouped AND and OR conditions on 9 Oct. Follow it when a decision step is built | A2b |
 | The planner lists every skill with a Start; with 0.8 that includes the module's own commands. Leave them out there by their kind (ModuleControl) | A2b |
 | A skill that is described but not built is told by its missing instance in the Control Configuration (as tried). Does it also get a state of its own that a client can read (described, deployed)? | A3 |
