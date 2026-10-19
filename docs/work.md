@@ -377,11 +377,10 @@ Consequences of following ARSO strictly:
   Things terms aas-model writes into the interface description (key, type, title, op, input,
   output, browse path), and the step references and procedures `modreg` adds.
 
-Findings about aas-model (the version of 1 Oct, `3e73c15`), to raise with its author. The version
-of 18 Oct (`6a03f78`) changed the interface description, the generator and how resources are
-authored; these are to be checked again when `modreg` moves to it:
+Findings about aas-model (the version of 1 Oct, `3e73c15`), to raise with its author. The first is
+resolved in the version of 18 Oct (`6a03f78`); the others are still to be checked against it:
 
-- Its generator as checked in names fields in snake_case, while the classes it ships (and so the
+- (Resolved 18 Oct.) Its generator as checked in names fields in snake_case, while the classes it ships (and so the
   idShorts) keep the idShort; `modreg` runs it with exact names, which reproduces the shipped
   style (a one-function difference, `field_name`).
 - `pip install git+...` fails on Windows (a submodule with over-long paths); the archive works,
@@ -413,6 +412,31 @@ authored; these are to be checked again when `modreg` moves to it:
 - A Property with an empty string is written without a value.
 - Reading an AAS back into its type turns an `xs:duration` into the text of a Python object
   (`relativedelta(seconds=+5)`), which then cannot be written. Building is not affected.
+
+### Moving to aas-model of 18 Oct (19 Oct)
+
+aas-model `6a03f78` (23 commits after `3e73c15`) authors resources in Python, extends the interface
+description with WoT actions and events, and changed its generator. What `modreg` changed with it:
+
+- **Gone from aas-model:** `deep_merge` (profiles: a short one in `model.py`), the lab nameplate
+  (`modreg/lab.py`; aas-model's resource says "Not specified"), the per-asset delegation base (the
+  delegation URLs are now `http://dmp:8080/operations/<AAS>/<action>`, filled in by `model.asset`;
+  a profile's `delegation_base` still replaces the origin), `OpcuaProperty` (now `DmpProperty`).
+- **Actions** are aas-model's: semantic id `.../aid/ActionDefinition/1/0` with `td#name` as the
+  first supplemental id (the command and the skill follow), `synchronous` as its own element,
+  `uav_componentOf` on the action (still the browse path of the owning object, since FORTE's node
+  ids change at every start), no `op` (the default of an action is `invokeaction`). Properties are
+  `readOnly`, without `op` (read and observe are the defaults with `observable`). An empty
+  `actions` or `properties` container is left out by aas-model, so `modreg` creates them.
+- **The generator** gives every element a class of its own with ARSO's comment as its description,
+  names fields like the idShorts itself (our hook is gone), and makes one class per description
+  when an element appears with several (the plan's `Name`): such a field is a `Union`. `modreg`
+  builds the generated classes (a Property's content as a dict, so the field's class adds its
+  semantic id), writes such an element into a profile with its description, and states a
+  submodel's idShort whenever its id is stated (given an id alone, aas_pydantic names it so).
+  `modreg generate` also names the template by its path here, and makes a generated Operation
+  aas-model's `SkillOperation`, whose variables read back from a dump (the generator's do not).
+- The vial's committed profile gains the description of each `Name` of its plan.
 
 ### A product and its plan (7 Oct)
 

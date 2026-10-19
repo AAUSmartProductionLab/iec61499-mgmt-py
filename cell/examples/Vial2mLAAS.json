@@ -887,6 +887,7 @@
       "value": "step"
      },
      "Name": {
+      "description": "The name shown for the node.",
       "value": "Filling"
      },
      "Order": {
@@ -962,6 +963,7 @@
       "Binding": {
        "Binding_0000": {
         "Name": {
+         "description": "The parameter of the skill.",
          "value": "Volume"
         },
         "Value": {},
@@ -1015,6 +1017,7 @@
       "value": "step"
      },
      "Name": {
+      "description": "The name shown for the node.",
       "value": "Stoppering"
      },
      "Order": {
@@ -1096,6 +1099,7 @@
       "value": "step"
      },
      "Name": {
+      "description": "The name shown for the node.",
       "value": "Capping"
      },
      "Order": {
@@ -1177,6 +1181,7 @@
       "value": "step"
      },
      "Name": {
+      "description": "The name shown for the node.",
       "value": "Inspection"
      },
      "Order": {

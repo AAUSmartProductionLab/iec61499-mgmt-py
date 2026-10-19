@@ -18,7 +18,6 @@ import base64
 from typing import ClassVar, Dict, Optional
 
 from aas_model.constants import BASE_URL
-from aas_model.resource_template import nameplate
 from aas_pydantic import AAS, Property
 from aas_pydantic.submodel_templates import capability_description as cd
 from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures, Node
@@ -27,6 +26,7 @@ from pydantic import model_validator
 
 from .generated.process_parameters import Processes, ProcessParameters
 from .generated.production_sequence import ProductionSequence
+from .lab import nameplate
 
 PLANS = f"{BASE_URL}/sm/process-plan"
 

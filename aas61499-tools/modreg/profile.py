@@ -29,13 +29,14 @@ from __future__ import annotations
 import hashlib
 import json
 
-from aas_model.constants import AID_SYNCHRONOUS, BASE_URL
+from aas_model.constants import AID_WOT_NAME, BASE_URL
 from aas_model.json_schema_aid import datapoint_from_schema
-from aas_model.resource_template import nameplate, skill_operation
+from aas_model.resource_template import skill_operation
 from aas_model.resource_template._helpers import put
 from aas_model.resource_template.asset_interfaces_mapping_configuration import mapping_configuration, sink, source
 from aas_model.submodel_templates import (
-    Aimc, AimcMappingConfigurations, DmpActionInput, DmpActionOutput, OpcuaAction, OpcuaProperty, OperationVariableProp,
+    Aimc, AimcMappingConfigurations, DmpActionInput, DmpActionOutput, DmpProperty, OpcuaAction, OperationVariableProp,
+    DmpProperties, OpcuaActions, ReadOnly, Synchronous, UavComponentOf,
 )
 from aas_pydantic import Capability, Key, ModelReference, Property, Qualifier, ReferenceElement
 from aas_pydantic.submodel_templates import asset_interfaces_description as wot
@@ -51,6 +52,8 @@ from modsync.device import Snapshot, literal
 
 from . import model
 from .generated import control_configuration as cc, skills as arso
+from .generated.operational_data import Datapoint
+from .lab import nameplate
 from .model import ComponentTypeAAS, ModuleTypeAAS
 
 AID = "{aas_id}/submodels/AssetInterfacesDescription"
@@ -87,8 +90,15 @@ def text(value) -> str:
     return str(value).lower() if isinstance(value, bool) else str(value)
 
 
-def prop(value, value_type: str = "xs:string", description: str = "") -> Property:
-    return Property(value=text(value), value_type=value_type, description=description)
+def prop(value, value_type: str = "xs:string", description: str = "") -> dict:
+    """A Property as the content of the field it goes into: the class aas-model's generator made for
+    that field adds its semantic id (its description is the one given here)."""
+    return {"value": text(value), "value_type": value_type, "description": description}
+
+
+def ref(value: ModelReference) -> dict:
+    """A ReferenceElement as the content of the field it goes into (see ``prop``)."""
+    return {"value": value}
 
 
 def path(submodel: str, *steps: tuple[str, str]) -> ModelReference:
@@ -210,7 +220,7 @@ class Describer:
         self.spec, self.target, self.snap, self.drift, self.spec_path = spec, target, snap, drift, spec_path
         self.opcua = opcua or f"opc.tcp://{spec.targets[target].host}:4840"
         self.actions: dict[str, OpcuaAction] = {}
-        self.properties: dict[str, OpcuaProperty] = {}
+        self.properties: dict[str, DmpProperty] = {}
         self.datapoints: dict[str, tuple[str, str, str]] = {}    # data point -> (interface property, concept, title)
         # Action of the interface -> (the Operation that invokes it, its arguments in call order)
         self.operations: dict[str, tuple[ModelReference, list[str]]] = {}
@@ -227,32 +237,31 @@ class Describer:
 
     def action(self, key: str, node: str, title: str, parameters: dict[str, Parameter] | None = None) -> str:
         href = browse_path(self.spec, node)
-        action = OpcuaAction()
+        # FORTE gives its nodes new numeric ids at every start, so the owning object is named by
+        # its browse path, where OPC 10101 has its NodeId.
+        action = OpcuaAction(uav_componentOf=UavComponentOf(value=href.rpartition("/")[0]))
         action.title = wot.Title(value=title)
         # The call answers at once with Accepted and ErrorID; the skill's progress is its State.
-        action.synchronous = Property(semantic_id=AID_SYNCHRONOUS, value="true")
+        action.synchronous = Synchronous(value="true")
         action.input = datapoint_from_schema(schema(parameters or {}), cls=DmpActionInput)
         action.output = datapoint_from_schema(ANSWER, cls=DmpActionOutput)
         action.forms.href.value = href
-        action.forms.op.value = "invokeaction"
         action.forms.uav_browsePath = wot.UavBrowsePath(value=href)
-        # FORTE gives its nodes new numeric ids at every start, so the owning object is named by
-        # its browse path as well.
-        action.forms.uav_componentOf.value = href.rpartition("/")[0]
         self.actions[key] = action
         return key
 
     def property(self, key: str, node: str, iec: str, title: str, unit: str | None = None) -> str:
         href = browse_path(self.spec, node)
-        p = OpcuaProperty()
+        p = DmpProperty()
         p.key = wot.Key(value=key)
         p.title = wot.Title(value=title)
         p.type = wot.Type(value=JSON.get(iec, "integer"))
         p.observable = wot.Observable(value="true")
         if unit:
             p.unit = wot.Unit(value=unit)
+        # The module publishes it; a client reads and observes it, never writes it.
+        p.readOnly = ReadOnly(value="true")
         p.forms.href.value = href
-        p.forms.op.value = "observeproperty"
         p.forms.uav_browsePath = wot.UavBrowsePath(value=href)
         self.properties[key] = p
         return key
@@ -297,9 +306,11 @@ class Describer:
         """The Operation of a command: the session and ``inputs`` in; Accepted, ErrorID and
         ``outputs`` out. With ``key`` it invokes that action of the interface (the AIMC maps it
         there, and the lab's delegation service calls it)."""
-        op = skill_operation(key or "local", synchronous=True)
+        op = arso.SkillOperation(id_short="operation", qualifiers=skill_operation(key or "local", synchronous=True).qualifiers)
         if not key:
             op.qualifiers = []                      # nothing calls it: it only declares the variables
+        for qualifier in op.qualifiers:             # the delegation calls the action of the interface
+            qualifier.value = qualifier.value.replace("{skill}", key or "")
         op.semantic_id = meaning_id
         op.description = about
         op.in_output_variable = []
@@ -322,8 +333,8 @@ class Describer:
         if key:
             self.action(key, node, about.partition(";")[0], parameters)
             # The action says which command it carries out, beside the id every action has.
-            self.actions[key].supplemental_semantic_ids = says or [meaning_id]
-            made.InterfaceReference = ReferenceElement(value=path(
+            self.actions[key].supplemental_semantic_ids = [AID_WOT_NAME, *(says or [meaning_id])]
+            made.InterfaceReference = arso.InterfaceReference(value=path(
                 interface, (SMC, "interface_opcua"), (SMC, "InteractionMetadata"), (SMC, "actions"), (SMC, key)))
         put(made.SkillOperation, name, self.operation(key, path(where, *at, ("Operation", name)), about, meaning_id,
                                                       inputs, outputs))
@@ -505,6 +516,21 @@ class Describer:
 
     # Submodels -------------------------------------------------------------------------------
 
+    def interface_and_data(self, asset: ModuleTypeAAS):
+        """Put the actions, properties and data points described so far into ``asset``."""
+        interface = asset.asset_interfaces_description.InterfaceTemplateForOPCUA["interface_opcua"]
+        # aas-model leaves a container out until something is in it.
+        interface.InteractionMetadata.actions = interface.InteractionMetadata.actions or OpcuaActions()
+        interface.InteractionMetadata.properties = interface.InteractionMetadata.properties or DmpProperties()
+        for key, action in self.actions.items():
+            put(interface.InteractionMetadata.actions.property_name, key, action)
+        for key, p in self.properties.items():
+            put(interface.InteractionMetadata.properties.property_name, key, p)
+        # A data point is a decimal: states and counts as their number, a Boolean as 0 or 1.
+        for name, (_, concept, title) in self.datapoints.items():
+            asset.operational_data.Datapoint[name] = Datapoint(
+                id_short=name, value="0", value_type="xs:decimal", semantic_id=concept, description=title)
+
     def mappings(self) -> Aimc:
         """How the interface reaches the other submodels (AIMC): every property of the interface
         feeds its Operational Data point, and every action of the interface is invoked by one
@@ -584,7 +610,7 @@ class Describer:
             known = snap.hashes.get(typ) if snap else None
             instances[instance.replace(".", "_")] = cc.CCfgInstance(
                 InstancePath=prop(instance), FBType=prop(typ), TypeHash=prop(known) if known else None,
-                Skill=ReferenceElement(value=what))
+                Skill=ref(what))
         return model.ModuleControlConfiguration(
             id_short="ControlConfiguration",
             Runtime=cc.Runtime(Name=prop("Eclipse 4diac FORTE"), Resource=prop(snap.resource if snap else "RES"),
@@ -653,14 +679,7 @@ class Describer:
         interface.EndpointMetadata.base.value = self.opcua
         interface.EndpointMetadata.contentType.value = "application/octet-stream"
         interface.EndpointMetadata.securityDefinitions.nosec_sc = wot.nosec_sc(scheme=wot.Scheme(value="nosec"))
-        for key, action in self.actions.items():
-            put(interface.InteractionMetadata.actions.property_name, key, action)
-        for key, p in self.properties.items():
-            put(interface.InteractionMetadata.properties.property_name, key, p)
-        # A data point is a decimal: states and counts as their number, a Boolean as 0 or 1.
-        for name, (_, concept, title) in self.datapoints.items():
-            put(asset.operational_data.Datapoint, name,
-                Property(value="0", value_type="xs:decimal", semantic_id=concept, description=title))
+        self.interface_and_data(asset)
         asset.capability_description = self.capabilities()
         asset.asset_interfaces_mapping_configuration = self.mappings()
         asset.control_configuration = self.control_configuration()
