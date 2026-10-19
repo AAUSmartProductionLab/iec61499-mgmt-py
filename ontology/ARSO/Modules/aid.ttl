@@ -70,7 +70,8 @@ arso:AIDSubmodel rdf:type owl:Class ;
   rdfs:subClassOf aas:Submodel ;
   rdfs:label "Asset Interfaces Description Submodel" ;
   arso:semanticId "https://admin-shell.io/idta/AssetInterfacesDescription/1/0/Submodel",
-    "https://admin-shell.io/idta/AssetInterfacesDescription/1/1/Submodel" ;
+    "https://admin-shell.io/idta/AssetInterfacesDescription/1/1/Submodel",
+    "https://admin-shell.io/idta/AssetInterfacesDescription/1/2/Submodel" ;
   rdfs:comment "IDTA 02017 — Asset Interfaces Description." .
 
 
@@ -209,11 +210,13 @@ arso:PropertyDefinitionSMC rdf:type owl:Class ;
 
 arso:ActionDefinitionSMC rdf:type owl:Class ;
   rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:semanticId "https://smartproductionlab.aau.dk/aid/ActionDefinition/1/0" ;
   arso:parentClass arso:ActionsSMC ;
   rdfs:comment "SMC {action_name} — an ActionAffordance (invokable operation). Must have a Forms SMC." .
 
 arso:EventDefinitionSMC rdf:type owl:Class ;
   rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:semanticId "https://smartproductionlab.aau.dk/aid/EventDefinition/1/0" ;
   arso:parentClass arso:EventsSMC ;
   rdfs:comment "SMC {event_name} — an EventAffordance (subscribable notification). Must have a Forms SMC." .
 
@@ -232,8 +235,50 @@ arso:FormsSMC rdf:type owl:Class ;
   arso:parentClass arso:ActionDefinitionSMC ,
                    arso:PropertyDefinitionSMC ,
                    arso:EventDefinitionSMC ;
-  arso:idShort "Forms" ;
+  arso:idShort "Forms" , "forms" ;
   rdfs:comment "SMC Forms — protocol binding for an interaction affordance. Must contain href." .
+
+
+#################################################################
+# ELEMENT TYPES — the action and property terms of aas-model's AID extension
+# (aas-model docs/aid-extension.md, 19 Oct 2026): WoT TD terms AID 1.2 leaves
+# EXTERNAL or does not detail, carried inside the AID with the W3C IRIs.
+#################################################################
+
+arso:ActionSynchronousProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:semanticId "https://www.w3.org/2019/wot/td#isSynchronous" ;
+  arso:parentClass arso:ActionDefinitionSMC ;
+  arso:idShort "synchronous" ;
+  rdfs:comment "Property synchronous (xs:boolean) — the result arrives in the reply to the invocation." .
+
+arso:ActionInputSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:semanticId "https://www.w3.org/2019/wot/td#hasInputSchema" ;
+  arso:parentClass arso:ActionDefinitionSMC ;
+  arso:idShort "input" ;
+  rdfs:comment "SMC input — the data schema of the action's input (its arguments in call order)." .
+
+arso:ActionOutputSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:semanticId "https://www.w3.org/2019/wot/td#hasOutputSchema" ;
+  arso:parentClass arso:ActionDefinitionSMC ;
+  arso:idShort "output" ;
+  rdfs:comment "SMC output — the data schema of the action's result." .
+
+arso:UavComponentOfProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:semanticId "http://opcfoundation.org/UA/WoT-Binding/componentOf" ;
+  arso:parentClass arso:ActionDefinitionSMC ;
+  arso:idShort "uav_componentOf" ;
+  rdfs:comment "Property uav_componentOf (xs:string) — the UA Object the method belongs to (OPC 10101; a NodeId, or a browse path where node ids change at every start)." .
+
+arso:PropertyReadOnlyProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:semanticId "https://www.w3.org/2019/wot/json-schema#readOnly" ;
+  arso:parentClass arso:PropertyDefinitionSMC ;
+  arso:idShort "readOnly" ;
+  rdfs:comment "Property readOnly (xs:boolean) — the property cannot be written." .
 
 arso:HrefProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
