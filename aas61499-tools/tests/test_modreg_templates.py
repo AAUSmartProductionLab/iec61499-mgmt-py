@@ -81,13 +81,16 @@ def test_aas_models_generator_makes_the_classes(plate, tmp_path):
     template.write_text(json.dumps(plate), encoding="utf-8")
     made, = templates.generate([template], tmp_path / "generated")
     source = made.read_text(encoding="utf-8")
-    # Fields are named like the idShorts, as in the classes aas-model ships; cardinalities decide their kind.
-    assert "    Maker: Property\n" in source and "    Part: Dict[str, Part_t] = {}" in source
+    # Fields are named like the idShorts, as in the classes aas-model ships; every element has a class
+    # of its own (its semantic id and description as defaults); cardinalities decide the field's kind.
+    assert "class Maker(Property):" in source and "    Maker: Maker_t\n" in source
+    assert "    Part: Dict[str, Part_t] = Field(default_factory=dict" in source
     assert "    Weight: Optional[Weight_t] = None" in source and 'value_type: str = "xs:decimal"' in source
     namespace = {}
     exec(compile(source, str(made), "exec"), namespace)             # noqa: S102 (the generated module)
-    Plate, Part, Property = namespace["Plate"], namespace["Part"], namespace["Property"]
-    built = Plate(id_short="Plate", Maker=Property(value="AAU"), Part={"Lid": Part()})
+    Plate, Part, Maker = namespace["Plate"], namespace["Part"], namespace["Maker"]
+    built = Plate(id_short="Plate", Maker=Maker(value="AAU"), Part={"Lid": Part()})
+    assert built.Maker.description == "Who made it."
     assert built.Part["Lid"].id_short == "Lid" and built.semantic_id.endswith("/Plate/2/1/Submodel")
     with pytest.raises(ValueError):
         Plate(id_short="Plate")                                     # the Maker is mandatory

@@ -22,8 +22,6 @@ from __future__ import annotations
 import base64
 import copy
 
-from aas_pydantic import Property
-
 from modgen.spec import ModuleSpec
 
 from . import model
@@ -81,13 +79,7 @@ def offered(module: dict, spec: ModuleSpec, skills: list[str]) -> dict:
                           derived_from=model.RESOURCE_TEMPLATE)
     for name in skills:
         put(asset.skills.Skills.Skill, name, describer.skill(name))
-    made = asset.asset_interfaces_description.InterfaceTemplateForOPCUA["interface_opcua"]
-    for key, action in describer.actions.items():
-        put(made.InteractionMetadata.actions.property_name, key, action)
-    for key, shown in describer.properties.items():
-        put(made.InteractionMetadata.properties.property_name, key, shown)
-    for name, (_, concept, title) in describer.datapoints.items():
-        put(asset.operational_data.Datapoint, name, Property(value="0", value_type="xs:decimal", semantic_id=concept, description=title))
+    describer.interface_and_data(asset)
     asset.asset_interfaces_mapping_configuration = describer.mappings()
     # The same way a module's AAS is built: profile, then the AAS it describes.
     built = model.build(model.profile(ModuleTypeAAS.model_validate(asset.model_dump()),

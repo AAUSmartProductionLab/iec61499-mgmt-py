@@ -11,6 +11,7 @@ import yaml
 pytest.importorskip("aas_model")
 pytest.importorskip("rdflib")
 
+from aas_model.resource_template import MqttOperationalStation                # noqa: E402
 from modgen import SPECS, load                                              # noqa: E402
 from modgen.spec import ModuleSpec                                          # noqa: E402
 from modreg import model, profile as profiles                               # noqa: E402
@@ -20,6 +21,7 @@ from modsync.device import Snapshot                                         # no
 
 ARSO = Path(__file__).resolve().parents[2] / "ontology" / "ARSO"
 BASE = "https://smartproductionlab.aau.dk"
+WOT_NAME = "https://www.w3.org/2019/wot/td#name"
 
 
 # What an AAS environment holds -----------------------------------------------------------------
@@ -129,10 +131,15 @@ def test_a_module_speaks_opc_ua_only(stoppering, stoppering_aas):
     # The arguments in call order: the session, then the skill's parameters.
     assert names(at(start, "input", "properties")) == ["Session", *spec.skills["MoveAxis"].parameters]
     assert names(at(start, "output", "properties")) == ["Accepted", "ErrorID"]
-    # Which command the action carries out, and of which skill.
-    assert [ref["keys"][0]["value"] for ref in start["supplementalSemanticIds"]] == [f"{BASE}/skill/Start", f"{BASE}/skills/MoveAxis"]
+    # An action of aas-model's AID extension (a WoT action named by its idShort); which command it
+    # carries out, and of which skill.
+    assert start["semanticId"]["keys"][0]["value"] == f"{BASE}/aid/ActionDefinition/1/0"
+    assert [ref["keys"][0]["value"] for ref in start["supplementalSemanticIds"]] == [
+        WOT_NAME, f"{BASE}/skill/Start", f"{BASE}/skills/MoveAxis"]
+    assert at(start, "uav_componentOf")["value"] == path.rpartition("/")[0]
     stop = at(actions, "MoveAxis_Stop")
-    assert [ref["keys"][0]["value"] for ref in stop["supplementalSemanticIds"]] == [f"{BASE}/skill/Stop", f"{BASE}/skills/MoveAxis"]
+    assert [ref["keys"][0]["value"] for ref in stop["supplementalSemanticIds"]] == [
+        WOT_NAME, f"{BASE}/skill/Stop", f"{BASE}/skills/MoveAxis"]
     state = at(interfaces, "interface_opcua", "InteractionMetadata", "properties", "Module_State")
     assert at(state, "forms", "href")["value"] == "/0:Objects/1:Stoppering/1:Module/1:State"
 
@@ -525,7 +532,9 @@ def test_a_module_that_was_read_shows_what_runs_there():
 
 
 def test_the_labs_own_resources_go_the_same_way():
-    env = model.build({"id_short": "SomeStationAAS", "asset_type": f"{BASE}/Resource/Station"})
+    # A station as aas-model authors it, exported as the plain Resource the lab's stations register.
+    station = MqttOperationalStation(id_short="SomeStationAAS", id=f"{BASE}/aas/SomeStationAAS")
+    env = model.build(json.loads(station.model_dump_json()))
     assert names(submodel(env, "AssetInterfacesDescription")) == ["interface_mqtt"]
     assert {"Halt", "Occupy", "Release"} == set(names(at(submodel(env, "ControlComponentInstance"), "Skills")))
 

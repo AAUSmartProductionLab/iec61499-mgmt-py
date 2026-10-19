@@ -18,8 +18,9 @@ Two more templates are kept as files, because they are not the ontology's: Proce
 RequiredCapability) and Production Sequence 2.0 (the process planner's, written from the plans it
 saves). Their classes are made the same way; a product's AAS is built from them (``product``).
 
-The generator is the one in the aas-model checkout (``aas-model/scripts/idta_generate.py``), run
-with field names equal to the idShorts, which is the style of the classes aas-model ships.
+The generator is the one in the aas-model checkout (``aas-model/scripts/idta_generate.py``). It
+names a field like its element's idShort and gives every element a class of its own, as in the
+classes aas-model ships; ``finished`` makes two changes to what it writes.
 """
 from __future__ import annotations
 
@@ -186,16 +187,10 @@ def given(folder: Path = TEMPLATES) -> list[Path]:
     return [folder / f"{name}.json" for name in GIVEN]
 
 
-# aas-model's generator names a field after its element in snake_case; the classes aas-model ships
-# (and so the AAS: a field's name is the element's idShort) keep the idShort as it is.
 RUN = """
-import keyword, sys
+import sys
 sys.path.insert(0, sys.argv[1])
 import idta_generate as generator
-def exact(id_short):
-    name = generator.safe_name(id_short)
-    return name + "_" if keyword.iskeyword(name) else name
-generator.field_name = exact
 for template in sys.argv[3:]:
     generator.gen_template(template, sys.argv[2])
 """
@@ -218,6 +213,24 @@ def aliases_after_classes(source: str) -> str:
     return source.replace(REBUILD, "".join(m.group(0) for m in early) + "\n" + REBUILD, 1)
 
 
+OPERATION = re.compile(r"^(class \w+)\(Operation\):", re.MULTILINE)
+SOURCE = re.compile(r"^Source: .*$", re.MULTILINE)
+
+
+def finished(source: str, template: str) -> str:
+    """What the generator wrote, made independent of where it ran and readable back: the template
+    is named by its place in this repository, and an Operation is aas-model's delegated Operation,
+    whose variables are Properties of aas-model's own class (a dump names that class, and only that
+    class reads it back; the generator declares them as any element)."""
+    source = SOURCE.sub(f"Source: modreg/templates/{template}", source, count=1)
+    if OPERATION.search(source):
+        source = OPERATION.sub(r"\1(DelegatedOperation):", source)
+        source = source.replace("from aas_pydantic.aas_model import AasIdString\n",
+                                "from aas_pydantic.aas_model import AasIdString\n"
+                                "from aas_model.submodel_templates import SkillOperation as DelegatedOperation\n", 1)
+    return source
+
+
 def generate(templates: list[Path], out: Path = GENERATED, aas_model: Path = AAS_MODEL) -> list[Path]:
     """Have aas-model's generator make the pydantic classes of the templates."""
     scripts = aas_model / "scripts"
@@ -229,8 +242,11 @@ def generate(templates: list[Path], out: Path = GENERATED, aas_model: Path = AAS
     if run.returncode:
         raise RuntimeError(f"aas-model's generator failed:\n{run.stderr[-2000:]}")
     made = sorted(p for p in out.glob("*.py") if p.name != "__init__.py")
+    sources = {template.stem.lower(): template.name for template in templates}
     for path in made:                                   # one line ending, whatever the platform wrote
-        path.write_text(aliases_after_classes(path.read_text(encoding="utf-8")).rstrip() + "\n", encoding="utf-8", newline="\n")
+        source = finished(aliases_after_classes(path.read_text(encoding="utf-8")),
+                          sources.get(path.stem.replace("_", ""), path.stem))
+        path.write_text(source.rstrip() + "\n", encoding="utf-8", newline="\n")
     (out / "__init__.py").write_text(
         '"""Pydantic classes of the submodels aas-model has no classes of (the resource ontology\'s own, Process\n'
         'Parameters and Production Sequence), made by aas-model\'s generator from the templates in\n'

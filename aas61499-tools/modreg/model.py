@@ -28,14 +28,15 @@ from typing import Dict, List, Optional
 import aas_pydantic.aas_model
 import aas_pydantic.convert_aas_instance
 
-from aas_model.builder import deep_merge
-from aas_model.constants import BASE_URL, DELEGATION_BASE
+from aas_model.constants import BASE_URL, INVOCATION_ORIGIN
 from aas_model.id_injector import inject_ids
-from aas_model.resource_template import ResourceTypeAAS, nameplate
+from aas_model.resource_template import ResourceTypeAAS
 from aas_model.submodel_templates import (
     Aimc, AimcMappingConfigurations, DmpAssetInterfacesDescription, DmpOpcuaInterface, MqttInterface, SkillOperation,
 )
-from aas_pydantic import AAS, ModelReference, Property, ReferenceElement, SubmodelElementCollection, convert_model_to_aas
+from aas_pydantic import (
+    AAS, ModelReference, Property, Qualifier, ReferenceElement, SubmodelElementCollection, convert_model_to_aas,
+)
 from aas_pydantic.submodel_templates import capability_description as cd
 from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures
 from aas_pydantic.submodel_templates.nameplate import Nameplate
@@ -48,6 +49,7 @@ from .generated import skills
 from .generated.control_configuration import ControlConfiguration
 from .generated.operational_data import OperationalData
 from .generated.parameters import Parameters
+from .lab import nameplate
 from .product import ProductTypeAAS
 
 
@@ -68,12 +70,39 @@ class _Typing:
 
 aas_pydantic.aas_model.typing = aas_pydantic.convert_aas_instance.typing = _Typing()
 
+
 ARSO = f"{BASE_URL}/ARSO"
 SKILL = f"{BASE_URL}/skills"
 RESOURCE_TEMPLATE = f"{BASE_URL}/aas/templates/resource"
 
 
 DelegatedOperation = SkillOperation         # a field cannot be named like its type
+
+
+def deep_merge(base: dict, override: dict) -> dict:
+    """``override`` laid over ``base``: dictionaries merge key by key, anything else replaces."""
+    merged = dict(base)
+    for key, value in override.items():
+        merged[key] = deep_merge(merged[key], value) if isinstance(value, dict) and isinstance(merged.get(key), dict) else value
+    return merged
+
+
+def invocations(node, aas_id_short: str, origin: str) -> None:
+    """Fill in the operation delegation URLs (``{origin}/operations/{aas_id_short}/{action}``) of
+    every Operation below ``node``; aas-model fills in only those of its Control Component Instance."""
+    if isinstance(node, Qualifier):
+        if node.type_ == "invocationDelegation" and node.value:
+            node.value = (node.value.replace(INVOCATION_ORIGIN, origin.rstrip("/"))
+                          .replace("{aas_id_short}", aas_id_short))
+    elif isinstance(node, BaseModel):
+        for field in type(node).model_fields:
+            invocations(getattr(node, field), aas_id_short, origin)
+    elif isinstance(node, dict):
+        for value in node.values():
+            invocations(value, aas_id_short, origin)
+    elif isinstance(node, (list, tuple)):
+        for value in node:
+            invocations(value, aas_id_short, origin)
 
 
 # ARSO's own submodels ------------------------------------------------------------------------------
@@ -214,9 +243,17 @@ ELEMENT = (aas_pydantic.SubmodelElement, aas_pydantic.Submodel, AAS)
 
 
 def item_type(cls: type, field: str):
-    """The declared class of the children a container field holds."""
+    """The declared class of the children a container field holds; of a field that may hold one of
+    several element classes (the generator makes a class per description of an element), that
+    choice."""
     declared = getattr(cls, "item_type", None) if field == "value" else None
-    return declared or aas_pydantic.aas_model._container_item_type(aas_pydantic.aas_model._field_annotation(cls, field))
+    annotation = aas_pydantic.aas_model._field_annotation(cls, field)
+    return declared or aas_pydantic.aas_model._container_item_type(annotation) or (annotation if choice(annotation) else None)
+
+
+def choice(declared) -> bool:
+    """Whether a field may hold one of several element classes."""
+    return typing.get_origin(declared) is typing.Union and len([a for a in typing.get_args(declared) if a is not type(None)]) > 1
 
 
 def slim(node, dumped, known, declared=None, name=None):
@@ -225,6 +262,14 @@ def slim(node, dumped, known, declared=None, name=None):
     the element's class, which validation fills in again. An element named like its field or its
     key needs no idShort, and a child of a container keeps its ``modelType`` only if its class is
     not the declared one."""
+    if isinstance(node, BaseModel) and choice(declared):
+        # Which of the classes reads it back depends on what it states: what differs from its class,
+        # and whatever tells the classes apart.
+        own = class_defaults(type(node))
+        apart = {f for f in own if len({repr(class_defaults(c).get(f)) for c in typing.get_args(declared)
+                                        if c is not type(None)}) > 1}
+        return {f: v for f, v in dumped.items()
+                if (f in apart or v != own.get(f, SAME)) and not (f == "id_short" and v == name)}
     if isinstance(node, BaseModel):
         new = not isinstance(known, dict)
         start = class_defaults(type(node)) if new else known
@@ -234,6 +279,9 @@ def slim(node, dumped, known, declared=None, name=None):
                         item_type(type(node), field) if isinstance(node, ELEMENT) else None, field)
             if part is not SAME and not (field == "id_short" and part == name):
                 out[field] = part
+        if "id" in out and "id_short" not in out:
+            # Given an id alone, aas_pydantic names the element like it.
+            out = {"id_short": dumped["id_short"], **out}
         if new and declared is not None and declared is not type(node):
             out["modelType"] = type(node).__name__
         if isinstance(node, aas_pydantic.Reference):
@@ -298,7 +346,8 @@ def validated(profile: dict) -> AAS:
 def asset(profile: dict) -> AAS:
     """The validated model of a profile, with ids and self references filled in."""
     model = validated(profile)
-    inject_ids(model, delegation_base=profile.get("delegation_base") or DELEGATION_BASE)
+    inject_ids(model)
+    invocations(model, model.id_short, profile.get("delegation_base") or INVOCATION_ORIGIN)
     return model
 
 
