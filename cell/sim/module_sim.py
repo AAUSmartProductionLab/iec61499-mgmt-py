@@ -21,7 +21,10 @@ equipment item (``sim`` in cell/modules/*.yaml):
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
+import multiprocessing
 from pathlib import Path
+import socket
 import socketserver
 import struct
 import threading
@@ -285,6 +288,33 @@ class SimServer(socketserver.ThreadingTCPServer):
         self._halt.set()
         self.shutdown()
         self.server_close()
+
+
+def _serve(spec_path: str, host: str, port: int) -> None:
+    with SimServer(ModuleSim(load(Path(spec_path))), host=host, port=port):
+        threading.Event().wait()
+
+
+@contextmanager
+def separate(spec_path: Path | str, host="127.0.0.1", port=1502, timeout=15.0):
+    """The simulator of a module in a process of its own, so that what the process using it does
+    (a test that builds an AAS for seconds) cannot hold up the equipment it simulates."""
+    process = multiprocessing.get_context("spawn").Process(target=_serve, args=(str(spec_path), host, port), daemon=True)
+    process.start()
+    try:
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                socket.create_connection(("127.0.0.1" if host == "0.0.0.0" else host, port), timeout=1).close()
+                break
+            except OSError:
+                if not process.is_alive() or time.monotonic() > deadline:
+                    raise RuntimeError(f"the simulator of {spec_path} did not start on port {port}") from None
+                time.sleep(0.1)
+        yield process
+    finally:
+        process.terminate()
+        process.join(5)
 
 
 def main():

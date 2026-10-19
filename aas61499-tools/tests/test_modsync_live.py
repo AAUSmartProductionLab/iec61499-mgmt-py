@@ -29,7 +29,7 @@ from modsync.sync import PiDeployer, Refused, candidates, inspect, push
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "cell" / "sim"))
-from module_sim import ModuleSim, SimServer  # noqa: E402
+from module_sim import separate  # noqa: E402
 from module_ua import ModuleUa  # noqa: E402
 from test_modsync import Recorder, composed  # noqa: E402
 
@@ -92,7 +92,8 @@ def module(request, tmp_path):
 
     host = pi or "127.0.0.1"
     with ExitStack() as stack:
-        stack.enter_context(SimServer(ModuleSim(cand.spec), host="0.0.0.0" if pi else "127.0.0.1", port=modbus))
+        # In a process of its own: a test that builds an AAS meanwhile would hold up a simulator in this one.
+        stack.enter_context(separate(FILLING, host="0.0.0.0" if pi else "127.0.0.1", port=modbus))
         port, ua_port = stack.enter_context(forte(boot, tmp_path))
         client = stack.enter_context(Client(host, port))
         ua = ModuleUa(ua_port, cand.spec.module, host)
