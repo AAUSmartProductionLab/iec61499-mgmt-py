@@ -6,7 +6,7 @@ so far sits in four places:
 | Where | What |
 | --- | --- |
 | [iec61499-mgmt-py](https://github.com/AAUSmartProductionLab/iec61499-mgmt-py) (this repository) | Runtime, module library and generator, management client, `modsync`, `modreg`, the ontologies, the two modules |
-| [iec61499-opcua-hmi](https://github.com/AAUSmartProductionLab/iec61499-opcua-hmi) | `modlink`, the HMI, an OPC UA stand-in for a module (`sim/`), the Linux FORTE build (`tools/forte`), the end-to-end test |
+| [iec61499-opcua-hmi](https://github.com/AAUSmartProductionLab/iec61499-opcua-hmi) | `modlink`, the HMI, an OPC UA stand-in for a module (`sim/`), the Linux FORTE build (`tools/forte`), the end-to-end test. A submodule of this repository since 19 Oct (`iec61499-opcua-hmi/`), so that both can be changed together |
 | [ARSO_Ontology_AAS_Generation](https://github.com/MartinJensen37/ARSO_Ontology_AAS_Generation) | The LLM generator with its editor, an AAS builder, AAS → RDF, SHACL validation, a copy of ARSO (the same files as here since 6 Oct, updated by hand) |
 | [basyx-aas-web-ui](https://github.com/MartinJensen37/basyx-aas-web-ui), branch `feat/process-sequence-pharma` | The process sequence planner: one module folder (`aas-web-ui/src/pages/modules/ProcessSequence`) in a fork of the BaSyx web UI |
  Several parts
