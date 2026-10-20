@@ -215,7 +215,7 @@ IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(C
     <Algorithm Name="Alg_Sample">
       <ST>AtHome := I_AtHome;
 IF Moving AND NOT MoveStart THEN
-  ActualPosition := MoveFrom + MoveDir * 20.0 * TIME_IN_MS_TO_LREAL(NOW_MONOTONIC() - MoveSince) / 1000.0;
+  ActualPosition := MoveFrom + MoveDir * 12.5 * TIME_IN_MS_TO_LREAL(NOW_MONOTONIC() - MoveSince) / 1000.0;
   IF MoveDir * (ActualPosition - MoveGoal) &gt; 0.0 THEN
     ActualPosition := MoveGoal;
   END_IF;
@@ -244,7 +244,7 @@ NE_Step := CE_Step;
 N_Move := C_Move;
 N_Goal := C_Goal;
 IF Moving AND NOT MoveStart THEN
-  ActualPosition := MoveFrom + MoveDir * 20.0 * TIME_IN_MS_TO_LREAL(NOW_MONOTONIC() - MoveSince) / 1000.0;
+  ActualPosition := MoveFrom + MoveDir * 12.5 * TIME_IN_MS_TO_LREAL(NOW_MONOTONIC() - MoveSince) / 1000.0;
   IF MoveDir * (ActualPosition - MoveGoal) &gt; 0.0 THEN
     ActualPosition := MoveGoal;
   END_IF;
@@ -255,7 +255,7 @@ IF N_Move THEN
   IF Homed AND (ABS(N_Goal - ActualPosition) &gt;= 0.0005) THEN
     MoveGoal := N_Goal;
     MoveFrom := ActualPosition;
-    MoveDT := MUL_TIME(T#1s, ABS(N_Goal - ActualPosition) / 20.0);
+    MoveDT := MUL_TIME(T#1s, ABS(N_Goal - ActualPosition) / 12.5);
     IF N_Goal &gt; ActualPosition THEN
       MoveDir := 1.0;
       N_Enable := TRUE;
@@ -293,7 +293,7 @@ NE_Step := FALSE;
 N_Move := FALSE;
 N_Goal := 0.0;
 IF Moving AND NOT MoveStart THEN
-  ActualPosition := MoveFrom + MoveDir * 20.0 * TIME_IN_MS_TO_LREAL(NOW_MONOTONIC() - MoveSince) / 1000.0;
+  ActualPosition := MoveFrom + MoveDir * 12.5 * TIME_IN_MS_TO_LREAL(NOW_MONOTONIC() - MoveSince) / 1000.0;
   IF MoveDir * (ActualPosition - MoveGoal) &gt; 0.0 THEN
     ActualPosition := MoveGoal;
   END_IF;

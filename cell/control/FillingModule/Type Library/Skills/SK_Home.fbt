@@ -35,7 +35,7 @@
       <VarDeclaration Name="Methods" Type="BOOL" />
       <VarDeclaration Name="Token" Type="WSTRING" />
       <VarDeclaration Name="LastUse" Type="BOOL" InitialValue="TRUE" />
-      <VarDeclaration Name="Timeout" Type="TIME" InitialValue="T#8000ms" />
+      <VarDeclaration Name="Timeout" Type="TIME" InitialValue="T#60000ms" />
     </InputVars>
     <OutputVars>
       <VarDeclaration Name="State" Type="USINT" />

@@ -654,7 +654,7 @@
             <Parameter Name="VALUE" Value="&quot;LinearAxis_Step&quot;" />
             <Parameter Name="ChipNumber" Value="0" />
             <Parameter Name="Channel" Value="2" />
-            <Parameter Name="PeriodNs" Value="1000000" />
+            <Parameter Name="PeriodNs" Value="500000" />
             <Parameter Name="SysfsRoot" Value="&quot;/hostsys/class/pwm&quot;" />
           </FB>
           <EventConnections>
