@@ -9,9 +9,9 @@
 
 The AAS as the desired state (no module spec is read; the AASs are a folder of AAS files or an AAS server):
 
-    python -m modsync verify aas --host 192.168.0.134                      # is the module what its AAS describes?
+    python -m modsync verify aas --host 192.168.0.203                      # is the module what its AAS describes?
     python -m modsync reconfigure http://localhost:8081 --shell FillingModuleAAS --dry-run   # what would change
-    python -m modsync reconfigure aas --host 192.168.0.134                 # bring the module to its AAS, record it
+    python -m modsync reconfigure aas --host 192.168.0.203                 # bring the module to its AAS, record it
 
 Run on the module's own computer with --host localhost: push then writes the boot file in ~/forte
 and restarts the FORTE container there (elsewhere it does so over SSH).
