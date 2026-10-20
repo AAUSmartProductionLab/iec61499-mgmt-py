@@ -92,7 +92,7 @@ AXIS = "Equipment/LinearAxis"
 
 def at(sim, ua, position, tolerance=1.5):
     """The axis says it is at ``position``, and the simulated one is there too (it is not measured:
-    the difference is what starting and stopping late costs at 20 mm/s)."""
+    the difference is what starting and stopping late costs at 12.5 mm/s)."""
     return (ua.value(f"{AXIS}/ActualPosition") == pytest.approx(position, abs=0.001)
             and sim.position("LinearAxis") == pytest.approx(position, abs=tolerance))
 
@@ -113,7 +113,7 @@ def test_filling_resetting_finds_home_and_stopping_returns_there(filling):
     assert ua.value("Procedures/Resetting/Tare/State") in DONE               # the scale is tared with it
     assert ua.call("Module/Start", a) == [True, 0]
     assert ua.call("Skills/MoveAxis/Start", a, 30.0) == [True, 0]
-    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=10)
     assert at(sim, ua, 30.0)
     assert ua.call("Module/Stop", a) == [True, 0]                            # the Stopping procedure homes it
     ua.expect("Module/State", M["Stopped"], timeout=8)
@@ -136,8 +136,8 @@ def test_filling_the_axis_moves_to_a_position_from_either_side(filling):
     states, moving = ua.record("Skills/MoveAxis/State"), ua.record(f"{AXIS}/Moving")
     started = time.monotonic()
     assert ua.call("Skills/MoveAxis/Start", a, 40.0) == [True, 0]
-    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
-    assert 1.7 <= time.monotonic() - started <= 2.8                          # 40 mm at 20 mm/s
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=10)
+    assert 2.9 <= time.monotonic() - started <= 4.2                          # 40 mm at 12.5 mm/s
     assert in_order(states, S["Running"], S["Succeeded"]) and in_order(moving, True, False)
     assert at(sim, ua, 40.0)
     assert ua.value("Skills/MoveAxis/Parameters/Position") == 40.0
@@ -147,13 +147,13 @@ def test_filling_the_axis_moves_to_a_position_from_either_side(filling):
     # Back up to 10 mm: the same skill, the other direction.
     sim.trace.clear()
     assert ua.call("Skills/MoveAxis/Start", a, 10.0) == [True, 0]
-    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=10)
     assert at(sim, ua, 10.0)
     assert outputs(sim, "LinearAxis.Down") == [] and [v for n, v in outputs(sim, "LinearAxis.Step")] == [50.0, None]
     # While it moves, the position on the way is published.
     seen = ua.record(f"{AXIS}/ActualPosition")
     assert ua.call("Skills/MoveAxis/Start", a, 50.0) == [True, 0]
-    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=10)
     between = [v for v in seen if 10.0 < v < 50.0]
     assert len(between) >= 3 and between == sorted(between), seen
     assert settled(sim) == []
@@ -177,7 +177,7 @@ def test_filling_a_move_cut_short_leaves_the_axis_where_the_time_puts_it(filling
     assert ua.value(f"{AXIS}/Homed") is True
     # From there on to a position, as from any other.
     assert ua.call("Skills/MoveAxis/Start", a, 5.0) == [True, 0]
-    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=10)
     assert at(sim, ua, 5.0, tolerance=3.0)
 
 
@@ -186,7 +186,7 @@ def test_filling_an_axis_that_lost_its_reference_has_to_home_first(filling):
     a = str(uuid.uuid4())
     ready(sim, ua, a)
     assert ua.call("Skills/MoveAxis/Start", a, 40.0) == [True, 0]
-    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=10)
     # Homing cut short: it was driven without counting, so where it is is no longer known.
     assert ua.call("Skills/Home/Start", a) == [True, 0]
     ua.expect("Skills/Home/State", S["Running"], timeout=1)
@@ -199,10 +199,10 @@ def test_filling_an_axis_that_lost_its_reference_has_to_home_first(filling):
     assert ua.value("Skills/MoveAxis/ErrorID") == E["PreconditionViolated"]
     assert settled(sim) == [] and sim.position("LinearAxis") > 20.0          # it did not move
     assert ua.call("Skills/Home/Start", a) == [True, 0]
-    ua.expect("Skills/Home/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/Home/State", S["Succeeded"], timeout=10)
     assert ua.value(f"{AXIS}/Homed") is True and ua.value(f"{AXIS}/ActualPosition") == 0.0
     assert ua.call("Skills/MoveAxis/Start", a, 10.0) == [True, 0]
-    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=10)
     assert at(sim, ua, 10.0)
 
 
@@ -330,7 +330,7 @@ def test_filling_stop_of_dispensing_homes_the_needle(filling):
     assert ua.value(f"{AXIS}/AtHome") is True and sim.position("LinearAxis") == 0.0
     assert ua.value("Module/State") == M["Execute"]
     assert ua.call("Skills/MoveAxis/Start", a, 20.0) == [True, 0]           # the needle was released
-    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=10)
     assert at(sim, ua, 20.0)
 
 
@@ -373,7 +373,7 @@ def test_filling_an_axis_that_never_reaches_its_switch_fails_homing_and_is_freed
     a = str(uuid.uuid4())
     ready(sim, ua, a)
     assert ua.call("Skills/MoveAxis/Start", a, 30.0) == [True, 0]
-    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=10)
     sim.axes["LinearAxis"].speed = 0.0                                       # blocked
     assert ua.call("Skills/Home/Start", a) == [True, 0]
     ua.expect("Skills/Home/State", S["Failed"], timeout=5)
@@ -382,7 +382,7 @@ def test_filling_an_axis_that_never_reaches_its_switch_fails_homing_and_is_freed
     assert ua.value("Module/State") == M["Execute"]
     sim.axes["LinearAxis"].speed = 20.0
     assert ua.call("Skills/Home/Start", a) == [True, 0]                      # free again
-    ua.expect("Skills/Home/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/Home/State", S["Succeeded"], timeout=10)
     assert ua.value(f"{AXIS}/Homed") is True
 
 
@@ -417,11 +417,11 @@ def test_stoppering_has_the_same_axis_skills_as_the_filling_module(stoppering):
     ready(sim, ua, a)
     assert ua.call("Skills/MoveAxis/Start", a, 80.0) == [False, E["OutOfRange"]]
     assert ua.call("Skills/MoveAxis/Start", a, 25.0) == [True, 0]
-    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/MoveAxis/State", S["Succeeded"], timeout=10)
     assert ua.value("Equipment/LinearAxis/ActualPosition") == 25.0
     assert sim.position("LinearAxis") == pytest.approx(25.0, abs=1.5)
     assert ua.call("Skills/Home/Start", a) == [True, 0]
-    ua.expect("Skills/Home/State", S["Succeeded"], timeout=6)
+    ua.expect("Skills/Home/State", S["Succeeded"], timeout=10)
     assert ua.value("Equipment/LinearAxis/AtHome") is True and sim.position("LinearAxis") == 0.0
     assert settled(sim) == []
 

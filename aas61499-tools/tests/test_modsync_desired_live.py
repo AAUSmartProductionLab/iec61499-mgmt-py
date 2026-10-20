@@ -152,5 +152,6 @@ def test_a_limit_and_a_constant_changed_in_the_aas_hold_at_the_next_start(module
     started = time.monotonic()
     assert ua.call("Skills/Dispensing/Start", a, 8.0) == [True, 0]
     ua.expect("Skills/Dispensing/State", SKILL_STATES["Succeeded"], timeout=20)
-    # 8 mL at 2 mL/s is 4 s of dispensing, 8 s at the old rate; the axis and the scale take about 4 s more.
-    assert time.monotonic() - started < 10.5
+    # 8 mL at 2 mL/s is 4 s of dispensing, 8 s at the old rate; the axis (40 mm down and up at 12.5 mm/s)
+    # and the scale take about 7 s more.
+    assert time.monotonic() - started < 13.0

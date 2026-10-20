@@ -40,7 +40,7 @@ def test_what_a_module_is_made_of():
                                       "FlowRate": {"type": "LREAL", "default": 1.0, "minimum": 0.1, "maximum": 5.0}}
     assert dispense["equipment"] == "Pump"                   # no output yet: dispensing is a time
     move = found["skills"]["MoveAxis"]
-    assert move["offered"] and move["equipment"] == "LinearAxis" and move["timeout"] == 8000
+    assert move["offered"] and move["equipment"] == "LinearAxis" and move["timeout"] == 30000
     assert move["parameters"] == {"Position": {"type": "LREAL", "default": 0.0, "minimum": 0.0, "maximum": 60.0}}
     assert found["skills"]["Weigh"]["results"] == ["Weight"]
     dispensing = found["composites"]["Dispensing"]
