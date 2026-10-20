@@ -39,9 +39,10 @@ The ESP32 code has three layers. Only the bottom one is module-specific.
 Since 8 Oct 2026 the module is built from the components every module of the line is built from
 (a linear axis and one process component), no longer as the ESP32 station was: the needle is lifted
 by a stepper motor with a limit switch, as on a 3D printer. It runs on a Raspberry Pi 5
-(192.168.0.134), the stoppering module on the Raspberry Pi 4 (192.168.0.191). The Pi pins below
-are a proposal until the driver is wired; the speed and the travel are placeholders until the axis
-is measured.
+(192.168.0.203 since 20 Oct; the Pi 5 at 192.168.0.134 was another one), the stoppering module on
+the Raspberry Pi 4 (192.168.0.191). The axis is wired as below to a TB6600 driver through a 3.3 V
+to 5 V level converter (20 Oct), without its limit switch so far; the speed and the travel are
+placeholders until the axis is measured.
 
 **The stepper driver** is a RepRap Stepper Motor Driver v2.3 with an Allegro A3982
 ([reprap.org](https://reprap.org/wiki/Stepper_Motor_Driver_2.3)). Its 10-pin interface, and what

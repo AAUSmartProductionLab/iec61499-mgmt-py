@@ -165,7 +165,7 @@ def test_from_the_command_line_with_the_aas_in_a_folder(with_double_dose, tmp_pa
     module, components = with_double_dose
     for env in (module, *components):
         (tmp_path / f"{env['assetAdministrationShells'][0]['idShort']}.json").write_text(json.dumps(env), encoding="utf-8")
-    assert desired.endpoint(module) == ("192.168.0.134", 61499)
+    assert desired.endpoint(module) == ("192.168.0.203", 61499)
     forte, asked = FakeForte(filling()), []
     monkeypatch.setattr(cli, "Client", lambda host, port, timeout: asked.append((host, port)) or forte)
     monkeypatch.setattr(cli, "is_local", lambda host: False)
@@ -178,7 +178,7 @@ def test_from_the_command_line_with_the_aas_in_a_folder(with_double_dose, tmp_pa
 
     code, out = run("verify", str(tmp_path))
     assert code == 1 and "1 differences from its AAS (FillingModuleAAS)" in out
-    assert "described, not in the program: DoubleDose" in out and asked == [("192.168.0.134", 61499)]
+    assert "described, not in the program: DoubleDose" in out and asked == [("192.168.0.203", 61499)]
     code, out = run("reconfigure", str(tmp_path), "--dry-run")
     assert code == 0 and "create DoubleDose: " in out and "DoubleDose.Control" not in forte.fbs
     code, out = run("reconfigure", str(tmp_path), "--trigger", "two doses")
