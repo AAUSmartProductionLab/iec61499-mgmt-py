@@ -18,19 +18,17 @@ equipment:
   LinearAxis:
     kind: LinearAxis
     description: Lift of the stoppering head, a stepper motor through a step and direction driver, with a limit switch at the top (home)
-    # As the filling module's axis. The driver is a RepRap Stepper Motor Driver v2.3 (Allegro A3982, https://reprap.org/wiki/Stepper_Motor_Driver_2.3).
-    # Its 10-pin interface: 2 GND, 3 Step, 4 Dir, 5 !Enable (6 Min and 7 Max only pass its own endstop
-    # sockets through and are not used). The board's logic runs on its own 5 V: check that it takes the
-    # Pi's 3.3 V as high, or put a level shifter in between.
+    # As the filling module's axis (the same linear stage): a TB6600 driver, its PUL+, DIR+ and ENA+ from
+    # the Pi through a 3.3 V to 5 V level converter, PUL-, DIR- and ENA- on GND.
     inputs:
       # An ordinary limit switch at the top, straight to the Pi: between the line and GND, closing when
       # pressed (the Pi's pull-up holds the line high otherwise).
       AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up, active_low: true}}   # Pi pin 16
     outputs:
-      # !Enable (pin 5) is inverted and pulled high on the board: the motor is on while the line is low.
+      # ENA+ high switches the TB6600 off: the motor is on while the line is low.
       Enable: {modbus: c0, gpio: {line: 17, active_low: true}}     # Pi pin 11
-      Down:   {modbus: c1, gpio: 27}                               # Pi pin 13, Dir (pin 4): on is down, away from the switch
-      # Step (pin 3): PWM0 on GPIO18 (Pi pin 12), one step per period (1 kHz); 50 % duty while it moves.
+      Down:   {modbus: c1, gpio: 27}                               # Pi pin 13, DIR: on is down, away from the switch
+      # PUL: PWM0 on GPIO18 (Pi pin 12), one step per period (1 kHz); 50 % duty while it moves.
       Step:   {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 1000000}, gain: 655.35,
                minimum: 0, maximum: 100, unit: "%"}
     commands:
