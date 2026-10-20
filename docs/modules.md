@@ -41,19 +41,21 @@ Since 8 Oct 2026 the module is built from the components every module of the lin
 by a stepper motor with a limit switch, as on a 3D printer. It runs on a Raspberry Pi 5
 (192.168.0.203 since 20 Oct; the Pi 5 at 192.168.0.134 was another one), the stoppering module on
 the Raspberry Pi 4 (192.168.0.191). The axis is wired as below to a TB6600 driver through a 3.3 V
-to 5 V level converter (20 Oct), without its limit switch so far; the speed and the travel are
-placeholders until the axis is measured.
+to 5 V level converter (20 Oct); its limit switch is wired but not mounted yet. The travel is a
+placeholder until the axis is measured.
 
-**The stepper driver** is a RepRap Stepper Motor Driver v2.3 with an Allegro A3982
-([reprap.org](https://reprap.org/wiki/Stepper_Motor_Driver_2.3)). Its 10-pin interface, and what
-the module's equipment item connects to it:
+**The axis** is a RATTMMOTOR linear stage (300 mm stroke) with an SFU1605 ball screw (5 mm per turn)
+and a 1.8° Nema 23 motor rated 3 A. **The stepper driver** is a TB6600, set to 4 microsteps (800
+pulses per turn: SW1 on, SW2 and SW3 off) and 2.8 A (2.9 A peak: SW4 and SW5 off, SW6 on). That is
+160 pulses per mm, so 12.5 mm/s at the Pi's 2 kHz. The RepRap Stepper Motor Driver v2.3 before it
+never energised the motor. What the module's equipment item connects to the TB6600, through a
+3.3 V to 5 V level converter:
 
-| Board pin | Signal | Equipment signal | Note |
-| --- | --- | --- | --- |
-| 2, 8–10 | GND | – | common ground with the Pi |
-| 3 | Step | `Step` | one step per pulse: the Pi's PWM at 1 kHz while the axis moves |
-| 4 | Dir | `Down` | high is "forward"; which way that is depends on how the motor is connected |
-| 5 | !Enable | `Enable` | inverted and pulled high on the board: the motor is on while the line is low, so the Pi's line is set active low |
+| TB6600 input | Equipment signal | Note |
+| --- | --- | --- |
+| PUL+ (PUL− on GND) | `Step` | one step per pulse: the Pi's PWM at 2 kHz while the axis moves |
+| DIR+ (DIR− on GND) | `Down` | high is "forward"; which way that is depends on how the motor is connected |
+| ENA+ (ENA− on GND) | `Enable` | ENA+ high switches the driver off: the motor is on while the line is low, so the Pi's line is set active low |
 | 6, 7 | Min, Max | not used | the board only passes the signals of its own endstop sockets through to these pins; it does not act on them |
 
 The home switch is an ordinary limit switch at the top, wired straight to the Pi: between GPIO23
@@ -72,13 +74,13 @@ together with the screw.
 
 | Equipment (kind) | IO (Pi pin) | Commands |
 | --- | --- | --- |
-| `LinearAxis` (LinearAxis): stepper motor through the driver board above | out `Enable` (GPIO17, Pi pin 11, active low), `Down` (GPIO27, Pi pin 13), `Step` (PWM0 on GPIO18, Pi pin 12: 1 kHz, 50 % while it moves); in `AtHome` (GPIO23, Pi pin 16) | `Stop`: all off. `Up`, `Down`: enabled and stepping, with the direction. `MoveTo(position)`: see below |
+| `LinearAxis` (LinearAxis): stepper motor through the driver board above | out `Enable` (GPIO17, Pi pin 11, active low), `Down` (GPIO27, Pi pin 13), `Step` (PWM0 on GPIO18, Pi pin 12: 2 kHz, 50 % while it moves); in `AtHome` (GPIO23, Pi pin 16) | `Stop`: all off. `Up`, `Down`: enabled and stepping, with the direction. `MoveTo(position)`: see below |
 | `Pump` (FillingPump) | none yet | `Run`: nothing to switch, so dispensing is a time |
 | `Scale` (Scale) | none: the weight is simulated | simulated equipment with a value `Weight` |
 
 **The axis knows its position without measuring it.** A stepper moves a known distance per step,
 so the controller keeps the position itself: at the limit switch it is 0 (`Homed`), and while the
-axis is stepping it changes at the axis' speed (20 mm/s here). The equipment block publishes
+axis is stepping it changes at the axis' speed (12.5 mm/s here). The equipment block publishes
 `ActualPosition`, `Homed` and `Moving`. Told to move to a position, it compares that with where it
 is, drives up or down, stops after the time the distance takes and is there. A move that is cut
 short leaves the position the elapsed time gives (to about a millimetre); driving the axis any
@@ -89,8 +91,8 @@ again. A blocked axis is noticed only when it is to find the switch: nothing mea
 
 | Primitive | Equipment, command | Ends when | Timeout |
 | --- | --- | --- | --- |
-| `Home` | LinearAxis `Up` | `AtHome` | 8 s |
-| `MoveAxis(Position = 0..60 mm)` | LinearAxis `MoveTo`; needs `Homed` | it is there | 8 s |
+| `Home` | LinearAxis `Up` | `AtHome` | 60 s |
+| `MoveAxis(Position = 0..60 mm)` | LinearAxis `MoveTo`; needs `Homed` | it is there | 30 s |
 | `Dispense(Volume, FlowRate = 1 mL/s)` | Pump `Run` | time: Volume / FlowRate | – |
 | `Tare` | Scale | after 2 s | – |
 | `Weigh` | Scale, publishes `Weight` | after 0.2 s | – |
@@ -106,8 +108,8 @@ again. A blocked axis is noticed only when it is to find the switch: nothing mea
 The needle goes back up by homing, after every operation: a position that is counted, not
 measured, drifts a little with every move, and the switch takes that out again. Where `MoveAxis`
 goes (the step `NeedleDown`) is a constant of the step that reconfiguration can change, like the
-flow rate of `Dispense`. The speed in the description (20 mm/s) assumes a screw of 8 mm per turn
-and half steps at 1 kHz; measure a move and correct it. The
+flow rate of `Dispense`. The speed in the description (12.5 mm/s) follows from the screw, the
+microsteps and the step rate; a move measured with a ruler confirms it. The
 Filling capability's FillVolume is set by Dispensing's Volume. Gone with the DC motor: the skills
 `MoveNeedleUp`, `MoveNeedleDown` and `AttachNeedle`, and the start boost and brake pulses. A plain
 wait (`Dwell`) was removed on 8 Oct 2026: no skill used it.

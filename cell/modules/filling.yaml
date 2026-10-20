@@ -30,18 +30,20 @@ equipment:
       # ENA+ high switches the TB6600 off: the motor is on while the line is low.
       Enable: {modbus: c0, gpio: {line: 17, active_low: true}}     # Pi pin 11
       Down:   {modbus: c1, gpio: 27}                               # Pi pin 13, DIR: on is down, away from the switch
-      # PUL: PWM0 on GPIO18 (Pi pin 12; channel 2 on a Pi 5), one step per period (1 kHz); 50 % duty while it moves.
-      Step:   {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 1000000}, gain: 655.35,
+      # PUL: PWM0 on GPIO18 (Pi pin 12; channel 2 on a Pi 5), one step per period (2 kHz since 20 Oct: at
+      # 1 kHz the axis was too slow to home in 8 s); 50 % duty while it moves.
+      Step:   {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 500000}, gain: 655.35,
                minimum: 0, maximum: 100, unit: "%"}
     commands:
       Stop: {}
       Up:   {Enable: true, Step: 50}
       Down: {Enable: true, Down: true, Step: 50}
-    # No encoder: the controller counts the time it steps. The speed assumes the most common screw (8 mm
-    # per turn) and half steps (400 per turn) at the 1 kHz above: 20 mm/s. Measure a move and correct it;
-    # the travel is a placeholder too. What error remains is taken out by homing after every operation.
-    position: {unit: mm, speed: 20.0, increase: Down, decrease: Up, home: AtHome, minimum: 0.0, maximum: 60.0}
-    sim: {stepper: {step: Step, direction: Down, enable: Enable, speed: 20.0, travel: 60.0, start: 15.0,
+    # No encoder: the controller counts the time it steps. The stage (RATTMMOTOR, 300 mm stroke) has an
+    # SFU1605 ball screw, 5 mm per turn, and a 1.8 degree Nema 23; the TB6600 is set to 4 microsteps (800
+    # pulses per turn, SW1 on, SW2 and SW3 off): 160 pulses per mm, so 12.5 mm/s at the 2 kHz above. The
+    # travel is still a placeholder. What error remains is taken out by homing after every operation.
+    position: {unit: mm, speed: 12.5, increase: Down, decrease: Up, home: AtHome, minimum: 0.0, maximum: 60.0}
+    sim: {stepper: {step: Step, direction: Down, enable: Enable, speed: 12.5, travel: 60.0, start: 15.0,
                     switches: {AtHome: 0.0}}}
   Pump:
     kind: FillingPump
@@ -61,14 +63,15 @@ skills:
     equipment: LinearAxis
     command: Up
     ensures: AtHome
-    timeout: 8s
+    # Ends on the switch; the timeout only stops the motor if the switch never closes.
+    timeout: 60s
   MoveAxis:
     description: Needle to Position, measured down from the limit switch; the direction follows from where it is
     equipment: LinearAxis
     move_to: Position
     parameters:
       Position: {unit: mm, minimum: 0.0, maximum: 60.0, default: 0.0, description: Where to move to}
-    timeout: 8s
+    timeout: 30s
   Dispense:
     description: Dispense a volume at the station's flow rate (open loop, by time, until a pump is wired)
     equipment: Pump

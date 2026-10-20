@@ -294,7 +294,7 @@ def test_an_axis_with_a_position_moves_itself_to_where_it_is_told():
     # The equipment: the direction from where it is, the time from the distance, then it is there.
     logic, code = st("FillingModule", "Equipment/Base", "EL_LinearAxis")
     assert "IF N_Goal > ActualPosition THEN\n      MoveDir := 1.0;\n      N_Enable := TRUE;\n      N_Down := TRUE;" in code
-    assert "MoveDT := MUL_TIME(T#1s, ABS(N_Goal - ActualPosition) / 20.0);" in code
+    assert "MoveDT := MUL_TIME(T#1s, ABS(N_Goal - ActualPosition) / 12.5);" in code    # the speed in mm/s
     assert "ActualPosition := MoveGoal;\nMoving := FALSE;\nN_Enable := FALSE;" in code
     assert "ELSIF AtHome THEN\n  ActualPosition := 0.0;\n  Homed := TRUE;" in code       # the reference
     transitions = {(x.get("Source"), x.get("Destination"), x.get("Condition")) for x in logic.iter("ECTransition")}
@@ -439,7 +439,7 @@ def test_a_module_names_its_pwm_channels_as_a_pi_4_does():
     enable is inverted: the line is low while the motor is on."""
     assert load(SPECS / "filling.yaml").targets["pi"].board == "pi5"
     written = flat("FillingModule", "Filling_pi")[2]
-    assert written["PwmLines.LinearAxis_Step.Channel"] == "2" and written["PwmLines.LinearAxis_Step.PeriodNs"] == "1000000"
+    assert written["PwmLines.LinearAxis_Step.Channel"] == "2" and written["PwmLines.LinearAxis_Step.PeriodNs"] == "500000"
     assert written["GpioLines.LinearAxis_Enable.ActiveLow"] == "TRUE"
     assert written["GpioLines.LinearAxis_Down.ActiveLow"] == "FALSE"
     assert written["GpioLines.LinearAxis_AtHome.ActiveLow"] == "TRUE"       # a switch to GND: low when pressed
