@@ -383,13 +383,12 @@ def test_pi_target_drives_the_io_over_gpio_lines():
     assert written["GpioLines.NeedleAxis_Down.ReadWriteMode"] == "1"
     assert written["GpioLines.NeedleAxis_AtTop.BiasMode"] == "2"        # pull-up (FORTE 3.3.0 numbering)
     assert written["GpioLines.NeedleAxis_AtTop.ActiveLow"] == "TRUE"
-    assert written["NeedleAxis.Down_Io"] == "'NeedleAxis_Down'"
-    assert (written["NeedleAxis.Down_Backend"], written["NeedleAxis.Position_Backend"]) == ("1", "0")
-    assert not any(k.endswith("_Modbus") for k in written)
+    assert (written["NeedleAxis.Down_Address"], written["NeedleAxis.Position_Address"]) == ("'NeedleAxis_Down'", "'sim'")
+    assert not any("modbus[" in v for v in written.values())
     assert ("Boot.COLD", "GpioLines.NeedleAxis_AtTop.INIT") in wired
     assert ("GpioLines.NeedleAxis_Up.INITO", "Occupation.INIT") in wired
     pc = flat("FillerModule", "Filler")[2]
-    assert not any("GpioLines" in k for k in pc) and pc["NeedleAxis.Position_Backend"] == "2"
+    assert not any("GpioLines" in k for k in pc) and pc["NeedleAxis.Position_Address"].startswith("'modbus[")
 
 
 def test_regeneration_keeps_layout_arranged_in_the_ide(tmp_path):

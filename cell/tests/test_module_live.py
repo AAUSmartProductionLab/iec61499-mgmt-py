@@ -53,7 +53,7 @@ def running(request, tmp_path, spec_name, overrides=None):
     modbus, ua_port = free_port(), free_port()
     app = load_application(system_file(spec.project), app_name(spec, "pc"))
     ports = {k: v.replace(f":{spec.modbus.port}:", f":{modbus}:") for k, v in app.parameters.items()
-             if k.endswith("_Modbus")}
+             if v.startswith("'modbus[")}
     with SimServer(sim, port=modbus), launch_forte(exe, tmp_path, None, ["-op", str(ua_port)]) as port, \
             Client("127.0.0.1", port) as client:
         for command in deployment(app, overrides={**ports, **(overrides or {})},
@@ -82,7 +82,7 @@ def running_on_pi(request, host, spec_name, overrides=None):
     app = load_application(system_file(spec.project), app_name(spec, "pc"))
     endpoint = f"{spec.modbus.host}:{spec.modbus.port}:"
     remote = {k: v.replace(endpoint, f"{sim_host}:{modbus}:") for k, v in app.parameters.items()
-              if k.endswith("_Modbus")}
+              if v.startswith("'modbus[")}
     user = request.config.getoption("--pi-user") or load(SPECS / "filling.yaml").targets["pi"].user
     args = type("Args", (), {"host": host, "user": user, "port": 61499})()
     with SimServer(sim, host="0.0.0.0", port=modbus):

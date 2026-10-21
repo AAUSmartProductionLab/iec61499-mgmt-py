@@ -11,25 +11,15 @@
         <With Var="UaRoot" />
         <With Var="UaEnable" />
         <With Var="CycleTime" />
-        <With Var="AtTop_Backend" />
-        <With Var="AtTop_Modbus" />
-        <With Var="AtTop_Io" />
+        <With Var="AtTop_Address" />
         <With Var="AtTop_Sim" />
-        <With Var="AtBottom_Backend" />
-        <With Var="AtBottom_Modbus" />
-        <With Var="AtBottom_Io" />
+        <With Var="AtBottom_Address" />
         <With Var="AtBottom_Sim" />
-        <With Var="Position_Backend" />
-        <With Var="Position_Modbus" />
-        <With Var="Position_Io" />
+        <With Var="Position_Address" />
         <With Var="Position_Sim" />
         <With Var="Position_Scale" />
-        <With Var="Down_Backend" />
-        <With Var="Down_Modbus" />
-        <With Var="Down_Io" />
-        <With Var="Up_Backend" />
-        <With Var="Up_Modbus" />
-        <With Var="Up_Io" />
+        <With Var="Down_Address" />
+        <With Var="Up_Address" />
       </Event>
     </EventInputs>
     <EventOutputs>
@@ -41,25 +31,15 @@
       <VarDeclaration Name="UaRoot" Type="WSTRING" />
       <VarDeclaration Name="UaEnable" Type="BOOL" />
       <VarDeclaration Name="CycleTime" Type="TIME" InitialValue="T#50ms" />
-      <VarDeclaration Name="AtTop_Backend" Type="USINT" InitialValue="2" />
-      <VarDeclaration Name="AtTop_Modbus" Type="WSTRING" />
-      <VarDeclaration Name="AtTop_Io" Type="STRING" />
+      <VarDeclaration Name="AtTop_Address" Type="STRING" />
       <VarDeclaration Name="AtTop_Sim" Type="BOOL" InitialValue="FALSE" />
-      <VarDeclaration Name="AtBottom_Backend" Type="USINT" InitialValue="2" />
-      <VarDeclaration Name="AtBottom_Modbus" Type="WSTRING" />
-      <VarDeclaration Name="AtBottom_Io" Type="STRING" />
+      <VarDeclaration Name="AtBottom_Address" Type="STRING" />
       <VarDeclaration Name="AtBottom_Sim" Type="BOOL" InitialValue="FALSE" />
-      <VarDeclaration Name="Position_Backend" Type="USINT" InitialValue="2" />
-      <VarDeclaration Name="Position_Modbus" Type="WSTRING" />
-      <VarDeclaration Name="Position_Io" Type="STRING" />
+      <VarDeclaration Name="Position_Address" Type="STRING" />
       <VarDeclaration Name="Position_Sim" Type="LREAL" InitialValue="0.0" />
       <VarDeclaration Name="Position_Scale" Type="LREAL" InitialValue="0.1" />
-      <VarDeclaration Name="Down_Backend" Type="USINT" InitialValue="2" />
-      <VarDeclaration Name="Down_Modbus" Type="WSTRING" />
-      <VarDeclaration Name="Down_Io" Type="STRING" />
-      <VarDeclaration Name="Up_Backend" Type="USINT" InitialValue="2" />
-      <VarDeclaration Name="Up_Modbus" Type="WSTRING" />
-      <VarDeclaration Name="Up_Io" Type="STRING" />
+      <VarDeclaration Name="Down_Address" Type="STRING" />
+      <VarDeclaration Name="Up_Address" Type="STRING" />
     </InputVars>
     <OutputVars />
   </InterfaceList>
@@ -152,36 +132,26 @@
       <Connection Source="SubCmd.RD_4" Destination="Logic.C_Up" />
       <Connection Source="SubRelease.RD_1" Destination="Logic.R_Holder" />
       <Connection Source="Mode.State" Destination="Logic.ModState" />
-      <Connection Source="AtTop_Backend" Destination="In_AtTop.Backend" />
-      <Connection Source="AtTop_Modbus" Destination="In_AtTop.ModbusId" />
-      <Connection Source="AtTop_Io" Destination="In_AtTop.IoName" />
+      <Connection Source="AtTop_Address" Destination="In_AtTop.Address" />
       <Connection Source="AtTop_Sim" Destination="In_AtTop.SimValue" />
       <Connection Source="In_AtTop.IN" Destination="Logic.I_AtTop" />
       <Connection Source="Logic.AtTop" Destination="PubState.SD_1" />
       <Connection Source="Logic.AtTop" Destination="PubUa.SD_1" />
-      <Connection Source="AtBottom_Backend" Destination="In_AtBottom.Backend" />
-      <Connection Source="AtBottom_Modbus" Destination="In_AtBottom.ModbusId" />
-      <Connection Source="AtBottom_Io" Destination="In_AtBottom.IoName" />
+      <Connection Source="AtBottom_Address" Destination="In_AtBottom.Address" />
       <Connection Source="AtBottom_Sim" Destination="In_AtBottom.SimValue" />
       <Connection Source="In_AtBottom.IN" Destination="Logic.I_AtBottom" />
       <Connection Source="Logic.AtBottom" Destination="PubState.SD_2" />
       <Connection Source="Logic.AtBottom" Destination="PubUa.SD_2" />
-      <Connection Source="Position_Backend" Destination="In_Position.Backend" />
-      <Connection Source="Position_Modbus" Destination="In_Position.ModbusId" />
-      <Connection Source="Position_Io" Destination="In_Position.IoName" />
+      <Connection Source="Position_Address" Destination="In_Position.Address" />
       <Connection Source="Position_Sim" Destination="In_Position.SimValue" />
       <Connection Source="Position_Scale" Destination="In_Position.Scale" />
       <Connection Source="In_Position.IN" Destination="Logic.I_Position" />
       <Connection Source="Logic.Position" Destination="PubState.SD_3" />
       <Connection Source="Logic.Position" Destination="PubUa.SD_3" />
       <Connection Source="Logic.Holder" Destination="PubState.SD_4" />
-      <Connection Source="Down_Backend" Destination="Out_Down.Backend" />
-      <Connection Source="Down_Modbus" Destination="Out_Down.ModbusId" />
-      <Connection Source="Down_Io" Destination="Out_Down.IoName" />
+      <Connection Source="Down_Address" Destination="Out_Down.Address" />
       <Connection Source="Logic.O_Down" Destination="Out_Down.OUT" />
-      <Connection Source="Up_Backend" Destination="Out_Up.Backend" />
-      <Connection Source="Up_Modbus" Destination="Out_Up.ModbusId" />
-      <Connection Source="Up_Io" Destination="Out_Up.IoName" />
+      <Connection Source="Up_Address" Destination="Out_Up.Address" />
       <Connection Source="Logic.O_Up" Destination="Out_Up.OUT" />
     </DataConnections>
   </FBNetwork>

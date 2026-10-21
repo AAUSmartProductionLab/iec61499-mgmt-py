@@ -30,8 +30,6 @@ NUMERIC = {"LREAL", "REAL", "INT", "DINT", "UINT", "UDINT", "USINT"}
 DURATION = r"^\d+(ms|s)$"
 # Procedures the module state manager runs (the acting states of PackML it uses).
 PROCEDURES = Literal["Resetting", "Stopping"]
-# IO backends of the IO primitives (IO_DI, IO_DO, IO_AI, IO_AO): 1 is a local IO handle (GPIO line or PWM channel).
-BACKENDS = {"sim": 0, "gpio": 1, "pwm": 1, "modbus": 2}
 # Blocks and pins of a module level skill's subapp (IEC names are case-insensitive).
 RESERVED = {"CONTROL", "UASTART", "PUBPARAMS", "PUBRESULTS", "RELEASE", "EXECUTE", "STOP", "INIT", "INITO"}
 # What an equipment item with a position adds itself: where it is, whether that is known (it has
@@ -620,6 +618,14 @@ class ModuleSpec(Model):
         if isinstance(io, Output) and io.pwm is not None:
             return "pwm"
         return "modbus" if t.modbus is not None and io.modbus is not None else "sim"
+
+    def address(self, target: str, io: Input | Output, handle: str) -> str:
+        """Where the IO point is on ``target``, as its IO block takes it: a Modbus CLIENT ID, the
+        name of the local IO handle (``handle``, the GPIO or PWM line's), or ``sim``."""
+        backend = self.backend(target, io)
+        if backend == "modbus":
+            return self.modbus_id(io.modbus, isinstance(io, Output), target)
+        return handle if backend in ("gpio", "pwm") else "sim"
 
     def modbus_id(self, address: str, write: bool, target: str | None = None) -> str:
         """FORTE Modbus CLIENT ID polling (read) or writing one address, on ``target``'s server."""

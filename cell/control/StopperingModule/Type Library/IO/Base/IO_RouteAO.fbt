@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="IO_RouteAO" Comment="Backend router for IO_AO: 0 simulated, 1 local IO handle, 2 Modbus">
+<FBType Name="IO_RouteAO" Comment="Backend router for IO_AO; Address: 'sim' simulated, 'modbus[...]' a Modbus CLIENT ID, any other name a local IO handle (IX/QX PARAMS, e.g. a GPIOChip line or PWM channel); empty: not connected (QO = FALSE)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
       <Event Name="INIT" Type="Event">
-        <With Var="Backend" />
+        <With Var="Address" />
       </Event>
       <Event Name="IO_READY" Type="Event">
         <With Var="QO_G" />
@@ -29,6 +29,8 @@
       <Event Name="INIT_IO" Type="Event">
         <With Var="GQI" />
         <With Var="MQI" />
+        <With Var="IoName" />
+        <With Var="ModbusId" />
       </Event>
       <Event Name="INITO" Type="Event">
         <With Var="QO" />
@@ -44,7 +46,7 @@
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Backend" Type="USINT" />
+      <VarDeclaration Name="Address" Type="STRING" />
       <VarDeclaration Name="QO_G" Type="BOOL" />
       <VarDeclaration Name="QO_M" Type="BOOL" />
       <VarDeclaration Name="OUT" Type="LREAL" />
@@ -55,12 +57,15 @@
     <OutputVars>
       <VarDeclaration Name="GQI" Type="BOOL" />
       <VarDeclaration Name="MQI" Type="BOOL" />
+      <VarDeclaration Name="IoName" Type="STRING" />
+      <VarDeclaration Name="ModbusId" Type="WSTRING" />
       <VarDeclaration Name="QO" Type="BOOL" />
       <VarDeclaration Name="Value" Type="WORD" />
     </OutputVars>
   </InterfaceList>
   <BasicFB>
     <InternalVars>
+      <VarDeclaration Name="Backend" Type="USINT" />
       <VarDeclaration Name="Raw" Type="LREAL" />
     </InternalVars>
     <ECC>
@@ -84,6 +89,9 @@
       <ECState Name="Sim" x="990" y="330">
         <ECAction Algorithm="Alg_Sim" Output="CNF" />
       </ECState>
+      <ECState Name="None" x="1410" y="330">
+        <ECAction Algorithm="Alg_None" Output="CNF" />
+      </ECState>
       <ECState Name="DoneG" x="1410" y="330">
         <ECAction Algorithm="Alg_DoneG" Output="CNF" />
       </ECState>
@@ -97,17 +105,30 @@
       <ECTransition Source="START" Destination="Req" Condition="REQ" x="0" y="0" />
       <ECTransition Source="Req" Destination="ReqG" Condition="Backend = 1" x="0" y="0" />
       <ECTransition Source="Req" Destination="ReqM" Condition="Backend = 2" x="0" y="0" />
+      <ECTransition Source="Req" Destination="None" Condition="Backend = 3" x="0" y="0" />
       <ECTransition Source="Req" Destination="Sim" Condition="1" x="0" y="0" />
       <ECTransition Source="START" Destination="DoneG" Condition="CNF_G" x="0" y="0" />
       <ECTransition Source="START" Destination="DoneM" Condition="CNF_M" x="0" y="0" />
       <ECTransition Source="ReqG" Destination="START" Condition="1" x="0" y="0" />
       <ECTransition Source="ReqM" Destination="START" Condition="1" x="0" y="0" />
       <ECTransition Source="Sim" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="None" Destination="START" Condition="1" x="0" y="0" />
       <ECTransition Source="DoneG" Destination="START" Condition="1" x="0" y="0" />
       <ECTransition Source="DoneM" Destination="START" Condition="1" x="0" y="0" />
     </ECC>
     <Algorithm Name="Alg_Init">
-      <ST>GQI := Backend = 1;
+      <ST>IF Address = 'sim' THEN
+  Backend := 0;
+ELSIF LEFT(Address, 7) = 'modbus[' THEN
+  Backend := 2;
+  ModbusId := STRING_TO_WSTRING(Address);
+ELSIF LEN(Address) &gt; 0 THEN
+  Backend := 1;
+  IoName := Address;
+ELSE
+  Backend := 3;
+END_IF;
+GQI := Backend = 1;
 MQI := Backend = 2;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Ready">
@@ -131,6 +152,9 @@ END_IF;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Sim">
       <ST>QO := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_None">
+      <ST>QO := FALSE;</ST>
     </Algorithm>
     <Algorithm Name="Alg_DoneG">
       <ST>QO := QO_G;</ST>

@@ -28,24 +28,18 @@
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="AtHome_Backend" Value="2" />
-        <Parameter Name="AtHome_Modbus" Value="&quot;modbus[127.0.0.1:1503:1:10:d0:]&quot;" />
-        <Parameter Name="Enable_Backend" Value="2" />
-        <Parameter Name="Enable_Modbus" Value="&quot;modbus[127.0.0.1:1503:1:0::c0]&quot;" />
-        <Parameter Name="Down_Backend" Value="2" />
-        <Parameter Name="Down_Modbus" Value="&quot;modbus[127.0.0.1:1503:1:0::c1]&quot;" />
-        <Parameter Name="Step_Backend" Value="2" />
-        <Parameter Name="Step_Modbus" Value="&quot;modbus[127.0.0.1:1503:1:0::h0]&quot;" />
+        <Parameter Name="AtHome_Address" Value="'modbus[127.0.0.1:1503:1:10:d0:]'" />
+        <Parameter Name="Enable_Address" Value="'modbus[127.0.0.1:1503:1:0::c0]'" />
+        <Parameter Name="Down_Address" Value="'modbus[127.0.0.1:1503:1:0::c1]'" />
+        <Parameter Name="Step_Address" Value="'modbus[127.0.0.1:1503:1:0::h0]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="Piston" Type="stoppering::EQ_Piston" x="9300" y="900">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="Retract_Backend" Value="2" />
-        <Parameter Name="Retract_Modbus" Value="&quot;modbus[127.0.0.1:1503:1:0::c2]&quot;" />
-        <Parameter Name="Extend_Backend" Value="2" />
-        <Parameter Name="Extend_Modbus" Value="&quot;modbus[127.0.0.1:1503:1:0::c3]&quot;" />
+        <Parameter Name="Retract_Address" Value="'modbus[127.0.0.1:1503:1:0::c2]'" />
+        <Parameter Name="Extend_Address" Value="'modbus[127.0.0.1:1503:1:0::c3]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="Home" Type="stoppering::SK_Home" x="2800" y="900">
@@ -600,24 +594,18 @@
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="AtHome_Backend" Value="1" />
-        <Parameter Name="AtHome_Io" Value="'LinearAxis_AtHome'" />
-        <Parameter Name="Enable_Backend" Value="1" />
-        <Parameter Name="Enable_Io" Value="'LinearAxis_Enable'" />
-        <Parameter Name="Down_Backend" Value="1" />
-        <Parameter Name="Down_Io" Value="'LinearAxis_Down'" />
-        <Parameter Name="Step_Backend" Value="1" />
-        <Parameter Name="Step_Io" Value="'LinearAxis_Step'" />
+        <Parameter Name="AtHome_Address" Value="'LinearAxis_AtHome'" />
+        <Parameter Name="Enable_Address" Value="'LinearAxis_Enable'" />
+        <Parameter Name="Down_Address" Value="'LinearAxis_Down'" />
+        <Parameter Name="Step_Address" Value="'LinearAxis_Step'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="Piston" Type="stoppering::EQ_Piston" x="2800" y="900">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="Retract_Backend" Value="1" />
-        <Parameter Name="Retract_Io" Value="'Piston_Retract'" />
-        <Parameter Name="Extend_Backend" Value="1" />
-        <Parameter Name="Extend_Io" Value="'Piston_Extend'" />
+        <Parameter Name="Retract_Address" Value="'Piston_Retract'" />
+        <Parameter Name="Extend_Address" Value="'Piston_Extend'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="Home" Type="stoppering::SK_Home" x="2800" y="900">

@@ -11,12 +11,8 @@
         <With Var="UaRoot" />
         <With Var="UaEnable" />
         <With Var="CycleTime" />
-        <With Var="Retract_Backend" />
-        <With Var="Retract_Modbus" />
-        <With Var="Retract_Io" />
-        <With Var="Extend_Backend" />
-        <With Var="Extend_Modbus" />
-        <With Var="Extend_Io" />
+        <With Var="Retract_Address" />
+        <With Var="Extend_Address" />
       </Event>
     </EventInputs>
     <EventOutputs>
@@ -28,12 +24,8 @@
       <VarDeclaration Name="UaRoot" Type="WSTRING" />
       <VarDeclaration Name="UaEnable" Type="BOOL" />
       <VarDeclaration Name="CycleTime" Type="TIME" InitialValue="T#50ms" />
-      <VarDeclaration Name="Retract_Backend" Type="USINT" InitialValue="2" />
-      <VarDeclaration Name="Retract_Modbus" Type="WSTRING" />
-      <VarDeclaration Name="Retract_Io" Type="STRING" />
-      <VarDeclaration Name="Extend_Backend" Type="USINT" InitialValue="2" />
-      <VarDeclaration Name="Extend_Modbus" Type="WSTRING" />
-      <VarDeclaration Name="Extend_Io" Type="STRING" />
+      <VarDeclaration Name="Retract_Address" Type="STRING" />
+      <VarDeclaration Name="Extend_Address" Type="STRING" />
     </InputVars>
     <OutputVars />
   </InterfaceList>
@@ -103,13 +95,9 @@
       <Connection Source="SubRelease.RD_1" Destination="Logic.R_Holder" />
       <Connection Source="Mode.State" Destination="Logic.ModState" />
       <Connection Source="Logic.Holder" Destination="PubState.SD_1" />
-      <Connection Source="Retract_Backend" Destination="Out_Retract.Backend" />
-      <Connection Source="Retract_Modbus" Destination="Out_Retract.ModbusId" />
-      <Connection Source="Retract_Io" Destination="Out_Retract.IoName" />
+      <Connection Source="Retract_Address" Destination="Out_Retract.Address" />
       <Connection Source="Logic.O_Retract" Destination="Out_Retract.OUT" />
-      <Connection Source="Extend_Backend" Destination="Out_Extend.Backend" />
-      <Connection Source="Extend_Modbus" Destination="Out_Extend.ModbusId" />
-      <Connection Source="Extend_Io" Destination="Out_Extend.IoName" />
+      <Connection Source="Extend_Address" Destination="Out_Extend.Address" />
       <Connection Source="Logic.O_Extend" Destination="Out_Extend.OUT" />
     </DataConnections>
   </FBNetwork>
