@@ -42,8 +42,9 @@ Module (one FORTE resource)                       OPC UA below /Objects/<Module>
 │                  (skills the occupant started stop, wait until none is active, Stopping
 │                  procedure) -> Stopped; Abort -> Aborted (skills and equipment off)
 │                  -Clear-> Stopped                                    /Module
-├─ Equipment IO    EQ_<Item>: owns its IO points (an address each: 'sim', a GPIO or PWM
-│                  line's handle, or 'modbus[...]'; IO_DI and the others pick the way) and knows
+├─ Equipment IO    EQ_<Item>: owns its IO points (an address each: 'gpio[0:23:pull_up]',
+│                  'pwm[0:2:500000]', 'modbus[...]' or 'sim'; IO_DI and the others set up the
+│                  line and pick the way) and knows
 │                  nothing about what they mean: writes what its one holder sends (break
 │                  before make), reads its inputs every cycle, publishes changes, switches
 │                  all off on release or module Abort                  /Equipment/<Item>
@@ -516,6 +517,22 @@ because with a wrong `.buildpath` it silently skips the system):
   after every run of a composite with a bound parameter).
 - **`STEP` is reserved too** (SFC): an IO point's address input is `<Point>_Address`, as a
   point's name alone may be a keyword.
+- **An IO block sets up its own line** (21 Oct): `IO_DI`/`IO_DO` hold a `GPIOChip`, `IO_AO` a
+  `PWMChip`, configured from the address (`gpio[0:23:pull_up:active_low]`, the line's handle name
+  is the address). Windows' FORTE has neither type, and a composite needs the class of every
+  block inside it, so `forte-patches/0003-io-stand-ins.patch` adds stand-ins (module `iostubs`,
+  `FORTE_MODULE_IOSTUBS`, not on Linux: same classes, INIT answers `QO = FALSE`) and gives the
+  gpiochip and pwmsysfs modules include folders; `forte-compat` maps the exporter's
+  `forte/eclipse4diac/io/gpiochip/GPIOChip_fbt.h` onto them. The `GpioLines`/`PwmLines`
+  subapplications are gone.
+- **ST in FORTE 3.3 / IDE 3.3**: there is no `STRING_TO_UINT` (digits are read with
+  `FIND('0123456789', MID(...)) - 1`); `FIND` and `LEN` give `ANY_INT`, which arithmetic only takes
+  through a variable of a type; a `FOR` counter must be a `VAR_TEMP` (else a warning, and the
+  type check fails on warnings).
+- **A changed FBE configuration needs a fresh CMake cache**: the FBE passes `-D` settings only when
+  a build is configured from scratch, and its own clean misses our out-of-tree build ("seems to
+  be cleaned already"). `build-runtime.ps1` deletes `CMakeCache.txt` when the configuration file
+  is newer, and applies the FORTE patches as a stack (from the newest applied one).
 - **A comm `ID` with brackets is taken as written**: `fbdk[127.0.0.1:61550]` has no IP layer and
   never opens a socket (`NO_SOCKET`); `127.0.0.1:61550` alone is FORTE's `fbdk[].ip[...]`
   (`CBaseCommFB::openConnection`).
