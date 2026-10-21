@@ -24,7 +24,7 @@ classes from and checks every resource AAS against), until the repository is spl
 | `aas-model/` | (submodule) | The lab's shared pydantic AAS model; `modreg` builds on it and uses its generator |
 | `iec61499-opcua-hmi/` | (submodule) | `modlink` (runs a module from its AAS over OPC UA), the HMI, an OPC UA stand-in for a module, the Linux FORTE build, the end-to-end test; here so both can change together. Its tests run in its own folder, not with this repository's |
 | `ontology/` | (working copy) | The product, process, resource and link ontologies with their notes; ARSO is the blueprint of the resource AAS |
-| `docs/` | (working notes) | `work.md`: what is built, how, learnings; `next-steps.md`: the plan; `decisions.md`: what was decided; `aas-models.md`: the product, plan and resource AAS, their submodels and how they connect; `aas-examples.md`: the example line's five AASs with class diagrams; `module-rules.md`: the rules a module is built by; `modules.md`: the two modules and what was ported; `repositories.md`: how the work divides into repositories; `archive/`: superseded plans and figures |
+| `docs/` | (working notes) | `pipeline.md`: from AAS to running code and how it is changed; `work.md`: what is built, how, learnings; `next-steps.md`: the plan; `decisions.md`: what was decided; `aas-models.md`: the product, plan and resource AAS, their submodels and how they connect; `aas-examples.md`: the example line's five AASs with class diagrams; `module-rules.md`: the rules a module is built by; `modules.md`: the two modules and what was ported; `repositories.md`: how the work divides into repositories; `archive/`: superseded plans and figures |
 
 Each folder has its own `tests/`; `conftest.py` at the top holds the shared live-test options.
 
