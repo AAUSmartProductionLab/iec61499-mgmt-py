@@ -9,6 +9,9 @@ from pydantic import model_validator
 
 from .models import Model
 
+# The instances a resource has of itself (EMB_RES: START, its E_RESTART), outside any application.
+RESOURCE_BLOCKS = frozenset({"START"})
+
 
 class Command(Model):
     """One typed management request."""
@@ -39,12 +42,14 @@ class Command(Model):
 
     def inside(self, container: str) -> "Command":
         """The command for a program inside an application's container (``Filling.Home``), as the
-        4diac IDE deploys and monitors an application. Requests to the device and queries are kept."""
+        4diac IDE deploys and monitors an application. Requests to the device, queries and the
+        resource's own blocks (``START.COLD``) are kept."""
         if not container or not self.resource or self.op.startswith("query"):
             return self
         fields = {"write": ("destination",), "read": ("source",), "connect": ("source", "destination"),
                   "disconnect": ("source", "destination")}.get(self.op, ("name",))
-        return self.model_copy(update={f: f"{container}.{getattr(self, f)}" for f in fields})
+        return self.model_copy(update={f: f"{container}.{getattr(self, f)}" for f in fields
+                                       if getattr(self, f).split(".")[0] not in RESOURCE_BLOCKS})
 
     def xml(self, request_id: int) -> str:
         """Serialise the request to FORTE management XML."""
