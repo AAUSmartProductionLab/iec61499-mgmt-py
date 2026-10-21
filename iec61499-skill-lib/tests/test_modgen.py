@@ -94,7 +94,7 @@ def canonical(path):
         # Layout arranged in the IDE is kept by the generator and is not part of the content; the
         # IDE also drops empty variable groups when it saves a type.
         for node in root.iter():
-            for attr in ("x", "y", "dx1", "dx2", "dy"):
+            for attr in ("x", "y", "dx1", "dx2", "dy") + (("width", "height") if node.tag == "Group" else ()):
                 node.attrib.pop(attr, None)
             for group in [g for g in node if g.tag in ("InputVars", "OutputVars") and len(g) == 0]:
                 node.remove(group)
@@ -403,6 +403,24 @@ def test_regeneration_keeps_layout_arranged_in_the_ide(tmp_path):
     generate(spec, project, manifest)
     again = next(fb for fb in ET.parse(path).getroot().iter("FB") if fb.get("Name") == "Logic")
     assert again.get("x") == "1234.5"
+
+
+def test_regeneration_keeps_each_applications_own_layout(tmp_path):
+    """Blocks of the same name in two applications keep their own places, and a group its size."""
+    spec = load(FILLER)
+    project, manifest = tmp_path / spec.project, tmp_path / "manifest.json"
+    generate(spec, project, manifest)
+    path = project / f"{spec.project}.sys"
+    doc = ET.parse(path)
+    apps = {a.get("Name"): a.find("SubAppNetwork") for a in doc.getroot().iter("Application")}
+    next(fb for fb in apps["Filler_pi"].iter("FB") if fb.get("Name") == "Module").set("x", "4321.5")
+    next(g for g in apps["Filler"].iter("Group") if g.get("Name") == "ModuleLevel").set("width", "7093.33")
+    doc.write(path, encoding="utf-8", xml_declaration=True)
+    generate(spec, project, manifest)
+    apps = {a.get("Name"): a.find("SubAppNetwork") for a in ET.parse(path).getroot().iter("Application")}
+    module = {name: next(fb for fb in net.iter("FB") if fb.get("Name") == "Module").get("x") for name, net in apps.items()}
+    assert module["Filler_pi"] == "4321.5" and module["Filler"] != "4321.5"
+    assert next(g for g in apps["Filler"].iter("Group") if g.get("Name") == "ModuleLevel").get("width") == "7093.33"
 
 
 def test_application_is_grouped_and_init_chains_are_hidden():
