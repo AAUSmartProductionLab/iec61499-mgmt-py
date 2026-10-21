@@ -157,8 +157,15 @@ class Candidate:
         return app_name(self.spec, self.target)
 
 
-def closest(snap: Snapshot, candidates: list[Candidate]) -> tuple[Candidate, int]:
-    """The candidate whose generated program is structurally closest to ``snap``, and its distance."""
+def closest(snap: Snapshot, candidates: list[Candidate], value=None) -> tuple[Candidate, int]:
+    """The candidate whose generated program is structurally closest to ``snap``, and its distance.
+    Candidates as close as each other (a module's targets: the same blocks, other IO addresses) are
+    told apart by the addresses of the IO points, read with ``value(port)``."""
     scored = [(distance(c.app, snap), i, c) for i, c in enumerate(candidates)]
-    d, _, best = min(scored, key=lambda s: s[:2])
-    return best, d
+    d = min(s[0] for s in scored)
+    tied = [s for s in scored if s[0] == d]
+    if len(tied) > 1 and value is not None:
+        def misses(c: Candidate) -> int:
+            return sum(not same(v, value(p)) for p, v in c.app.parameters.items() if p.endswith("_Address"))
+        tied.sort(key=lambda s: (misses(s[2]), s[1]))
+    return tied[0][2], d
