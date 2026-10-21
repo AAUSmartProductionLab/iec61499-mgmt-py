@@ -75,6 +75,8 @@ def keep_layout(root, path):
                     walk(child, prefix + name + ".")
                 elif child.tag == "Connection":
                     found[("Connection", prefix + child.get("Source", "") + ">" + child.get("Destination", ""))] = child
+                elif child.tag in ("Application", "Device", "Resource"):
+                    walk(child, prefix + child.get("Name", "") + "/")     # each application its own layout
                 else:
                     walk(child, prefix)
         walk(tree, "")
@@ -88,7 +90,8 @@ def keep_layout(root, path):
     for key, node in placed(root).items():
         # A block's position is relative to its group: only kept while it stays in that group.
         if key in before and group(before[key]) == group(node):
-            for attr in LAYOUT:
+            # A group keeps the size it was given too: its blocks keep their places in it.
+            for attr in LAYOUT + (("width", "height") if key[0] == "Group" else ()):
                 if attr in before[key].attrib:
                     node.set(attr, before[key].get(attr))
 
