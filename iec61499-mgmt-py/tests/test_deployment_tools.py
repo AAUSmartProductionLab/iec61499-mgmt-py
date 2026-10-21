@@ -65,6 +65,17 @@ def test_boot_file_order_and_format(library):
     assert any(c.op == "create_fb" and c.type == f"filling::SK_Dispense#{HASH}" for c in commands)
 
 
+def test_deployment_inside_the_applications_container():
+    """As the 4diac IDE deploys: every instance, value and connection inside the application."""
+    plain, inside = deployment(load_application(SYS, APP)), deployment(load_application(SYS, APP), container=APP)
+    assert [c.op for c in inside] == [c.op for c in plain]
+    assert inside[0] == plain[0] and inside[-1] == plain[-1]          # the resource itself
+    for a, b in zip(plain[1:-1], inside[1:-1]):
+        names = [n for n in (a.name, a.source, a.destination) if n is not None]
+        assert [n for n in (b.name, b.source, b.destination) if n is not None] == [f"{APP}.{n}" for n in names]
+        assert (a.type, a.value) == (b.type, b.value)
+
+
 def test_same_value_and_time():
     """READ results match typed values, tolerating typed literals and TIME units."""
     assert same_value(IECValue(type="LREAL", value=0.5), "LREAL#0.5")

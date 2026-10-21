@@ -37,6 +37,15 @@ class Command(Model):
             raise ValueError(f"{self.op} requires exactly {sorted(required)}")
         return self
 
+    def inside(self, container: str) -> "Command":
+        """The command for a program inside an application's container (``Filling.Home``), as the
+        4diac IDE deploys and monitors an application. Requests to the device and queries are kept."""
+        if not container or not self.resource or self.op.startswith("query"):
+            return self
+        fields = {"write": ("destination",), "read": ("source",), "connect": ("source", "destination"),
+                  "disconnect": ("source", "destination")}.get(self.op, ("name",))
+        return self.model_copy(update={f: f"{container}.{getattr(self, f)}" for f in fields})
+
     def xml(self, request_id: int) -> str:
         """Serialise the request to FORTE management XML."""
         action = {"create_fb": "CREATE", "delete_fb": "DELETE", "connect": "CREATE",
