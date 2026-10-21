@@ -1,23 +1,26 @@
 # Next steps
 
-Plan of 8 Oct 2026, its state updated on 19 Oct; it replaces the plan of 6 Oct
-([archive](archive/next-steps-2026-10-06.md)). What is built and how is in [work.md](work.md); what
-each AAS holds in [aas-models.md](aas-models.md); what was decided in [decisions.md](decisions.md);
-how the work divides into repositories in [repositories.md](repositories.md).
+Plan of 8 Oct 2026, reviewed and updated on 21 Oct; it replaces the plan of 6 Oct
+([archive](archive/next-steps-2026-10-06.md)). The whole pipeline in one place is
+[pipeline.md](pipeline.md); what is built and how is in [work.md](work.md); what each AAS holds in
+[aas-models.md](aas-models.md); what was decided in [decisions.md](decisions.md); how the work
+divides into repositories in [repositories.md](repositories.md).
 
-## State on 21 Oct
+## State on 21 Oct (evening)
 
 | Area | Built | Missing |
 | --- | --- | --- |
-| Reconfigure from the AAS (A) | Verify, create a skill, change a value, record, operate the result: on FORTE on the PC and on the Pi 5. A skill written by the skill editor is built and run from its AAS alone | The editor's fixes from its look in a browser are not committed to the fork; one Python interface for all of it (A4) is started |
-| Evaluation (B) | – | The scenario runner, the baseline by restart, the runs on the Pi |
-| Models (D2) | ARSO 0.8 for the line, module and component; product AAS with its plan; ontologies | The generation project's ARSO copy and closed validation at 0.8 (done in a working copy, not committed; the full run over the fourteen AASs to repeat) |
-| aas-model (E, new) | `modreg` builds on aas-model of 18 Oct (`6a03f78`, done 19 Oct); a line, a module and a component are its `Resource` with ARSO's submodels added; actions in its AID form; ARSO knows AID 1.2 | Registering one module on a disposable server (E3); the findings to raise with aas-model's author (E4) |
-| Clients (C) | `modlink` reads 0.8; the HMI is a submodule here since 19 Oct | The HMI's own reader (C1); the planner's skill list leaves out ModuleControl; the planner reading ARSO skills |
-| Hardware | The filling module runs on its own Pi 5 (192.168.0.203 since 20 Oct) and moves its axis: TB6600 straight on the Pi's pins, homing on the limit switch, MoveAxis at 12.5 mm/s (20 and 21 Oct). The stoppering Pi 4 verifies against its AAS | The limit switch mounted (it is pressed by hand); a move measured with a ruler; Dispensing on the real axis; the stoppering axis wired |
+| Reconfigure from the AAS (A) | Verify, create a skill, change a value, record, operate the result: on FORTE on the PC and on the Pi 5. A skill written by the skill editor is built and run from its AAS alone. **New:** `modsync project` writes the 4diac project of what runs (a skill added online included) and checks that it deploys that program | One Python interface for all of it (A4, started). The editor's fixes from its look in a browser are not committed to the fork (waiting for your go-ahead) |
+| Evaluation (B) | – | **Not started:** the scenario runner, the baseline by restart, the runs on the Pi. This is now the paper's largest gap |
+| Models (D2) | ARSO 0.8 for the line, module and component; product AAS with its plan; ontologies; [pipeline.md](pipeline.md) describes the whole chain | The generation project's ARSO copy and closed validation at 0.8 (working copy, not committed) |
+| aas-model (E) | `modreg` on aas-model `6a03f78` (E1, 19 Oct); ARSO knows AID 1.2 (E2); resources are aas-model's `Resource` with ARSO's submodels, `modreg serve` is the registration service (E3 built). ARSO's submodels, Module, Component, ProductionSystem and Product added to aas-model on a local branch (`arso-submodels`, 230 tests pass) | That branch reaching aas-model (fork and pull request, or push access: your decision); one module registered on a disposable server (E3); the findings for aas-model's author (E4) |
+| Clients (C) | `modlink` reads 0.8; the HMI operates the filling module on its Pi from its AAS; its reader rewritten for 0.8 (`hmi/aas.py`, not committed in the submodule) | The HMI's tests, its stand-in module's skills and its built-in descriptions (C1); the planner's skill list leaves out ModuleControl; the planner reading ARSO skills |
+| Program structure (new, 21 Oct) | Deployed inside the application's container, so the 4diac IDE monitors what the tools deployed; started by the resource's own START block; one address per IO point (`gpio[...]`, `pwm[...]`, `modbus[...]`, `sim`) and the IO blocks set up their own Pi lines (no line blocks; stand-ins for GPIOChip and PWMChip in the Windows FORTE); compact layout, a layout arranged in the IDE kept per application | Typed subapplications for module level skills (asked, not decided) |
+| Hardware | Filling module on its own Pi 5 (192.168.0.203): TB6600 straight on the pins, normally open limit switch on GPIO23 (pressed by hand), homing until the switch (60 s at most), MoveAxis at 2 kHz, 12.5 mm/s. The program of 21 Oct (container naming, START) runs there and verifies; the HMI moves the axis. The Pi runtime with the new IO blocks is built, tested under emulation and committed | **Installing that runtime and the new program on the filling Pi** (needs you at the bench: Reset homes); the switch mounted; a move measured with a ruler; Dispensing on the real axis; the stoppering axis wired (its Pi 4 is off) |
 
-On the timeline the week of 19 to 25 Oct is A4, B1 and B2. E came first because every test that
-builds an AAS depends on it; E1, E2 and the decision of E3 were done on 19 Oct.
+The week of 19 to 25 Oct was planned for E, A4, B1 and B2. E was done. The rest of the week went
+into the hardware and into the program's structure, which the paper's figures and the teaching
+both use, so A4, B1 and B2 move to the coming days (see the timeline).
 
 ## What the paper delivers
 
@@ -32,8 +35,8 @@ That is four deliverables:
 | --- | --- | --- | --- |
 | D1 | Module rules | How a module is built: the module library (module state machine, occupation, skill state machine), the fixed pattern of a module level skill, what may change online ([module-rules.md](module-rules.md)) | Built |
 | D2 | Information model | The resource AAS in ARSO 0.8: the line, each module and each component ([aas-models.md](aas-models.md)) | Built; the generation project's ARSO copy and closed validation are at 0.8 in a working copy, not committed |
-| D3 | Method and tools | Register, verify, operate, reconfigure, record | Register and operate are built. Verify, reconfigure and record from the AAS work since 8 Oct for a value and for a new skill (`modsync verify`, `reconfigure`); an editor for the description and a run on the Pi are missing |
-| D4 | Evaluation | The same changes online and by full redeployment, timed, on a Raspberry Pi | Not built |
+| D3 | Method and tools | Register, verify, operate, reconfigure, record | Built for a value and for a new skill: `modsync verify`, `reconfigure`, the record, the skill editor (9 Oct), on the PC and on the Pi 5 (9 Oct); `modsync project` (21 Oct). Missing: the one Python interface (A4) |
+| D4 | Evaluation | The same changes online and by full redeployment, timed, on a Raspberry Pi | Not built: the most urgent part |
 
 Agents are not part of the paper; they are its future work ([after the paper](#after-the-paper)).
 
@@ -44,7 +47,7 @@ Agents are not part of the paper; they are its future work ([after the paper](#a
 | Nameplate, asset type | `modreg` | the checker | Which kind of resource this is (line, module, component), so which rules apply |
 | Hierarchical Structures | `modreg` | plan check | The line's modules and a module's components |
 | Capability Description | `modreg` | plan check, `modlink.run_capability` | What a module offers and within which ranges; names the skill that realizes it |
-| Skills (in a module's and in each component's AAS) | `modreg`; the skill editor (to be built) | `modlink`; `modsync verify` and `reconfigure` | How a skill is called (commands, variables with limits), what it is composed of (a flow of steps with their bindings), and the module's own commands |
+| Skills (in a module's and in each component's AAS) | `modreg`; the skill editor | `modlink`; `modsync verify` and `reconfigure` | How a skill is called (commands, variables with limits), what it is composed of (a flow of steps with their bindings), and the module's own commands |
 | Asset Interfaces Description | `modreg` | `modlink` | The OPC UA endpoint and the browse path of every action and property |
 | Asset Interfaces Mapping Configuration | `modreg` | `modlink` | Which interface element carries a skill's state, error and results |
 | Control Configuration | `modreg`; `modsync reconfigure` (the record) | `modsync verify` | Block type, instance and type hash of every skill and step; the rule set; the record of a change |
@@ -103,6 +106,7 @@ Later a resource agent calls the same function when a bid that needs a reconfigu
 | A2b | **Edit a skill.** A plugin of the BaSyx web UI fork that opens on the Skills submodel and shows a module level skill as a flow, like the product's sequence editor: the module's components and their skills on the left, steps added, removed, reordered and bound, saved to the Skills submodel. ARSO 0.8 (9 Oct) gave the steps the planner's elements for this. **First version 9 Oct** (sequences, bindings, results, parameter limits, a new skill from an existing one; `modsync` builds what it saves); looked at and tested in Chrome the same day, its three fixes and the browser test not yet committed to the fork. Then, one kind at a time and each through the module rules, the generator's pattern, `modsync` and the editor: parallel, decision, conditional. No fallbacks for now | web UI fork, `modsync` | A skill changed in the editor is what `modsync reconfigure` builds |
 | A3 | **Operate what was created.** A client that reads the registered AAS again finds and runs the new skill. **Done 9 Oct:** recording a change gives a built skill its interface (`modreg/offer.py`); `modlink` ran the skill editor's DoubleDose on FORTE from the recorded AAS alone | `modlink` (HMI repository), `modreg` | `modlink` runs DoubleDose on FORTE from the AAS alone |
 | A4 | **Callable functions.** Verify, create a skill, set a value: one Python interface, so a script, the HMI or later an agent calls the same thing. **Started 8 Oct:** `desired.load`, `read`, `reconfigure`, `record`, `store` | `modsync` | The scenario runner (B1) uses only these |
+| A5 | **Back to the IDE.** The 4diac project of what runs, from the program by the module rules, with the IDE's layout, checked against what runs. **Done 21 Oct** (`modsync project`), tried live with DoubleDose added online | `modsync` | An engineer opens what runs in the IDE and keeps working |
 
 Step 1.2 of the old plan (a whole profile read from the running program) is no longer on the
 path: the AAS is delivered with the module, the program is only compared with it.
@@ -113,17 +117,19 @@ path: the AAS is delivered with the module, the program is only compared with it
 | --- | --- | --- |
 | B1 | **Scenario runner.** Plug in a module (register, verify, operate); change a constant; create a new skill. Each timed: downtime, commands sent, time to verify | The scenarios run unattended and write their numbers |
 | B2 | **Baseline.** The same changes by a new boot file and a restart | Numbers side by side |
-| B3 | **Hardware.** The filling module on the Raspberry Pi 5 with the stepper. **Axis moving since 20 Oct** (homing, MoveAxis); the switch is to be mounted and Dispensing run. The stoppering module on the Pi 4 if time allows | The scenarios run on the Pi with the axis moving |
+| B3 | **Hardware.** The filling module on the Raspberry Pi 5 with the stepper. **Axis moving since 20 Oct**, homing on the limit switch and operated from the HMI since 21 Oct. Next: install the runtime and program of 21 Oct (IO blocks that set up their lines), mount the switch, measure a 20 mm move, run Dispensing on the real axis. The stoppering module on the Pi 4 if time allows | The scenarios run on the Pi with the axis moving |
 
 ### C. Keeping the clients in step
 
 | # | Step | Where |
 | --- | --- | --- |
-| C1 | The HMI's own AAS reader, its built-in module descriptions and its stand-in module still describe the modules before 8 Oct. Read ARSO 0.8 through `modlink`'s reader and drop the built-ins | `iec61499-opcua-hmi/` (submodule) |
+| C1 | The HMI's own AAS reader, its built-in module descriptions and its stand-in module still describe the modules before 8 Oct. **Reader rewritten for 0.8 on 20 Oct** (operates the filling Pi; not committed in the submodule). Left: its tests, the stand-in module's skills (Home, MoveAxis, Dispense, Tare, Weigh), the built-ins dropped, one `modlink` test | `iec61499-opcua-hmi/` (submodule) |
 | C2 | The scale's weight follows the dispensed volume (it is a constant 2.0 g) | module spec, simulator |
 | C3 | The Pi 4: host name `stoppering-module`, the installer's setup, system updates, the stoppering program. **Done 9 Oct**, checked across a reboot | Pi 4 |
 
-C1 to C3 are not needed for the paper's claim; they go in when they block a figure or a run.
+| C4 | Teaching material: the 4diac IDE monitors deployed modules; projects of what runs (`modsync project`); a three-FORTE pub/sub demo (outside the repository). **Done 21 Oct** | IDE, `modsync` |
+
+C1 to C4 are not needed for the paper's claim; they go in when they block a figure or a run.
 
 ### E. aas-model of 18 Oct (new, 19 Oct)
 
@@ -138,8 +144,9 @@ plain `Resource`.
 | --- | --- | --- |
 | E1 | **Move `modreg` to it.** Replace what is gone (`deep_merge`, `nameplate()`, `DELEGATION_BASE`, `OpcuaProperty`), regenerate the classes of ARSO's own submodels with the new generator, write actions in aas-model's action form. **Done 19 Oct**; also a dump made linear (aas_pydantic's serializer dumped every level twice) and the live tests' simulator moved to a process of its own | The submodule and the pin are both `6a03f78` (or later) and every test passes |
 | E2 | **ARSO follows the interface description.** Declare the new action, event and form terms in `aid.ttl`; the closed validation passes again. **Done 19 Oct in this repository** (AID 1.2, the action and event definitions, `synchronous`, `input`, `output`, `uav_componentOf`, `readOnly`); the generation project's copy follows with its 0.8 update | `modreg check` and the generation project's validation pass on the example line |
-| E3 | **Registration.** **Decided 19 Oct:** our modules are AAS resources in the PPR sense, so a line, a module and a component are aas-model's `Resource` with ARSO's Skills, Operational Data and Control Configuration added (built the same day); the registration service is `modreg serve`, which also takes a plain `Resource` export of the lab's stations. Operational Data is left as it is; it may become Time Series Data | One module registered through `modreg serve` on a disposable server |
+| E3 | **Registration.** **Decided and built 19 Oct:** our modules are AAS resources in the PPR sense, so a line, a module and a component are aas-model's `Resource` with ARSO's Skills, Operational Data and Control Configuration added (built the same day); the registration service is `modreg serve`, which also takes a plain `Resource` export of the lab's stations. Operational Data is left as it is; it may become Time Series Data | One module registered through `modreg serve` on a disposable server |
 | E4 | **Findings.** Check the list of aas-model findings in [work.md](work.md) against the new version and raise what remains with its author (one resolved; a new one: the serializer's double dump) | The list is current |
+| E5 | **ARSO's submodels in aas-model.** Templates and generated classes of Skills, Control Configuration, Operational Data, Process Parameters and Production Sequence, and the types Module, Component, ProductionSystem, Product. **Built 19 Oct on a local branch** (`arso-submodels`, 230 tests); not pushed: no access to aas-model. Then `modreg` uses aas-model's classes instead of its own | The branch is in aas-model (fork and pull request, or access) and `modreg` points at it |
 
 
 ### D. Writing
@@ -151,12 +158,14 @@ Outline and figures by 1 Nov; experiment runs and text from 2 Nov; submission 18
 | Week | Work |
 | --- | --- |
 | 9 to 18 Oct | A2 (writing a description), A3 (both done) |
-| 19 to 25 Oct | E1 to E3, then A4, B1, B2 |
-| 26 Oct to 1 Nov | B3 (when the driver is in), C as needed, outline and figures |
+| 19 to 21 Oct | E1 to E3 (done); the filling hardware moving (B3, started); program structure and A5 (done) |
+| 22 to 25 Oct | The new runtime and program on the filling Pi; A4; B1 (scenario runner, with simulated IO on the PC first) |
+| 26 Oct to 1 Nov | B2 (baseline by restart); B3 runs on the Pi with the axis; outline and figures |
 | 2 to 18 Nov | Experiment runs, writing |
 
-If time runs out, cut in this order: C, then B3 on real hardware (keep the Pi with simulated IO),
-then A3. Not to be cut: A1, A2, B1, B2.
+B has not started and is what the paper cannot do without: from now on it comes before anything
+in C or E that does not block it. If time runs out, cut in this order: C, E4 and E5, then B3 on
+real hardware (keep the Pi with simulated IO), then A3. Not to be cut: A1, A2, B1, B2.
 
 ## After the paper
 
@@ -181,7 +190,10 @@ after step A4, the reconfiguration as functions. What is missing:
 A first slice: one product agent, two resource agents (filling, stoppering) and the simulators;
 one call for proposals per step; then a bid that needs a reconfiguration.
 
-**Also after the paper:** the planner reading a module's skills; a module shell for the 4diac IDE
+**Also after the paper:** drivers where FORTE has no block: a stepper whose position is counted
+from its pulses (today it is estimated from the time it ran), a real scale (e.g. HX711), as
+service interface blocks; typed subapplications for module level skills, if skills are to be
+dragged in from a library; the planner reading a module's skills; a module shell for the 4diac IDE
 so a hand-written module goes the same way; the AAS generator writing profiles; live values and
 history in the AAS; registration on the lab's AAS server; the repository split and CI.
 
@@ -189,6 +201,11 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 
 | Question | Blocks |
 | --- | --- |
+| **Waiting for you:** go to install the runtime and program of 21 Oct on the filling Pi (at the bench) | B3 |
+| **Waiting for you:** how ARSO's submodels reach aas-model (fork and pull request, or push access) | E5 |
+| **Waiting for you:** go-ahead to commit the skill editor's fixes to the fork and the generation project's ARSO 0.8 | A2b, D2 |
+| Should module level skills become typed subapplications in the IDE (reusable, with an interface), or stay untyped (created online without type files)? | later |
+| Commit the HMI's 0.8 reader to the submodule now, or with its tests and stand-in module (C1)? | C1 |
 | `modsync reconfigure` puts the recorded AAS back where it came from (a file, or every changed submodel on the AAS server). The registration service keeps its own copy of a module's profile and does not learn of the change | A4 |
 | The HMI's own reader still reads the modules of before 8 Oct; the generation project's pushed ARSO copy and closed validation are 0.7 (0.8 in a working copy); `modlink` reads 0.8 | C1, D2 |
 | ARSO's Condition follows the planner's elements of 8 Oct; the planner got grouped AND and OR conditions on 9 Oct. Follow it when a decision step is built | A2b |
