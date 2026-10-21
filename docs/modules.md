@@ -164,7 +164,8 @@ is for that case and runs first when the module resets.
   L298N enable is tied high. A pump on a stepper would take the Pi's second hardware channel.
 - **Step pulses by PWM**: the controller does not count pulses, it counts the time the PWM is on.
   A step rate of 1 to 2 kHz and the 1 ms it takes to switch give a position to a few steps; how many
-  millimetres that is depends on the driver's microstepping and the screw, which are not known yet.
+  millimetres that is depends on the driver's microstepping and the screw: on the filling axis
+  160 pulses per mm (4 microsteps, 5 mm screw), so a few hundredths of a millimetre.
 - **Analog inputs**: none needed by these two modules (the weight is simulated). Later: an ADC
   with a Linux IIO driver (ADS1115, MCP3008) read by the same kind of module (`IW`).
 - **Wiring**: L298N logic inputs accept 3.3 V. The end switches are wired as on the ESP32

@@ -1,4 +1,4 @@
-"""Raspberry Pi 4 helper: install the cross-built FORTE, blink an LED, run a module, read the log.
+"""Raspberry Pi helper (Pi 4 and 5): install the cross-built FORTE, blink an LED, run a module, read the log.
 
     python deploy/pi.py install                  # copy FORTE to the Pi, build and start its container
     python deploy/pi.py stop | start | status    # the FORTE container
