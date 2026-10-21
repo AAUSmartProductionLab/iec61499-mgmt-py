@@ -40,16 +40,16 @@ Since 8 Oct 2026 the module is built from the components every module of the lin
 (a linear axis and one process component), no longer as the ESP32 station was: the needle is lifted
 by a stepper motor with a limit switch, as on a 3D printer. It runs on a Raspberry Pi 5
 (192.168.0.203 since 20 Oct; the Pi 5 at 192.168.0.134 was another one), the stoppering module on
-the Raspberry Pi 4 (192.168.0.191). The axis is wired as below to a TB6600 driver through a 3.3 V
-to 5 V level converter (20 Oct); its limit switch is wired but not mounted yet. The travel is a
-placeholder until the axis is measured.
+the Raspberry Pi 4 (192.168.0.191). The axis is wired as below to a TB6600 driver, straight to
+the Pi's pins (21 Oct; a 3.3 V to 5 V level converter in between, as on 20 Oct, is not needed); its
+limit switch is wired but not mounted yet. The travel is a placeholder until the axis is measured.
 
 **The axis** is a RATTMMOTOR linear stage (300 mm stroke) with an SFU1605 ball screw (5 mm per turn)
 and a 1.8° Nema 23 motor rated 3 A. **The stepper driver** is a TB6600, set to 4 microsteps (800
 pulses per turn: SW1 on, SW2 and SW3 off) and 2.8 A (2.9 A peak: SW4 and SW5 off, SW6 on). That is
 160 pulses per mm, so 12.5 mm/s at the Pi's 2 kHz. The RepRap Stepper Motor Driver v2.3 before it
-never energised the motor. What the module's equipment item connects to the TB6600, through a
-3.3 V to 5 V level converter:
+never energised the motor. What the module's equipment item connects to the TB6600, straight from
+the Pi's pins (the TB6600's optocoupler inputs take 3.3 V):
 
 | TB6600 input | Equipment signal | Note |
 | --- | --- | --- |

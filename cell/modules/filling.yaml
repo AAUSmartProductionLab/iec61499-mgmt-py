@@ -19,9 +19,9 @@ equipment:
     kind: LinearAxis
     description: Needle lift, a stepper motor through a step and direction driver, with a limit switch at the top (home)
     # The driver is a TB6600 (since 20 Oct; the RepRap Stepper Motor Driver v2.3 before it never energised
-    # the motor). Its inputs PUL+, DIR+ and ENA+ come from the Pi through a 3.3 V to 5 V level converter
-    # (LV1/HV1 step, LV2/HV2 direction, LV3/HV3 enable); PUL-, DIR- and ENA- are on GND. Tested on 20 Oct
-    # from Python without FORTE: 1200 pulses each way at 500 and 890 Hz, smooth, back to the start.
+    # the motor). Its inputs PUL+, DIR+ and ENA+ are wired straight to the Pi's pins, PUL-, DIR- and ENA-
+    # to GND: its optocouplers take the Pi's 3.3 V (homing and moves ran so on 21 Oct; on 20 Oct a 3.3 V
+    # to 5 V level converter was in between, which is not needed).
     inputs:
       # An ordinary limit switch at the top, straight to the Pi: between the line and GND, closing when
       # pressed (the Pi's pull-up holds the line high otherwise).

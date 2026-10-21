@@ -18,8 +18,8 @@ equipment:
   LinearAxis:
     kind: LinearAxis
     description: Lift of the stoppering head, a stepper motor through a step and direction driver, with a limit switch at the top (home)
-    # As the filling module's axis (the same linear stage): a TB6600 driver, its PUL+, DIR+ and ENA+ from
-    # the Pi through a 3.3 V to 5 V level converter, PUL-, DIR- and ENA- on GND.
+    # As the filling module's axis (the same linear stage): a TB6600 driver, its PUL+, DIR+ and ENA+
+    # straight to the Pi's pins, PUL-, DIR- and ENA- on GND (no level converter needed).
     inputs:
       # An ordinary limit switch at the top, straight to the Pi: between the line and GND, closing when
       # pressed (the Pi's pull-up holds the line high otherwise).
