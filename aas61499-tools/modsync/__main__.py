@@ -6,6 +6,7 @@
     python -m modsync push cell/modules/filling.yaml --target pi --dry-run   # what would change on the module
     python -m modsync push cell/modules/filling.yaml --target pi           # bring the module to its spec
     python -m modsync watch                                                # pull whenever a module comes online or changes
+    python -m modsync project --host 192.168.0.203                         # a 4diac IDE project of what runs there
 
 The AAS as the desired state (no module spec is read; the AASs are a folder of AAS files or an AAS server):
 
@@ -29,10 +30,12 @@ from iec61499_mgmt.protocol import Client, Command, ManagementError
 from modgen import SPECS, load, specs
 
 from . import desired
+from .project import write_project
 from .compare import Candidate
 from .sync import LocalDeployer, PiDeployer, Refused, Status, candidates, inspect, is_local, push, relative, watch
 
 OUT = Path("aas")
+PROJECTS = Path("projects")
 
 
 def publish(status: Status | None, args, spec=None, target=None, path=None):
@@ -145,6 +148,32 @@ def against_the_aas(args) -> int:
     return 0 if found.empty or args.command == "reconfigure" and args.dry_run else 1
 
 
+def project(args) -> int:
+    """Write the 4diac IDE project of what runs on a module."""
+    cand = chosen(args)
+    cands = [c for c in candidates([cand.path]) if not args.target or c.target == args.target] if cand \
+        else candidates(specs())
+    host, port = endpoint(args, cand)
+    with Client(host, port, timeout=5) as client:
+        status = inspect(client, host, port, cands)
+        report(status)
+        if not status.identified:
+            print("  no project: the program is no module a spec here describes")
+            return 1
+        made = write_project(client, host, port, status, Path(args.out))
+    for line in made.changes:
+        print(f"  read from the program: {line}")
+    print(f"  project: {made.path} (target {made.target}); in the 4diac IDE: File > Import > Existing Projects "
+          "into Workspace")
+    if made.unreproduced:
+        print("  the project does NOT deploy what runs:")
+        for line in made.unreproduced[:40]:
+            print(f"    {line}")
+        return 1
+    print("  checked: the project deploys the program that runs")
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -161,6 +190,12 @@ def main():
             p.add_argument("--dry-run", action="store_true", help="Only show what would change")
             p.add_argument("--force", action="store_true", help="Write values even while the module runs or is occupied")
             p.add_argument("--trigger", default="", help="Why: goes into the change log")
+    p = sub.add_parser("project")
+    p.add_argument("--host", help="FORTE host (default: the target's)")
+    p.add_argument("--port", type=int, help="FORTE management port (default: the target's)")
+    p.add_argument("--spec", help="Module spec (default: find it among modules/*.yaml)")
+    p.add_argument("--target", help="Target in the module spec (default: the one the program is)")
+    p.add_argument("--out", default=str(PROJECTS), help="Folder for the project (a folder per project in it)")
     for name in ("describe", "pull", "push", "watch"):
         p = sub.add_parser(name)
         p.add_argument("--out", default=str(OUT), help="Folder for the AAS JSON files")
@@ -185,6 +220,8 @@ def main():
 
     if args.command in ("verify", "reconfigure"):
         sys.exit(against_the_aas(args))
+    if args.command == "project":
+        sys.exit(project(args))
     if args.command == "describe":
         spec = load(spec_path(args.spec))
         target = args.target or next(iter(spec.targets))
