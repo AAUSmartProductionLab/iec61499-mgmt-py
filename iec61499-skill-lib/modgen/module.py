@@ -29,7 +29,6 @@ from .spec import ACTUAL, HOMED, MOVE, MOVING, Equipment, ModuleSpec, Output, Pa
 IO_TYPE = {("in", "BOOL"): "DI", ("in", "LREAL"): "AI", ("out", "BOOL"): "DO", ("out", "LREAL"): "AO"}
 # GPIOChip BiasMode. FORTE 3.3.0 indexes {as is, disable, pull-up, pull-down} with an enum
 # {None, PullUp, PullDown}, so the documented PullUp (1) only disables the bias.
-BIAS = {"none": 0, "pull_up": 2, "pull_down": 3}
 
 
 def tlit(duration: str) -> str:
@@ -915,55 +914,6 @@ def device_name(target: str) -> str:
     return f"FORTE_{target.upper()}"
 
 
-def gpio_lines(net, spec: ModuleSpec, target: str, x, y):
-    """Subapp with one GPIOChip per GPIO point of ``target``; its name, or None if there are none.
-
-    A GPIOChip claims one line and registers it under a handle name (VALUE) that the IX/QX in the
-    equipment refer to (PARAMS), so the lines are initialised before the equipment. The type
-    exists only in Linux builds of FORTE.
-    """
-    lines = [(point, io) for point, io in spec.points() if spec.backend(target, io) == "gpio"]
-    if not lines:
-        return None
-    _, inner = subapp(net, "GpioLines", x, y, "GPIO lines of the equipment's IO points (Linux /dev/gpiochip)",
-                      {"INIT": ([], "EInit")}, {"INITO": ([], "EInit")})
-    names = []
-    for i, (point, io) in enumerate(lines):
-        handle = point.replace(".", "_")
-        fb(inner, handle, STD["GPIOChip"], 1000 + i * 3000, 1000, QI="TRUE", VALUE=wstr(handle),
-           ChipNumber=str(io.gpio.chip), LineNumber=str(io.gpio.line),
-           ReadWriteMode="1" if isinstance(io, Output) else "0",      # 1 push-pull output, 0 input
-           BiasMode=str(BIAS[io.gpio.bias]), ActiveLow="TRUE" if io.gpio.active_low else "FALSE")
-        names.append(handle)
-    events = [("INIT", names[0] + ".INIT"), (names[-1] + ".INITO", "INITO")]
-    events += [(a + ".INITO", z + ".INIT") for a, z in zip(names, names[1:])]
-    connections(inner, events, [])
-    return "GpioLines"
-
-
-def pwm_lines(net, spec: ModuleSpec, target: str, x, y):
-    """Subapp with one PWMChip per PWM output of ``target`` (FORTE module pwmsysfs, Linux only)."""
-    channels = [(point, io) for point, io in spec.points() if spec.backend(target, io) == "pwm"]
-    if not channels:
-        return None
-    _, inner = subapp(net, "PwmLines", x, y, "PWM channels of the equipment's analog outputs (Linux /sys/class/pwm)",
-                      {"INIT": ([], "EInit")}, {"INITO": ([], "EInit")})
-    board = spec.targets[target]
-    root = board.pwm_root
-    names = []
-    for i, (point, io) in enumerate(channels):
-        handle = point.replace(".", "_")
-        extra = {} if root == "/sys/class/pwm" else {"SysfsRoot": wstr(root)}
-        fb(inner, handle, STD["PWMChip"], 1000 + i * 3000, 1000, QI="TRUE", VALUE=wstr(handle),
-           ChipNumber=str(io.pwm.chip), Channel=str(board.pwm_channel(io.pwm.channel)), PeriodNs=str(io.pwm.period_ns),
-           **extra)
-        names.append(handle)
-    events = [("INIT", names[0] + ".INIT"), (names[-1] + ".INITO", "INITO")]
-    events += [(a + ".INITO", z + ".INIT") for a, z in zip(names, names[1:])]
-    connections(inner, events, [])
-    return "PwmLines"
-
-
 def application(root, spec: ModuleSpec, target: str):
     """The module's application on ``target``, in rows: module level, equipment IO, skill primitives,
     module level skills, procedures."""
@@ -978,14 +928,13 @@ def application(root, spec: ModuleSpec, target: str):
     fb(net, "Occupation", q("MOD_Occupation"), 5000, 200, Module=module, UaRoot=ua_root, UaEnable="TRUE")
     fb(net, "Module", q("MOD_StateManager"), 9000, 200, Module=module, UaRoot=ua_root, UaEnable="TRUE",
        StopTimeout=tlit(spec.stop_timeout))
-    lines = [n for n in (gpio_lines(net, spec, target, 13000, 200), pwm_lines(net, spec, target, 17000, 200)) if n]
-    chain = lines + ["Occupation", "Module"]
+    chain = ["Occupation", "Module"]        # an IO point sets up its own line (its address): no line blocks
     for i, (name, eq) in enumerate(spec.equipment.items()):
         io = {}
         for s, point in [*eq.inputs.items(), *eq.outputs.items()]:
             if getattr(point, "computed", False):
                 continue
-            io[f"{s}_Address"] = f"'{spec.address(target, point, f'{name}_{s}')}'"
+            io[f"{s}_Address"] = f"'{spec.address(target, point)}'"
         fb(net, name, f"{pkg}::EQ_{name}", 2000 + i * 5000, 3000, Module=module, UaRoot=ua_root, UaEnable="TRUE", **io)
         chain.append(name)
     for i, (name, skill) in enumerate((n, s) for n, s in spec.skills.items() if s.offered):
@@ -1027,7 +976,7 @@ def group_layout(net, spec: ModuleSpec):
     module level skills, procedures, a catalogue of skill primitives, equipment IO."""
     arrange(net, [
         ("ModuleLevel", "Module level: occupation, PackML state manager, start-up and the target's IO lines",
-         ["GpioLines", "PwmLines", "Occupation", "Module"], 5, 5000, 3000),
+         ["Occupation", "Module"], 5, 5000, 3000),
         ("ModuleLevelSkills", "Module level skills: Control, Sequences (Execute, Stop) of skill primitives and "
          "Release; OPC UA /Skills/<name>", list(spec.composites), 4, 5000, 2200),
         ("Procedures", "Procedures the module state manager runs while Resetting and Stopping",

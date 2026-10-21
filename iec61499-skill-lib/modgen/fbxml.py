@@ -498,10 +498,11 @@ class Composite(FB, Wiring):
         FB.__init__(self, project, name, comment, ei, eo, iv, ov, folder, package)
         Wiring.__init__(self)
         self.net = elem(self.root, "FBNetwork")
+        self.spacing = 3600                       # between the instances of the one row they are written in
 
     def write(self):
         """Emit the network (declaring the generic comm FBs it uses), then write the file."""
         for _, typ, _ in self.fbs:
             self.project.use(typ)
-        self.emit(self.net, 400, 200, 3600)
+        self.emit(self.net, 400, 200, self.spacing)
         return super().write()

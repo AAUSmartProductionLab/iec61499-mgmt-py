@@ -619,13 +619,21 @@ class ModuleSpec(Model):
             return "pwm"
         return "modbus" if t.modbus is not None and io.modbus is not None else "sim"
 
-    def address(self, target: str, io: Input | Output, handle: str) -> str:
-        """Where the IO point is on ``target``, as its IO block takes it: a Modbus CLIENT ID, the
-        name of the local IO handle (``handle``, the GPIO or PWM line's), or ``sim``."""
-        backend = self.backend(target, io)
+    def address(self, target: str, io: Input | Output) -> str:
+        """Where the IO point is on ``target``, as its IO block takes it (modgen.library's
+        ADDRESSING): ``gpio[<chip>:<line>...]`` or ``pwm[<chip>:<channel>:<period ns>]``, which the
+        block sets up itself, a Modbus CLIENT ID, or ``sim``."""
+        backend, t = self.backend(target, io), self.targets[target]
         if backend == "modbus":
             return self.modbus_id(io.modbus, isinstance(io, Output), target)
-        return handle if backend in ("gpio", "pwm") else "sim"
+        if backend == "gpio":
+            g = io.gpio
+            flags = (f":{g.bias}" if g.bias != "none" else "") + (":active_low" if g.active_low else "")
+            return f"gpio[{g.chip}:{g.line}{flags}]"
+        if backend == "pwm":
+            root = "" if t.pwm_root == "/sys/class/pwm" else f":{t.pwm_root}"
+            return f"pwm[{io.pwm.chip}:{t.pwm_channel(io.pwm.channel)}:{io.pwm.period_ns}{root}]"
+        return "sim"
 
     def modbus_id(self, address: str, write: bool, target: str | None = None) -> str:
         """FORTE Modbus CLIENT ID polling (read) or writing one address, on ``target``'s server."""

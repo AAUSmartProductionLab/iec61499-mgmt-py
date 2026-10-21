@@ -417,81 +417,15 @@
         <Parameter Name="StopTimeout" Value="T#10000ms" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <SubApp Name="GpioLines" x="4825" y="500" Comment="GPIO lines of the equipment's IO points (Linux /dev/gpiochip)">
-        <SubAppInterfaceList>
-          <SubAppEventInputs>
-            <SubAppEvent Name="INIT" Type="EInit" />
-          </SubAppEventInputs>
-          <SubAppEventOutputs>
-            <SubAppEvent Name="INITO" Type="EInit" />
-          </SubAppEventOutputs>
-        </SubAppInterfaceList>
-        <SubAppNetwork>
-          <FB Name="NeedleAxis_AtTop" Type="eclipse4diac::io::gpiochip::GPIOChip" x="1910" y="1000">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;NeedleAxis_AtTop&quot;" />
-            <Parameter Name="ChipNumber" Value="0" />
-            <Parameter Name="LineNumber" Value="17" />
-            <Parameter Name="ReadWriteMode" Value="0" />
-            <Parameter Name="BiasMode" Value="2" />
-            <Parameter Name="ActiveLow" Value="TRUE" />
-          </FB>
-          <FB Name="NeedleAxis_AtBottom" Type="eclipse4diac::io::gpiochip::GPIOChip" x="4265" y="1000">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;NeedleAxis_AtBottom&quot;" />
-            <Parameter Name="ChipNumber" Value="0" />
-            <Parameter Name="LineNumber" Value="27" />
-            <Parameter Name="ReadWriteMode" Value="0" />
-            <Parameter Name="BiasMode" Value="2" />
-            <Parameter Name="ActiveLow" Value="TRUE" />
-          </FB>
-          <FB Name="NeedleAxis_Down" Type="eclipse4diac::io::gpiochip::GPIOChip" x="6620" y="1000">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;NeedleAxis_Down&quot;" />
-            <Parameter Name="ChipNumber" Value="0" />
-            <Parameter Name="LineNumber" Value="5" />
-            <Parameter Name="ReadWriteMode" Value="1" />
-            <Parameter Name="BiasMode" Value="0" />
-            <Parameter Name="ActiveLow" Value="FALSE" />
-          </FB>
-          <FB Name="NeedleAxis_Up" Type="eclipse4diac::io::gpiochip::GPIOChip" x="8645" y="1000">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;NeedleAxis_Up&quot;" />
-            <Parameter Name="ChipNumber" Value="0" />
-            <Parameter Name="LineNumber" Value="6" />
-            <Parameter Name="ReadWriteMode" Value="1" />
-            <Parameter Name="BiasMode" Value="0" />
-            <Parameter Name="ActiveLow" Value="FALSE" />
-          </FB>
-          <EventConnections>
-            <Connection Source="INIT" Destination="NeedleAxis_AtTop.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="NeedleAxis_Up.INITO" Destination="INITO">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="NeedleAxis_AtTop.INITO" Destination="NeedleAxis_AtBottom.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="NeedleAxis_AtBottom.INITO" Destination="NeedleAxis_Down.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="NeedleAxis_Down.INITO" Destination="NeedleAxis_Up.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-          </EventConnections>
-        </SubAppNetwork>
-        <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
-      </SubApp>
       <FB Name="NeedleAxis" Type="filler::EQ_NeedleAxis" x="1245" y="500">
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="AtTop_Address" Value="'NeedleAxis_AtTop'" />
-        <Parameter Name="AtBottom_Address" Value="'NeedleAxis_AtBottom'" />
+        <Parameter Name="AtTop_Address" Value="'gpio[0:17:pull_up:active_low]'" />
+        <Parameter Name="AtBottom_Address" Value="'gpio[0:27:pull_up:active_low]'" />
         <Parameter Name="Position_Address" Value="'sim'" />
-        <Parameter Name="Down_Address" Value="'NeedleAxis_Down'" />
-        <Parameter Name="Up_Address" Value="'NeedleAxis_Up'" />
+        <Parameter Name="Down_Address" Value="'gpio[0:5]'" />
+        <Parameter Name="Up_Address" Value="'gpio[0:6]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="MoveNeedleDown" Type="filler::SK_MoveNeedleDown" x="1380" y="500">
@@ -835,9 +769,6 @@
         <Connection Source="Module.RUN_STOPPING" Destination="Stopping.START" />
         <Connection Source="Stopping.DONE" Destination="Module.STOPPING_DONE" />
         <Connection Source="Stopping.FAILED" Destination="Module.STOPPING_FAILED" />
-        <Connection Source="GpioLines.INITO" Destination="Occupation.INIT">
-          <Attribute Name="Visible" Value="false" />
-        </Connection>
         <Connection Source="Occupation.INITO" Destination="Module.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
@@ -882,8 +813,8 @@
     <Resource Name="RES" Type="iec61499::system::EMB_RES" x="0" y="0">
       <FBNetwork>
         <EventConnections>
-          <Connection Source="START.COLD" Destination="Filler_pi.GpioLines.INIT" />
-          <Connection Source="START.WARM" Destination="Filler_pi.GpioLines.INIT" />
+          <Connection Source="START.COLD" Destination="Filler_pi.Occupation.INIT" />
+          <Connection Source="START.WARM" Destination="Filler_pi.Occupation.INIT" />
         </EventConnections>
       </FBNetwork>
     </Resource>
@@ -898,7 +829,6 @@
   <Mapping From="Filler.Fill" To="FORTE_PC.RES" />
   <Mapping From="Filler_pi.Occupation" To="FORTE_PI.RES" />
   <Mapping From="Filler_pi.Module" To="FORTE_PI.RES" />
-  <Mapping From="Filler_pi.GpioLines" To="FORTE_PI.RES" />
   <Mapping From="Filler_pi.NeedleAxis" To="FORTE_PI.RES" />
   <Mapping From="Filler_pi.MoveNeedleDown" To="FORTE_PI.RES" />
   <Mapping From="Filler_pi.MoveNeedleUp" To="FORTE_PI.RES" />
