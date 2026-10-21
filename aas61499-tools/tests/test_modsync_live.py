@@ -69,7 +69,7 @@ def module(request, tmp_path):
     endpoint = f"{cand.spec.modbus.host}:{cand.spec.modbus.port}:"
     overrides = {k: v.replace(endpoint, f"{sim_host}:{modbus}:") for k, v in cand.app.parameters.items()
                  if k.endswith("_Modbus")}
-    boot = boot_file(deployment(cand.app, overrides=overrides))
+    boot = boot_file(deployment(cand.app, overrides=overrides, container=cand.container))
     deployer = PiDeployer(pi, request.config.getoption("--pi-user") or cand.spec.targets["pi"].user) if pi else None
 
     @contextmanager
@@ -131,7 +131,8 @@ def test_a_deployed_module_is_read_back_and_identified(module):
 
 
 def test_a_parameter_changed_online_is_reported_described_and_pushed_back(module, tmp_path):
-    module.client.execute(Command(op="write", resource="RES", destination=DWELL, value="2.5"))
+    module.client.execute(Command(op="write", resource="RES", destination=DWELL, value="2.5")
+                          .inside(module.cand.container))
     st = check(module)
     assert st.drift.values == {DWELL: ("1.0", "2.5")} and not st.drift.restart
     profiles = pytest.importorskip("modreg.profile")           # the registration extra
@@ -147,7 +148,8 @@ def test_a_parameter_changed_online_is_reported_described_and_pushed_back(module
 
 def test_push_leaves_an_occupied_module_alone(module):
     assert module.ua.call("Occupation/Occupy", "orchestrator-1") == [True, 0]
-    module.client.execute(Command(op="write", resource="RES", destination=DWELL, value="2.5"))
+    module.client.execute(Command(op="write", resource="RES", destination=DWELL, value="2.5")
+                          .inside(module.cand.container))
     with pytest.raises(Refused, match="occupied"):
         push(module.client, module.host, module.port, module.cand, overrides=module.overrides)
     assert module.ua.call("Occupation/Release", "orchestrator-1") == [True, 0]

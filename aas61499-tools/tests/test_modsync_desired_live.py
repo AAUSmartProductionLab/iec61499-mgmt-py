@@ -49,7 +49,8 @@ def test_a_skill_described_in_the_aas_is_created_while_another_runs(module):   #
 
     assert read(module.client, module.host, module.port, wanted, components).differences.create == ["DoubleDose"]
     saved = []
-    deployer = SimpleNamespace(load=lambda: boot_file(deployment(module.cand.app, overrides=module.overrides)),
+    deployer = SimpleNamespace(load=lambda: boot_file(deployment(module.cand.app, overrides=module.overrides,
+                                                                 container=module.cand.container)),
                                save=saved.append)
     started = time.perf_counter()
     done, after = reconfigure(module.client, module.host, module.port, wanted, components, deployer)

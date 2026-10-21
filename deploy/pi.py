@@ -174,7 +174,7 @@ def module(args):
     """Run the module's application for the target (replaces whatever runs on the Pi)."""
     spec = load(args.spec)
     app = load_application(system_file(spec.project), app_name(spec, args.target))
-    commands = deployment(app)
+    commands = deployment(app, container=app_name(spec, args.target))    # as the IDE deploys: it can monitor it
     if args.print:
         sys.stdout.buffer.write(boot_file(commands).encode("utf-8"))
         return
