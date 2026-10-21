@@ -190,7 +190,9 @@ after step A4, the reconfiguration as functions. What is missing:
 A first slice: one product agent, two resource agents (filling, stoppering) and the simulators;
 one call for proposals per step; then a bid that needs a reconfiguration.
 
-**Also after the paper:** drivers where FORTE has no block: a stepper whose position is counted
+**Also after the paper** (or earlier where B1 needs it): states, measurements and events as time
+series in Operational Data, and the Parameters submodel ([state-and-parameters.md](state-and-parameters.md),
+planned 21 Oct, decisions open); drivers where FORTE has no block: a stepper whose position is counted
 from its pulses (today it is estimated from the time it ran), a real scale (e.g. HX711), as
 service interface blocks; typed subapplications for module level skills, if skills are to be
 dragged in from a library; the planner reading a module's skills; a module shell for the 4diac IDE
