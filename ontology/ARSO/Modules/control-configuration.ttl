@@ -43,8 +43,8 @@
   rdfs:comment """ARSO module: Control Configuration (custom, v0.5). The reflection of a
   controller in its resource AAS: which program runs, whether it still matches the
   source it was generated from, the type hashes the runtime reports, the active
-  procedure and the log of reconfigurations. Written by modsync (as idShort
-  ControlSoftware until it is renamed).""" .
+  procedure and the log of reconfigurations. Written by modreg and by modsync's record
+  of a change (once named ControlSoftware; that semantic id is still accepted).""" .
 
 
 #################################################################

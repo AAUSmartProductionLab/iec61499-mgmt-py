@@ -20,7 +20,7 @@ in [conceptual-model.md](conceptual-model.md). What the AASs hold as built is in
 | `AAS/` | AAS v3.1 RDF ontology | The metamodel (unchanged) |
 | `CSS/` | CSS 2.0.2 | Capability, Skill, Service reference model (updated from 2.0.1 on 30 Sep 2026: fixes the domain of `behaviorConformsTo`) |
 | `APSO/` | APSO 0.2 | Product AAS: BatchInformation, BoM, Requirements, Bill of Process |
-| `ARSO/` | ARSO 0.5 | Resource AAS: Nameplate, Hierarchical Structures, AID, AIMC, Skills, Capabilities, Operational Data, Parameters, Technical Data, Control Configuration |
+| `ARSO/` | ARSO 0.8 | Resource AAS of a line, a module and a component: Nameplate, Hierarchical Structures, AID, AIMC, Skills, Capabilities, Operational Data, Parameters, Technical Data, Control Configuration |
 | `AProSO/` | AProSO 0.1 (new) | Process AAS: ProcessInformation, ProcessStructure (process map with flow), CapabilityBindings, Validation, Policy |
 | `PPRL/` | PPRL 0.1 (new) | What lies between them: the CSS concept an AAS element describes, process decomposition and order, resource parts, required and offered capabilities and matching, skill composition, occupation, binding, parameter value flow, derived candidates, change classes |
 
@@ -73,8 +73,23 @@ own copy.
   `Implementation`. ARSO's flattening had dropped per-skill parameters and IDTA 02015's `Uses`;
   these bring back what matching, composition and checking need.
 - A Control Configuration submodel (runtime, sync state, differences, type hashes, active
-  procedure, change log), which modsync writes (as `ControlSoftware` for now).
+  procedure, change log), which modsync writes (first as `ControlSoftware`, its semantic id is
+  still accepted).
 - Resolved properties `usesSkill`, `occupies`, `realizesProperty`, `realizedBySkill`.
+
+**ARSO 0.5 → 0.8** (6 to 19 Oct; the details are in [docs/aas-models.md](../docs/aas-models.md),
+section 2)
+- 0.7 (8 Oct): a skill is its commands (Start, Stop, Abort, Reset), each with its interface
+  reference, an Operation whose variables are the parameters and results, and the steps it runs;
+  `Kind`, `Parameters`, `Uses`, the `Execute`/`Stop` lists, `Occupies` and the rest of 0.5's
+  per-skill elements are gone. A line, a module and a component are each an AAS, told apart by
+  the asset type (`arso:SystemAAS`, `arso:ResourceAAS`, `arso:ComponentAAS`).
+- 0.8 (9 Oct): the steps are a flow in the elements of the process planner's Production Sequence;
+  a skill's kind (Primitive, Composite, ModuleControl) is a supplemental semantic id; the
+  module's own commands are skills of the kind ModuleControl, and the Module submodel is gone.
+- 19 Oct (still 0.8, additions only): the AID of IDTA 02017 version 1.2, and the action, event
+  and property terms of aas-model's AID extension (`.../aid/ActionDefinition/1/0`,
+  `synchronous`, `input`, `output`, `uav_componentOf`, `readOnly`).
 
 ## Checks
 
