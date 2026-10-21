@@ -159,10 +159,11 @@ is for that case and runs first when the module resets.
   (`dtoverlay=pwm-2chan`, PWM0 on GPIO18, PWM1 on GPIO19) and would drive a PCA9685 board through
   the kernel `pwm-pca9685` driver. Tested on the aarch64 binary under emulation and on the lab Pi.
 - **Channel count** (one Pi per module): each module needs 1 PWM channel, for the step pulses of
-  its linear axis (PWM0 at 1 kHz, one step per period, 50 % duty while it moves). The piston's
+  its linear axis (PWM0, one step per period, 50 % duty while it moves: 2 kHz on the filling
+  axis since 20 Oct, 1 kHz on the stoppering one). The piston's
   L298N enable is tied high. A pump on a stepper would take the Pi's second hardware channel.
 - **Step pulses by PWM**: the controller does not count pulses, it counts the time the PWM is on.
-  A step rate of 1 kHz and the 1 ms it takes to switch give a position to a few steps; how many
+  A step rate of 1 to 2 kHz and the 1 ms it takes to switch give a position to a few steps; how many
   millimetres that is depends on the driver's microstepping and the screw, which are not known yet.
 - **Analog inputs**: none needed by these two modules (the weight is simulated). Later: an ADC
   with a Linux IIO driver (ADS1115, MCP3008) read by the same kind of module (`IW`).
