@@ -471,129 +471,22 @@
         <Parameter Name="StopTimeout" Value="T#10000ms" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <SubApp Name="GpioLines" x="100" y="993.33" Comment="GPIO lines of the equipment's IO points (Linux /dev/gpiochip)">
-        <SubAppInterfaceList>
-          <SubAppEventInputs>
-            <SubAppEvent Name="INIT" Type="EInit" />
-          </SubAppEventInputs>
-          <SubAppEventOutputs>
-            <SubAppEvent Name="INITO" Type="EInit" />
-          </SubAppEventOutputs>
-        </SubAppInterfaceList>
-        <SubAppNetwork>
-          <FB Name="LinearAxis_AtHome" Type="eclipse4diac::io::gpiochip::GPIOChip" x="1955" y="1000">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;LinearAxis_AtHome&quot;" />
-            <Parameter Name="ChipNumber" Value="0" />
-            <Parameter Name="LineNumber" Value="23" />
-            <Parameter Name="ReadWriteMode" Value="0" />
-            <Parameter Name="BiasMode" Value="2" />
-            <Parameter Name="ActiveLow" Value="TRUE" />
-          </FB>
-          <FB Name="LinearAxis_Enable" Type="eclipse4diac::io::gpiochip::GPIOChip" x="4280" y="1000">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;LinearAxis_Enable&quot;" />
-            <Parameter Name="ChipNumber" Value="0" />
-            <Parameter Name="LineNumber" Value="17" />
-            <Parameter Name="ReadWriteMode" Value="1" />
-            <Parameter Name="BiasMode" Value="0" />
-            <Parameter Name="ActiveLow" Value="TRUE" />
-          </FB>
-          <FB Name="LinearAxis_Down" Type="eclipse4diac::io::gpiochip::GPIOChip" x="6515" y="1000">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;LinearAxis_Down&quot;" />
-            <Parameter Name="ChipNumber" Value="0" />
-            <Parameter Name="LineNumber" Value="27" />
-            <Parameter Name="ReadWriteMode" Value="1" />
-            <Parameter Name="BiasMode" Value="0" />
-            <Parameter Name="ActiveLow" Value="FALSE" />
-          </FB>
-          <FB Name="Piston_Retract" Type="eclipse4diac::io::gpiochip::GPIOChip" x="8585" y="1000">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;Piston_Retract&quot;" />
-            <Parameter Name="ChipNumber" Value="0" />
-            <Parameter Name="LineNumber" Value="5" />
-            <Parameter Name="ReadWriteMode" Value="1" />
-            <Parameter Name="BiasMode" Value="0" />
-            <Parameter Name="ActiveLow" Value="FALSE" />
-          </FB>
-          <FB Name="Piston_Extend" Type="eclipse4diac::io::gpiochip::GPIOChip" x="10550" y="1000">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;Piston_Extend&quot;" />
-            <Parameter Name="ChipNumber" Value="0" />
-            <Parameter Name="LineNumber" Value="6" />
-            <Parameter Name="ReadWriteMode" Value="1" />
-            <Parameter Name="BiasMode" Value="0" />
-            <Parameter Name="ActiveLow" Value="FALSE" />
-          </FB>
-          <EventConnections>
-            <Connection Source="INIT" Destination="LinearAxis_AtHome.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Piston_Extend.INITO" Destination="INITO">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="LinearAxis_AtHome.INITO" Destination="LinearAxis_Enable.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="LinearAxis_Enable.INITO" Destination="LinearAxis_Down.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="LinearAxis_Down.INITO" Destination="Piston_Retract.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Piston_Retract.INITO" Destination="Piston_Extend.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-          </EventConnections>
-        </SubAppNetwork>
-        <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
-      </SubApp>
-      <SubApp Name="PwmLines" x="2500" y="193.33" Comment="PWM channels of the equipment's analog outputs (Linux /sys/class/pwm)">
-        <SubAppInterfaceList>
-          <SubAppEventInputs>
-            <SubAppEvent Name="INIT" Type="EInit" />
-          </SubAppEventInputs>
-          <SubAppEventOutputs>
-            <SubAppEvent Name="INITO" Type="EInit" />
-          </SubAppEventOutputs>
-        </SubAppInterfaceList>
-        <SubAppNetwork>
-          <FB Name="LinearAxis_Step" Type="eclipse4diac::io::pwmsysfs::PWMChip" x="2000" y="1000">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="VALUE" Value="&quot;LinearAxis_Step&quot;" />
-            <Parameter Name="ChipNumber" Value="0" />
-            <Parameter Name="Channel" Value="0" />
-            <Parameter Name="PeriodNs" Value="1000000" />
-            <Parameter Name="SysfsRoot" Value="&quot;/hostsys/class/pwm&quot;" />
-          </FB>
-          <EventConnections>
-            <Connection Source="INIT" Destination="LinearAxis_Step.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="LinearAxis_Step.INITO" Destination="INITO">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-          </EventConnections>
-        </SubAppNetwork>
-        <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
-      </SubApp>
       <FB Name="LinearAxis" Type="stoppering::EQ_LinearAxis" x="806.67" y="793.33">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="AtHome_Address" Value="'LinearAxis_AtHome'" />
-        <Parameter Name="Enable_Address" Value="'LinearAxis_Enable'" />
-        <Parameter Name="Down_Address" Value="'LinearAxis_Down'" />
-        <Parameter Name="Step_Address" Value="'LinearAxis_Step'" />
+        <Parameter Name="AtHome_Address" Value="'gpio[0:23:pull_up:active_low]'" />
+        <Parameter Name="Enable_Address" Value="'gpio[0:17:active_low]'" />
+        <Parameter Name="Down_Address" Value="'gpio[0:27]'" />
+        <Parameter Name="Step_Address" Value="'pwm[0:0:1000000:/hostsys/class/pwm]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="Piston" Type="stoppering::EQ_Piston" x="3606.67" y="793.33">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="Retract_Address" Value="'Piston_Retract'" />
-        <Parameter Name="Extend_Address" Value="'Piston_Extend'" />
+        <Parameter Name="Retract_Address" Value="'gpio[0:5]'" />
+        <Parameter Name="Extend_Address" Value="'gpio[0:6]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="Home" Type="stoppering::SK_Home" x="1360" y="393.33">
@@ -975,12 +868,6 @@
         <Connection Source="Module.RUN_STOPPING" Destination="Stopping.START" />
         <Connection Source="Stopping.DONE" Destination="Module.STOPPING_DONE" />
         <Connection Source="Stopping.FAILED" Destination="Module.STOPPING_FAILED" />
-        <Connection Source="GpioLines.INITO" Destination="PwmLines.INIT">
-          <Attribute Name="Visible" Value="false" />
-        </Connection>
-        <Connection Source="PwmLines.INITO" Destination="Occupation.INIT">
-          <Attribute Name="Visible" Value="false" />
-        </Connection>
         <Connection Source="Occupation.INITO" Destination="Module.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
@@ -1034,8 +921,8 @@
     <Resource Name="RES" Type="iec61499::system::EMB_RES" x="0" y="0">
       <FBNetwork>
         <EventConnections>
-          <Connection Source="START.COLD" Destination="Stoppering_pi.GpioLines.INIT" />
-          <Connection Source="START.WARM" Destination="Stoppering_pi.GpioLines.INIT" />
+          <Connection Source="START.COLD" Destination="Stoppering_pi.Occupation.INIT" />
+          <Connection Source="START.WARM" Destination="Stoppering_pi.Occupation.INIT" />
         </EventConnections>
       </FBNetwork>
     </Resource>
@@ -1053,8 +940,6 @@
   <Mapping From="Stoppering.Stoppering" To="FORTE_PC.RES" />
   <Mapping From="Stoppering_pi.Occupation" To="FORTE_PI.RES" />
   <Mapping From="Stoppering_pi.Module" To="FORTE_PI.RES" />
-  <Mapping From="Stoppering_pi.GpioLines" To="FORTE_PI.RES" />
-  <Mapping From="Stoppering_pi.PwmLines" To="FORTE_PI.RES" />
   <Mapping From="Stoppering_pi.LinearAxis" To="FORTE_PI.RES" />
   <Mapping From="Stoppering_pi.Piston" To="FORTE_PI.RES" />
   <Mapping From="Stoppering_pi.Home" To="FORTE_PI.RES" />

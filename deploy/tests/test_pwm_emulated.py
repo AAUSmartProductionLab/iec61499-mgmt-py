@@ -1,6 +1,6 @@
 """FORTE's pwmsysfs module (runtime/forte-patches) on the Raspberry Pi binary, run under arm64
 emulation in Docker against a fake /sys/class/pwm tree: a PWMChip configures the channel and a QW
-sets the duty cycle; so does an IO_AO whose address is the channel's handle.
+sets the duty cycle; so does an IO_AO whose address names the channel (it sets it up itself).
 
     runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate
     python -m pytest deploy/tests/test_pwm_emulated.py --pi-forte-exe runtime/fbe/build/modules-pi/output/bin/forte
@@ -36,10 +36,11 @@ def res(**k) -> Command:
 
 
 @contextmanager
-def emulated(pi_forte, tmp_path, fbs: dict[str, str], values: dict[str, str], events: list[tuple[str, str]]):
-    """The Pi's FORTE in an arm64 container, booting a PWMChip ("Chip", handle "Pwm" on channel 1 of
-    a fake sysfs tree, initialised from START.COLD) and ``fbs``; yields the channel's folder and a
-    management client once the channel is configured."""
+def emulated(pi_forte, tmp_path, fbs: dict[str, str], values: dict[str, str], events: list[tuple[str, str]],
+             chip: bool = True):
+    """The Pi's FORTE in an arm64 container, booting ``fbs`` and (``chip``) a PWMChip ("Chip", handle
+    "Pwm" on channel 1 of a fake sysfs tree, initialised from START.COLD); yields the channel's
+    folder and a management client once the channel is configured."""
     channel = tmp_path / "fake/class/pwm/pwmchip0/pwm1"      # already exported: no udev in the fake tree
     channel.mkdir(parents=True)
     (tmp_path / "fake/class/pwm/pwmchip0/export").write_text("")
@@ -47,13 +48,14 @@ def emulated(pi_forte, tmp_path, fbs: dict[str, str], values: dict[str, str], ev
         (channel / name).write_text("0")
     (tmp_path / "bin").mkdir()
     shutil.copy(pi_forte, tmp_path / "bin/forte")
-    chip = {"Chip.QI": "TRUE", "Chip.VALUE": '"Pwm"', "Chip.Channel": "1", "Chip.PeriodNs": "20000000",
-            "Chip.SysfsRoot": '"/work/fake/class/pwm"'}
+    settings = {"Chip.QI": "TRUE", "Chip.VALUE": '"Pwm"', "Chip.Channel": "1", "Chip.PeriodNs": "20000000",
+                "Chip.SysfsRoot": '"/work/fake/class/pwm"'}
+    own = {"Chip": "eclipse4diac::io::pwmsysfs::PWMChip"} if chip else {}
     program = [Command(op="create_fb", resource="", name="RES", type="iec61499::system::EMB_RES"),
-               res(op="create_fb", name="Chip", type="eclipse4diac::io::pwmsysfs::PWMChip"),
-               *[res(op="create_fb", name=n, type=t) for n, t in fbs.items()],
-               *[res(op="write", destination=d, value=v) for d, v in {**chip, **values}.items()],
-               *[res(op="connect", source=s, destination=d) for s, d in [("START.COLD", "Chip.INIT"), *events]],
+               *[res(op="create_fb", name=n, type=t) for n, t in {**own, **fbs}.items()],
+               *[res(op="write", destination=d, value=v) for d, v in {**(settings if chip else {}), **values}.items()],
+               *[res(op="connect", source=s, destination=d)
+                 for s, d in [*([("START.COLD", "Chip.INIT")] if chip else []), *events]],
                Command(op="start", resource="", name="RES")]
     (tmp_path / "bin/forte.fboot").write_bytes(boot_file(program).encode())
     port = free_port()
@@ -69,7 +71,8 @@ def emulated(pi_forte, tmp_path, fbs: dict[str, str], values: dict[str, str], ev
         assert (channel / "period").read_text().strip() == "20000000"
         time.sleep(1)                                                        # the Docker proxy accepts before FORTE listens
         with Client("127.0.0.1", port, timeout=10) as client:
-            assert client.execute(res(op="read", source="Chip.QO")).read_value("Chip.QO") == "TRUE"
+            if chip:
+                assert client.execute(res(op="read", source="Chip.QO")).read_value("Chip.QO") == "TRUE"
             yield channel, client
     finally:
         subprocess.run(["docker", "rm", "-f", CONTAINER], capture_output=True)
@@ -95,15 +98,17 @@ def test_pwmchip_and_qw_write_the_duty_cycle(pi_forte, tmp_path):
 
 
 def test_io_blocks_reach_the_point_their_address_names(pi_forte, tmp_path):
-    """An IO_AO at the channel's handle drives it; an empty address is not connected; 'sim' is simulated."""
-    fbs = {"Out": "modlib::IO_AO", "Off": "modlib::IO_DO", "Simulated": "modlib::IO_DI",
+    """An IO_AO whose address names a PWM channel sets it up and drives it; an empty address is not
+    connected; 'sim' is simulated; a GPIO line where there is no GPIO chip reports QO = FALSE."""
+    fbs = {"Out": "modlib::IO_AO", "Off": "modlib::IO_DO", "Simulated": "modlib::IO_DI", "Line": "modlib::IO_DO",
            "Cycle": "iec61499::events::E_CYCLE"}
-    values = {"Out.Address": "'Pwm'", "Out.EN": "TRUE", "Off.Address": "''", "Simulated.Address": "'sim'",
-              "Simulated.SimValue": "TRUE", "Cycle.DT": "T#100ms"}
-    events = [("Chip.INITO", "Out.INIT"), ("Out.INITO", "Off.INIT"), ("Off.INITO", "Simulated.INIT"),
-              ("Simulated.INITO", "Cycle.START"), ("Cycle.EO", "Out.REQ"), ("Cycle.EO", "Off.REQ"),
-              ("Cycle.EO", "Simulated.REQ")]
-    with emulated(pi_forte, tmp_path, fbs, values, events) as (channel, client):
+    values = {"Out.Address": "'pwm[0:1:20000000:/work/fake/class/pwm]'", "Out.EN": "TRUE", "Off.Address": "''",
+              "Simulated.Address": "'sim'", "Simulated.SimValue": "TRUE", "Line.Address": "'gpio[0:5]'",
+              "Cycle.DT": "T#100ms"}
+    events = [("START.COLD", "Out.INIT"), ("Out.INITO", "Off.INIT"), ("Off.INITO", "Simulated.INIT"),
+              ("Simulated.INITO", "Cycle.START"), ("Simulated.INITO", "Line.INIT"), ("Cycle.EO", "Out.REQ"),
+              ("Cycle.EO", "Off.REQ"), ("Cycle.EO", "Simulated.REQ")]
+    with emulated(pi_forte, tmp_path, fbs, values, events, chip=False) as (channel, client):
         def read(port):
             return client.execute(res(op="read", source=port)).read_value(port)
         for value, duty in [("32768.0", 10000152), ("65535.0", 20000000), ("0.0", 0)]:
@@ -111,3 +116,7 @@ def test_io_blocks_reach_the_point_their_address_names(pi_forte, tmp_path):
             duty_becomes(channel, duty, value)
         assert (read("Out.QO"), read("Off.QO")) == ("TRUE", "FALSE")
         assert (read("Simulated.QO"), read("Simulated.IN")) == ("TRUE", "TRUE")
+        deadline = time.monotonic() + 20                  # GPIOChip retries a line 4 times (10 s) before giving up
+        while read("Line.Line.STATUS") in ("", None) and time.monotonic() < deadline:
+            time.sleep(0.5)
+        assert read("Line.QO") == "FALSE"

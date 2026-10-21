@@ -374,22 +374,35 @@ def test_filler_maps_one_application_per_target():
     assert mappings == {("Filler", "FORTE_PC.RES"), ("Filler_pi", "FORTE_PI.RES")}
 
 
-def test_pi_target_drives_the_io_over_gpio_lines():
-    """The Pi application claims each GPIO line once, before the equipment, with mode and bias."""
+def test_pi_target_names_each_gpio_line_in_its_io_points_address():
+    """On the Pi each IO point sets up its own line: the address names chip, line, bias and polarity
+    (no line blocks of their own); the PC reaches the same points over Modbus."""
     created, wired, written = flat("FillerModule", "Filler_pi")
-    lines = {n.split(".")[1]: written[n + ".LineNumber"] for n, t in created.items() if t.endswith("GPIOChip")}
-    assert lines == {"NeedleAxis_AtTop": "17", "NeedleAxis_AtBottom": "27", "NeedleAxis_Down": "5",
-                     "NeedleAxis_Up": "6"}
-    assert written["GpioLines.NeedleAxis_AtTop.ReadWriteMode"] == "0"
-    assert written["GpioLines.NeedleAxis_Down.ReadWriteMode"] == "1"
-    assert written["GpioLines.NeedleAxis_AtTop.BiasMode"] == "2"        # pull-up (FORTE 3.3.0 numbering)
-    assert written["GpioLines.NeedleAxis_AtTop.ActiveLow"] == "TRUE"
-    assert (written["NeedleAxis.Down_Address"], written["NeedleAxis.Position_Address"]) == ("'NeedleAxis_Down'", "'sim'")
-    assert not any("modbus[" in v for v in written.values())
-    assert ("START.COLD", "GpioLines.NeedleAxis_AtTop.INIT") in wired           # the resource's own START
-    assert ("GpioLines.NeedleAxis_Up.INITO", "Occupation.INIT") in wired
+    assert not any(t.endswith(("GPIOChip", "PWMChip")) for t in created.values())
+    addresses = {k.split(".")[1]: v for k, v in written.items() if k.endswith("_Address")}
+    assert addresses == {"AtTop_Address": "'gpio[0:17:pull_up:active_low]'",
+                         "AtBottom_Address": "'gpio[0:27:pull_up:active_low]'",
+                         "Down_Address": "'gpio[0:5]'", "Up_Address": "'gpio[0:6]'", "Position_Address": "'sim'"}
+    assert ("START.COLD", "Occupation.INIT") in wired                         # the resource's own START
     pc = flat("FillerModule", "Filler")[2]
-    assert not any("GpioLines" in k for k in pc) and pc["NeedleAxis.Position_Address"].startswith("'modbus[")
+    assert pc["NeedleAxis.Position_Address"].startswith("'modbus[")
+
+
+def test_an_io_block_sets_up_the_line_its_address_names():
+    """IO_DI, IO_DO and IO_AO hold the GPIOChip or PWMChip that claims their line, initialised
+    before the IX/QX/QW binds to it; IO_AI has none (a Pi has no analog inputs)."""
+    from modgen.library import route
+    for kind, line in (("DI", "GPIOChip"), ("DO", "GPIOChip"), ("AO", "PWMChip"), ("AI", None)):
+        root = ET.parse(project_dir(LIBRARY_PROJECT) / "Type Library" / "IO" / f"IO_{kind}.fbt").getroot()
+        inner = {fb.get("Name"): fb.get("Type") for fb in root.iter("FB")}
+        events = {(c.get("Source"), c.get("Destination")) for c in root.iter("Connection")}
+        if line is None:
+            assert "Line" not in inner and ("Route.INIT_IO", "Local.INIT") in events
+            continue
+        assert inner["Line"].endswith(line)
+        assert {("Route.INIT_IO", "Line.INIT"), ("Line.INITO", "Local.INIT")} <= events
+    assert "LineBias := 2;" in route("DI") and "FIND(Address, ':active_low')" in route("DO")
+    assert "Root := STRING_TO_WSTRING" in route("AO") and "gpio[" not in route("AI")
 
 
 def test_regeneration_keeps_layout_arranged_in_the_ide(tmp_path):
@@ -484,7 +497,7 @@ def test_the_resources_start_block_starts_the_init_chain():
     links = {d.get("Name"): [(c.get("Source"), c.get("Destination")) for c in d.iter("Connection")]
              for d in system.iter("Device")}
     assert links == {"FORTE_PC": [("START.COLD", "Filling.Occupation.INIT"), ("START.WARM", "Filling.Occupation.INIT")],
-                     "FORTE_PI": [("START.COLD", "Filling_pi.GpioLines.INIT"), ("START.WARM", "Filling_pi.GpioLines.INIT")]}
+                     "FORTE_PI": [("START.COLD", "Filling_pi.Occupation.INIT"), ("START.WARM", "Filling_pi.Occupation.INIT")]}
 
 
 def test_application_is_grouped_and_init_chains_are_hidden():
@@ -520,8 +533,9 @@ def test_a_module_names_its_pwm_channels_as_a_pi_4_does():
     enable is inverted: the line is low while the motor is on."""
     assert load(SPECS / "filling.yaml").targets["pi"].board == "pi5"
     written = flat("FillingModule", "Filling_pi")[2]
-    assert written["PwmLines.LinearAxis_Step.Channel"] == "2" and written["PwmLines.LinearAxis_Step.PeriodNs"] == "500000"
-    assert written["GpioLines.LinearAxis_Enable.ActiveLow"] == "TRUE"
-    assert written["GpioLines.LinearAxis_Down.ActiveLow"] == "FALSE"
-    assert written["GpioLines.LinearAxis_AtHome.ActiveLow"] == "TRUE"       # a switch to GND: low when pressed
-    assert flat("StopperingModule", "Stoppering_pi")[2]["PwmLines.LinearAxis_Step.Channel"] == "0"      # a Pi 4
+    # Channel 2 of the PWM chip, 2 kHz, the PWM folder as the FORTE container sees it.
+    assert written["LinearAxis.Step_Address"] == "'pwm[0:2:500000:/hostsys/class/pwm]'"
+    assert written["LinearAxis.Enable_Address"] == "'gpio[0:17:active_low]'"
+    assert written["LinearAxis.Down_Address"] == "'gpio[0:27]'"
+    assert written["LinearAxis.AtHome_Address"] == "'gpio[0:23:pull_up:active_low]'"     # a switch to GND
+    assert flat("StopperingModule", "Stoppering_pi")[2]["LinearAxis.Step_Address"].startswith("'pwm[0:0:")  # a Pi 4

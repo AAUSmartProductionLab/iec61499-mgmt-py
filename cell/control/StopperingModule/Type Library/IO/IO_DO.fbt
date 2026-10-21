@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="IO_DO" Comment="Digital output; Address: 'sim' simulated, 'modbus[...]' a Modbus CLIENT ID, any other name a local IO handle (QX PARAMS, e.g. a GPIOChip line or PWM channel); empty: not connected (QO = FALSE)">
+<FBType Name="IO_DO" Comment="Digital output; Address: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]' or 'pwm[chip:channel:period_ns]' a Raspberry Pi's line, set up here; 'modbus[...]' a Modbus CLIENT ID; 'sim' simulated; another name a local IO handle set up elsewhere (QX PARAMS); empty: not connected (QO = FALSE)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
@@ -30,11 +30,15 @@
   </InterfaceList>
   <FBNetwork>
     <FB Name="Route" Type="modlib::IO_RouteDO" x="400" y="200" />
+    <FB Name="Line" Type="eclipse4diac::io::gpiochip::GPIOChip" x="4000" y="200">
+      <Parameter Name="ReadWriteMode" Value="1" />
+    </FB>
     <FB Name="Local" Type="eclipse4diac::io::QX" x="4000" y="200" />
     <FB Name="Bus" Type="iec61499::net::CLIENT_1_0" x="7600" y="200" />
     <EventConnections>
       <Connection Source="INIT" Destination="Route.INIT" />
-      <Connection Source="Route.INIT_IO" Destination="Local.INIT" />
+      <Connection Source="Route.INIT_IO" Destination="Line.INIT" />
+      <Connection Source="Line.INITO" Destination="Local.INIT" />
       <Connection Source="Local.INITO" Destination="Bus.INIT" />
       <Connection Source="Bus.INITO" Destination="Route.IO_READY" />
       <Connection Source="Route.INITO" Destination="INITO" />
@@ -46,6 +50,12 @@
       <Connection Source="Route.CNF" Destination="CNF" />
     </EventConnections>
     <DataConnections>
+      <Connection Source="Route.LineQI" Destination="Line.QI" />
+      <Connection Source="Route.LineName" Destination="Line.VALUE" />
+      <Connection Source="Route.ChipNo" Destination="Line.ChipNumber" />
+      <Connection Source="Route.LineNo" Destination="Line.LineNumber" />
+      <Connection Source="Route.LineBias" Destination="Line.BiasMode" />
+      <Connection Source="Route.LineLow" Destination="Line.ActiveLow" />
       <Connection Source="Address" Destination="Route.Address" />
       <Connection Source="Route.IoName" Destination="Local.PARAMS" />
       <Connection Source="Route.ModbusId" Destination="Bus.ID" />

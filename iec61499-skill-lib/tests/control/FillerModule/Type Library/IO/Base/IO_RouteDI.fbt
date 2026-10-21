@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="IO_RouteDI" Comment="Backend router for IO_DI; Address: 'sim' simulated, 'modbus[...]' a Modbus CLIENT ID, any other name a local IO handle (IX/QX PARAMS, e.g. a GPIOChip line or PWM channel); empty: not connected (QO = FALSE)">
+<FBType Name="IO_RouteDI" Comment="Backend router for IO_DI; Address: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]' or 'pwm[chip:channel:period_ns]' a Raspberry Pi's line, set up here; 'modbus[...]' a Modbus CLIENT ID; 'sim' simulated; another name a local IO handle set up elsewhere (IX/QX PARAMS); empty: not connected (QO = FALSE)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
@@ -30,6 +30,12 @@
         <With Var="MQI" />
         <With Var="IoName" />
         <With Var="ModbusId" />
+        <With Var="LineQI" />
+        <With Var="LineName" />
+        <With Var="ChipNo" />
+        <With Var="LineNo" />
+        <With Var="LineBias" />
+        <With Var="LineLow" />
       </Event>
       <Event Name="INITO" Type="Event">
         <With Var="QO" />
@@ -55,6 +61,12 @@
       <VarDeclaration Name="IoName" Type="STRING" />
       <VarDeclaration Name="ModbusId" Type="WSTRING" />
       <VarDeclaration Name="QO" Type="BOOL" />
+      <VarDeclaration Name="LineQI" Type="BOOL" />
+      <VarDeclaration Name="LineName" Type="WSTRING" />
+      <VarDeclaration Name="ChipNo" Type="UINT" />
+      <VarDeclaration Name="LineNo" Type="UINT" />
+      <VarDeclaration Name="LineBias" Type="UINT" />
+      <VarDeclaration Name="LineLow" Type="BOOL" />
       <VarDeclaration Name="IN" Type="BOOL" />
     </OutputVars>
   </InterfaceList>
@@ -106,16 +118,63 @@
       <ECTransition Source="DoneM" Destination="START" Condition="1" x="0" y="0" />
     </ECC>
     <Algorithm Name="Alg_Init">
-      <ST>IF Address = 'sim' THEN
+      <ST>VAR_TEMP
+  Field : STRING;
+  Length : INT;
+  Cut : INT;
+  Pos : INT;
+  Digit : INT;
+  Number : UDINT;
+END_VAR
+Backend := 3;
+LineQI := FALSE;
+IF Address = 'sim' THEN
   Backend := 0;
 ELSIF LEFT(Address, 7) = 'modbus[' THEN
   Backend := 2;
   ModbusId := STRING_TO_WSTRING(Address);
+ELSIF LEFT(Address, 5) = 'gpio[' THEN
+  Backend := 1;
+  IoName := Address;
+  LineQI := TRUE;
+  LineName := STRING_TO_WSTRING(Address);
+  Length := LEN(Address);
+  Field := MID(Address, Length - 5, 6);
+  Cut := FIND(Field, ':');
+  IF Cut = 0 THEN
+    Cut := FIND(Field, ']');
+  END_IF;
+  Number := 0;
+  FOR Digit := 1 TO Cut - 1 DO
+    Pos := FIND('0123456789', MID(Field, 1, Digit));
+    Number := Number * 10 + INT_TO_UDINT(Pos - 1);
+  END_FOR;
+  ChipNo := UDINT_TO_UINT(Number);
+  Length := LEN(Field);
+  Field := MID(Field, Length - Cut, Cut + 1);
+  Cut := FIND(Field, ':');
+  IF Cut = 0 THEN
+    Cut := FIND(Field, ']');
+  END_IF;
+  Number := 0;
+  FOR Digit := 1 TO Cut - 1 DO
+    Pos := FIND('0123456789', MID(Field, 1, Digit));
+    Number := Number * 10 + INT_TO_UDINT(Pos - 1);
+  END_FOR;
+  LineNo := UDINT_TO_UINT(Number);
+  Length := LEN(Field);
+  Field := MID(Field, Length - Cut, Cut + 1);
+  IF FIND(Address, ':pull_up') &gt; 0 THEN
+    LineBias := 2;
+  ELSIF FIND(Address, ':pull_down') &gt; 0 THEN
+    LineBias := 3;
+  ELSE
+    LineBias := 0;
+  END_IF;
+  LineLow := FIND(Address, ':active_low') &gt; 0;
 ELSIF LEN(Address) &gt; 0 THEN
   Backend := 1;
   IoName := Address;
-ELSE
-  Backend := 3;
 END_IF;
 GQI := Backend = 1;
 MQI := Backend = 2;</ST>

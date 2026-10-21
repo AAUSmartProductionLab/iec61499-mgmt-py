@@ -58,21 +58,96 @@ def ua(kind, *terms):
 # IO primitives
 # --------------------------------------------------------------------------------------------
 
-# The address of an IO point says where it is, in FORTE's own notation: a Modbus CLIENT's ID
-# (``modbus[...]``), the name of a local IO handle as IX and QX take it in PARAMS (a GPIOChip line,
-# a PWM channel), or ``sim``. Empty: not connected, the point reports QO = FALSE.
-ADDRESSING = ("Address: 'sim' simulated, 'modbus[...]' a Modbus CLIENT ID, any other name a local IO handle "
-              "(IX/QX PARAMS, e.g. a GPIOChip line or PWM channel); empty: not connected (QO = FALSE)")
-ROUTE = """IF Address = 'sim' THEN
+# The address of an IO point says where it is, in the notation of FORTE's own IDs:
+#   gpio[<chip>:<line>]       a Raspberry Pi's GPIO line, set up by the IO block itself (a GPIOChip
+#                             inside it); flags after the line: :pull_up or :pull_down, :active_low
+#   pwm[<chip>:<channel>:<period ns>]   a PWM channel, set up likewise (a PWMChip); a fourth field
+#                             is the sysfs folder when it is not /sys/class/pwm
+#   modbus[...]               a Modbus CLIENT's ID
+#   sim                       simulated
+#   any other name            a local IO handle set up elsewhere, as IX and QX take it in PARAMS
+# Empty: not connected, the point reports QO = FALSE. Where FORTE has no GPIO (Windows), GPIOChip
+# and PWMChip are stand-ins (runtime/forte-patches/0003) and a gpio or pwm point reports QO = FALSE.
+ADDRESSING = ("Address: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]' or 'pwm[chip:channel:period_ns]' a "
+              "Raspberry Pi's line, set up here; 'modbus[...]' a Modbus CLIENT ID; 'sim' simulated; another name "
+              "a local IO handle set up elsewhere (IX/QX PARAMS); empty: not connected (QO = FALSE)")
+# GPIOChip's bias numbering in FORTE 3.3.0 (its interface comment says otherwise).
+BIAS = {"none": 0, "pull_up": 2, "pull_down": 3}
+
+
+TEMP = """VAR_TEMP
+  Field : STRING;
+  Length : INT;
+  Cut : INT;
+  Pos : INT;
+  Digit : INT;
+  Number : UDINT;
+END_VAR
+"""
+
+
+def take(target: str, convert: str) -> str:
+    """ST: the number at the front of Field (up to ':' or ']') into ``target``, and Field after it.
+    FORTE 3.3 has no STRING_TO_UINT: the digits are found one by one. FIND and LEN give ANY_INT,
+    which the IDE only lets into arithmetic through a variable of a type."""
+    return f"""  Cut := FIND(Field, ':');
+  IF Cut = 0 THEN
+    Cut := FIND(Field, ']');
+  END_IF;
+  Number := 0;
+  FOR Digit := 1 TO Cut - 1 DO
+    Pos := FIND('0123456789', MID(Field, 1, Digit));
+    Number := Number * 10 + INT_TO_UDINT(Pos - 1);
+  END_FOR;
+  {target} := {convert}(Number);
+  Length := LEN(Field);
+  Field := MID(Field, Length - Cut, Cut + 1);
+"""
+
+
+def route(kind: str) -> str:
+    """ST of IO_Route<kind>'s INIT: the backend and, for a line set up here, its settings."""
+    lines = ""
+    if kind in ("DI", "DO"):
+        lines = ("""ELSIF LEFT(Address, 5) = 'gpio[' THEN
+  Backend := 1;
+  IoName := Address;
+  LineQI := TRUE;
+  LineName := STRING_TO_WSTRING(Address);
+  Length := LEN(Address);
+  Field := MID(Address, Length - 5, 6);
+""" + take("ChipNo", "UDINT_TO_UINT") + take("LineNo", "UDINT_TO_UINT") + f"""  IF FIND(Address, ':pull_up') > 0 THEN
+    LineBias := {BIAS['pull_up']};
+  ELSIF FIND(Address, ':pull_down') > 0 THEN
+    LineBias := {BIAS['pull_down']};
+  ELSE
+    LineBias := {BIAS['none']};
+  END_IF;
+  LineLow := FIND(Address, ':active_low') > 0;
+""")
+    elif kind == "AO":
+        lines = ("""ELSIF LEFT(Address, 4) = 'pwm[' THEN
+  Backend := 1;
+  IoName := Address;
+  LineQI := TRUE;
+  LineName := STRING_TO_WSTRING(Address);
+  Length := LEN(Address);
+  Field := MID(Address, Length - 4, 5);
+""" + take("ChipNo", "UDINT_TO_UINT") + take("LineNo", "UDINT_TO_UINT") + take("Period", "") + """  Length := LEN(Field);
+  IF Length > 0 THEN
+    Root := STRING_TO_WSTRING(LEFT(Field, Length - 1));
+  END_IF;
+""")
+    reset = "LineQI := FALSE;\n" if lines else ""
+    return (TEMP if lines else "") + f"""Backend := 3;
+{reset}IF Address = 'sim' THEN
   Backend := 0;
 ELSIF LEFT(Address, 7) = 'modbus[' THEN
   Backend := 2;
   ModbusId := STRING_TO_WSTRING(Address);
-ELSIF LEN(Address) > 0 THEN
+{lines}ELSIF LEN(Address) > 0 THEN
   Backend := 1;
   IoName := Address;
-ELSE
-  Backend := 3;
 END_IF;
 GQI := Backend = 1;
 MQI := Backend = 2;"""
@@ -89,6 +164,12 @@ def make_io(p: Project):
         eo = {"INIT_IO": ["GQI", "MQI", "IoName", "ModbusId"], "INITO": ["QO"], "REQ_G": [], "REQ_M": [], "CNF": ["QO"]}
         ov = {"GQI": "BOOL", "MQI": "BOOL", "IoName": "STRING", "ModbusId": "WSTRING", "QO": "BOOL"}
         internal = {"Backend": "USINT"}            # 0 simulated, 1 local IO handle, 2 Modbus, 3 not connected
+        line = {"DI": STD["GPIOChip"], "DO": STD["GPIOChip"], "AO": STD["PWMChip"]}.get(kind)
+        if line:                                   # the line or channel the block sets up itself
+            settings = {"LineQI": "BOOL", "LineName": "WSTRING", "ChipNo": "UINT", "LineNo": "UINT"}
+            settings.update({"Period": "UDINT", "Root": "WSTRING"} if kind == "AO" else {"LineBias": "UINT", "LineLow": "BOOL"})
+            eo["INIT_IO"] += list(settings)
+            ov.update(settings)
         if output:
             ei["REQ"], iv["OUT"] = ["OUT"], vtype
             if kind == "AO":
@@ -109,7 +190,7 @@ def make_io(p: Project):
         b = Basic(p, LIB, f"IO_Route{kind}", f"Backend router for IO_{kind}; {ADDRESSING}",
                   ei, eo, iv, ov, internal, folder="IO/Base")
         b.state("START")
-        b.state("Init", ROUTE, "INIT_IO")
+        b.state("Init", route(kind), "INIT_IO")
         b.state("Ready", "QO := (Backend = 0) OR ((Backend = 1) AND QO_G) OR ((Backend = 2) AND QO_M);", "INITO")
         b.trans("START", "Init", "INIT")
         b.trans("Init", "START", "1")
@@ -175,11 +256,23 @@ def make_io(p: Project):
                  "AO": "Analog output (raw = Bias + OUT * Gain, 0..65535; EN = FALSE writes 0)"}[kind]
         c = Composite(p, LIB, f"IO_{kind}", f"{label}; {ADDRESSING.replace('IX/QX', local.split('::')[-1])}",
                       ev_in, ev_out, iv, ov, folder="IO")
+        c.spacing = 6000                          # GPIOChip and PWMChip are wide blocks
         c.fb("Route", q(f"IO_Route{kind}"))
+        if line:
+            c.fb("Line", line, **({} if kind == "AO" else {"ReadWriteMode": "1" if output else "0"}))
         c.fb("Local", local)
         c.fb("Bus", client)
         c.ev("INIT", "Route.INIT")
-        c.ev("Route.INIT_IO", "Local.INIT")
+        if line:                                   # the line exists before the IX/QX binds to it
+            c.ev("Route.INIT_IO", "Line.INIT")
+            c.ev("Line.INITO", "Local.INIT")
+            pins = {"LineQI": "QI", "LineName": "VALUE", "ChipNo": "ChipNumber"}
+            pins.update({"LineNo": "Channel", "Period": "PeriodNs", "Root": "SysfsRoot"} if kind == "AO"
+                        else {"LineNo": "LineNumber", "LineBias": "BiasMode", "LineLow": "ActiveLow"})
+            for setting, pin in pins.items():
+                c.da(f"Route.{setting}", f"Line.{pin}")
+        else:
+            c.ev("Route.INIT_IO", "Local.INIT")
         c.ev("Local.INITO", "Bus.INIT")
         c.ev("Bus.INITO", "Route.IO_READY")
         c.ev("Route.INITO", "INITO")
