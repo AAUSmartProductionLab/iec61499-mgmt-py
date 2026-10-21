@@ -8,9 +8,6 @@
       <Group Name="Procedures" Comment="Procedures the module state manager runs while Resetting and Stopping" x="1000" y="10400" width="12800" height="3100" locked="false" />
       <Group Name="SkillPrimitives" Comment="Skill primitives: one equipment command until a sensor or a time; OPC UA /Skills/&lt;name&gt;" x="1000" y="14700" width="24800" height="4700" locked="false" />
       <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="1000" y="20600" width="15800" height="5900" locked="false" />
-      <FB Name="Boot" Type="iec61499::events::E_RESTART" x="2800" y="900">
-        <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
-      </FB>
       <FB Name="Occupation" Type="modlib::MOD_Occupation" x="7800" y="900">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
@@ -415,12 +412,6 @@
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevelSkills" />
       </SubApp>
       <EventConnections>
-        <Connection Source="Boot.COLD" Destination="Occupation.INIT">
-          <Attribute Name="Visible" Value="false" />
-        </Connection>
-        <Connection Source="Boot.WARM" Destination="Occupation.INIT" dx1="2146.67">
-          <Attribute Name="Visible" Value="false" />
-        </Connection>
         <Connection Source="Module.RUN_RESETTING" Destination="Resetting.START" />
         <Connection Source="Resetting.DONE" Destination="Module.RESETTING_DONE" />
         <Connection Source="Resetting.FAILED" Destination="Module.RESETTING_FAILED" />
@@ -467,9 +458,6 @@
       <Group Name="Procedures" Comment="Procedures the module state manager runs while Resetting and Stopping" x="1000" y="10400" width="12800" height="3100" locked="false" />
       <Group Name="SkillPrimitives" Comment="Skill primitives: one equipment command until a sensor or a time; OPC UA /Skills/&lt;name&gt;" x="1000" y="14700" width="24800" height="4700" locked="false" />
       <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="1000" y="24400" width="15800" height="5900" locked="false" />
-      <FB Name="Boot" Type="iec61499::events::E_RESTART" x="2800" y="900">
-        <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
-      </FB>
       <FB Name="Occupation" Type="modlib::MOD_Occupation" x="17800" y="900">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
@@ -981,12 +969,6 @@
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevelSkills" />
       </SubApp>
       <EventConnections>
-        <Connection Source="Boot.COLD" Destination="GpioLines.INIT">
-          <Attribute Name="Visible" Value="false" />
-        </Connection>
-        <Connection Source="Boot.WARM" Destination="GpioLines.INIT">
-          <Attribute Name="Visible" Value="false" />
-        </Connection>
         <Connection Source="Module.RUN_RESETTING" Destination="Resetting.START" />
         <Connection Source="Resetting.DONE" Destination="Module.RESETTING_DONE" />
         <Connection Source="Resetting.FAILED" Destination="Module.RESETTING_FAILED" />
@@ -1037,7 +1019,12 @@
     <Attribute Name="Profile" Type="STRING" Value="HOLOBLOC" />
     <Attribute Name="Color" Type="STRING" Value="255,190,111" />
     <Resource Name="RES" Type="iec61499::system::EMB_RES" x="0" y="0">
-      <FBNetwork />
+      <FBNetwork>
+        <EventConnections>
+          <Connection Source="START.COLD" Destination="Stoppering.Occupation.INIT" />
+          <Connection Source="START.WARM" Destination="Stoppering.Occupation.INIT" />
+        </EventConnections>
+      </FBNetwork>
     </Resource>
   </Device>
   <Device Name="FORTE_PI" Type="iec61499::system::FORTE_PC" x="4000" y="1000">
@@ -1045,10 +1032,14 @@
     <Attribute Name="Profile" Type="STRING" Value="HOLOBLOC" />
     <Attribute Name="Color" Type="STRING" Value="255,190,111" />
     <Resource Name="RES" Type="iec61499::system::EMB_RES" x="0" y="0">
-      <FBNetwork />
+      <FBNetwork>
+        <EventConnections>
+          <Connection Source="START.COLD" Destination="Stoppering_pi.GpioLines.INIT" />
+          <Connection Source="START.WARM" Destination="Stoppering_pi.GpioLines.INIT" />
+        </EventConnections>
+      </FBNetwork>
     </Resource>
   </Device>
-  <Mapping From="Stoppering.Boot" To="FORTE_PC.RES" />
   <Mapping From="Stoppering.Occupation" To="FORTE_PC.RES" />
   <Mapping From="Stoppering.Module" To="FORTE_PC.RES" />
   <Mapping From="Stoppering.LinearAxis" To="FORTE_PC.RES" />
@@ -1060,7 +1051,6 @@
   <Mapping From="Stoppering.Resetting" To="FORTE_PC.RES" />
   <Mapping From="Stoppering.Stopping" To="FORTE_PC.RES" />
   <Mapping From="Stoppering.Stoppering" To="FORTE_PC.RES" />
-  <Mapping From="Stoppering_pi.Boot" To="FORTE_PI.RES" />
   <Mapping From="Stoppering_pi.Occupation" To="FORTE_PI.RES" />
   <Mapping From="Stoppering_pi.Module" To="FORTE_PI.RES" />
   <Mapping From="Stoppering_pi.GpioLines" To="FORTE_PI.RES" />

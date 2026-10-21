@@ -28,9 +28,10 @@ Fixed for every module; nothing here changes online.
 4. Blocks reach equipment and occupation over FORTE local channels, not over connections:
    `loc[<Module>/owner]`, `loc[<Module>/<Item>/state]`, `.../cmd` and `.../release`. A block added
    online therefore needs no connection to them.
-5. Every block has `INIT` and `INITO`. The application's blocks form one chain from the boot
-   event: IO lines, `Occupation`, `Module`, equipment, offered skill primitives, procedures, then
-   the module level skills. A block added online is appended to the end of the chain.
+5. Every block has `INIT` and `INITO`. The application's blocks form one chain, started by the
+   resource's own `START` block (`COLD` and `WARM`, drawn in the resource): IO lines,
+   `Occupation`, `Module`, equipment, offered skill primitives, procedures, then the module level
+   skills. A block added online is appended to the end of the chain.
 
 ## 2. A skill primitive
 

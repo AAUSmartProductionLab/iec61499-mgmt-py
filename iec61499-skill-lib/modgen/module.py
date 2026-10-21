@@ -974,7 +974,6 @@ def application(root, spec: ModuleSpec, target: str):
     net = elem(app, "SubAppNetwork")
     # Wide spacing: the IDE checks for overlapping blocks, including the resource's own START
     # block at the origin, and a mapped block keeps its application coordinates.
-    fb(net, "Boot", STD["E_RESTART"], 2000, 200)
     fb(net, "Occupation", q("MOD_Occupation"), 5000, 200, Module=module, UaRoot=ua_root, UaEnable="TRUE")
     fb(net, "Module", q("MOD_StateManager"), 9000, 200, Module=module, UaRoot=ua_root, UaEnable="TRUE",
        StopTimeout=tlit(spec.stop_timeout))
@@ -992,7 +991,7 @@ def application(root, spec: ModuleSpec, target: str):
         skill_instance(net, spec, Step(skill=name, name=name), 2000 + i * 5000, 6000, f"/Skills/{name}", name, True,
                        True, ua_root)
         chain.append(name)
-    events, data = [("Boot.COLD", chain[0] + ".INIT"), ("Boot.WARM", chain[0] + ".INIT")], []
+    events, data = [], []                 # the resource's START starts the INIT chain (start_links)
     for i, proc in enumerate(["Resetting", "Stopping"]):
         upper = proc.upper()
         if proc in spec.procedures:
@@ -1012,12 +1011,22 @@ def application(root, spec: ModuleSpec, target: str):
     return app
 
 
+def start_links(app) -> list[tuple[str, str]]:
+    """The resource's own START block (COLD, WARM) to the head of the application's INIT chain: the
+    one block whose INIT nothing in the application drives (module rules 1.5)."""
+    pairs = [(c.get("Source"), c.get("Destination")) for c in app.iterfind("SubAppNetwork/EventConnections/Connection")]
+    driven = {d for _, d in pairs if d.endswith(".INIT")}
+    heads = [s[:-len("O")] for s, d in pairs if s.endswith(".INITO") and d.endswith(".INIT") and s[:-len("O")] not in driven]
+    head = next(iter(dict.fromkeys(heads)))
+    return [("START.COLD", head), ("START.WARM", head)]
+
+
 def group_layout(net, spec: ModuleSpec):
     """Arrange the application's blocks in one group each, stacked from top to bottom: module level,
     module level skills, procedures, a catalogue of skill primitives, equipment IO."""
     arrange(net, [
         ("ModuleLevel", "Module level: occupation, PackML state manager, start-up and the target's IO lines",
-         ["Boot", "GpioLines", "PwmLines", "Occupation", "Module"], 5, 5000, 3000),
+         ["GpioLines", "PwmLines", "Occupation", "Module"], 5, 5000, 3000),
         ("ModuleLevelSkills", "Module level skills: Control, Sequences (Execute, Stop) of skill primitives and "
          "Release; OPC UA /Skills/<name>", list(spec.composites), 4, 5000, 2200),
         ("Procedures", "Procedures the module state manager runs while Resetting and Stopping",
@@ -1058,7 +1067,9 @@ def make_system(p: Project, spec: ModuleSpec):
         # As the IDE writes it: the resource network holds only resource-local FBs, and each mapped
         # element is a Mapping to the resource; the IDE rebuilds the mapped copies itself. Copies
         # in the resource network make the IDE's system editor fail ("Could not load system").
-        elem(res, "FBNetwork")
+        # Its connections from the resource's START name the mapped blocks with their application.
+        app = apps[target]
+        connections(elem(res, "FBNetwork"), [(s, f"{app.get('Name')}.{d}") for s, d in start_links(app)], [])
     for target, app in apps.items():
         for child in app.find("SubAppNetwork"):
             if child.tag in ("FB", "SubApp"):

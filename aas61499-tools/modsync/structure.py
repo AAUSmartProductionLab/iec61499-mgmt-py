@@ -35,7 +35,7 @@ from modgen.library import PARAM_RANGE, q
 from modgen.module import tlit
 from modgen.spec import ModuleSpec, Parameter
 
-from .device import literal
+from .device import BOOT, literal
 
 CORE = q("SKILL_Core")
 LATCH = q("SKILL_Param_")
@@ -91,7 +91,7 @@ def structure(fbs: dict[str, str], connections, value: Callable[[str], str | Non
     driven = {d: s for s, d in connections}
 
     # Rule 1.5: one INIT chain from the boot event; it gives the order things were declared in.
-    order, at = [], driven_by(connections, "Boot.COLD")
+    order, at = [], driven_by(connections, BOOT)
     while at:
         top = at.partition(".")[0]
         if top not in order:

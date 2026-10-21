@@ -41,7 +41,7 @@ from modgen.module import module_skill
 from modgen.spec import Composite, Equipment, Input, ModuleSpec, Parameter, Skill, Step
 
 from .compare import Drift
-from .device import Snapshot, literal, read_structure, read_values
+from .device import BOOT, Snapshot, literal, read_structure, read_values
 from .structure import driven_by, stated, structure
 from .sync import Refused, guard, lacking, online, summary
 
@@ -450,11 +450,11 @@ def differences(wanted: dict, running: dict, spec: ModuleSpec) -> Differences:
 
 def init_tail(connections) -> str:
     """Where the INIT chain of the running program ends (rule 1.5): a new skill is added there."""
-    at_, last = driven_by(connections, "Boot.COLD"), None
+    at_, last = driven_by(connections, BOOT), None
     while at_:
         last, at_ = at_, driven_by(connections, at_[:-len(".INIT")] + ".INITO", ".INIT")
     if last is None:
-        raise NotDescribed("the program has no INIT chain from Boot.COLD")
+        raise NotDescribed(f"the program has no INIT chain from {BOOT}")
     return last[:-len(".INIT")] + ".INITO"
 
 

@@ -614,8 +614,13 @@ because with a wrong `.buildpath` it silently skips the system):
   copies in the resource view are drawn at the members' relative positions, so they overlap
   there (the check warns, the build passes); the application view is the one to read.
   The generator lays each application out as five groups (module level, equipment IO, a
-  catalogue of skill primitives, module level skills, procedures) and hides every INIT chain and
-  start-up connection.
+  catalogue of skill primitives, module level skills, procedures) and hides every INIT chain.
+- **The resource starts the program** (21 Oct): `EMB_RES` has an `E_RESTART` of its own,
+  `START`, so a module has none: `START.COLD` and `.WARM` go to the head of the INIT chain, drawn
+  in each device's resource (`Filling_pi.GpioLines.INIT`). `load_application` takes those links
+  with the application, and `Command.inside` leaves `START` outside the application's container.
+- **Regeneration keeps the layout arranged in the IDE per application** (blocks of the same name
+  in `Filling` and `Filling_pi` used to share one entry) **and the size of each group**.
 - **The IDE's `checkTypeLibrary` fails on warnings too** ("has N errors or warnings"). Every
   declared variable must be used: a subscriber's data must still end on typed pins (else
   `INVALID_ID`), so a skill that reads only some equipment inputs gets them through a typed view
