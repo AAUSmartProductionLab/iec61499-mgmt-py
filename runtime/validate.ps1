@@ -56,8 +56,9 @@ Copy-Item -Recurse -Force -Path (Join-Path $PSScriptRoot 'forte-compat\include\*
 # The exported module links only forte-core; composites also include standard FB headers.
 Add-Content -LiteralPath (Join-Path $export 'CMakeLists.txt') -Encoding utf8 -Value @'
 
-# Added by validate.ps1: headers of standard FBs used inside the composites.
-foreach (lib forte-events forte-net)
+# Added by validate.ps1: headers of standard FBs used inside the composites (the IO blocks set up
+# their GPIO line or PWM channel: the Linux modules, or their stand-ins elsewhere).
+foreach (lib forte-events forte-net forte-gpiochip forte-pwmsysfs forte-iostubs)
         if (TARGET ${lib})
                 target_link_libraries(forte-__MODULE__ PUBLIC ${lib})
         endif ()

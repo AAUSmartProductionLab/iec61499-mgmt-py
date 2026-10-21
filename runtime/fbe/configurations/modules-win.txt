@@ -9,3 +9,6 @@ UA_MULTITHREADING:STRING=0
 // skill and equipment item at once (20+), more than FORTE's default queue of 16 holds.
 FORTE_EventChainExternalEventListSize:STRING=256
 FORTE_CommunicationInterruptQueueSize:STRING=64
+// Stand-ins for GPIOChip and PWMChip (forte-patches/0003-io-stand-ins.patch): the IO blocks that set
+// up a Raspberry Pi's lines themselves are then the same types here, answering QO = FALSE.
+FORTE_MODULE_IOSTUBS:BOOL=ON

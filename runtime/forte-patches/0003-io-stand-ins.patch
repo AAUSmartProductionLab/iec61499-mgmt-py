@@ -1,0 +1,495 @@
+diff --git a/modules/gpiochip/CMakeLists.txt b/modules/gpiochip/CMakeLists.txt
+--- a/modules/gpiochip/CMakeLists.txt
++++ b/modules/gpiochip/CMakeLists.txt
+@@ -24,6 +24,7 @@
+             gpiochip_controller.h gpiochip_controller.cpp
+             gpiochip_config_fb.h gpiochip_config_fb.cpp
+ )
++target_include_directories(forte-gpiochip PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+ target_link_libraries(forte-gpiochip PUBLIC forte-core)
+ target_link_libraries(forte PUBLIC $<IF:$<BOOL:${BUILD_SHARED_LIBS}>,forte-gpiochip,$<LINK_LIBRARY:WHOLE_ARCHIVE,forte-gpiochip>>)
+ install(TARGETS forte-gpiochip EXPORT forte-export FILE_SET HEADERS)
+diff --git a/modules/pwmsysfs/CMakeLists.txt b/modules/pwmsysfs/CMakeLists.txt
+--- a/modules/pwmsysfs/CMakeLists.txt
++++ b/modules/pwmsysfs/CMakeLists.txt
+@@ -23,6 +23,7 @@
+             pwmsysfs_controller.h pwmsysfs_controller.cpp
+             pwmsysfs_config_fb.h pwmsysfs_config_fb.cpp
+ )
++target_include_directories(forte-pwmsysfs PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+ target_link_libraries(forte-pwmsysfs PUBLIC forte-core)
+ target_link_libraries(forte PUBLIC $<IF:$<BOOL:${BUILD_SHARED_LIBS}>,forte-pwmsysfs,$<LINK_LIBRARY:WHOLE_ARCHIVE,forte-pwmsysfs>>)
+ install(TARGETS forte-pwmsysfs EXPORT forte-export FILE_SET HEADERS)
+diff --git a/modules/CMakeLists.txt b/modules/CMakeLists.txt
+--- a/modules/CMakeLists.txt
++++ b/modules/CMakeLists.txt
+@@ -29,6 +29,7 @@
+ add_subdirectory(odroid)
+ add_subdirectory(piface)
+ add_subdirectory(pwmsysfs)
++add_subdirectory(iostubs)
+ add_subdirectory(PLC01A1)
+ add_subdirectory(PLCnext)
+ add_subdirectory(powerlink)
+diff --git a/modules/iostubs/CMakeLists.txt b/modules/iostubs/CMakeLists.txt
+new file mode 100644
+--- /dev/null
++++ b/modules/iostubs/CMakeLists.txt
+@@ -0,0 +1,24 @@
++#*******************************************************************************
++# Stand-ins for the Linux IO configuration blocks GPIOChip and PWMChip where those modules are
++# not built (not Linux): same types, classes and header names, INIT answers QO = FALSE. So a
++# block that contains one (an IO point that sets up its own line) is the same type everywhere.
++#
++# SPDX-License-Identifier: EPL-2.0
++#*******************************************************************************
++if (LINUX)
++    return()
++endif ()
++
++option(FORTE_MODULE_IOSTUBS "Stand-ins for GPIOChip and PWMChip on platforms without them" OFF)
++if (NOT FORTE_MODULE_IOSTUBS)
++    return()
++endif ()
++
++add_library(forte-iostubs
++            gpiochip_config_fb.h gpiochip_config_fb.cpp
++            pwmsysfs_config_fb.h pwmsysfs_config_fb.cpp
++)
++target_include_directories(forte-iostubs PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
++target_link_libraries(forte-iostubs PUBLIC forte-core)
++target_link_libraries(forte PUBLIC $<IF:$<BOOL:${BUILD_SHARED_LIBS}>,forte-iostubs,$<LINK_LIBRARY:WHOLE_ARCHIVE,forte-iostubs>>)
++install(TARGETS forte-iostubs EXPORT forte-export FILE_SET HEADERS)
+diff --git a/modules/iostubs/gpiochip_config_fb.h b/modules/iostubs/gpiochip_config_fb.h
+new file mode 100644
+--- /dev/null
++++ b/modules/iostubs/gpiochip_config_fb.h
+@@ -0,0 +1,60 @@
++/*******************************************************************************
++ * Stand-in for GPIOChip on platforms without /dev/gpiochip (Windows): the same type, class and
++ * interface as the gpiochip module's, so a program or a block made for a Raspberry Pi loads here.
++ * INIT answers QO = FALSE: the line is not available.
++ *
++ * SPDX-License-Identifier: EPL-2.0
++ *******************************************************************************/
++#pragma once
++
++#include "forte/funcbloc.h"
++#include "forte/datatypes/forte_bool.h"
++#include "forte/datatypes/forte_uint.h"
++#include "forte/datatypes/forte_wstring.h"
++
++namespace forte::eclipse4diac::io::gpiochip {
++  class FORTE_GPIOChip final : public CFunctionBlock {
++      DECLARE_FIRMWARE_FB(FORTE_GPIOChip)
++
++    private:
++      static const TEventID scmEventINITID = 0;
++      static const TEventID scmEventINITOID = 0;
++      static const TEventID scmEventINDID = 1;
++
++      void executeEvent(TEventID paEIID, CEventChainExecutionThread *const paECET) override;
++      void readInputData(TEventID paEIID) override;
++      void writeOutputData(TEventID paEIID) override;
++      void setInitialValues() override;
++
++    public:
++      FORTE_GPIOChip(const forte::StringId paInstanceNameId, CFBContainer &paContainer);
++
++      CIEC_BOOL var_QI;
++      CIEC_WSTRING var_VALUE;
++      CIEC_UINT var_ChipNumber;
++      CIEC_UINT var_LineNumber;
++      CIEC_UINT var_ReadWriteMode;
++      CIEC_UINT var_BiasMode;
++      CIEC_BOOL var_ActiveLow;
++      CIEC_BOOL var_QO;
++      CIEC_WSTRING var_STATUS;
++
++      CEventConnection conn_INITO;
++      CEventConnection conn_IND;
++      CDataConnection *conn_QI;
++      CDataConnection *conn_VALUE;
++      CDataConnection *conn_ChipNumber;
++      CDataConnection *conn_LineNumber;
++      CDataConnection *conn_ReadWriteMode;
++      CDataConnection *conn_BiasMode;
++      CDataConnection *conn_ActiveLow;
++      COutDataConnection<CIEC_BOOL> conn_QO;
++      COutDataConnection<CIEC_WSTRING> conn_STATUS;
++
++      CIEC_ANY *getDI(size_t) override;
++      CIEC_ANY *getDO(size_t) override;
++      CEventConnection *getEOConUnchecked(TPortId) override;
++      CDataConnection **getDIConUnchecked(TPortId) override;
++      CDataConnection *getDOConUnchecked(TPortId) override;
++  };
++} // namespace forte::eclipse4diac::io::gpiochip
+diff --git a/modules/iostubs/gpiochip_config_fb.cpp b/modules/iostubs/gpiochip_config_fb.cpp
+new file mode 100644
+--- /dev/null
++++ b/modules/iostubs/gpiochip_config_fb.cpp
+@@ -0,0 +1,146 @@
++/*******************************************************************************
++ * Stand-in for GPIOChip on platforms without /dev/gpiochip; see gpiochip_config_fb.h.
++ *
++ * SPDX-License-Identifier: EPL-2.0
++ *******************************************************************************/
++#include "gpiochip_config_fb.h"
++
++using namespace forte::literals;
++
++namespace forte::eclipse4diac::io::gpiochip {
++  namespace {
++    const auto cEventInputNames = std::array{"INIT"_STRID};
++    const auto cEventOutputNames = std::array{"INITO"_STRID, "IND"_STRID};
++    const auto cDataInputNames =
++        std::array{"QI"_STRID,       "VALUE"_STRID,    "ChipNumber"_STRID, "LineNumber"_STRID, "ReadWriteMode"_STRID,
++                   "BiasMode"_STRID, "ActiveLow"_STRID};
++    const auto cDataOutputNames = std::array{"QO"_STRID, "STATUS"_STRID};
++    const SFBInterfaceSpec cFBInterfaceSpec = {
++        .mEINames = cEventInputNames,
++        .mEITypeNames = {},
++        .mEONames = cEventOutputNames,
++        .mEOTypeNames = {},
++        .mDINames = cDataInputNames,
++        .mDONames = cDataOutputNames,
++        .mDIONames = {},
++        .mSocketNames = {},
++        .mPlugNames = {},
++    };
++  } // namespace
++
++  DEFINE_FIRMWARE_FB(FORTE_GPIOChip, "eclipse4diac::io::gpiochip::GPIOChip"_STRID)
++
++  FORTE_GPIOChip::FORTE_GPIOChip(const forte::StringId paInstanceNameId, CFBContainer &paContainer) :
++      CFunctionBlock(paContainer, cFBInterfaceSpec, paInstanceNameId),
++      var_QI(0_BOOL),
++      var_VALUE(u""_WSTRING),
++      var_ChipNumber(0_UINT),
++      var_LineNumber(0_UINT),
++      var_ReadWriteMode(0_UINT),
++      var_BiasMode(0_UINT),
++      var_ActiveLow(0_BOOL),
++      var_QO(0_BOOL),
++      var_STATUS(u""_WSTRING),
++      conn_INITO(*this, 0),
++      conn_IND(*this, 1),
++      conn_QI(nullptr),
++      conn_VALUE(nullptr),
++      conn_ChipNumber(nullptr),
++      conn_LineNumber(nullptr),
++      conn_ReadWriteMode(nullptr),
++      conn_BiasMode(nullptr),
++      conn_ActiveLow(nullptr),
++      conn_QO(*this, 0, var_QO),
++      conn_STATUS(*this, 1, var_STATUS) {
++  }
++
++  void FORTE_GPIOChip::setInitialValues() {
++    CFunctionBlock::setInitialValues();
++    var_QI = 0_BOOL;
++    var_VALUE = u""_WSTRING;
++    var_ChipNumber = 0_UINT;
++    var_LineNumber = 0_UINT;
++    var_ReadWriteMode = 0_UINT;
++    var_BiasMode = 0_UINT;
++    var_ActiveLow = 0_BOOL;
++    var_QO = 0_BOOL;
++    var_STATUS = u""_WSTRING;
++  }
++
++  void FORTE_GPIOChip::executeEvent(const TEventID paEIID, CEventChainExecutionThread *const paECET) {
++    if (scmEventINITID == paEIID) {
++      var_QO = 0_BOOL;
++      var_STATUS = var_QI ? u"no GPIO lines on this platform"_WSTRING : u""_WSTRING;
++      sendOutputEvent(scmEventINITOID, paECET);
++    }
++  }
++
++  void FORTE_GPIOChip::readInputData(const TEventID paEIID) {
++    if (scmEventINITID == paEIID) {
++      readData(0, var_QI, conn_QI);
++      readData(1, var_VALUE, conn_VALUE);
++      readData(2, var_ChipNumber, conn_ChipNumber);
++      readData(3, var_LineNumber, conn_LineNumber);
++      readData(4, var_ReadWriteMode, conn_ReadWriteMode);
++      readData(5, var_BiasMode, conn_BiasMode);
++      readData(6, var_ActiveLow, conn_ActiveLow);
++    }
++  }
++
++  void FORTE_GPIOChip::writeOutputData(const TEventID paEIID) {
++    if (scmEventINITOID == paEIID || scmEventINDID == paEIID) {
++      writeData(7, var_QO, conn_QO);
++      writeData(8, var_STATUS, conn_STATUS);
++    }
++  }
++
++  CIEC_ANY *FORTE_GPIOChip::getDI(const size_t paIndex) {
++    switch (paIndex) {
++      case 0: return &var_QI;
++      case 1: return &var_VALUE;
++      case 2: return &var_ChipNumber;
++      case 3: return &var_LineNumber;
++      case 4: return &var_ReadWriteMode;
++      case 5: return &var_BiasMode;
++      case 6: return &var_ActiveLow;
++    }
++    return nullptr;
++  }
++
++  CIEC_ANY *FORTE_GPIOChip::getDO(const size_t paIndex) {
++    switch (paIndex) {
++      case 0: return &var_QO;
++      case 1: return &var_STATUS;
++    }
++    return nullptr;
++  }
++
++  CEventConnection *FORTE_GPIOChip::getEOConUnchecked(const TPortId paIndex) {
++    switch (paIndex) {
++      case 0: return &conn_INITO;
++      case 1: return &conn_IND;
++    }
++    return nullptr;
++  }
++
++  CDataConnection **FORTE_GPIOChip::getDIConUnchecked(const TPortId paIndex) {
++    switch (paIndex) {
++      case 0: return &conn_QI;
++      case 1: return &conn_VALUE;
++      case 2: return &conn_ChipNumber;
++      case 3: return &conn_LineNumber;
++      case 4: return &conn_ReadWriteMode;
++      case 5: return &conn_BiasMode;
++      case 6: return &conn_ActiveLow;
++    }
++    return nullptr;
++  }
++
++  CDataConnection *FORTE_GPIOChip::getDOConUnchecked(const TPortId paIndex) {
++    switch (paIndex) {
++      case 0: return &conn_QO;
++      case 1: return &conn_STATUS;
++    }
++    return nullptr;
++  }
++} // namespace forte::eclipse4diac::io::gpiochip
+diff --git a/modules/iostubs/pwmsysfs_config_fb.h b/modules/iostubs/pwmsysfs_config_fb.h
+new file mode 100644
+--- /dev/null
++++ b/modules/iostubs/pwmsysfs_config_fb.h
+@@ -0,0 +1,61 @@
++/*******************************************************************************
++ * Stand-in for PWMChip on platforms without /sys/class/pwm (Windows): the same type, class and
++ * interface as the pwmsysfs module's, so a program or a block made for a Raspberry Pi loads here.
++ * INIT answers QO = FALSE: the channel is not available.
++ *
++ * SPDX-License-Identifier: EPL-2.0
++ *******************************************************************************/
++#pragma once
++
++#include "forte/funcbloc.h"
++#include "forte/datatypes/forte_bool.h"
++#include "forte/datatypes/forte_udint.h"
++#include "forte/datatypes/forte_uint.h"
++#include "forte/datatypes/forte_wstring.h"
++
++namespace forte::eclipse4diac::io::pwmsysfs {
++  class FORTE_PWMChip final : public CFunctionBlock {
++      DECLARE_FIRMWARE_FB(FORTE_PWMChip)
++
++    private:
++      static const TEventID scmEventINITID = 0;
++      static const TEventID scmEventINITOID = 0;
++      static const TEventID scmEventINDID = 1;
++
++      void executeEvent(TEventID paEIID, CEventChainExecutionThread *const paECET) override;
++      void readInputData(TEventID paEIID) override;
++      void writeOutputData(TEventID paEIID) override;
++      void setInitialValues() override;
++
++    public:
++      FORTE_PWMChip(const forte::StringId paInstanceNameId, CFBContainer &paContainer);
++
++      CIEC_BOOL var_QI;
++      CIEC_WSTRING var_VALUE;
++      CIEC_UINT var_ChipNumber;
++      CIEC_UINT var_Channel;
++      CIEC_UDINT var_PeriodNs;
++      CIEC_BOOL var_Inversed;
++      CIEC_WSTRING var_SysfsRoot;
++      CIEC_BOOL var_QO;
++      CIEC_WSTRING var_STATUS;
++
++      CEventConnection conn_INITO;
++      CEventConnection conn_IND;
++      CDataConnection *conn_QI;
++      CDataConnection *conn_VALUE;
++      CDataConnection *conn_ChipNumber;
++      CDataConnection *conn_Channel;
++      CDataConnection *conn_PeriodNs;
++      CDataConnection *conn_Inversed;
++      CDataConnection *conn_SysfsRoot;
++      COutDataConnection<CIEC_BOOL> conn_QO;
++      COutDataConnection<CIEC_WSTRING> conn_STATUS;
++
++      CIEC_ANY *getDI(size_t) override;
++      CIEC_ANY *getDO(size_t) override;
++      CEventConnection *getEOConUnchecked(TPortId) override;
++      CDataConnection **getDIConUnchecked(TPortId) override;
++      CDataConnection *getDOConUnchecked(TPortId) override;
++  };
++} // namespace forte::eclipse4diac::io::pwmsysfs
+diff --git a/modules/iostubs/pwmsysfs_config_fb.cpp b/modules/iostubs/pwmsysfs_config_fb.cpp
+new file mode 100644
+--- /dev/null
++++ b/modules/iostubs/pwmsysfs_config_fb.cpp
+@@ -0,0 +1,146 @@
++/*******************************************************************************
++ * Stand-in for PWMChip on platforms without /sys/class/pwm; see pwmsysfs_config_fb.h.
++ *
++ * SPDX-License-Identifier: EPL-2.0
++ *******************************************************************************/
++#include "pwmsysfs_config_fb.h"
++
++using namespace forte::literals;
++
++namespace forte::eclipse4diac::io::pwmsysfs {
++  namespace {
++    const auto cEventInputNames = std::array{"INIT"_STRID};
++    const auto cEventOutputNames = std::array{"INITO"_STRID, "IND"_STRID};
++    const auto cDataInputNames =
++        std::array{"QI"_STRID,       "VALUE"_STRID,    "ChipNumber"_STRID, "Channel"_STRID, "PeriodNs"_STRID,
++                   "Inversed"_STRID, "SysfsRoot"_STRID};
++    const auto cDataOutputNames = std::array{"QO"_STRID, "STATUS"_STRID};
++    const SFBInterfaceSpec cFBInterfaceSpec = {
++        .mEINames = cEventInputNames,
++        .mEITypeNames = {},
++        .mEONames = cEventOutputNames,
++        .mEOTypeNames = {},
++        .mDINames = cDataInputNames,
++        .mDONames = cDataOutputNames,
++        .mDIONames = {},
++        .mSocketNames = {},
++        .mPlugNames = {},
++    };
++  } // namespace
++
++  DEFINE_FIRMWARE_FB(FORTE_PWMChip, "eclipse4diac::io::pwmsysfs::PWMChip"_STRID)
++
++  FORTE_PWMChip::FORTE_PWMChip(const forte::StringId paInstanceNameId, CFBContainer &paContainer) :
++      CFunctionBlock(paContainer, cFBInterfaceSpec, paInstanceNameId),
++      var_QI(0_BOOL),
++      var_VALUE(u""_WSTRING),
++      var_ChipNumber(0_UINT),
++      var_Channel(0_UINT),
++      var_PeriodNs(1000000_UDINT),
++      var_Inversed(0_BOOL),
++      var_SysfsRoot(u""_WSTRING),
++      var_QO(0_BOOL),
++      var_STATUS(u""_WSTRING),
++      conn_INITO(*this, 0),
++      conn_IND(*this, 1),
++      conn_QI(nullptr),
++      conn_VALUE(nullptr),
++      conn_ChipNumber(nullptr),
++      conn_Channel(nullptr),
++      conn_PeriodNs(nullptr),
++      conn_Inversed(nullptr),
++      conn_SysfsRoot(nullptr),
++      conn_QO(*this, 0, var_QO),
++      conn_STATUS(*this, 1, var_STATUS) {
++  }
++
++  void FORTE_PWMChip::setInitialValues() {
++    CFunctionBlock::setInitialValues();
++    var_QI = 0_BOOL;
++    var_VALUE = u""_WSTRING;
++    var_ChipNumber = 0_UINT;
++    var_Channel = 0_UINT;
++    var_PeriodNs = 1000000_UDINT;
++    var_Inversed = 0_BOOL;
++    var_SysfsRoot = u""_WSTRING;
++    var_QO = 0_BOOL;
++    var_STATUS = u""_WSTRING;
++  }
++
++  void FORTE_PWMChip::executeEvent(const TEventID paEIID, CEventChainExecutionThread *const paECET) {
++    if (scmEventINITID == paEIID) {
++      var_QO = 0_BOOL;
++      var_STATUS = var_QI ? u"no PWM channels on this platform"_WSTRING : u""_WSTRING;
++      sendOutputEvent(scmEventINITOID, paECET);
++    }
++  }
++
++  void FORTE_PWMChip::readInputData(const TEventID paEIID) {
++    if (scmEventINITID == paEIID) {
++      readData(0, var_QI, conn_QI);
++      readData(1, var_VALUE, conn_VALUE);
++      readData(2, var_ChipNumber, conn_ChipNumber);
++      readData(3, var_Channel, conn_Channel);
++      readData(4, var_PeriodNs, conn_PeriodNs);
++      readData(5, var_Inversed, conn_Inversed);
++      readData(6, var_SysfsRoot, conn_SysfsRoot);
++    }
++  }
++
++  void FORTE_PWMChip::writeOutputData(const TEventID paEIID) {
++    if (scmEventINITOID == paEIID || scmEventINDID == paEIID) {
++      writeData(7, var_QO, conn_QO);
++      writeData(8, var_STATUS, conn_STATUS);
++    }
++  }
++
++  CIEC_ANY *FORTE_PWMChip::getDI(const size_t paIndex) {
++    switch (paIndex) {
++      case 0: return &var_QI;
++      case 1: return &var_VALUE;
++      case 2: return &var_ChipNumber;
++      case 3: return &var_Channel;
++      case 4: return &var_PeriodNs;
++      case 5: return &var_Inversed;
++      case 6: return &var_SysfsRoot;
++    }
++    return nullptr;
++  }
++
++  CIEC_ANY *FORTE_PWMChip::getDO(const size_t paIndex) {
++    switch (paIndex) {
++      case 0: return &var_QO;
++      case 1: return &var_STATUS;
++    }
++    return nullptr;
++  }
++
++  CEventConnection *FORTE_PWMChip::getEOConUnchecked(const TPortId paIndex) {
++    switch (paIndex) {
++      case 0: return &conn_INITO;
++      case 1: return &conn_IND;
++    }
++    return nullptr;
++  }
++
++  CDataConnection **FORTE_PWMChip::getDIConUnchecked(const TPortId paIndex) {
++    switch (paIndex) {
++      case 0: return &conn_QI;
++      case 1: return &conn_VALUE;
++      case 2: return &conn_ChipNumber;
++      case 3: return &conn_Channel;
++      case 4: return &conn_PeriodNs;
++      case 5: return &conn_Inversed;
++      case 6: return &conn_SysfsRoot;
++    }
++    return nullptr;
++  }
++
++  CDataConnection *FORTE_PWMChip::getDOConUnchecked(const TPortId paIndex) {
++    switch (paIndex) {
++      case 0: return &conn_QO;
++      case 1: return &conn_STATUS;
++    }
++    return nullptr;
++  }
++} // namespace forte::eclipse4diac::io::pwmsysfs
