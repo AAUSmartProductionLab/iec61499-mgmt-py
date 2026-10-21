@@ -68,10 +68,10 @@ FillingLineAAS
 | AAS | Kind | Submodels |
 | --- | --- | --- |
 | `FillingLineAAS` | system | HierarchicalStructures |
-| `FillingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
-| `StopperingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
-| `CappingModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
-| `InspectionModuleAAS` | module | Nameplate, HierarchicalStructures, AssetInterfacesDescription, Skills, OperationalData, AssetInterfacesMappingConfiguration, ControlConfiguration, CapabilityDescription |
+| `FillingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData, ControlConfiguration |
+| `StopperingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData, ControlConfiguration |
+| `CappingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData, ControlConfiguration |
+| `InspectionModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData, ControlConfiguration |
 | `FillingLinearAxisAAS` | component/linearaxis | Skills |
 | `FillingPumpAAS` | component/fillingpump | Skills |
 | `FillingScaleAAS` | component/scale | Skills |
@@ -453,8 +453,8 @@ flowchart BT
 | Skill | Held by | Kind | Start runs | Stop runs |
 | --- | --- | --- | --- | --- |
 | Dispensing(Volume = 1.0 mL) → Weight [g] | the module | Composite | MoveAxis (Position = 40.0) → Dispense (Volume ← Volume, FlowRate = 1.0) → Home → Weigh (Weight → Weight) | Home |
-| Home() | FillingLinearAxisAAS | Primitive | – (Ensures AtHome; Timeout 8s) | – |
-| MoveAxis(Position = 0.0 mm) | FillingLinearAxisAAS | Primitive | – (Requires Homed; Ensures NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 8s) | – |
+| Home() | FillingLinearAxisAAS | Primitive | – (Ensures AtHome; Timeout 60s) | – |
+| MoveAxis(Position = 0.0 mm) | FillingLinearAxisAAS | Primitive | – (Requires Homed; Ensures NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 30s) | – |
 | Dispense(Volume = 1.0 mL, FlowRate = 1.0 mL/s) | FillingPumpAAS | Primitive | – (After Volume / FlowRate) | – |
 | Tare() | FillingScaleAAS | Primitive | – (After 2.0) | – |
 | Weigh() → Weight [g] | FillingScaleAAS | Primitive | – (After 0.2) | – |
