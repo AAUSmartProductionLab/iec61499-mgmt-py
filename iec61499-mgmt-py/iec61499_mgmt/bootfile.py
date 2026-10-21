@@ -14,10 +14,14 @@ def boot_file(commands: list[Command]) -> str:
 
 def deployment(fixed: FlatApplication, resource: str = "RES",
                resource_type: str = "iec61499::system::EMB_RES", overrides: dict[str, str] | None = None,
-               procedure: Network | None = None, library: TypeLibrary | None = None) -> list[Command]:
-    """Create the resource, the fixed application and the procedure, then start the resource."""
+               procedure: Network | None = None, library: TypeLibrary | None = None,
+               container: str = "") -> list[Command]:
+    """Create the resource, the fixed application and the procedure, then start the resource.
+
+    ``container``: the application's name, to create its instances inside it (``Filling.Home``),
+    as the 4diac IDE does; the IDE can then monitor the program."""
     commands = [Command(op="create_fb", resource="", name=resource, type=resource_type)]
-    commands += fixed.commands(resource, overrides)
+    commands += [c.inside(container) for c in fixed.commands(resource, overrides)]
     if procedure is not None:
         if library is None:
             raise ValueError("A procedure needs the type library it was planned against")
