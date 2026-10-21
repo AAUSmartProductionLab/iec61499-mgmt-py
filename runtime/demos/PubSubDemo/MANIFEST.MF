@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Manifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="platform:/resource/org.eclipse.fordiac.ide.library.model/model/library.xsd" Scope="Project">
+  <Dependencies/>
+  <Product Name="PubSubDemo" SymbolicName="PubSubDemo" Comment="Two publishers, one subscriber: two counters and their sum on three FORTEs">
+    <VersionInfo Author="Project contributors" Date="2026-10-21" Version="1.0.0"/>
+  </Product>
+</Manifest>
