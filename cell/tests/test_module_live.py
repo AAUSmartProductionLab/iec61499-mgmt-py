@@ -56,7 +56,8 @@ def running(request, tmp_path, spec_name, overrides=None):
              if k.endswith("_Modbus")}
     with SimServer(sim, port=modbus), launch_forte(exe, tmp_path, None, ["-op", str(ua_port)]) as port, \
             Client("127.0.0.1", port) as client:
-        for command in deployment(app, overrides={**ports, **(overrides or {})}):
+        for command in deployment(app, overrides={**ports, **(overrides or {})},
+                                  container=app_name(spec, "pc")):
             client.execute(command)
         ua = ModuleUa(ua_port, spec.module)
         try:
@@ -86,7 +87,8 @@ def running_on_pi(request, host, spec_name, overrides=None):
     args = type("Args", (), {"host": host, "user": user, "port": 61499})()
     with SimServer(sim, host="0.0.0.0", port=modbus):
         pitool.ssh(args, "cat > ~/forte/boot/forte.fboot && cd ~/forte && docker compose restart",
-                   stdin=pitool.boot_file(deployment(app, overrides={**remote, **(overrides or {})})))
+                   stdin=pitool.boot_file(deployment(app, overrides={**remote, **(overrides or {})},
+                                                     container=app_name(spec, "pc"))))
         pitool.wait_port(host, 61499)
         ua = ModuleUa(4840, spec.module, host)
         try:

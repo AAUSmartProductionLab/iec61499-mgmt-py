@@ -67,9 +67,10 @@ def main():
         try:
             wait_port(args.mgmt_port)
             if not args.no_deploy:
-                app = load_application(system_file(spec.project), app_name(spec, next(iter(spec.targets))))
+                name = app_name(spec, next(iter(spec.targets)))
+                app = load_application(system_file(spec.project), name)
                 with Client("127.0.0.1", args.mgmt_port) as client:
-                    for command in deployment(app):
+                    for command in deployment(app, container=name):
                         client.execute(command)
             print(f"{spec.module}: FORTE management 127.0.0.1:{args.mgmt_port}, OPC UA "
                   f"opc.tcp://localhost:{args.opcua_port}{spec.opcua_root}, Modbus simulator 127.0.0.1:"
