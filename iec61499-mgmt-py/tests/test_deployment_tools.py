@@ -66,13 +66,15 @@ def test_boot_file_order_and_format(library):
 
 
 def test_deployment_inside_the_applications_container():
-    """As the 4diac IDE deploys: every instance, value and connection inside the application."""
+    """As the 4diac IDE deploys: every instance, value and connection inside the application; the
+    resource's own START stays outside it."""
     plain, inside = deployment(load_application(SYS, APP)), deployment(load_application(SYS, APP), container=APP)
     assert [c.op for c in inside] == [c.op for c in plain]
     assert inside[0] == plain[0] and inside[-1] == plain[-1]          # the resource itself
     for a, b in zip(plain[1:-1], inside[1:-1]):
         names = [n for n in (a.name, a.source, a.destination) if n is not None]
-        assert [n for n in (b.name, b.source, b.destination) if n is not None] == [f"{APP}.{n}" for n in names]
+        assert [n for n in (b.name, b.source, b.destination) if n is not None] == \
+            [n if n.startswith("START.") else f"{APP}.{n}" for n in names]
         assert (a.type, a.value) == (b.type, b.value)
 
 

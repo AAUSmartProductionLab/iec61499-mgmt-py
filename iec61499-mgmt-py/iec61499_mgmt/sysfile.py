@@ -3,6 +3,8 @@
 Untyped subapplications become name prefixes (``EM_Filler.Dose``), as FORTE 3 creates
 containers for dotted instance names. Connections through subapplication interface pins
 are resolved to the FB ports they finally reach; pins with no FB on one side are dropped.
+Connections drawn in a resource to the application's blocks (from the resource's own START
+block, ``START.COLD`` -> ``Filling.Occupation.INIT``) belong to the application too.
 """
 from __future__ import annotations
 
@@ -38,7 +40,17 @@ def load_application(path: str | Path, application: str) -> FlatApplication:
     app = next((a for a in root.iter("Application") if a.get("Name") == application), None)
     if app is None:
         raise ValueError(f"Application {application!r} not found in {path}")
-    return flatten(app.find("SubAppNetwork"))
+    return flatten(app.find("SubAppNetwork"), resource_links(root, application))
+
+
+def resource_links(root, application: str) -> list[tuple[str, str]]:
+    """The event connections drawn in the resources between a resource's own blocks and the
+    application's, named as inside the application (``START.COLD`` -> ``Occupation.INIT``)."""
+    prefix = application + "."
+    strip = lambda end: end[len(prefix):] if end.startswith(prefix) else end  # noqa: E731
+    return [(strip(c.get("Source")), strip(c.get("Destination")))
+            for res in root.iter("Resource") for c in res.iterfind("FBNetwork/EventConnections/Connection")
+            if prefix in (c.get("Source")[:len(prefix)], c.get("Destination")[:len(prefix)])]
 
 
 def load_resource(path: str | Path, device: str, resource: str) -> FlatApplication:
@@ -51,8 +63,9 @@ def load_resource(path: str | Path, device: str, resource: str) -> FlatApplicati
     raise ValueError(f"Resource {device}.{resource} not found in {path}")
 
 
-def flatten(network) -> FlatApplication:
-    """Flatten an FB network (application or resource) with its untyped subapplications."""
+def flatten(network, events: list[tuple[str, str]] = ()) -> FlatApplication:
+    """Flatten an FB network (application or resource) with its untyped subapplications;
+    ``events``: event connections from outside it (the resource's START), in its naming."""
     flat = FlatApplication()
     pins: set[str] = set()
     edges = {"EventConnections": [], "DataConnections": []}
@@ -78,6 +91,7 @@ def flatten(network) -> FlatApplication:
                 edges[kind].append(tuple(prefix + c.get(k) for k in ("Source", "Destination")))
 
     walk(network, "")
+    edges["EventConnections"] += list(events)
     for kind, target in [("EventConnections", flat.event_connections), ("DataConnections", flat.data_connections)]:
         outgoing: dict[str, list[str]] = {}
         for s, d in edges[kind]:
