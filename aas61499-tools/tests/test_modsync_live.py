@@ -68,7 +68,7 @@ def module(request, tmp_path):
     modbus = free_port()
     endpoint = f"{cand.spec.modbus.host}:{cand.spec.modbus.port}:"
     overrides = {k: v.replace(endpoint, f"{sim_host}:{modbus}:") for k, v in cand.app.parameters.items()
-                 if k.endswith("_Modbus")}
+                 if v.startswith("'modbus[")}
     boot = boot_file(deployment(cand.app, overrides=overrides, container=cand.container))
     deployer = PiDeployer(pi, request.config.getoption("--pi-user") or cand.spec.targets["pi"].user) if pi else None
 

@@ -42,7 +42,8 @@ Module (one FORTE resource)                       OPC UA below /Objects/<Module>
 │                  (skills the occupant started stop, wait until none is active, Stopping
 │                  procedure) -> Stopped; Abort -> Aborted (skills and equipment off)
 │                  -Clear-> Stopped                                    /Module
-├─ Equipment IO    EQ_<Item>: owns its IO points (simulated, GPIO, PWM or Modbus) and knows
+├─ Equipment IO    EQ_<Item>: owns its IO points (an address each: 'sim', a GPIO or PWM
+│                  line's handle, or 'modbus[...]'; IO_DI and the others pick the way) and knows
 │                  nothing about what they mean: writes what its one holder sends (break
 │                  before make), reads its inputs every cycle, publishes changes, switches
 │                  all off on release or module Abort                  /Equipment/<Item>
@@ -504,6 +505,11 @@ because with a wrong `.buildpath` it silently skips the system):
 - **A driven input has no expected value**: a skill parameter bound to the parent's holds the
   last passed value, so modsync no longer compares it with the type default (it reported drift
   after every run of a composite with a bound parameter).
+- **`STEP` is reserved too** (SFC): an IO point's address input is `<Point>_Address`, as a
+  point's name alone may be a keyword.
+- **A comm `ID` with brackets is taken as written**: `fbdk[127.0.0.1:61550]` has no IP layer and
+  never opens a socket (`NO_SOCKET`); `127.0.0.1:61550` alone is FORTE's `fbdk[].ip[...]`
+  (`CBaseCommFB::openConnection`).
 - **One FB per IO point.** `IOMapper::registerObserver` refuses a second observer for the same
   handle ("Duplicated observer entry"; `core/src/io/mapper/io_mapper.cpp`, FORTE 3.2 source).
   Different FBs owning different pins is fine, on a Pi as elsewhere.

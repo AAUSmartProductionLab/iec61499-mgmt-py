@@ -28,16 +28,11 @@
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="AtTop_Backend" Value="2" />
-        <Parameter Name="AtTop_Modbus" Value="&quot;modbus[127.0.0.1:1504:1:10:d0:]&quot;" />
-        <Parameter Name="AtBottom_Backend" Value="2" />
-        <Parameter Name="AtBottom_Modbus" Value="&quot;modbus[127.0.0.1:1504:1:10:d1:]&quot;" />
-        <Parameter Name="Position_Backend" Value="2" />
-        <Parameter Name="Position_Modbus" Value="&quot;modbus[127.0.0.1:1504:1:10:i1:]&quot;" />
-        <Parameter Name="Down_Backend" Value="2" />
-        <Parameter Name="Down_Modbus" Value="&quot;modbus[127.0.0.1:1504:1:0::c0]&quot;" />
-        <Parameter Name="Up_Backend" Value="2" />
-        <Parameter Name="Up_Modbus" Value="&quot;modbus[127.0.0.1:1504:1:0::c2]&quot;" />
+        <Parameter Name="AtTop_Address" Value="'modbus[127.0.0.1:1504:1:10:d0:]'" />
+        <Parameter Name="AtBottom_Address" Value="'modbus[127.0.0.1:1504:1:10:d1:]'" />
+        <Parameter Name="Position_Address" Value="'modbus[127.0.0.1:1504:1:10:i1:]'" />
+        <Parameter Name="Down_Address" Value="'modbus[127.0.0.1:1504:1:0::c0]'" />
+        <Parameter Name="Up_Address" Value="'modbus[127.0.0.1:1504:1:0::c2]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="MoveNeedleDown" Type="filler::SK_MoveNeedleDown" x="2800" y="900">
@@ -504,15 +499,11 @@
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="AtTop_Backend" Value="1" />
-        <Parameter Name="AtTop_Io" Value="'NeedleAxis_AtTop'" />
-        <Parameter Name="AtBottom_Backend" Value="1" />
-        <Parameter Name="AtBottom_Io" Value="'NeedleAxis_AtBottom'" />
-        <Parameter Name="Position_Backend" Value="0" />
-        <Parameter Name="Down_Backend" Value="1" />
-        <Parameter Name="Down_Io" Value="'NeedleAxis_Down'" />
-        <Parameter Name="Up_Backend" Value="1" />
-        <Parameter Name="Up_Io" Value="'NeedleAxis_Up'" />
+        <Parameter Name="AtTop_Address" Value="'NeedleAxis_AtTop'" />
+        <Parameter Name="AtBottom_Address" Value="'NeedleAxis_AtBottom'" />
+        <Parameter Name="Position_Address" Value="'sim'" />
+        <Parameter Name="Down_Address" Value="'NeedleAxis_Down'" />
+        <Parameter Name="Up_Address" Value="'NeedleAxis_Up'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="MoveNeedleDown" Type="filler::SK_MoveNeedleDown" x="2800" y="900">

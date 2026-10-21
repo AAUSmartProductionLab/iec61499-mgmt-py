@@ -1,14 +1,12 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="IO_DO" Comment="Digital output; Backend 0 simulated, 1 local IO handle (QX, e.g. GPIOChip or PWM channel), 2 Modbus CLIENT">
+<FBType Name="IO_DO" Comment="Digital output; Address: 'sim' simulated, 'modbus[...]' a Modbus CLIENT ID, any other name a local IO handle (QX PARAMS, e.g. a GPIOChip line or PWM channel); empty: not connected (QO = FALSE)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
       <Event Name="INIT" Type="EInit">
-        <With Var="Backend" />
-        <With Var="IoName" />
-        <With Var="ModbusId" />
+        <With Var="Address" />
       </Event>
       <Event Name="REQ" Type="Event">
         <With Var="OUT" />
@@ -23,9 +21,7 @@
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Backend" Type="USINT" />
-      <VarDeclaration Name="IoName" Type="STRING" />
-      <VarDeclaration Name="ModbusId" Type="WSTRING" />
+      <VarDeclaration Name="Address" Type="STRING" />
       <VarDeclaration Name="OUT" Type="BOOL" />
     </InputVars>
     <OutputVars>
@@ -50,9 +46,9 @@
       <Connection Source="Route.CNF" Destination="CNF" />
     </EventConnections>
     <DataConnections>
-      <Connection Source="Backend" Destination="Route.Backend" />
-      <Connection Source="IoName" Destination="Local.PARAMS" />
-      <Connection Source="ModbusId" Destination="Bus.ID" />
+      <Connection Source="Address" Destination="Route.Address" />
+      <Connection Source="Route.IoName" Destination="Local.PARAMS" />
+      <Connection Source="Route.ModbusId" Destination="Bus.ID" />
       <Connection Source="Route.GQI" Destination="Local.QI" />
       <Connection Source="Route.MQI" Destination="Bus.QI" />
       <Connection Source="Local.QO" Destination="Route.QO_G" />

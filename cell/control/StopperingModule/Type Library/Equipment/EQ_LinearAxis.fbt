@@ -11,19 +11,11 @@
         <With Var="UaRoot" />
         <With Var="UaEnable" />
         <With Var="CycleTime" />
-        <With Var="AtHome_Backend" />
-        <With Var="AtHome_Modbus" />
-        <With Var="AtHome_Io" />
+        <With Var="AtHome_Address" />
         <With Var="AtHome_Sim" />
-        <With Var="Enable_Backend" />
-        <With Var="Enable_Modbus" />
-        <With Var="Enable_Io" />
-        <With Var="Down_Backend" />
-        <With Var="Down_Modbus" />
-        <With Var="Down_Io" />
-        <With Var="Step_Backend" />
-        <With Var="Step_Modbus" />
-        <With Var="Step_Io" />
+        <With Var="Enable_Address" />
+        <With Var="Down_Address" />
+        <With Var="Step_Address" />
         <With Var="Step_Gain" />
         <With Var="Step_Bias" />
       </Event>
@@ -37,19 +29,11 @@
       <VarDeclaration Name="UaRoot" Type="WSTRING" />
       <VarDeclaration Name="UaEnable" Type="BOOL" />
       <VarDeclaration Name="CycleTime" Type="TIME" InitialValue="T#50ms" />
-      <VarDeclaration Name="AtHome_Backend" Type="USINT" InitialValue="2" />
-      <VarDeclaration Name="AtHome_Modbus" Type="WSTRING" />
-      <VarDeclaration Name="AtHome_Io" Type="STRING" />
+      <VarDeclaration Name="AtHome_Address" Type="STRING" />
       <VarDeclaration Name="AtHome_Sim" Type="BOOL" InitialValue="FALSE" />
-      <VarDeclaration Name="Enable_Backend" Type="USINT" InitialValue="2" />
-      <VarDeclaration Name="Enable_Modbus" Type="WSTRING" />
-      <VarDeclaration Name="Enable_Io" Type="STRING" />
-      <VarDeclaration Name="Down_Backend" Type="USINT" InitialValue="2" />
-      <VarDeclaration Name="Down_Modbus" Type="WSTRING" />
-      <VarDeclaration Name="Down_Io" Type="STRING" />
-      <VarDeclaration Name="Step_Backend" Type="USINT" InitialValue="2" />
-      <VarDeclaration Name="Step_Modbus" Type="WSTRING" />
-      <VarDeclaration Name="Step_Io" Type="STRING" />
+      <VarDeclaration Name="Enable_Address" Type="STRING" />
+      <VarDeclaration Name="Down_Address" Type="STRING" />
+      <VarDeclaration Name="Step_Address" Type="STRING" />
       <VarDeclaration Name="Step_Gain" Type="LREAL" InitialValue="655.35" />
       <VarDeclaration Name="Step_Bias" Type="LREAL" InitialValue="0.0" />
     </InputVars>
@@ -150,9 +134,7 @@
       <Connection Source="SubCmd.RD_8" Destination="Logic.C_Goal" />
       <Connection Source="SubRelease.RD_1" Destination="Logic.R_Holder" />
       <Connection Source="Mode.State" Destination="Logic.ModState" />
-      <Connection Source="AtHome_Backend" Destination="In_AtHome.Backend" />
-      <Connection Source="AtHome_Modbus" Destination="In_AtHome.ModbusId" />
-      <Connection Source="AtHome_Io" Destination="In_AtHome.IoName" />
+      <Connection Source="AtHome_Address" Destination="In_AtHome.Address" />
       <Connection Source="AtHome_Sim" Destination="In_AtHome.SimValue" />
       <Connection Source="In_AtHome.IN" Destination="Logic.I_AtHome" />
       <Connection Source="Logic.AtHome" Destination="PubState.SD_1" />
@@ -164,17 +146,11 @@
       <Connection Source="Logic.Moving" Destination="PubState.SD_4" />
       <Connection Source="Logic.Moving" Destination="PubUa.SD_4" />
       <Connection Source="Logic.Holder" Destination="PubState.SD_5" />
-      <Connection Source="Enable_Backend" Destination="Out_Enable.Backend" />
-      <Connection Source="Enable_Modbus" Destination="Out_Enable.ModbusId" />
-      <Connection Source="Enable_Io" Destination="Out_Enable.IoName" />
+      <Connection Source="Enable_Address" Destination="Out_Enable.Address" />
       <Connection Source="Logic.O_Enable" Destination="Out_Enable.OUT" />
-      <Connection Source="Down_Backend" Destination="Out_Down.Backend" />
-      <Connection Source="Down_Modbus" Destination="Out_Down.ModbusId" />
-      <Connection Source="Down_Io" Destination="Out_Down.IoName" />
+      <Connection Source="Down_Address" Destination="Out_Down.Address" />
       <Connection Source="Logic.O_Down" Destination="Out_Down.OUT" />
-      <Connection Source="Step_Backend" Destination="Out_Step.Backend" />
-      <Connection Source="Step_Modbus" Destination="Out_Step.ModbusId" />
-      <Connection Source="Step_Io" Destination="Out_Step.IoName" />
+      <Connection Source="Step_Address" Destination="Out_Step.Address" />
       <Connection Source="Logic.O_Step" Destination="Out_Step.OUT" />
       <Connection Source="Logic.E_Step" Destination="Out_Step.EN" />
       <Connection Source="Step_Gain" Destination="Out_Step.Gain" />

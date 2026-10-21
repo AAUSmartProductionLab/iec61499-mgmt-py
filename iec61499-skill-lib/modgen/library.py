@@ -58,16 +58,37 @@ def ua(kind, *terms):
 # IO primitives
 # --------------------------------------------------------------------------------------------
 
+# The address of an IO point says where it is, in FORTE's own notation: a Modbus CLIENT's ID
+# (``modbus[...]``), the name of a local IO handle as IX and QX take it in PARAMS (a GPIOChip line,
+# a PWM channel), or ``sim``. Empty: not connected, the point reports QO = FALSE.
+ADDRESSING = ("Address: 'sim' simulated, 'modbus[...]' a Modbus CLIENT ID, any other name a local IO handle "
+              "(IX/QX PARAMS, e.g. a GPIOChip line or PWM channel); empty: not connected (QO = FALSE)")
+ROUTE = """IF Address = 'sim' THEN
+  Backend := 0;
+ELSIF LEFT(Address, 7) = 'modbus[' THEN
+  Backend := 2;
+  ModbusId := STRING_TO_WSTRING(Address);
+ELSIF LEN(Address) > 0 THEN
+  Backend := 1;
+  IoName := Address;
+ELSE
+  Backend := 3;
+END_IF;
+GQI := Backend = 1;
+MQI := Backend = 2;"""
+
+
 def make_io(p: Project):
-    """IO_DO, IO_DI, IO_AI, IO_AO: backend 0 simulated, 1 local IO handle (GPIO line, PWM channel), 2 Modbus."""
+    """IO_DO, IO_DI, IO_AI, IO_AO: one IO point, reached where its address says (``ADDRESSING``)."""
     for kind in ["DO", "DI", "AI", "AO"]:
         output = kind in ("DO", "AO")
         vtype = {"DO": "BOOL", "DI": "BOOL", "AI": "LREAL", "AO": "LREAL"}[kind]
         raw = {"DO": "BOOL", "DI": "BOOL", "AI": "WORD", "AO": "WORD"}[kind]
-        ei = {"INIT": ["Backend"], "IO_READY": ["QO_G", "QO_M"], "CNF_G": ["QO_G"], "CNF_M": ["QO_M"]}
-        iv = {"Backend": "USINT", "QO_G": "BOOL", "QO_M": "BOOL"}
-        eo = {"INIT_IO": ["GQI", "MQI"], "INITO": ["QO"], "REQ_G": [], "REQ_M": [], "CNF": ["QO"]}
-        ov = {"GQI": "BOOL", "MQI": "BOOL", "QO": "BOOL"}
+        ei = {"INIT": ["Address"], "IO_READY": ["QO_G", "QO_M"], "CNF_G": ["QO_G"], "CNF_M": ["QO_M"]}
+        iv = {"Address": "STRING", "QO_G": "BOOL", "QO_M": "BOOL"}
+        eo = {"INIT_IO": ["GQI", "MQI", "IoName", "ModbusId"], "INITO": ["QO"], "REQ_G": [], "REQ_M": [], "CNF": ["QO"]}
+        ov = {"GQI": "BOOL", "MQI": "BOOL", "IoName": "STRING", "ModbusId": "WSTRING", "QO": "BOOL"}
+        internal = {"Backend": "USINT"}            # 0 simulated, 1 local IO handle, 2 Modbus, 3 not connected
         if output:
             ei["REQ"], iv["OUT"] = ["OUT"], vtype
             if kind == "AO":
@@ -83,10 +104,12 @@ def make_io(p: Project):
                 iv["Scale"] = ("LREAL", "1.0")
             eo["CNF"] = ["QO", "IN"]
             ov["IN"] = vtype
-        b = Basic(p, LIB, f"IO_Route{kind}", f"Backend router for IO_{kind}: 0 simulated, 1 local IO handle, 2 Modbus",
-                  ei, eo, iv, ov, {"Raw": "LREAL"} if kind == "AO" else None, folder="IO/Base")
+        if kind == "AO":
+            internal["Raw"] = "LREAL"
+        b = Basic(p, LIB, f"IO_Route{kind}", f"Backend router for IO_{kind}; {ADDRESSING}",
+                  ei, eo, iv, ov, internal, folder="IO/Base")
         b.state("START")
-        b.state("Init", "GQI := Backend = 1;\nMQI := Backend = 2;", "INIT_IO")
+        b.state("Init", ROUTE, "INIT_IO")
         b.state("Ready", "QO := (Backend = 0) OR ((Backend = 1) AND QO_G) OR ((Backend = 2) AND QO_M);", "INITO")
         b.trans("START", "Init", "INIT")
         b.trans("Init", "START", "1")
@@ -106,9 +129,11 @@ def make_io(p: Project):
             else:
                 b.state("Req", "Value := OUT;")
             b.state("Sim", "QO := TRUE;", "CNF")
+            b.state("None", "QO := FALSE;", "CNF")
             b.trans("START", "Req", "REQ")
             b.trans("Req", "ReqG", "Backend = 1")
             b.trans("Req", "ReqM", "Backend = 2")
+            b.trans("Req", "None", "Backend = 3")
             b.trans("Req", "Sim", "1")
             b.state("DoneG", "QO := QO_G;", "CNF")
             b.state("DoneM", "QO := QO_M;")
@@ -116,21 +141,23 @@ def make_io(p: Project):
             b.state("ReqM", None, "REQ_M")
             conv = "UINT_TO_LREAL(WORD_TO_UINT({0})) * Scale" if kind == "AI" else "{0}"
             b.state("Sim", "QO := TRUE;\nIN := SimValue;", "CNF")
+            b.state("None", "QO := FALSE;", "CNF")
             b.trans("START", "ReqG", "REQ[Backend = 1]")
             b.trans("START", "ReqM", "REQ[Backend = 2]")
+            b.trans("START", "None", "REQ[Backend = 3]")
             b.trans("START", "Sim", "REQ")
             b.state("DoneG", f"QO := QO_G;\nIN := {conv.format('IN_G')};", "CNF")
             b.state("DoneM", f"QO := QO_M;\nIN := {conv.format('IN_M')};", "CNF")
         b.trans("START", "DoneG", "CNF_G")
         b.trans("START", "DoneM", "CNF_M")
-        for s in ["ReqG", "ReqM", "Sim", "DoneG", "DoneM"]:
+        for s in ["ReqG", "ReqM", "Sim", "None", "DoneG", "DoneM"]:
             b.trans(s, "START", "1")
         b.write()
 
         local = {"DO": STD["QX"], "DI": STD["IX"], "AI": STD["IW"], "AO": STD["QW"]}[kind]
         client = STD["CLIENT_1_0"] if output else STD["CLIENT_0_1"]
-        iv = {"Backend": "USINT", "IoName": "STRING", "ModbusId": "WSTRING"}
-        ev_in = {"INIT": (["Backend", "IoName", "ModbusId"], "EInit")}
+        iv = {"Address": "STRING"}
+        ev_in = {"INIT": (["Address"], "EInit")}
         ev_out = {"INITO": (["QO"], "EInit")}
         ov = {"QO": "BOOL"}
         if output:
@@ -146,8 +173,7 @@ def make_io(p: Project):
             ev_out["CNF"], ov["IN"] = ["QO", "IN"], vtype
         label = {"DO": "Digital output", "DI": "Digital input", "AI": "Analog input",
                  "AO": "Analog output (raw = Bias + OUT * Gain, 0..65535; EN = FALSE writes 0)"}[kind]
-        c = Composite(p, LIB, f"IO_{kind}", f"{label}; Backend 0 simulated, 1 local IO handle "
-                      f"({local.split('::')[-1]}, e.g. GPIOChip or PWM channel), 2 Modbus CLIENT",
+        c = Composite(p, LIB, f"IO_{kind}", f"{label}; {ADDRESSING.replace('IX/QX', local.split('::')[-1])}",
                       ev_in, ev_out, iv, ov, folder="IO")
         c.fb("Route", q(f"IO_Route{kind}"))
         c.fb("Local", local)
@@ -163,9 +189,9 @@ def make_io(p: Project):
         c.ev("Local.CNF", "Route.CNF_G")
         c.ev("Bus.CNF", "Route.CNF_M")
         c.ev("Route.CNF", "CNF")
-        c.da("Backend", "Route.Backend")
-        c.da("IoName", "Local.PARAMS")
-        c.da("ModbusId", "Bus.ID")
+        c.da("Address", "Route.Address")
+        c.da("Route.IoName", "Local.PARAMS")
+        c.da("Route.ModbusId", "Bus.ID")
         c.da("Route.GQI", "Local.QI")
         c.da("Route.MQI", "Bus.QI")
         c.da("Local.QO", "Route.QO_G")

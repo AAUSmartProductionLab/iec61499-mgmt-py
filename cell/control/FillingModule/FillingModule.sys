@@ -28,14 +28,10 @@
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="AtHome_Backend" Value="2" />
-        <Parameter Name="AtHome_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:10:d0:]&quot;" />
-        <Parameter Name="Enable_Backend" Value="2" />
-        <Parameter Name="Enable_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c0]&quot;" />
-        <Parameter Name="Down_Backend" Value="2" />
-        <Parameter Name="Down_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:0::c1]&quot;" />
-        <Parameter Name="Step_Backend" Value="2" />
-        <Parameter Name="Step_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:0::h0]&quot;" />
+        <Parameter Name="AtHome_Address" Value="'modbus[127.0.0.1:1502:1:10:d0:]'" />
+        <Parameter Name="Enable_Address" Value="'modbus[127.0.0.1:1502:1:0::c0]'" />
+        <Parameter Name="Down_Address" Value="'modbus[127.0.0.1:1502:1:0::c1]'" />
+        <Parameter Name="Step_Address" Value="'modbus[127.0.0.1:1502:1:0::h0]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="Pump" Type="filling::EQ_Pump" x="9300" y="900">
@@ -48,8 +44,7 @@
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="Weight_Backend" Value="2" />
-        <Parameter Name="Weight_Modbus" Value="&quot;modbus[127.0.0.1:1502:1:10:i0:]&quot;" />
+        <Parameter Name="Weight_Address" Value="'modbus[127.0.0.1:1502:1:10:i0:]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="Home" Type="filling::SK_Home" x="2800" y="900">
@@ -672,14 +667,10 @@
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="AtHome_Backend" Value="1" />
-        <Parameter Name="AtHome_Io" Value="'LinearAxis_AtHome'" />
-        <Parameter Name="Enable_Backend" Value="1" />
-        <Parameter Name="Enable_Io" Value="'LinearAxis_Enable'" />
-        <Parameter Name="Down_Backend" Value="1" />
-        <Parameter Name="Down_Io" Value="'LinearAxis_Down'" />
-        <Parameter Name="Step_Backend" Value="1" />
-        <Parameter Name="Step_Io" Value="'LinearAxis_Step'" />
+        <Parameter Name="AtHome_Address" Value="'LinearAxis_AtHome'" />
+        <Parameter Name="Enable_Address" Value="'LinearAxis_Enable'" />
+        <Parameter Name="Down_Address" Value="'LinearAxis_Down'" />
+        <Parameter Name="Step_Address" Value="'LinearAxis_Step'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="Pump" Type="filling::EQ_Pump" x="9300" y="900">
@@ -692,7 +683,7 @@
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="Weight_Backend" Value="0" />
+        <Parameter Name="Weight_Address" Value="'sim'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
       <FB Name="Home" Type="filling::SK_Home" x="2800" y="900">
@@ -1157,15 +1148,15 @@
         <Connection Source="Boot.COLD" Destination="GpioLines.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Boot.WARM" Destination="GpioLines.INIT">
+        <Connection Source="Boot.WARM" Destination="GpioLines.INIT" dx1="2146.67">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Module.RUN_RESETTING" Destination="Resetting.START" />
-        <Connection Source="Resetting.DONE" Destination="Module.RESETTING_DONE" />
-        <Connection Source="Resetting.FAILED" Destination="Module.RESETTING_FAILED" />
-        <Connection Source="Module.RUN_STOPPING" Destination="Stopping.START" />
-        <Connection Source="Stopping.DONE" Destination="Module.STOPPING_DONE" />
-        <Connection Source="Stopping.FAILED" Destination="Module.STOPPING_FAILED" />
+        <Connection Source="Module.RUN_RESETTING" Destination="Resetting.START" dx1="80" dx2="80" dy="4700" />
+        <Connection Source="Resetting.DONE" Destination="Module.RESETTING_DONE" dx1="9673.33" />
+        <Connection Source="Resetting.FAILED" Destination="Module.RESETTING_FAILED" dx1="9673.33" />
+        <Connection Source="Module.RUN_STOPPING" Destination="Stopping.START" dx1="80" dx2="80" dy="4646.67" />
+        <Connection Source="Stopping.DONE" Destination="Module.STOPPING_DONE" dx1="7173.33" />
+        <Connection Source="Stopping.FAILED" Destination="Module.STOPPING_FAILED" dx1="7173.33" />
         <Connection Source="GpioLines.INITO" Destination="PwmLines.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
@@ -1175,16 +1166,16 @@
         <Connection Source="Occupation.INITO" Destination="Module.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Module.INITO" Destination="LinearAxis.INIT">
+        <Connection Source="Module.INITO" Destination="LinearAxis.INIT" dx1="80" dx2="80" dy="11700">
           <Attribute Name="Visible" Value="false" />
         </Connection>
         <Connection Source="LinearAxis.INITO" Destination="Pump.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Pump.INITO" Destination="Scale.INIT">
+        <Connection Source="Pump.INITO" Destination="Scale.INIT" dx1="80" dx2="80" dy="160">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Scale.INITO" Destination="Home.INIT">
+        <Connection Source="Scale.INITO" Destination="Home.INIT" dx1="80" dx2="80" dy="-4846.67">
           <Attribute Name="Visible" Value="false" />
         </Connection>
         <Connection Source="Home.INITO" Destination="MoveAxis.INIT">
@@ -1193,19 +1184,19 @@
         <Connection Source="MoveAxis.INITO" Destination="Dispense.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Dispense.INITO" Destination="Tare.INIT">
+        <Connection Source="Dispense.INITO" Destination="Tare.INIT" dx1="80" dx2="80" dy="160">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Tare.INITO" Destination="Weigh.INIT">
+        <Connection Source="Tare.INITO" Destination="Weigh.INIT" dx1="80" dx2="80" dy="1900">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Weigh.INITO" Destination="Resetting.INIT">
+        <Connection Source="Weigh.INITO" Destination="Resetting.INIT" dx1="80" dx2="80" dy="-4046.67">
           <Attribute Name="Visible" Value="false" />
         </Connection>
         <Connection Source="Resetting.INITO" Destination="Stopping.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Stopping.INITO" Destination="Dispensing.INIT">
+        <Connection Source="Stopping.INITO" Destination="Dispensing.INIT" dx1="80" dx2="80" dy="-2146.67">
           <Attribute Name="Visible" Value="false" />
         </Connection>
       </EventConnections>

@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ET
 from .fbxml import (STD, Basic, Composite, Project, Simple, SubNet, Wiring, arrange, connections, elem, fb, publish,
                     save, server, subapp, subscribe, wstr)
 from .library import ERRORS, cat, lit, q, ua
-from .spec import ACTUAL, BACKENDS, HOMED, MOVE, MOVING, Equipment, ModuleSpec, Output, Parameter, Skill, Step, ms, names
+from .spec import ACTUAL, HOMED, MOVE, MOVING, Equipment, ModuleSpec, Output, Parameter, Skill, Step, ms, names
 
 IO_TYPE = {("in", "BOOL"): "DI", ("in", "LREAL"): "AI", ("out", "BOOL"): "DO", ("out", "LREAL"): "AO"}
 # GPIOChip BiasMode. FORTE 3.3.0 indexes {as is, disable, pull-up, pull-down} with an enum
@@ -312,14 +312,15 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
 
     iv = {"Module": "WSTRING", "Name": ("WSTRING", wstr(name)), "UaRoot": "WSTRING", "UaEnable": "BOOL",
           "CycleTime": ("TIME", "T#50ms")}
-    # Per IO point: backend (0 simulated, 1 local IO handle, 2 Modbus), Modbus ID, IO handle name.
+    # Per IO point: its address (IO_DI and the others: 'sim', 'modbus[...]' or an IO handle name);
+    # <point>_Address, as a point's name alone may be a keyword (STEP).
     for s, i in wired.items():
-        iv[f"{s}_Backend"], iv[f"{s}_Modbus"], iv[f"{s}_Io"] = ("USINT", "2"), "WSTRING", "STRING"
+        iv[f"{s}_Address"] = "STRING"
         iv[f"{s}_Sim"] = (i.type, ("TRUE" if i.sim else "FALSE") if i.type == "BOOL" else num(i.sim))
         if i.type == "LREAL":
             iv[f"{s}_Scale"] = ("LREAL", num(i.scale))
     for o, x in outs.items():
-        iv[f"{o}_Backend"], iv[f"{o}_Modbus"], iv[f"{o}_Io"] = ("USINT", "2"), "WSTRING", "STRING"
+        iv[f"{o}_Address"] = "STRING"
         if x.type == "LREAL":
             iv[f"{o}_Gain"], iv[f"{o}_Bias"] = ("LREAL", num(x.gain)), ("LREAL", num(x.bias))
     c = Composite(p, pkg, f"EQ_{name}", (eq.description or name) + "; equipment IO: owns its IO points, writes the "
@@ -381,9 +382,9 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
     else:
         c.ev("Cycle.EO", "Logic.SAMPLE")
     for k, (s, i) in enumerate(ins.items(), 1):
-        for v, pin in [] if i.computed else [("Backend", "Backend"), ("Modbus", "ModbusId"), ("Io", "IoName"),
-                                             ("Sim", "SimValue")]:
-            c.da(f"{s}_{v}", f"In_{s}.{pin}")
+        if not i.computed:
+            c.da(f"{s}_Address", f"In_{s}.Address")
+            c.da(f"{s}_Sim", f"In_{s}.SimValue")
         if i.type == "LREAL" and not i.computed:
             c.da(f"{s}_Scale", f"In_{s}.Scale")
         if not i.computed:
@@ -399,8 +400,7 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
     else:
         c.ev("Logic.DRIVE", "Logic.DRIVEN")
     for o, x in outs.items():
-        for v, pin in [("Backend", "Backend"), ("Modbus", "ModbusId"), ("Io", "IoName")]:
-            c.da(f"{o}_{v}", f"Out_{o}.{pin}")
+        c.da(f"{o}_Address", f"Out_{o}.Address")
         c.da(f"Logic.O_{o}", f"Out_{o}.OUT")
         if x.type == "LREAL":
             c.da(f"Logic.E_{o}", f"Out_{o}.EN")
@@ -985,12 +985,7 @@ def application(root, spec: ModuleSpec, target: str):
         for s, point in [*eq.inputs.items(), *eq.outputs.items()]:
             if getattr(point, "computed", False):
                 continue
-            backend = spec.backend(target, point)
-            io[f"{s}_Backend"] = str(BACKENDS[backend])
-            if backend == "modbus":
-                io[f"{s}_Modbus"] = wstr(spec.modbus_id(point.modbus, isinstance(point, Output), target))
-            elif backend in ("gpio", "pwm"):
-                io[f"{s}_Io"] = f"'{name}_{s}'"
+            io[f"{s}_Address"] = f"'{spec.address(target, point, f'{name}_{s}')}'"
         fb(net, name, f"{pkg}::EQ_{name}", 2000 + i * 5000, 3000, Module=module, UaRoot=ua_root, UaEnable="TRUE", **io)
         chain.append(name)
     for i, (name, skill) in enumerate((n, s) for n, s in spec.skills.items() if s.offered):
