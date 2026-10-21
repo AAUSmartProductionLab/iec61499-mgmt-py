@@ -99,8 +99,9 @@ modsync pull --host 192.168.0.191 --register http://<host>:8090    # ... or with
 when it comes online or changes). The service keeps each profile and AAS in its `--store`
 folder; a profile registered again unchanged is not published again. A broken restriction of the
 ontology refuses the registration; `--strict` also refuses what the ontology does not describe.
-`ModuleTypeAAS` (`modreg/model.py`) is a resource in the structure of the resource ontology (ARSO)
-for an OPC UA module; profiles of the lab's own `ResourceTypeAAS` go through the same service.
+`ModuleTypeAAS` (`modreg/model.py`) is aas-model's `Resource` in the structure of the resource
+ontology (ARSO) for an OPC UA module; the plain `Resource` export of the lab's own stations goes
+through the same service.
 Nameplate, Hierarchical Structures, interface description and mapping configuration are aas-model's
 classes. The ontology's own submodels (Skills, Operational Data, Parameters, Control
 Configuration) have no IDTA template, so their classes are made the way aas-model makes its own:
