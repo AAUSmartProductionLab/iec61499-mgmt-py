@@ -23,6 +23,7 @@ import xml.etree.ElementTree as ET
 from .fbxml import (STD, Basic, Composite, Project, Simple, SubNet, Wiring, arrange, connections, elem, fb, publish,
                     save, server, subapp, subscribe, wstr)
 from .library import ERRORS, cat, lit, q, ua
+from .layout import Sizer, networks, place_new, relayout
 from .spec import ACTUAL, HOMED, MOVE, MOVING, Equipment, ModuleSpec, Output, Parameter, Skill, Step, ms, names
 
 IO_TYPE = {("in", "BOOL"): "DI", ("in", "LREAL"): "AI", ("out", "BOOL"): "DO", ("out", "LREAL"): "AO"}
@@ -1058,6 +1059,9 @@ def make_system(p: Project, spec: ModuleSpec):
     for app in apps.values():
         group_layout(app.find("SubAppNetwork"), spec)
     hide_init_connections(root)
+    size = Sizer(p.types)
+    for net in networks(root):
+        relayout(net, size)
     for i, (target, t) in enumerate(spec.targets.items()):
         device = elem(root, "Device", Name=device_name(target), Type=STD["FORTE_PC"], x=1000 + i * 3000, y=1000)
         elem(device, "Parameter", Name="MGR_ID", Comment="Device manager socket ID", Value=wstr(f"{t.host}:{t.port}"))
@@ -1074,7 +1078,7 @@ def make_system(p: Project, spec: ModuleSpec):
         for child in app.find("SubAppNetwork"):
             if child.tag in ("FB", "SubApp"):
                 elem(root, "Mapping", From=f"{app.get('Name')}.{child.get('Name')}", To=f"{device_name(target)}.RES")
-    save(root, p.root / f"{p.name}.sys")
+    save(root, p.root / f"{p.name}.sys", lambda tree, kept: place_new(tree, kept, size))
 
 
 def make_module(p: Project, spec: ModuleSpec):

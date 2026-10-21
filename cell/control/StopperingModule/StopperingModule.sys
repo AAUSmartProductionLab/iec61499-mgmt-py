@@ -95,7 +95,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="1000" y="1000">
+          <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="2500" y="1000">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/RetractPiston&quot;" />
@@ -104,7 +104,7 @@
             <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
             <Parameter Name="LastUse" Value="TRUE" />
           </FB>
-          <FB Name="Home" Type="stoppering::SK_Home" x="6000" y="1000">
+          <FB Name="Home" Type="stoppering::SK_Home" x="5170" y="1000">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Home&quot;" />
@@ -113,7 +113,7 @@
             <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
             <Parameter Name="LastUse" Value="TRUE" />
           </FB>
-          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6000" y="4000" />
+          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6245" y="1000" />
           <EventConnections>
             <Connection Source="INIT" Destination="RetractPiston.INIT">
               <Attribute Name="Visible" Value="false" />
@@ -155,7 +155,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="Home" Type="stoppering::SK_Home" x="1000" y="1000">
+          <FB Name="Home" Type="stoppering::SK_Home" x="2315" y="1000">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/Home&quot;" />
@@ -191,10 +191,10 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="12000" height="5500" locked="false" />
-          <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="1000" y="7700" width="14800" height="4100" locked="false" />
-          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="13000" width="16600" height="3500" locked="false" />
-          <FB Name="Control" Type="modlib::SKILL_Core" x="2800" y="900">
+          <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="3675" height="2800" locked="false" />
+          <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="4975" y="1000" width="2080" height="1600" locked="false" />
+          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="4100" width="7110" height="1500" locked="false" />
+          <FB Name="Control" Type="modlib::SKILL_Core" x="1245" y="500">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering&quot;" />
@@ -202,25 +202,25 @@
             <Parameter Name="Methods" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="7400" y="900">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="2725" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
           </FB>
-          <FB Name="Release" Type="modlib::SKILL_Release" x="2800" y="900">
+          <FB Name="Release" Type="modlib::SKILL_Release" x="840" y="500">
             <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
           </FB>
-          <FB Name="Rel_LinearAxis" Type="iec61499::net::PUBLISH_1" x="7400" y="900">
+          <FB Name="Rel_LinearAxis" Type="iec61499::net::PUBLISH_1" x="3470" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;loc[Stoppering/LinearAxis/release]&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
           </FB>
-          <FB Name="Rel_Piston" Type="iec61499::net::PUBLISH_1" x="12000" y="900">
+          <FB Name="Rel_Piston" Type="iec61499::net::PUBLISH_1" x="6160" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;loc[Stoppering/Piston/release]&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
           </FB>
-          <SubApp Name="Execute" x="2800" y="900" Comment="Stoppering: execute sequence">
+          <SubApp Name="Execute" x="300" y="500" Comment="Stoppering: execute sequence">
             <SubAppInterfaceList>
               <SubAppEventInputs>
                 <SubAppEvent Name="INIT" Type="EInit" />
@@ -239,7 +239,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="HeadDown" Type="stoppering::SK_MoveAxis" x="1000" y="1000">
+              <FB Name="HeadDown" Type="stoppering::SK_MoveAxis" x="2500" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/HeadDown&quot;" />
@@ -249,7 +249,7 @@
                 <Parameter Name="LastUse" Value="FALSE" />
                 <Parameter Name="Position" Value="40.0" />
               </FB>
-              <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="6000" y="1000">
+              <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="5010" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/PressStopper&quot;" />
@@ -258,7 +258,7 @@
                 <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="LastUse" Value="TRUE" />
               </FB>
-              <FB Name="Home" Type="stoppering::SK_Home" x="11000" y="1000">
+              <FB Name="Home" Type="stoppering::SK_Home" x="7760" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/Home&quot;" />
@@ -267,8 +267,8 @@
                 <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="LastUse" Value="TRUE" />
               </FB>
-              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6000" y="4000" />
-              <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="11000" y="4000" />
+              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="8835" y="1000" />
+              <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="10185" y="1000" />
               <EventConnections>
                 <Connection Source="INIT" Destination="HeadDown.INIT">
                   <Attribute Name="Visible" Value="false" />
@@ -311,7 +311,7 @@
             </SubAppNetwork>
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
-          <SubApp Name="Stop" x="8800" y="900" Comment="Stoppering: stop sequence">
+          <SubApp Name="Stop" x="1240" y="500" Comment="Stoppering: stop sequence">
             <SubAppInterfaceList>
               <SubAppEventInputs>
                 <SubAppEvent Name="INIT" Type="EInit" />
@@ -330,7 +330,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="Home" Type="stoppering::SK_Home" x="1000" y="1000">
+              <FB Name="Home" Type="stoppering::SK_Home" x="2500" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Stopping/Home&quot;" />
@@ -481,7 +481,7 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="LinearAxis_AtHome" Type="eclipse4diac::io::gpiochip::GPIOChip" x="1000" y="1000">
+          <FB Name="LinearAxis_AtHome" Type="eclipse4diac::io::gpiochip::GPIOChip" x="1955" y="1000">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="VALUE" Value="&quot;LinearAxis_AtHome&quot;" />
             <Parameter Name="ChipNumber" Value="0" />
@@ -490,7 +490,7 @@
             <Parameter Name="BiasMode" Value="2" />
             <Parameter Name="ActiveLow" Value="TRUE" />
           </FB>
-          <FB Name="LinearAxis_Enable" Type="eclipse4diac::io::gpiochip::GPIOChip" x="4000" y="1000">
+          <FB Name="LinearAxis_Enable" Type="eclipse4diac::io::gpiochip::GPIOChip" x="4280" y="1000">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="VALUE" Value="&quot;LinearAxis_Enable&quot;" />
             <Parameter Name="ChipNumber" Value="0" />
@@ -499,7 +499,7 @@
             <Parameter Name="BiasMode" Value="0" />
             <Parameter Name="ActiveLow" Value="TRUE" />
           </FB>
-          <FB Name="LinearAxis_Down" Type="eclipse4diac::io::gpiochip::GPIOChip" x="7000" y="1000">
+          <FB Name="LinearAxis_Down" Type="eclipse4diac::io::gpiochip::GPIOChip" x="6515" y="1000">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="VALUE" Value="&quot;LinearAxis_Down&quot;" />
             <Parameter Name="ChipNumber" Value="0" />
@@ -508,7 +508,7 @@
             <Parameter Name="BiasMode" Value="0" />
             <Parameter Name="ActiveLow" Value="FALSE" />
           </FB>
-          <FB Name="Piston_Retract" Type="eclipse4diac::io::gpiochip::GPIOChip" x="10000" y="1000">
+          <FB Name="Piston_Retract" Type="eclipse4diac::io::gpiochip::GPIOChip" x="8585" y="1000">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="VALUE" Value="&quot;Piston_Retract&quot;" />
             <Parameter Name="ChipNumber" Value="0" />
@@ -517,7 +517,7 @@
             <Parameter Name="BiasMode" Value="0" />
             <Parameter Name="ActiveLow" Value="FALSE" />
           </FB>
-          <FB Name="Piston_Extend" Type="eclipse4diac::io::gpiochip::GPIOChip" x="13000" y="1000">
+          <FB Name="Piston_Extend" Type="eclipse4diac::io::gpiochip::GPIOChip" x="10550" y="1000">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="VALUE" Value="&quot;Piston_Extend&quot;" />
             <Parameter Name="ChipNumber" Value="0" />
@@ -559,7 +559,7 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="LinearAxis_Step" Type="eclipse4diac::io::pwmsysfs::PWMChip" x="1000" y="1000">
+          <FB Name="LinearAxis_Step" Type="eclipse4diac::io::pwmsysfs::PWMChip" x="2000" y="1000">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="VALUE" Value="&quot;LinearAxis_Step&quot;" />
             <Parameter Name="ChipNumber" Value="0" />
@@ -652,7 +652,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="1000" y="1000">
+          <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="2500" y="1000">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/RetractPiston&quot;" />
@@ -661,7 +661,7 @@
             <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
             <Parameter Name="LastUse" Value="TRUE" />
           </FB>
-          <FB Name="Home" Type="stoppering::SK_Home" x="6000" y="1000">
+          <FB Name="Home" Type="stoppering::SK_Home" x="5170" y="1000">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Home&quot;" />
@@ -670,7 +670,7 @@
             <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
             <Parameter Name="LastUse" Value="TRUE" />
           </FB>
-          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6000" y="4000" />
+          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6245" y="1000" />
           <EventConnections>
             <Connection Source="INIT" Destination="RetractPiston.INIT">
               <Attribute Name="Visible" Value="false" />
@@ -712,7 +712,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="Home" Type="stoppering::SK_Home" x="1000" y="1000">
+          <FB Name="Home" Type="stoppering::SK_Home" x="2315" y="1000">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/Home&quot;" />
@@ -748,10 +748,10 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="12000" height="5500" locked="false" />
-          <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="1000" y="7700" width="14800" height="4100" locked="false" />
-          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="13000" width="16600" height="3500" locked="false" />
-          <FB Name="Control" Type="modlib::SKILL_Core" x="2800" y="900">
+          <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="3675" height="2800" locked="false" />
+          <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="4975" y="1000" width="2080" height="1600" locked="false" />
+          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="4100" width="7110" height="1500" locked="false" />
+          <FB Name="Control" Type="modlib::SKILL_Core" x="1245" y="500">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering&quot;" />
@@ -759,25 +759,25 @@
             <Parameter Name="Methods" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="7400" y="900">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="2725" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
           </FB>
-          <FB Name="Release" Type="modlib::SKILL_Release" x="2800" y="900">
+          <FB Name="Release" Type="modlib::SKILL_Release" x="840" y="500">
             <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
           </FB>
-          <FB Name="Rel_LinearAxis" Type="iec61499::net::PUBLISH_1" x="7400" y="900">
+          <FB Name="Rel_LinearAxis" Type="iec61499::net::PUBLISH_1" x="3470" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;loc[Stoppering/LinearAxis/release]&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
           </FB>
-          <FB Name="Rel_Piston" Type="iec61499::net::PUBLISH_1" x="7400" y="900">
+          <FB Name="Rel_Piston" Type="iec61499::net::PUBLISH_1" x="6160" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;loc[Stoppering/Piston/release]&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
           </FB>
-          <SubApp Name="Execute" x="2800" y="900" Comment="Stoppering: execute sequence">
+          <SubApp Name="Execute" x="300" y="500" Comment="Stoppering: execute sequence">
             <SubAppInterfaceList>
               <SubAppEventInputs>
                 <SubAppEvent Name="INIT" Type="EInit" />
@@ -796,7 +796,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="HeadDown" Type="stoppering::SK_MoveAxis" x="1000" y="1000">
+              <FB Name="HeadDown" Type="stoppering::SK_MoveAxis" x="2500" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/HeadDown&quot;" />
@@ -806,7 +806,7 @@
                 <Parameter Name="LastUse" Value="FALSE" />
                 <Parameter Name="Position" Value="40.0" />
               </FB>
-              <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="6000" y="1000">
+              <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="5010" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/PressStopper&quot;" />
@@ -815,7 +815,7 @@
                 <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="LastUse" Value="TRUE" />
               </FB>
-              <FB Name="Home" Type="stoppering::SK_Home" x="11000" y="1000">
+              <FB Name="Home" Type="stoppering::SK_Home" x="7760" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/Home&quot;" />
@@ -824,8 +824,8 @@
                 <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="LastUse" Value="TRUE" />
               </FB>
-              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6000" y="4000" />
-              <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="11000" y="4000" />
+              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="8835" y="1000" />
+              <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="10185" y="1000" />
               <EventConnections>
                 <Connection Source="INIT" Destination="HeadDown.INIT">
                   <Attribute Name="Visible" Value="false" />
@@ -868,7 +868,7 @@
             </SubAppNetwork>
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
-          <SubApp Name="Stop" x="8800" y="900" Comment="Stoppering: stop sequence">
+          <SubApp Name="Stop" x="1240" y="500" Comment="Stoppering: stop sequence">
             <SubAppInterfaceList>
               <SubAppEventInputs>
                 <SubAppEvent Name="INIT" Type="EInit" />
@@ -887,7 +887,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="Home" Type="stoppering::SK_Home" x="1000" y="1000">
+              <FB Name="Home" Type="stoppering::SK_Home" x="2500" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Stopping/Home&quot;" />
