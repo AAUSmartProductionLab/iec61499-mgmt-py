@@ -4,23 +4,29 @@
 Run it on the Pi, to tell a wiring or hardware fault from a software one. Stop FORTE first, it
 holds the pins:  cd ~/forte && docker compose stop
 
-    python3 steptest.py hold 10                # driver on for 10 s, no steps: the shaft should be stiff
-    python3 steptest.py steps 400              # 400 steps at 200 a second, pulsed by this script
-    python3 steptest.py steps 400 --dir 1 --hz 500
-    python3 steptest.py loopback               # do pulses leave the Step pin? (jumper Step -> the test input)
-    sudo python3 steptest.py pwm 2             # 2 s of the hardware PWM that FORTE steps with (1 kHz)
-    sudo python3 steptest.py pwm-loopback      # count that PWM's pulses (same jumper)
+    python steptest.py hold 10                 # driver on for 10 s, no steps: the shaft should be stiff
+    python steptest.py steps 400               # 400 steps at 500 a second, pulsed by this script
+    python steptest.py steps 1200 --dir 1 --hz 1000
+    python steptest.py loopback                # do pulses leave the Step pin? (jumper Step -> the test input)
+    sudo python steptest.py pwm 2              # 2 s of the hardware PWM that FORTE steps with (2 kHz)
+    sudo python steptest.py pwm-loopback       # count that PWM's pulses (same jumper)
 
 The pins are those of the module descriptions (cell/modules): Step GPIO18 (header pin 12), Dir
-GPIO27 (pin 13), Enable GPIO17 (pin 11, low is on), test input GPIO23 (pin 16). Other pins:
---step, --dir-pin, --enable, --input; a driver whose enable is high for on: --enable-high.
+GPIO27 (pin 13), Enable GPIO17 (pin 11, low is on, as on a TB6600 with ENA- on GND), test input
+GPIO23 (pin 16, the limit switch's). Other pins: --step, --dir-pin, --enable, --input; a driver
+whose enable is high for on: --enable-high. On the filling axis (TB6600 at 4 microsteps, 5 mm ball
+screw) 160 steps are 1 mm, so 400 steps are 2.5 mm.
 
 Do the two pwm tests first after a boot: once this script has pulsed the Step pin itself, the pin
 is an ordinary output and the hardware PWM no longer reaches it until the Pi is rebooted. Reboot
 before FORTE is started again:  sudo reboot  (FORTE then starts by itself).
 
-Needs gpiozero with lgpio (sudo apt install python3-gpiozero python3-lgpio) and access to
-/dev/gpiochip0 (group dialout on Ubuntu, gpio on Raspberry Pi OS, or sudo).
+Needs the gpiod bindings, which install without sudo into a venv:
+
+    python3 -m venv --without-pip ~/iotest && curl -sS https://bootstrap.pypa.io/get-pip.py | ~/iotest/bin/python
+    ~/iotest/bin/pip install gpiod                     # then: ~/iotest/bin/python steptest.py ...
+
+and access to /dev/gpiochip0 (group dialout on Ubuntu, gpio on Raspberry Pi OS, or sudo).
 """
 import argparse
 from pathlib import Path
@@ -38,6 +44,12 @@ def pi5() -> bool:
         return False
 
 
+def chip() -> str:
+    """The header's GPIO chip: 0 on a Pi 4 and on a Pi 5 with a current kernel (older ones: 4)."""
+    return "/dev/gpiochip4" if pi5() and Path("/dev/gpiochip4").exists() and not Path("/dev/gpiochip0").exists() \
+        else "/dev/gpiochip0"
+
+
 def forte_runs() -> bool:
     """FORTE's container holds the lines: nothing here would work beside it."""
     try:
@@ -48,26 +60,40 @@ def forte_runs() -> bool:
         return False
 
 
-def devices(args, step_by_gpio: bool):
-    from gpiozero import Device, DigitalOutputDevice
-    from gpiozero.pins.lgpio import LGPIOFactory
-    # The header is chip 0 on a Pi 4 and on a Pi 5 with a current kernel (older ones: 4).
-    chip = 0 if Path("/dev/gpiochip0").exists() and not Path("/dev/gpiochip4").exists() else (4 if pi5() else 0)
-    Device.pin_factory = LGPIOFactory(chip=chip)
-    # Off at first: for a driver that is on while its enable is low, the pin starts high.
-    enable = DigitalOutputDevice(args.enable, active_high=args.enable_high, initial_value=False)
-    direction = DigitalOutputDevice(args.dir_pin, initial_value=bool(args.dir))
-    step = DigitalOutputDevice(args.step, initial_value=False) if step_by_gpio else None
-    return enable, direction, step
+class Pins:
+    """Enable, Dir and (when this script pulses it) Step as outputs; Enable starts off."""
 
+    def __init__(self, args, step_by_gpio: bool):
+        import gpiod
+        from gpiod.line import Direction, Value
+        self.on, self.off = Value.ACTIVE, Value.INACTIVE
+        self.args = args
+        self.enable_on = self.on if args.enable_high else self.off
+        self.enable_off = self.off if args.enable_high else self.on
+        config = {args.enable: gpiod.LineSettings(direction=Direction.OUTPUT, output_value=self.enable_off),
+                  args.dir_pin: gpiod.LineSettings(direction=Direction.OUTPUT,
+                                                   output_value=self.on if args.dir else self.off)}
+        if step_by_gpio:
+            config[args.step] = gpiod.LineSettings(direction=Direction.OUTPUT, output_value=self.off)
+        self.request = gpiod.request_lines(chip(), consumer="steptest", config=config)
+        self.step_by_gpio = step_by_gpio
 
-def pulses(step, count: int, hz: float):
-    half = 0.5 / hz
-    for _ in range(count):
-        step.on()
-        time.sleep(half)
-        step.off()
-        time.sleep(half)
+    def enable(self, on: bool):
+        self.request.set_value(self.args.enable, self.enable_on if on else self.enable_off)
+
+    def pulses(self, count: int, hz: float):
+        half = 0.5 / hz
+        for _ in range(count):
+            self.request.set_value(self.args.step, self.on)
+            time.sleep(half)
+            self.request.set_value(self.args.step, self.off)
+            time.sleep(half)
+
+    def release(self):
+        self.enable(False)
+        if self.step_by_gpio:
+            self.request.set_value(self.args.step, self.off)
+        self.request.release()
 
 
 class HardwarePwm:
@@ -92,31 +118,30 @@ class HardwarePwm:
 
 def counted(args, make_pulses, expected: int) -> int:
     """Count rising edges on the test input while ``make_pulses`` runs."""
-    from gpiozero import DigitalInputDevice
-    seen = [0]
-    listener = DigitalInputDevice(args.input, pull_up=False)
-
-    def one():
-        seen[0] += 1
-    listener.when_activated = one
-    make_pulses()
-    time.sleep(0.2)
-    listener.close()
-    print(f"{seen[0]} pulses seen on GPIO{args.input}, about {expected} sent on GPIO{args.step}")
-    if seen[0] == 0:
+    import gpiod
+    from gpiod.line import Direction, Edge
+    settings = gpiod.LineSettings(direction=Direction.INPUT, edge_detection=Edge.RISING)
+    seen = 0
+    with gpiod.request_lines(chip(), consumer="steptest-count", config={args.input: settings}) as listener:
+        make_pulses()
+        time.sleep(0.2)
+        while listener.wait_edge_events(0):
+            seen += len(listener.read_edge_events())
+    print(f"{seen} pulses seen on GPIO{args.input}, about {expected} sent on GPIO{args.step}")
+    if seen == 0:
         print("none arrived: is the jumper between the Step pin and the test input in? Otherwise the pin gives no pulses.")
-    elif seen[0] < 0.8 * expected:
-        print("fewer than sent: some are missed by this script's counting at this rate; the pin does pulse.")
+    elif seen < 0.8 * expected:
+        print("fewer than sent: the input missed some at this rate; the pin does pulse.")
     else:
         print("the Step pin gives its pulses.")
-    return 0 if seen[0] else 1
+    return 0 if seen else 1
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("what", choices=["hold", "steps", "loopback", "pwm", "pwm-loopback"])
     parser.add_argument("amount", nargs="?", type=float, help="hold, pwm: seconds; steps: how many")
-    parser.add_argument("--hz", type=float, default=200.0, help="steps a second (steps, loopback)")
+    parser.add_argument("--hz", type=float, default=500.0, help="steps a second (steps, loopback; pwm: default 2000)")
     parser.add_argument("--dir", type=int, choices=[0, 1], default=0, help="level of the Dir pin")
     parser.add_argument("--step", type=int, default=18)
     parser.add_argument("--dir-pin", type=int, default=27)
@@ -124,48 +149,50 @@ def main(argv=None) -> int:
     parser.add_argument("--input", type=int, default=23)
     parser.add_argument("--enable-high", action="store_true", help="the driver is on while its enable is high")
     args = parser.parse_args(argv)
+    if args.what == "steps" and not 0 < (args.amount or 400) <= 10_000:
+        parser.error("at most 10000 steps in one move")
     if forte_runs():
         sys.exit("FORTE is running and holds the pins. Stop it first: cd ~/forte && docker compose stop")
 
     by_gpio = args.what in ("steps", "loopback")
-    enable, direction, step = devices(args, by_gpio)
+    pins = Pins(args, by_gpio)
     level = "high" if args.enable_high else "low"
     try:
         if args.what == "hold":
             seconds = args.amount or 10
-            enable.on()
+            pins.enable(True)
             print(f"Enable (GPIO{args.enable}) is {level} for {seconds:g} s, no steps: the shaft should be stiff now")
             time.sleep(seconds)
         elif args.what == "steps":
             count = int(args.amount or 400)
-            enable.on()
-            time.sleep(0.05)
+            pins.enable(True)
+            time.sleep(0.05)                              # the driver: enable and Dir settle before a step
             print(f"{count} steps at {args.hz:g} a second, Dir (GPIO{args.dir_pin}) {'high' if args.dir else 'low'}, "
                   f"Enable {level}: {count / args.hz:.1f} s")
-            pulses(step, count, args.hz)
+            pins.pulses(count, args.hz)
         elif args.what == "loopback":
             hz = min(args.hz, 100.0)                      # slow enough to count every one here
-            return counted(args, lambda: pulses(step, 200, hz), 200)
+            return counted(args, lambda: pins.pulses(200, hz), 200)
+        elif args.what == "pwm":
+            seconds = args.amount or 2
+            hz = args.hz if args.hz != parser.get_default("hz") else 2000.0      # FORTE's rate on the filling axis
+            pwm = HardwarePwm(round(1e9 / hz))
+            pins.enable(True)
+            time.sleep(0.05)
+            print(f"hardware PWM on GPIO{args.step}: {hz:g} steps a second for {seconds:g} s, Enable {level}")
+            pwm.run(True)
+            time.sleep(seconds)
+            pwm.run(False)
         else:
-            if args.what == "pwm":
-                seconds = args.amount or 2
-                pwm = HardwarePwm(1_000_000)             # 1 kHz, as FORTE sets it
-                enable.on()
-                time.sleep(0.05)
-                print(f"hardware PWM on GPIO{args.step}: 1000 steps a second for {seconds:g} s, Enable {level}")
-                pwm.run(True)
-                time.sleep(seconds)
-                pwm.run(False)
-            else:
-                pwm = HardwarePwm(20_000_000)            # 50 a second: slow enough to count here
+            pwm = HardwarePwm(20_000_000)                # 50 a second: slow enough to count here
 
-                def two_seconds():
-                    pwm.run(True)
-                    time.sleep(2.0)
-                    pwm.run(False)
-                return counted(args, two_seconds, 100)
+            def two_seconds():
+                pwm.run(True)
+                time.sleep(2.0)
+                pwm.run(False)
+            return counted(args, two_seconds, 100)
     finally:
-        enable.off()
+        pins.release()
         if by_gpio:
             print("The Step pin is an ordinary output now: reboot before FORTE or the pwm tests are used again.")
     print("done: Enable is off again")
