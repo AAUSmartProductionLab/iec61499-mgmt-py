@@ -5,16 +5,16 @@ Plan of 8 Oct 2026, its state updated on 19 Oct; it replaces the plan of 6 Oct
 each AAS holds in [aas-models.md](aas-models.md); what was decided in [decisions.md](decisions.md);
 how the work divides into repositories in [repositories.md](repositories.md).
 
-## State on 19 Oct
+## State on 21 Oct
 
 | Area | Built | Missing |
 | --- | --- | --- |
 | Reconfigure from the AAS (A) | Verify, create a skill, change a value, record, operate the result: on FORTE on the PC and on the Pi 5. A skill written by the skill editor is built and run from its AAS alone | The editor's fixes from its look in a browser are not committed to the fork; one Python interface for all of it (A4) is started |
-| Evaluation (B) | – | The scenario runner, the baseline by restart, the runs on the Pi. The stepper driver for motion is awaited |
+| Evaluation (B) | – | The scenario runner, the baseline by restart, the runs on the Pi |
 | Models (D2) | ARSO 0.8 for the line, module and component; product AAS with its plan; ontologies | The generation project's ARSO copy and closed validation at 0.8 (done in a working copy, not committed; the full run over the fourteen AASs to repeat) |
 | aas-model (E, new) | `modreg` builds on aas-model of 18 Oct (`6a03f78`, done 19 Oct); a line, a module and a component are its `Resource` with ARSO's submodels added; actions in its AID form; ARSO knows AID 1.2 | Registering one module on a disposable server (E3); the findings to raise with aas-model's author (E4) |
 | Clients (C) | `modlink` reads 0.8; the HMI is a submodule here since 19 Oct | The HMI's own reader (C1); the planner's skill list leaves out ModuleControl; the planner reading ARSO skills |
-| Hardware | Both Pis run their modules, verify against their AAS, keep their clock | Motion: the TB6600 driver |
+| Hardware | The filling module runs on its own Pi 5 (192.168.0.203 since 20 Oct) and moves its axis: TB6600 straight on the Pi's pins, homing on the limit switch, MoveAxis at 12.5 mm/s (20 and 21 Oct). The stoppering Pi 4 verifies against its AAS | The limit switch mounted (it is pressed by hand); a move measured with a ruler; Dispensing on the real axis; the stoppering axis wired |
 
 On the timeline the week of 19 to 25 Oct is A4, B1 and B2. E came first because every test that
 builds an AAS depends on it; E1, E2 and the decision of E3 were done on 19 Oct.
@@ -113,7 +113,7 @@ path: the AAS is delivered with the module, the program is only compared with it
 | --- | --- | --- |
 | B1 | **Scenario runner.** Plug in a module (register, verify, operate); change a constant; create a new skill. Each timed: downtime, commands sent, time to verify | The scenarios run unattended and write their numbers |
 | B2 | **Baseline.** The same changes by a new boot file and a restart | Numbers side by side |
-| B3 | **Hardware.** The filling module on the Raspberry Pi 5 with the stepper (TB6600 driver, ordered); the stoppering module on the Pi 4 if time allows | The scenarios run on the Pi with the axis moving; until then on the Pi's FORTE with simulated IO |
+| B3 | **Hardware.** The filling module on the Raspberry Pi 5 with the stepper. **Axis moving since 20 Oct** (homing, MoveAxis); the switch is to be mounted and Dispensing run. The stoppering module on the Pi 4 if time allows | The scenarios run on the Pi with the axis moving |
 
 ### C. Keeping the clients in step
 
