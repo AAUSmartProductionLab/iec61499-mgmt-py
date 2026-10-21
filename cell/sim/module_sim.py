@@ -171,6 +171,8 @@ class ModuleSim:
                         axis.position = min(axis.travel, max(0.0, axis.position + way * axis.speed * dt))
                     for name, at in axis.switches.items():
                         near = axis.position >= at - 1e-6 if at > axis.travel / 2 else axis.position <= at + 1e-6
+                        if near:
+                            axis.position = at                  # a switch is at an end: the axis is there
                         self.set_input(eq, name, near)
                     continue
                 fwd, bwd = self.output(eq, axis.forward), self.output(eq, axis.backward)
