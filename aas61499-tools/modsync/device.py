@@ -4,6 +4,10 @@ FORTE 3.3 answers QUERY with every instance of a resource under its full dotted 
 inside subapplications included), QUERY of a type with its hash, QUERY of connections with every
 event and data connection, and READ of any input or output, also inside a composite FB. So the
 running program can be read back completely, including changes made online since the boot.
+
+A program deployed by the 4diac IDE (or for it to monitor) lies inside its application's container
+(``Filling.Home``). The snapshot names the container and leaves it out of every instance name, so
+the program reads the same either way; requests to the device add it back (``Snapshot.at``).
 """
 from __future__ import annotations
 
@@ -24,6 +28,7 @@ class Snapshot:
     host: str
     port: int
     resource: str = "RES"
+    container: str = ""                                          # the application's, '' if none
     fbs: dict[str, str] = field(default_factory=dict)           # instance -> qualified type
     status: dict[str, str] = field(default_factory=dict)        # instance -> RUNNING, STOPPED, ...
     hashes: dict[str, str] = field(default_factory=dict)        # type -> hash reported by the runtime
@@ -36,6 +41,22 @@ class Snapshot:
         """No program: the resource does not exist or has no instances."""
         return not self.fbs
 
+    def at(self, command: Command) -> Command:
+        """``command`` for this program on the device: inside its container."""
+        return command.inside(self.container)
+
+
+def container(names) -> str:
+    """The application's container every instance lies in ('' if none): the first part of each
+    name, the same for all, and not an instance itself."""
+    firsts = {n.split(".")[0] for n in names}
+    found = next(iter(firsts)) if len(firsts) == 1 else ""
+    return found if found and all("." in n for n in names) else ""
+
+
+def outside(name: str, container_: str) -> str:
+    return name[len(container_) + 1:] if container_ and name.startswith(container_ + ".") else name
+
 
 def read_structure(client: Client, host: str, port: int, resource: str = "RES") -> Snapshot:
     """Instances, their types with hashes, and connections; values are read separately (read_values)."""
@@ -44,12 +65,13 @@ def read_structure(client: Client, host: str, port: int, resource: str = "RES") 
         fbs = client.execute(Command(op="query_fbs", resource=resource)).fbs
     except ManagementError:              # no such resource: FORTE runs without a program
         return snap
+    fbs = [fb for fb in fbs if fb["Name"] not in RESOURCE_FBS]
+    snap.container = container([fb["Name"] for fb in fbs])
     for fb in fbs:
-        if fb["Name"] in RESOURCE_FBS:
-            continue
-        snap.fbs[fb["Name"]] = fb.get("Type", "").partition("#")[0]
-        snap.status[fb["Name"]] = fb.get("Status", "")
-    snap.connections = {(c["Source"], c["Destination"])
+        name = outside(fb["Name"], snap.container)
+        snap.fbs[name] = fb.get("Type", "").partition("#")[0]
+        snap.status[name] = fb.get("Status", "")
+    snap.connections = {(outside(c["Source"], snap.container), outside(c["Destination"], snap.container))
                         for c in client.execute(Command(op="query_connections", resource=resource)).connections}
     for typ in sorted(set(snap.fbs.values())):
         types = client.execute(Command(op="query_type", resource=resource, type=typ)).types
@@ -63,7 +85,8 @@ def read_values(client: Client, snap: Snapshot, ports) -> None:
         if port.rpartition(".")[0] not in snap.fbs and not internal(port, snap):
             continue
         try:
-            snap.values[port] = client.execute(Command(op="read", resource=snap.resource, source=port)).read_value(port)
+            command = snap.at(Command(op="read", resource=snap.resource, source=port))
+            snap.values[port] = client.execute(command).read_value(command.source)
         except (ManagementError, ProtocolError):     # e.g. an empty string answers without a value
             snap.values[port] = None
 

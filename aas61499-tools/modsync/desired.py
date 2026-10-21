@@ -508,7 +508,7 @@ def reconfigure(client: Client, host: str, port: int, module: dict, components: 
     if missing := lacking(client, app.fbs.values(), before.snapshot.hashes):
         raise Refused(f"FORTE lacks the block types {missing}")
     drift = Drift(missing=list(app.fbs), missing_connections=links, values=found.values)
-    commands = online(app, drift, resource)
+    commands = online(app, drift, resource, container=before.snapshot.container)
     done = summary(drift, commands)
     if dry_run:
         return done, before
