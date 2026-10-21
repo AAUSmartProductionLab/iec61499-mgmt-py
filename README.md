@@ -46,6 +46,7 @@ runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate  # FORTE for the R
 python deploy/pi.py install                                    # FORTE in Docker on the Pi of cell/modules/filling.yaml
 python deploy/pi.py module                                     # run the module on its Pi
 python -m modsync pull --host 192.168.0.191                    # which module runs there, drift from its spec, its AAS
+python -m modsync project --host 192.168.0.203                 # a 4diac IDE project of what runs there (projects/)
 ```
 
 ## Install on a Raspberry Pi

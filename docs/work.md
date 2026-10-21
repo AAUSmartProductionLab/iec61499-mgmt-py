@@ -182,6 +182,15 @@ The module spec is the one source. `modsync` checks it against what really runs 
   occupied, unless `--force`. Types missing in the FORTE build are refused.
 - **Which direction wins.** The spec. A value changed online shows up as drift until it is
   pushed back or put into the spec. Taking running values into the spec is not built.
+- **An IDE project of what runs (project, 21 Oct).** FORTE keeps the program, not the project (no
+  layout, comments or type sources); the IDE cannot load one from a device. `modsync project
+  --host <module>` reads the program, recognises the module, reads its structure by the module
+  rules (module level skills, steps, bound values, parameters, procedures, offered primitives,
+  the Modbus server its IO points use) and writes the spec of exactly what runs, from which
+  modgen makes the project in `projects/<Project>`. The layout comes from the repository's
+  project; new blocks (a skill added online) get free places. The project is checked: the
+  program it deploys must be the one that runs, else the differences are listed. Only programs
+  built by the module rules can be read back this way; tried live with DoubleDose added online.
 - On the module's own computer (`--host localhost`) push writes the boot file there and restarts
   the container; from elsewhere it does so over SSH.
 - **Describe.** `modsync` writes the AASs of the module and of its components as `modreg` builds
