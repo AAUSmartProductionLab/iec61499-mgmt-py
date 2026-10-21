@@ -15,11 +15,10 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import re
 
-from iec61499_mgmt.protocol import Client, Command, ManagementError, ProtocolError
+from iec61499_mgmt.protocol import RESOURCE_BLOCKS as RESOURCE_FBS, Client, Command, ManagementError, ProtocolError
 
-
-# Instances of the resource type itself (EMB_RES), not of the program.
-RESOURCE_FBS = {"START"}
+# Where a module's INIT chain begins (module rules 1.5): the resource's own START block.
+BOOT = "START.COLD"
 
 
 @dataclass

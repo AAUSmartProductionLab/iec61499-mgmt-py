@@ -8,7 +8,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 from iec61499_mgmt.sysfile import FlatApplication, flatten
-from modgen.module import app_name, application, parameter_port
+from modgen.module import app_name, application, parameter_port, start_links
 from modgen.spec import ModuleSpec, Parameter
 
 from .device import Snapshot, literal
@@ -25,8 +25,10 @@ def init_link(connection: tuple[str, str]) -> bool:
 
 
 def expected(spec: ModuleSpec, target: str) -> FlatApplication:
-    """The application modgen generates for ``target``, flattened as FORTE names its instances."""
-    return flatten(application(ET.Element("System"), spec, target).find("SubAppNetwork"))
+    """The application modgen generates for ``target``, flattened as FORTE names its instances, with
+    the links from the resource's START that start it."""
+    app = application(ET.Element("System"), spec, target)
+    return flatten(app.find("SubAppNetwork"), start_links(app))
 
 
 def parameters(spec: ModuleSpec, fbs: dict[str, str]) -> dict[str, Parameter]:

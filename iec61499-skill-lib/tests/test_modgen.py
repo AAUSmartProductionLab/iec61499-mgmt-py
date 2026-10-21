@@ -149,8 +149,9 @@ def flat(project, app):
 
 def test_filler_flattens_to_module_level_equipment_skills_and_procedures():
     created, wired, written = flat("FillerModule", "Filler")
+    assert ("START.COLD", "Occupation.INIT") in wired and ("START.WARM", "Occupation.INIT") in wired
     assert created == {
-        "Boot": "iec61499::events::E_RESTART", "Occupation": "modlib::MOD_Occupation",
+        "Occupation": "modlib::MOD_Occupation",
         "Module": "modlib::MOD_StateManager", "NeedleAxis": "filler::EQ_NeedleAxis",
         "MoveNeedleDown": "filler::SK_MoveNeedleDown", "MoveNeedleUp": "filler::SK_MoveNeedleUp",
         "Fill.Control": "modlib::SKILL_Core", "Fill.UaStart": "iec61499::net::SERVER_2_2",
@@ -363,7 +364,7 @@ def test_projects_follow_the_ide_conventions(project):
     for sub in system.iter("SubApp"):
         assert sub.find("InterfaceList") is None and sub.find("SubAppInterfaceList/SubAppEventInputs/SubAppEvent") is not None
     for device in system.iter("Device"):
-        assert len(device.find("Resource/FBNetwork")) == 0     # mapped blocks are rebuilt by the IDE
+        assert device.find("Resource/FBNetwork/FB") is None    # mapped blocks are rebuilt by the IDE
         assert device.find("Attribute[@Name='Color']") is not None
 
 
@@ -385,7 +386,7 @@ def test_pi_target_drives_the_io_over_gpio_lines():
     assert written["GpioLines.NeedleAxis_AtTop.ActiveLow"] == "TRUE"
     assert (written["NeedleAxis.Down_Address"], written["NeedleAxis.Position_Address"]) == ("'NeedleAxis_Down'", "'sim'")
     assert not any("modbus[" in v for v in written.values())
-    assert ("Boot.COLD", "GpioLines.NeedleAxis_AtTop.INIT") in wired
+    assert ("START.COLD", "GpioLines.NeedleAxis_AtTop.INIT") in wired           # the resource's own START
     assert ("GpioLines.NeedleAxis_Up.INITO", "Occupation.INIT") in wired
     pc = flat("FillerModule", "Filler")[2]
     assert not any("GpioLines" in k for k in pc) and pc["NeedleAxis.Position_Address"].startswith("'modbus[")
@@ -423,6 +424,16 @@ def test_regeneration_keeps_each_applications_own_layout(tmp_path):
     assert next(g for g in apps["Filler"].iter("Group") if g.get("Name") == "ModuleLevel").get("width") == "7093.33"
 
 
+def test_the_resources_start_block_starts_the_init_chain():
+    """No E_RESTART of the module's own: the resource's START (COLD, WARM) drives the head of the chain."""
+    system = ET.parse(system_file("FillingModule")).getroot()
+    assert not [fb for fb in system.iter("FB") if fb.get("Type") == "iec61499::events::E_RESTART"]
+    links = {d.get("Name"): [(c.get("Source"), c.get("Destination")) for c in d.iter("Connection")]
+             for d in system.iter("Device")}
+    assert links == {"FORTE_PC": [("START.COLD", "Filling.Occupation.INIT"), ("START.WARM", "Filling.Occupation.INIT")],
+                     "FORTE_PI": [("START.COLD", "Filling_pi.GpioLines.INIT"), ("START.WARM", "Filling_pi.GpioLines.INIT")]}
+
+
 def test_application_is_grouped_and_init_chains_are_hidden():
     """Five groups, top to bottom (module level, module level skills, procedures, skill primitives, equipment IO);
     every block of the application in one of them; INIT and start-up connections hidden."""
@@ -436,7 +447,7 @@ def test_application_is_grouped_and_init_chains_are_hidden():
     assert member["LinearAxis"] == "EquipmentIO" and member["Resetting"] == "Procedures"
     for conn in net.find("EventConnections"):
         hidden = conn.find("Attribute[@Name='Visible']") is not None
-        init = conn.get("Destination").endswith(".INIT") or conn.get("Source").startswith("Boot.")
+        init = conn.get("Destination").endswith(".INIT")
         assert hidden == init, (conn.get("Source"), conn.get("Destination"))
 
 
