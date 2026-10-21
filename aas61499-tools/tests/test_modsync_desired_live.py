@@ -15,7 +15,8 @@ from iec61499_mgmt.bootfile import boot_file, deployment                     # n
 from iec61499_mgmt.protocol import Command                                   # noqa: E402
 from modgen.library import ERRORS, SKILL_STATES, STATES                      # noqa: E402
 from modsync.desired import at, instances, read, reconfigure, record, submodel   # noqa: E402
-from modsync.sync import Refused                                             # noqa: E402
+from modsync.project import write_project                                    # noqa: E402
+from modsync.sync import Refused, inspect                                    # noqa: E402
 from test_modsync import composed                                            # noqa: E402
 from test_modsync_desired import aas, wanting                                # noqa: E402
 from test_modsync_live import module                                         # noqa: E402, F401  (the fixture)
@@ -31,7 +32,7 @@ def test_a_delivered_module_is_what_its_aas_describes(module):    # noqa: F811
     assert read(module.client, module.host, module.port, recorded, components).differences.empty
 
 
-def test_a_skill_described_in_the_aas_is_created_while_another_runs(module):   # noqa: F811
+def test_a_skill_described_in_the_aas_is_created_while_another_runs(module, tmp_path):   # noqa: F811
     """The changeover to two doses: the AAS describes DoubleDose, the program does not have it. It
     is created from the description while the module runs Dispensing; FORTE is neither rebuilt
     nor restarted, and no module spec is read."""
@@ -75,6 +76,12 @@ def test_a_skill_described_in_the_aas_is_created_while_another_runs(module):   #
     built = {path: digest for path, _, digest in instances(recorded)}
     assert built["DoubleDose.Execute.Dispense_2"].startswith("v2:SHA3-512:")
     assert read(module.client, module.host, module.port, recorded, components).differences.empty
+    # The IDE project of what runs has the new skill, and deploys exactly the program that runs.
+    status = inspect(module.client, module.host, module.port, [module.cand])
+    project = write_project(module.client, module.host, module.port, status, tmp_path)
+    assert project.unreproduced == [], project.unreproduced
+    assert any(c.startswith("DoubleDose: ") for c in project.changes) and "DoubleDose" in project.spec.composites
+    assert any(c.startswith("Modbus server: 127.0.0.1:") for c in project.changes)    # the simulator's port
     # A FORTE started from the amended boot file runs what the AAS describes.
     module.client.close()
     with module.fresh(saved[0]) as (client, port):
