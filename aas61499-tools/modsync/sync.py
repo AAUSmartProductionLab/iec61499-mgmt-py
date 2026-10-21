@@ -91,7 +91,12 @@ def inspect(client: Client, host: str, port: int, cands: list[Candidate], resour
     read_values(client, snap, [MODULE_NAME])
     module = snap.values.pop(MODULE_NAME, None)
     named = [c for c in cands if c.spec.module == module]
-    best, dist = closest(snap, named or cands)
+    def value(port: str) -> str | None:
+        if port not in snap.values:
+            read_values(client, snap, [port])
+        return snap.values.get(port)
+
+    best, dist = closest(snap, named or cands, value)
     values = {**expected_values(best.spec, best.app), **overrides}
     # Also the parameters of skill instances that are not in the generated program (added online).
     online = set(parameters(best.spec, snap.fbs))
