@@ -424,6 +424,59 @@ def test_regeneration_keeps_each_applications_own_layout(tmp_path):
     assert next(g for g in apps["Filler"].iter("Group") if g.get("Name") == "ModuleLevel").get("width") == "7093.33"
 
 
+def boxes(net, size):
+    """Each block of a network with its box (left, top, right, bottom), groups' offsets added."""
+    from modgen.layout import group_of
+    groups = {g.get("Name"): (float(g.get("x")), float(g.get("y"))) for g in net.findall("Group")}
+    found = {}
+    for el in net:
+        if el.tag in ("FB", "SubApp"):
+            gx, gy = groups.get(group_of(el), (0.0, 0.0))
+            _, w, h = size(el)
+            x, y = gx + float(el.get("x")), gy + float(el.get("y"))
+            found[el.get("Name")] = (x, y, x + w, y + h)
+    return found
+
+
+def overlaps(found):
+    names = sorted(found)
+    return [(a, b) for i, a in enumerate(names) for b in names[i + 1:]
+            if found[a][0] < found[b][2] and found[b][0] < found[a][2] and found[a][1] < found[b][3] and found[b][1] < found[a][3]]
+
+
+@pytest.mark.parametrize("project", ["FillingModule", "StopperingModule", "FillerModule"])
+def test_no_two_blocks_overlap_in_any_network(project):
+    """By the sizes the IDE draws blocks at (its own overlap check agrees); in the applications and
+    inside every subapplication."""
+    from modgen.layout import Sizer, networks
+    size = Sizer(project_dir(project) / "Type Library")
+    for net in networks(ET.parse(system_file(project)).getroot()):
+        assert overlaps(boxes(net, size)) == []
+
+
+def test_a_skill_added_later_gets_a_free_place_in_its_group(tmp_path):
+    """Regenerating keeps the layout arranged in the IDE; a new module level skill goes below the
+    others in its group, which grows to hold it."""
+    from modgen.layout import Sizer
+    spec = load(FILLER)
+    project = tmp_path / spec.project
+    generate(spec, project, tmp_path / "manifest.json")
+    path = project / f"{spec.project}.sys"
+    app = lambda: next(a for a in ET.parse(path).getroot().iter("Application") if a.get("Name") == "Filler")  # noqa: E731
+    before = {el.get("Name"): (el.get("x"), el.get("y")) for el in app().find("SubAppNetwork") if el.tag in ("FB", "SubApp")}
+    data = yaml.safe_load(FILLER.read_text(encoding="utf-8"))
+    data["composites"]["FillTwice"] = {**next(iter(data["composites"].values()))}
+    generate(ModuleSpec.model_validate(data), project, tmp_path / "manifest.json")
+    net = app().find("SubAppNetwork")
+    after = {el.get("Name"): (el.get("x"), el.get("y")) for el in net if el.tag in ("FB", "SubApp")}
+    assert {k: after[k] for k in before} == before
+    group = next(g for g in net.findall("Group") if g.get("Name") == "ModuleLevelSkills")
+    found = boxes(net, Sizer(project / "Type Library"))
+    assert overlaps(found) == []
+    left, top, right, bottom = found["FillTwice"]
+    assert float(group.get("y")) < top and bottom <= float(group.get("y")) + float(group.get("height"))
+
+
 def test_the_resources_start_block_starts_the_init_chain():
     """No E_RESTART of the module's own: the resource's START (COLD, WARM) drives the head of the chain."""
     system = ET.parse(system_file("FillingModule")).getroot()

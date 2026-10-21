@@ -56,13 +56,14 @@ def elem(parent, tag, **attrs):
 LAYOUT = ("x", "y", "dx1", "dx2", "dy")
 
 
-def keep_layout(root, path):
+def keep_layout(root, path) -> set[int]:
     """Copy positions and connection routing from the file being replaced, so a layout arranged
-    in the IDE survives regeneration. Blocks match by name path, connections by their ends."""
+    in the IDE survives regeneration. Blocks match by name path, connections by their ends.
+    Returns the elements (``id``) whose place was kept."""
     try:
         old = ET.parse(path).getroot()
     except (OSError, ET.ParseError):
-        return
+        return set()
 
     def placed(tree):
         found = {}
@@ -87,6 +88,7 @@ def keep_layout(root, path):
         return attr.get("Value") if attr is not None else None
 
     before = placed(old)
+    kept = set()
     for key, node in placed(root).items():
         # A block's position is relative to its group: only kept while it stays in that group.
         if key in before and group(before[key]) == group(node):
@@ -94,6 +96,9 @@ def keep_layout(root, path):
             for attr in LAYOUT + (("width", "height") if key[0] == "Group" else ()):
                 if attr in before[key].attrib:
                     node.set(attr, before[key].get(attr))
+            if "x" in before[key].attrib:
+                kept.add(id(node))
+    return kept
 
 
 LEFT, TOP, GAP = 2800, 900, 1200     # room for parameter values left of a block, the group title, between groups
@@ -126,10 +131,13 @@ def arrange(net, groups, x=1000, y=1000):
         net.insert(i, g)
 
 
-def save(root, path):
-    """Indent and write an XML tree, creating folders; keeps the layout of an existing file."""
+def save(root, path, settle=None):
+    """Indent and write an XML tree, creating folders; keeps the layout of an existing file, then
+    lets ``settle(root, kept)`` place what that layout did not have."""
     if path.exists():
-        keep_layout(root, path)
+        kept = keep_layout(root, path)
+        if settle is not None and kept:
+            settle(root, kept)
     path.parent.mkdir(parents=True, exist_ok=True)
     ET.indent(root, space="  ")
     ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
