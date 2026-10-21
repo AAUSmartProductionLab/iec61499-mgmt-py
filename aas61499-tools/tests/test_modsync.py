@@ -96,6 +96,14 @@ class Recorder:
         self.restarted.append(boot)
 
 
+def inside(forte: FakeForte, container: str) -> FakeForte:
+    """The program as the 4diac IDE deploys it: inside its application's container (``Filling_pi.Home``)."""
+    forte.fbs = {f"{container}.{n}": t for n, t in forte.fbs.items()}
+    forte.connections = {(f"{container}.{s}", f"{container}.{d}") for s, d in forte.connections}
+    forte.values = {f"{container}.{p}": v for p, v in forte.values.items()}
+    return forte
+
+
 def filling(target="pi") -> Candidate:
     return Candidate(FILLING, load(FILLING), target)
 
@@ -115,6 +123,11 @@ def composed(target="pi", first=False) -> Candidate:
     new = {"DoubleDose": DOUBLE_DOSE}
     data["composites"] = {**new, **data["composites"]} if first else {**data["composites"], **new}
     return Candidate(FILLING, ModuleSpec.model_validate(data), target)
+
+
+def booted(cand: Candidate) -> str:
+    """The boot file push deploys: the program inside its application's container."""
+    return boot_file(deployment(cand.app, container=cand.container))
 
 
 def status(forte, cands=None):
@@ -165,7 +178,7 @@ def test_a_changed_skill_parameter_is_drift_pushed_online_and_saved():
     deployer = Recorder()
     done = push(forte, "pi", 61499, filling(), deployer)
     assert forte.writes == [("Dispensing.Execute.Dispense.FlowRate", "1.0")]
-    assert deployer.saved == [boot_file(deployment(filling().app))] and not deployer.restarted
+    assert deployer.saved == [booted(filling())] and not deployer.restarted
     assert "boot file saved" in done
     assert status(forte).drift.empty
 
@@ -183,7 +196,7 @@ def test_values_read_at_init_and_structure_need_a_restart():
     assert push(forte, "pi", 61499, filling(), dry_run=True)[0].startswith("redeploy: ")
     deployer = Recorder()
     push(forte, "pi", 61499, filling(), deployer)
-    assert deployer.restarted == [boot_file(deployment(filling().app))] and not forte.writes
+    assert deployer.restarted == [booted(filling())] and not forte.writes
 
 
 @pytest.mark.parametrize("state, occupied", [("Execute", False), ("Idle", True)])
@@ -219,7 +232,22 @@ def test_a_new_module_level_skill_is_created_online_while_the_module_runs():
     assert forte.triggered == ["DoubleDose.Control.INIT"]         # the INIT chain enters there, once
     assert forte.values["DoubleDose.Dose.Default"] == "0.5"
     assert done[0].startswith("create DoubleDose: ") and "initialise from DoubleDose.Control.INIT" in done
-    assert "verified by read-back" in done and deployer.saved == [boot_file(deployment(new.app))]
+    assert "verified by read-back" in done and deployer.saved == [booted(new)]
+    assert inspect(forte, "pi", 61499, [new]).drift.empty
+
+
+def test_a_program_inside_its_applications_container_is_read_and_changed_inside_it():
+    forte = inside(FakeForte(filling()), "Filling_pi")
+    forte.values["Filling_pi.Dispensing.Execute.Dispense.FlowRate"] = "2.5"
+    st = inspect(forte, "pi", 61499, [filling()])
+    assert st.snapshot.container == "Filling_pi" and "Dispensing.Control" in st.snapshot.fbs
+    assert st.drift.values == {"Dispensing.Execute.Dispense.FlowRate": ("1.0", "2.5")} and not st.drift.restart
+    push(forte, "pi", 61499, filling(), Recorder())                       # guarded: reads the state inside
+    assert forte.writes == [("Filling_pi.Dispensing.Execute.Dispense.FlowRate", "1.0")]
+    new = composed()
+    push(forte, "pi", 61499, new, Recorder())
+    assert set(forte.fbs) == {f"Filling_pi.{n}" for n in new.app.fbs}
+    assert forte.triggered == ["Filling_pi.DoubleDose.Control.INIT"]
     assert inspect(forte, "pi", 61499, [new]).drift.empty
 
 
@@ -245,7 +273,7 @@ def test_push_deploys_a_module_to_a_forte_without_a_program():
     forte.fbs, forte.connections, forte.values = {}, set(), {}            # a fresh install: no resource yet
     deployer = Recorder()
     done = push(forte, "pi", 61499, filling(), deployer)
-    assert deployer.restarted == [boot_file(deployment(filling().app))]
+    assert deployer.restarted == [booted(filling())]
     assert done[0].startswith("deploy Filling (target pi): ") and done[1:] == ["boot file replaced, FORTE restarted"]
 
 

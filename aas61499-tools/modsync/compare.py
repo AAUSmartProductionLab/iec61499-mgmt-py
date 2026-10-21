@@ -8,7 +8,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 from iec61499_mgmt.sysfile import FlatApplication, flatten
-from modgen.module import application, parameter_port
+from modgen.module import app_name, application, parameter_port
 from modgen.spec import ModuleSpec, Parameter
 
 from .device import Snapshot, literal
@@ -148,6 +148,11 @@ class Candidate:
     @cached_property
     def app(self) -> FlatApplication:
         return expected(self.spec, self.target)
+
+    @property
+    def container(self) -> str:
+        """The application the program is deployed in, as the 4diac IDE deploys it."""
+        return app_name(self.spec, self.target)
 
 
 def closest(snap: Snapshot, candidates: list[Candidate]) -> tuple[Candidate, int]:

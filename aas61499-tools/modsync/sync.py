@@ -179,7 +179,9 @@ class Refused(RuntimeError):
 
 def guard(client: Client, snap: Snapshot):
     """Changes only while the module is Stopped, Idle or Aborted and nobody occupies it."""
-    read = lambda p: client.execute(Command(op="read", resource=snap.resource, source=p)).read_value(p)
+    def read(port: str) -> str:
+        command = snap.at(Command(op="read", resource=snap.resource, source=port))
+        return client.execute(command).read_value(command.source)
     try:
         state, occupied = int(read(MODULE_STATE)), read(OCCUPIED) == "TRUE"
     except (ManagementError, ValueError):
@@ -205,8 +207,10 @@ def lacking(client: Client, types, known) -> list[str]:
     return missing
 
 
-def online(app: FlatApplication, drift: Drift, resource: str = "RES", overrides=None) -> list[Command]:
-    """The management commands that apply ``drift`` to the running program without a restart.
+def online(app: FlatApplication, drift: Drift, resource: str = "RES", overrides=None,
+           container: str = "") -> list[Command]:
+    """The management commands that apply ``drift`` to the running program without a restart
+    (``container``: the application's the program lies in, ``Snapshot.container``).
 
     Changed parameters are written. New instances are created, given their values, wired and
     started; then the INIT event where the INIT chain enters them from the running program is
@@ -215,7 +219,7 @@ def online(app: FlatApplication, drift: Drift, resource: str = "RES", overrides=
     fresh = set(drift.missing)
     new = [n for n in app.fbs if n in fresh]              # in the order of the program
     values = {**app.parameters, **(overrides or {})}
-    cmd = lambda op, **kw: Command(op=op, resource=resource, **kw)  # noqa: E731
+    cmd = lambda op, **kw: Command(op=op, resource=resource, **kw).inside(container)  # noqa: E731
     return [*[cmd("write", destination=p, value=e) for p, (e, _) in drift.values.items()],
             *[cmd("create_fb", name=n, type=app.fbs[n]) for n in new],
             *[cmd("write", destination=p, value=v) for p, v in values.items() if owner(p) in fresh],
@@ -254,7 +258,7 @@ def push(client: Client, host: str, port: int, cand: Candidate, deployer=None, o
     drift, snap = status.drift, status.snapshot
     if drift.empty:
         return ["in sync, nothing to do"]
-    boot = boot_file(deployment(cand.app, resource, overrides=overrides))
+    boot = boot_file(deployment(cand.app, resource, overrides=overrides, container=cand.container))
     if missing := lacking(client, cand.app.fbs.values(), snap.hashes):
         raise Refused(f"FORTE lacks the types {missing}: rebuild it (build-modules.ps1) and install it first")
     if drift.restart or snap.empty:
@@ -272,7 +276,7 @@ def push(client: Client, host: str, port: int, cand: Candidate, deployer=None, o
         client.close()                       # FORTE restarts: the management connection goes away
         deployer.restart(boot)
         return done + ["boot file replaced, FORTE restarted"]
-    commands = online(cand.app, drift, resource, overrides)
+    commands = online(cand.app, drift, resource, overrides, snap.container)
     done = summary(drift, commands)
     if dry_run:
         return done
