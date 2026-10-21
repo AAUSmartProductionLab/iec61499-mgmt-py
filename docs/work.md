@@ -619,6 +619,16 @@ because with a wrong `.buildpath` it silently skips the system):
   `START`, so a module has none: `START.COLD` and `.WARM` go to the head of the INIT chain, drawn
   in each device's resource (`Filling_pi.GpioLines.INIT`). `load_application` takes those links
   with the application, and `Command.inside` leaves `START` outside the application's container.
+- **The IDE's block sizes** (measured with its own overlap check, `checkSystem`, on pairs of blocks
+  at growing distances): about 100 units per pin row (the larger of event and of data pins, in
+  or out) plus 300 high, and as wide as the longest pin names or the type and instance name.
+  The IDE writes parameter values left of a block. `modgen/layout.py` lays out every network
+  with these: blocks in a grid inside their groups, groups side by side in rows of 12000, a
+  sequence's steps in a row; no two blocks overlap in an application or a subapplication.
+- **The resource view cannot be arranged**: the IDE builds it on loading (a container named like
+  the application with a copy of each mapped block at the block's position, without its group)
+  and does not save mapped blocks in a resource. Grouped blocks have positions relative to their
+  group, so they pile up there; only an application without groups would look the same.
 - **Regeneration keeps the layout arranged in the IDE per application** (blocks of the same name
   in `Filling` and `Filling_pi` used to share one entry) **and the size of each group**.
 - **The IDE's `checkTypeLibrary` fails on warnings too** ("has N errors or warnings"). Every
