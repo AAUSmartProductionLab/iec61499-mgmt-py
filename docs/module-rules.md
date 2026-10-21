@@ -21,10 +21,13 @@ Fixed for every module; nothing here changes online.
    module level: who may command the module, and its PackML state.
 3. Each equipment item is one block `<Item>` of type `<package>::EQ_<Item>`. It owns the item's
    IO points and knows nothing about what they mean. Each IO point is set by one input
-   `<Point>_Address` (`STRING`) in FORTE's own notation: a Modbus CLIENT's ID (`modbus[...]`),
-   the name of a local IO handle as `IX` and `QX` take it (a GPIO line, a PWM channel), or `sim`.
-   Empty means not connected: the point reports `QO = FALSE`. The same type then runs on every
-   target; only the addresses differ.
+   `<Point>_Address` (`STRING`) in the notation of FORTE's IDs: `gpio[<chip>:<line>]` (flags
+   `:pull_up` or `:pull_down`, `:active_low`) or `pwm[<chip>:<channel>:<period ns>]` (a fourth
+   field: the sysfs folder) for a Raspberry Pi's line, which the IO block sets up itself; a
+   Modbus CLIENT's ID (`modbus[...]`); `sim`; or the name of a local IO handle set up elsewhere,
+   as `IX` and `QX` take it. Empty means not connected: the point reports `QO = FALSE`. The same
+   type then runs on every target, and an equipment block needs no other block for its IO; only
+   the addresses differ.
 4. Blocks reach equipment and occupation over FORTE local channels, not over connections:
    `loc[<Module>/owner]`, `loc[<Module>/<Item>/state]`, `.../cmd` and `.../release`. A block added
    online therefore needs no connection to them.
