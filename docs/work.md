@@ -660,6 +660,13 @@ because with a wrong `.buildpath` it silently skips the system):
   catalogue of skill primitives, module level skills, procedures). Since 22 Oct every connection
   is hidden (drawn as labels at its ends), in the systems and inside the composite types, which
   cannot be edited in the IDE.
+- **What the IDE draws, measured from screenshots** (22 Oct): a grouped block's position is
+  relative to the group's content, which starts below the title and the wrapped comment (about
+  220 + 110 units per comment line), not at the group's top; the group's height covers both. A
+  hidden connection's label (the other end, `Block.Pin`, or the count when there are several)
+  takes about 40 units per character beside its pin. Blocks placed 500 below the group's top were
+  cut off at its bottom, and the labels ran into the next block. The layout now leaves room for
+  both; the composite types were laid out anew once.
 - **The resource starts the program** (21 Oct): `EMB_RES` has an `E_RESTART` of its own,
   `START`, so a module has none: `START.COLD` and `.WARM` go to the head of the INIT chain, drawn
   in each device's resource (`Filling_pi.GpioLines.INIT`). `load_application` takes those links
