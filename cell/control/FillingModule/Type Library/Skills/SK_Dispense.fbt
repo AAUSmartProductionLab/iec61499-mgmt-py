@@ -99,96 +99,272 @@
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
     <EventConnections>
-      <Connection Source="Control.START_RSP" Destination="UaStart.RSP" />
-      <Connection Source="UaStart.IND" Destination="Par_Volume.CHECK" />
-      <Connection Source="Control.RUN" Destination="Par_Volume.LATCH" />
-      <Connection Source="Par_Volume.CHECKED" Destination="Par_FlowRate.CHECK" />
-      <Connection Source="Par_Volume.LATCHED" Destination="Par_FlowRate.LATCH" />
-      <Connection Source="Par_FlowRate.CHECKED" Destination="Control.START_REQ" />
-      <Connection Source="Par_FlowRate.LATCHED" Destination="PubParams.REQ" />
-      <Connection Source="PubParams.INITO" Destination="PubParams.REQ" />
-      <Connection Source="INIT" Destination="Control.INIT" />
-      <Connection Source="Control.INITO" Destination="Logic.INIT" />
-      <Connection Source="Logic.INITO" Destination="UaStart.INIT" />
-      <Connection Source="UaStart.INITO" Destination="Par_Volume.INIT" />
-      <Connection Source="Par_Volume.INITO" Destination="Par_FlowRate.INIT" />
-      <Connection Source="Par_FlowRate.INITO" Destination="PubParams.INIT" />
-      <Connection Source="PubParams.INITO" Destination="EqState.INIT" />
-      <Connection Source="EqState.INITO" Destination="EqCmd.INIT" />
-      <Connection Source="EqCmd.INITO" Destination="INITO" />
-      <Connection Source="START" Destination="Control.START" />
-      <Connection Source="HALT" Destination="Control.HALT" />
-      <Connection Source="ABORT" Destination="Control.ABORT" />
-      <Connection Source="RESET" Destination="Control.RESET" />
-      <Connection Source="Control.SUCCESS" Destination="SUCCESS" />
-      <Connection Source="Control.FAILURE" Destination="FAILURE" />
-      <Connection Source="Par_FlowRate.LATCHED" Destination="Logic.START" />
-      <Connection Source="Control.HALT_SEQ" Destination="Logic.HALT" />
-      <Connection Source="Control.ABORT_SEQ" Destination="Logic.ABORT" />
-      <Connection Source="Control.RUN_STOPPING" Destination="Control.STOPPING_DONE" />
-      <Connection Source="Logic.DONE" Destination="Control.EXECUTE_DONE" />
-      <Connection Source="Logic.FAILED" Destination="Control.EXECUTE_FAILED" />
-      <Connection Source="Logic.HALTED" Destination="Control.EXECUTE_FAILED" />
-      <Connection Source="EqState.IND" Destination="EqView.REQ" />
-      <Connection Source="EqView.CNF" Destination="Logic.SAMPLE" />
-      <Connection Source="Logic.CMD" Destination="Driver.PLAY" />
-      <Connection Source="Driver.OUT" Destination="EqCmd.REQ" />
-      <Connection Source="Driver.PHASE_START" Destination="PhaseT.START" />
-      <Connection Source="Driver.PHASE_STOP" Destination="PhaseT.STOP" />
-      <Connection Source="PhaseT.EO" Destination="Driver.PHASE_T" />
-      <Connection Source="Driver.PLAYED" Destination="Logic.PLAYED" />
-      <Connection Source="Logic.WAIT_START" Destination="WaitT.START" />
-      <Connection Source="Logic.WAIT_STOP" Destination="WaitT.STOP" />
-      <Connection Source="WaitT.EO" Destination="Logic.WAIT_OVER" />
-      <Connection Source="Logic.TIMER_START" Destination="Timer.START" />
-      <Connection Source="Logic.TIMER_STOP" Destination="Timer.STOP" />
-      <Connection Source="Timer.EO" Destination="Logic.TIMER" />
+      <Connection Source="Control.START_RSP" Destination="UaStart.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaStart.IND" Destination="Par_Volume.CHECK">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.RUN" Destination="Par_Volume.LATCH">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_Volume.CHECKED" Destination="Par_FlowRate.CHECK">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_Volume.LATCHED" Destination="Par_FlowRate.LATCH">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_FlowRate.CHECKED" Destination="Control.START_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_FlowRate.LATCHED" Destination="PubParams.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubParams.INITO" Destination="PubParams.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="INIT" Destination="Control.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.INITO" Destination="Logic.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.INITO" Destination="UaStart.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaStart.INITO" Destination="Par_Volume.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_Volume.INITO" Destination="Par_FlowRate.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_FlowRate.INITO" Destination="PubParams.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubParams.INITO" Destination="EqState.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqState.INITO" Destination="EqCmd.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqCmd.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="START" Destination="Control.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="HALT" Destination="Control.HALT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="ABORT" Destination="Control.ABORT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="RESET" Destination="Control.RESET">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.SUCCESS" Destination="SUCCESS">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.FAILURE" Destination="FAILURE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_FlowRate.LATCHED" Destination="Logic.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.HALT_SEQ" Destination="Logic.HALT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ABORT_SEQ" Destination="Logic.ABORT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.RUN_STOPPING" Destination="Control.STOPPING_DONE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.DONE" Destination="Control.EXECUTE_DONE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.FAILED" Destination="Control.EXECUTE_FAILED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.HALTED" Destination="Control.EXECUTE_FAILED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqState.IND" Destination="EqView.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqView.CNF" Destination="Logic.SAMPLE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.CMD" Destination="Driver.PLAY">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.OUT" Destination="EqCmd.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.PHASE_START" Destination="PhaseT.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.PHASE_STOP" Destination="PhaseT.STOP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PhaseT.EO" Destination="Driver.PHASE_T">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.PLAYED" Destination="Logic.PLAYED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.WAIT_START" Destination="WaitT.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.WAIT_STOP" Destination="WaitT.STOP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="WaitT.EO" Destination="Logic.WAIT_OVER">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.TIMER_START" Destination="Timer.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.TIMER_STOP" Destination="Timer.STOP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Timer.EO" Destination="Logic.TIMER">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </EventConnections>
     <DataConnections>
-      <Connection Source="Control.StartMethodId" Destination="UaStart.ID" />
-      <Connection Source="UaStart.RD_1" Destination="Control.Session" />
-      <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
-      <Connection Source="Control.StartError" Destination="UaStart.SD_2" />
-      <Connection Source="UaStart.RD_2" Destination="Par_Volume.Requested" />
-      <Connection Source="Control.CalledByClient" Destination="Par_Volume.CalledByClient" />
-      <Connection Source="Par_Volume.Value" Destination="PubParams.SD_1" />
-      <Connection Source="UaStart.RD_3" Destination="Par_FlowRate.Requested" />
-      <Connection Source="Control.CalledByClient" Destination="Par_FlowRate.CalledByClient" />
-      <Connection Source="Par_FlowRate.Value" Destination="PubParams.SD_2" />
-      <Connection Source="Par_Volume.AllInRange" Destination="Par_FlowRate.PreviousInRange" />
-      <Connection Source="Par_FlowRate.AllInRange" Destination="Control.ParamsInRange" />
-      <Connection Source="Module" Destination="Control.Module" />
-      <Connection Source="UaRoot" Destination="Control.UaRoot" />
-      <Connection Source="UaPath" Destination="Control.UaPath" />
-      <Connection Source="UaEnable" Destination="Control.UaEnable" />
-      <Connection Source="Methods" Destination="Control.Methods" />
-      <Connection Source="Methods" Destination="UaStart.QI" />
-      <Connection Source="Control.State" Destination="State" />
-      <Connection Source="Control.ErrorID" Destination="ErrorID" />
-      <Connection Source="Module" Destination="Logic.Module" />
-      <Connection Source="Holder" Destination="Logic.Holder" />
-      <Connection Source="ReleaseAfter" Destination="Logic.ReleaseAfter" />
-      <Connection Source="UaRoot" Destination="Logic.UaRoot" />
-      <Connection Source="UaPath" Destination="Logic.UaPath" />
-      <Connection Source="UaEnable" Destination="PubParams.QI" />
-      <Connection Source="Logic.IdParams" Destination="PubParams.ID" />
-      <Connection Source="Volume" Destination="Par_Volume.Default" />
-      <Connection Source="Par_Volume.Value" Destination="Logic.Volume" />
-      <Connection Source="FlowRate" Destination="Par_FlowRate.Default" />
-      <Connection Source="Par_FlowRate.Value" Destination="Logic.FlowRate" />
-      <Connection Source="Logic.ErrorID" Destination="Control.ExecuteError" />
-      <Connection Source="Logic.EquipmentFree" Destination="Control.EquipmentFree" />
-      <Connection Source="Logic.IdEqState" Destination="EqState.ID" />
-      <Connection Source="EqState.RD_1" Destination="EqView.I_Holder" />
-      <Connection Source="EqView.Holder" Destination="Logic.EqHolder" />
-      <Connection Source="Logic.IdEqCmd" Destination="EqCmd.ID" />
-      <Connection Source="Logic.C_Holder" Destination="Driver.Holder" />
-      <Connection Source="Logic.C_Command" Destination="Driver.Command" />
-      <Connection Source="Logic.C_Release" Destination="Driver.Release" />
-      <Connection Source="Driver.O_Holder" Destination="EqCmd.SD_1" />
-      <Connection Source="Driver.O_Release" Destination="EqCmd.SD_2" />
-      <Connection Source="Driver.PhaseDT" Destination="PhaseT.DT" />
-      <Connection Source="Logic.TimerDT" Destination="Timer.DT" />
+      <Connection Source="Control.StartMethodId" Destination="UaStart.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaStart.RD_1" Destination="Control.Session">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.Accepted" Destination="UaStart.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.StartError" Destination="UaStart.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaStart.RD_2" Destination="Par_Volume.Requested">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.CalledByClient" Destination="Par_Volume.CalledByClient">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_Volume.Value" Destination="PubParams.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaStart.RD_3" Destination="Par_FlowRate.Requested">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.CalledByClient" Destination="Par_FlowRate.CalledByClient">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_FlowRate.Value" Destination="PubParams.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_Volume.AllInRange" Destination="Par_FlowRate.PreviousInRange">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_FlowRate.AllInRange" Destination="Control.ParamsInRange">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Module" Destination="Control.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaRoot" Destination="Control.UaRoot">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaPath" Destination="Control.UaPath">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="Control.UaEnable">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Methods" Destination="Control.Methods">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Methods" Destination="UaStart.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.State" Destination="State">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ErrorID" Destination="ErrorID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Module" Destination="Logic.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Holder" Destination="Logic.Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="ReleaseAfter" Destination="Logic.ReleaseAfter">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaRoot" Destination="Logic.UaRoot">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaPath" Destination="Logic.UaPath">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="PubParams.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdParams" Destination="PubParams.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Volume" Destination="Par_Volume.Default">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_Volume.Value" Destination="Logic.Volume">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="FlowRate" Destination="Par_FlowRate.Default">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Par_FlowRate.Value" Destination="Logic.FlowRate">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ErrorID" Destination="Control.ExecuteError">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.EquipmentFree" Destination="Control.EquipmentFree">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdEqState" Destination="EqState.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqState.RD_1" Destination="EqView.I_Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqView.Holder" Destination="Logic.EqHolder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdEqCmd" Destination="EqCmd.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.C_Holder" Destination="Driver.Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.C_Command" Destination="Driver.Command">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.C_Release" Destination="Driver.Release">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.O_Holder" Destination="EqCmd.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.O_Release" Destination="EqCmd.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.PhaseDT" Destination="PhaseT.DT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.TimerDT" Destination="Timer.DT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </DataConnections>
   </FBNetwork>
 </FBType>

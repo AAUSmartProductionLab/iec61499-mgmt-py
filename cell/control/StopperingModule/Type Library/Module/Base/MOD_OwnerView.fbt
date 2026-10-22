@@ -31,20 +31,44 @@
       <Parameter Name="QI" Value="TRUE" />
     </FB>
     <EventConnections>
-      <Connection Source="INIT" Destination="Latch.INIT" />
-      <Connection Source="Latch.INITO" Destination="Listen.INIT" />
-      <Connection Source="Listen.INITO" Destination="Query.INIT" />
-      <Connection Source="Query.INITO" Destination="Query.REQ" />
-      <Connection Source="Query.INITO" Destination="INITO" />
-      <Connection Source="Listen.IND" Destination="Latch.REQ" />
-      <Connection Source="Latch.CNF" Destination="CHG" />
+      <Connection Source="INIT" Destination="Latch.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Latch.INITO" Destination="Listen.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Listen.INITO" Destination="Query.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Query.INITO" Destination="Query.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Query.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Listen.IND" Destination="Latch.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Latch.CNF" Destination="CHG">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </EventConnections>
     <DataConnections>
-      <Connection Source="Module" Destination="Latch.Module" />
-      <Connection Source="Latch.IdSub" Destination="Listen.ID" />
-      <Connection Source="Latch.IdQuery" Destination="Query.ID" />
-      <Connection Source="Listen.RD_1" Destination="Latch.Received" />
-      <Connection Source="Latch.Owner" Destination="Owner" />
+      <Connection Source="Module" Destination="Latch.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Latch.IdSub" Destination="Listen.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Latch.IdQuery" Destination="Query.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Listen.RD_1" Destination="Latch.Received">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Latch.Owner" Destination="Owner">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </DataConnections>
   </FBNetwork>
 </FBType>

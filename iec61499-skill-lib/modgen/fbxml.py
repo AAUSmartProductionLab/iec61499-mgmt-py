@@ -131,6 +131,16 @@ def arrange(net, groups, x=1000, y=1000):
         net.insert(i, g)
 
 
+def hide_connections(root):
+    """Hide every connection: the IDE draws a hidden one as a label at both of its ends, which keeps
+    a network readable (and a composite type cannot be edited in the IDE to hide them by hand)."""
+    for group in ("EventConnections", "DataConnections", "AdapterConnections"):
+        for connections_ in root.iter(group):
+            for conn in connections_:
+                if conn.find("Attribute[@Name='Visible']") is None:
+                    elem(conn, "Attribute", Name="Visible", Value="false")      # a system attribute: no Type
+
+
 def save(root, path, settle=None):
     """Indent and write an XML tree, creating folders; keeps the layout of an existing file, then
     lets ``settle(root, kept)`` place what that layout did not have."""
@@ -362,6 +372,7 @@ class TypeFile:
         annotate(self.root, getattr(self.project, "domain", {}))
         settle = None
         if self.root.find("FBNetwork") is not None:    # a composite: new blocks in a kept layout get a free place
+            hide_connections(self.root)
             from .layout import Sizer, place_new
             size = Sizer(self.project.types)
             settle = lambda tree, kept: place_new(tree, kept, size)  # noqa: E731

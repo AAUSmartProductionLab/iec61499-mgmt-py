@@ -109,90 +109,254 @@
       <Attribute Name="GroupName" Type="STRING" Value="Release" />
     </FB>
     <EventConnections>
-      <Connection Source="INIT" Destination="Control.INIT" />
-      <Connection Source="Control.INITO" Destination="Owner.INIT" />
-      <Connection Source="Owner.INITO" Destination="Mode.INIT" />
-      <Connection Source="Mode.INITO" Destination="UaStop.INIT" />
-      <Connection Source="UaStop.INITO" Destination="UaAbort.INIT" />
-      <Connection Source="UaAbort.INITO" Destination="UaReset.INIT" />
-      <Connection Source="UaReset.INITO" Destination="PubState.INIT" />
-      <Connection Source="PubState.INITO" Destination="Act.INIT" />
-      <Connection Source="Act.INITO" Destination="PubRelease.INIT" />
-      <Connection Source="PubRelease.INITO" Destination="PubState.REQ" />
-      <Connection Source="PubRelease.INITO" Destination="INITO" />
-      <Connection Source="START_REQ" Destination="Control.START_REQ" />
-      <Connection Source="Control.START_RSP" Destination="START_RSP" />
-      <Connection Source="UaStop.IND" Destination="Control.STOP_REQ" />
-      <Connection Source="Control.STOP_RSP" Destination="UaStop.RSP" />
-      <Connection Source="UaAbort.IND" Destination="Control.ABORT_REQ" />
-      <Connection Source="Control.ABORT_RSP" Destination="UaAbort.RSP" />
-      <Connection Source="UaReset.IND" Destination="Control.RESET_REQ" />
-      <Connection Source="Control.RESET_RSP" Destination="UaReset.RSP" />
-      <Connection Source="Owner.CHG" Destination="Control.OWNER_CHG" />
-      <Connection Source="Mode.CHG" Destination="Control.MOD_CHG" />
-      <Connection Source="Control.PUB" Destination="PubState.REQ" />
-      <Connection Source="Control.ACT" Destination="Act.REQ" />
-      <Connection Source="START" Destination="Control.START" />
-      <Connection Source="HALT" Destination="Control.HALT" />
-      <Connection Source="ABORT" Destination="Control.ABORT" />
-      <Connection Source="RESET" Destination="Control.RESET" />
-      <Connection Source="EXECUTE_DONE" Destination="Control.EXECUTE_DONE" />
-      <Connection Source="EXECUTE_FAILED" Destination="Control.EXECUTE_FAILED" />
-      <Connection Source="STOPPING_DONE" Destination="Control.STOPPING_DONE" />
-      <Connection Source="Control.RUN" Destination="RUN" />
-      <Connection Source="Control.HALT_SEQ" Destination="HALT_SEQ" />
-      <Connection Source="Control.ABORT_SEQ" Destination="ABORT_SEQ" />
-      <Connection Source="Control.RESET_SEQ" Destination="RESET_SEQ" />
-      <Connection Source="Control.RUN_STOPPING" Destination="RUN_STOPPING" />
-      <Connection Source="Control.SUCCESS" Destination="SUCCESS" />
-      <Connection Source="Control.FAILURE" Destination="FAILURE" />
-      <Connection Source="Control.TO_IDLE_START" Destination="ToIdle.START" />
-      <Connection Source="Control.TO_IDLE_STOP" Destination="ToIdle.STOP" />
-      <Connection Source="ToIdle.EO" Destination="Control.TO_IDLE" />
-      <Connection Source="Control.RELEASE" Destination="PubRelease.REQ" />
+      <Connection Source="INIT" Destination="Control.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.INITO" Destination="Owner.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Owner.INITO" Destination="Mode.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.INITO" Destination="UaStop.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaStop.INITO" Destination="UaAbort.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaAbort.INITO" Destination="UaReset.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaReset.INITO" Destination="PubState.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubState.INITO" Destination="Act.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Act.INITO" Destination="PubRelease.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubRelease.INITO" Destination="PubState.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubRelease.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="START_REQ" Destination="Control.START_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.START_RSP" Destination="START_RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaStop.IND" Destination="Control.STOP_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.STOP_RSP" Destination="UaStop.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaAbort.IND" Destination="Control.ABORT_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ABORT_RSP" Destination="UaAbort.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaReset.IND" Destination="Control.RESET_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.RESET_RSP" Destination="UaReset.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Owner.CHG" Destination="Control.OWNER_CHG">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.CHG" Destination="Control.MOD_CHG">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.PUB" Destination="PubState.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ACT" Destination="Act.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="START" Destination="Control.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="HALT" Destination="Control.HALT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="ABORT" Destination="Control.ABORT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="RESET" Destination="Control.RESET">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EXECUTE_DONE" Destination="Control.EXECUTE_DONE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EXECUTE_FAILED" Destination="Control.EXECUTE_FAILED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="STOPPING_DONE" Destination="Control.STOPPING_DONE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.RUN" Destination="RUN">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.HALT_SEQ" Destination="HALT_SEQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ABORT_SEQ" Destination="ABORT_SEQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.RESET_SEQ" Destination="RESET_SEQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.RUN_STOPPING" Destination="RUN_STOPPING">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.SUCCESS" Destination="SUCCESS">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.FAILURE" Destination="FAILURE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.TO_IDLE_START" Destination="ToIdle.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.TO_IDLE_STOP" Destination="ToIdle.STOP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="ToIdle.EO" Destination="Control.TO_IDLE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.RELEASE" Destination="PubRelease.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </EventConnections>
     <DataConnections>
-      <Connection Source="Module" Destination="Control.Module" />
-      <Connection Source="Module" Destination="Owner.Module" />
-      <Connection Source="Module" Destination="Mode.Module" />
-      <Connection Source="UaRoot" Destination="Control.UaRoot" />
-      <Connection Source="UaPath" Destination="Control.UaPath" />
-      <Connection Source="Methods" Destination="UaStop.QI" />
-      <Connection Source="Methods" Destination="UaAbort.QI" />
-      <Connection Source="Methods" Destination="UaReset.QI" />
-      <Connection Source="UaEnable" Destination="PubState.QI" />
-      <Connection Source="Control.StartMethodId" Destination="StartMethodId" />
-      <Connection Source="Session" Destination="Control.Session" />
-      <Connection Source="ParamsInRange" Destination="Control.ParamsInRange" />
-      <Connection Source="EquipmentFree" Destination="Control.EquipmentFree" />
-      <Connection Source="Control.Accepted" Destination="Accepted" />
-      <Connection Source="Control.Accepted" Destination="UaStop.SD_1" />
-      <Connection Source="Control.Accepted" Destination="UaAbort.SD_1" />
-      <Connection Source="Control.Accepted" Destination="UaReset.SD_1" />
-      <Connection Source="Control.ResponseError" Destination="StartError" />
-      <Connection Source="Control.ResponseError" Destination="UaStop.SD_2" />
-      <Connection Source="Control.ResponseError" Destination="UaAbort.SD_2" />
-      <Connection Source="Control.ResponseError" Destination="UaReset.SD_2" />
-      <Connection Source="Control.StopMethodId" Destination="UaStop.ID" />
-      <Connection Source="UaStop.RD_1" Destination="Control.StopSession" />
-      <Connection Source="Control.AbortMethodId" Destination="UaAbort.ID" />
-      <Connection Source="UaAbort.RD_1" Destination="Control.AbortSession" />
-      <Connection Source="Control.ResetMethodId" Destination="UaReset.ID" />
-      <Connection Source="UaReset.RD_1" Destination="Control.ResetSession" />
-      <Connection Source="Owner.Owner" Destination="Control.Owner" />
-      <Connection Source="Mode.State" Destination="Control.ModuleState" />
-      <Connection Source="Control.StateId" Destination="PubState.ID" />
-      <Connection Source="Control.State" Destination="PubState.SD_1" />
-      <Connection Source="Control.State" Destination="State" />
-      <Connection Source="Control.ErrorID" Destination="PubState.SD_2" />
-      <Connection Source="Control.ErrorID" Destination="ErrorID" />
-      <Connection Source="Control.ActivityId" Destination="Act.ID" />
-      <Connection Source="Control.ActivityDelta" Destination="Act.SD_1" />
-      <Connection Source="ExecuteError" Destination="Control.ExecuteError" />
-      <Connection Source="Control.CalledByClient" Destination="CalledByClient" />
-      <Connection Source="ReleaseAll" Destination="PubRelease.QI" />
-      <Connection Source="Control.ReleaseId" Destination="PubRelease.ID" />
-      <Connection Source="Holder" Destination="PubRelease.SD_1" />
+      <Connection Source="Module" Destination="Control.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Module" Destination="Owner.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Module" Destination="Mode.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaRoot" Destination="Control.UaRoot">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaPath" Destination="Control.UaPath">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Methods" Destination="UaStop.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Methods" Destination="UaAbort.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Methods" Destination="UaReset.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="PubState.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.StartMethodId" Destination="StartMethodId">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Session" Destination="Control.Session">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="ParamsInRange" Destination="Control.ParamsInRange">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EquipmentFree" Destination="Control.EquipmentFree">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.Accepted" Destination="Accepted">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.Accepted" Destination="UaStop.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.Accepted" Destination="UaAbort.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.Accepted" Destination="UaReset.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ResponseError" Destination="StartError">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ResponseError" Destination="UaStop.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ResponseError" Destination="UaAbort.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ResponseError" Destination="UaReset.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.StopMethodId" Destination="UaStop.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaStop.RD_1" Destination="Control.StopSession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.AbortMethodId" Destination="UaAbort.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaAbort.RD_1" Destination="Control.AbortSession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ResetMethodId" Destination="UaReset.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaReset.RD_1" Destination="Control.ResetSession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Owner.Owner" Destination="Control.Owner">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.State" Destination="Control.ModuleState">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.StateId" Destination="PubState.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.State" Destination="PubState.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.State" Destination="State">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ErrorID" Destination="PubState.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ErrorID" Destination="ErrorID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ActivityId" Destination="Act.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ActivityDelta" Destination="Act.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="ExecuteError" Destination="Control.ExecuteError">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.CalledByClient" Destination="CalledByClient">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="ReleaseAll" Destination="PubRelease.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ReleaseId" Destination="PubRelease.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Holder" Destination="PubRelease.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </DataConnections>
   </FBNetwork>
 </FBType>

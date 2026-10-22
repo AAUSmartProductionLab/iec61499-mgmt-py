@@ -576,9 +576,9 @@ def test_the_resources_start_block_starts_the_init_chain():
                      "FORTE_PI": [("START.COLD", "Filling_pi.Occupation.INIT"), ("START.WARM", "Filling_pi.Occupation.INIT")]}
 
 
-def test_application_is_grouped_and_init_chains_are_hidden():
+def test_application_is_grouped():
     """Five groups, top to bottom (module level, module level skills, procedures, skill primitives, equipment IO);
-    every block of the application in one of them; INIT and start-up connections hidden."""
+    every block of the application in one of them."""
     system = ET.parse(system_file("FillingModule")).getroot()
     net = next(a for a in system.iter("Application") if a.get("Name") == "Filling").find("SubAppNetwork")
     groups = [g.get("Name") for g in net.findall("Group")]
@@ -587,10 +587,19 @@ def test_application_is_grouped_and_init_chains_are_hidden():
               for el in net if el.tag in ("FB", "SubApp")}
     assert member["Dispensing"] == "ModuleLevelSkills" and member["MoveAxis"] == "SkillPrimitives"
     assert member["LinearAxis"] == "EquipmentIO" and member["Resetting"] == "Procedures"
-    for conn in net.find("EventConnections"):
-        hidden = conn.find("Attribute[@Name='Visible']") is not None
-        init = conn.get("Destination").endswith(".INIT")
-        assert hidden == init, (conn.get("Source"), conn.get("Destination"))
+
+
+
+@pytest.mark.parametrize("project", [LIBRARY_PROJECT, *[load(p).project for p in ALL]])
+def test_every_connection_is_hidden(project):
+    """A hidden connection is drawn as a label at both ends: in the applications, the subapplications,
+    the resources and every composite type (which cannot be edited in the IDE to hide them)."""
+    files = [system_file(project), *(project_dir(project) / "Type Library").rglob("*.fbt")]
+    shown = [f"{path.stem}: {c.get('Source')} -> {c.get('Destination')}" for path in files
+             if not {"Std", "Generic"} & set(path.parts)
+             for c in ET.parse(path).getroot().iter("Connection")
+             if c.find("Attribute[@Name='Visible']") is None]
+    assert shown == []
 
 
 def test_stop_sequence_nodes_do_not_collide_with_the_stop_method():
