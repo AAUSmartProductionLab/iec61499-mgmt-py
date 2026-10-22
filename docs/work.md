@@ -517,6 +517,23 @@ because with a wrong `.buildpath` it silently skips the system):
   after every run of a composite with a bound parameter).
 - **`STEP` is reserved too** (SFC): an IO point's address input is `<Point>_Address`, as a
   point's name alone may be a keyword.
+- **Names that say what a pin is** (22 Oct): the skill blocks' pins were renamed (`S_Start` →
+  `Session`, `S` → `Requested`, `P` → `Value`, `OkIn`/`InRange` → `PreviousInRange`/`AllInRange`,
+  `GO` → `RUN`, `HALT_O` → `HALT_SEQ`, `CMD_START`/`RSP_START` → `START_REQ`/`START_RSP`, the
+  module's and the occupation's methods alike; `Token`/`LastUse` → `Holder`/`ReleaseAfter`), and every
+  pin of every generated type has a comment the IDE shows as its tooltip (`modgen/pins.py`; a test
+  requires one on every pin).
+- **A module level skill gives up its equipment in `Control`** (22 Oct): SKILL_Core publishes its
+  `Holder` on the module's one release channel, `loc[<Module>/release]`, whenever a run ends
+  (succeeded too, as a safety net), when `ReleaseAll` is set; every equipment item listens there.
+  The Releasing group (`Release`, `Rel_<Item>`) and `SKILL_Release` are gone. A step still gives up
+  only its own equipment, with its last command (`ReleaseAfter`): the module-wide release would
+  free the axis that the next step keeps.
+- **A group may not share a name with a block, nor in a type with a pin**: the IDE refuses the
+  network ("Duplicate element"), and every connection to the block fails after it. A test checks
+  it; another checks that every connection ends on a pin its block's type has.
+- **Composite types are laid out like systems** (sized grid, groups); their positions were cleared
+  once on 22 Oct (nobody had arranged them), and a block added later gets a free place.
 - **An IO block sets up its own line** (21 Oct): `IO_DI`/`IO_DO` hold a `GPIOChip`, `IO_AO` a
   `PWMChip`, configured from the address (`gpio[0:23:pull_up:active_low]`, the line's handle name
   is the address). Windows' FORTE has neither type, and a composite needs the class of every
@@ -619,7 +636,7 @@ because with a wrong `.buildpath` it silently skips the system):
   current ECC state has no transition for. Together this lost equipment commands (a child's stop
   and the next child's start in the same instant) and module states (Aborting followed at once by
   Aborted, Clearing by Stopped). Rules adopted: (1) a message carries the whole intent (the final
-  command and the release in one message, `LastUse`); (2) the equipment marks commands and aborts
+  command and the release in one message, `ReleaseAfter`, then `LastUse`); (2) the equipment marks commands and aborts
   that arrive while it writes outputs and handles them when settled, and the latest command wins;
   (3) receivers treat a state and the state it passes into at once alike (Aborting or Aborted =
   abort; Clearing or Stopped = reset); (4) a step that finds another holder waits up to 0.5 s for

@@ -29,8 +29,9 @@ Fixed for every module; nothing here changes online.
    type then runs on every target, and an equipment block needs no other block for its IO; only
    the addresses differ.
 4. Blocks reach equipment and occupation over FORTE local channels, not over connections:
-   `loc[<Module>/owner]`, `loc[<Module>/<Item>/state]`, `.../cmd` and `.../release`. A block added
-   online therefore needs no connection to them.
+   `loc[<Module>/owner]`, `loc[<Module>/<Item>/state]` and `.../cmd`, and one release channel for
+   the module, `loc[<Module>/release]`: a holder named there gives up every item it holds. A block
+   added online therefore needs no connection to them.
 5. Every block has `INIT` and `INITO`. The application's blocks form one chain, started by the
    resource's own `START` block (`COLD` and `WARM`, drawn in the resource): IO lines,
    `Occupation`, `Module`, equipment, offered skill primitives, procedures, then the module level
@@ -43,20 +44,20 @@ A skill primitive is a block type. It is the unit a module level skill is built 
 1. Its type is `<package>::SK_<Skill>`.
 2. Events in: `INIT`, `START` (with the parameters), `HALT`, `ABORT`, `RESET`. Events out: `INITO`,
    `SUCCESS` (with the results) and `FAILURE` (with `ErrorID`).
-3. Data in: `Module`, `UaRoot`, `UaPath`, `UaEnable`, `Methods`, `Token`, `LastUse` (default
+3. Data in: `Module`, `UaRoot`, `UaPath`, `UaEnable`, `Methods`, `Holder`, `ReleaseAfter` (default
    `TRUE`), `Timeout` if a sensor ends it, and one input per parameter, named like the parameter,
    whose value is the default. Data out: `State`, `ErrorID` and `R_<result>` per result.
 4. It publishes `State`, `ErrorID`, `Parameters/<p>` and `Results/<r>` below `UaRoot` + `UaPath`
    when `UaEnable` is set, and offers the methods `Start`, `Stop`, `Abort` and `Reset` there when
    `Methods` is set.
-5. It takes its equipment under the name `Token` and gives it up when it ends if `LastUse` is
-   set. Instances with the same `Token` share the equipment: that is how the steps of one module
-   level skill keep it between them.
+5. It takes its equipment under the name `Holder` and gives it up with its last command when it
+   ends if `ReleaseAfter` is set. Instances with the same `Holder` share the equipment: that is how
+   the steps of one module level skill keep it between them.
 6. States and error codes are those of `modlib::SKILL_Core` (see *Skill interface* in
    [work.md](work.md)).
 
 An offered primitive is an instance `<Skill>` of its type in the application, with
-`UaPath = /Skills/<Skill>`, `Methods = TRUE`, `Token = <Skill>` and `LastUse = TRUE`. A primitive
+`UaPath = /Skills/<Skill>`, `Methods = TRUE`, `Holder = <Skill>` and `ReleaseAfter = TRUE`. A primitive
 that is not offered has no instance of its own: it only runs as a step (a building block).
 
 ### An equipment item that keeps its position
@@ -88,41 +89,42 @@ instances of library types and of skill primitives, so it can be created online.
 
 | Instance | Type | Values |
 | --- | --- | --- |
-| `Control` | `modlib::SKILL_Core` | `Module`, `UaRoot`, `UaPath = <path>`, `UaEnable = TRUE`, `Methods` |
+| `Control` | `modlib::SKILL_Core` | `Module`, `UaRoot`, `UaPath = <path>`, `UaEnable = TRUE`, `Methods`, `Holder = <Skill>`, `ReleaseAll = TRUE` if it uses equipment |
 | `UaStart` | `iec61499::net::SERVER_2_<1 + parameters>` (OPC UA method) | `QI = Methods` |
 | `<p>`, one per parameter, named like it | `modlib::SKILL_Param_<type>` | `Default`, and `Lower`, `Upper` if declared |
 | `PubParams`, if it has parameters | `iec61499::net::PUBLISH_<parameters>` | `QI = TRUE`, `ID` writing `<root><path>/Parameters/<p>` |
 | `PubResults`, if it has results | `iec61499::net::PUBLISH_<results>` | `QI = TRUE`, `ID` writing `<root><path>/Results/<r>` |
-| `Release`, if it uses equipment | `modlib::SKILL_Release` | `Token = <Skill>` |
-| `Rel_<Item>`, one per equipment item | `iec61499::net::PUBLISH_1` | `QI = TRUE`, `ID = loc[<Module>/<Item>/release]` |
 | `Execute` | subapplication, see below | |
 | `Stop`, if it has a stop sequence | subapplication, see below | |
 
 The OPC UA identifiers are written as values, since no type of the skill's own computes them.
+In the IDE they are shown in four groups: Core (`Control`), Start (`UaStart`, the parameters,
+`PubParams`), Sequences (`Execute`, `Stop`) and Results (`PubResults`).
 
 ### Connections
 
-1. Start method: `Control.IdStart` → `UaStart.ID`; `UaStart.RD_1` → `Control.S_Start`;
-   `Control.RSP_START` → `UaStart.RSP` with `Control.Accepted` → `UaStart.SD_1` and
-   `Control.RspError` → `UaStart.SD_2`.
+1. Start method: `Control.StartMethodId` → `UaStart.ID`; `UaStart.RD_1` → `Control.Session`;
+   `Control.START_RSP` → `UaStart.RSP` with `Control.Accepted` → `UaStart.SD_1` and
+   `Control.StartError` → `UaStart.SD_2`.
 2. Parameters, in declared order. Check: `UaStart.IND` → first `.CHECK`; each `.CHECKED` → the
-   next `.CHECK` with `.InRange` → `.OkIn`; the last `.CHECKED` → `Control.CMD_START` with
-   `.InRange` → `Control.InRange`. Latch: `Control.GO` → first `.LATCH`; each `.LATCHED` → the next
-   `.LATCH`; the last `.LATCHED` → `PubParams.REQ` and → `Execute.START`. Data: `UaStart.RD_<k+1>` →
-   `<p>.S`, `Control.FromUa` → `<p>.FromUa`, `<p>.P` → `PubParams.SD_<k>` and → `Execute.<p>`.
-   `PubParams.INITO` → `PubParams.REQ` publishes the defaults once.
-   Without parameters: `UaStart.IND` → `Control.CMD_START` and `Control.GO` → `Execute.START`.
-3. Run: `Control.HALT_O`, `.ABORT_O`, `.RESET_O` → `Execute.HALT`, `.ABORT`, `.RESET`;
-   `Execute.DONE` → `Control.EXEC_DONE`; `Execute.FAILED` → `Control.EXEC_FAILED` with
-   `Execute.ErrorID` → `Control.ExecError`.
+   next `.CHECK` with `.AllInRange` → `.PreviousInRange`; the last `.CHECKED` → `Control.START_REQ`
+   with `.AllInRange` → `Control.ParamsInRange`. Latch: `Control.RUN` → first `.LATCH`; each
+   `.LATCHED` → the next `.LATCH`; the last `.LATCHED` → `PubParams.REQ` and → `Execute.START`.
+   Data: `UaStart.RD_<k+1>` → `<p>.Requested`, `Control.CalledByClient` → `<p>.CalledByClient`,
+   `<p>.Value` → `PubParams.SD_<k>` and → `Execute.<p>`. `PubParams.INITO` → `PubParams.REQ`
+   publishes the defaults once. Without parameters: `UaStart.IND` → `Control.START_REQ` and
+   `Control.RUN` → `Execute.START`.
+3. Run: `Control.HALT_SEQ`, `.ABORT_SEQ`, `.RESET_SEQ` → `Execute.HALT`, `.ABORT`, `.RESET`;
+   `Execute.DONE` → `Control.EXECUTE_DONE`; `Execute.FAILED` → `Control.EXECUTE_FAILED` with
+   `Execute.ErrorID` → `Control.ExecuteError`.
 4. Results: `Execute.DONE` → `PubResults.REQ`, `Execute.<r>` → `PubResults.SD_<k>`.
-5. Stop: `Control.RUN_STOP` → `Stop.START`; `Control.ABORT_O` → `Stop.ABORT`; `Control.RESET_O` →
-   `Stop.RESET`; `Stop.DONE` and `Stop.FAILED` → `Control.STOP_DONE`. Without a stop sequence:
-   `Control.RUN_STOP` → `Control.STOP_DONE`.
-6. Release: `Control.FAILURE` and `Control.ABORT_O` → `Release.REQ`; `Release.CNF` → each
-   `Rel_<Item>.REQ` with `Release.Holder` → `Rel_<Item>.SD_1`.
+5. Stop: `Control.RUN_STOPPING` → `Stop.START`; `Control.ABORT_SEQ` → `Stop.ABORT`;
+   `Control.RESET_SEQ` → `Stop.RESET`; `Stop.DONE` and `Stop.FAILED` → `Control.STOPPING_DONE`.
+   Without a stop sequence: `Control.RUN_STOPPING` → `Control.STOPPING_DONE`.
+6. Release: none to wire. `Control` publishes `Holder` on `loc[<Module>/release]` whenever a run
+   ends (succeeded, failed or aborted), so the skill gives up everything it still holds.
 7. Initialisation: `INIT` → `Control` → `UaStart` → parameters → `PubParams` → `PubResults` →
-   `Rel_<Item>` → `Execute` → `Stop` → `INITO`, each `INITO` to the next `INIT`.
+   `Execute` → `Stop` → `INITO`, each `INITO` to the next `INIT`.
 
 ### A sequence (`Execute`, `Stop`)
 
@@ -131,8 +133,8 @@ in, and `DONE` (with the results), `FAILED` (with `ErrorID`) and `INITO` out.
 
 1. One instance per step, named like the step, of the step's skill primitive type, with `Module`,
    `UaRoot`, `UaEnable = TRUE`, `UaPath = <path>/Execute/<step>` (`<path>/Stopping/<step>` in a stop
-   sequence), `Methods = FALSE`, `Token = <Skill>`, and `LastUse = TRUE` only on the last step that
-   uses its equipment item.
+   sequence), `Methods = FALSE`, `Holder = <Skill>`, and `ReleaseAfter = TRUE` only on the last step
+   that uses its equipment item.
 2. A constant bound to a step's parameter is the value of that input. A parameter of the skill
    bound to it is a data connection from the sequence's input. Either stays within the limits of
    the step's parameter and has its type: a skill started by a parent does not check its values
