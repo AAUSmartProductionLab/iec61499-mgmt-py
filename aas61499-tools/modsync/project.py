@@ -7,7 +7,9 @@ with the module spec it was generated from, the spec of exactly what runs can be
 spec's equipment, skill primitives and wiring, with the module level skills, procedures, offered
 primitives and parameter values read from the program, a skill added online among them. modgen
 makes the project from that. Its layout comes from the module's project in the repository, so
-blocks keep the places they were given in the IDE and new ones get free places.
+blocks keep the places they were given in the IDE (taken anew each time: the repository's layout
+wins), a block only this project has (a skill added online) keeps its place here, new ones get
+free places, and the layout is spread where it is too tight.
 
 The project is checked: the program it deploys must be the one that runs. Only what the module
 rules describe can be read back; anything else the program has is reported, not guessed.
@@ -17,9 +19,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 import shutil
+import xml.etree.ElementTree as ET
 
 from iec61499_mgmt.protocol import Client
 from modgen import generate, project_dir
+from modgen.fbxml import keep_layout
 from modgen.spec import Composite, Modbus, ModuleSpec, Parameter, Step
 
 from .compare import Candidate
@@ -133,9 +137,14 @@ def write_project(client: Client, host: str, port: int, status: Status, out: Pat
     path = Path(out) / spec.project
     system = path / f"{spec.project}.sys"
     arranged = project_dir(spec.project) / f"{spec.project}.sys"
-    if not system.exists() and arranged.exists():           # the layout arranged in the IDE comes along
-        system.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(arranged, system)
+    if arranged.exists():                                   # the layout arranged in the IDE comes along
+        if system.exists():
+            tree = ET.parse(system)                         # what only this project has keeps its place
+            keep_layout(tree.getroot(), arranged)
+            tree.write(system, encoding="utf-8", xml_declaration=True)
+        else:
+            system.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(arranged, system)
     generate(spec, path)
     target = status.candidate.target
     check = inspect(client, host, port, [Candidate(None, spec, target)], status.snapshot.resource)

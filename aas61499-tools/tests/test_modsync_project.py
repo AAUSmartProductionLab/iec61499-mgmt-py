@@ -43,3 +43,21 @@ def test_a_skill_added_online_and_a_changed_value_are_in_the_project(tmp_path):
     kept = positions(project_dir("FillingModule") / "FillingModule.sys", "Filling_pi")
     assert {k: placed[k] for k in kept} == kept and "DoubleDose" in placed
     assert project.spec.targets["pi"].host == "pi"      # the project's device is the one read
+
+
+def test_a_project_written_again_takes_the_repositorys_layout_and_keeps_its_own_blocks(tmp_path):
+    """The repository's layout wins (it may have been arranged since); a skill only the written
+    project has keeps the place it was given there."""
+    project = written(FakeForte(composed()), tmp_path)
+    system = project.path / "FillingModule.sys"
+    doc = ET.parse(system)
+    net = next(a for a in doc.getroot().iter("Application") if a.get("Name") == "Filling_pi").find("SubAppNetwork")
+    for el in net:
+        if el.get("Name") in ("Occupation", "DoubleDose"):
+            el.set("x", str(float(el.get("x")) + 777))
+    doc.write(system, encoding="utf-8", xml_declaration=True)
+    moved = positions(system, "Filling_pi")["DoubleDose"]
+    written(FakeForte(composed()), tmp_path)
+    placed = positions(system, "Filling_pi")
+    kept = positions(project_dir("FillingModule") / "FillingModule.sys", "Filling_pi")
+    assert placed["Occupation"] == kept["Occupation"] and placed["DoubleDose"] == moved
