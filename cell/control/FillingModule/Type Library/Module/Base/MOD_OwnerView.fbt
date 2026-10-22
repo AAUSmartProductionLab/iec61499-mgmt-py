@@ -23,11 +23,11 @@
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Latch" Type="modlib::MOD_OwnerLatch" x="1100" y="1000" />
-    <FB Name="Listen" Type="iec61499::net::SUBSCRIBE_1" x="2570" y="1000">
+    <FB Name="Latch" Type="modlib::MOD_OwnerLatch" x="1750" y="1000" />
+    <FB Name="Listen" Type="iec61499::net::SUBSCRIBE_1" x="4240" y="1000">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="Query" Type="iec61499::net::PUBLISH_0" x="3860" y="1000">
+    <FB Name="Query" Type="iec61499::net::PUBLISH_0" x="6630" y="1000">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
     <EventConnections>

@@ -33,9 +33,9 @@
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Route" Type="modlib::IO_RouteAI" x="1100" y="1000" />
-    <FB Name="Local" Type="eclipse4diac::io::IW" x="2220" y="1000" />
-    <FB Name="Bus" Type="iec61499::net::CLIENT_0_1" x="3160" y="1000" />
+    <FB Name="Route" Type="modlib::IO_RouteAI" x="1830" y="1000" />
+    <FB Name="Local" Type="eclipse4diac::io::IW" x="4230" y="1000" />
+    <FB Name="Bus" Type="iec61499::net::CLIENT_0_1" x="6370" y="1000" />
     <EventConnections>
       <Connection Source="INIT" Destination="Route.INIT">
         <Attribute Name="Visible" Value="false" />

@@ -513,18 +513,31 @@ def test_regeneration_keeps_each_applications_own_layout(tmp_path):
     assert next(g for g in apps["Filler"].iter("Group") if g.get("Name") == "ModuleLevel").get("width") == "7093.33"
 
 
-def boxes(net, size):
-    """Each block of a network with its box (left, top, right, bottom), groups' offsets added."""
-    from modgen.layout import group_of
-    groups = {g.get("Name"): (float(g.get("x")), float(g.get("y"))) for g in net.findall("Group")}
+def boxes(net, size, labelled=False):
+    """Each block of a network with its box (left, top, right, bottom), groups' offsets added (a
+    grouped block is placed below the group's comment); ``labelled``: with the room for its
+    connection labels and parameter values on either side."""
+    from modgen.layout import group_of, header, measure
+    groups = {g.get("Name"): (float(g.get("x")), float(g.get("y")) + header(g)) for g in net.findall("Group")}
+    box = measure(net, size)
     found = {}
     for el in net:
         if el.tag in ("FB", "SubApp"):
             gx, gy = groups.get(group_of(el), (0.0, 0.0))
-            _, w, h = size(el)
+            left, w, h, right = box(el) if labelled else (0.0, *size(el)[1:], 0.0)
             x, y = gx + float(el.get("x")), gy + float(el.get("y"))
-            found[el.get("Name")] = (x, y, x + w, y + h)
+            found[el.get("Name")] = (x - left, y, x + w + right, y + h)
     return found
+
+
+def outside(net, size):
+    """The blocks of a network that do not fit in their group, with their labels."""
+    from modgen.layout import group_of
+    found = boxes(net, size, labelled=True)
+    groups = {g.get("Name"): g for g in net.findall("Group")}
+    return [el.get("Name") for el in net if el.tag in ("FB", "SubApp") and group_of(el) in groups
+            and not (lambda g, b: float(g.get("x")) <= b[0] and b[2] <= float(g.get("x")) + float(g.get("width"))
+                     and b[3] <= float(g.get("y")) + float(g.get("height")))(groups[group_of(el)], found[el.get("Name")])]
 
 
 def overlaps(found):
@@ -541,6 +554,19 @@ def test_no_two_blocks_overlap_in_any_network(project):
     size = Sizer(project_dir(project) / "Type Library")
     for net in networks(ET.parse(system_file(project)).getroot()):
         assert overlaps(boxes(net, size)) == []
+
+
+@pytest.mark.parametrize("project", [LIBRARY_PROJECT, *[load(p).project for p in ALL]])
+def test_composite_types_leave_room_for_labels_and_comments(project):
+    """Inside every composite type no block nor the labels of its hidden connections overlap
+    another, and each block with its labels fits in its group, below the group's comment."""
+    from modgen.layout import Sizer
+    size = Sizer(project_dir(project) / "Type Library")
+    for path in (project_dir(project) / "Type Library").rglob("*.fbt"):
+        net = ET.parse(path).getroot().find("FBNetwork")
+        if net is None or {"Std", "Generic"} & set(path.parts):
+            continue
+        assert (path.stem, overlaps(boxes(net, size, labelled=True)), outside(net, size)) == (path.stem, [], [])
 
 
 def test_a_skill_added_later_gets_a_free_place_in_its_group(tmp_path):

@@ -30,26 +30,26 @@
     <OutputVars />
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Ids" Type="modlib::MOD_StateIds" x="1100" y="1000" />
-    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="2570" y="1000" />
-    <FB Name="Reset" Type="iec61499::net::SERVER_2_1" x="3800" y="1000" />
-    <FB Name="Start" Type="iec61499::net::SERVER_2_1" x="5090" y="1000" />
-    <FB Name="Stop" Type="iec61499::net::SERVER_2_1" x="1100" y="2500" />
-    <FB Name="Abort" Type="iec61499::net::SERVER_2_1" x="2570" y="2500" />
-    <FB Name="Clear" Type="iec61499::net::SERVER_2_1" x="3800" y="2500" />
-    <FB Name="Logic" Type="modlib::MOD_StateLogic" x="5090" y="2500" />
-    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1100" y="4900" />
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="2750" y="4900">
+    <FB Name="Ids" Type="modlib::MOD_StateIds" x="1750" y="1000" />
+    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="4380" y="1000" />
+    <FB Name="Reset" Type="iec61499::net::SERVER_2_1" x="7110" y="1000" />
+    <FB Name="Start" Type="iec61499::net::SERVER_2_1" x="9760" y="1000" />
+    <FB Name="Stop" Type="iec61499::net::SERVER_2_1" x="1830" y="2500" />
+    <FB Name="Abort" Type="iec61499::net::SERVER_2_1" x="4460" y="2500" />
+    <FB Name="Clear" Type="iec61499::net::SERVER_2_1" x="7110" y="2500" />
+    <FB Name="Logic" Type="modlib::MOD_StateLogic" x="10080" y="2500" />
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1830" y="4900" />
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="4220" y="4900">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="3980" y="4900">
+    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="6990" y="4900">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="SubAct" Type="iec61499::net::SUBSCRIBE_1" x="5270" y="4900">
+    <FB Name="SubAct" Type="iec61499::net::SUBSCRIBE_1" x="9640" y="4900">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="Count" Type="modlib::MOD_ActivityCount" x="1100" y="5900" />
-    <FB Name="Wd" Type="iec61499::events::E_DELAY" x="2570" y="5900" />
+    <FB Name="Count" Type="modlib::MOD_ActivityCount" x="1590" y="5900" />
+    <FB Name="Wd" Type="iec61499::events::E_DELAY" x="4580" y="5900" />
     <EventConnections>
       <Connection Source="INIT" Destination="Ids.INIT">
         <Attribute Name="Visible" Value="false" />

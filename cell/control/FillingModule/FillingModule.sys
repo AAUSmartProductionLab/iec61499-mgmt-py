@@ -650,16 +650,16 @@
         <Connection Source="Stopping.FAILED" Destination="Module.STOPPING_FAILED" dx1="2173.33">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Occupation.INITO" Destination="Module.INIT">
+        <Connection Source="Occupation.INITO" Destination="Module.INIT" dx1="780">
           <Attribute Name="Visible" Value="false" />
         </Connection>
         <Connection Source="Module.INITO" Destination="LinearAxis.INIT" dx1="80" dx2="80" dy="11700">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="LinearAxis.INITO" Destination="Pump.INIT">
+        <Connection Source="LinearAxis.INITO" Destination="Pump.INIT" dx1="953.33">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Pump.INITO" Destination="Scale.INIT">
+        <Connection Source="Pump.INITO" Destination="Scale.INIT" dx1="80" dx2="80" dy="600">
           <Attribute Name="Visible" Value="false" />
         </Connection>
         <Connection Source="Scale.INITO" Destination="Home.INIT" dx1="80" dx2="80" dy="-4846.67">
@@ -668,10 +668,10 @@
         <Connection Source="Home.INITO" Destination="MoveAxis.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="MoveAxis.INITO" Destination="Dispense.INIT">
+        <Connection Source="MoveAxis.INITO" Destination="Dispense.INIT" dx1="80" dx2="80" dy="1900">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Dispense.INITO" Destination="Tare.INIT">
+        <Connection Source="Dispense.INITO" Destination="Tare.INIT" dx1="686.67">
           <Attribute Name="Visible" Value="false" />
         </Connection>
         <Connection Source="Tare.INITO" Destination="Weigh.INIT" dx1="80" dx2="80" dy="1900">
@@ -680,7 +680,7 @@
         <Connection Source="Weigh.INITO" Destination="Resetting.INIT" dx1="80" dx2="80" dy="-4046.67">
           <Attribute Name="Visible" Value="false" />
         </Connection>
-        <Connection Source="Resetting.INITO" Destination="Stopping.INIT">
+        <Connection Source="Resetting.INITO" Destination="Stopping.INIT" dx1="80" dx2="80" dy="-400">
           <Attribute Name="Visible" Value="false" />
         </Connection>
         <Connection Source="Stopping.INITO" Destination="Dispensing.INIT" dx1="80" dx2="80" dy="-2146.67">
@@ -695,21 +695,21 @@
       <Group Name="ModuleLevelSkills" Comment="Module level skills: Control, Sequences (Execute, Stop) of skill primitives and Release; OPC UA /Skills/&lt;name&gt;" x="1000" y="4100" width="2500" height="2493.33" locked="false" />
       <Group Name="Procedures" Comment="Procedures the module state manager runs while Resetting and Stopping" x="4000" y="4400" width="3193.33" height="1993.33" locked="false" />
       <Group Name="SkillPrimitives" Comment="Skill primitives: one equipment command until a sensor or a time; OPC UA /Skills/&lt;name&gt;" x="1000" y="6800" width="5460" height="6393.33" locked="false" />
-      <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="6700" y="6900" width="5206.67" height="3200" locked="false" />
-      <FB Name="Occupation" Type="modlib::MOD_Occupation" x="2400" y="893.33">
+      <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="6626.67" y="6900" width="5280" height="3200" locked="false" />
+      <FB Name="Occupation" Type="modlib::MOD_Occupation" x="1000" y="693.33">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="Module" Type="modlib::MOD_StateManager" x="4900" y="293.33">
+      <FB Name="Module" Type="modlib::MOD_StateManager" x="4500" y="393.33">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="StopTimeout" Value="T#10000ms" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="LinearAxis" Type="filling::EQ_LinearAxis" x="806.67" y="793.33">
+      <FB Name="LinearAxis" Type="filling::EQ_LinearAxis" x="1173.33" y="493.33">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
@@ -719,13 +719,13 @@
         <Parameter Name="Step_Address" Value="'pwm[0:2:500000:/hostsys/class/pwm]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
-      <FB Name="Pump" Type="filling::EQ_Pump" x="3606.67" y="393.33">
+      <FB Name="Pump" Type="filling::EQ_Pump" x="3673.33" y="293.33">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
-      <FB Name="Scale" Type="filling::EQ_Scale" x="3606.67" y="1593.33">
+      <FB Name="Scale" Type="filling::EQ_Scale" x="3673.33" y="1293.33">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
@@ -816,7 +816,7 @@
             <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
             <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
-          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="5770" y="1000" />
+          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="7300" y="1000" />
           <EventConnections>
             <Connection Source="INIT" Destination="Home.INIT" dx1="1026.67">
               <Attribute Name="Visible" Value="false" />
@@ -836,24 +836,24 @@
             <Connection Source="Home.SUCCESS" Destination="Tare.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_1">
+            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_1" dx1="1193.33">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_2">
+            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_2" dx1="386.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Fail1.FAIL" Destination="FAILED" dx1="3073.33">
+            <Connection Source="Fail1.FAIL" Destination="FAILED" dx1="1880">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Home.ErrorID" Destination="Fail1.Error1">
+            <Connection Source="Home.ErrorID" Destination="Fail1.Error1" dx1="1193.33">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Tare.ErrorID" Destination="Fail1.Error2">
+            <Connection Source="Tare.ErrorID" Destination="Fail1.Error2" dx1="386.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Fail1.Error" Destination="ErrorID">
+            <Connection Source="Fail1.Error" Destination="ErrorID" dx1="1880">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </DataConnections>
@@ -922,7 +922,7 @@
         <SubAppNetwork>
           <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="-1500" y="400" width="3013.33" height="3033.33" locked="false" />
           <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="-1246.67" y="3733.33" width="8940" height="1900" locked="false" />
-          <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="2053.33" y="806.67" width="5593.33" height="1926.67" locked="false" />
+          <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="2200" y="1400" width="5593.33" height="1926.67" locked="false" />
           <Group Name="Results" Comment="The results published when Execute is done" x="8300" y="3000" width="2926.67" height="1500" locked="false" />
           <FB Name="Control" Type="modlib::SKILL_Core" x="853.33" y="0.33">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
@@ -987,7 +987,7 @@
                 <Parameter Name="ReleaseAfter" Value="FALSE" />
                 <Parameter Name="Position" Value="40.0" />
               </FB>
-              <FB Name="Dispense" Type="filling::SK_Dispense" x="4593.33" y="1526.67">
+              <FB Name="Dispense" Type="filling::SK_Dispense" x="4500" y="1800">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/Dispense&quot;" />
@@ -1052,7 +1052,7 @@
                 <Connection Source="HALT" Destination="NeedleDown.HALT" dx1="333.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="HALT" Destination="Dispense.HALT" dx1="333.33" dx2="333.33" dy="-666.67">
+                <Connection Source="HALT" Destination="Dispense.HALT" dx1="3406.67">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="HALT" Destination="Home.HALT" dx1="333.33" dx2="333.33" dy="826.67">
@@ -1076,7 +1076,7 @@
                 <Connection Source="RESET" Destination="NeedleDown.RESET" dx1="200">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="RESET" Destination="Dispense.RESET" dx1="200" dx2="200" dy="-106.67">
+                <Connection Source="RESET" Destination="Dispense.RESET" dx1="3406.67">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="RESET" Destination="Home.RESET" dx1="200" dx2="200" dy="1320">
@@ -1085,22 +1085,22 @@
                 <Connection Source="RESET" Destination="Weigh.RESET" dx1="200" dx2="200" dy="2126.67">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_1">
+                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_1" dx1="1273.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_2">
+                <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_2" dx1="106.67">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1">
+                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1" dx1="713.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2">
+                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2" dx1="80" dx2="80" dy="-673.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_1">
+                <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_1" dx1="773.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_2">
+                <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_2" dx1="80" dx2="80" dy="-1073.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="Fail3.FAIL" Destination="FAILED" dx1="66.67">
@@ -1108,28 +1108,28 @@
                 </Connection>
               </EventConnections>
               <DataConnections>
-                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.Error1">
+                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.Error1" dx1="1273.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Dispense.ErrorID" Destination="Fail1.Error2">
+                <Connection Source="Dispense.ErrorID" Destination="Fail1.Error2" dx1="106.67">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Fail1.Error" Destination="Fail2.Error1">
+                <Connection Source="Fail1.Error" Destination="Fail2.Error1" dx1="713.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Home.ErrorID" Destination="Fail2.Error2">
+                <Connection Source="Home.ErrorID" Destination="Fail2.Error2" dx1="80" dx2="80" dy="-780">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Fail2.Error" Destination="Fail3.Error1">
+                <Connection Source="Fail2.Error" Destination="Fail3.Error1" dx1="773.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Weigh.ErrorID" Destination="Fail3.Error2">
+                <Connection Source="Weigh.ErrorID" Destination="Fail3.Error2" dx1="80" dx2="80" dy="-1180">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Fail3.Error" Destination="ErrorID">
+                <Connection Source="Fail3.Error" Destination="ErrorID" dx1="3280">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Volume" Destination="Dispense.Volume" dx1="266.67" dx2="266.67" dy="-140">
+                <Connection Source="Volume" Destination="Dispense.Volume" dx1="3406.67">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="Weigh.R_Weight" Destination="Weight" dx1="266.67" dx2="266.67" dy="-1633.33">
@@ -1168,33 +1168,33 @@
                 <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <EventConnections>
-                <Connection Source="INIT" Destination="Home.INIT">
+                <Connection Source="INIT" Destination="Home.INIT" dx1="1100">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Home.INITO" Destination="INITO">
+                <Connection Source="Home.INITO" Destination="INITO" dx1="3360">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="START" Destination="Home.START">
+                <Connection Source="START" Destination="Home.START" dx1="1100">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Home.SUCCESS" Destination="DONE">
+                <Connection Source="Home.SUCCESS" Destination="DONE" dx1="3360">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="HALT" Destination="Home.HALT">
+                <Connection Source="HALT" Destination="Home.HALT" dx1="1100">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="ABORT" Destination="Home.ABORT">
+                <Connection Source="ABORT" Destination="Home.ABORT" dx1="1100">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="RESET" Destination="Home.RESET">
+                <Connection Source="RESET" Destination="Home.RESET" dx1="1100">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Home.FAILURE" Destination="FAILED">
+                <Connection Source="Home.FAILURE" Destination="FAILED" dx1="3360">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
               </EventConnections>
               <DataConnections>
-                <Connection Source="Home.ErrorID" Destination="ErrorID">
+                <Connection Source="Home.ErrorID" Destination="ErrorID" dx1="3360">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
               </DataConnections>

@@ -32,34 +32,34 @@
     <OutputVars />
   </InterfaceList>
   <FBNetwork>
-    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="2370" height="2500" locked="false" />
-    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="3670" y="1000" width="4010" height="2700" locked="false" />
-    <Group Name="Inputs" Comment="The equipment's sensors: read every cycle, one block per IO point" x="7980" y="1000" width="1190" height="1500" locked="false" />
-    <FB Name="Logic" Type="filling::EL_Scale" x="300" y="500">
+    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="4650" height="2480" locked="false" />
+    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="1000" y="3780" width="7810" height="2680" locked="false" />
+    <Group Name="Inputs" Comment="The equipment's sensors: read every cycle, one block per IO point" x="9110" y="3780" width="2870" height="1480" locked="false" />
+    <FB Name="Logic" Type="filling::EL_Scale" x="950" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="1600" y="500">
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="3690" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Mode" Type="modlib::MOD_StateView" x="300" y="500">
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="950" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_2" x="1710" y="500">
+    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_2" x="3500" y="150">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="3000" y="500">
+    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="6090" y="150">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="480" y="1600">
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="990" y="1250">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1530" y="1600">
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="3740" y="1250">
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="In_Weight" Type="modlib::IO_AI" x="300" y="500">
+    <FB Name="In_Weight" Type="modlib::IO_AI" x="1270" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Inputs" />
     </FB>
     <EventConnections>
