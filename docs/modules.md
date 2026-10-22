@@ -40,7 +40,7 @@ Since 8 Oct 2026 the module is built from the components every module of the lin
 (a linear axis and one process component), no longer as the ESP32 station was: the needle is lifted
 by a stepper motor with a limit switch, as on a 3D printer. It runs on a Raspberry Pi 5
 (192.168.0.203 since 20 Oct; the Pi 5 at 192.168.0.134 was another one), the stoppering module on
-the Raspberry Pi 4 (192.168.0.191). The axis is wired as below to a TB6600 driver, straight to
+the Raspberry Pi 5 at 192.168.0.134 since 22 Oct (before, the Raspberry Pi 4 at 192.168.0.191). The axis is wired as below to a TB6600 driver, straight to
 the Pi's pins (21 Oct; a 3.3 V to 5 V level converter in between, as on 20 Oct, is not needed); its
 limit switch is wired but not mounted yet. The travel is a placeholder until the axis is measured.
 
