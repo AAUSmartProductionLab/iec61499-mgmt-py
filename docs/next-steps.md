@@ -204,6 +204,7 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 | Question | Blocks |
 | --- | --- |
 | **Waiting for you:** go to install the runtime and program of 21 Oct on the filling Pi (at the bench) | B3 |
+| **Waiting for you:** the twelve decisions of the state and parameters model ([state-and-parameters.md](state-and-parameters.md), Sections 7 and 8.8); the modelling is picked up again after them | S1 to S5 |
 | **Waiting for you:** how ARSO's submodels reach aas-model (fork and pull request, or push access) | E5 |
 | **Waiting for you:** go-ahead to commit the skill editor's fixes to the fork and the generation project's ARSO 0.8 | A2b, D2 |
 | Should module level skills become typed subapplications in the IDE (reusable, with an interface), or stay untyped (created online without type files)? | later |
