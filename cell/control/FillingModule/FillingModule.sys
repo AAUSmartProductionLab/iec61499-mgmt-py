@@ -50,8 +50,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/Home&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;Home&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;Home&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="MoveAxis" Type="filling::SK_MoveAxis" x="3360" y="393.33">
@@ -60,8 +60,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveAxis&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveAxis&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;MoveAxis&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="Dispense" Type="filling::SK_Dispense" x="1360" y="4193.33">
@@ -70,8 +70,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/Dispense&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;Dispense&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;Dispense&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="Tare" Type="filling::SK_Tare" x="3760" y="2293.33">
@@ -80,8 +80,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/Tare&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;Tare&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;Tare&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="Weigh" Type="filling::SK_Weigh" x="1360" y="2293.33">
@@ -90,8 +90,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/Weigh&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;Weigh&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;Weigh&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <SubApp Name="Resetting" x="1200" y="893.33" Comment="Procedure the module runs while Resetting">
@@ -116,8 +116,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <FB Name="Tare" Type="filling::SK_Tare" x="4695" y="1000">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
@@ -125,8 +125,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Tare&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="5770" y="1000" />
           <EventConnections>
@@ -142,14 +142,14 @@
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Home.SUCCESS" Destination="Tare.START" />
-            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_A" />
-            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_B" />
+            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_1" />
+            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_2" />
             <Connection Source="Fail1.FAIL" Destination="FAILED" />
           </EventConnections>
           <DataConnections>
-            <Connection Source="Home.ErrorID" Destination="Fail1.ErrA" />
-            <Connection Source="Tare.ErrorID" Destination="Fail1.ErrB" />
-            <Connection Source="Fail1.Err" Destination="ErrorID" />
+            <Connection Source="Home.ErrorID" Destination="Fail1.Error1" />
+            <Connection Source="Tare.ErrorID" Destination="Fail1.Error2" />
+            <Connection Source="Fail1.Error" Destination="ErrorID" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -176,8 +176,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Stopping&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Stopping&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
             <Connection Source="INIT" Destination="Home.INIT">
@@ -206,55 +206,39 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="6690" height="3800" locked="false" />
+          <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="1000" y="3000" width="2760" height="3000" locked="false" />
+          <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="1000" y="6300" width="5525" height="1900" locked="false" />
           <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="7990" y="1000" width="2125" height="1700" locked="false" />
-          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="5100" width="5095" height="2500" locked="false" />
+          <Group Name="Results" Comment="The results published when Execute is done" x="1000" y="8500" width="2650" height="1500" locked="false" />
           <FB Name="Control" Type="modlib::SKILL_Core" x="1200" y="500">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+            <Parameter Name="ReleaseAll" Value="TRUE" />
+            <Attribute Name="GroupName" Type="STRING" Value="Core" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="2870" y="500">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="480" y="500">
             <Parameter Name="QI" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="Volume" Type="modlib::SKILL_Param_LREAL" x="5320" y="500">
+          <FB Name="Volume" Type="modlib::SKILL_Param_LREAL" x="1710" y="500">
             <Parameter Name="Default" Value="1.0" />
             <Parameter Name="Lower" Value="0.5" />
             <Parameter Name="Upper" Value="10.0" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="1700" y="2800">
+          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="4635" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;opc_ua[WRITE;/Objects/Filling/Skills/Dispensing/Parameters/Volume]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="PubResults" Type="iec61499::net::PUBLISH_1" x="4090" y="2800">
+          <FB Name="PubResults" Type="iec61499::net::PUBLISH_1" x="1700" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;opc_ua[WRITE;/Objects/Filling/Skills/Dispensing/Results/Weight]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
-          </FB>
-          <FB Name="Release" Type="modlib::SKILL_Release" x="840" y="500">
-            <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_LinearAxis" Type="iec61499::net::PUBLISH_1" x="3905" y="500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Filling/LinearAxis/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_Pump" Type="iec61499::net::PUBLISH_1" x="1515" y="1500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Filling/Pump/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_Scale" Type="iec61499::net::PUBLISH_1" x="3765" y="1500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Filling/Scale/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
+            <Attribute Name="GroupName" Type="STRING" Value="Results" />
           </FB>
           <SubApp Name="Execute" x="300" y="500" Comment="Dispensing: execute sequence">
             <SubAppInterfaceList>
@@ -285,8 +269,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/NeedleDown&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-                <Parameter Name="LastUse" Value="FALSE" />
+                <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
                 <Parameter Name="Position" Value="40.0" />
               </FB>
               <FB Name="Dispense" Type="filling::SK_Dispense" x="5020" y="1000">
@@ -295,8 +279,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/Dispense&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
                 <Parameter Name="FlowRate" Value="1.0" />
               </FB>
               <FB Name="Home" Type="filling::SK_Home" x="7530" y="1000">
@@ -305,8 +289,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/Home&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <FB Name="Weigh" Type="filling::SK_Weigh" x="2500" y="2900">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
@@ -314,8 +298,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/Weigh&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="3620" y="2900" />
               <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="6130" y="2900" />
@@ -353,22 +337,22 @@
                 <Connection Source="RESET" Destination="Dispense.RESET" />
                 <Connection Source="RESET" Destination="Home.RESET" />
                 <Connection Source="RESET" Destination="Weigh.RESET" />
-                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_A" />
-                <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_B" />
-                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_A" />
-                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_B" />
-                <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_A" />
-                <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_B" />
+                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_1" />
+                <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_2" />
+                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1" />
+                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2" />
+                <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_1" />
+                <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_2" />
                 <Connection Source="Fail3.FAIL" Destination="FAILED" />
               </EventConnections>
               <DataConnections>
-                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.ErrA" />
-                <Connection Source="Dispense.ErrorID" Destination="Fail1.ErrB" />
-                <Connection Source="Fail1.Err" Destination="Fail2.ErrA" />
-                <Connection Source="Home.ErrorID" Destination="Fail2.ErrB" />
-                <Connection Source="Fail2.Err" Destination="Fail3.ErrA" />
-                <Connection Source="Weigh.ErrorID" Destination="Fail3.ErrB" />
-                <Connection Source="Fail3.Err" Destination="ErrorID" />
+                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.Error1" />
+                <Connection Source="Dispense.ErrorID" Destination="Fail1.Error2" />
+                <Connection Source="Fail1.Error" Destination="Fail2.Error1" />
+                <Connection Source="Home.ErrorID" Destination="Fail2.Error2" />
+                <Connection Source="Fail2.Error" Destination="Fail3.Error1" />
+                <Connection Source="Weigh.ErrorID" Destination="Fail3.Error2" />
+                <Connection Source="Fail3.Error" Destination="ErrorID" />
                 <Connection Source="Volume" Destination="Dispense.Volume" />
                 <Connection Source="Weigh.R_Weight" Destination="Weight" />
               </DataConnections>
@@ -400,8 +384,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Stopping/Home&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <EventConnections>
                 <Connection Source="INIT" Destination="Home.INIT">
@@ -424,31 +408,26 @@
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
           <EventConnections>
-            <Connection Source="Control.RSP_START" Destination="UaStart.RSP" />
+            <Connection Source="Control.START_RSP" Destination="UaStart.RSP" />
             <Connection Source="UaStart.IND" Destination="Volume.CHECK" />
-            <Connection Source="Control.GO" Destination="Volume.LATCH" />
-            <Connection Source="Volume.CHECKED" Destination="Control.CMD_START" />
+            <Connection Source="Control.RUN" Destination="Volume.LATCH" />
+            <Connection Source="Volume.CHECKED" Destination="Control.START_REQ" />
             <Connection Source="Volume.LATCHED" Destination="PubParams.REQ" />
             <Connection Source="PubParams.INITO" Destination="PubParams.REQ">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Execute.DONE" Destination="PubResults.REQ" />
-            <Connection Source="Control.FAILURE" Destination="Release.REQ" />
-            <Connection Source="Control.ABORT_O" Destination="Release.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_LinearAxis.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_Pump.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_Scale.REQ" />
             <Connection Source="Volume.LATCHED" Destination="Execute.START" />
-            <Connection Source="Control.HALT_O" Destination="Execute.HALT" />
-            <Connection Source="Control.ABORT_O" Destination="Execute.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Execute.RESET" />
-            <Connection Source="Execute.DONE" Destination="Control.EXEC_DONE" />
-            <Connection Source="Execute.FAILED" Destination="Control.EXEC_FAILED" />
-            <Connection Source="Control.RUN_STOP" Destination="Stop.START" />
-            <Connection Source="Control.ABORT_O" Destination="Stop.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Stop.RESET" />
-            <Connection Source="Stop.DONE" Destination="Control.STOP_DONE" />
-            <Connection Source="Stop.FAILED" Destination="Control.STOP_DONE" />
+            <Connection Source="Control.HALT_SEQ" Destination="Execute.HALT" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Execute.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Execute.RESET" />
+            <Connection Source="Execute.DONE" Destination="Control.EXECUTE_DONE" />
+            <Connection Source="Execute.FAILED" Destination="Control.EXECUTE_FAILED" />
+            <Connection Source="Control.RUN_STOPPING" Destination="Stop.START" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Stop.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Stop.RESET" />
+            <Connection Source="Stop.DONE" Destination="Control.STOPPING_DONE" />
+            <Connection Source="Stop.FAILED" Destination="Control.STOPPING_DONE" />
             <Connection Source="INIT" Destination="Control.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
@@ -464,16 +443,7 @@
             <Connection Source="PubParams.INITO" Destination="PubResults.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="PubResults.INITO" Destination="Rel_LinearAxis.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Rel_LinearAxis.INITO" Destination="Rel_Pump.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Rel_Pump.INITO" Destination="Rel_Scale.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Rel_Scale.INITO" Destination="Execute.INIT">
+            <Connection Source="PubResults.INITO" Destination="Execute.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Execute.INITO" Destination="Stop.INIT">
@@ -484,20 +454,17 @@
             </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Control.IdStart" Destination="UaStart.ID" />
-            <Connection Source="UaStart.RD_1" Destination="Control.S_Start" />
+            <Connection Source="Control.StartMethodId" Destination="UaStart.ID" />
+            <Connection Source="UaStart.RD_1" Destination="Control.Session" />
             <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
-            <Connection Source="Control.RspError" Destination="UaStart.SD_2" />
-            <Connection Source="UaStart.RD_2" Destination="Volume.S" />
-            <Connection Source="Control.FromUa" Destination="Volume.FromUa" />
-            <Connection Source="Volume.P" Destination="PubParams.SD_1" />
-            <Connection Source="Volume.InRange" Destination="Control.InRange" />
+            <Connection Source="Control.StartError" Destination="UaStart.SD_2" />
+            <Connection Source="UaStart.RD_2" Destination="Volume.Requested" />
+            <Connection Source="Control.CalledByClient" Destination="Volume.CalledByClient" />
+            <Connection Source="Volume.Value" Destination="PubParams.SD_1" />
+            <Connection Source="Volume.AllInRange" Destination="Control.ParamsInRange" />
             <Connection Source="Execute.Weight" Destination="PubResults.SD_1" />
-            <Connection Source="Release.Holder" Destination="Rel_LinearAxis.SD_1" />
-            <Connection Source="Release.Holder" Destination="Rel_Pump.SD_1" />
-            <Connection Source="Release.Holder" Destination="Rel_Scale.SD_1" />
-            <Connection Source="Volume.P" Destination="Execute.Volume" />
-            <Connection Source="Execute.ErrorID" Destination="Control.ExecError" />
+            <Connection Source="Volume.Value" Destination="Execute.Volume" />
+            <Connection Source="Execute.ErrorID" Destination="Control.ExecuteError" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevelSkills" />
@@ -597,8 +564,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/Home&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;Home&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;Home&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="MoveAxis" Type="filling::SK_MoveAxis" x="3360" y="393.33">
@@ -607,8 +574,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveAxis&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveAxis&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;MoveAxis&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="Dispense" Type="filling::SK_Dispense" x="1360" y="4193.33">
@@ -617,8 +584,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/Dispense&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;Dispense&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;Dispense&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="Tare" Type="filling::SK_Tare" x="3760" y="2293.33">
@@ -627,8 +594,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/Tare&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;Tare&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;Tare&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="Weigh" Type="filling::SK_Weigh" x="1360" y="2293.33">
@@ -637,8 +604,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/Weigh&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;Weigh&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;Weigh&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <SubApp Name="Resetting" x="1200" y="893.33" Comment="Procedure the module runs while Resetting">
@@ -663,8 +630,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <FB Name="Tare" Type="filling::SK_Tare" x="4695" y="1000">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
@@ -672,31 +639,31 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Tare&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="5770" y="1000" />
           <EventConnections>
-            <Connection Source="INIT" Destination="Home.INIT">
+            <Connection Source="INIT" Destination="Home.INIT" dx1="1026.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Tare.INITO" Destination="INITO">
+            <Connection Source="Tare.INITO" Destination="INITO" dx1="3686.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="START" Destination="Home.START" />
-            <Connection Source="Tare.SUCCESS" Destination="DONE" />
+            <Connection Source="START" Destination="Home.START" dx1="1026.67" />
+            <Connection Source="Tare.SUCCESS" Destination="DONE" dx1="3686.67" />
             <Connection Source="Home.INITO" Destination="Tare.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Home.SUCCESS" Destination="Tare.START" />
-            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_A" />
-            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_B" />
-            <Connection Source="Fail1.FAIL" Destination="FAILED" />
+            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_1" />
+            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_2" />
+            <Connection Source="Fail1.FAIL" Destination="FAILED" dx1="3073.33" />
           </EventConnections>
           <DataConnections>
-            <Connection Source="Home.ErrorID" Destination="Fail1.ErrA" />
-            <Connection Source="Tare.ErrorID" Destination="Fail1.ErrB" />
-            <Connection Source="Fail1.Err" Destination="ErrorID" />
+            <Connection Source="Home.ErrorID" Destination="Fail1.Error1" />
+            <Connection Source="Tare.ErrorID" Destination="Fail1.Error2" />
+            <Connection Source="Fail1.Error" Destination="ErrorID" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -723,22 +690,22 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Stopping&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Stopping&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
-            <Connection Source="INIT" Destination="Home.INIT">
+            <Connection Source="INIT" Destination="Home.INIT" dx1="1006.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Home.INITO" Destination="INITO">
+            <Connection Source="Home.INITO" Destination="INITO" dx1="3546.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="START" Destination="Home.START" />
-            <Connection Source="Home.SUCCESS" Destination="DONE" />
-            <Connection Source="Home.FAILURE" Destination="FAILED" />
+            <Connection Source="START" Destination="Home.START" dx1="1006.67" />
+            <Connection Source="Home.SUCCESS" Destination="DONE" dx1="3546.67" />
+            <Connection Source="Home.FAILURE" Destination="FAILED" dx1="3546.67" />
           </EventConnections>
           <DataConnections>
-            <Connection Source="Home.ErrorID" Destination="ErrorID" />
+            <Connection Source="Home.ErrorID" Destination="ErrorID" dx1="3546.67" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -753,57 +720,41 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="6690" height="3800" locked="false" />
-          <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="7990" y="1000" width="2125" height="1700" locked="false" />
-          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="5100" width="5095" height="2500" locked="false" />
+          <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="1000" y="3227" width="2760" height="3000" locked="false" />
+          <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="1000" y="6527" width="5525" height="1900" locked="false" />
+          <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="7920" y="1000" width="2680" height="1926.67" locked="false" />
+          <Group Name="Results" Comment="The results published when Execute is done" x="1000" y="8727" width="2650" height="1500" locked="false" />
           <FB Name="Control" Type="modlib::SKILL_Core" x="1200" y="500">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+            <Parameter Name="ReleaseAll" Value="TRUE" />
+            <Attribute Name="GroupName" Type="STRING" Value="Core" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="2870" y="500">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="480" y="500">
             <Parameter Name="QI" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="Volume" Type="modlib::SKILL_Param_LREAL" x="5320" y="500">
+          <FB Name="Volume" Type="modlib::SKILL_Param_LREAL" x="1710" y="500">
             <Parameter Name="Default" Value="1.0" />
             <Parameter Name="Lower" Value="0.5" />
             <Parameter Name="Upper" Value="10.0" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="1700" y="2800">
+          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="4635" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;opc_ua[WRITE;/Objects/Filling/Skills/Dispensing/Parameters/Volume]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="PubResults" Type="iec61499::net::PUBLISH_1" x="4090" y="2800">
+          <FB Name="PubResults" Type="iec61499::net::PUBLISH_1" x="1700" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;opc_ua[WRITE;/Objects/Filling/Skills/Dispensing/Results/Weight]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Attribute Name="GroupName" Type="STRING" Value="Results" />
           </FB>
-          <FB Name="Release" Type="modlib::SKILL_Release" x="840" y="500">
-            <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_LinearAxis" Type="iec61499::net::PUBLISH_1" x="3905" y="500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Filling/LinearAxis/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_Pump" Type="iec61499::net::PUBLISH_1" x="1515" y="1500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Filling/Pump/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_Scale" Type="iec61499::net::PUBLISH_1" x="3765" y="1500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Filling/Scale/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <SubApp Name="Execute" x="300" y="500" Comment="Dispensing: execute sequence">
+          <SubApp Name="Execute" x="176.67" y="93.33" Comment="Dispensing: execute sequence">
             <SubAppInterfaceList>
               <SubAppEventInputs>
                 <SubAppEvent Name="INIT" Type="EInit" />
@@ -826,103 +777,103 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="NeedleDown" Type="filling::SK_MoveAxis" x="2500" y="1000">
+              <FB Name="NeedleDown" Type="filling::SK_MoveAxis" x="2173.33" y="33.33">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/NeedleDown&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-                <Parameter Name="LastUse" Value="FALSE" />
+                <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
                 <Parameter Name="Position" Value="40.0" />
               </FB>
-              <FB Name="Dispense" Type="filling::SK_Dispense" x="5020" y="1000">
+              <FB Name="Dispense" Type="filling::SK_Dispense" x="4593.33" y="1526.67">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/Dispense&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
                 <Parameter Name="FlowRate" Value="1.0" />
               </FB>
-              <FB Name="Home" Type="filling::SK_Home" x="7530" y="1000">
+              <FB Name="Home" Type="filling::SK_Home" x="7080" y="3026.67">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/Home&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
-              <FB Name="Weigh" Type="filling::SK_Weigh" x="2500" y="2900">
+              <FB Name="Weigh" Type="filling::SK_Weigh" x="9500" y="4353.33">
                 <Parameter Name="Module" Value="&quot;Filling&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Execute/Weigh&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
-              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="3620" y="2900" />
-              <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="6130" y="2900" />
-              <FB Name="Fail3" Type="modlib::SKILL_FailMerge" x="1100" y="4600" />
+              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="5746.67" y="1040" />
+              <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="8166.67" y="1780" />
+              <FB Name="Fail3" Type="modlib::SKILL_FailMerge" x="10700" y="2313.33" />
               <EventConnections>
-                <Connection Source="INIT" Destination="NeedleDown.INIT">
+                <Connection Source="INIT" Destination="NeedleDown.INIT" dx1="1073.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Weigh.INITO" Destination="INITO">
+                <Connection Source="Weigh.INITO" Destination="INITO" dx1="6093.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="START" Destination="NeedleDown.START" />
-                <Connection Source="Weigh.SUCCESS" Destination="DONE" />
-                <Connection Source="NeedleDown.INITO" Destination="Dispense.INIT">
+                <Connection Source="START" Destination="NeedleDown.START" dx1="66.67" />
+                <Connection Source="Weigh.SUCCESS" Destination="DONE" dx1="66.67" dx2="133.33" dy="-2380" />
+                <Connection Source="NeedleDown.INITO" Destination="Dispense.INIT" dx1="786.67">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="NeedleDown.SUCCESS" Destination="Dispense.START" />
-                <Connection Source="Dispense.INITO" Destination="Home.INIT">
+                <Connection Source="NeedleDown.SUCCESS" Destination="Dispense.START" dx1="133.33" />
+                <Connection Source="Dispense.INITO" Destination="Home.INIT" dx1="820">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Dispense.SUCCESS" Destination="Home.START" />
-                <Connection Source="Home.INITO" Destination="Weigh.INIT">
+                <Connection Source="Dispense.SUCCESS" Destination="Home.START" dx1="266.67" />
+                <Connection Source="Home.INITO" Destination="Weigh.INIT" dx1="80" dx2="80" dy="946.67">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Home.SUCCESS" Destination="Weigh.START" />
-                <Connection Source="HALT" Destination="NeedleDown.HALT" />
-                <Connection Source="HALT" Destination="Dispense.HALT" />
-                <Connection Source="HALT" Destination="Home.HALT" />
-                <Connection Source="HALT" Destination="Weigh.HALT" />
-                <Connection Source="ABORT" Destination="NeedleDown.ABORT" />
-                <Connection Source="ABORT" Destination="Dispense.ABORT" />
-                <Connection Source="ABORT" Destination="Home.ABORT" />
-                <Connection Source="ABORT" Destination="Weigh.ABORT" />
-                <Connection Source="RESET" Destination="NeedleDown.RESET" />
-                <Connection Source="RESET" Destination="Dispense.RESET" />
-                <Connection Source="RESET" Destination="Home.RESET" />
-                <Connection Source="RESET" Destination="Weigh.RESET" />
-                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_A" />
-                <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_B" />
-                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_A" />
-                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_B" />
-                <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_A" />
-                <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_B" />
-                <Connection Source="Fail3.FAIL" Destination="FAILED" />
+                <Connection Source="Home.SUCCESS" Destination="Weigh.START" dx1="200" />
+                <Connection Source="HALT" Destination="NeedleDown.HALT" dx1="333.33" />
+                <Connection Source="HALT" Destination="Dispense.HALT" dx1="333.33" dx2="1466.67" dy="-666.67" />
+                <Connection Source="HALT" Destination="Home.HALT" dx1="333.33" dx2="1533.33" dy="826.67" />
+                <Connection Source="HALT" Destination="Weigh.HALT" dx1="333.33" />
+                <Connection Source="ABORT" Destination="NeedleDown.ABORT" dx1="133.33" />
+                <Connection Source="ABORT" Destination="Dispense.ABORT" dx1="133.33" />
+                <Connection Source="ABORT" Destination="Home.ABORT" dx1="133.33" />
+                <Connection Source="ABORT" Destination="Weigh.ABORT" dx1="133.33" />
+                <Connection Source="RESET" Destination="NeedleDown.RESET" dx1="200" />
+                <Connection Source="RESET" Destination="Dispense.RESET" dx1="200" dx2="3686.67" dy="-106.67" />
+                <Connection Source="RESET" Destination="Home.RESET" dx1="200" dx2="6173.33" dy="1320" />
+                <Connection Source="RESET" Destination="Weigh.RESET" dx1="200" dx2="8793.33" dy="2126.67" />
+                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_1" />
+                <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_2" />
+                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1" />
+                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2" />
+                <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_1" />
+                <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_2" />
+                <Connection Source="Fail3.FAIL" Destination="FAILED" dx1="66.67" />
               </EventConnections>
               <DataConnections>
-                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.ErrA" />
-                <Connection Source="Dispense.ErrorID" Destination="Fail1.ErrB" />
-                <Connection Source="Fail1.Err" Destination="Fail2.ErrA" />
-                <Connection Source="Home.ErrorID" Destination="Fail2.ErrB" />
-                <Connection Source="Fail2.Err" Destination="Fail3.ErrA" />
-                <Connection Source="Weigh.ErrorID" Destination="Fail3.ErrB" />
-                <Connection Source="Fail3.Err" Destination="ErrorID" />
-                <Connection Source="Volume" Destination="Dispense.Volume" />
-                <Connection Source="Weigh.R_Weight" Destination="Weight" />
+                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.Error1" />
+                <Connection Source="Dispense.ErrorID" Destination="Fail1.Error2" />
+                <Connection Source="Fail1.Error" Destination="Fail2.Error1" />
+                <Connection Source="Home.ErrorID" Destination="Fail2.Error2" />
+                <Connection Source="Fail2.Error" Destination="Fail3.Error1" />
+                <Connection Source="Weigh.ErrorID" Destination="Fail3.Error2" />
+                <Connection Source="Fail3.Error" Destination="ErrorID" />
+                <Connection Source="Volume" Destination="Dispense.Volume" dx1="266.67" dx2="3686.67" dy="-140" />
+                <Connection Source="Weigh.R_Weight" Destination="Weight" dx1="266.67" dx2="133.33" dy="-1633.33" />
               </DataConnections>
             </SubAppNetwork>
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
-          <SubApp Name="Stop" x="1285" y="500" Comment="Dispensing: stop sequence">
+          <SubApp Name="Stop" x="1680" y="193.33" Comment="Dispensing: stop sequence">
             <SubAppInterfaceList>
               <SubAppEventInputs>
                 <SubAppEvent Name="INIT" Type="EInit" />
@@ -947,8 +898,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing/Stopping/Home&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Dispensing&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Dispensing&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <EventConnections>
                 <Connection Source="INIT" Destination="Home.INIT">
@@ -971,32 +922,27 @@
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
           <EventConnections>
-            <Connection Source="Control.RSP_START" Destination="UaStart.RSP" />
+            <Connection Source="Control.START_RSP" Destination="UaStart.RSP" />
             <Connection Source="UaStart.IND" Destination="Volume.CHECK" />
-            <Connection Source="Control.GO" Destination="Volume.LATCH" />
-            <Connection Source="Volume.CHECKED" Destination="Control.CMD_START" />
-            <Connection Source="Volume.LATCHED" Destination="PubParams.REQ" />
-            <Connection Source="PubParams.INITO" Destination="PubParams.REQ">
+            <Connection Source="Control.RUN" Destination="Volume.LATCH" />
+            <Connection Source="Volume.CHECKED" Destination="Control.START_REQ" />
+            <Connection Source="Volume.LATCHED" Destination="PubParams.REQ" dx1="80" dx2="80" dy="1093.33" />
+            <Connection Source="PubParams.INITO" Destination="PubParams.REQ" dx1="80" dx2="80" dy="53.33">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Execute.DONE" Destination="PubResults.REQ" />
-            <Connection Source="Control.FAILURE" Destination="Release.REQ" />
-            <Connection Source="Control.ABORT_O" Destination="Release.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_LinearAxis.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_Pump.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_Scale.REQ" />
-            <Connection Source="Volume.LATCHED" Destination="Execute.START" />
-            <Connection Source="Control.HALT_O" Destination="Execute.HALT" />
-            <Connection Source="Control.ABORT_O" Destination="Execute.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Execute.RESET" />
-            <Connection Source="Execute.DONE" Destination="Control.EXEC_DONE" />
-            <Connection Source="Execute.FAILED" Destination="Control.EXEC_FAILED" />
-            <Connection Source="Control.RUN_STOP" Destination="Stop.START" />
-            <Connection Source="Control.ABORT_O" Destination="Stop.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Stop.RESET" />
-            <Connection Source="Stop.DONE" Destination="Control.STOP_DONE" />
-            <Connection Source="Stop.FAILED" Destination="Control.STOP_DONE" />
-            <Connection Source="INIT" Destination="Control.INIT">
+            <Connection Source="Execute.DONE" Destination="PubResults.REQ" dx1="80" dx2="80" dy="1100" />
+            <Connection Source="Volume.LATCHED" Destination="Execute.START" dx1="466.67" />
+            <Connection Source="Control.HALT_SEQ" Destination="Execute.HALT" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Execute.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Execute.RESET" />
+            <Connection Source="Execute.DONE" Destination="Control.EXECUTE_DONE" />
+            <Connection Source="Execute.FAILED" Destination="Control.EXECUTE_FAILED" />
+            <Connection Source="Control.RUN_STOPPING" Destination="Stop.START" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Stop.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Stop.RESET" />
+            <Connection Source="Stop.DONE" Destination="Control.STOPPING_DONE" />
+            <Connection Source="Stop.FAILED" Destination="Control.STOPPING_DONE" />
+            <Connection Source="INIT" Destination="Control.INIT" dx1="1020">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Control.INITO" Destination="UaStart.INIT">
@@ -1005,46 +951,34 @@
             <Connection Source="UaStart.INITO" Destination="Volume.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Volume.INITO" Destination="PubParams.INIT">
+            <Connection Source="Volume.INITO" Destination="PubParams.INIT" dx1="80" dx2="80" dy="1146.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="PubParams.INITO" Destination="PubResults.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="PubResults.INITO" Destination="Rel_LinearAxis.INIT">
+            <Connection Source="PubResults.INITO" Destination="Execute.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Rel_LinearAxis.INITO" Destination="Rel_Pump.INIT">
+            <Connection Source="Execute.INITO" Destination="Stop.INIT" dx1="373.33">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Rel_Pump.INITO" Destination="Rel_Scale.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Rel_Scale.INITO" Destination="Execute.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Execute.INITO" Destination="Stop.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Stop.INITO" Destination="INITO">
+            <Connection Source="Stop.INITO" Destination="INITO" dx1="2573.33">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Control.IdStart" Destination="UaStart.ID" />
-            <Connection Source="UaStart.RD_1" Destination="Control.S_Start" />
-            <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
-            <Connection Source="Control.RspError" Destination="UaStart.SD_2" />
-            <Connection Source="UaStart.RD_2" Destination="Volume.S" />
-            <Connection Source="Control.FromUa" Destination="Volume.FromUa" />
-            <Connection Source="Volume.P" Destination="PubParams.SD_1" />
-            <Connection Source="Volume.InRange" Destination="Control.InRange" />
-            <Connection Source="Execute.Weight" Destination="PubResults.SD_1" />
-            <Connection Source="Release.Holder" Destination="Rel_LinearAxis.SD_1" />
-            <Connection Source="Release.Holder" Destination="Rel_Pump.SD_1" />
-            <Connection Source="Release.Holder" Destination="Rel_Scale.SD_1" />
-            <Connection Source="Volume.P" Destination="Execute.Volume" />
-            <Connection Source="Execute.ErrorID" Destination="Control.ExecError" />
+            <Connection Source="Control.StartMethodId" Destination="UaStart.ID" />
+            <Connection Source="UaStart.RD_1" Destination="Control.Session" />
+            <Connection Source="Control.Accepted" Destination="UaStart.SD_1" dx1="300" />
+            <Connection Source="Control.StartError" Destination="UaStart.SD_2" />
+            <Connection Source="UaStart.RD_2" Destination="Volume.Requested" />
+            <Connection Source="Control.CalledByClient" Destination="Volume.CalledByClient" />
+            <Connection Source="Volume.Value" Destination="PubParams.SD_1" />
+            <Connection Source="Volume.AllInRange" Destination="Control.ParamsInRange" />
+            <Connection Source="Execute.Weight" Destination="PubResults.SD_1" dx1="80" dx2="80" dy="993.33" />
+            <Connection Source="Volume.Value" Destination="Execute.Volume" />
+            <Connection Source="Execute.ErrorID" Destination="Control.ExecuteError" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevelSkills" />
@@ -1053,7 +987,7 @@
         <Connection Source="Module.RUN_RESETTING" Destination="Resetting.START" dx1="80" dx2="80" dy="2046.67" />
         <Connection Source="Resetting.DONE" Destination="Module.RESETTING_DONE" dx1="80" dx2="80" dy="-1546.67" />
         <Connection Source="Resetting.FAILED" Destination="Module.RESETTING_FAILED" dx1="80" dx2="80" dy="-1546.67" />
-        <Connection Source="Module.RUN_STOPPING" Destination="Stopping.START" dx1="2000" dx2="80" dy="4646.67" />
+        <Connection Source="Module.RUN_STOPPING" Destination="Stopping.START" dx1="2000" dx2="2000" dy="4646.67" />
         <Connection Source="Stopping.DONE" Destination="Module.STOPPING_DONE" dx1="80" dx2="80" dy="-1940" />
         <Connection Source="Stopping.FAILED" Destination="Module.STOPPING_FAILED" dx1="80" dx2="80" dy="-1946.67" />
         <Connection Source="Occupation.INITO" Destination="Module.INIT" dx1="1326.67">
@@ -1103,7 +1037,7 @@
       <FBNetwork>
         <EventConnections>
           <Connection Source="START.COLD" Destination="Filling.Occupation.INIT" />
-          <Connection Source="START.WARM" Destination="Filling.Occupation.INIT" dx1="66.67" />
+          <Connection Source="START.WARM" Destination="Filling.Occupation.INIT" />
         </EventConnections>
       </FBNetwork>
     </Resource>

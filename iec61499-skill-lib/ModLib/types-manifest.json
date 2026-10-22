@@ -228,12 +228,6 @@
     "exported": true
   },
   {
-    "type": "modlib::SKILL_Release",
-    "kind": "SimpleFB",
-    "file": "Skills/SKILL_Release.fbt",
-    "exported": true
-  },
-  {
     "type": "modlib::SKILL_Core",
     "kind": "CompositeFB",
     "file": "Skills/SKILL_Core.fbt",

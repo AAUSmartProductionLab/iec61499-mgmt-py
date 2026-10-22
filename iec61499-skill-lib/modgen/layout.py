@@ -124,13 +124,15 @@ def relayout(net, size, x0: float = 1000, y0: float = 1000):
 
 
 def networks(root):
-    """Every block network of a system: the applications' and those of the subapplications in them."""
-    return [n for n in root.iter("SubAppNetwork")]
+    """Every block network: of a system, the applications' and those of the subapplications in them;
+    of a composite type, its network."""
+    return [n for n in root.iter() if n.tag in ("SubAppNetwork", "FBNetwork")]
 
 
 def place_new(root, kept: set[int], size):
     """After a layout arranged in the IDE was kept: blocks it did not have yet go below the other
-    blocks of their group (which grows to hold them), new groups below the other groups."""
+    blocks of their group (which grows to hold them), new groups below the other groups, a new block
+    in no group to the right of the others."""
     for net in networks(root):
         elements = [el for el in net if el.tag in ("FB", "SubApp", "Group")]
         if not any(id(el) in kept for el in elements):
@@ -143,6 +145,15 @@ def place_new(root, kept: set[int], size):
                 g.set("y", num(bottom + GROUP_GAP))
                 bottom += GROUP_GAP + float(g.get("height"))
         blocks = [el for el in net if el.tag in ("FB", "SubApp")]
+        for b in blocks:
+            if id(b) in kept or group_of(b) in groups:
+                continue
+            others = [o for o in blocks if id(o) in kept and group_of(o) not in groups]
+            room, _, _ = size(b)
+            right = max((float(o.get("x")) + size(o)[1] for o in others), default=1000)
+            b.set("x", num(right + GAP + room))
+            b.set("y", num(min((float(o.get("y")) for o in others), default=1000)))
+            kept.add(id(b))
         for b in blocks:
             if id(b) in kept or group_of(b) not in groups or id(groups[group_of(b)]) not in kept:
                 continue

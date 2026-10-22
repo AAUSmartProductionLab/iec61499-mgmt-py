@@ -156,35 +156,36 @@ def test_filler_flattens_to_module_level_equipment_skills_and_procedures():
         "MoveNeedleDown": "filler::SK_MoveNeedleDown", "MoveNeedleUp": "filler::SK_MoveNeedleUp",
         "Fill.Control": "modlib::SKILL_Core", "Fill.UaStart": "iec61499::net::SERVER_2_2",
         "Fill.Depth": "modlib::SKILL_Param_LREAL", "Fill.PubParams": "iec61499::net::PUBLISH_1",
-        "Fill.Release": "modlib::SKILL_Release", "Fill.Rel_NeedleAxis": "iec61499::net::PUBLISH_1",
         "Fill.Execute.MoveNeedleDown": "filler::SK_MoveNeedleDown",
         "Fill.Execute.MoveNeedleUp": "filler::SK_MoveNeedleUp", "Fill.Execute.Fail1": "modlib::SKILL_FailMerge",
         "Fill.Stop.MoveNeedleUp": "filler::SK_MoveNeedleUp", "Resetting.MoveNeedleUp": "filler::SK_MoveNeedleUp",
         "Stopping.MoveNeedleUp": "filler::SK_MoveNeedleUp"}
     # The Start argument is range checked, latched and passed to the child that runs first.
-    assert {("Fill.UaStart.IND", "Fill.Depth.CHECK"), ("Fill.Depth.CHECKED", "Fill.Control.CMD_START"),
-            ("Fill.Control.GO", "Fill.Depth.LATCH"),
+    assert {("Fill.UaStart.IND", "Fill.Depth.CHECK"), ("Fill.Depth.CHECKED", "Fill.Control.START_REQ"),
+            ("Fill.Control.RUN", "Fill.Depth.LATCH"), ("Fill.UaStart.RD_1", "Fill.Control.Session"),
+            ("Fill.UaStart.RD_2", "Fill.Depth.Requested"),
             ("Fill.Depth.LATCHED", "Fill.Execute.MoveNeedleDown.START"),
             ("Fill.Execute.MoveNeedleDown.SUCCESS", "Fill.Execute.MoveNeedleUp.START"),
-            ("Fill.Execute.MoveNeedleUp.SUCCESS", "Fill.Control.EXEC_DONE"),
-            ("Fill.Depth.P", "Fill.Execute.MoveNeedleDown.Distance"),
-            ("Fill.Control.RUN_STOP", "Fill.Stop.MoveNeedleUp.START"),
+            ("Fill.Execute.MoveNeedleUp.SUCCESS", "Fill.Control.EXECUTE_DONE"),
+            ("Fill.Depth.Value", "Fill.Execute.MoveNeedleDown.Distance"),
+            ("Fill.Control.RUN_STOPPING", "Fill.Stop.MoveNeedleUp.START"),
             ("Module.RUN_RESETTING", "Resetting.MoveNeedleUp.START"),
             ("Resetting.MoveNeedleUp.SUCCESS", "Module.RESETTING_DONE")} <= wired
     assert (written["Fill.Depth.Default"], written["Fill.Depth.Lower"], written["Fill.Depth.Upper"]) == ("50.0", "0.0", "50.0")
     assert written["Fill.PubParams.ID"] == '"opc_ua[WRITE;/Objects/Filler/Skills/Fill/Parameters/Depth]"'
-    assert written["Fill.Rel_NeedleAxis.ID"] == '"loc[Filler/NeedleAxis/release]"'
+    # Control gives up everything the skill holds when a run ends, on the module's release channel.
+    assert (written["Fill.Control.Holder"], written["Fill.Control.ReleaseAll"]) == ('"Fill"', "TRUE")
     # No wiring between skills, equipment and the module level: they meet on local channels.
     assert not {w for w in wired if any(p.startswith("NeedleAxis.") for p in w) and "INIT" not in w[0] + w[1]}
     assert written["MoveNeedleDown.UaPath"] == '"/Skills/MoveNeedleDown"'
     assert written["MoveNeedleDown.Methods"] == "TRUE"
     # Children are private (no methods) and keep the composite's equipment lock.
     assert written["Fill.Execute.MoveNeedleDown.Methods"] == "FALSE"
-    assert written["Fill.Execute.MoveNeedleDown.Token"] == '"Fill"'
-    assert written["Fill.Execute.MoveNeedleDown.LastUse"] == "FALSE"       # MoveNeedleUp comes next
-    assert written["Fill.Execute.MoveNeedleUp.LastUse"] == "TRUE"          # releases the needle
+    assert written["Fill.Execute.MoveNeedleDown.Holder"] == '"Fill"'
+    assert written["Fill.Execute.MoveNeedleDown.ReleaseAfter"] == "FALSE"  # MoveNeedleUp comes next
+    assert written["Fill.Execute.MoveNeedleUp.ReleaseAfter"] == "TRUE"     # releases the needle
     # Procedure children release after each step.
-    assert written["Resetting.MoveNeedleUp.LastUse"] == "TRUE"
+    assert written["Resetting.MoveNeedleUp.ReleaseAfter"] == "TRUE"
     assert "MoveNeedleDown.Distance" not in written                        # the type's default applies
 
 
@@ -201,12 +202,87 @@ def st(project, folder, name):
     return root, "\n".join(s.text or "" for s in root.iter("ST"))
 
 
+@pytest.mark.parametrize("project", [LIBRARY_PROJECT, *[load(p).project for p in ALL]])
+def test_every_pin_of_a_generated_type_says_what_it_is(project):
+    """The IDE shows a pin's comment as its tooltip: every event and variable of every type we
+    generate has one (modgen/pins.py)."""
+    missing = []
+    for path in (project_dir(project) / "Type Library").rglob("*.fbt"):
+        if {"Std", "Generic"} & set(path.parts):
+            continue
+        for el in ET.parse(path).getroot().find("InterfaceList").iter():
+            if el.tag in ("Event", "VarDeclaration") and not el.get("Comment"):
+                missing.append(f"{path.stem}.{el.get('Name')}")
+    assert missing == []
+
+
+@pytest.mark.parametrize("project", [LIBRARY_PROJECT, *[load(p).project for p in ALL]])
+def test_group_names_are_not_names_of_blocks_or_pins(project):
+    """The IDE refuses a network where a group and a block (or a pin of the type) share a name."""
+    from modgen.layout import networks
+    clashes = []
+    files = [system_file(project), *(project_dir(project) / "Type Library").rglob("*.fbt")]
+    for path in files:
+        root = ET.parse(path).getroot()
+        pins = {el.get("Name") for el in (root.find("InterfaceList") or [])
+                for el in el.iter() if el.tag in ("Event", "VarDeclaration")}
+        for net in networks(root):
+            groups = {g.get("Name") for g in net.findall("Group")}
+            blocks = {el.get("Name") for el in net if el.tag in ("FB", "SubApp")}
+            clashes += [f"{path.stem}: {n}" for n in groups & (blocks | pins)]
+    assert clashes == []
+
+
+@pytest.mark.parametrize("project", [load(p).project for p in ALL])
+def test_every_connection_ends_on_a_pin_its_block_has(project):
+    """What the IDE's system check reports as a missing endpoint, found without the IDE: every end of
+    every connection of every application is a pin of its block's type (or the resource's START)."""
+    from iec61499_mgmt.sysfile import load_application
+    files = {path.stem: path for path in (project_dir(project) / "Type Library").rglob("*.fbt")}
+    pins = {}
+
+    def has(typ: str, pin: str) -> bool:
+        name = typ.rpartition("::")[2]
+        if name not in pins:
+            iface = ET.parse(files[name]).getroot().find("InterfaceList")
+            pins[name] = {el.get("Name") for el in iface.iter() if el.tag in ("Event", "VarDeclaration")}
+        return pin in pins[name]
+
+    root = ET.parse(system_file(project)).getroot()
+    missing = []
+    for app in root.iter("Application"):
+        flat = load_application(system_file(project), app.get("Name"))
+        for s, d in flat.event_connections + flat.data_connections:
+            for end in (s, d):
+                block, _, pin = end.rpartition(".")
+                if block != "START" and not has(flat.fbs[block], pin):
+                    missing.append(f"{app.get('Name')}: {end}")
+    assert missing == []
+
+
+def test_a_module_level_skill_gives_up_all_it_holds_when_a_run_ends():
+    """SKILL_Core announces every end of a run (success, failure, abort) and, with ReleaseAll, publishes
+    its holder on the module's release channel, which every equipment item listens to."""
+    core, _ = st(LIBRARY_PROJECT, "Skills", "SKILL_Core")
+    wired = {(c.get("Source"), c.get("Destination")) for c in core.iter("Connection")}
+    assert {("Control.RELEASE", "PubRelease.REQ"), ("ReleaseAll", "PubRelease.QI"), ("Holder", "PubRelease.SD_1"),
+            ("Control.ReleaseId", "PubRelease.ID")} <= wired
+    assert list(groups(core.find("FBNetwork"))) == ["StateMachine", "ModuleViews", "OpcUa", "Release"]
+    control, code = st(LIBRARY_PROJECT, "Skills/Base", "SKILL_Control")
+    ends = {s.get("Name"): [a.get("Output") for a in s.iter("ECAction")] for s in control.iter("ECState")}
+    for state in ("Succeed", "Fail", "Interrupted", "AbortActive"):
+        assert "RELEASE" in ends[state], state
+    assert 'ReleaseId := CONCAT(CONCAT("loc[", Module), "/release]");' in code
+    _, logic = st("FillingModule", "Equipment/Base", "EL_LinearAxis")
+    assert 'IdRelease := CONCAT(CONCAT("loc[", Module), "/release]");' in logic
+
+
 def test_skill_logic_carries_contract_range_and_lock():
     root, code = st("FillerModule", "Skills/Logic", "SL_MoveNeedleDown")
     conditions = {t.get("Condition") for t in root.iter("ECTransition")}
     assert "SAMPLE[(Position >= Distance) OR AtBottom]" in conditions
-    assert 'SAMPLE[(Holder <> "") AND (Holder <> Token)]' in conditions      # lost the equipment
-    assert "C_Holder := Token;" in code
+    assert 'SAMPLE[(EqHolder <> "") AND (EqHolder <> Holder)]' in conditions  # lost the equipment
+    assert "C_Holder := Holder;" in code
     assert "IdParams := " in code and "/Parameters/Distance" in code          # SL_ names its OPC UA variables
     skill, _ = st("FillerModule", "Skills", "SK_MoveNeedleDown")
     latch = next(fb for fb in skill.iter("FB") if fb.get("Name") == "Par_Distance")
@@ -350,8 +426,8 @@ def test_blocks_inside_equipment_skills_and_module_level_skills_are_grouped():
     system = ET.parse(system_file("FillingModule")).getroot()
     app = next(a for a in system.iter("Application") if a.get("Name") == "Filling").find("SubAppNetwork")
     inner = next(s for s in app.findall("SubApp") if s.get("Name") == "Dispensing").find("SubAppNetwork")
-    assert groups(inner) == {"SkillControl": ["Control", "UaStart", "Volume", "PubParams", "PubResults"], "Sequences": ["Execute", "Stop"],
-                             "Releasing": ["Release", "Rel_LinearAxis", "Rel_Pump", "Rel_Scale"]}
+    assert groups(inner) == {"Core": ["Control"], "Start": ["UaStart", "Volume", "PubParams"],
+                             "Sequences": ["Execute", "Stop"], "Results": ["PubResults"]}
     assert all(len(g) for g in groups(inner).values())
 
 

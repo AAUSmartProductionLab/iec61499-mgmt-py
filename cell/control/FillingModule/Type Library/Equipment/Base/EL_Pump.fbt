@@ -5,50 +5,50 @@
   <CompilerInfo packageName="filling" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
         <With Var="Module" />
         <With Var="Name" />
       </Event>
-      <Event Name="CMD" Type="Event">
+      <Event Name="CMD" Type="Event" Comment="A command arrived from a holder">
         <With Var="C_Holder" />
         <With Var="C_Release" />
       </Event>
-      <Event Name="RELEASE" Type="Event">
+      <Event Name="RELEASE" Type="Event" Comment="A release arrived on the module's release channel (R_Holder)">
         <With Var="R_Holder" />
       </Event>
-      <Event Name="SAMPLE" Type="Event" />
-      <Event Name="REFRESH" Type="Event" />
-      <Event Name="DRIVEN" Type="Event" />
-      <Event Name="MOD_CHG" Type="Event">
-        <With Var="ModState" />
+      <Event Name="SAMPLE" Type="Event" Comment="The inputs were read" />
+      <Event Name="REFRESH" Type="Event" Comment="Cycle: write the outputs again" />
+      <Event Name="DRIVEN" Type="Event" Comment="The outputs were written" />
+      <Event Name="MOD_CHG" Type="Event" Comment="The module's state changed (its Aborting switches all off)">
+        <With Var="ModuleState" />
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit">
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
         <With Var="IdCmd" />
         <With Var="IdRelease" />
         <With Var="IdState" />
         <With Var="IdPub" />
       </Event>
-      <Event Name="DRIVE" Type="Event" />
-      <Event Name="STATE" Type="Event">
+      <Event Name="DRIVE" Type="Event" Comment="Write the outputs" />
+      <Event Name="STATE" Type="Event" Comment="Publish the state (the inputs and the holder)">
         <With Var="Holder" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Module" Type="WSTRING" />
-      <VarDeclaration Name="Name" Type="WSTRING" />
-      <VarDeclaration Name="C_Holder" Type="WSTRING" />
-      <VarDeclaration Name="C_Release" Type="BOOL" />
-      <VarDeclaration Name="R_Holder" Type="WSTRING" />
-      <VarDeclaration Name="ModState" Type="USINT" />
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="Name" Type="WSTRING" Comment="The equipment item's name: its local channels and OPC UA folder" />
+      <VarDeclaration Name="C_Holder" Type="WSTRING" Comment="Who sends the command" />
+      <VarDeclaration Name="C_Release" Type="BOOL" Comment="Give up the equipment after this command" />
+      <VarDeclaration Name="R_Holder" Type="WSTRING" Comment="Who gives up the equipment" />
+      <VarDeclaration Name="ModuleState" Type="USINT" Comment="PackML state: 1 Clearing, 2 Stopped, 3 Starting, 4 Idle, 6 Execute, 7 Stopping, 8 Aborting, 9 Aborted, 15 Resetting" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="IdCmd" Type="WSTRING" />
-      <VarDeclaration Name="IdRelease" Type="WSTRING" />
-      <VarDeclaration Name="IdState" Type="WSTRING" />
-      <VarDeclaration Name="IdPub" Type="WSTRING" />
-      <VarDeclaration Name="Holder" Type="WSTRING" />
+      <VarDeclaration Name="IdCmd" Type="WSTRING" Comment="Local channel of the commands" />
+      <VarDeclaration Name="IdRelease" Type="WSTRING" Comment="Local channel of the releases (the module's, one for all equipment)" />
+      <VarDeclaration Name="IdState" Type="WSTRING" Comment="Local channel of the state" />
+      <VarDeclaration Name="IdPub" Type="WSTRING" Comment="OPC UA ID of the published inputs" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who holds the equipment (empty: free)" />
     </OutputVars>
   </InterfaceList>
   <BasicFB>
@@ -111,7 +111,7 @@
       <ECTransition Source="START" Destination="Refresh" Condition="REFRESH" x="0" y="0" />
       <ECTransition Source="START" Destination="Cmd" Condition="CMD[(Holder = &quot;&quot;) OR (C_Holder = Holder)]" x="0" y="0" />
       <ECTransition Source="START" Destination="Off" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="0" y="0" />
-      <ECTransition Source="START" Destination="Off" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Off" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
       <ECTransition Source="Init" Destination="START" Condition="1" x="0" y="0" />
       <ECTransition Source="Sample" Destination="Publish" Condition="Publish" x="0" y="0" />
       <ECTransition Source="Sample" Destination="START" Condition="1" x="0" y="0" />
@@ -125,12 +125,12 @@
       <ECTransition Source="MakeW" Destination="Settled" Condition="DRIVEN" x="0" y="0" />
       <ECTransition Source="BreakW" Destination="QueueB" Condition="CMD" x="0" y="0" />
       <ECTransition Source="BreakW" Destination="OffB" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="0" y="0" />
-      <ECTransition Source="BreakW" Destination="OffB" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="BreakW" Destination="OffB" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
       <ECTransition Source="QueueB" Destination="BreakW" Condition="1" x="0" y="0" />
       <ECTransition Source="OffB" Destination="BreakW" Condition="1" x="0" y="0" />
       <ECTransition Source="MakeW" Destination="QueueM" Condition="CMD" x="0" y="0" />
       <ECTransition Source="MakeW" Destination="OffM" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="0" y="0" />
-      <ECTransition Source="MakeW" Destination="OffM" Condition="MOD_CHG[(ModState = 8) OR (ModState = 9)]" x="0" y="0" />
+      <ECTransition Source="MakeW" Destination="OffM" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
       <ECTransition Source="QueueM" Destination="MakeW" Condition="1" x="0" y="0" />
       <ECTransition Source="OffM" Destination="MakeW" Condition="1" x="0" y="0" />
       <ECTransition Source="Settled" Destination="Off" Condition="OffPending" x="0" y="0" />
@@ -142,7 +142,7 @@
     </ECC>
     <Algorithm Name="Alg_Init">
       <ST>IdCmd := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/cmd]");
-IdRelease := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/release]");
+IdRelease := CONCAT(CONCAT("loc[", Module), "/release]");
 IdState := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/state]");
 IdPub := "";</ST>
     </Algorithm>

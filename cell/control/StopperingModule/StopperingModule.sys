@@ -45,8 +45,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/Home&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;Home&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;Home&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="MoveAxis" Type="stoppering::SK_MoveAxis" x="3360" y="393.33">
@@ -55,8 +55,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveAxis&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveAxis&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;MoveAxis&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="1360" y="2293.33">
@@ -65,8 +65,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/PressStopper&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;PressStopper&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;PressStopper&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="3360" y="2293.33">
@@ -75,8 +75,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/RetractPiston&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;RetractPiston&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;RetractPiston&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <SubApp Name="Resetting" x="1200" y="893.33" Comment="Procedure the module runs while Resetting">
@@ -101,8 +101,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/RetractPiston&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <FB Name="Home" Type="stoppering::SK_Home" x="5170" y="1000">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
@@ -110,8 +110,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6245" y="1000" />
           <EventConnections>
@@ -127,14 +127,14 @@
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="RetractPiston.SUCCESS" Destination="Home.START" />
-            <Connection Source="RetractPiston.FAILURE" Destination="Fail1.FAIL_A" />
-            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_B" />
+            <Connection Source="RetractPiston.FAILURE" Destination="Fail1.FAIL_1" />
+            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_2" />
             <Connection Source="Fail1.FAIL" Destination="FAILED" />
           </EventConnections>
           <DataConnections>
-            <Connection Source="RetractPiston.ErrorID" Destination="Fail1.ErrA" />
-            <Connection Source="Home.ErrorID" Destination="Fail1.ErrB" />
-            <Connection Source="Fail1.Err" Destination="ErrorID" />
+            <Connection Source="RetractPiston.ErrorID" Destination="Fail1.Error1" />
+            <Connection Source="Home.ErrorID" Destination="Fail1.Error2" />
+            <Connection Source="Fail1.Error" Destination="ErrorID" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -161,8 +161,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Stopping&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Stopping&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
             <Connection Source="INIT" Destination="Home.INIT">
@@ -191,34 +191,22 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="3675" height="2800" locked="false" />
+          <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="1000" y="2900" width="2805" height="3000" locked="false" />
+          <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="1000" y="6200" width="1430" height="1600" locked="false" />
           <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="4975" y="1000" width="2080" height="1600" locked="false" />
-          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="4100" width="7110" height="1500" locked="false" />
           <FB Name="Control" Type="modlib::SKILL_Core" x="1245" y="500">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
+            <Parameter Name="ReleaseAll" Value="TRUE" />
+            <Attribute Name="GroupName" Type="STRING" Value="Core" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="2725" y="500">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="480" y="500">
             <Parameter Name="QI" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
-          </FB>
-          <FB Name="Release" Type="modlib::SKILL_Release" x="840" y="500">
-            <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_LinearAxis" Type="iec61499::net::PUBLISH_1" x="3470" y="500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Stoppering/LinearAxis/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_Piston" Type="iec61499::net::PUBLISH_1" x="6160" y="500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Stoppering/Piston/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
           <SubApp Name="Execute" x="300" y="500" Comment="Stoppering: execute sequence">
             <SubAppInterfaceList>
@@ -245,8 +233,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/HeadDown&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="LastUse" Value="FALSE" />
+                <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
                 <Parameter Name="Position" Value="40.0" />
               </FB>
               <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="5010" y="1000">
@@ -255,8 +243,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/PressStopper&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <FB Name="Home" Type="stoppering::SK_Home" x="7760" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
@@ -264,8 +252,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/Home&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="8835" y="1000" />
               <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="10185" y="1000" />
@@ -295,18 +283,18 @@
                 <Connection Source="RESET" Destination="HeadDown.RESET" />
                 <Connection Source="RESET" Destination="PressStopper.RESET" />
                 <Connection Source="RESET" Destination="Home.RESET" />
-                <Connection Source="HeadDown.FAILURE" Destination="Fail1.FAIL_A" />
-                <Connection Source="PressStopper.FAILURE" Destination="Fail1.FAIL_B" />
-                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_A" />
-                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_B" />
+                <Connection Source="HeadDown.FAILURE" Destination="Fail1.FAIL_1" />
+                <Connection Source="PressStopper.FAILURE" Destination="Fail1.FAIL_2" />
+                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1" />
+                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2" />
                 <Connection Source="Fail2.FAIL" Destination="FAILED" />
               </EventConnections>
               <DataConnections>
-                <Connection Source="HeadDown.ErrorID" Destination="Fail1.ErrA" />
-                <Connection Source="PressStopper.ErrorID" Destination="Fail1.ErrB" />
-                <Connection Source="Fail1.Err" Destination="Fail2.ErrA" />
-                <Connection Source="Home.ErrorID" Destination="Fail2.ErrB" />
-                <Connection Source="Fail2.Err" Destination="ErrorID" />
+                <Connection Source="HeadDown.ErrorID" Destination="Fail1.Error1" />
+                <Connection Source="PressStopper.ErrorID" Destination="Fail1.Error2" />
+                <Connection Source="Fail1.Error" Destination="Fail2.Error1" />
+                <Connection Source="Home.ErrorID" Destination="Fail2.Error2" />
+                <Connection Source="Fail2.Error" Destination="ErrorID" />
               </DataConnections>
             </SubAppNetwork>
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
@@ -336,8 +324,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Stopping/Home&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <EventConnections>
                 <Connection Source="INIT" Destination="Home.INIT">
@@ -360,36 +348,26 @@
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
           <EventConnections>
-            <Connection Source="Control.RSP_START" Destination="UaStart.RSP" />
-            <Connection Source="UaStart.IND" Destination="Control.CMD_START" />
-            <Connection Source="Control.FAILURE" Destination="Release.REQ" />
-            <Connection Source="Control.ABORT_O" Destination="Release.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_LinearAxis.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_Piston.REQ" />
-            <Connection Source="Control.GO" Destination="Execute.START" />
-            <Connection Source="Control.HALT_O" Destination="Execute.HALT" />
-            <Connection Source="Control.ABORT_O" Destination="Execute.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Execute.RESET" />
-            <Connection Source="Execute.DONE" Destination="Control.EXEC_DONE" />
-            <Connection Source="Execute.FAILED" Destination="Control.EXEC_FAILED" />
-            <Connection Source="Control.RUN_STOP" Destination="Stop.START" />
-            <Connection Source="Control.ABORT_O" Destination="Stop.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Stop.RESET" />
-            <Connection Source="Stop.DONE" Destination="Control.STOP_DONE" />
-            <Connection Source="Stop.FAILED" Destination="Control.STOP_DONE" />
+            <Connection Source="Control.START_RSP" Destination="UaStart.RSP" />
+            <Connection Source="UaStart.IND" Destination="Control.START_REQ" />
+            <Connection Source="Control.RUN" Destination="Execute.START" />
+            <Connection Source="Control.HALT_SEQ" Destination="Execute.HALT" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Execute.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Execute.RESET" />
+            <Connection Source="Execute.DONE" Destination="Control.EXECUTE_DONE" />
+            <Connection Source="Execute.FAILED" Destination="Control.EXECUTE_FAILED" />
+            <Connection Source="Control.RUN_STOPPING" Destination="Stop.START" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Stop.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Stop.RESET" />
+            <Connection Source="Stop.DONE" Destination="Control.STOPPING_DONE" />
+            <Connection Source="Stop.FAILED" Destination="Control.STOPPING_DONE" />
             <Connection Source="INIT" Destination="Control.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Control.INITO" Destination="UaStart.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="UaStart.INITO" Destination="Rel_LinearAxis.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Rel_LinearAxis.INITO" Destination="Rel_Piston.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Rel_Piston.INITO" Destination="Execute.INIT">
+            <Connection Source="UaStart.INITO" Destination="Execute.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Execute.INITO" Destination="Stop.INIT">
@@ -400,13 +378,11 @@
             </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Control.IdStart" Destination="UaStart.ID" />
-            <Connection Source="UaStart.RD_1" Destination="Control.S_Start" />
+            <Connection Source="Control.StartMethodId" Destination="UaStart.ID" />
+            <Connection Source="UaStart.RD_1" Destination="Control.Session" />
             <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
-            <Connection Source="Control.RspError" Destination="UaStart.SD_2" />
-            <Connection Source="Release.Holder" Destination="Rel_LinearAxis.SD_1" />
-            <Connection Source="Release.Holder" Destination="Rel_Piston.SD_1" />
-            <Connection Source="Execute.ErrorID" Destination="Control.ExecError" />
+            <Connection Source="Control.StartError" Destination="UaStart.SD_2" />
+            <Connection Source="Execute.ErrorID" Destination="Control.ExecuteError" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevelSkills" />
@@ -495,8 +471,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/Home&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;Home&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;Home&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="MoveAxis" Type="stoppering::SK_MoveAxis" x="3360" y="393.33">
@@ -505,8 +481,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveAxis&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveAxis&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;MoveAxis&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="1360" y="2293.33">
@@ -515,8 +491,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/PressStopper&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;PressStopper&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;PressStopper&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="3360" y="2293.33">
@@ -525,8 +501,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/RetractPiston&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;RetractPiston&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;RetractPiston&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <SubApp Name="Resetting" x="1200" y="893.33" Comment="Procedure the module runs while Resetting">
@@ -551,8 +527,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/RetractPiston&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <FB Name="Home" Type="stoppering::SK_Home" x="5170" y="1000">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
@@ -560,8 +536,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6245" y="1000" />
           <EventConnections>
@@ -577,14 +553,14 @@
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="RetractPiston.SUCCESS" Destination="Home.START" />
-            <Connection Source="RetractPiston.FAILURE" Destination="Fail1.FAIL_A" />
-            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_B" />
+            <Connection Source="RetractPiston.FAILURE" Destination="Fail1.FAIL_1" />
+            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_2" />
             <Connection Source="Fail1.FAIL" Destination="FAILED" />
           </EventConnections>
           <DataConnections>
-            <Connection Source="RetractPiston.ErrorID" Destination="Fail1.ErrA" />
-            <Connection Source="Home.ErrorID" Destination="Fail1.ErrB" />
-            <Connection Source="Fail1.Err" Destination="ErrorID" />
+            <Connection Source="RetractPiston.ErrorID" Destination="Fail1.Error1" />
+            <Connection Source="Home.ErrorID" Destination="Fail1.Error2" />
+            <Connection Source="Fail1.Error" Destination="ErrorID" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -611,8 +587,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/Home&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Stopping&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Stopping&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
             <Connection Source="INIT" Destination="Home.INIT">
@@ -641,34 +617,22 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="3675" height="2800" locked="false" />
+          <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="1000" y="2900" width="2805" height="3000" locked="false" />
+          <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="1000" y="6200" width="1430" height="1600" locked="false" />
           <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="4975" y="1000" width="2080" height="1600" locked="false" />
-          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="1000" y="4100" width="7110" height="1500" locked="false" />
           <FB Name="Control" Type="modlib::SKILL_Core" x="1245" y="500">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
+            <Parameter Name="ReleaseAll" Value="TRUE" />
+            <Attribute Name="GroupName" Type="STRING" Value="Core" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="2725" y="500">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="480" y="500">
             <Parameter Name="QI" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
-          </FB>
-          <FB Name="Release" Type="modlib::SKILL_Release" x="840" y="500">
-            <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_LinearAxis" Type="iec61499::net::PUBLISH_1" x="3470" y="500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Stoppering/LinearAxis/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_Piston" Type="iec61499::net::PUBLISH_1" x="6160" y="500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Stoppering/Piston/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
           <SubApp Name="Execute" x="300" y="500" Comment="Stoppering: execute sequence">
             <SubAppInterfaceList>
@@ -695,8 +659,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/HeadDown&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="LastUse" Value="FALSE" />
+                <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
                 <Parameter Name="Position" Value="40.0" />
               </FB>
               <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="5010" y="1000">
@@ -705,8 +669,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/PressStopper&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <FB Name="Home" Type="stoppering::SK_Home" x="7760" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
@@ -714,8 +678,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/Home&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="8835" y="1000" />
               <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="10185" y="1000" />
@@ -745,18 +709,18 @@
                 <Connection Source="RESET" Destination="HeadDown.RESET" />
                 <Connection Source="RESET" Destination="PressStopper.RESET" />
                 <Connection Source="RESET" Destination="Home.RESET" />
-                <Connection Source="HeadDown.FAILURE" Destination="Fail1.FAIL_A" />
-                <Connection Source="PressStopper.FAILURE" Destination="Fail1.FAIL_B" />
-                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_A" />
-                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_B" />
+                <Connection Source="HeadDown.FAILURE" Destination="Fail1.FAIL_1" />
+                <Connection Source="PressStopper.FAILURE" Destination="Fail1.FAIL_2" />
+                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1" />
+                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2" />
                 <Connection Source="Fail2.FAIL" Destination="FAILED" />
               </EventConnections>
               <DataConnections>
-                <Connection Source="HeadDown.ErrorID" Destination="Fail1.ErrA" />
-                <Connection Source="PressStopper.ErrorID" Destination="Fail1.ErrB" />
-                <Connection Source="Fail1.Err" Destination="Fail2.ErrA" />
-                <Connection Source="Home.ErrorID" Destination="Fail2.ErrB" />
-                <Connection Source="Fail2.Err" Destination="ErrorID" />
+                <Connection Source="HeadDown.ErrorID" Destination="Fail1.Error1" />
+                <Connection Source="PressStopper.ErrorID" Destination="Fail1.Error2" />
+                <Connection Source="Fail1.Error" Destination="Fail2.Error1" />
+                <Connection Source="Home.ErrorID" Destination="Fail2.Error2" />
+                <Connection Source="Fail2.Error" Destination="ErrorID" />
               </DataConnections>
             </SubAppNetwork>
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
@@ -786,8 +750,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Stopping/Home&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <EventConnections>
                 <Connection Source="INIT" Destination="Home.INIT">
@@ -810,36 +774,26 @@
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
           <EventConnections>
-            <Connection Source="Control.RSP_START" Destination="UaStart.RSP" />
-            <Connection Source="UaStart.IND" Destination="Control.CMD_START" />
-            <Connection Source="Control.FAILURE" Destination="Release.REQ" />
-            <Connection Source="Control.ABORT_O" Destination="Release.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_LinearAxis.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_Piston.REQ" />
-            <Connection Source="Control.GO" Destination="Execute.START" />
-            <Connection Source="Control.HALT_O" Destination="Execute.HALT" />
-            <Connection Source="Control.ABORT_O" Destination="Execute.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Execute.RESET" />
-            <Connection Source="Execute.DONE" Destination="Control.EXEC_DONE" />
-            <Connection Source="Execute.FAILED" Destination="Control.EXEC_FAILED" />
-            <Connection Source="Control.RUN_STOP" Destination="Stop.START" />
-            <Connection Source="Control.ABORT_O" Destination="Stop.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Stop.RESET" />
-            <Connection Source="Stop.DONE" Destination="Control.STOP_DONE" />
-            <Connection Source="Stop.FAILED" Destination="Control.STOP_DONE" />
+            <Connection Source="Control.START_RSP" Destination="UaStart.RSP" />
+            <Connection Source="UaStart.IND" Destination="Control.START_REQ" />
+            <Connection Source="Control.RUN" Destination="Execute.START" />
+            <Connection Source="Control.HALT_SEQ" Destination="Execute.HALT" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Execute.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Execute.RESET" />
+            <Connection Source="Execute.DONE" Destination="Control.EXECUTE_DONE" />
+            <Connection Source="Execute.FAILED" Destination="Control.EXECUTE_FAILED" />
+            <Connection Source="Control.RUN_STOPPING" Destination="Stop.START" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Stop.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Stop.RESET" />
+            <Connection Source="Stop.DONE" Destination="Control.STOPPING_DONE" />
+            <Connection Source="Stop.FAILED" Destination="Control.STOPPING_DONE" />
             <Connection Source="INIT" Destination="Control.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Control.INITO" Destination="UaStart.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="UaStart.INITO" Destination="Rel_LinearAxis.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Rel_LinearAxis.INITO" Destination="Rel_Piston.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Rel_Piston.INITO" Destination="Execute.INIT">
+            <Connection Source="UaStart.INITO" Destination="Execute.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Execute.INITO" Destination="Stop.INIT">
@@ -850,13 +804,11 @@
             </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Control.IdStart" Destination="UaStart.ID" />
-            <Connection Source="UaStart.RD_1" Destination="Control.S_Start" />
+            <Connection Source="Control.StartMethodId" Destination="UaStart.ID" />
+            <Connection Source="UaStart.RD_1" Destination="Control.Session" />
             <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
-            <Connection Source="Control.RspError" Destination="UaStart.SD_2" />
-            <Connection Source="Release.Holder" Destination="Rel_LinearAxis.SD_1" />
-            <Connection Source="Release.Holder" Destination="Rel_Piston.SD_1" />
-            <Connection Source="Execute.ErrorID" Destination="Control.ExecError" />
+            <Connection Source="Control.StartError" Destination="UaStart.SD_2" />
+            <Connection Source="Execute.ErrorID" Destination="Control.ExecuteError" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevelSkills" />

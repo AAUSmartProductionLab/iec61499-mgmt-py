@@ -358,7 +358,14 @@ class TypeFile:
     def write(self):
         """Write the file and record it in the manifest; return the qualified name."""
         rel = Path(self.folder) / (self.name + self.ext)
-        save(self.root, self.project.types / rel)
+        from .pins import annotate                 # every pin of the interface gets its comment
+        annotate(self.root, getattr(self.project, "domain", {}))
+        settle = None
+        if self.root.find("FBNetwork") is not None:    # a composite: new blocks in a kept layout get a free place
+            from .layout import Sizer, place_new
+            size = Sizer(self.project.types)
+            settle = lambda tree, kept: place_new(tree, kept, size)  # noqa: E731
+        save(self.root, self.project.types / rel, settle)
         self.project.record(self.qualified, self.kind, rel, self.exported and self.package not in self.project.external)
         return self.qualified
 
@@ -505,4 +512,7 @@ class Composite(FB, Wiring):
         for _, typ, _ in self.fbs:
             self.project.use(typ)
         self.emit(self.net, 400, 200, self.spacing)
+        # As the systems are laid out: blocks by their size in a grid inside their groups.
+        from .layout import Sizer, relayout
+        relayout(self.net, Sizer(self.project.types))
         return super().write()

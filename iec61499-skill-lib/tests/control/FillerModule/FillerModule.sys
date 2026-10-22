@@ -38,8 +38,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleDown&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveNeedleDown&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;MoveNeedleDown&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="3840" y="500">
@@ -48,8 +48,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleUp&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveNeedleUp&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;MoveNeedleUp&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <SubApp Name="Resetting" x="300" y="500" Comment="Procedure the module runs while Resetting">
@@ -74,8 +74,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/MoveNeedleUp&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
             <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
@@ -116,8 +116,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/MoveNeedleUp&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Stopping&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Stopping&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
             <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
@@ -146,40 +146,33 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="4655" height="4200" locked="false" />
+          <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="1000" y="2900" width="2625" height="3000" locked="false" />
+          <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="1000" y="6200" width="5525" height="1900" locked="false" />
           <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="5955" y="1000" width="2080" height="1600" locked="false" />
-          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="8335" y="1000" width="4390" height="1500" locked="false" />
           <FB Name="Control" Type="modlib::SKILL_Core" x="1065" y="500">
             <Parameter Name="Module" Value="&quot;Filler&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Fill&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Parameter Name="Holder" Value="&quot;Fill&quot;" />
+            <Parameter Name="ReleaseAll" Value="TRUE" />
+            <Attribute Name="GroupName" Type="STRING" Value="Core" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="2545" y="500">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="480" y="500">
             <Parameter Name="QI" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="Depth" Type="modlib::SKILL_Param_LREAL" x="480" y="2800">
+          <FB Name="Depth" Type="modlib::SKILL_Param_LREAL" x="1710" y="500">
             <Parameter Name="Default" Value="50.0" />
             <Parameter Name="Lower" Value="0.0" />
             <Parameter Name="Upper" Value="50.0" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="3765" y="2800">
+          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="4635" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;opc_ua[WRITE;/Objects/Filler/Skills/Fill/Parameters/Depth]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
-          </FB>
-          <FB Name="Release" Type="modlib::SKILL_Release" x="570" y="500">
-            <Parameter Name="Token" Value="&quot;Fill&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_NeedleAxis" Type="iec61499::net::PUBLISH_1" x="3200" y="500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Filler/NeedleAxis/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
           <SubApp Name="Execute" x="300" y="500" Comment="Fill: execute sequence">
             <SubAppInterfaceList>
@@ -209,8 +202,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Execute/MoveNeedleDown&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Fill&quot;" />
-                <Parameter Name="LastUse" Value="FALSE" />
+                <Parameter Name="Holder" Value="&quot;Fill&quot;" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="5370" y="1000">
                 <Parameter Name="Module" Value="&quot;Filler&quot;" />
@@ -218,8 +211,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Execute/MoveNeedleUp&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Fill&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Fill&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6720" y="1000" />
               <EventConnections>
@@ -241,14 +234,14 @@
                 <Connection Source="ABORT" Destination="MoveNeedleUp.ABORT" />
                 <Connection Source="RESET" Destination="MoveNeedleDown.RESET" />
                 <Connection Source="RESET" Destination="MoveNeedleUp.RESET" />
-                <Connection Source="MoveNeedleDown.FAILURE" Destination="Fail1.FAIL_A" />
-                <Connection Source="MoveNeedleUp.FAILURE" Destination="Fail1.FAIL_B" />
+                <Connection Source="MoveNeedleDown.FAILURE" Destination="Fail1.FAIL_1" />
+                <Connection Source="MoveNeedleUp.FAILURE" Destination="Fail1.FAIL_2" />
                 <Connection Source="Fail1.FAIL" Destination="FAILED" />
               </EventConnections>
               <DataConnections>
-                <Connection Source="MoveNeedleDown.ErrorID" Destination="Fail1.ErrA" />
-                <Connection Source="MoveNeedleUp.ErrorID" Destination="Fail1.ErrB" />
-                <Connection Source="Fail1.Err" Destination="ErrorID" />
+                <Connection Source="MoveNeedleDown.ErrorID" Destination="Fail1.Error1" />
+                <Connection Source="MoveNeedleUp.ErrorID" Destination="Fail1.Error2" />
+                <Connection Source="Fail1.Error" Destination="ErrorID" />
                 <Connection Source="Depth" Destination="MoveNeedleDown.Distance" />
               </DataConnections>
             </SubAppNetwork>
@@ -279,8 +272,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Stopping/MoveNeedleUp&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Fill&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Fill&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <EventConnections>
                 <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
@@ -303,28 +296,25 @@
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
           <EventConnections>
-            <Connection Source="Control.RSP_START" Destination="UaStart.RSP" />
+            <Connection Source="Control.START_RSP" Destination="UaStart.RSP" />
             <Connection Source="UaStart.IND" Destination="Depth.CHECK" />
-            <Connection Source="Control.GO" Destination="Depth.LATCH" />
-            <Connection Source="Depth.CHECKED" Destination="Control.CMD_START" />
+            <Connection Source="Control.RUN" Destination="Depth.LATCH" />
+            <Connection Source="Depth.CHECKED" Destination="Control.START_REQ" />
             <Connection Source="Depth.LATCHED" Destination="PubParams.REQ" />
             <Connection Source="PubParams.INITO" Destination="PubParams.REQ">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Control.FAILURE" Destination="Release.REQ" />
-            <Connection Source="Control.ABORT_O" Destination="Release.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_NeedleAxis.REQ" />
             <Connection Source="Depth.LATCHED" Destination="Execute.START" />
-            <Connection Source="Control.HALT_O" Destination="Execute.HALT" />
-            <Connection Source="Control.ABORT_O" Destination="Execute.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Execute.RESET" />
-            <Connection Source="Execute.DONE" Destination="Control.EXEC_DONE" />
-            <Connection Source="Execute.FAILED" Destination="Control.EXEC_FAILED" />
-            <Connection Source="Control.RUN_STOP" Destination="Stop.START" />
-            <Connection Source="Control.ABORT_O" Destination="Stop.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Stop.RESET" />
-            <Connection Source="Stop.DONE" Destination="Control.STOP_DONE" />
-            <Connection Source="Stop.FAILED" Destination="Control.STOP_DONE" />
+            <Connection Source="Control.HALT_SEQ" Destination="Execute.HALT" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Execute.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Execute.RESET" />
+            <Connection Source="Execute.DONE" Destination="Control.EXECUTE_DONE" />
+            <Connection Source="Execute.FAILED" Destination="Control.EXECUTE_FAILED" />
+            <Connection Source="Control.RUN_STOPPING" Destination="Stop.START" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Stop.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Stop.RESET" />
+            <Connection Source="Stop.DONE" Destination="Control.STOPPING_DONE" />
+            <Connection Source="Stop.FAILED" Destination="Control.STOPPING_DONE" />
             <Connection Source="INIT" Destination="Control.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
@@ -337,10 +327,7 @@
             <Connection Source="Depth.INITO" Destination="PubParams.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="PubParams.INITO" Destination="Rel_NeedleAxis.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Rel_NeedleAxis.INITO" Destination="Execute.INIT">
+            <Connection Source="PubParams.INITO" Destination="Execute.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Execute.INITO" Destination="Stop.INIT">
@@ -351,17 +338,16 @@
             </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Control.IdStart" Destination="UaStart.ID" />
-            <Connection Source="UaStart.RD_1" Destination="Control.S_Start" />
+            <Connection Source="Control.StartMethodId" Destination="UaStart.ID" />
+            <Connection Source="UaStart.RD_1" Destination="Control.Session" />
             <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
-            <Connection Source="Control.RspError" Destination="UaStart.SD_2" />
-            <Connection Source="UaStart.RD_2" Destination="Depth.S" />
-            <Connection Source="Control.FromUa" Destination="Depth.FromUa" />
-            <Connection Source="Depth.P" Destination="PubParams.SD_1" />
-            <Connection Source="Depth.InRange" Destination="Control.InRange" />
-            <Connection Source="Release.Holder" Destination="Rel_NeedleAxis.SD_1" />
-            <Connection Source="Depth.P" Destination="Execute.Depth" />
-            <Connection Source="Execute.ErrorID" Destination="Control.ExecError" />
+            <Connection Source="Control.StartError" Destination="UaStart.SD_2" />
+            <Connection Source="UaStart.RD_2" Destination="Depth.Requested" />
+            <Connection Source="Control.CalledByClient" Destination="Depth.CalledByClient" />
+            <Connection Source="Depth.Value" Destination="PubParams.SD_1" />
+            <Connection Source="Depth.AllInRange" Destination="Control.ParamsInRange" />
+            <Connection Source="Depth.Value" Destination="Execute.Depth" />
+            <Connection Source="Execute.ErrorID" Destination="Control.ExecuteError" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevelSkills" />
@@ -434,8 +420,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleDown&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveNeedleDown&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;MoveNeedleDown&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="3840" y="500">
@@ -444,8 +430,8 @@
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleUp&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="Methods" Value="TRUE" />
-        <Parameter Name="Token" Value="&quot;MoveNeedleUp&quot;" />
-        <Parameter Name="LastUse" Value="TRUE" />
+        <Parameter Name="Holder" Value="&quot;MoveNeedleUp&quot;" />
+        <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
       <SubApp Name="Resetting" x="300" y="500" Comment="Procedure the module runs while Resetting">
@@ -470,8 +456,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/MoveNeedleUp&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Resetting&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
             <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
@@ -512,8 +498,8 @@
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/MoveNeedleUp&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="FALSE" />
-            <Parameter Name="Token" Value="&quot;Procedures/Stopping&quot;" />
-            <Parameter Name="LastUse" Value="TRUE" />
+            <Parameter Name="Holder" Value="&quot;Procedures/Stopping&quot;" />
+            <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
             <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
@@ -542,40 +528,33 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with one block per parameter (range check, value for this run), Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="4655" height="4200" locked="false" />
+          <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="1000" y="2900" width="2625" height="3000" locked="false" />
+          <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="1000" y="6200" width="5525" height="1900" locked="false" />
           <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="5955" y="1000" width="2080" height="1600" locked="false" />
-          <Group Name="Releasing" Comment="After a failure or an abort: gives up the equipment the skill holds (all off, free again)" x="8335" y="1000" width="4390" height="1500" locked="false" />
           <FB Name="Control" Type="modlib::SKILL_Core" x="1065" y="500">
             <Parameter Name="Module" Value="&quot;Filler&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Fill&quot;" />
             <Parameter Name="UaEnable" Value="TRUE" />
             <Parameter Name="Methods" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Parameter Name="Holder" Value="&quot;Fill&quot;" />
+            <Parameter Name="ReleaseAll" Value="TRUE" />
+            <Attribute Name="GroupName" Type="STRING" Value="Core" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="2545" y="500">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="480" y="500">
             <Parameter Name="QI" Value="TRUE" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="Depth" Type="modlib::SKILL_Param_LREAL" x="480" y="2800">
+          <FB Name="Depth" Type="modlib::SKILL_Param_LREAL" x="1710" y="500">
             <Parameter Name="Default" Value="50.0" />
             <Parameter Name="Lower" Value="0.0" />
             <Parameter Name="Upper" Value="50.0" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="3765" y="2800">
+          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="4635" y="500">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;opc_ua[WRITE;/Objects/Filler/Skills/Fill/Parameters/Depth]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
-          </FB>
-          <FB Name="Release" Type="modlib::SKILL_Release" x="570" y="500">
-            <Parameter Name="Token" Value="&quot;Fill&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
-          </FB>
-          <FB Name="Rel_NeedleAxis" Type="iec61499::net::PUBLISH_1" x="3200" y="500">
-            <Parameter Name="QI" Value="TRUE" />
-            <Parameter Name="ID" Value="&quot;loc[Filler/NeedleAxis/release]&quot;" />
-            <Attribute Name="GroupName" Type="STRING" Value="Releasing" />
+            <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
           <SubApp Name="Execute" x="300" y="500" Comment="Fill: execute sequence">
             <SubAppInterfaceList>
@@ -605,8 +584,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Execute/MoveNeedleDown&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Fill&quot;" />
-                <Parameter Name="LastUse" Value="FALSE" />
+                <Parameter Name="Holder" Value="&quot;Fill&quot;" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="5370" y="1000">
                 <Parameter Name="Module" Value="&quot;Filler&quot;" />
@@ -614,8 +593,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Execute/MoveNeedleUp&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Fill&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Fill&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="6720" y="1000" />
               <EventConnections>
@@ -637,14 +616,14 @@
                 <Connection Source="ABORT" Destination="MoveNeedleUp.ABORT" />
                 <Connection Source="RESET" Destination="MoveNeedleDown.RESET" />
                 <Connection Source="RESET" Destination="MoveNeedleUp.RESET" />
-                <Connection Source="MoveNeedleDown.FAILURE" Destination="Fail1.FAIL_A" />
-                <Connection Source="MoveNeedleUp.FAILURE" Destination="Fail1.FAIL_B" />
+                <Connection Source="MoveNeedleDown.FAILURE" Destination="Fail1.FAIL_1" />
+                <Connection Source="MoveNeedleUp.FAILURE" Destination="Fail1.FAIL_2" />
                 <Connection Source="Fail1.FAIL" Destination="FAILED" />
               </EventConnections>
               <DataConnections>
-                <Connection Source="MoveNeedleDown.ErrorID" Destination="Fail1.ErrA" />
-                <Connection Source="MoveNeedleUp.ErrorID" Destination="Fail1.ErrB" />
-                <Connection Source="Fail1.Err" Destination="ErrorID" />
+                <Connection Source="MoveNeedleDown.ErrorID" Destination="Fail1.Error1" />
+                <Connection Source="MoveNeedleUp.ErrorID" Destination="Fail1.Error2" />
+                <Connection Source="Fail1.Error" Destination="ErrorID" />
                 <Connection Source="Depth" Destination="MoveNeedleDown.Distance" />
               </DataConnections>
             </SubAppNetwork>
@@ -675,8 +654,8 @@
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Stopping/MoveNeedleUp&quot;" />
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
-                <Parameter Name="Token" Value="&quot;Fill&quot;" />
-                <Parameter Name="LastUse" Value="TRUE" />
+                <Parameter Name="Holder" Value="&quot;Fill&quot;" />
+                <Parameter Name="ReleaseAfter" Value="TRUE" />
               </FB>
               <EventConnections>
                 <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
@@ -699,28 +678,25 @@
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
           <EventConnections>
-            <Connection Source="Control.RSP_START" Destination="UaStart.RSP" />
+            <Connection Source="Control.START_RSP" Destination="UaStart.RSP" />
             <Connection Source="UaStart.IND" Destination="Depth.CHECK" />
-            <Connection Source="Control.GO" Destination="Depth.LATCH" />
-            <Connection Source="Depth.CHECKED" Destination="Control.CMD_START" />
+            <Connection Source="Control.RUN" Destination="Depth.LATCH" />
+            <Connection Source="Depth.CHECKED" Destination="Control.START_REQ" />
             <Connection Source="Depth.LATCHED" Destination="PubParams.REQ" />
             <Connection Source="PubParams.INITO" Destination="PubParams.REQ">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Control.FAILURE" Destination="Release.REQ" />
-            <Connection Source="Control.ABORT_O" Destination="Release.REQ" />
-            <Connection Source="Release.CNF" Destination="Rel_NeedleAxis.REQ" />
             <Connection Source="Depth.LATCHED" Destination="Execute.START" />
-            <Connection Source="Control.HALT_O" Destination="Execute.HALT" />
-            <Connection Source="Control.ABORT_O" Destination="Execute.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Execute.RESET" />
-            <Connection Source="Execute.DONE" Destination="Control.EXEC_DONE" />
-            <Connection Source="Execute.FAILED" Destination="Control.EXEC_FAILED" />
-            <Connection Source="Control.RUN_STOP" Destination="Stop.START" />
-            <Connection Source="Control.ABORT_O" Destination="Stop.ABORT" />
-            <Connection Source="Control.RESET_O" Destination="Stop.RESET" />
-            <Connection Source="Stop.DONE" Destination="Control.STOP_DONE" />
-            <Connection Source="Stop.FAILED" Destination="Control.STOP_DONE" />
+            <Connection Source="Control.HALT_SEQ" Destination="Execute.HALT" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Execute.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Execute.RESET" />
+            <Connection Source="Execute.DONE" Destination="Control.EXECUTE_DONE" />
+            <Connection Source="Execute.FAILED" Destination="Control.EXECUTE_FAILED" />
+            <Connection Source="Control.RUN_STOPPING" Destination="Stop.START" />
+            <Connection Source="Control.ABORT_SEQ" Destination="Stop.ABORT" />
+            <Connection Source="Control.RESET_SEQ" Destination="Stop.RESET" />
+            <Connection Source="Stop.DONE" Destination="Control.STOPPING_DONE" />
+            <Connection Source="Stop.FAILED" Destination="Control.STOPPING_DONE" />
             <Connection Source="INIT" Destination="Control.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
@@ -733,10 +709,7 @@
             <Connection Source="Depth.INITO" Destination="PubParams.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="PubParams.INITO" Destination="Rel_NeedleAxis.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Rel_NeedleAxis.INITO" Destination="Execute.INIT">
+            <Connection Source="PubParams.INITO" Destination="Execute.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Execute.INITO" Destination="Stop.INIT">
@@ -747,17 +720,16 @@
             </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Control.IdStart" Destination="UaStart.ID" />
-            <Connection Source="UaStart.RD_1" Destination="Control.S_Start" />
+            <Connection Source="Control.StartMethodId" Destination="UaStart.ID" />
+            <Connection Source="UaStart.RD_1" Destination="Control.Session" />
             <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
-            <Connection Source="Control.RspError" Destination="UaStart.SD_2" />
-            <Connection Source="UaStart.RD_2" Destination="Depth.S" />
-            <Connection Source="Control.FromUa" Destination="Depth.FromUa" />
-            <Connection Source="Depth.P" Destination="PubParams.SD_1" />
-            <Connection Source="Depth.InRange" Destination="Control.InRange" />
-            <Connection Source="Release.Holder" Destination="Rel_NeedleAxis.SD_1" />
-            <Connection Source="Depth.P" Destination="Execute.Depth" />
-            <Connection Source="Execute.ErrorID" Destination="Control.ExecError" />
+            <Connection Source="Control.StartError" Destination="UaStart.SD_2" />
+            <Connection Source="UaStart.RD_2" Destination="Depth.Requested" />
+            <Connection Source="Control.CalledByClient" Destination="Depth.CalledByClient" />
+            <Connection Source="Depth.Value" Destination="PubParams.SD_1" />
+            <Connection Source="Depth.AllInRange" Destination="Control.ParamsInRange" />
+            <Connection Source="Depth.Value" Destination="Execute.Depth" />
+            <Connection Source="Execute.ErrorID" Destination="Control.ExecuteError" />
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevelSkills" />

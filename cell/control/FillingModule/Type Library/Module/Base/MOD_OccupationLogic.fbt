@@ -5,63 +5,63 @@
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="OCCUPY" Type="Event">
-        <With Var="S_Occupy" />
+      <Event Name="OCCUPY_REQ" Type="Event" Comment="Occupy(Session) was called">
+        <With Var="OccupySession" />
       </Event>
-      <Event Name="RELEASE" Type="Event">
-        <With Var="S_Release" />
+      <Event Name="RELEASE_REQ" Type="Event" Comment="Release(Session) was called">
+        <With Var="ReleaseSession" />
       </Event>
-      <Event Name="QUERY" Type="Event" />
+      <Event Name="QUERY_REQ" Type="Event" Comment="A block asks for the current owner" />
     </EventInputs>
     <EventOutputs>
-      <Event Name="RSP_OCCUPY" Type="Event">
+      <Event Name="OCCUPY_RSP" Type="Event" Comment="Answer to Occupy: Accepted, ErrorID">
         <With Var="Accepted" />
         <With Var="ErrorID" />
       </Event>
-      <Event Name="RSP_RELEASE" Type="Event">
+      <Event Name="RELEASE_RSP" Type="Event" Comment="Answer to Release: Accepted, ErrorID">
         <With Var="Accepted" />
         <With Var="ErrorID" />
       </Event>
-      <Event Name="CHG" Type="Event">
+      <Event Name="CHG" Type="Event" Comment="The value changed">
         <With Var="Owner" />
         <With Var="Occupied" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="S_Occupy" Type="WSTRING" />
-      <VarDeclaration Name="S_Release" Type="WSTRING" />
+      <VarDeclaration Name="OccupySession" Type="WSTRING" Comment="Session ID of the caller of Occupy" />
+      <VarDeclaration Name="ReleaseSession" Type="WSTRING" Comment="Session ID of the caller of Release" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="Accepted" Type="BOOL" />
-      <VarDeclaration Name="ErrorID" Type="UINT" />
-      <VarDeclaration Name="Owner" Type="WSTRING" />
-      <VarDeclaration Name="Occupied" Type="BOOL" />
+      <VarDeclaration Name="Accepted" Type="BOOL" Comment="The call was accepted" />
+      <VarDeclaration Name="ErrorID" Type="UINT" Comment="Error code: 0 none, 1 PreconditionViolated, 2 InvariantViolated, 3 Timeout, 4 NotReady, 5 NotPermitted, 6 Busy, 7 Interrupted, 8 OutOfRange" />
+      <VarDeclaration Name="Owner" Type="WSTRING" Comment="Session ID of the module's owner (empty: free)" />
+      <VarDeclaration Name="Occupied" Type="BOOL" Comment="The module is occupied" />
     </OutputVars>
   </InterfaceList>
   <BasicFB>
     <ECC>
       <ECState Name="START" x="150" y="100" />
       <ECState Name="Occupy" x="570" y="100">
-        <ECAction Algorithm="Alg_Occupy" Output="RSP_OCCUPY" />
+        <ECAction Algorithm="Alg_Occupy" Output="OCCUPY_RSP" />
         <ECAction Output="CHG" />
       </ECState>
       <ECState Name="Release" x="990" y="100">
-        <ECAction Algorithm="Alg_Release" Output="RSP_RELEASE" />
+        <ECAction Algorithm="Alg_Release" Output="RELEASE_RSP" />
         <ECAction Output="CHG" />
       </ECState>
       <ECState Name="Query" x="1410" y="100">
         <ECAction Output="CHG" />
       </ECState>
-      <ECTransition Source="START" Destination="Occupy" Condition="OCCUPY" x="0" y="0" />
+      <ECTransition Source="START" Destination="Occupy" Condition="OCCUPY_REQ" x="0" y="0" />
       <ECTransition Source="Occupy" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="START" Destination="Release" Condition="RELEASE" x="0" y="0" />
+      <ECTransition Source="START" Destination="Release" Condition="RELEASE_REQ" x="0" y="0" />
       <ECTransition Source="Release" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="START" Destination="Query" Condition="QUERY" x="0" y="0" />
+      <ECTransition Source="START" Destination="Query" Condition="QUERY_REQ" x="0" y="0" />
       <ECTransition Source="Query" Destination="START" Condition="1" x="0" y="0" />
     </ECC>
     <Algorithm Name="Alg_Occupy">
-      <ST>IF (S_Occupy &lt;&gt; "") AND ((Owner = "") OR (Owner = S_Occupy)) THEN
-  Owner := S_Occupy;
+      <ST>IF (OccupySession &lt;&gt; "") AND ((Owner = "") OR (Owner = OccupySession)) THEN
+  Owner := OccupySession;
   Occupied := TRUE;
   Accepted := TRUE;
   ErrorID := 0;
@@ -71,7 +71,7 @@ ELSE
 END_IF;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Release">
-      <ST>IF (Owner &lt;&gt; "") AND (Owner = S_Release) THEN
+      <ST>IF (Owner &lt;&gt; "") AND (Owner = ReleaseSession) THEN
   Owner := "";
   Occupied := FALSE;
   Accepted := TRUE;

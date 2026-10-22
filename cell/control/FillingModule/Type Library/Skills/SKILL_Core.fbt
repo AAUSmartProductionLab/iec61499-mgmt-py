@@ -1,85 +1,112 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SKILL_Core" Comment="Skill core: state machine, OPC UA Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID], State and ErrorID published, activity counted; the Start method (with the skill's parameters) is wired to CMD_START and RSP_START; GO starts the execution, SUCCESS or FAILURE(ErrorID) ends it">
+<FBType Name="SKILL_Core" Comment="Skill core: state machine, OPC UA Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID], State and ErrorID published, activity counted; the Start method (with the skill's parameters) is wired to START_REQ and START_RSP; RUN starts the execution, SUCCESS or FAILURE(ErrorID) ends it">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
         <With Var="Module" />
         <With Var="UaRoot" />
         <With Var="UaPath" />
         <With Var="UaEnable" />
         <With Var="Methods" />
+        <With Var="Holder" />
+        <With Var="ReleaseAll" />
       </Event>
-      <Event Name="CMD_START" Type="Event">
-        <With Var="S_Start" />
-        <With Var="InRange" />
-        <With Var="EqFree" />
+      <Event Name="START_REQ" Type="Event" Comment="Start(Session, parameters) was called: check Session, ParamsInRange, EquipmentFree">
+        <With Var="Session" />
+        <With Var="ParamsInRange" />
+        <With Var="EquipmentFree" />
       </Event>
-      <Event Name="START" Type="Event" />
-      <Event Name="HALT" Type="Event" />
-      <Event Name="ABORT" Type="Event" />
-      <Event Name="RESET" Type="Event" />
-      <Event Name="EXEC_DONE" Type="Event" />
-      <Event Name="EXEC_FAILED" Type="Event">
-        <With Var="ExecError" />
+      <Event Name="START" Type="Event" Comment="Start a run, from the parent (a step of a sequence): no session check" />
+      <Event Name="HALT" Type="Event" Comment="Stop the run, from the parent" />
+      <Event Name="ABORT" Type="Event" Comment="Abort: everything off at once" />
+      <Event Name="RESET" Type="Event" Comment="Reset from Failed or Aborted to Idle" />
+      <Event Name="EXECUTE_DONE" Type="Event" Comment="The execution ended successfully" />
+      <Event Name="EXECUTE_FAILED" Type="Event" Comment="The execution failed (ExecuteError)">
+        <With Var="ExecuteError" />
       </Event>
-      <Event Name="STOP_DONE" Type="Event" />
+      <Event Name="STOPPING_DONE" Type="Event" Comment="The stop sequence ended" />
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit">
-        <With Var="IdStart" />
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
+        <With Var="StartMethodId" />
       </Event>
-      <Event Name="RSP_START" Type="Event">
+      <Event Name="START_RSP" Type="Event" Comment="Answer to Start">
         <With Var="Accepted" />
-        <With Var="RspError" />
+        <With Var="StartError" />
       </Event>
-      <Event Name="GO" Type="Event">
-        <With Var="FromUa" />
+      <Event Name="RUN" Type="Event" Comment="Run: latch the parameters, start the execution">
+        <With Var="CalledByClient" />
       </Event>
-      <Event Name="HALT_O" Type="Event" />
-      <Event Name="ABORT_O" Type="Event" />
-      <Event Name="RESET_O" Type="Event" />
-      <Event Name="RUN_STOP" Type="Event" />
-      <Event Name="SUCCESS" Type="Event" />
-      <Event Name="FAILURE" Type="Event">
+      <Event Name="HALT_SEQ" Type="Event" Comment="Halt the execute sequence" />
+      <Event Name="ABORT_SEQ" Type="Event" Comment="Abort the sequences" />
+      <Event Name="RESET_SEQ" Type="Event" Comment="Reset the sequences" />
+      <Event Name="RUN_STOPPING" Type="Event" Comment="Run the stop sequence (the skill was stopped)" />
+      <Event Name="SUCCESS" Type="Event" Comment="The run succeeded (the results are set)" />
+      <Event Name="FAILURE" Type="Event" Comment="The run failed (ErrorID)">
         <With Var="ErrorID" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Module" Type="WSTRING" />
-      <VarDeclaration Name="UaRoot" Type="WSTRING" />
-      <VarDeclaration Name="UaPath" Type="WSTRING" />
-      <VarDeclaration Name="UaEnable" Type="BOOL" />
-      <VarDeclaration Name="Methods" Type="BOOL" />
-      <VarDeclaration Name="S_Start" Type="WSTRING" />
-      <VarDeclaration Name="InRange" Type="BOOL" InitialValue="TRUE" />
-      <VarDeclaration Name="EqFree" Type="BOOL" InitialValue="TRUE" />
-      <VarDeclaration Name="ExecError" Type="UINT" />
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaPath" Type="WSTRING" Comment="This skill's OPC UA folder below UaRoot, e.g. /Skills/Dispensing" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" Comment="Publish on OPC UA" />
+      <VarDeclaration Name="Methods" Type="BOOL" Comment="Offer the OPC UA methods Start, Stop, Abort, Reset (FALSE: a step, run by its parent)" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="The name the equipment is held under: the skill's own, or for a step the skill it belongs to" />
+      <VarDeclaration Name="ReleaseAll" Type="BOOL" InitialValue="FALSE" Comment="When a run ends, give up everything held under Holder (a module level skill)" />
+      <VarDeclaration Name="Session" Type="WSTRING" Comment="Session ID of the caller of Start (must be the module's owner)" />
+      <VarDeclaration Name="ParamsInRange" Type="BOOL" InitialValue="TRUE" Comment="Every Start argument lies within its limits" />
+      <VarDeclaration Name="EquipmentFree" Type="BOOL" InitialValue="TRUE" Comment="The equipment is free, or held by this skill" />
+      <VarDeclaration Name="ExecuteError" Type="UINT" Comment="Why the execution failed" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="IdStart" Type="WSTRING" />
-      <VarDeclaration Name="Accepted" Type="BOOL" />
-      <VarDeclaration Name="RspError" Type="UINT" />
-      <VarDeclaration Name="FromUa" Type="BOOL" />
-      <VarDeclaration Name="State" Type="USINT" />
-      <VarDeclaration Name="ErrorID" Type="UINT" />
+      <VarDeclaration Name="StartMethodId" Type="WSTRING" Comment="OPC UA ID of the Start method, for its SERVER block" />
+      <VarDeclaration Name="Accepted" Type="BOOL" Comment="The call was accepted" />
+      <VarDeclaration Name="StartError" Type="UINT" Comment="Why Start was refused (error code)" />
+      <VarDeclaration Name="CalledByClient" Type="BOOL" Comment="Started over OPC UA (take the Start arguments), not by a parent (take the defaults)" />
+      <VarDeclaration Name="State" Type="USINT" Comment="Skill state: 0 Idle, 1 Running, 2 Stopping, 3 Succeeded, 4 Failed, 5 Aborted" />
+      <VarDeclaration Name="ErrorID" Type="UINT" Comment="Error code: 0 none, 1 PreconditionViolated, 2 InvariantViolated, 3 Timeout, 4 NotReady, 5 NotPermitted, 6 Busy, 7 Interrupted, 8 OutOfRange" />
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Control" Type="modlib::SKILL_Control" x="400" y="200" />
-    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="4000" y="200" />
-    <FB Name="Mode" Type="modlib::MOD_StateView" x="7600" y="200" />
-    <FB Name="UaStop" Type="iec61499::net::SERVER_2_1" x="11200" y="200" />
-    <FB Name="UaAbort" Type="iec61499::net::SERVER_2_1" x="14800" y="200" />
-    <FB Name="UaReset" Type="iec61499::net::SERVER_2_1" x="18400" y="200" />
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="22000" y="200" />
-    <FB Name="Act" Type="iec61499::net::PUBLISH_1" x="25600" y="200">
-      <Parameter Name="QI" Value="TRUE" />
+    <Group Name="StateMachine" Comment="The skill's states and when a Succeeded returns to Idle" x="1000" y="1000" width="3090" height="4000" locked="false" />
+    <Group Name="ModuleViews" Comment="The module's owner and state in, the activity count out" x="4390" y="1000" width="3830" height="1500" locked="false" />
+    <Group Name="OpcUa" Comment="The methods Stop, Abort and Reset, and the published State and ErrorID" x="8520" y="1000" width="2300" height="2700" locked="false" />
+    <Group Name="Release" Comment="At the end of a run of a module level skill: everything it holds given up" x="11120" y="1000" width="1250" height="1500" locked="false" />
+    <FB Name="Control" Type="modlib::SKILL_Control" x="300" y="500">
+      <Attribute Name="GroupName" Type="STRING" Value="StateMachine" />
     </FB>
-    <FB Name="ToIdle" Type="iec61499::events::E_DELAY" x="29200" y="200">
+    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="300" y="500">
+      <Attribute Name="GroupName" Type="STRING" Value="ModuleViews" />
+    </FB>
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="1530" y="500">
+      <Attribute Name="GroupName" Type="STRING" Value="ModuleViews" />
+    </FB>
+    <FB Name="UaStop" Type="iec61499::net::SERVER_2_1" x="300" y="500">
+      <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
+    </FB>
+    <FB Name="UaAbort" Type="iec61499::net::SERVER_2_1" x="1350" y="500">
+      <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
+    </FB>
+    <FB Name="UaReset" Type="iec61499::net::SERVER_2_1" x="300" y="1600">
+      <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
+    </FB>
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="1350" y="1600">
+      <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
+    </FB>
+    <FB Name="Act" Type="iec61499::net::PUBLISH_1" x="2940" y="500">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="ModuleViews" />
+    </FB>
+    <FB Name="ToIdle" Type="iec61499::events::E_DELAY" x="2320" y="500">
       <Parameter Name="DT" Value="T#1500ms" />
+      <Attribute Name="GroupName" Type="STRING" Value="StateMachine" />
+    </FB>
+    <FB Name="PubRelease" Type="iec61499::net::PUBLISH_1" x="300" y="500">
+      <Attribute Name="GroupName" Type="STRING" Value="Release" />
     </FB>
     <EventConnections>
       <Connection Source="INIT" Destination="Control.INIT" />
@@ -90,16 +117,17 @@
       <Connection Source="UaAbort.INITO" Destination="UaReset.INIT" />
       <Connection Source="UaReset.INITO" Destination="PubState.INIT" />
       <Connection Source="PubState.INITO" Destination="Act.INIT" />
-      <Connection Source="Act.INITO" Destination="PubState.REQ" />
-      <Connection Source="Act.INITO" Destination="INITO" />
-      <Connection Source="CMD_START" Destination="Control.CMD_START" />
-      <Connection Source="Control.RSP_START" Destination="RSP_START" />
-      <Connection Source="UaStop.IND" Destination="Control.CMD_STOP" />
-      <Connection Source="Control.RSP_STOP" Destination="UaStop.RSP" />
-      <Connection Source="UaAbort.IND" Destination="Control.CMD_ABORT" />
-      <Connection Source="Control.RSP_ABORT" Destination="UaAbort.RSP" />
-      <Connection Source="UaReset.IND" Destination="Control.CMD_RESET" />
-      <Connection Source="Control.RSP_RESET" Destination="UaReset.RSP" />
+      <Connection Source="Act.INITO" Destination="PubRelease.INIT" />
+      <Connection Source="PubRelease.INITO" Destination="PubState.REQ" />
+      <Connection Source="PubRelease.INITO" Destination="INITO" />
+      <Connection Source="START_REQ" Destination="Control.START_REQ" />
+      <Connection Source="Control.START_RSP" Destination="START_RSP" />
+      <Connection Source="UaStop.IND" Destination="Control.STOP_REQ" />
+      <Connection Source="Control.STOP_RSP" Destination="UaStop.RSP" />
+      <Connection Source="UaAbort.IND" Destination="Control.ABORT_REQ" />
+      <Connection Source="Control.ABORT_RSP" Destination="UaAbort.RSP" />
+      <Connection Source="UaReset.IND" Destination="Control.RESET_REQ" />
+      <Connection Source="Control.RESET_RSP" Destination="UaReset.RSP" />
       <Connection Source="Owner.CHG" Destination="Control.OWNER_CHG" />
       <Connection Source="Mode.CHG" Destination="Control.MOD_CHG" />
       <Connection Source="Control.PUB" Destination="PubState.REQ" />
@@ -108,19 +136,20 @@
       <Connection Source="HALT" Destination="Control.HALT" />
       <Connection Source="ABORT" Destination="Control.ABORT" />
       <Connection Source="RESET" Destination="Control.RESET" />
-      <Connection Source="EXEC_DONE" Destination="Control.EXEC_DONE" />
-      <Connection Source="EXEC_FAILED" Destination="Control.EXEC_FAILED" />
-      <Connection Source="STOP_DONE" Destination="Control.STOP_DONE" />
-      <Connection Source="Control.GO" Destination="GO" />
-      <Connection Source="Control.HALT_O" Destination="HALT_O" />
-      <Connection Source="Control.ABORT_O" Destination="ABORT_O" />
-      <Connection Source="Control.RESET_O" Destination="RESET_O" />
-      <Connection Source="Control.RUN_STOP" Destination="RUN_STOP" />
+      <Connection Source="EXECUTE_DONE" Destination="Control.EXECUTE_DONE" />
+      <Connection Source="EXECUTE_FAILED" Destination="Control.EXECUTE_FAILED" />
+      <Connection Source="STOPPING_DONE" Destination="Control.STOPPING_DONE" />
+      <Connection Source="Control.RUN" Destination="RUN" />
+      <Connection Source="Control.HALT_SEQ" Destination="HALT_SEQ" />
+      <Connection Source="Control.ABORT_SEQ" Destination="ABORT_SEQ" />
+      <Connection Source="Control.RESET_SEQ" Destination="RESET_SEQ" />
+      <Connection Source="Control.RUN_STOPPING" Destination="RUN_STOPPING" />
       <Connection Source="Control.SUCCESS" Destination="SUCCESS" />
       <Connection Source="Control.FAILURE" Destination="FAILURE" />
       <Connection Source="Control.TO_IDLE_START" Destination="ToIdle.START" />
       <Connection Source="Control.TO_IDLE_STOP" Destination="ToIdle.STOP" />
       <Connection Source="ToIdle.EO" Destination="Control.TO_IDLE" />
+      <Connection Source="Control.RELEASE" Destination="PubRelease.REQ" />
     </EventConnections>
     <DataConnections>
       <Connection Source="Module" Destination="Control.Module" />
@@ -132,35 +161,38 @@
       <Connection Source="Methods" Destination="UaAbort.QI" />
       <Connection Source="Methods" Destination="UaReset.QI" />
       <Connection Source="UaEnable" Destination="PubState.QI" />
-      <Connection Source="Control.IdStart" Destination="IdStart" />
-      <Connection Source="S_Start" Destination="Control.S_Start" />
-      <Connection Source="InRange" Destination="Control.InRange" />
-      <Connection Source="EqFree" Destination="Control.EqFree" />
+      <Connection Source="Control.StartMethodId" Destination="StartMethodId" />
+      <Connection Source="Session" Destination="Control.Session" />
+      <Connection Source="ParamsInRange" Destination="Control.ParamsInRange" />
+      <Connection Source="EquipmentFree" Destination="Control.EquipmentFree" />
       <Connection Source="Control.Accepted" Destination="Accepted" />
       <Connection Source="Control.Accepted" Destination="UaStop.SD_1" />
       <Connection Source="Control.Accepted" Destination="UaAbort.SD_1" />
       <Connection Source="Control.Accepted" Destination="UaReset.SD_1" />
-      <Connection Source="Control.RspError" Destination="RspError" />
-      <Connection Source="Control.RspError" Destination="UaStop.SD_2" />
-      <Connection Source="Control.RspError" Destination="UaAbort.SD_2" />
-      <Connection Source="Control.RspError" Destination="UaReset.SD_2" />
-      <Connection Source="Control.IdStop" Destination="UaStop.ID" />
-      <Connection Source="UaStop.RD_1" Destination="Control.S_Stop" />
-      <Connection Source="Control.IdAbort" Destination="UaAbort.ID" />
-      <Connection Source="UaAbort.RD_1" Destination="Control.S_Abort" />
-      <Connection Source="Control.IdReset" Destination="UaReset.ID" />
-      <Connection Source="UaReset.RD_1" Destination="Control.S_Reset" />
+      <Connection Source="Control.ResponseError" Destination="StartError" />
+      <Connection Source="Control.ResponseError" Destination="UaStop.SD_2" />
+      <Connection Source="Control.ResponseError" Destination="UaAbort.SD_2" />
+      <Connection Source="Control.ResponseError" Destination="UaReset.SD_2" />
+      <Connection Source="Control.StopMethodId" Destination="UaStop.ID" />
+      <Connection Source="UaStop.RD_1" Destination="Control.StopSession" />
+      <Connection Source="Control.AbortMethodId" Destination="UaAbort.ID" />
+      <Connection Source="UaAbort.RD_1" Destination="Control.AbortSession" />
+      <Connection Source="Control.ResetMethodId" Destination="UaReset.ID" />
+      <Connection Source="UaReset.RD_1" Destination="Control.ResetSession" />
       <Connection Source="Owner.Owner" Destination="Control.Owner" />
-      <Connection Source="Mode.State" Destination="Control.ModState" />
-      <Connection Source="Control.IdPub" Destination="PubState.ID" />
+      <Connection Source="Mode.State" Destination="Control.ModuleState" />
+      <Connection Source="Control.StateId" Destination="PubState.ID" />
       <Connection Source="Control.State" Destination="PubState.SD_1" />
       <Connection Source="Control.State" Destination="State" />
       <Connection Source="Control.ErrorID" Destination="PubState.SD_2" />
       <Connection Source="Control.ErrorID" Destination="ErrorID" />
-      <Connection Source="Control.IdAct" Destination="Act.ID" />
-      <Connection Source="Control.Delta" Destination="Act.SD_1" />
-      <Connection Source="ExecError" Destination="Control.ExecError" />
-      <Connection Source="Control.FromUa" Destination="FromUa" />
+      <Connection Source="Control.ActivityId" Destination="Act.ID" />
+      <Connection Source="Control.ActivityDelta" Destination="Act.SD_1" />
+      <Connection Source="ExecuteError" Destination="Control.ExecuteError" />
+      <Connection Source="Control.CalledByClient" Destination="CalledByClient" />
+      <Connection Source="ReleaseAll" Destination="PubRelease.QI" />
+      <Connection Source="Control.ReleaseId" Destination="PubRelease.ID" />
+      <Connection Source="Holder" Destination="PubRelease.SD_1" />
     </DataConnections>
   </FBNetwork>
 </FBType>

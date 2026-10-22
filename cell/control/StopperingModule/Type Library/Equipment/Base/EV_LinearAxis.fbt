@@ -5,7 +5,7 @@
   <CompilerInfo packageName="stoppering" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="REQ" Type="Event">
+      <Event Name="REQ" Type="Event" Comment="The equipment's state arrived">
         <With Var="I_AtHome" />
         <With Var="I_ActualPosition" />
         <With Var="I_Homed" />
@@ -14,7 +14,7 @@
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="CNF" Type="Event">
+      <Event Name="CNF" Type="Event" Comment="The values below are updated">
         <With Var="AtHome" />
         <With Var="ActualPosition" />
         <With Var="Homed" />
@@ -23,18 +23,18 @@
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="I_AtHome" Type="BOOL" />
-      <VarDeclaration Name="I_ActualPosition" Type="LREAL" />
-      <VarDeclaration Name="I_Homed" Type="BOOL" />
-      <VarDeclaration Name="I_Moving" Type="BOOL" />
-      <VarDeclaration Name="I_Holder" Type="WSTRING" />
+      <VarDeclaration Name="I_AtHome" Type="BOOL" Comment="AtHome as read or received" />
+      <VarDeclaration Name="I_ActualPosition" Type="LREAL" Comment="ActualPosition as read or received" />
+      <VarDeclaration Name="I_Homed" Type="BOOL" Comment="Homed as read or received" />
+      <VarDeclaration Name="I_Moving" Type="BOOL" Comment="Moving as read or received" />
+      <VarDeclaration Name="I_Holder" Type="WSTRING" Comment="Holder as read or received" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="AtHome" Type="BOOL" />
-      <VarDeclaration Name="ActualPosition" Type="LREAL" />
-      <VarDeclaration Name="Homed" Type="BOOL" />
-      <VarDeclaration Name="Moving" Type="BOOL" />
-      <VarDeclaration Name="Holder" Type="WSTRING" />
+      <VarDeclaration Name="AtHome" Type="BOOL" Comment="LinearAxis: AtHome, an input" />
+      <VarDeclaration Name="ActualPosition" Type="LREAL" Comment="LinearAxis: ActualPosition (mm), worked out by the equipment" />
+      <VarDeclaration Name="Homed" Type="BOOL" Comment="LinearAxis: Homed, worked out by the equipment" />
+      <VarDeclaration Name="Moving" Type="BOOL" Comment="LinearAxis: Moving, worked out by the equipment" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who holds the equipment (empty: free)" />
     </OutputVars>
   </InterfaceList>
   <SimpleFB>

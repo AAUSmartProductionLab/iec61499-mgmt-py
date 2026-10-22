@@ -5,37 +5,37 @@
   <CompilerInfo packageName="stoppering" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="PLAY" Type="Event">
+      <Event Name="PLAY" Type="Event" Comment="Play a command: its output values, phase by phase">
         <With Var="Holder" />
         <With Var="Command" />
         <With Var="Release" />
       </Event>
-      <Event Name="PHASE_T" Type="Event" />
+      <Event Name="PHASE_T" Type="Event" Comment="A phase's time is up" />
     </EventInputs>
     <EventOutputs>
-      <Event Name="OUT" Type="Event">
+      <Event Name="OUT" Type="Event" Comment="Send the output values">
         <With Var="O_Holder" />
         <With Var="O_Release" />
         <With Var="N_Retract" />
         <With Var="N_Extend" />
       </Event>
-      <Event Name="PHASE_START" Type="Event">
+      <Event Name="PHASE_START" Type="Event" Comment="Start a phase's timer (PhaseDT)">
         <With Var="PhaseDT" />
       </Event>
-      <Event Name="PHASE_STOP" Type="Event" />
-      <Event Name="PLAYED" Type="Event" />
+      <Event Name="PHASE_STOP" Type="Event" Comment="Stop the phase's timer" />
+      <Event Name="PLAYED" Type="Event" Comment="All phases were played" />
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Holder" Type="WSTRING" />
-      <VarDeclaration Name="Command" Type="USINT" />
-      <VarDeclaration Name="Release" Type="BOOL" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who sends the command" />
+      <VarDeclaration Name="Command" Type="USINT" Comment="The command's code" />
+      <VarDeclaration Name="Release" Type="BOOL" Comment="Give up the equipment after the command" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="O_Holder" Type="WSTRING" />
-      <VarDeclaration Name="O_Release" Type="BOOL" />
-      <VarDeclaration Name="N_Retract" Type="BOOL" />
-      <VarDeclaration Name="N_Extend" Type="BOOL" />
-      <VarDeclaration Name="PhaseDT" Type="TIME" />
+      <VarDeclaration Name="O_Holder" Type="WSTRING" Comment="Sent: who holds the equipment" />
+      <VarDeclaration Name="O_Release" Type="BOOL" Comment="Sent: give up the equipment after this" />
+      <VarDeclaration Name="N_Retract" Type="BOOL" Comment="Sent: the value of Retract" />
+      <VarDeclaration Name="N_Extend" Type="BOOL" Comment="Sent: the value of Extend" />
+      <VarDeclaration Name="PhaseDT" Type="TIME" Comment="How long the phase lasts" />
     </OutputVars>
   </InterfaceList>
   <BasicFB>

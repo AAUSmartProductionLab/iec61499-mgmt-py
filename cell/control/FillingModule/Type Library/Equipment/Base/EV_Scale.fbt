@@ -5,24 +5,24 @@
   <CompilerInfo packageName="filling" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="REQ" Type="Event">
+      <Event Name="REQ" Type="Event" Comment="The equipment's state arrived">
         <With Var="I_Weight" />
         <With Var="I_Holder" />
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="CNF" Type="Event">
+      <Event Name="CNF" Type="Event" Comment="The values below are updated">
         <With Var="Weight" />
         <With Var="Holder" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="I_Weight" Type="LREAL" />
-      <VarDeclaration Name="I_Holder" Type="WSTRING" />
+      <VarDeclaration Name="I_Weight" Type="LREAL" Comment="Weight as read or received" />
+      <VarDeclaration Name="I_Holder" Type="WSTRING" Comment="Holder as read or received" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="Weight" Type="LREAL" />
-      <VarDeclaration Name="Holder" Type="WSTRING" />
+      <VarDeclaration Name="Weight" Type="LREAL" Comment="Scale: Weight (g), an input" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who holds the equipment (empty: free)" />
     </OutputVars>
   </InterfaceList>
   <SimpleFB>

@@ -5,30 +5,30 @@
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
         <With Var="Module" />
       </Event>
-      <Event Name="REQ" Type="Event">
+      <Event Name="REQ" Type="Event" Comment="The value arrived on the local channel">
         <With Var="Received" />
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit">
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
         <With Var="IdSub" />
         <With Var="IdQuery" />
       </Event>
-      <Event Name="CNF" Type="Event">
+      <Event Name="CNF" Type="Event" Comment="Confirmation of REQ">
         <With Var="State" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Module" Type="WSTRING" />
-      <VarDeclaration Name="Received" Type="USINT" />
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="Received" Type="USINT" Comment="The value as it arrived" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="IdSub" Type="WSTRING" />
-      <VarDeclaration Name="IdQuery" Type="WSTRING" />
-      <VarDeclaration Name="State" Type="USINT" />
+      <VarDeclaration Name="IdSub" Type="WSTRING" Comment="Local channel the value arrives on" />
+      <VarDeclaration Name="IdQuery" Type="WSTRING" Comment="Local channel that asks for the current value (a block that starts later)" />
+      <VarDeclaration Name="State" Type="USINT" Comment="PackML state: 1 Clearing, 2 Stopped, 3 Starting, 4 Idle, 6 Execute, 7 Stopping, 8 Aborting, 9 Aborted, 15 Resetting" />
     </OutputVars>
   </InterfaceList>
   <SimpleFB>

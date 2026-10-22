@@ -5,20 +5,20 @@
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="Event">
+      <Event Name="INIT" Type="Event" Comment="Work out from Address how the point is reached">
         <With Var="Address" />
       </Event>
-      <Event Name="IO_READY" Type="Event">
+      <Event Name="IO_READY" Type="Event" Comment="The line, the local IO block and the Modbus client are initialised">
         <With Var="QO_G" />
         <With Var="QO_M" />
       </Event>
-      <Event Name="CNF_G" Type="Event">
+      <Event Name="CNF_G" Type="Event" Comment="The local IO block answered">
         <With Var="QO_G" />
       </Event>
-      <Event Name="CNF_M" Type="Event">
+      <Event Name="CNF_M" Type="Event" Comment="The Modbus client answered">
         <With Var="QO_M" />
       </Event>
-      <Event Name="REQ" Type="Event">
+      <Event Name="REQ" Type="Event" Comment="Access the point">
         <With Var="OUT" />
         <With Var="EN" />
         <With Var="Gain" />
@@ -26,7 +26,7 @@
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="INIT_IO" Type="Event">
+      <Event Name="INIT_IO" Type="Event" Comment="Set up the line, the local IO block and the Modbus client (each only if it is the way)">
         <With Var="GQI" />
         <With Var="MQI" />
         <With Var="IoName" />
@@ -38,41 +38,41 @@
         <With Var="Period" />
         <With Var="Root" />
       </Event>
-      <Event Name="INITO" Type="Event">
+      <Event Name="INITO" Type="Event" Comment="Initialised: QO says whether the point is reachable">
         <With Var="QO" />
       </Event>
-      <Event Name="REQ_G" Type="Event">
+      <Event Name="REQ_G" Type="Event" Comment="Access the point through the local IO block (IX/QX/IW/QW)">
         <With Var="Value" />
       </Event>
-      <Event Name="REQ_M" Type="Event">
+      <Event Name="REQ_M" Type="Event" Comment="Access the point through the Modbus client">
         <With Var="Value" />
       </Event>
-      <Event Name="CNF" Type="Event">
+      <Event Name="CNF" Type="Event" Comment="Done: QO says whether it worked">
         <With Var="QO" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Address" Type="STRING" />
-      <VarDeclaration Name="QO_G" Type="BOOL" />
-      <VarDeclaration Name="QO_M" Type="BOOL" />
-      <VarDeclaration Name="OUT" Type="LREAL" />
-      <VarDeclaration Name="EN" Type="BOOL" />
-      <VarDeclaration Name="Gain" Type="LREAL" InitialValue="1.0" />
-      <VarDeclaration Name="Bias" Type="LREAL" />
+      <VarDeclaration Name="Address" Type="STRING" Comment="Where the point is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="QO_G" Type="BOOL" Comment="The local IO block works" />
+      <VarDeclaration Name="QO_M" Type="BOOL" Comment="The Modbus client works" />
+      <VarDeclaration Name="OUT" Type="LREAL" Comment="The value to write" />
+      <VarDeclaration Name="EN" Type="BOOL" Comment="On; FALSE writes 0 (no pulses on a PWM channel)" />
+      <VarDeclaration Name="Gain" Type="LREAL" InitialValue="1.0" Comment="Raw = Bias + OUT * Gain, limited to 0..65535" />
+      <VarDeclaration Name="Bias" Type="LREAL" Comment="Raw = Bias + OUT * Gain, limited to 0..65535" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="GQI" Type="BOOL" />
-      <VarDeclaration Name="MQI" Type="BOOL" />
-      <VarDeclaration Name="IoName" Type="STRING" />
-      <VarDeclaration Name="ModbusId" Type="WSTRING" />
-      <VarDeclaration Name="QO" Type="BOOL" />
-      <VarDeclaration Name="LineQI" Type="BOOL" />
-      <VarDeclaration Name="LineName" Type="WSTRING" />
-      <VarDeclaration Name="ChipNo" Type="UINT" />
-      <VarDeclaration Name="LineNo" Type="UINT" />
-      <VarDeclaration Name="Period" Type="UDINT" />
-      <VarDeclaration Name="Root" Type="WSTRING" />
-      <VarDeclaration Name="Value" Type="WORD" />
+      <VarDeclaration Name="GQI" Type="BOOL" Comment="Use the local IO block" />
+      <VarDeclaration Name="MQI" Type="BOOL" Comment="Use the Modbus client" />
+      <VarDeclaration Name="IoName" Type="STRING" Comment="The local IO handle's name (PARAMS of IX/QX/IW/QW)" />
+      <VarDeclaration Name="ModbusId" Type="WSTRING" Comment="The Modbus CLIENT's ID" />
+      <VarDeclaration Name="QO" Type="BOOL" Comment="The point is reachable, the last access worked" />
+      <VarDeclaration Name="LineQI" Type="BOOL" Comment="Set up a Raspberry Pi line here (a gpio[...] or pwm[...] address)" />
+      <VarDeclaration Name="LineName" Type="WSTRING" Comment="The name the line is registered under (the address)" />
+      <VarDeclaration Name="ChipNo" Type="UINT" Comment="The GPIO or PWM chip's number" />
+      <VarDeclaration Name="LineNo" Type="UINT" Comment="The GPIO line's or PWM channel's number" />
+      <VarDeclaration Name="Period" Type="UDINT" Comment="The PWM period in ns" />
+      <VarDeclaration Name="Root" Type="WSTRING" Comment="The sysfs PWM folder (empty: /sys/class/pwm)" />
+      <VarDeclaration Name="Value" Type="WORD" Comment="The raw value to write (0 to 65535 for an analog output)" />
     </OutputVars>
   </InterfaceList>
   <BasicFB>

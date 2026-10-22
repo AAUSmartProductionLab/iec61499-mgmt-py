@@ -5,42 +5,42 @@
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Publish the default as the value">
         <With Var="Default" />
         <With Var="Lower" />
         <With Var="Upper" />
       </Event>
-      <Event Name="CHECK" Type="Event">
-        <With Var="S" />
-        <With Var="OkIn" />
+      <Event Name="CHECK" Type="Event" Comment="Check Requested against Lower..Upper">
+        <With Var="Requested" />
+        <With Var="PreviousInRange" />
       </Event>
-      <Event Name="LATCH" Type="Event">
-        <With Var="FromUa" />
+      <Event Name="LATCH" Type="Event" Comment="Take the value for this run: Requested if CalledByClient, else Default">
+        <With Var="CalledByClient" />
         <With Var="Default" />
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit">
-        <With Var="P" />
+      <Event Name="INITO" Type="EInit" Comment="Initialised: Value is the default">
+        <With Var="Value" />
       </Event>
-      <Event Name="CHECKED" Type="Event">
-        <With Var="InRange" />
+      <Event Name="CHECKED" Type="Event" Comment="Checked: AllInRange">
+        <With Var="AllInRange" />
       </Event>
-      <Event Name="LATCHED" Type="Event">
-        <With Var="P" />
+      <Event Name="LATCHED" Type="Event" Comment="Value holds this run's value">
+        <With Var="Value" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Default" Type="DINT" />
-      <VarDeclaration Name="Lower" Type="DINT" InitialValue="-2147483648" />
-      <VarDeclaration Name="Upper" Type="DINT" InitialValue="2147483647" />
-      <VarDeclaration Name="S" Type="DINT" />
-      <VarDeclaration Name="OkIn" Type="BOOL" InitialValue="TRUE" />
-      <VarDeclaration Name="FromUa" Type="BOOL" />
+      <VarDeclaration Name="Default" Type="DINT" Comment="The value when the caller gives none; a parent's binding sets it" />
+      <VarDeclaration Name="Lower" Type="DINT" InitialValue="-2147483648" Comment="The smallest value accepted" />
+      <VarDeclaration Name="Upper" Type="DINT" InitialValue="2147483647" Comment="The largest value accepted" />
+      <VarDeclaration Name="Requested" Type="DINT" Comment="The value the caller asks for (an argument of Start)" />
+      <VarDeclaration Name="PreviousInRange" Type="BOOL" InitialValue="TRUE" Comment="The parameters checked before this one are all in range (TRUE for the first)" />
+      <VarDeclaration Name="CalledByClient" Type="BOOL" Comment="Started over OPC UA: take Requested, not the default" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="P" Type="DINT" />
-      <VarDeclaration Name="InRange" Type="BOOL" />
+      <VarDeclaration Name="Value" Type="DINT" Comment="The value for this run" />
+      <VarDeclaration Name="AllInRange" Type="BOOL" Comment="This and every parameter before it are in range" />
     </OutputVars>
   </InterfaceList>
   <SimpleFB>
@@ -54,16 +54,16 @@
       <ECAction Algorithm="LATCH" Output="LATCHED" />
     </ECState>
     <Algorithm Name="INIT">
-      <ST>P := Default;</ST>
+      <ST>Value := Default;</ST>
     </Algorithm>
     <Algorithm Name="CHECK">
-      <ST>InRange := OkIn AND (S &gt;= Lower) AND (S &lt;= Upper);</ST>
+      <ST>AllInRange := PreviousInRange AND (Requested &gt;= Lower) AND (Requested &lt;= Upper);</ST>
     </Algorithm>
     <Algorithm Name="LATCH">
-      <ST>IF FromUa THEN
-  P := S;
+      <ST>IF CalledByClient THEN
+  Value := Requested;
 ELSE
-  P := Default;
+  Value := Default;
 END_IF;</ST>
     </Algorithm>
   </SimpleFB>

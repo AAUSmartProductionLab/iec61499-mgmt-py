@@ -5,34 +5,34 @@
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
         <With Var="Module" />
         <With Var="UaRoot" />
         <With Var="UaEnable" />
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit" />
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Module" Type="WSTRING" />
-      <VarDeclaration Name="UaRoot" Type="WSTRING" />
-      <VarDeclaration Name="UaEnable" Type="BOOL" />
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" Comment="Publish on OPC UA" />
     </InputVars>
     <OutputVars />
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Ids" Type="modlib::MOD_OccupationIds" x="400" y="200" />
-    <FB Name="Occupy" Type="iec61499::net::SERVER_2_1" x="4000" y="200" />
-    <FB Name="Release" Type="iec61499::net::SERVER_2_1" x="7600" y="200" />
-    <FB Name="Logic" Type="modlib::MOD_OccupationLogic" x="11200" y="200" />
-    <FB Name="PubOwner" Type="iec61499::net::PUBLISH_1" x="14800" y="200">
+    <FB Name="Ids" Type="modlib::MOD_OccupationIds" x="1100" y="1000" />
+    <FB Name="Occupy" Type="iec61499::net::SERVER_2_1" x="2690" y="1000" />
+    <FB Name="Release" Type="iec61499::net::SERVER_2_1" x="3860" y="1000" />
+    <FB Name="Logic" Type="modlib::MOD_OccupationLogic" x="1100" y="2100" />
+    <FB Name="PubOwner" Type="iec61499::net::PUBLISH_1" x="2870" y="2100">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="18400" y="200">
+    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="4040" y="2100">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="22000" y="200" />
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1100" y="3300" />
     <EventConnections>
       <Connection Source="INIT" Destination="Ids.INIT" />
       <Connection Source="Ids.INITO" Destination="Occupy.INIT" />
@@ -42,11 +42,11 @@
       <Connection Source="SubQuery.INITO" Destination="PubUa.INIT" />
       <Connection Source="PubUa.INITO" Destination="PubUa.REQ" />
       <Connection Source="PubUa.INITO" Destination="INITO" />
-      <Connection Source="Occupy.IND" Destination="Logic.OCCUPY" />
-      <Connection Source="Logic.RSP_OCCUPY" Destination="Occupy.RSP" />
-      <Connection Source="Release.IND" Destination="Logic.RELEASE" />
-      <Connection Source="Logic.RSP_RELEASE" Destination="Release.RSP" />
-      <Connection Source="SubQuery.IND" Destination="Logic.QUERY" />
+      <Connection Source="Occupy.IND" Destination="Logic.OCCUPY_REQ" />
+      <Connection Source="Logic.OCCUPY_RSP" Destination="Occupy.RSP" />
+      <Connection Source="Release.IND" Destination="Logic.RELEASE_REQ" />
+      <Connection Source="Logic.RELEASE_RSP" Destination="Release.RSP" />
+      <Connection Source="SubQuery.IND" Destination="Logic.QUERY_REQ" />
       <Connection Source="Logic.CHG" Destination="PubOwner.REQ" />
       <Connection Source="Logic.CHG" Destination="PubUa.REQ" />
     </EventConnections>
@@ -61,10 +61,10 @@
       <Connection Source="Ids.IdPub" Destination="PubUa.ID" />
       <Connection Source="Ids.IdOwner" Destination="PubOwner.ID" />
       <Connection Source="Ids.IdQuery" Destination="SubQuery.ID" />
-      <Connection Source="Occupy.RD_1" Destination="Logic.S_Occupy" />
+      <Connection Source="Occupy.RD_1" Destination="Logic.OccupySession" />
       <Connection Source="Logic.Accepted" Destination="Occupy.SD_1" />
       <Connection Source="Logic.ErrorID" Destination="Occupy.SD_2" />
-      <Connection Source="Release.RD_1" Destination="Logic.S_Release" />
+      <Connection Source="Release.RD_1" Destination="Logic.ReleaseSession" />
       <Connection Source="Logic.Accepted" Destination="Release.SD_1" />
       <Connection Source="Logic.ErrorID" Destination="Release.SD_2" />
       <Connection Source="Logic.Owner" Destination="PubOwner.SD_1" />

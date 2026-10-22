@@ -5,7 +5,7 @@
   <CompilerInfo packageName="iec61499::net" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
         <With Var="QI" />
         <With Var="ID" />
       </Event>
@@ -16,7 +16,7 @@
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit">
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
         <With Var="QO" />
         <With Var="STATUS" />
       </Event>

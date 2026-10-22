@@ -5,84 +5,84 @@
   <CompilerInfo packageName="filler" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Initialise: name the channels and OPC UA variables">
         <With Var="Module" />
         <With Var="Equipment" />
-        <With Var="Token" />
-        <With Var="LastUse" />
+        <With Var="Holder" />
+        <With Var="ReleaseAfter" />
         <With Var="Timeout" />
         <With Var="UaRoot" />
         <With Var="UaPath" />
       </Event>
-      <Event Name="START" Type="Event">
+      <Event Name="START" Type="Event" Comment="Start the run with the parameters (checks Requires first)">
         <With Var="Distance" />
       </Event>
-      <Event Name="HALT" Type="Event" />
-      <Event Name="ABORT" Type="Event" />
-      <Event Name="TIMER" Type="Event" />
-      <Event Name="SAMPLE" Type="Event">
+      <Event Name="HALT" Type="Event" Comment="Stop the run (ErrorID Interrupted)" />
+      <Event Name="ABORT" Type="Event" Comment="Abort the run: the equipment off and given up" />
+      <Event Name="TIMER" Type="Event" Comment="The run's timer expired" />
+      <Event Name="SAMPLE" Type="Event" Comment="The equipment's state arrived">
         <With Var="AtTop" />
         <With Var="AtBottom" />
         <With Var="Position" />
-        <With Var="Holder" />
+        <With Var="EqHolder" />
       </Event>
-      <Event Name="WAIT_OVER" Type="Event" />
-      <Event Name="PLAYED" Type="Event" />
+      <Event Name="WAIT_OVER" Type="Event" Comment="Waited long enough for another holder to let go" />
+      <Event Name="PLAYED" Type="Event" Comment="The command's phases were played" />
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit">
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
         <With Var="IdEqState" />
         <With Var="IdEqCmd" />
         <With Var="IdParams" />
       </Event>
-      <Event Name="DONE" Type="Event" />
-      <Event Name="FAILED" Type="Event">
+      <Event Name="DONE" Type="Event" Comment="The run succeeded (results set)" />
+      <Event Name="FAILED" Type="Event" Comment="The run failed (ErrorID)">
         <With Var="ErrorID" />
       </Event>
-      <Event Name="HALTED" Type="Event">
+      <Event Name="HALTED" Type="Event" Comment="The run was stopped">
         <With Var="ErrorID" />
       </Event>
-      <Event Name="TIMER_START" Type="Event">
+      <Event Name="TIMER_START" Type="Event" Comment="Start the timer (TimerDT)">
         <With Var="TimerDT" />
       </Event>
-      <Event Name="TIMER_STOP" Type="Event" />
-      <Event Name="WAIT_START" Type="Event" />
-      <Event Name="WAIT_STOP" Type="Event" />
-      <Event Name="CMD" Type="Event">
+      <Event Name="TIMER_STOP" Type="Event" Comment="Stop the timer" />
+      <Event Name="WAIT_START" Type="Event" Comment="Start waiting for the equipment" />
+      <Event Name="WAIT_STOP" Type="Event" Comment="Stop waiting" />
+      <Event Name="CMD" Type="Event" Comment="Send a command to the equipment">
         <With Var="C_Holder" />
         <With Var="C_Command" />
         <With Var="C_Arg" />
         <With Var="C_Release" />
       </Event>
-      <Event Name="EQ_FREE" Type="Event">
-        <With Var="EqFree" />
+      <Event Name="EQ_FREE" Type="Event" Comment="EquipmentFree is updated">
+        <With Var="EquipmentFree" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Module" Type="WSTRING" />
-      <VarDeclaration Name="Equipment" Type="WSTRING" />
-      <VarDeclaration Name="Token" Type="WSTRING" />
-      <VarDeclaration Name="LastUse" Type="BOOL" />
-      <VarDeclaration Name="Timeout" Type="TIME" />
-      <VarDeclaration Name="UaRoot" Type="WSTRING" />
-      <VarDeclaration Name="UaPath" Type="WSTRING" />
-      <VarDeclaration Name="Distance" Type="LREAL" />
-      <VarDeclaration Name="AtTop" Type="BOOL" />
-      <VarDeclaration Name="AtBottom" Type="BOOL" />
-      <VarDeclaration Name="Position" Type="LREAL" />
-      <VarDeclaration Name="Holder" Type="WSTRING" />
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="Equipment" Type="WSTRING" Comment="The equipment item it drives" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="The name the equipment is held under: the skill's own, or for a step the skill it belongs to" />
+      <VarDeclaration Name="ReleaseAfter" Type="BOOL" Comment="Give up the equipment with the run's last command" />
+      <VarDeclaration Name="Timeout" Type="TIME" Comment="How long the run may take before it fails with Timeout (3)" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaPath" Type="WSTRING" Comment="This skill's OPC UA folder below UaRoot, e.g. /Skills/Dispensing" />
+      <VarDeclaration Name="Distance" Type="LREAL" Comment="Parameter Distance mm, 0.0 to 50.0: Target depth below the top position" />
+      <VarDeclaration Name="AtTop" Type="BOOL" Comment="NeedleAxis: AtTop, an input" />
+      <VarDeclaration Name="AtBottom" Type="BOOL" Comment="NeedleAxis: AtBottom, an input" />
+      <VarDeclaration Name="Position" Type="LREAL" Comment="NeedleAxis: Position (mm), an input" />
+      <VarDeclaration Name="EqHolder" Type="WSTRING" Comment="Who holds the equipment now (empty: free)" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="ErrorID" Type="UINT" />
-      <VarDeclaration Name="TimerDT" Type="TIME" />
-      <VarDeclaration Name="IdEqState" Type="WSTRING" />
-      <VarDeclaration Name="IdEqCmd" Type="WSTRING" />
-      <VarDeclaration Name="IdParams" Type="WSTRING" />
-      <VarDeclaration Name="C_Holder" Type="WSTRING" />
-      <VarDeclaration Name="C_Command" Type="USINT" />
-      <VarDeclaration Name="C_Arg" Type="LREAL" />
-      <VarDeclaration Name="C_Release" Type="BOOL" />
-      <VarDeclaration Name="EqFree" Type="BOOL" />
+      <VarDeclaration Name="ErrorID" Type="UINT" Comment="Error code: 0 none, 1 PreconditionViolated, 2 InvariantViolated, 3 Timeout, 4 NotReady, 5 NotPermitted, 6 Busy, 7 Interrupted, 8 OutOfRange" />
+      <VarDeclaration Name="TimerDT" Type="TIME" Comment="How long the timer runs" />
+      <VarDeclaration Name="IdEqState" Type="WSTRING" Comment="Local channel of the equipment's state" />
+      <VarDeclaration Name="IdEqCmd" Type="WSTRING" Comment="Local channel of the equipment's commands" />
+      <VarDeclaration Name="IdParams" Type="WSTRING" Comment="OPC UA ID of the published parameters" />
+      <VarDeclaration Name="C_Holder" Type="WSTRING" Comment="Sent with the command: who holds the equipment" />
+      <VarDeclaration Name="C_Command" Type="USINT" Comment="Sent with the command: the command's code" />
+      <VarDeclaration Name="C_Arg" Type="LREAL" Comment="Sent with the command: its argument (e.g. a position)" />
+      <VarDeclaration Name="C_Release" Type="BOOL" Comment="Sent with the command: give up the equipment after it" />
+      <VarDeclaration Name="EquipmentFree" Type="BOOL" Comment="The equipment is free, or held under Holder" />
     </OutputVars>
   </InterfaceList>
   <BasicFB>
@@ -161,16 +161,16 @@
       <ECTransition Source="Check" Destination="Reject" Condition="NOT (NOT (AtTop AND AtBottom))" x="0" y="0" />
       <ECTransition Source="Idle" Destination="Sample" Condition="SAMPLE" x="0" y="0" />
       <ECTransition Source="Sample" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="Check" Destination="WaitFree" Condition="(Holder &lt;&gt; &quot;&quot;) AND (Holder &lt;&gt; Token)" x="0" y="0" />
+      <ECTransition Source="Check" Destination="WaitFree" Condition="(EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder)" x="0" y="0" />
       <ECTransition Source="WaitFree" Destination="WaitW" Condition="1" x="0" y="0" />
-      <ECTransition Source="WaitW" Destination="Recheck" Condition="SAMPLE[NOT ((Holder &lt;&gt; &quot;&quot;) AND (Holder &lt;&gt; Token))]" x="0" y="0" />
+      <ECTransition Source="WaitW" Destination="Recheck" Condition="SAMPLE[NOT ((EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder))]" x="0" y="0" />
       <ECTransition Source="WaitW" Destination="Busy" Condition="WAIT_OVER" x="0" y="0" />
       <ECTransition Source="WaitW" Destination="Idle" Condition="HALT" x="0" y="0" />
       <ECTransition Source="WaitW" Destination="Idle" Condition="ABORT" x="0" y="0" />
       <ECTransition Source="Recheck" Destination="Check" Condition="1" x="0" y="0" />
       <ECTransition Source="Check" Destination="AlreadyDone" Condition="(Position &gt;= Distance) OR AtBottom" x="0" y="0" />
       <ECTransition Source="Running" Destination="Unsafe" Condition="SAMPLE[NOT (NOT (AtTop AND AtBottom))]" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Lost" Condition="SAMPLE[(Holder &lt;&gt; &quot;&quot;) AND (Holder &lt;&gt; Token)]" x="0" y="0" />
+      <ECTransition Source="Running" Destination="Lost" Condition="SAMPLE[(EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder)]" x="0" y="0" />
       <ECTransition Source="Running" Destination="Done" Condition="SAMPLE[(Position &gt;= Distance) OR AtBottom]" x="0" y="0" />
       <ECTransition Source="Running" Destination="TimedOut" Condition="TIMER" x="0" y="0" />
       <ECTransition Source="Running" Destination="RunSample" Condition="SAMPLE" x="0" y="0" />
@@ -206,26 +206,26 @@ IdParams := CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, UaPath)), "/Par
       <ST>ErrorID := 1;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Sample">
-      <ST>EqFree := (Holder = "") OR (Holder = Token);</ST>
+      <ST>EquipmentFree := (EqHolder = "") OR (EqHolder = Holder);</ST>
     </Algorithm>
     <Algorithm Name="Alg_Busy">
       <ST>ErrorID := 6;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Run">
-      <ST>C_Holder := Token;
+      <ST>C_Holder := Holder;
 C_Command := 1;
 C_Arg := 0.0;
 C_Release := FALSE;
 TimerDT := Timeout;</ST>
     </Algorithm>
     <Algorithm Name="Alg_RunSample">
-      <ST>EqFree := (Holder = "") OR (Holder = Token);</ST>
+      <ST>EquipmentFree := (EqHolder = "") OR (EqHolder = Holder);</ST>
     </Algorithm>
     <Algorithm Name="Alg_Unsafe">
-      <ST>C_Holder := Token;
+      <ST>C_Holder := Holder;
 C_Command := 0;
 C_Arg := 0.0;
-C_Release := LastUse;
+C_Release := ReleaseAfter;
 ErrorID := 2;
 Outcome := 2;</ST>
     </Algorithm>
@@ -233,30 +233,30 @@ Outcome := 2;</ST>
       <ST>ErrorID := 6;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Done">
-      <ST>C_Holder := Token;
+      <ST>C_Holder := Holder;
 C_Command := 0;
 C_Arg := 0.0;
-C_Release := LastUse;
+C_Release := ReleaseAfter;
 Outcome := 1;</ST>
     </Algorithm>
     <Algorithm Name="Alg_TimedOut">
-      <ST>C_Holder := Token;
+      <ST>C_Holder := Holder;
 C_Command := 0;
 C_Arg := 0.0;
-C_Release := LastUse;
+C_Release := ReleaseAfter;
 ErrorID := 3;
 Outcome := 2;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Halt">
-      <ST>C_Holder := Token;
+      <ST>C_Holder := Holder;
 C_Command := 0;
 C_Arg := 0.0;
-C_Release := LastUse;
+C_Release := ReleaseAfter;
 ErrorID := 7;
 Outcome := 3;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Abort">
-      <ST>C_Holder := Token;
+      <ST>C_Holder := Holder;
 C_Command := 0;
 C_Arg := 0.0;
 C_Release := TRUE;
