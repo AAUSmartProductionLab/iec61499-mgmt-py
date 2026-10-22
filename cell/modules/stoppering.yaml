@@ -11,8 +11,8 @@ modbus: {host: 127.0.0.1, port: 1503, unit: 1, poll_ms: 10}   # 4diac/tools/modu
 
 targets:
   pc: {host: localhost, io: modbus}
-  pi: {host: 192.168.0.191, user: iiot_gateway, io: gpio,
-       pwm_root: /hostsys/class/pwm}    # the stoppering Pi, a Raspberry Pi 4
+  pi: {host: 192.168.0.134, user: admin, io: gpio, board: pi5,
+       pwm_root: /hostsys/class/pwm}    # the stoppering Pi, a Raspberry Pi 5 (until 22 Oct the Pi 4 at .191)
 
 equipment:
   LinearAxis:

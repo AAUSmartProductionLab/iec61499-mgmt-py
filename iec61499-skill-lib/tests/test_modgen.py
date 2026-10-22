@@ -676,7 +676,7 @@ def test_stop_sequence_nodes_do_not_collide_with_the_stop_method():
     assert paths == {"Dispensing.Stop.Home.UaPath": '"/Skills/Dispensing/Stopping/Home"'}
 
 
-def test_a_module_names_its_pwm_channels_as_a_pi_4_does():
+def test_a_module_names_its_pwm_channels_as_its_board_does():
     """Channel 0 is GPIO18 on every board; a Raspberry Pi 5 numbers that pin 2. The stepper driver's
     enable is inverted: the line is low while the motor is on."""
     assert load(SPECS / "filling.yaml").targets["pi"].board == "pi5"
@@ -686,4 +686,4 @@ def test_a_module_names_its_pwm_channels_as_a_pi_4_does():
     assert written["LinearAxis.Enable_Address"] == "'gpio[0:17:active_low]'"
     assert written["LinearAxis.Down_Address"] == "'gpio[0:27]'"
     assert written["LinearAxis.AtHome_Address"] == "'gpio[0:23:pull_up:active_low]'"     # a switch to GND
-    assert flat("StopperingModule", "Stoppering_pi")[2]["LinearAxis.Step_Address"].startswith("'pwm[0:0:")  # a Pi 4
+    assert flat("StopperingModule", "Stoppering_pi")[2]["LinearAxis.Step_Address"].startswith("'pwm[0:2:")  # a Pi 5 too
