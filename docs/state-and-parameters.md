@@ -1,6 +1,6 @@
 # States, measurements, events and parameters in the resource AAS: a plan
 
-Plan of 21 Oct 2026, not built. How a resource AAS (line, module, component) tracks what happens
+Plan of 21 Oct 2026 (relation to skills added 22 Oct, Section 8), not built. How a resource AAS (line, module, component) tracks what happens
 to the resource over time, using the structure of IDTA's Time Series Data template inside a
 submodel of our own; how states, measurements and events are told apart; and what goes into the
 Parameters submodel instead. The database behind the history is left out on purpose: the model
@@ -204,10 +204,10 @@ Parameters still read, and add those as optional children (the same way Skills w
 | # | Step | Where | Done when |
 | --- | --- | --- | --- |
 | S0 | **Decide** the questions in Section 7 | – | Answered |
-| S1 | **ARSO.** Operational Data 2.0 (StateSeries, MeasurementSeries, EventLog, their Records, Source, Trigger, Origin, IDTA's elements reused); Parameters 1.0 (Parameter with Value, Unit, Min, Max, Default, ChangedBy, Target); Technical Data as it is; SHACL shapes for each | `ontology/ARSO/Modules` | `modreg check` validates a hand-written example of each |
+| S1 | **ARSO.** Operational Data 2.0 (StateSeries, MeasurementSeries, EventLog, their Records, Source, Trigger, Origin, a `Skill` reference, IDTA's elements reused); a contract's `Uses`; the skill lifecycle states; Parameters 1.0 (Parameter with Value, Unit, Min, Max, Default, ChangedBy, Target); Technical Data as it is; SHACL shapes for each | `ontology/ARSO/Modules` | `modreg check` validates a hand-written example of each |
 | S2 | **Templates and classes.** Submodel templates from ARSO (`modreg generate`), reusing aas_pydantic's Time Series element classes so the IDTA semantic ids are the same objects; the same into aas-model (`arso-submodels`) | `modreg/templates`, aas-model | Generated classes read and write the examples |
 | S3 | **ConceptDescriptions** with value lists for the PackML states, the skill states, the error codes, occupation | `modreg` | The AASs carry them; the HMI's state names come from them |
-| S4 | **The module's profile.** Sort today's 45 data points by kind (Section 2); skill parameters' values out of Operational Data; the axis' and scale's series into their component AASs; the mapping (AIMC) writes into each series' `Latest`; events: skill executions, occupation, reconfigurations; Parameters from the module spec (the axis' settings, timeouts) with `ChangedBy` | `modreg/profile.py`, `modsync` (reconfigurations as events) | The example line's AASs are built this way and pass the check; `modlink` and the HMI still work |
+| S4 | **The module's profile.** Sort today's 45 data points by kind (Section 2); skill parameters' values out of Operational Data; the axis' and scale's series into their component AASs; the mapping (AIMC) writes into each series' `Latest`; events: skill executions (Section 8.5), occupation, reconfigurations; lifecycle series per skill; Parameters from the module spec (the axis' settings, timeouts) with `ChangedBy` | `modreg/profile.py`, `modsync` (reconfigurations as events) | The example line's AASs are built this way and pass the check; `modlink` and the HMI still work |
 | S5 | **Write the Latest values.** A small collector that reads the OPC UA properties and writes each series' Latest record (no database): the AAS shows the current state | `modlink` or a service | The HMI's and the AAS server's values agree |
 | S6 | **The database** (left out here): LinkedSegment endpoints and queries, the collector writing history | – | Later |
 
@@ -228,3 +228,150 @@ time for a figure (the downtime of a reconfiguration is a state series, so B1 ma
 6. **Technical Data and Parameters from the module spec**: put the axis' facts and settings that
    are only in the YAML today into the AAS (as proposed), or leave the spec as their source?
 7. **When**: after the paper's evaluation (as proposed), or the state series (S5) for B1 now?
+
+## 8. How this relates to skills
+
+A skill is already described in three places: what it is (Skills), what was built of it (Control
+Configuration), and what offers it (Capability Description). Operational Data adds the fourth:
+what it did. The same skill should be one identity across all four, joined by references, not by
+matching names.
+
+### 8.1 One skill, four views
+
+| View | Submodel | What it says about MoveAxis | Changes |
+| --- | --- | --- | --- |
+| Description | Skills | Commands, parameter Position (0 to 160 mm), contract (requires Homed, ensures not Moving and at Position, timeout 30 s), the component that holds it | When the skill is edited (engineer, skill editor) |
+| Build | Control Configuration | Instance `MoveAxis`, type `filling::SK_MoveAxis`, its hash | When it is built or rebuilt (`modsync reconfigure`, a deployment) |
+| Offer | Capability Description | Positioning, 0 to 160 mm, realized by MoveAxis | With the description (ranges come from the parameters' limits) |
+| Behaviour | Operational Data | Its state over time (Idle, Running, Succeeded, ErrorID), each run as an event (Position asked, duration, outcome, session) | Continuously |
+
+Today the Control Configuration's instances already point at the skill or step they are
+(`Skill` reference). The proposal does the same for Operational Data: every series that belongs
+to a skill or a step has a `Skill` reference to its element in Skills, next to its `Source`
+reference into the interface. Then "what did Dispensing's step Dispense do" is answered by
+following references, also for a skill created online.
+
+### 8.2 Contracts are expressions over states, measurements and parameters
+
+The contracts are written over the resource's variables, by name:
+
+| Skill | Contract | Uses |
+| --- | --- | --- |
+| Home | Ensures `AtHome`; Timeout 60 s | AtHome: measurement (the switch) |
+| MoveAxis | Requires `Homed`; Ensures `NOT Moving AND ABS(ActualPosition - Position) < 0.001`; Timeout 30 s | Homed, Moving: states; ActualPosition: measurement (estimated); Position: the skill's parameter |
+
+That gives the four kinds of Section 2 a precise role in a contract:
+
+- **States and measurements** are what a contract observes. Every name a contract uses should be
+  a series in Operational Data of the component that holds the skill. Proposal: next to the
+  expression, a contract lists what it uses as references (`Uses`: the series, the parameters),
+  so the ontology check can say that MoveAxis requires a state Homed that exists, and a client
+  can show the precondition's current truth from the series' `Latest` (why a Start is refused).
+- **Skill parameters** are what a call hands the contract (Position).
+- **Parameters and technical data** bound what a contract can promise. MoveAxis' Timeout of
+  30 s must be longer than the longest move at the set speed (160 mm / 12.5 mm/s = 12.8 s plus
+  homing margin); its Position's limits must lie within the travel (technical data). Today
+  `modsync` checks that a composite does not offer more than the component skill it hands a
+  value to; with Parameters and Technical Data in the AAS the same check reaches the hardware:
+  a skill cannot offer more than its equipment's settings allow. The check also says what to
+  change when it fails: the skill's limit (Online), or the axis' speed (Rebuild today).
+- **Origin matters to contracts.** MoveAxis' postcondition is over an *estimated* position: the
+  contract holds by construction, not by observation. The Origin of the series (Section 3) makes
+  that visible, and is the reason for a pulse counting driver later.
+
+### 8.3 Parameters: skill, step and resource
+
+Three places can hold a number that shapes what a skill does. The rule for which:
+
+| If the value is | It is a | Lives in | Example | ChangedBy |
+| --- | --- | --- | --- | --- |
+| Chosen by the caller for each call | Skill parameter (its default and limits are configuration) | Skills: a Start variable | Dispensing.Volume | per call; default and limits Online |
+| Fixed for one use of a primitive inside a composite | Step constant | Skills: the step's binding | Dispense.FlowRate = 1.0 in Dispensing | Online |
+| A setting of the equipment, the same for every skill that uses it | Resource parameter | Parameters (of the component) | Axis speed 12.5 mm/s, microsteps 4 | Rebuild or Redeploy today |
+| A fact of the hardware | Technical data | Technical Data | Screw lead 5 mm, travel 160 mm | never |
+
+A value can move between them, and that is a design decision with consequences: the axis' speed
+as a resource parameter is one setting for every move; as a parameter of MoveAxis, each caller
+chooses it (and it can change online). The model makes the choice visible instead of hiding it in
+a block type.
+
+### 8.4 A skill's two state machines
+
+A skill has two states that change on different time scales:
+
+| State | Values | Changed by | Series |
+| --- | --- | --- | --- |
+| Lifecycle | Described, Built, Offered (and later Retired) | Editing and reconfiguration | `States/<Skill>_Lifecycle`, a record per change |
+| Execution | The skill state machine (Idle, Starting, Running, Succeeded, Failed, Stopping, Aborted, ...), with ErrorID | The skill's core in the program | `States/<Skill>`, a record per change |
+
+The lifecycle answers an open question of the plan ("a described skill: does it get a state a
+client can read?"): yes, a lifecycle state. A skill described in the skill editor is
+`Described`, has a lifecycle series and no execution series; `modsync reconfigure` builds it,
+records it in the Control Configuration and moves it to `Built` (an event), and `record` adds its
+execution series together with its interface, as it adds its data points today. Matching reads the
+lifecycle: offered now (Offered), offered after a reconfiguration (Described), not offered.
+
+The module's own commands (ModuleControl skills) are the same: the module's PackML state and its
+occupation are the execution states of Reset, Start, Stop, ... and of Occupy and Release.
+
+### 8.5 A run of a skill is an event, and links the product to the resource
+
+Today a run leaves nothing behind except the values at its interface, overwritten by the next run.
+As an event (Section 3, `Events/SkillExecutions`) it keeps:
+
+| Field | From |
+| --- | --- |
+| Skill (reference), Step (for a step of a composite) | Skills |
+| Started, ended, duration, outcome (Succeeded, Failed, Aborted), ErrorID | The execution state series: the event is written when the state leaves Running |
+| Parameters as handed | The Start call (the skill's published parameters at Starting) |
+| Results | The skill's results at Succeeded |
+| Session | The occupation: who called it |
+| Order, product, plan step (optional) | Handed by the caller with the session |
+
+Two things follow:
+
+- **Traceability.** With the order and the plan step in the event, the product side can record
+  what was done to each product (the "execution history" the Production Sequence lacks,
+  [aas-models.md](aas-models.md) Section 4): the resource's event and the product's record
+  point at each other.
+- **Measured capabilities.** Durations and outcomes per skill give what the Capability
+  Description and the planner only guess today: the time a Filling of 2 mL takes (the plan's
+  PlannedProcessTime), how often it fails. A resource agent bids with it (after the paper).
+  Kept as derived values in the Capability Description (expected duration, success rate) with a
+  reference to the events they come from.
+
+The events of a composite's steps are kept too (each step is a run of a component skill), each
+with a reference to the composite's run. That is the evaluation's material: where the time of a
+Dispensing goes, step by step.
+
+### 8.6 Reconfiguration is an event in the same log
+
+`modsync reconfigure` writes the Control Configuration's change log today. In the same terms it
+is an event of the resource (`Events/Reconfigurations`: what changed, from and to, trigger,
+outcome, how long the module was affected) with references to the skills it created or changed,
+and the lifecycle states of those skills change with it. The downtime of a reconfiguration (the
+paper's evaluation, B1) is then read from the series: the module's PackML state and the affected
+skills' execution states around the event's time. That is the reason to build the collector
+(S5) for B1 rather than after the paper.
+
+### 8.7 What changes in the skill tools
+
+| Tool | Change |
+| --- | --- |
+| Skill editor | Shows a contract's `Uses` with the current values from the series; offers only variables that exist; warns when a limit exceeds the equipment's parameters |
+| `modsync verify`, `reconfigure` | Check contracts' `Uses` against Operational Data and limits against Parameters and Technical Data; write the reconfiguration event and the lifecycle states |
+| `modreg` (`offer.py`, `record`) | A built skill gets its execution series (instead of data points) and its lifecycle moves to Built |
+| `modlink`, the HMI | Read states and their codes from the series and the ConceptDescriptions; say why a Start would be refused (a precondition false) |
+| Planner, agents (later) | Durations and success rates from the events; lifecycle for "offered after a reconfiguration" |
+
+### 8.8 More decisions (add to Section 7)
+
+8. **A `Skill` reference on every series and event** that belongs to a skill or step (as proposed)?
+9. **Contracts list what they use** (`Uses` references) next to the expression (as proposed), or
+   stay strings?
+10. **A lifecycle state per skill** (Described, Built, Offered), next to its execution state (as
+    proposed)?
+11. **Order and plan step in a run's event**, handed by the caller with the session (as
+    proposed), or only the session?
+12. **Measured durations and success rates** kept in the Capability Description (as proposed),
+    or only in the events?
