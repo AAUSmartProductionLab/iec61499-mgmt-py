@@ -24,6 +24,7 @@ from .fbxml import (STD, Basic, Composite, Project, Simple, SubNet, Wiring, arra
                     save, server, subapp, subscribe, wstr)
 from .library import ERRORS, cat, lit, q, ua
 from .layout import Sizer, networks, place_new, relayout
+from .pins import domain
 from .spec import ACTUAL, HOMED, MOVE, MOVING, Equipment, ModuleSpec, Output, Parameter, Skill, Step, ms, names
 
 IO_TYPE = {("in", "BOOL"): "DI", ("in", "LREAL"): "AI", ("out", "BOOL"): "DO", ("out", "LREAL"): "AO"}
@@ -185,13 +186,13 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
               "all off on release or when the module aborts; inputs -> state channel when they change",
               {"INIT": (["Module", "Name", *(["UaRoot"] if ins else [])], "EInit"),
                "CMD": ["C_Holder", "C_Release", *received], "RELEASE": ["R_Holder"],
-               "SAMPLE": [f"I_{s}" for s in wired], "REFRESH": [], "DRIVEN": [], "MOD_CHG": ["ModState"],
+               "SAMPLE": [f"I_{s}" for s in wired], "REFRESH": [], "DRIVEN": [], "MOD_CHG": ["ModuleState"],
                **({"MOVE_T": []} if pos else {})},
               {"INITO": (["IdCmd", "IdRelease", "IdState", "IdPub"], "EInit"), "DRIVE": drive,
                "STATE": [*ins, "Holder"], **({"MOVE_START": ["MoveDT"], "MOVE_STOP": []} if pos else {})},
               {"Module": "WSTRING", "Name": "WSTRING", **({"UaRoot": "WSTRING"} if ins else {}),
                "C_Holder": "WSTRING", "C_Release": "BOOL", **dict(zip(received, types)), "R_Holder": "WSTRING",
-               **{f"I_{s}": i.type for s, i in wired.items()}, "ModState": "USINT"},
+               **{f"I_{s}": i.type for s, i in wired.items()}, "ModuleState": "USINT"},
               {"IdCmd": "WSTRING", "IdRelease": "WSTRING", "IdState": "WSTRING", "IdPub": "WSTRING",
                **dict(zip(drive, drive_types)), **{s: i.type for s, i in ins.items()}, "Holder": "WSTRING",
                **({"MoveDT": "TIME"} if pos else {})},
@@ -231,9 +232,9 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
                            "ELSIF Uncounted THEN", f"  {HOMED} := FALSE;", "END_IF;"]
     channel = lambda part: cat(lit("loc["), "Module", lit("/"), "Name", lit(f"/{part}]"))  # noqa: E731
     free = '(Holder = "") OR (C_Holder = Holder)'
-    off = "(ModState = 8) OR (ModState = 9)"                                  # the module Aborting or Aborted
+    off = "(ModuleState = 8) OR (ModuleState = 9)"                                  # the module Aborting or Aborted
     b.state("START")
-    b.state("Init", f"IdCmd := {channel('cmd')};\nIdRelease := {channel('release')};\nIdState := {channel('state')};\n"
+    b.state("Init", f"IdCmd := {channel('cmd')};\nIdRelease := {cat(lit('loc['), 'Module', lit('/release]'))};\nIdState := {channel('state')};\n"
                     + (f"IdPub := {ua('WRITE', *pub)};" if ins else 'IdPub := "";'), "INITO")
     # The state is published only when an input or the holder changed, and every 20 samples as a
     # heartbeat (for skills added online): every Modbus poll delivers a sample, and publishing each
@@ -372,7 +373,7 @@ def make_equipment(p: Project, pkg: str, name: str, eq: Equipment):
     c.ev("SubRelease.IND", "Logic.RELEASE")
     c.da("SubRelease.RD_1", "Logic.R_Holder")
     c.ev("Mode.CHG", "Logic.MOD_CHG")
-    c.da("Mode.State", "Logic.ModState")
+    c.da("Mode.State", "Logic.ModuleState")
     c.ev("Cycle.EO", "Logic.REFRESH")
     if reads:
         c.ev("Cycle.EO", reads[0] + ".REQ")
@@ -469,38 +470,38 @@ def make_skill_logic(p: Project, pkg: str, name: str, skill: Skill, eq: Equipmen
     used = used_inputs(skill, eq)
     ids = [*(["IdEqState", "IdEqCmd"] if has_eq else []), *(["IdParams"] if params else []),
            *(["IdResults"] if skill.results else [])]
-    init = ((["Module", "Equipment", "Token", "LastUse"] if has_eq else []) + ([] if timed else ["Timeout"])
+    init = ((["Module", "Equipment", "Holder", "ReleaseAfter"] if has_eq else []) + ([] if timed else ["Timeout"])
             + (["UaRoot", "UaPath"] if params or skill.results else []))
     ei = {"INIT": (init, "EInit"), "START": list(params), "HALT": [], "ABORT": [], "TIMER": []}
     eo = {"INITO": (ids, "EInit"), "DONE": [f"R_{r}" for r in skill.results],
           "FAILED": ["ErrorID"], "HALTED": ["ErrorID"], "TIMER_START": ["TimerDT"], "TIMER_STOP": []}
-    types = {"Module": "WSTRING", "Equipment": "WSTRING", "Token": "WSTRING", "LastUse": "BOOL", "Timeout": "TIME",
+    types = {"Module": "WSTRING", "Equipment": "WSTRING", "Holder": "WSTRING", "ReleaseAfter": "BOOL", "Timeout": "TIME",
              "UaRoot": "WSTRING", "UaPath": "WSTRING"}
     iv = {**{v: types[v] for v in init}, **{n: pr.type for n, pr in params.items()}}
     ov = {"ErrorID": "UINT", "TimerDT": "TIME", **{f"R_{r}": ins[src].type for r, src in skill.results.items()},
           **{i: "WSTRING" for i in ids}}
     if has_eq:
         # Only the inputs the skill uses (the equipment view EV_ receives the whole state channel).
-        ei["SAMPLE"] = [*used, "Holder"]
+        ei["SAMPLE"] = [*used, "EqHolder"]
         ei["WAIT_OVER"] = []
         ei["PLAYED"] = []
         eo["WAIT_START"], eo["WAIT_STOP"] = [], []
         eo["CMD"] = ["C_Holder", "C_Command", "C_Arg", "C_Release"]
-        eo["EQ_FREE"] = ["EqFree"]
-        iv.update({**{s: ins[s].type for s in used}, "Holder": "WSTRING"})
-        ov.update({"C_Holder": "WSTRING", "C_Command": "USINT", "C_Arg": "LREAL", "C_Release": "BOOL", "EqFree": "BOOL"})
+        eo["EQ_FREE"] = ["EquipmentFree"]
+        iv.update({**{s: ins[s].type for s in used}, "EqHolder": "WSTRING"})
+        ov.update({"C_Holder": "WSTRING", "C_Command": "USINT", "C_Arg": "LREAL", "C_Release": "BOOL", "EquipmentFree": "BOOL"})
     what = (f"holds {skill.equipment}.{skill.command} until {skill.ensures or f'{after} s'}" if has_eq
             else f"waits {after} s")
     b = Basic(p, pkg, f"SL_{name}", f"{name}: Requires {skill.requires}; {what}; Invariant {skill.invariant}",
               ei, eo, iv, ov, {"Outcome": "USINT"} if has_eq else None, folder="Skills/Logic")
 
-    # The final command releases the equipment when this is the last step using it (LastUse), in
+    # The final command releases the equipment when this is the last step using it (ReleaseAfter), in
     # the same message: a separate release could overwrite the stop on the local channel.
-    def cmd(code, release="LastUse"):
-        return f"C_Holder := Token;\nC_Command := {code};\nC_Arg := {arg};\nC_Release := {release};"
+    def cmd(code, release="ReleaseAfter"):
+        return f"C_Holder := Holder;\nC_Command := {code};\nC_Arg := {arg};\nC_Release := {release};"
 
     arg = (skill.arg if isinstance(skill.arg, str) else num(skill.arg)) if skill.arg is not None else "0.0"
-    busy = '(Holder <> "") AND (Holder <> Token)'
+    busy = '(EqHolder <> "") AND (EqHolder <> Holder)'
     base = cat("UaRoot", "UaPath")
     init_code = []
     if has_eq:
@@ -517,7 +518,7 @@ def make_skill_logic(p: Project, pkg: str, name: str, skill: Skill, eq: Equipmen
     results = "\n".join(f"R_{r} := {src};" for r, src in skill.results.items())
     timer = f"TimerDT := MUL_TIME(T#1s, {after});" if timed else "TimerDT := Timeout;"
     if has_eq:
-        b.state("Sample", 'EqFree := (Holder = "") OR (Holder = Token);', "EQ_FREE")
+        b.state("Sample", 'EquipmentFree := (EqHolder = "") OR (EqHolder = Holder);', "EQ_FREE")
         b.state("Busy", f"ErrorID := {e['Busy']};", "FAILED")
         # Another holder: wait up to 0.5 s for the equipment's next state (a release in flight, e.g.
         # from the previous step or a skill that just stopped) before failing with Busy.
@@ -527,7 +528,7 @@ def make_skill_logic(p: Project, pkg: str, name: str, skill: Skill, eq: Equipmen
         if not timed:
             b.state("AlreadyDone", results or None, "DONE")
         b.state("Run", cmd(drive, "FALSE") + "\n" + timer, "CMD", ["TIMER_START"])
-        b.state("RunSample", 'EqFree := (Holder = "") OR (Holder = Token);', "EQ_FREE")
+        b.state("RunSample", 'EquipmentFree := (EqHolder = "") OR (EqHolder = Holder);', "EQ_FREE")
         # A final command may take time (a brake pulse): the run ends when it has been played, and
         # Outcome says how (1 done, 2 failed, 3 halted, 0 aborted: nothing to report).
         b.state("Unsafe", cmd(0) + f"\nErrorID := {e['InvariantViolated']};\nOutcome := 2;", "CMD", ["TIMER_STOP"])
@@ -602,7 +603,7 @@ def start_method(n: Wiring, params: dict[str, Parameter], latches: dict[str, str
     """The Start method of a skill whose core is the instance ``Control`` (SKILL_Core) in ``n``.
 
     UaStart (Start(Session, parameters...)): each parameter latch checks its argument and passes
-    the result on, the last one to Control.CMD_START. Control.GO latches the arguments (or the
+    the result on, the last one to Control.START_REQ. Control.RUN latches the arguments (or the
     defaults, for a start from a parent) one after the other and PubParams publishes them.
     ``latches``: parameter -> latch instance; ``start``, ``publish_params``: parameter values of
     UaStart and PubParams; ``defaults``: the latches get the default as a value (else the caller
@@ -610,30 +611,30 @@ def start_method(n: Wiring, params: dict[str, Parameter], latches: dict[str, str
     latched.
     """
     n.fb("UaStart", server(2, 1 + len(params)), **start)
-    n.da("Control.IdStart", "UaStart.ID")
-    n.da("UaStart.RD_1", "Control.S_Start")
-    n.ev("Control.RSP_START", "UaStart.RSP")
+    n.da("Control.StartMethodId", "UaStart.ID")
+    n.da("UaStart.RD_1", "Control.Session")
+    n.ev("Control.START_RSP", "UaStart.RSP")
     n.da("Control.Accepted", "UaStart.SD_1")
-    n.da("Control.RspError", "UaStart.SD_2")
+    n.da("Control.StartError", "UaStart.SD_2")
     if not params:
-        n.ev("UaStart.IND", "Control.CMD_START")
-        return ["UaStart"], "Control.GO"
+        n.ev("UaStart.IND", "Control.START_REQ")
+        return ["UaStart"], "Control.RUN"
     chain = [latches[x] for x in params]
     for k, (x, pr) in enumerate(params.items()):
         bounds = {v: pr.literal(b) for v, b in (("Lower", pr.minimum), ("Upper", pr.maximum)) if b is not None}
         n.fb(chain[k], q(f"SKILL_Param_{pr.type}"), **({"Default": pr.literal()} if defaults else {}), **bounds)
-        n.da(f"UaStart.RD_{k + 2}", f"{chain[k]}.S")
-        n.da("Control.FromUa", f"{chain[k]}.FromUa")
-        n.da(f"{chain[k]}.P", f"PubParams.SD_{k + 1}")
+        n.da(f"UaStart.RD_{k + 2}", f"{chain[k]}.Requested")
+        n.da("Control.CalledByClient", f"{chain[k]}.CalledByClient")
+        n.da(f"{chain[k]}.Value", f"PubParams.SD_{k + 1}")
     n.fb("PubParams", publish(len(params)), **publish_params)
     n.ev("UaStart.IND", chain[0] + ".CHECK")
-    n.ev("Control.GO", chain[0] + ".LATCH")
+    n.ev("Control.RUN", chain[0] + ".LATCH")
     for a, z in zip(chain, chain[1:]):
         n.ev(a + ".CHECKED", z + ".CHECK")
-        n.da(a + ".InRange", z + ".OkIn")
+        n.da(a + ".AllInRange", z + ".PreviousInRange")
         n.ev(a + ".LATCHED", z + ".LATCH")
-    n.ev(chain[-1] + ".CHECKED", "Control.CMD_START")
-    n.da(chain[-1] + ".InRange", "Control.InRange")
+    n.ev(chain[-1] + ".CHECKED", "Control.START_REQ")
+    n.da(chain[-1] + ".AllInRange", "Control.ParamsInRange")
     n.ev(chain[-1] + ".LATCHED", "PubParams.REQ")
     n.ev("PubParams.INITO", "PubParams.REQ")           # publishes the defaults once
     return ["UaStart", *chain, "PubParams"], chain[-1] + ".LATCHED"
@@ -645,7 +646,7 @@ def make_skill(p: Project, pkg: str, name: str, skill: Skill, eq: Equipment | No
     params, results = skill.parameters, list(skill.results)
     make_skill_logic(p, pkg, name, skill, eq)
     iv = {"Module": "WSTRING", "UaRoot": "WSTRING", "UaPath": "WSTRING", "UaEnable": "BOOL", "Methods": "BOOL",
-          "Token": "WSTRING", "LastUse": ("BOOL", "TRUE"),
+          "Holder": "WSTRING", "ReleaseAfter": ("BOOL", "TRUE"),
           **({"Timeout": ("TIME", tlit(skill.timeout))} if skill.ensures is not None else {}),
           **{n: (pr.type, pr.literal()) for n, pr in params.items()}}
     ins = eq.inputs if eq else {}
@@ -683,7 +684,7 @@ def make_skill(p: Project, pkg: str, name: str, skill: Skill, eq: Equipment | No
     c.da("Control.State", "State")
     c.da("Control.ErrorID", "ErrorID")
     if eq:
-        for v in ["Module", "Token", "LastUse"]:
+        for v in ["Module", "Holder", "ReleaseAfter"]:
             c.da(v, f"Logic.{v}")
     if params or results:
         c.da("UaRoot", "Logic.UaRoot")
@@ -695,7 +696,7 @@ def make_skill(p: Project, pkg: str, name: str, skill: Skill, eq: Equipment | No
         c.da("Logic.IdParams", "PubParams.ID")
         for x in params:
             c.da(x, f"Par_{x}.Default")
-            c.da(f"Par_{x}.P", f"Logic.{x}")
+            c.da(f"Par_{x}.Value", f"Logic.{x}")
     c.ev(go, "Logic.START")
     if results:
         c.da("UaEnable", "PubResults.QI")
@@ -703,22 +704,23 @@ def make_skill(p: Project, pkg: str, name: str, skill: Skill, eq: Equipment | No
         c.ev("Logic.DONE", "PubResults.REQ")
         for k, r in enumerate(results, 1):
             c.da(f"Logic.R_{r}", f"PubResults.SD_{k}", f"R_{r}")
-    c.ev("Control.HALT_O", "Logic.HALT")
-    c.ev("Control.ABORT_O", "Logic.ABORT")
-    c.ev("Control.RUN_STOP", "Control.STOP_DONE")          # a primitive has no stop procedure
-    c.ev("Logic.DONE", "Control.EXEC_DONE")
-    c.ev("Logic.FAILED", "Control.EXEC_FAILED")
-    c.ev("Logic.HALTED", "Control.EXEC_FAILED")
-    c.da("Logic.ErrorID", "Control.ExecError")
+    c.ev("Control.HALT_SEQ", "Logic.HALT")
+    c.ev("Control.ABORT_SEQ", "Logic.ABORT")
+    c.ev("Control.RUN_STOPPING", "Control.STOPPING_DONE")          # a primitive has no stop procedure
+    c.ev("Logic.DONE", "Control.EXECUTE_DONE")
+    c.ev("Logic.FAILED", "Control.EXECUTE_FAILED")
+    c.ev("Logic.HALTED", "Control.EXECUTE_FAILED")
+    c.da("Logic.ErrorID", "Control.ExecuteError")
     if eq:
-        c.da("Logic.EqFree", "Control.EqFree")
+        c.da("Logic.EquipmentFree", "Control.EquipmentFree")
         c.da("Logic.IdEqState", "EqState.ID")
         c.ev("EqState.IND", "EqView.REQ")
         for k, s in enumerate([*ins, "Holder"], 1):
             c.da(f"EqState.RD_{k}", f"EqView.I_{s}")
         c.ev("EqView.CNF", "Logic.SAMPLE")
-        for s in [*used_inputs(skill, eq), "Holder"]:
+        for s in used_inputs(skill, eq):
             c.da(f"EqView.{s}", f"Logic.{s}")
+        c.da("EqView.Holder", "Logic.EqHolder")
         c.da("Logic.IdEqCmd", "EqCmd.ID")
         c.ev("Logic.CMD", "Driver.PLAY")
         for v in ["Holder", "Command", *(["Arg"] if takes_arg(eq) else []), "Release"]:
@@ -762,10 +764,10 @@ def result_type(spec: ModuleSpec, steps: list[Step], source: str) -> str:
 def skill_instance(net, spec: ModuleSpec, step: Step, x, y, ua_path: str, token: str, top: bool, methods: bool,
                    ua_root: str):
     """An SK_ instance for a step, with its constant parameter bindings; ``top``: it releases its
-    equipment with its final command (LastUse)."""
+    equipment with its final command (ReleaseAfter)."""
     skill = spec.skills[step.skill]
     params = {"Module": wstr(spec.module), "UaRoot": ua_root, "UaPath": wstr(ua_path), "UaEnable": "TRUE",
-              "Methods": "TRUE" if methods else "FALSE", "Token": wstr(token), "LastUse": "TRUE" if top else "FALSE"}
+              "Methods": "TRUE" if methods else "FALSE", "Holder": wstr(token), "ReleaseAfter": "TRUE" if top else "FALSE"}
     for n, v in step.bind.items():
         if not isinstance(v, str):
             params[n] = value_lit(v, skill.parameters[n].type)
@@ -813,9 +815,9 @@ def sequence(net, spec: ModuleSpec, name: str, steps: list[Step], x, y, ua_prefi
         for i, n in enumerate(names[1:], 1):
             m = f"Fail{i}"
             fb(inner, m, q("SKILL_FailMerge"), 1000 + i * 5000, 4000)
-            ev += [(prev_ev, f"{m}.FAIL_A"), (n + ".FAILURE", f"{m}.FAIL_B")]
-            da += [(prev_err, f"{m}.ErrA"), (n + ".ErrorID", f"{m}.ErrB")]
-            prev_ev, prev_err = f"{m}.FAIL", f"{m}.Err"
+            ev += [(prev_ev, f"{m}.FAIL_1"), (n + ".FAILURE", f"{m}.FAIL_2")]
+            da += [(prev_err, f"{m}.Error1"), (n + ".ErrorID", f"{m}.Error2")]
+            prev_ev, prev_err = f"{m}.FAIL", f"{m}.Error"
         ev.append((prev_ev, "FAILED"))
         da.append((prev_err, "ErrorID"))
     for step in steps:
@@ -831,8 +833,9 @@ def sequence(net, spec: ModuleSpec, name: str, steps: list[Step], x, y, ua_prefi
 
 def module_skill(net, spec: ModuleSpec, name: str, x, y):
     """Subapp of a module level skill, of library instances only: Control (SKILL_Core), the Start
-    method with one latch per parameter (named like the parameter), the OPC UA publishers and the
-    equipment release; then the Execute sequence and the optional Stop sequence. Its OPC UA IDs are
+    method with one latch per parameter (named like the parameter) and the OPC UA publishers; then
+    the Execute sequence and the optional Stop sequence. Control gives up all the skill holds at
+    every end of a run (ReleaseAll, on the module's release channel). Its OPC UA IDs are
     written as values, since no type of its own computes them."""
     comp = spec.composites[name]
     _, inner = subapp(net, name, x, y, f"Module level skill {name}: {comp.description}".rstrip(": "),
@@ -841,7 +844,7 @@ def module_skill(net, spec: ModuleSpec, name: str, x, y):
     root, path = spec.opcua_root, f"/Skills/{name}"
     methods = "TRUE" if comp.offered else "FALSE"
     n.fb("Control", q("SKILL_Core"), Module=wstr(spec.module), UaRoot=wstr(root), UaPath=wstr(path),
-         UaEnable="TRUE", Methods=methods)
+         UaEnable="TRUE", Methods=methods, Holder=wstr(name), ReleaseAll="TRUE" if spec.uses(name) else "FALSE")
     params_id = ua_literal("WRITE", [f"{root}{path}/Parameters/{p}" for p in comp.parameters])
     start, go = start_method(n, comp.parameters, {p: p for p in comp.parameters}, {"QI": methods},
                              {"QI": "TRUE", "ID": params_id}, defaults=True)
@@ -853,47 +856,36 @@ def module_skill(net, spec: ModuleSpec, name: str, x, y):
         for k, r in enumerate(comp.results, 1):
             n.da(f"Execute.{r}", f"PubResults.SD_{k}")
         chain.append("PubResults")
-    if equipment := spec.uses(name):
-        # On success the children have released the equipment (LastUse); on failure or abort the
-        # skill gives it up on the release channel, so a lost message still ends all off.
-        n.fb("Release", q("SKILL_Release"), Token=wstr(name))
-        n.ev("Control.FAILURE", "Release.REQ")
-        n.ev("Control.ABORT_O", "Release.REQ")
-        for eq in equipment:
-            n.fb(f"Rel_{eq}", publish(1), QI="TRUE", ID=wstr(f"loc[{spec.module}/{eq}/release]"))
-            n.ev("Release.CNF", f"Rel_{eq}.REQ")
-            n.da("Release.Holder", f"Rel_{eq}.SD_1")
-            chain.append(f"Rel_{eq}")
     sequence(inner, spec, "Execute", comp.execute, 1000, 5000, f"{path}/Execute", name,
              f"{name}: execute sequence", comp.parameters, comp.results)
     chain.append("Execute")
     n.ev(go, "Execute.START")
     for p in comp.parameters:
-        n.da(f"{p}.P", f"Execute.{p}")
+        n.da(f"{p}.Value", f"Execute.{p}")
     for ev in ["HALT", "ABORT", "RESET"]:
-        n.ev(f"Control.{ev}_O", f"Execute.{ev}")
-    n.ev("Execute.DONE", "Control.EXEC_DONE")
-    n.ev("Execute.FAILED", "Control.EXEC_FAILED")
-    n.da("Execute.ErrorID", "Control.ExecError")
+        n.ev(f"Control.{ev}_SEQ", f"Execute.{ev}")
+    n.ev("Execute.DONE", "Control.EXECUTE_DONE")
+    n.ev("Execute.FAILED", "Control.EXECUTE_FAILED")
+    n.da("Execute.ErrorID", "Control.ExecuteError")
     if comp.stop:
         # Published below .../Stopping: a "Stop" object would collide with the skill's Stop method.
         sequence(inner, spec, "Stop", comp.stop, 9000, 5000, f"{path}/Stopping", name, f"{name}: stop sequence")
         chain.append("Stop")
-        n.ev("Control.RUN_STOP", "Stop.START")
-        n.ev("Control.ABORT_O", "Stop.ABORT")
-        n.ev("Control.RESET_O", "Stop.RESET")
-        n.ev("Stop.DONE", "Control.STOP_DONE")
-        n.ev("Stop.FAILED", "Control.STOP_DONE")
+        n.ev("Control.RUN_STOPPING", "Stop.START")
+        n.ev("Control.ABORT_SEQ", "Stop.ABORT")
+        n.ev("Control.RESET_SEQ", "Stop.RESET")
+        n.ev("Stop.DONE", "Control.STOPPING_DONE")
+        n.ev("Stop.FAILED", "Control.STOPPING_DONE")
     else:
-        n.ev("Control.RUN_STOP", "Control.STOP_DONE")
+        n.ev("Control.RUN_STOPPING", "Control.STOPPING_DONE")
     n.chain("INIT", chain, "INITO")
-    n.group("SkillControl", "State machine and OPC UA: Start(Session, parameters) with one block per parameter (range "
-            "check, value for this run), Stop, Abort, Reset; State, parameters and results published",
-            ["Control", *start, "PubResults"], dy=4600)
+    n.group("Core", "The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up "
+            "everything the skill holds when a run ends", ["Control"])
+    n.group("Start", "The Start method: one block per parameter (range check, value for this run), the values "
+            "published", start)
     n.group("Sequences", "What the skill does: Execute, and Stop when it is interrupted; private skill primitives "
-            "in order", ["Execute", "Stop"], dx=6000, dy=3200)
-    n.group("Releasing", "After a failure or an abort: gives up the equipment the skill holds (all off, free again)",
-            ["Release", *[f"Rel_{e}" for e in equipment]], dy=2600)
+            "in order", ["Execute", "Stop"])
+    n.group("Results", "The results published when Execute is done", ["PubResults"])
     n.write()
     return name
 
@@ -1032,6 +1024,7 @@ def make_system(p: Project, spec: ModuleSpec):
 
 def make_module(p: Project, spec: ModuleSpec):
     """Write the module's equipment, skill and control types and its system."""
+    p.domain = domain(spec)                    # what the module's own names mean, for the pins' comments
     for name, eq in spec.equipment.items():
         make_equipment(p, spec.package, name, eq)
         make_equipment_commands(p, spec.package, name, eq)

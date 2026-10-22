@@ -5,7 +5,7 @@
   <CompilerInfo packageName="filler" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="REQ" Type="Event">
+      <Event Name="REQ" Type="Event" Comment="The equipment's state arrived">
         <With Var="I_AtTop" />
         <With Var="I_AtBottom" />
         <With Var="I_Position" />
@@ -13,7 +13,7 @@
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="CNF" Type="Event">
+      <Event Name="CNF" Type="Event" Comment="The values below are updated">
         <With Var="AtTop" />
         <With Var="AtBottom" />
         <With Var="Position" />
@@ -21,16 +21,16 @@
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="I_AtTop" Type="BOOL" />
-      <VarDeclaration Name="I_AtBottom" Type="BOOL" />
-      <VarDeclaration Name="I_Position" Type="LREAL" />
-      <VarDeclaration Name="I_Holder" Type="WSTRING" />
+      <VarDeclaration Name="I_AtTop" Type="BOOL" Comment="AtTop as read or received" />
+      <VarDeclaration Name="I_AtBottom" Type="BOOL" Comment="AtBottom as read or received" />
+      <VarDeclaration Name="I_Position" Type="LREAL" Comment="Position as read or received" />
+      <VarDeclaration Name="I_Holder" Type="WSTRING" Comment="Holder as read or received" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="AtTop" Type="BOOL" />
-      <VarDeclaration Name="AtBottom" Type="BOOL" />
-      <VarDeclaration Name="Position" Type="LREAL" />
-      <VarDeclaration Name="Holder" Type="WSTRING" />
+      <VarDeclaration Name="AtTop" Type="BOOL" Comment="NeedleAxis: AtTop, an input" />
+      <VarDeclaration Name="AtBottom" Type="BOOL" Comment="NeedleAxis: AtBottom, an input" />
+      <VarDeclaration Name="Position" Type="LREAL" Comment="NeedleAxis: Position (mm), an input" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who holds the equipment (empty: free)" />
     </OutputVars>
   </InterfaceList>
   <SimpleFB>

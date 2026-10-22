@@ -5,13 +5,13 @@
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
         <With Var="Module" />
         <With Var="UaRoot" />
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit">
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
         <With Var="IdReset" />
         <With Var="IdStart" />
         <With Var="IdStop" />
@@ -24,19 +24,19 @@
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Module" Type="WSTRING" />
-      <VarDeclaration Name="UaRoot" Type="WSTRING" />
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="IdReset" Type="WSTRING" />
-      <VarDeclaration Name="IdStart" Type="WSTRING" />
-      <VarDeclaration Name="IdStop" Type="WSTRING" />
-      <VarDeclaration Name="IdAbort" Type="WSTRING" />
-      <VarDeclaration Name="IdClear" Type="WSTRING" />
-      <VarDeclaration Name="IdPub" Type="WSTRING" />
-      <VarDeclaration Name="IdState" Type="WSTRING" />
-      <VarDeclaration Name="IdQuery" Type="WSTRING" />
-      <VarDeclaration Name="IdAct" Type="WSTRING" />
+      <VarDeclaration Name="IdReset" Type="WSTRING" Comment="ID of the channel or OPC UA node of Reset" />
+      <VarDeclaration Name="IdStart" Type="WSTRING" Comment="ID of the channel or OPC UA node of Start" />
+      <VarDeclaration Name="IdStop" Type="WSTRING" Comment="ID of the channel or OPC UA node of Stop" />
+      <VarDeclaration Name="IdAbort" Type="WSTRING" Comment="ID of the channel or OPC UA node of Abort" />
+      <VarDeclaration Name="IdClear" Type="WSTRING" Comment="ID of the channel or OPC UA node of Clear" />
+      <VarDeclaration Name="IdPub" Type="WSTRING" Comment="OPC UA ID of the published value" />
+      <VarDeclaration Name="IdState" Type="WSTRING" Comment="Local channel of the module's state" />
+      <VarDeclaration Name="IdQuery" Type="WSTRING" Comment="Local channel that asks for the current value (a block that starts later)" />
+      <VarDeclaration Name="IdAct" Type="WSTRING" Comment="Local channel of the activity count" />
     </OutputVars>
   </InterfaceList>
   <SimpleFB>

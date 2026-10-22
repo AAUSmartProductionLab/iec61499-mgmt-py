@@ -5,22 +5,22 @@
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="ACT" Type="Event">
+      <Event Name="ACT" Type="Event" Comment="A skill started (+1) or ended (-1)">
         <With Var="Delta" />
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="CHG" Type="Event">
+      <Event Name="CHG" Type="Event" Comment="The value changed">
         <With Var="Active" />
         <With Var="AllIdle" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Delta" Type="INT" />
+      <VarDeclaration Name="Delta" Type="INT" Comment="+1 when a skill starts, -1 when it ends" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="Active" Type="INT" />
-      <VarDeclaration Name="AllIdle" Type="BOOL" InitialValue="TRUE" />
+      <VarDeclaration Name="Active" Type="INT" Comment="Some skill runs" />
+      <VarDeclaration Name="AllIdle" Type="BOOL" InitialValue="TRUE" Comment="No skill runs" />
     </OutputVars>
   </InterfaceList>
   <SimpleFB>

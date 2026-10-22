@@ -5,38 +5,38 @@
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="FAIL_A" Type="Event">
-        <With Var="ErrA" />
+      <Event Name="FAIL_1" Type="Event" Comment="A step failed (Error1)">
+        <With Var="Error1" />
       </Event>
-      <Event Name="FAIL_B" Type="Event">
-        <With Var="ErrB" />
+      <Event Name="FAIL_2" Type="Event" Comment="A step failed (Error2)">
+        <With Var="Error2" />
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="FAIL" Type="Event">
-        <With Var="Err" />
+      <Event Name="FAIL" Type="Event" Comment="One of them failed (Error)">
+        <With Var="Error" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="ErrA" Type="UINT" />
-      <VarDeclaration Name="ErrB" Type="UINT" />
+      <VarDeclaration Name="Error1" Type="UINT" Comment="Error code of the first" />
+      <VarDeclaration Name="Error2" Type="UINT" Comment="Error code of the second" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="Err" Type="UINT" />
+      <VarDeclaration Name="Error" Type="UINT" Comment="Error code of the one that failed" />
     </OutputVars>
   </InterfaceList>
   <SimpleFB>
-    <ECState Name="FAIL_A">
-      <ECAction Algorithm="FAIL_A" Output="FAIL" />
+    <ECState Name="FAIL_1">
+      <ECAction Algorithm="FAIL_1" Output="FAIL" />
     </ECState>
-    <ECState Name="FAIL_B">
-      <ECAction Algorithm="FAIL_B" Output="FAIL" />
+    <ECState Name="FAIL_2">
+      <ECAction Algorithm="FAIL_2" Output="FAIL" />
     </ECState>
-    <Algorithm Name="FAIL_A">
-      <ST>Err := ErrA;</ST>
+    <Algorithm Name="FAIL_1">
+      <ST>Error := Error1;</ST>
     </Algorithm>
-    <Algorithm Name="FAIL_B">
-      <ST>Err := ErrB;</ST>
+    <Algorithm Name="FAIL_2">
+      <ST>Error := Error2;</ST>
     </Algorithm>
   </SimpleFB>
 </FBType>

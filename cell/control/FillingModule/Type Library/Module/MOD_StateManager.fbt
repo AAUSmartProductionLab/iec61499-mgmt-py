@@ -5,51 +5,51 @@
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
         <With Var="Module" />
         <With Var="UaRoot" />
         <With Var="UaEnable" />
         <With Var="StopTimeout" />
       </Event>
-      <Event Name="RESETTING_DONE" Type="Event" />
-      <Event Name="RESETTING_FAILED" Type="Event" />
-      <Event Name="STOPPING_DONE" Type="Event" />
-      <Event Name="STOPPING_FAILED" Type="Event" />
+      <Event Name="RESETTING_DONE" Type="Event" Comment="The Resetting procedure ended" />
+      <Event Name="RESETTING_FAILED" Type="Event" Comment="The Resetting procedure failed" />
+      <Event Name="STOPPING_DONE" Type="Event" Comment="The Stopping procedure ended" />
+      <Event Name="STOPPING_FAILED" Type="Event" Comment="The Stopping procedure failed" />
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit" />
-      <Event Name="RUN_RESETTING" Type="Event" />
-      <Event Name="RUN_STOPPING" Type="Event" />
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
+      <Event Name="RUN_RESETTING" Type="Event" Comment="Run the Resetting procedure (the module was reset)" />
+      <Event Name="RUN_STOPPING" Type="Event" Comment="Run the Stopping procedure (the module was stopped)" />
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Module" Type="WSTRING" />
-      <VarDeclaration Name="UaRoot" Type="WSTRING" />
-      <VarDeclaration Name="UaEnable" Type="BOOL" />
-      <VarDeclaration Name="StopTimeout" Type="TIME" InitialValue="T#10s" />
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" Comment="Publish on OPC UA" />
+      <VarDeclaration Name="StopTimeout" Type="TIME" InitialValue="T#10s" Comment="How long Stopping may take before the module aborts" />
     </InputVars>
     <OutputVars />
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Ids" Type="modlib::MOD_StateIds" x="400" y="200" />
-    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="4000" y="200" />
-    <FB Name="Reset" Type="iec61499::net::SERVER_2_1" x="7600" y="200" />
-    <FB Name="Start" Type="iec61499::net::SERVER_2_1" x="11200" y="200" />
-    <FB Name="Stop" Type="iec61499::net::SERVER_2_1" x="14800" y="200" />
-    <FB Name="Abort" Type="iec61499::net::SERVER_2_1" x="18400" y="200" />
-    <FB Name="Clear" Type="iec61499::net::SERVER_2_1" x="22000" y="200" />
-    <FB Name="Logic" Type="modlib::MOD_StateLogic" x="25600" y="200" />
-    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="29200" y="200" />
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="32800" y="200">
+    <FB Name="Ids" Type="modlib::MOD_StateIds" x="1100" y="1000" />
+    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="2570" y="1000" />
+    <FB Name="Reset" Type="iec61499::net::SERVER_2_1" x="3800" y="1000" />
+    <FB Name="Start" Type="iec61499::net::SERVER_2_1" x="5090" y="1000" />
+    <FB Name="Stop" Type="iec61499::net::SERVER_2_1" x="1100" y="2500" />
+    <FB Name="Abort" Type="iec61499::net::SERVER_2_1" x="2570" y="2500" />
+    <FB Name="Clear" Type="iec61499::net::SERVER_2_1" x="3800" y="2500" />
+    <FB Name="Logic" Type="modlib::MOD_StateLogic" x="5090" y="2500" />
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1100" y="4900" />
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="2750" y="4900">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="36400" y="200">
+    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="3980" y="4900">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="SubAct" Type="iec61499::net::SUBSCRIBE_1" x="40000" y="200">
+    <FB Name="SubAct" Type="iec61499::net::SUBSCRIBE_1" x="5270" y="4900">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="Count" Type="modlib::MOD_ActivityCount" x="43600" y="200" />
-    <FB Name="Wd" Type="iec61499::events::E_DELAY" x="47200" y="200" />
+    <FB Name="Count" Type="modlib::MOD_ActivityCount" x="1100" y="5900" />
+    <FB Name="Wd" Type="iec61499::events::E_DELAY" x="2570" y="5900" />
     <EventConnections>
       <Connection Source="INIT" Destination="Ids.INIT" />
       <Connection Source="Ids.INITO" Destination="Owner.INIT" />
@@ -66,16 +66,16 @@
       <Connection Source="SubAct.INITO" Destination="PubState.REQ" />
       <Connection Source="SubAct.INITO" Destination="INITO" />
       <Connection Source="Owner.CHG" Destination="Logic.OWNER_CHG" />
-      <Connection Source="Reset.IND" Destination="Logic.CMD_RESET" />
-      <Connection Source="Logic.RSP_RESET" Destination="Reset.RSP" />
-      <Connection Source="Start.IND" Destination="Logic.CMD_START" />
-      <Connection Source="Logic.RSP_START" Destination="Start.RSP" />
-      <Connection Source="Stop.IND" Destination="Logic.CMD_STOP" />
-      <Connection Source="Logic.RSP_STOP" Destination="Stop.RSP" />
-      <Connection Source="Abort.IND" Destination="Logic.CMD_ABORT" />
-      <Connection Source="Logic.RSP_ABORT" Destination="Abort.RSP" />
-      <Connection Source="Clear.IND" Destination="Logic.CMD_CLEAR" />
-      <Connection Source="Logic.RSP_CLEAR" Destination="Clear.RSP" />
+      <Connection Source="Reset.IND" Destination="Logic.RESET_REQ" />
+      <Connection Source="Logic.RESET_RSP" Destination="Reset.RSP" />
+      <Connection Source="Start.IND" Destination="Logic.START_REQ" />
+      <Connection Source="Logic.START_RSP" Destination="Start.RSP" />
+      <Connection Source="Stop.IND" Destination="Logic.STOP_REQ" />
+      <Connection Source="Logic.STOP_RSP" Destination="Stop.RSP" />
+      <Connection Source="Abort.IND" Destination="Logic.ABORT_REQ" />
+      <Connection Source="Logic.ABORT_RSP" Destination="Abort.RSP" />
+      <Connection Source="Clear.IND" Destination="Logic.CLEAR_REQ" />
+      <Connection Source="Logic.CLEAR_RSP" Destination="Clear.RSP" />
       <Connection Source="Logic.CNF" Destination="PubUa.REQ" />
       <Connection Source="Logic.CNF" Destination="PubState.REQ" />
       <Connection Source="SubQuery.IND" Destination="PubState.REQ" />
@@ -104,23 +104,23 @@
       <Connection Source="StopTimeout" Destination="Wd.DT" />
       <Connection Source="Owner.Owner" Destination="Logic.Owner" />
       <Connection Source="Ids.IdReset" Destination="Reset.ID" />
-      <Connection Source="Reset.RD_1" Destination="Logic.S_Reset" />
+      <Connection Source="Reset.RD_1" Destination="Logic.ResetSession" />
       <Connection Source="Logic.Accepted" Destination="Reset.SD_1" />
       <Connection Source="Logic.ErrorID" Destination="Reset.SD_2" />
       <Connection Source="Ids.IdStart" Destination="Start.ID" />
-      <Connection Source="Start.RD_1" Destination="Logic.S_Start" />
+      <Connection Source="Start.RD_1" Destination="Logic.StartSession" />
       <Connection Source="Logic.Accepted" Destination="Start.SD_1" />
       <Connection Source="Logic.ErrorID" Destination="Start.SD_2" />
       <Connection Source="Ids.IdStop" Destination="Stop.ID" />
-      <Connection Source="Stop.RD_1" Destination="Logic.S_Stop" />
+      <Connection Source="Stop.RD_1" Destination="Logic.StopSession" />
       <Connection Source="Logic.Accepted" Destination="Stop.SD_1" />
       <Connection Source="Logic.ErrorID" Destination="Stop.SD_2" />
       <Connection Source="Ids.IdAbort" Destination="Abort.ID" />
-      <Connection Source="Abort.RD_1" Destination="Logic.S_Abort" />
+      <Connection Source="Abort.RD_1" Destination="Logic.AbortSession" />
       <Connection Source="Logic.Accepted" Destination="Abort.SD_1" />
       <Connection Source="Logic.ErrorID" Destination="Abort.SD_2" />
       <Connection Source="Ids.IdClear" Destination="Clear.ID" />
-      <Connection Source="Clear.RD_1" Destination="Logic.S_Clear" />
+      <Connection Source="Clear.RD_1" Destination="Logic.ClearSession" />
       <Connection Source="Logic.Accepted" Destination="Clear.SD_1" />
       <Connection Source="Logic.ErrorID" Destination="Clear.SD_2" />
       <Connection Source="Ids.IdPub" Destination="PubUa.ID" />

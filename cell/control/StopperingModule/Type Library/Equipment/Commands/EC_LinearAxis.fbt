@@ -5,16 +5,16 @@
   <CompilerInfo packageName="stoppering" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="PLAY" Type="Event">
+      <Event Name="PLAY" Type="Event" Comment="Play a command: its output values, phase by phase">
         <With Var="Holder" />
         <With Var="Command" />
         <With Var="Arg" />
         <With Var="Release" />
       </Event>
-      <Event Name="PHASE_T" Type="Event" />
+      <Event Name="PHASE_T" Type="Event" Comment="A phase's time is up" />
     </EventInputs>
     <EventOutputs>
-      <Event Name="OUT" Type="Event">
+      <Event Name="OUT" Type="Event" Comment="Send the output values">
         <With Var="O_Holder" />
         <With Var="O_Release" />
         <With Var="N_Enable" />
@@ -24,28 +24,28 @@
         <With Var="N_Move" />
         <With Var="N_Goal" />
       </Event>
-      <Event Name="PHASE_START" Type="Event">
+      <Event Name="PHASE_START" Type="Event" Comment="Start a phase's timer (PhaseDT)">
         <With Var="PhaseDT" />
       </Event>
-      <Event Name="PHASE_STOP" Type="Event" />
-      <Event Name="PLAYED" Type="Event" />
+      <Event Name="PHASE_STOP" Type="Event" Comment="Stop the phase's timer" />
+      <Event Name="PLAYED" Type="Event" Comment="All phases were played" />
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Holder" Type="WSTRING" />
-      <VarDeclaration Name="Command" Type="USINT" />
-      <VarDeclaration Name="Arg" Type="LREAL" />
-      <VarDeclaration Name="Release" Type="BOOL" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who sends the command" />
+      <VarDeclaration Name="Command" Type="USINT" Comment="The command's code" />
+      <VarDeclaration Name="Arg" Type="LREAL" Comment="The command's argument (e.g. a position)" />
+      <VarDeclaration Name="Release" Type="BOOL" Comment="Give up the equipment after the command" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="O_Holder" Type="WSTRING" />
-      <VarDeclaration Name="O_Release" Type="BOOL" />
-      <VarDeclaration Name="N_Enable" Type="BOOL" />
-      <VarDeclaration Name="N_Down" Type="BOOL" />
-      <VarDeclaration Name="N_Step" Type="LREAL" />
-      <VarDeclaration Name="NE_Step" Type="BOOL" />
-      <VarDeclaration Name="N_Move" Type="BOOL" />
-      <VarDeclaration Name="N_Goal" Type="LREAL" />
-      <VarDeclaration Name="PhaseDT" Type="TIME" />
+      <VarDeclaration Name="O_Holder" Type="WSTRING" Comment="Sent: who holds the equipment" />
+      <VarDeclaration Name="O_Release" Type="BOOL" Comment="Sent: give up the equipment after this" />
+      <VarDeclaration Name="N_Enable" Type="BOOL" Comment="Sent: the value of Enable" />
+      <VarDeclaration Name="N_Down" Type="BOOL" Comment="Sent: the value of Down" />
+      <VarDeclaration Name="N_Step" Type="LREAL" Comment="Sent: the value of Step" />
+      <VarDeclaration Name="NE_Step" Type="BOOL" Comment="Sent: Step enabled" />
+      <VarDeclaration Name="N_Move" Type="BOOL" Comment="Sent: move to a position" />
+      <VarDeclaration Name="N_Goal" Type="LREAL" Comment="Sent: the position to move to" />
+      <VarDeclaration Name="PhaseDT" Type="TIME" Comment="How long the phase lasts" />
     </OutputVars>
   </InterfaceList>
   <BasicFB>

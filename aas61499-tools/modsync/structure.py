@@ -40,7 +40,7 @@ from .device import BOOT, literal
 CORE = q("SKILL_Core")
 LATCH = q("SKILL_Param_")
 # The inputs every skill primitive has (rule 2.3); its other inputs are its parameters.
-STANDARD = ("Module", "UaRoot", "UaPath", "UaEnable", "Methods", "Token", "LastUse", "Timeout")
+STANDARD = ("Module", "UaRoot", "UaPath", "UaEnable", "Methods", "Holder", "ReleaseAfter", "Timeout")
 PROCEDURES = ("Resetting", "Stopping")
 
 
@@ -123,7 +123,7 @@ def structure(fbs: dict[str, str], connections, value: Callable[[str], str | Non
     for name in [n for n in order if fbs.get(f"{n}.Control") == CORE]:
         # Rule 3: the Start method hands argument k + 1 to the latch of parameter k.
         latches = sorted((int(s.rpartition("_")[2]), d.split(".")[-2]) for s, d in connections
-                         if s.startswith(f"{name}.UaStart.RD_") and d.endswith(".S"))
+                         if s.startswith(f"{name}.UaStart.RD_") and d.endswith(".Requested"))
         parameters = {p: declared(fbs[f"{name}.{p}"][len(LATCH):], value(f"{name}.{p}.Default"),
                                   value(f"{name}.{p}.Lower"), value(f"{name}.{p}.Upper")) for _, p in latches}
         # The results are published in the order the ID names them.

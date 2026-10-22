@@ -5,36 +5,36 @@
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Set up the point from Address (at start-up)">
         <With Var="Address" />
       </Event>
-      <Event Name="REQ" Type="Event">
+      <Event Name="REQ" Type="Event" Comment="Read the point, or write OUT to it">
         <With Var="OUT" />
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit">
+      <Event Name="INITO" Type="EInit" Comment="Set up: QO says whether the point is reachable">
         <With Var="QO" />
       </Event>
-      <Event Name="CNF" Type="Event">
+      <Event Name="CNF" Type="Event" Comment="Done: QO says whether it worked (an input: IN is the value read)">
         <With Var="QO" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Address" Type="STRING" />
-      <VarDeclaration Name="OUT" Type="BOOL" />
+      <VarDeclaration Name="Address" Type="STRING" Comment="Where the point is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="OUT" Type="BOOL" Comment="The value to write" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="QO" Type="BOOL" />
+      <VarDeclaration Name="QO" Type="BOOL" Comment="The point is reachable, the last access worked" />
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Route" Type="modlib::IO_RouteDO" x="400" y="200" />
-    <FB Name="Line" Type="eclipse4diac::io::gpiochip::GPIOChip" x="4000" y="200">
+    <FB Name="Route" Type="modlib::IO_RouteDO" x="1100" y="1000" />
+    <FB Name="Line" Type="eclipse4diac::io::gpiochip::GPIOChip" x="2265" y="1000">
       <Parameter Name="ReadWriteMode" Value="1" />
     </FB>
-    <FB Name="Local" Type="eclipse4diac::io::QX" x="4000" y="200" />
-    <FB Name="Bus" Type="iec61499::net::CLIENT_1_0" x="7600" y="200" />
+    <FB Name="Local" Type="eclipse4diac::io::QX" x="3520" y="1000" />
+    <FB Name="Bus" Type="iec61499::net::CLIENT_1_0" x="4460" y="1000" />
     <EventConnections>
       <Connection Source="INIT" Destination="Route.INIT" />
       <Connection Source="Route.INIT_IO" Destination="Line.INIT" />

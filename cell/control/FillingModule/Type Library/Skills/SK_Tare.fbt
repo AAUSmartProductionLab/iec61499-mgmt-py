@@ -5,82 +5,82 @@
   <CompilerInfo packageName="filling" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Initialise: its OPC UA nodes and its equipment's channels">
         <With Var="Module" />
         <With Var="UaRoot" />
         <With Var="UaPath" />
         <With Var="UaEnable" />
         <With Var="Methods" />
-        <With Var="Token" />
-        <With Var="LastUse" />
+        <With Var="Holder" />
+        <With Var="ReleaseAfter" />
       </Event>
-      <Event Name="START" Type="Event" />
-      <Event Name="HALT" Type="Event" />
-      <Event Name="ABORT" Type="Event" />
-      <Event Name="RESET" Type="Event" />
+      <Event Name="START" Type="Event" Comment="Start a run, from the parent (a step of a sequence): no session check" />
+      <Event Name="HALT" Type="Event" Comment="Stop the run, from the parent" />
+      <Event Name="ABORT" Type="Event" Comment="Abort: everything off at once" />
+      <Event Name="RESET" Type="Event" Comment="Reset from Failed or Aborted to Idle" />
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit" />
-      <Event Name="SUCCESS" Type="Event" />
-      <Event Name="FAILURE" Type="Event">
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
+      <Event Name="SUCCESS" Type="Event" Comment="The run succeeded (the results are set)" />
+      <Event Name="FAILURE" Type="Event" Comment="The run failed (ErrorID)">
         <With Var="ErrorID" />
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Module" Type="WSTRING" />
-      <VarDeclaration Name="UaRoot" Type="WSTRING" />
-      <VarDeclaration Name="UaPath" Type="WSTRING" />
-      <VarDeclaration Name="UaEnable" Type="BOOL" />
-      <VarDeclaration Name="Methods" Type="BOOL" />
-      <VarDeclaration Name="Token" Type="WSTRING" />
-      <VarDeclaration Name="LastUse" Type="BOOL" InitialValue="TRUE" />
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaPath" Type="WSTRING" Comment="This skill's OPC UA folder below UaRoot, e.g. /Skills/Dispensing" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" Comment="Publish on OPC UA" />
+      <VarDeclaration Name="Methods" Type="BOOL" Comment="Offer the OPC UA methods Start, Stop, Abort, Reset (FALSE: a step, run by its parent)" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="The name the equipment is held under: the skill's own, or for a step the skill it belongs to" />
+      <VarDeclaration Name="ReleaseAfter" Type="BOOL" InitialValue="TRUE" Comment="Give up the equipment when the run ends (FALSE: the next step keeps it)" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="State" Type="USINT" />
-      <VarDeclaration Name="ErrorID" Type="UINT" />
+      <VarDeclaration Name="State" Type="USINT" Comment="Skill state: 0 Idle, 1 Running, 2 Stopping, 3 Succeeded, 4 Failed, 5 Aborted" />
+      <VarDeclaration Name="ErrorID" Type="UINT" Comment="Error code: 0 none, 1 PreconditionViolated, 2 InvariantViolated, 3 Timeout, 4 NotReady, 5 NotPermitted, 6 Busy, 7 Interrupted, 8 OutOfRange" />
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="12000" height="5500" locked="false" />
-    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="1000" y="7700" width="23800" height="5820" locked="false" />
-    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="14720" width="28800" height="4520" locked="false" />
-    <FB Name="Control" Type="modlib::SKILL_Core" x="2800" y="900">
+    <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="2910" height="3000" locked="false" />
+    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="4210" y="1000" width="4095" height="2900" locked="false" />
+    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="8605" y="1000" width="3870" height="2800" locked="false" />
+    <FB Name="Control" Type="modlib::SKILL_Core" x="300" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="Logic" Type="filling::SL_Tare" x="2800" y="900">
+    <FB Name="Logic" Type="filling::SL_Tare" x="615" y="500">
       <Parameter Name="Equipment" Value="&quot;Scale&quot;" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="7400" y="900">
+    <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="1960" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_2" x="2800" y="900">
+    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_2" x="480" y="500">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqView" Type="filling::EV_Scale" x="8000" y="900">
+    <FB Name="EqView" Type="filling::EV_Scale" x="1590" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="16800" y="900">
+    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="2455" y="500">
       <Parameter Name="DT" Value="T#500ms" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="Driver" Type="filling::EC_Scale" x="13200" y="900">
+    <FB Name="Driver" Type="filling::EC_Scale" x="2760" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="18400" y="900">
+    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="300" y="1700">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_2" x="23600" y="900">
+    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_2" x="1770" y="1700">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="9800" y="900">
+    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="3325" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
     <EventConnections>
-      <Connection Source="Control.RSP_START" Destination="UaStart.RSP" />
-      <Connection Source="UaStart.IND" Destination="Control.CMD_START" />
+      <Connection Source="Control.START_RSP" Destination="UaStart.RSP" />
+      <Connection Source="UaStart.IND" Destination="Control.START_REQ" />
       <Connection Source="INIT" Destination="Control.INIT" />
       <Connection Source="Control.INITO" Destination="Logic.INIT" />
       <Connection Source="Logic.INITO" Destination="UaStart.INIT" />
@@ -93,13 +93,13 @@
       <Connection Source="RESET" Destination="Control.RESET" />
       <Connection Source="Control.SUCCESS" Destination="SUCCESS" />
       <Connection Source="Control.FAILURE" Destination="FAILURE" />
-      <Connection Source="Control.GO" Destination="Logic.START" />
-      <Connection Source="Control.HALT_O" Destination="Logic.HALT" />
-      <Connection Source="Control.ABORT_O" Destination="Logic.ABORT" />
-      <Connection Source="Control.RUN_STOP" Destination="Control.STOP_DONE" />
-      <Connection Source="Logic.DONE" Destination="Control.EXEC_DONE" />
-      <Connection Source="Logic.FAILED" Destination="Control.EXEC_FAILED" />
-      <Connection Source="Logic.HALTED" Destination="Control.EXEC_FAILED" />
+      <Connection Source="Control.RUN" Destination="Logic.START" />
+      <Connection Source="Control.HALT_SEQ" Destination="Logic.HALT" />
+      <Connection Source="Control.ABORT_SEQ" Destination="Logic.ABORT" />
+      <Connection Source="Control.RUN_STOPPING" Destination="Control.STOPPING_DONE" />
+      <Connection Source="Logic.DONE" Destination="Control.EXECUTE_DONE" />
+      <Connection Source="Logic.FAILED" Destination="Control.EXECUTE_FAILED" />
+      <Connection Source="Logic.HALTED" Destination="Control.EXECUTE_FAILED" />
       <Connection Source="EqState.IND" Destination="EqView.REQ" />
       <Connection Source="EqView.CNF" Destination="Logic.SAMPLE" />
       <Connection Source="Logic.CMD" Destination="Driver.PLAY" />
@@ -116,10 +116,10 @@
       <Connection Source="Timer.EO" Destination="Logic.TIMER" />
     </EventConnections>
     <DataConnections>
-      <Connection Source="Control.IdStart" Destination="UaStart.ID" />
-      <Connection Source="UaStart.RD_1" Destination="Control.S_Start" />
+      <Connection Source="Control.StartMethodId" Destination="UaStart.ID" />
+      <Connection Source="UaStart.RD_1" Destination="Control.Session" />
       <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
-      <Connection Source="Control.RspError" Destination="UaStart.SD_2" />
+      <Connection Source="Control.StartError" Destination="UaStart.SD_2" />
       <Connection Source="Module" Destination="Control.Module" />
       <Connection Source="UaRoot" Destination="Control.UaRoot" />
       <Connection Source="UaPath" Destination="Control.UaPath" />
@@ -129,14 +129,14 @@
       <Connection Source="Control.State" Destination="State" />
       <Connection Source="Control.ErrorID" Destination="ErrorID" />
       <Connection Source="Module" Destination="Logic.Module" />
-      <Connection Source="Token" Destination="Logic.Token" />
-      <Connection Source="LastUse" Destination="Logic.LastUse" />
-      <Connection Source="Logic.ErrorID" Destination="Control.ExecError" />
-      <Connection Source="Logic.EqFree" Destination="Control.EqFree" />
+      <Connection Source="Holder" Destination="Logic.Holder" />
+      <Connection Source="ReleaseAfter" Destination="Logic.ReleaseAfter" />
+      <Connection Source="Logic.ErrorID" Destination="Control.ExecuteError" />
+      <Connection Source="Logic.EquipmentFree" Destination="Control.EquipmentFree" />
       <Connection Source="Logic.IdEqState" Destination="EqState.ID" />
       <Connection Source="EqState.RD_1" Destination="EqView.I_Weight" />
       <Connection Source="EqState.RD_2" Destination="EqView.I_Holder" />
-      <Connection Source="EqView.Holder" Destination="Logic.Holder" />
+      <Connection Source="EqView.Holder" Destination="Logic.EqHolder" />
       <Connection Source="Logic.IdEqCmd" Destination="EqCmd.ID" />
       <Connection Source="Logic.C_Holder" Destination="Driver.Holder" />
       <Connection Source="Logic.C_Command" Destination="Driver.Command" />

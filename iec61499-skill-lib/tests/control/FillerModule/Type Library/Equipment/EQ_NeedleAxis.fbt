@@ -5,7 +5,7 @@
   <CompilerInfo packageName="filler" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="INIT" Type="EInit">
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
         <With Var="Module" />
         <With Var="Name" />
         <With Var="UaRoot" />
@@ -23,68 +23,68 @@
       </Event>
     </EventInputs>
     <EventOutputs>
-      <Event Name="INITO" Type="EInit" />
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="Module" Type="WSTRING" />
-      <VarDeclaration Name="Name" Type="WSTRING" InitialValue="&quot;NeedleAxis&quot;" />
-      <VarDeclaration Name="UaRoot" Type="WSTRING" />
-      <VarDeclaration Name="UaEnable" Type="BOOL" />
-      <VarDeclaration Name="CycleTime" Type="TIME" InitialValue="T#50ms" />
-      <VarDeclaration Name="AtTop_Address" Type="STRING" />
-      <VarDeclaration Name="AtTop_Sim" Type="BOOL" InitialValue="FALSE" />
-      <VarDeclaration Name="AtBottom_Address" Type="STRING" />
-      <VarDeclaration Name="AtBottom_Sim" Type="BOOL" InitialValue="FALSE" />
-      <VarDeclaration Name="Position_Address" Type="STRING" />
-      <VarDeclaration Name="Position_Sim" Type="LREAL" InitialValue="0.0" />
-      <VarDeclaration Name="Position_Scale" Type="LREAL" InitialValue="0.1" />
-      <VarDeclaration Name="Down_Address" Type="STRING" />
-      <VarDeclaration Name="Up_Address" Type="STRING" />
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="Name" Type="WSTRING" InitialValue="&quot;NeedleAxis&quot;" Comment="The equipment item's name: its local channels and OPC UA folder" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" Comment="Publish on OPC UA" />
+      <VarDeclaration Name="CycleTime" Type="TIME" InitialValue="T#50ms" Comment="How often the inputs are read" />
+      <VarDeclaration Name="AtTop_Address" Type="STRING" Comment="Where AtTop is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="AtTop_Sim" Type="BOOL" InitialValue="FALSE" Comment="The value of AtTop when simulated (address 'sim')" />
+      <VarDeclaration Name="AtBottom_Address" Type="STRING" Comment="Where AtBottom is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="AtBottom_Sim" Type="BOOL" InitialValue="FALSE" Comment="The value of AtBottom when simulated (address 'sim')" />
+      <VarDeclaration Name="Position_Address" Type="STRING" Comment="Where Position is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="Position_Sim" Type="LREAL" InitialValue="0.0" Comment="The value of Position when simulated (address 'sim')" />
+      <VarDeclaration Name="Position_Scale" Type="LREAL" InitialValue="0.1" Comment="Engineering value per raw count of Position" />
+      <VarDeclaration Name="Down_Address" Type="STRING" Comment="Where Down is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="Up_Address" Type="STRING" Comment="Where Up is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
     </InputVars>
     <OutputVars />
   </InterfaceList>
   <FBNetwork>
-    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="17800" height="6080" locked="false" />
-    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="1000" y="8280" width="25800" height="4780" locked="false" />
-    <Group Name="Inputs" Comment="The equipment's sensors: read every cycle, one block per IO point" x="1000" y="14260" width="16600" height="4700" locked="false" />
-    <Group Name="Outputs" Comment="The equipment's actuators: written on a change and every cycle, one block per IO point" x="1000" y="20160" width="12000" height="4700" locked="false" />
-    <FB Name="Logic" Type="filler::EL_NeedleAxis" x="2800" y="900">
+    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="2370" height="2900" locked="false" />
+    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="3670" y="1000" width="4010" height="3100" locked="false" />
+    <Group Name="Inputs" Comment="The equipment's sensors: read every cycle, one block per IO point" x="7980" y="1000" width="3405" height="1500" locked="false" />
+    <Group Name="Outputs" Comment="The equipment's actuators: written on a change and every cycle, one block per IO point" x="1000" y="4400" width="2080" height="1400" locked="false" />
+    <FB Name="Logic" Type="filler::EL_NeedleAxis" x="300" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="10300" y="900">
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="1600" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Mode" Type="modlib::MOD_StateView" x="21200" y="900">
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="300" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_4" x="2800" y="900">
+    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_4" x="1710" y="500">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="7400" y="900">
+    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="3000" y="500">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_4" x="12000" y="900">
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_4" x="480" y="1800">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="PubUa" Type="iec61499::net::PUBLISH_3" x="16600" y="900">
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_3" x="1530" y="1800">
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="In_AtTop" Type="modlib::IO_DI" x="2800" y="900">
+    <FB Name="In_AtTop" Type="modlib::IO_DI" x="300" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="Inputs" />
     </FB>
-    <FB Name="In_AtBottom" Type="modlib::IO_DI" x="7400" y="900">
+    <FB Name="In_AtBottom" Type="modlib::IO_DI" x="1285" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="Inputs" />
     </FB>
-    <FB Name="In_Position" Type="modlib::IO_AI" x="12000" y="900">
+    <FB Name="In_Position" Type="modlib::IO_AI" x="2395" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="Inputs" />
     </FB>
-    <FB Name="Out_Down" Type="modlib::IO_DO" x="2800" y="900">
+    <FB Name="Out_Down" Type="modlib::IO_DO" x="300" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
     </FB>
-    <FB Name="Out_Up" Type="modlib::IO_DO" x="7400" y="900">
+    <FB Name="Out_Up" Type="modlib::IO_DO" x="1240" y="500">
       <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
     </FB>
     <EventConnections>
@@ -131,7 +131,7 @@
       <Connection Source="SubCmd.RD_3" Destination="Logic.C_Down" />
       <Connection Source="SubCmd.RD_4" Destination="Logic.C_Up" />
       <Connection Source="SubRelease.RD_1" Destination="Logic.R_Holder" />
-      <Connection Source="Mode.State" Destination="Logic.ModState" />
+      <Connection Source="Mode.State" Destination="Logic.ModuleState" />
       <Connection Source="AtTop_Address" Destination="In_AtTop.Address" />
       <Connection Source="AtTop_Sim" Destination="In_AtTop.SimValue" />
       <Connection Source="In_AtTop.IN" Destination="Logic.I_AtTop" />
