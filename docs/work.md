@@ -667,6 +667,11 @@ because with a wrong `.buildpath` it silently skips the system):
   takes about 40 units per character beside its pin. Blocks placed 500 below the group's top were
   cut off at its bottom, and the labels ran into the next block. The layout now leaves room for
   both; the composite types were laid out anew once.
+- **A layout arranged in the IDE is spread, not redone** (22 Oct): where blocks or their labels
+  overlap, a block moves right of the one left of it; a group grows to hold its blocks below its
+  comment; a group that then overlaps another moves down if it was below it, else right. The order
+  and the rows stay as arranged, and a layout with room is left as it is. `modsync project` takes
+  the repository's layout each time it writes a project (a skill only it has keeps its place).
 - **The resource starts the program** (21 Oct): `EMB_RES` has an `E_RESTART` of its own,
   `START`, so a module has none: `START.COLD` and `.WARM` go to the head of the INIT chain, drawn
   in each device's resource (`Filling_pi.GpioLines.INIT`). `load_application` takes those links
