@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 
-from .fbxml import (STD, Basic, Composite, Project, Simple, SubNet, Wiring, arrange, connections, elem, fb, publish,
-                    save, server, subapp, subscribe, wstr)
+from .fbxml import (STD, Basic, Composite, Project, Simple, SubNet, Wiring, arrange, connections, elem, fb,
+                    hide_connections, publish, save, server, subapp, subscribe, wstr)
 from .library import ERRORS, cat, lit, q, ua
 from .layout import Sizer, networks, place_new, relayout
 from .pins import domain
@@ -979,17 +979,6 @@ def group_layout(net, spec: ModuleSpec):
          "local channels", list(spec.equipment), 4, 6500, 5000)])
 
 
-def hide_init_connections(root):
-    """Hide the INIT chains and the start-up connections: they only order the initialisation and
-    clutter the diagram (the IDE shows a hidden connection as a label at both ends)."""
-    for ec in root.iter("EventConnections"):
-        for conn in ec:
-            src, dst = conn.get("Source"), conn.get("Destination")
-            if (src.split(".")[-1] in ("INITO", "COLD", "WARM") or dst.split(".")[-1] == "INIT"
-                    or src == "INIT"):
-                elem(conn, "Attribute", Name="Visible", Value="false")      # a system attribute: no Type
-
-
 def make_system(p: Project, spec: ModuleSpec):
     """Write the .sys: per target, the module application mapped to resource RES of the target's device."""
     root = ET.Element("System", Name=p.name, Comment=f"Module {spec.module}, generated from its module specification")
@@ -999,7 +988,6 @@ def make_system(p: Project, spec: ModuleSpec):
         p.use(node.get("Type"))               # the module level skills use generic comm FBs directly
     for app in apps.values():
         group_layout(app.find("SubAppNetwork"), spec)
-    hide_init_connections(root)
     size = Sizer(p.types)
     for net in networks(root):
         relayout(net, size)
@@ -1019,6 +1007,7 @@ def make_system(p: Project, spec: ModuleSpec):
         for child in app.find("SubAppNetwork"):
             if child.tag in ("FB", "SubApp"):
                 elem(root, "Mapping", From=f"{app.get('Name')}.{child.get('Name')}", To=f"{device_name(target)}.RES")
+    hide_connections(root)                    # every connection, the resources' START links too
     save(root, p.root / f"{p.name}.sys", lambda tree, kept: place_new(tree, kept, size))
 
 

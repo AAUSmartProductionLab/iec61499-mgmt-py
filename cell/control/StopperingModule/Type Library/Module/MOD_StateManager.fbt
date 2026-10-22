@@ -51,86 +51,242 @@
     <FB Name="Count" Type="modlib::MOD_ActivityCount" x="1100" y="5900" />
     <FB Name="Wd" Type="iec61499::events::E_DELAY" x="2570" y="5900" />
     <EventConnections>
-      <Connection Source="INIT" Destination="Ids.INIT" />
-      <Connection Source="Ids.INITO" Destination="Owner.INIT" />
-      <Connection Source="Owner.INITO" Destination="Reset.INIT" />
-      <Connection Source="Reset.INITO" Destination="Start.INIT" />
-      <Connection Source="Start.INITO" Destination="Stop.INIT" />
-      <Connection Source="Stop.INITO" Destination="Abort.INIT" />
-      <Connection Source="Abort.INITO" Destination="Clear.INIT" />
-      <Connection Source="Clear.INITO" Destination="PubUa.INIT" />
-      <Connection Source="PubUa.INITO" Destination="PubState.INIT" />
-      <Connection Source="PubState.INITO" Destination="SubQuery.INIT" />
-      <Connection Source="SubQuery.INITO" Destination="SubAct.INIT" />
-      <Connection Source="SubAct.INITO" Destination="PubUa.REQ" />
-      <Connection Source="SubAct.INITO" Destination="PubState.REQ" />
-      <Connection Source="SubAct.INITO" Destination="INITO" />
-      <Connection Source="Owner.CHG" Destination="Logic.OWNER_CHG" />
-      <Connection Source="Reset.IND" Destination="Logic.RESET_REQ" />
-      <Connection Source="Logic.RESET_RSP" Destination="Reset.RSP" />
-      <Connection Source="Start.IND" Destination="Logic.START_REQ" />
-      <Connection Source="Logic.START_RSP" Destination="Start.RSP" />
-      <Connection Source="Stop.IND" Destination="Logic.STOP_REQ" />
-      <Connection Source="Logic.STOP_RSP" Destination="Stop.RSP" />
-      <Connection Source="Abort.IND" Destination="Logic.ABORT_REQ" />
-      <Connection Source="Logic.ABORT_RSP" Destination="Abort.RSP" />
-      <Connection Source="Clear.IND" Destination="Logic.CLEAR_REQ" />
-      <Connection Source="Logic.CLEAR_RSP" Destination="Clear.RSP" />
-      <Connection Source="Logic.CNF" Destination="PubUa.REQ" />
-      <Connection Source="Logic.CNF" Destination="PubState.REQ" />
-      <Connection Source="SubQuery.IND" Destination="PubState.REQ" />
-      <Connection Source="SubAct.IND" Destination="Count.ACT" />
-      <Connection Source="Count.CHG" Destination="Logic.ACT" />
-      <Connection Source="Logic.WD_START" Destination="Wd.START" />
-      <Connection Source="Logic.WD_STOP" Destination="Wd.STOP" />
-      <Connection Source="Wd.EO" Destination="Logic.STOP_TIMEOUT" />
-      <Connection Source="Logic.RUN_RESETTING" Destination="RUN_RESETTING" />
-      <Connection Source="Logic.RUN_STOPPING" Destination="RUN_STOPPING" />
-      <Connection Source="RESETTING_DONE" Destination="Logic.RESETTING_DONE" />
-      <Connection Source="RESETTING_FAILED" Destination="Logic.RESETTING_FAILED" />
-      <Connection Source="STOPPING_DONE" Destination="Logic.STOPPING_DONE" />
-      <Connection Source="STOPPING_FAILED" Destination="Logic.STOPPING_FAILED" />
+      <Connection Source="INIT" Destination="Ids.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.INITO" Destination="Owner.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Owner.INITO" Destination="Reset.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Reset.INITO" Destination="Start.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Start.INITO" Destination="Stop.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Stop.INITO" Destination="Abort.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Abort.INITO" Destination="Clear.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Clear.INITO" Destination="PubUa.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubUa.INITO" Destination="PubState.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubState.INITO" Destination="SubQuery.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubQuery.INITO" Destination="SubAct.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubAct.INITO" Destination="PubUa.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubAct.INITO" Destination="PubState.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubAct.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Owner.CHG" Destination="Logic.OWNER_CHG">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Reset.IND" Destination="Logic.RESET_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.RESET_RSP" Destination="Reset.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Start.IND" Destination="Logic.START_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.START_RSP" Destination="Start.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Stop.IND" Destination="Logic.STOP_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.STOP_RSP" Destination="Stop.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Abort.IND" Destination="Logic.ABORT_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ABORT_RSP" Destination="Abort.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Clear.IND" Destination="Logic.CLEAR_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.CLEAR_RSP" Destination="Clear.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.CNF" Destination="PubUa.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.CNF" Destination="PubState.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubQuery.IND" Destination="PubState.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubAct.IND" Destination="Count.ACT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Count.CHG" Destination="Logic.ACT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.WD_START" Destination="Wd.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.WD_STOP" Destination="Wd.STOP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Wd.EO" Destination="Logic.STOP_TIMEOUT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.RUN_RESETTING" Destination="RUN_RESETTING">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.RUN_STOPPING" Destination="RUN_STOPPING">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="RESETTING_DONE" Destination="Logic.RESETTING_DONE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="RESETTING_FAILED" Destination="Logic.RESETTING_FAILED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="STOPPING_DONE" Destination="Logic.STOPPING_DONE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="STOPPING_FAILED" Destination="Logic.STOPPING_FAILED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </EventConnections>
     <DataConnections>
-      <Connection Source="Module" Destination="Ids.Module" />
-      <Connection Source="Module" Destination="Owner.Module" />
-      <Connection Source="UaRoot" Destination="Ids.UaRoot" />
-      <Connection Source="UaEnable" Destination="Reset.QI" />
-      <Connection Source="UaEnable" Destination="Start.QI" />
-      <Connection Source="UaEnable" Destination="Stop.QI" />
-      <Connection Source="UaEnable" Destination="Abort.QI" />
-      <Connection Source="UaEnable" Destination="Clear.QI" />
-      <Connection Source="UaEnable" Destination="PubUa.QI" />
-      <Connection Source="StopTimeout" Destination="Wd.DT" />
-      <Connection Source="Owner.Owner" Destination="Logic.Owner" />
-      <Connection Source="Ids.IdReset" Destination="Reset.ID" />
-      <Connection Source="Reset.RD_1" Destination="Logic.ResetSession" />
-      <Connection Source="Logic.Accepted" Destination="Reset.SD_1" />
-      <Connection Source="Logic.ErrorID" Destination="Reset.SD_2" />
-      <Connection Source="Ids.IdStart" Destination="Start.ID" />
-      <Connection Source="Start.RD_1" Destination="Logic.StartSession" />
-      <Connection Source="Logic.Accepted" Destination="Start.SD_1" />
-      <Connection Source="Logic.ErrorID" Destination="Start.SD_2" />
-      <Connection Source="Ids.IdStop" Destination="Stop.ID" />
-      <Connection Source="Stop.RD_1" Destination="Logic.StopSession" />
-      <Connection Source="Logic.Accepted" Destination="Stop.SD_1" />
-      <Connection Source="Logic.ErrorID" Destination="Stop.SD_2" />
-      <Connection Source="Ids.IdAbort" Destination="Abort.ID" />
-      <Connection Source="Abort.RD_1" Destination="Logic.AbortSession" />
-      <Connection Source="Logic.Accepted" Destination="Abort.SD_1" />
-      <Connection Source="Logic.ErrorID" Destination="Abort.SD_2" />
-      <Connection Source="Ids.IdClear" Destination="Clear.ID" />
-      <Connection Source="Clear.RD_1" Destination="Logic.ClearSession" />
-      <Connection Source="Logic.Accepted" Destination="Clear.SD_1" />
-      <Connection Source="Logic.ErrorID" Destination="Clear.SD_2" />
-      <Connection Source="Ids.IdPub" Destination="PubUa.ID" />
-      <Connection Source="Ids.IdState" Destination="PubState.ID" />
-      <Connection Source="Ids.IdQuery" Destination="SubQuery.ID" />
-      <Connection Source="Ids.IdAct" Destination="SubAct.ID" />
-      <Connection Source="Logic.State" Destination="PubUa.SD_1" />
-      <Connection Source="Logic.State" Destination="PubState.SD_1" />
-      <Connection Source="SubAct.RD_1" Destination="Count.Delta" />
-      <Connection Source="Count.AllIdle" Destination="Logic.AllIdle" />
+      <Connection Source="Module" Destination="Ids.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Module" Destination="Owner.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaRoot" Destination="Ids.UaRoot">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="Reset.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="Start.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="Stop.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="Abort.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="Clear.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="PubUa.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="StopTimeout" Destination="Wd.DT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Owner.Owner" Destination="Logic.Owner">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdReset" Destination="Reset.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Reset.RD_1" Destination="Logic.ResetSession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Accepted" Destination="Reset.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ErrorID" Destination="Reset.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdStart" Destination="Start.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Start.RD_1" Destination="Logic.StartSession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Accepted" Destination="Start.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ErrorID" Destination="Start.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdStop" Destination="Stop.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Stop.RD_1" Destination="Logic.StopSession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Accepted" Destination="Stop.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ErrorID" Destination="Stop.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdAbort" Destination="Abort.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Abort.RD_1" Destination="Logic.AbortSession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Accepted" Destination="Abort.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ErrorID" Destination="Abort.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdClear" Destination="Clear.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Clear.RD_1" Destination="Logic.ClearSession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Accepted" Destination="Clear.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ErrorID" Destination="Clear.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdPub" Destination="PubUa.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdState" Destination="PubState.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdQuery" Destination="SubQuery.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdAct" Destination="SubAct.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.State" Destination="PubUa.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.State" Destination="PubState.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubAct.RD_1" Destination="Count.Delta">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Count.AllIdle" Destination="Logic.AllIdle">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </DataConnections>
   </FBNetwork>
 </FBType>

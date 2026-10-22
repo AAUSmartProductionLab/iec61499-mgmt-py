@@ -88,71 +88,197 @@
       <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
     </FB>
     <EventConnections>
-      <Connection Source="INIT" Destination="Logic.INIT" />
-      <Connection Source="Logic.INITO" Destination="Mode.INIT" />
-      <Connection Source="Mode.INITO" Destination="SubCmd.INIT" />
-      <Connection Source="SubCmd.INITO" Destination="SubRelease.INIT" />
-      <Connection Source="SubRelease.INITO" Destination="PubState.INIT" />
-      <Connection Source="PubState.INITO" Destination="PubUa.INIT" />
-      <Connection Source="PubUa.INITO" Destination="In_AtTop.INIT" />
-      <Connection Source="In_AtTop.INITO" Destination="In_AtBottom.INIT" />
-      <Connection Source="In_AtBottom.INITO" Destination="In_Position.INIT" />
-      <Connection Source="In_Position.INITO" Destination="Out_Down.INIT" />
-      <Connection Source="Out_Down.INITO" Destination="Out_Up.INIT" />
-      <Connection Source="Out_Up.INITO" Destination="Cycle.START" />
-      <Connection Source="Out_Up.INITO" Destination="INITO" />
-      <Connection Source="SubCmd.IND" Destination="Logic.CMD" />
-      <Connection Source="SubRelease.IND" Destination="Logic.RELEASE" />
-      <Connection Source="Mode.CHG" Destination="Logic.MOD_CHG" />
-      <Connection Source="Cycle.EO" Destination="Logic.REFRESH" />
-      <Connection Source="Cycle.EO" Destination="In_AtTop.REQ" />
-      <Connection Source="In_AtTop.CNF" Destination="In_AtBottom.REQ" />
-      <Connection Source="In_AtBottom.CNF" Destination="In_Position.REQ" />
-      <Connection Source="In_Position.CNF" Destination="Logic.SAMPLE" />
-      <Connection Source="Logic.STATE" Destination="PubState.REQ" />
-      <Connection Source="Logic.STATE" Destination="PubUa.REQ" />
-      <Connection Source="Logic.DRIVE" Destination="Out_Down.REQ" />
-      <Connection Source="Out_Down.CNF" Destination="Out_Up.REQ" />
-      <Connection Source="Out_Up.CNF" Destination="Logic.DRIVEN" />
+      <Connection Source="INIT" Destination="Logic.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.INITO" Destination="Mode.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.INITO" Destination="SubCmd.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.INITO" Destination="SubRelease.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubRelease.INITO" Destination="PubState.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubState.INITO" Destination="PubUa.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubUa.INITO" Destination="In_AtTop.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_AtTop.INITO" Destination="In_AtBottom.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_AtBottom.INITO" Destination="In_Position.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_Position.INITO" Destination="Out_Down.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Down.INITO" Destination="Out_Up.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Up.INITO" Destination="Cycle.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Up.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.IND" Destination="Logic.CMD">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubRelease.IND" Destination="Logic.RELEASE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.CHG" Destination="Logic.MOD_CHG">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Cycle.EO" Destination="Logic.REFRESH">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Cycle.EO" Destination="In_AtTop.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_AtTop.CNF" Destination="In_AtBottom.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_AtBottom.CNF" Destination="In_Position.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_Position.CNF" Destination="Logic.SAMPLE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.STATE" Destination="PubState.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.STATE" Destination="PubUa.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.DRIVE" Destination="Out_Down.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Down.CNF" Destination="Out_Up.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Up.CNF" Destination="Logic.DRIVEN">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </EventConnections>
     <DataConnections>
-      <Connection Source="Module" Destination="Logic.Module" />
-      <Connection Source="Name" Destination="Logic.Name" />
-      <Connection Source="UaRoot" Destination="Logic.UaRoot" />
-      <Connection Source="Module" Destination="Mode.Module" />
-      <Connection Source="Logic.IdCmd" Destination="SubCmd.ID" />
-      <Connection Source="Logic.IdRelease" Destination="SubRelease.ID" />
-      <Connection Source="Logic.IdState" Destination="PubState.ID" />
-      <Connection Source="Logic.IdPub" Destination="PubUa.ID" />
-      <Connection Source="UaEnable" Destination="PubUa.QI" />
-      <Connection Source="CycleTime" Destination="Cycle.DT" />
-      <Connection Source="SubCmd.RD_1" Destination="Logic.C_Holder" />
-      <Connection Source="SubCmd.RD_2" Destination="Logic.C_Release" />
-      <Connection Source="SubCmd.RD_3" Destination="Logic.C_Down" />
-      <Connection Source="SubCmd.RD_4" Destination="Logic.C_Up" />
-      <Connection Source="SubRelease.RD_1" Destination="Logic.R_Holder" />
-      <Connection Source="Mode.State" Destination="Logic.ModuleState" />
-      <Connection Source="AtTop_Address" Destination="In_AtTop.Address" />
-      <Connection Source="AtTop_Sim" Destination="In_AtTop.SimValue" />
-      <Connection Source="In_AtTop.IN" Destination="Logic.I_AtTop" />
-      <Connection Source="Logic.AtTop" Destination="PubState.SD_1" />
-      <Connection Source="Logic.AtTop" Destination="PubUa.SD_1" />
-      <Connection Source="AtBottom_Address" Destination="In_AtBottom.Address" />
-      <Connection Source="AtBottom_Sim" Destination="In_AtBottom.SimValue" />
-      <Connection Source="In_AtBottom.IN" Destination="Logic.I_AtBottom" />
-      <Connection Source="Logic.AtBottom" Destination="PubState.SD_2" />
-      <Connection Source="Logic.AtBottom" Destination="PubUa.SD_2" />
-      <Connection Source="Position_Address" Destination="In_Position.Address" />
-      <Connection Source="Position_Sim" Destination="In_Position.SimValue" />
-      <Connection Source="Position_Scale" Destination="In_Position.Scale" />
-      <Connection Source="In_Position.IN" Destination="Logic.I_Position" />
-      <Connection Source="Logic.Position" Destination="PubState.SD_3" />
-      <Connection Source="Logic.Position" Destination="PubUa.SD_3" />
-      <Connection Source="Logic.Holder" Destination="PubState.SD_4" />
-      <Connection Source="Down_Address" Destination="Out_Down.Address" />
-      <Connection Source="Logic.O_Down" Destination="Out_Down.OUT" />
-      <Connection Source="Up_Address" Destination="Out_Up.Address" />
-      <Connection Source="Logic.O_Up" Destination="Out_Up.OUT" />
+      <Connection Source="Module" Destination="Logic.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Name" Destination="Logic.Name">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaRoot" Destination="Logic.UaRoot">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Module" Destination="Mode.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdCmd" Destination="SubCmd.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdRelease" Destination="SubRelease.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdState" Destination="PubState.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdPub" Destination="PubUa.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="PubUa.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="CycleTime" Destination="Cycle.DT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_1" Destination="Logic.C_Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_2" Destination="Logic.C_Release">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_3" Destination="Logic.C_Down">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_4" Destination="Logic.C_Up">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubRelease.RD_1" Destination="Logic.R_Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.State" Destination="Logic.ModuleState">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="AtTop_Address" Destination="In_AtTop.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="AtTop_Sim" Destination="In_AtTop.SimValue">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_AtTop.IN" Destination="Logic.I_AtTop">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.AtTop" Destination="PubState.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.AtTop" Destination="PubUa.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="AtBottom_Address" Destination="In_AtBottom.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="AtBottom_Sim" Destination="In_AtBottom.SimValue">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_AtBottom.IN" Destination="Logic.I_AtBottom">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.AtBottom" Destination="PubState.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.AtBottom" Destination="PubUa.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Position_Address" Destination="In_Position.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Position_Sim" Destination="In_Position.SimValue">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Position_Scale" Destination="In_Position.Scale">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_Position.IN" Destination="Logic.I_Position">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Position" Destination="PubState.SD_3">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Position" Destination="PubUa.SD_3">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Holder" Destination="PubState.SD_4">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Down_Address" Destination="Out_Down.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.O_Down" Destination="Out_Down.OUT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Up_Address" Destination="Out_Up.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.O_Up" Destination="Out_Up.OUT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </DataConnections>
   </FBNetwork>
 </FBType>

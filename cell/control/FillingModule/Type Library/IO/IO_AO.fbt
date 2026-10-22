@@ -40,40 +40,104 @@
     <FB Name="Local" Type="eclipse4diac::io::QW" x="3340" y="1000" />
     <FB Name="Bus" Type="iec61499::net::CLIENT_1_0" x="4280" y="1000" />
     <EventConnections>
-      <Connection Source="INIT" Destination="Route.INIT" />
-      <Connection Source="Route.INIT_IO" Destination="Line.INIT" />
-      <Connection Source="Line.INITO" Destination="Local.INIT" />
-      <Connection Source="Local.INITO" Destination="Bus.INIT" />
-      <Connection Source="Bus.INITO" Destination="Route.IO_READY" />
-      <Connection Source="Route.INITO" Destination="INITO" />
-      <Connection Source="REQ" Destination="Route.REQ" />
-      <Connection Source="Route.REQ_G" Destination="Local.REQ" />
-      <Connection Source="Route.REQ_M" Destination="Bus.REQ" />
-      <Connection Source="Local.CNF" Destination="Route.CNF_G" />
-      <Connection Source="Bus.CNF" Destination="Route.CNF_M" />
-      <Connection Source="Route.CNF" Destination="CNF" />
+      <Connection Source="INIT" Destination="Route.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.INIT_IO" Destination="Line.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Line.INITO" Destination="Local.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Local.INITO" Destination="Bus.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Bus.INITO" Destination="Route.IO_READY">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="REQ" Destination="Route.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.REQ_G" Destination="Local.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.REQ_M" Destination="Bus.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Local.CNF" Destination="Route.CNF_G">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Bus.CNF" Destination="Route.CNF_M">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.CNF" Destination="CNF">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </EventConnections>
     <DataConnections>
-      <Connection Source="Route.LineQI" Destination="Line.QI" />
-      <Connection Source="Route.LineName" Destination="Line.VALUE" />
-      <Connection Source="Route.ChipNo" Destination="Line.ChipNumber" />
-      <Connection Source="Route.LineNo" Destination="Line.Channel" />
-      <Connection Source="Route.Period" Destination="Line.PeriodNs" />
-      <Connection Source="Route.Root" Destination="Line.SysfsRoot" />
-      <Connection Source="Address" Destination="Route.Address" />
-      <Connection Source="Route.IoName" Destination="Local.PARAMS" />
-      <Connection Source="Route.ModbusId" Destination="Bus.ID" />
-      <Connection Source="Route.GQI" Destination="Local.QI" />
-      <Connection Source="Route.MQI" Destination="Bus.QI" />
-      <Connection Source="Local.QO" Destination="Route.QO_G" />
-      <Connection Source="Bus.QO" Destination="Route.QO_M" />
-      <Connection Source="Route.QO" Destination="QO" />
-      <Connection Source="OUT" Destination="Route.OUT" />
-      <Connection Source="EN" Destination="Route.EN" />
-      <Connection Source="Gain" Destination="Route.Gain" />
-      <Connection Source="Bias" Destination="Route.Bias" />
-      <Connection Source="Route.Value" Destination="Local.OUT" />
-      <Connection Source="Route.Value" Destination="Bus.SD_1" />
+      <Connection Source="Route.LineQI" Destination="Line.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.LineName" Destination="Line.VALUE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.ChipNo" Destination="Line.ChipNumber">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.LineNo" Destination="Line.Channel">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.Period" Destination="Line.PeriodNs">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.Root" Destination="Line.SysfsRoot">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Address" Destination="Route.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.IoName" Destination="Local.PARAMS">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.ModbusId" Destination="Bus.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.GQI" Destination="Local.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.MQI" Destination="Bus.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Local.QO" Destination="Route.QO_G">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Bus.QO" Destination="Route.QO_M">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.QO" Destination="QO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="OUT" Destination="Route.OUT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EN" Destination="Route.EN">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Gain" Destination="Route.Gain">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Bias" Destination="Route.Bias">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.Value" Destination="Local.OUT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Route.Value" Destination="Bus.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </DataConnections>
   </FBNetwork>
 </FBType>

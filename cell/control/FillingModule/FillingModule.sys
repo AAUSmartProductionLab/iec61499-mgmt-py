@@ -136,20 +136,38 @@
             <Connection Source="Tare.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="START" Destination="Home.START" />
-            <Connection Source="Tare.SUCCESS" Destination="DONE" />
+            <Connection Source="START" Destination="Home.START">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Tare.SUCCESS" Destination="DONE">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
             <Connection Source="Home.INITO" Destination="Tare.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Home.SUCCESS" Destination="Tare.START" />
-            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_1" />
-            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_2" />
-            <Connection Source="Fail1.FAIL" Destination="FAILED" />
+            <Connection Source="Home.SUCCESS" Destination="Tare.START">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_1">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_2">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Fail1.FAIL" Destination="FAILED">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Home.ErrorID" Destination="Fail1.Error1" />
-            <Connection Source="Tare.ErrorID" Destination="Fail1.Error2" />
-            <Connection Source="Fail1.Error" Destination="ErrorID" />
+            <Connection Source="Home.ErrorID" Destination="Fail1.Error1">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Tare.ErrorID" Destination="Fail1.Error2">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Fail1.Error" Destination="ErrorID">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -186,12 +204,20 @@
             <Connection Source="Home.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="START" Destination="Home.START" />
-            <Connection Source="Home.SUCCESS" Destination="DONE" />
-            <Connection Source="Home.FAILURE" Destination="FAILED" />
+            <Connection Source="START" Destination="Home.START">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.SUCCESS" Destination="DONE">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.FAILURE" Destination="FAILED">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Home.ErrorID" Destination="ErrorID" />
+            <Connection Source="Home.ErrorID" Destination="ErrorID">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -311,50 +337,116 @@
                 <Connection Source="Weigh.INITO" Destination="INITO">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="START" Destination="NeedleDown.START" />
-                <Connection Source="Weigh.SUCCESS" Destination="DONE" />
+                <Connection Source="START" Destination="NeedleDown.START">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Weigh.SUCCESS" Destination="DONE">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
                 <Connection Source="NeedleDown.INITO" Destination="Dispense.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="NeedleDown.SUCCESS" Destination="Dispense.START" />
+                <Connection Source="NeedleDown.SUCCESS" Destination="Dispense.START">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
                 <Connection Source="Dispense.INITO" Destination="Home.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Dispense.SUCCESS" Destination="Home.START" />
+                <Connection Source="Dispense.SUCCESS" Destination="Home.START">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
                 <Connection Source="Home.INITO" Destination="Weigh.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Home.SUCCESS" Destination="Weigh.START" />
-                <Connection Source="HALT" Destination="NeedleDown.HALT" />
-                <Connection Source="HALT" Destination="Dispense.HALT" />
-                <Connection Source="HALT" Destination="Home.HALT" />
-                <Connection Source="HALT" Destination="Weigh.HALT" />
-                <Connection Source="ABORT" Destination="NeedleDown.ABORT" />
-                <Connection Source="ABORT" Destination="Dispense.ABORT" />
-                <Connection Source="ABORT" Destination="Home.ABORT" />
-                <Connection Source="ABORT" Destination="Weigh.ABORT" />
-                <Connection Source="RESET" Destination="NeedleDown.RESET" />
-                <Connection Source="RESET" Destination="Dispense.RESET" />
-                <Connection Source="RESET" Destination="Home.RESET" />
-                <Connection Source="RESET" Destination="Weigh.RESET" />
-                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_1" />
-                <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_2" />
-                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1" />
-                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2" />
-                <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_1" />
-                <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_2" />
-                <Connection Source="Fail3.FAIL" Destination="FAILED" />
+                <Connection Source="Home.SUCCESS" Destination="Weigh.START">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="HALT" Destination="NeedleDown.HALT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="HALT" Destination="Dispense.HALT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="HALT" Destination="Home.HALT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="HALT" Destination="Weigh.HALT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="ABORT" Destination="NeedleDown.ABORT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="ABORT" Destination="Dispense.ABORT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="ABORT" Destination="Home.ABORT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="ABORT" Destination="Weigh.ABORT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="RESET" Destination="NeedleDown.RESET">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="RESET" Destination="Dispense.RESET">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="RESET" Destination="Home.RESET">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="RESET" Destination="Weigh.RESET">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail3.FAIL" Destination="FAILED">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
               </EventConnections>
               <DataConnections>
-                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.Error1" />
-                <Connection Source="Dispense.ErrorID" Destination="Fail1.Error2" />
-                <Connection Source="Fail1.Error" Destination="Fail2.Error1" />
-                <Connection Source="Home.ErrorID" Destination="Fail2.Error2" />
-                <Connection Source="Fail2.Error" Destination="Fail3.Error1" />
-                <Connection Source="Weigh.ErrorID" Destination="Fail3.Error2" />
-                <Connection Source="Fail3.Error" Destination="ErrorID" />
-                <Connection Source="Volume" Destination="Dispense.Volume" />
-                <Connection Source="Weigh.R_Weight" Destination="Weight" />
+                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.Error1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Dispense.ErrorID" Destination="Fail1.Error2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail1.Error" Destination="Fail2.Error1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.ErrorID" Destination="Fail2.Error2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail2.Error" Destination="Fail3.Error1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Weigh.ErrorID" Destination="Fail3.Error2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail3.Error" Destination="ErrorID">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Volume" Destination="Dispense.Volume">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Weigh.R_Weight" Destination="Weight">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
               </DataConnections>
             </SubAppNetwork>
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
@@ -394,40 +486,88 @@
                 <Connection Source="Home.INITO" Destination="INITO">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="START" Destination="Home.START" />
-                <Connection Source="Home.SUCCESS" Destination="DONE" />
-                <Connection Source="HALT" Destination="Home.HALT" />
-                <Connection Source="ABORT" Destination="Home.ABORT" />
-                <Connection Source="RESET" Destination="Home.RESET" />
-                <Connection Source="Home.FAILURE" Destination="FAILED" />
+                <Connection Source="START" Destination="Home.START">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.SUCCESS" Destination="DONE">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="HALT" Destination="Home.HALT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="ABORT" Destination="Home.ABORT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="RESET" Destination="Home.RESET">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.FAILURE" Destination="FAILED">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
               </EventConnections>
               <DataConnections>
-                <Connection Source="Home.ErrorID" Destination="ErrorID" />
+                <Connection Source="Home.ErrorID" Destination="ErrorID">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
               </DataConnections>
             </SubAppNetwork>
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
           <EventConnections>
-            <Connection Source="Control.START_RSP" Destination="UaStart.RSP" />
-            <Connection Source="UaStart.IND" Destination="Volume.CHECK" />
-            <Connection Source="Control.RUN" Destination="Volume.LATCH" />
-            <Connection Source="Volume.CHECKED" Destination="Control.START_REQ" />
-            <Connection Source="Volume.LATCHED" Destination="PubParams.REQ" />
+            <Connection Source="Control.START_RSP" Destination="UaStart.RSP">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="UaStart.IND" Destination="Volume.CHECK">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.RUN" Destination="Volume.LATCH">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.CHECKED" Destination="Control.START_REQ">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.LATCHED" Destination="PubParams.REQ">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
             <Connection Source="PubParams.INITO" Destination="PubParams.REQ">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Execute.DONE" Destination="PubResults.REQ" />
-            <Connection Source="Volume.LATCHED" Destination="Execute.START" />
-            <Connection Source="Control.HALT_SEQ" Destination="Execute.HALT" />
-            <Connection Source="Control.ABORT_SEQ" Destination="Execute.ABORT" />
-            <Connection Source="Control.RESET_SEQ" Destination="Execute.RESET" />
-            <Connection Source="Execute.DONE" Destination="Control.EXECUTE_DONE" />
-            <Connection Source="Execute.FAILED" Destination="Control.EXECUTE_FAILED" />
-            <Connection Source="Control.RUN_STOPPING" Destination="Stop.START" />
-            <Connection Source="Control.ABORT_SEQ" Destination="Stop.ABORT" />
-            <Connection Source="Control.RESET_SEQ" Destination="Stop.RESET" />
-            <Connection Source="Stop.DONE" Destination="Control.STOPPING_DONE" />
-            <Connection Source="Stop.FAILED" Destination="Control.STOPPING_DONE" />
+            <Connection Source="Execute.DONE" Destination="PubResults.REQ">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.LATCHED" Destination="Execute.START">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.HALT_SEQ" Destination="Execute.HALT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.ABORT_SEQ" Destination="Execute.ABORT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.RESET_SEQ" Destination="Execute.RESET">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Execute.DONE" Destination="Control.EXECUTE_DONE">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Execute.FAILED" Destination="Control.EXECUTE_FAILED">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.RUN_STOPPING" Destination="Stop.START">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.ABORT_SEQ" Destination="Stop.ABORT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.RESET_SEQ" Destination="Stop.RESET">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Stop.DONE" Destination="Control.STOPPING_DONE">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Stop.FAILED" Destination="Control.STOPPING_DONE">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
             <Connection Source="INIT" Destination="Control.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
@@ -454,28 +594,62 @@
             </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Control.StartMethodId" Destination="UaStart.ID" />
-            <Connection Source="UaStart.RD_1" Destination="Control.Session" />
-            <Connection Source="Control.Accepted" Destination="UaStart.SD_1" />
-            <Connection Source="Control.StartError" Destination="UaStart.SD_2" />
-            <Connection Source="UaStart.RD_2" Destination="Volume.Requested" />
-            <Connection Source="Control.CalledByClient" Destination="Volume.CalledByClient" />
-            <Connection Source="Volume.Value" Destination="PubParams.SD_1" />
-            <Connection Source="Volume.AllInRange" Destination="Control.ParamsInRange" />
-            <Connection Source="Execute.Weight" Destination="PubResults.SD_1" />
-            <Connection Source="Volume.Value" Destination="Execute.Volume" />
-            <Connection Source="Execute.ErrorID" Destination="Control.ExecuteError" />
+            <Connection Source="Control.StartMethodId" Destination="UaStart.ID">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="UaStart.RD_1" Destination="Control.Session">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.Accepted" Destination="UaStart.SD_1">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.StartError" Destination="UaStart.SD_2">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="UaStart.RD_2" Destination="Volume.Requested">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.CalledByClient" Destination="Volume.CalledByClient">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.Value" Destination="PubParams.SD_1">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.AllInRange" Destination="Control.ParamsInRange">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Execute.Weight" Destination="PubResults.SD_1">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.Value" Destination="Execute.Volume">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Execute.ErrorID" Destination="Control.ExecuteError">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevelSkills" />
       </SubApp>
       <EventConnections>
-        <Connection Source="Module.RUN_RESETTING" Destination="Resetting.START" dx1="80" dx2="80" dy="4700" />
-        <Connection Source="Resetting.DONE" Destination="Module.RESETTING_DONE" dx1="4673.33" />
-        <Connection Source="Resetting.FAILED" Destination="Module.RESETTING_FAILED" dx1="4673.33" />
-        <Connection Source="Module.RUN_STOPPING" Destination="Stopping.START" dx1="80" dx2="80" dy="4646.67" />
-        <Connection Source="Stopping.DONE" Destination="Module.STOPPING_DONE" dx1="2173.33" />
-        <Connection Source="Stopping.FAILED" Destination="Module.STOPPING_FAILED" dx1="2173.33" />
+        <Connection Source="Module.RUN_RESETTING" Destination="Resetting.START" dx1="80" dx2="80" dy="4700">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Resetting.DONE" Destination="Module.RESETTING_DONE" dx1="4673.33">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Resetting.FAILED" Destination="Module.RESETTING_FAILED" dx1="4673.33">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Module.RUN_STOPPING" Destination="Stopping.START" dx1="80" dx2="80" dy="4646.67">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Stopping.DONE" Destination="Module.STOPPING_DONE" dx1="2173.33">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Stopping.FAILED" Destination="Module.STOPPING_FAILED" dx1="2173.33">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
         <Connection Source="Occupation.INITO" Destination="Module.INIT">
           <Attribute Name="Visible" Value="false" />
         </Connection>
@@ -650,20 +824,38 @@
             <Connection Source="Tare.INITO" Destination="INITO" dx1="3686.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="START" Destination="Home.START" dx1="1026.67" />
-            <Connection Source="Tare.SUCCESS" Destination="DONE" dx1="3686.67" />
+            <Connection Source="START" Destination="Home.START" dx1="1026.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Tare.SUCCESS" Destination="DONE" dx1="3686.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
             <Connection Source="Home.INITO" Destination="Tare.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Home.SUCCESS" Destination="Tare.START" />
-            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_1" />
-            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_2" />
-            <Connection Source="Fail1.FAIL" Destination="FAILED" dx1="3073.33" />
+            <Connection Source="Home.SUCCESS" Destination="Tare.START">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.FAILURE" Destination="Fail1.FAIL_1">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Tare.FAILURE" Destination="Fail1.FAIL_2">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Fail1.FAIL" Destination="FAILED" dx1="3073.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Home.ErrorID" Destination="Fail1.Error1" />
-            <Connection Source="Tare.ErrorID" Destination="Fail1.Error2" />
-            <Connection Source="Fail1.Error" Destination="ErrorID" />
+            <Connection Source="Home.ErrorID" Destination="Fail1.Error1">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Tare.ErrorID" Destination="Fail1.Error2">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Fail1.Error" Destination="ErrorID">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -700,12 +892,20 @@
             <Connection Source="Home.INITO" Destination="INITO" dx1="3546.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="START" Destination="Home.START" dx1="1006.67" />
-            <Connection Source="Home.SUCCESS" Destination="DONE" dx1="3546.67" />
-            <Connection Source="Home.FAILURE" Destination="FAILED" dx1="3546.67" />
+            <Connection Source="START" Destination="Home.START" dx1="1006.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.SUCCESS" Destination="DONE" dx1="3546.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.FAILURE" Destination="FAILED" dx1="3546.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Home.ErrorID" Destination="ErrorID" dx1="3546.67" />
+            <Connection Source="Home.ErrorID" Destination="ErrorID" dx1="3546.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="Procedures" />
@@ -720,11 +920,11 @@
           </SubAppEventOutputs>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="1000" y="3227" width="2760" height="3000" locked="false" />
-          <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="1000" y="6527" width="5525" height="1900" locked="false" />
-          <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="7920" y="1000" width="2680" height="1926.67" locked="false" />
-          <Group Name="Results" Comment="The results published when Execute is done" x="1000" y="8727" width="2650" height="1500" locked="false" />
-          <FB Name="Control" Type="modlib::SKILL_Core" x="1200" y="500">
+          <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="-1500" y="400" width="3013.33" height="3033.33" locked="false" />
+          <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="-1246.67" y="3733.33" width="8940" height="1900" locked="false" />
+          <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="2053.33" y="806.67" width="5593.33" height="1926.67" locked="false" />
+          <Group Name="Results" Comment="The results published when Execute is done" x="8300" y="3000" width="2926.67" height="1500" locked="false" />
+          <FB Name="Control" Type="modlib::SKILL_Core" x="853.33" y="0.33">
             <Parameter Name="Module" Value="&quot;Filling&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Dispensing&quot;" />
@@ -734,27 +934,27 @@
             <Parameter Name="ReleaseAll" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="Core" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="480" y="500">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="1000" y="166.67">
             <Parameter Name="QI" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="Volume" Type="modlib::SKILL_Param_LREAL" x="1710" y="500">
+          <FB Name="Volume" Type="modlib::SKILL_Param_LREAL" x="3946.67" y="160">
             <Parameter Name="Default" Value="1.0" />
             <Parameter Name="Lower" Value="0.5" />
             <Parameter Name="Upper" Value="10.0" />
             <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="4635" y="500">
+          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="7346.67" y="260">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;opc_ua[WRITE;/Objects/Filling/Skills/Dispensing/Parameters/Volume]&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="PubResults" Type="iec61499::net::PUBLISH_1" x="1700" y="500">
+          <FB Name="PubResults" Type="iec61499::net::PUBLISH_1" x="1173.33" y="167">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;opc_ua[WRITE;/Objects/Filling/Skills/Dispensing/Results/Weight]&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Results" />
           </FB>
-          <SubApp Name="Execute" x="176.67" y="93.33" Comment="Dispensing: execute sequence">
+          <SubApp Name="Execute" x="900" y="93.33" Comment="Dispensing: execute sequence">
             <SubAppInterfaceList>
               <SubAppEventInputs>
                 <SubAppEvent Name="INIT" Type="EInit" />
@@ -825,55 +1025,121 @@
                 <Connection Source="Weigh.INITO" Destination="INITO" dx1="6093.33">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="START" Destination="NeedleDown.START" dx1="66.67" />
-                <Connection Source="Weigh.SUCCESS" Destination="DONE" dx1="66.67" dx2="133.33" dy="-2380" />
+                <Connection Source="START" Destination="NeedleDown.START" dx1="66.67">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Weigh.SUCCESS" Destination="DONE" dx1="66.67" dx2="66.67" dy="-2380">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
                 <Connection Source="NeedleDown.INITO" Destination="Dispense.INIT" dx1="786.67">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="NeedleDown.SUCCESS" Destination="Dispense.START" dx1="133.33" />
+                <Connection Source="NeedleDown.SUCCESS" Destination="Dispense.START" dx1="133.33">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
                 <Connection Source="Dispense.INITO" Destination="Home.INIT" dx1="820">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Dispense.SUCCESS" Destination="Home.START" dx1="266.67" />
+                <Connection Source="Dispense.SUCCESS" Destination="Home.START" dx1="266.67">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
                 <Connection Source="Home.INITO" Destination="Weigh.INIT" dx1="80" dx2="80" dy="946.67">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Home.SUCCESS" Destination="Weigh.START" dx1="200" />
-                <Connection Source="HALT" Destination="NeedleDown.HALT" dx1="333.33" />
-                <Connection Source="HALT" Destination="Dispense.HALT" dx1="333.33" dx2="1466.67" dy="-666.67" />
-                <Connection Source="HALT" Destination="Home.HALT" dx1="333.33" dx2="1533.33" dy="826.67" />
-                <Connection Source="HALT" Destination="Weigh.HALT" dx1="333.33" />
-                <Connection Source="ABORT" Destination="NeedleDown.ABORT" dx1="133.33" />
-                <Connection Source="ABORT" Destination="Dispense.ABORT" dx1="133.33" />
-                <Connection Source="ABORT" Destination="Home.ABORT" dx1="133.33" />
-                <Connection Source="ABORT" Destination="Weigh.ABORT" dx1="133.33" />
-                <Connection Source="RESET" Destination="NeedleDown.RESET" dx1="200" />
-                <Connection Source="RESET" Destination="Dispense.RESET" dx1="200" dx2="3686.67" dy="-106.67" />
-                <Connection Source="RESET" Destination="Home.RESET" dx1="200" dx2="6173.33" dy="1320" />
-                <Connection Source="RESET" Destination="Weigh.RESET" dx1="200" dx2="8793.33" dy="2126.67" />
-                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_1" />
-                <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_2" />
-                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1" />
-                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2" />
-                <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_1" />
-                <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_2" />
-                <Connection Source="Fail3.FAIL" Destination="FAILED" dx1="66.67" />
+                <Connection Source="Home.SUCCESS" Destination="Weigh.START" dx1="200">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="HALT" Destination="NeedleDown.HALT" dx1="333.33">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="HALT" Destination="Dispense.HALT" dx1="333.33" dx2="333.33" dy="-666.67">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="HALT" Destination="Home.HALT" dx1="333.33" dx2="333.33" dy="826.67">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="HALT" Destination="Weigh.HALT" dx1="333.33">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="ABORT" Destination="NeedleDown.ABORT" dx1="133.33">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="ABORT" Destination="Dispense.ABORT" dx1="133.33">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="ABORT" Destination="Home.ABORT" dx1="133.33">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="ABORT" Destination="Weigh.ABORT" dx1="133.33">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="RESET" Destination="NeedleDown.RESET" dx1="200">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="RESET" Destination="Dispense.RESET" dx1="200" dx2="200" dy="-106.67">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="RESET" Destination="Home.RESET" dx1="200" dx2="200" dy="1320">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="RESET" Destination="Weigh.RESET" dx1="200" dx2="200" dy="2126.67">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="NeedleDown.FAILURE" Destination="Fail1.FAIL_1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Dispense.FAILURE" Destination="Fail1.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail2.FAIL" Destination="Fail3.FAIL_1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Weigh.FAILURE" Destination="Fail3.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail3.FAIL" Destination="FAILED" dx1="66.67">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
               </EventConnections>
               <DataConnections>
-                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.Error1" />
-                <Connection Source="Dispense.ErrorID" Destination="Fail1.Error2" />
-                <Connection Source="Fail1.Error" Destination="Fail2.Error1" />
-                <Connection Source="Home.ErrorID" Destination="Fail2.Error2" />
-                <Connection Source="Fail2.Error" Destination="Fail3.Error1" />
-                <Connection Source="Weigh.ErrorID" Destination="Fail3.Error2" />
-                <Connection Source="Fail3.Error" Destination="ErrorID" />
-                <Connection Source="Volume" Destination="Dispense.Volume" dx1="266.67" dx2="3686.67" dy="-140" />
-                <Connection Source="Weigh.R_Weight" Destination="Weight" dx1="266.67" dx2="133.33" dy="-1633.33" />
+                <Connection Source="NeedleDown.ErrorID" Destination="Fail1.Error1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Dispense.ErrorID" Destination="Fail1.Error2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail1.Error" Destination="Fail2.Error1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.ErrorID" Destination="Fail2.Error2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail2.Error" Destination="Fail3.Error1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Weigh.ErrorID" Destination="Fail3.Error2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail3.Error" Destination="ErrorID">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Volume" Destination="Dispense.Volume" dx1="266.67" dx2="266.67" dy="-140">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Weigh.R_Weight" Destination="Weight" dx1="266.67" dx2="266.67" dy="-1633.33">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
               </DataConnections>
             </SubAppNetwork>
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
-          <SubApp Name="Stop" x="1680" y="193.33" Comment="Dispensing: stop sequence">
+          <SubApp Name="Stop" x="3700" y="193.33" Comment="Dispensing: stop sequence">
             <SubAppInterfaceList>
               <SubAppEventInputs>
                 <SubAppEvent Name="INIT" Type="EInit" />
@@ -908,88 +1174,170 @@
                 <Connection Source="Home.INITO" Destination="INITO">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="START" Destination="Home.START" />
-                <Connection Source="Home.SUCCESS" Destination="DONE" />
-                <Connection Source="HALT" Destination="Home.HALT" />
-                <Connection Source="ABORT" Destination="Home.ABORT" />
-                <Connection Source="RESET" Destination="Home.RESET" />
-                <Connection Source="Home.FAILURE" Destination="FAILED" />
+                <Connection Source="START" Destination="Home.START">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.SUCCESS" Destination="DONE">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="HALT" Destination="Home.HALT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="ABORT" Destination="Home.ABORT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="RESET" Destination="Home.RESET">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.FAILURE" Destination="FAILED">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
               </EventConnections>
               <DataConnections>
-                <Connection Source="Home.ErrorID" Destination="ErrorID" />
+                <Connection Source="Home.ErrorID" Destination="ErrorID">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
               </DataConnections>
             </SubAppNetwork>
             <Attribute Name="GroupName" Type="STRING" Value="Sequences" />
           </SubApp>
           <EventConnections>
-            <Connection Source="Control.START_RSP" Destination="UaStart.RSP" />
-            <Connection Source="UaStart.IND" Destination="Volume.CHECK" />
-            <Connection Source="Control.RUN" Destination="Volume.LATCH" />
-            <Connection Source="Volume.CHECKED" Destination="Control.START_REQ" />
-            <Connection Source="Volume.LATCHED" Destination="PubParams.REQ" dx1="80" dx2="80" dy="1093.33" />
+            <Connection Source="Control.START_RSP" Destination="UaStart.RSP" dx1="80" dx2="80" dy="1546.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="UaStart.IND" Destination="Volume.CHECK" dx1="1093.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.RUN" Destination="Volume.LATCH" dx1="466.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.CHECKED" Destination="Control.START_REQ" dx1="80" dx2="80" dy="-1546.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.LATCHED" Destination="PubParams.REQ" dx1="733.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
             <Connection Source="PubParams.INITO" Destination="PubParams.REQ" dx1="80" dx2="80" dy="53.33">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Execute.DONE" Destination="PubResults.REQ" dx1="80" dx2="80" dy="1100" />
-            <Connection Source="Volume.LATCHED" Destination="Execute.START" dx1="466.67" />
-            <Connection Source="Control.HALT_SEQ" Destination="Execute.HALT" />
-            <Connection Source="Control.ABORT_SEQ" Destination="Execute.ABORT" />
-            <Connection Source="Control.RESET_SEQ" Destination="Execute.RESET" />
-            <Connection Source="Execute.DONE" Destination="Control.EXECUTE_DONE" />
-            <Connection Source="Execute.FAILED" Destination="Control.EXECUTE_FAILED" />
-            <Connection Source="Control.RUN_STOPPING" Destination="Stop.START" />
-            <Connection Source="Control.ABORT_SEQ" Destination="Stop.ABORT" />
-            <Connection Source="Control.RESET_SEQ" Destination="Stop.RESET" />
-            <Connection Source="Stop.DONE" Destination="Control.STOPPING_DONE" />
-            <Connection Source="Stop.FAILED" Destination="Control.STOPPING_DONE" />
+            <Connection Source="Execute.DONE" Destination="PubResults.REQ" dx1="80" dx2="80" dy="1100">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.LATCHED" Destination="Execute.START" dx1="80" dx2="80" dy="-1553.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.HALT_SEQ" Destination="Execute.HALT" dx1="2053.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.ABORT_SEQ" Destination="Execute.ABORT" dx1="2053.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.RESET_SEQ" Destination="Execute.RESET" dx1="2053.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Execute.DONE" Destination="Control.EXECUTE_DONE" dx1="80" dx2="80" dy="1633.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Execute.FAILED" Destination="Control.EXECUTE_FAILED" dx1="80" dx2="80" dy="1633.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.RUN_STOPPING" Destination="Stop.START" dx1="3066.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.ABORT_SEQ" Destination="Stop.ABORT" dx1="3066.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.RESET_SEQ" Destination="Stop.RESET" dx1="3066.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Stop.DONE" Destination="Control.STOPPING_DONE" dx1="80" dx2="80" dy="1686.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Stop.FAILED" Destination="Control.STOPPING_DONE" dx1="80" dx2="80" dy="1633.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
             <Connection Source="INIT" Destination="Control.INIT" dx1="1020">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Control.INITO" Destination="UaStart.INIT">
+            <Connection Source="Control.INITO" Destination="UaStart.INIT" dx1="80" dx2="80" dy="1546.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="UaStart.INITO" Destination="Volume.INIT">
+            <Connection Source="UaStart.INITO" Destination="Volume.INIT" dx1="1093.33">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Volume.INITO" Destination="PubParams.INIT" dx1="80" dx2="80" dy="1146.67">
+            <Connection Source="Volume.INITO" Destination="PubParams.INIT" dx1="1013.33">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="PubParams.INITO" Destination="PubResults.INIT">
+            <Connection Source="PubParams.INITO" Destination="PubResults.INIT" dx1="1326.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="PubResults.INITO" Destination="Execute.INIT">
+            <Connection Source="PubResults.INITO" Destination="Execute.INIT" dx1="2306.67">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Execute.INITO" Destination="Stop.INIT" dx1="373.33">
               <Attribute Name="Visible" Value="false" />
             </Connection>
-            <Connection Source="Stop.INITO" Destination="INITO" dx1="2573.33">
+            <Connection Source="Stop.INITO" Destination="INITO" dx1="2393.33">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
           <DataConnections>
-            <Connection Source="Control.StartMethodId" Destination="UaStart.ID" />
-            <Connection Source="UaStart.RD_1" Destination="Control.Session" />
-            <Connection Source="Control.Accepted" Destination="UaStart.SD_1" dx1="300" />
-            <Connection Source="Control.StartError" Destination="UaStart.SD_2" />
-            <Connection Source="UaStart.RD_2" Destination="Volume.Requested" />
-            <Connection Source="Control.CalledByClient" Destination="Volume.CalledByClient" />
-            <Connection Source="Volume.Value" Destination="PubParams.SD_1" />
-            <Connection Source="Volume.AllInRange" Destination="Control.ParamsInRange" />
-            <Connection Source="Execute.Weight" Destination="PubResults.SD_1" dx1="80" dx2="80" dy="993.33" />
-            <Connection Source="Volume.Value" Destination="Execute.Volume" />
-            <Connection Source="Execute.ErrorID" Destination="Control.ExecuteError" />
+            <Connection Source="Control.StartMethodId" Destination="UaStart.ID" dx1="80" dx2="80" dy="1226.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="UaStart.RD_1" Destination="Control.Session" dx1="80" dx2="80" dy="-906.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.Accepted" Destination="UaStart.SD_1" dx1="80" dx2="80" dy="1493.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.StartError" Destination="UaStart.SD_2" dx1="80" dx2="80" dy="1226.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="UaStart.RD_2" Destination="Volume.Requested" dx1="240">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Control.CalledByClient" Destination="Volume.CalledByClient" dx1="466.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.Value" Destination="PubParams.SD_1" dx1="873.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.AllInRange" Destination="Control.ParamsInRange" dx1="80" dx2="80" dy="-853.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Execute.Weight" Destination="PubResults.SD_1" dx1="80" dx2="80" dy="993.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Volume.Value" Destination="Execute.Volume" dx1="80" dx2="80" dy="-1386.67">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Execute.ErrorID" Destination="Control.ExecuteError" dx1="80" dx2="80" dy="2113.33">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
           </DataConnections>
         </SubAppNetwork>
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevelSkills" />
       </SubApp>
       <EventConnections>
-        <Connection Source="Module.RUN_RESETTING" Destination="Resetting.START" dx1="80" dx2="80" dy="2046.67" />
-        <Connection Source="Resetting.DONE" Destination="Module.RESETTING_DONE" dx1="80" dx2="80" dy="-1546.67" />
-        <Connection Source="Resetting.FAILED" Destination="Module.RESETTING_FAILED" dx1="80" dx2="80" dy="-1546.67" />
-        <Connection Source="Module.RUN_STOPPING" Destination="Stopping.START" dx1="2000" dx2="2000" dy="4646.67" />
-        <Connection Source="Stopping.DONE" Destination="Module.STOPPING_DONE" dx1="80" dx2="80" dy="-1940" />
-        <Connection Source="Stopping.FAILED" Destination="Module.STOPPING_FAILED" dx1="80" dx2="80" dy="-1946.67" />
+        <Connection Source="Module.RUN_RESETTING" Destination="Resetting.START" dx1="80" dx2="80" dy="2046.67">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Resetting.DONE" Destination="Module.RESETTING_DONE" dx1="80" dx2="80" dy="-1546.67">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Resetting.FAILED" Destination="Module.RESETTING_FAILED" dx1="80" dx2="80" dy="-1546.67">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Module.RUN_STOPPING" Destination="Stopping.START" dx1="2000" dx2="2000" dy="4646.67">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Stopping.DONE" Destination="Module.STOPPING_DONE" dx1="80" dx2="80" dy="-1940">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
+        <Connection Source="Stopping.FAILED" Destination="Module.STOPPING_FAILED" dx1="80" dx2="80" dy="-1946.67">
+          <Attribute Name="Visible" Value="false" />
+        </Connection>
         <Connection Source="Occupation.INITO" Destination="Module.INIT" dx1="1326.67">
           <Attribute Name="Visible" Value="false" />
         </Connection>
@@ -1036,8 +1384,12 @@
     <Resource Name="RES" Type="iec61499::system::EMB_RES" x="0" y="0">
       <FBNetwork>
         <EventConnections>
-          <Connection Source="START.COLD" Destination="Filling.Occupation.INIT" />
-          <Connection Source="START.WARM" Destination="Filling.Occupation.INIT" />
+          <Connection Source="START.COLD" Destination="Filling.Occupation.INIT">
+            <Attribute Name="Visible" Value="false" />
+          </Connection>
+          <Connection Source="START.WARM" Destination="Filling.Occupation.INIT">
+            <Attribute Name="Visible" Value="false" />
+          </Connection>
         </EventConnections>
       </FBNetwork>
     </Resource>
@@ -1049,8 +1401,12 @@
     <Resource Name="RES" Type="iec61499::system::EMB_RES" x="0" y="0">
       <FBNetwork>
         <EventConnections>
-          <Connection Source="START.COLD" Destination="Filling_pi.Occupation.INIT" />
-          <Connection Source="START.WARM" Destination="Filling_pi.Occupation.INIT" />
+          <Connection Source="START.COLD" Destination="Filling_pi.Occupation.INIT">
+            <Attribute Name="Visible" Value="false" />
+          </Connection>
+          <Connection Source="START.WARM" Destination="Filling_pi.Occupation.INIT">
+            <Attribute Name="Visible" Value="false" />
+          </Connection>
         </EventConnections>
       </FBNetwork>
     </Resource>

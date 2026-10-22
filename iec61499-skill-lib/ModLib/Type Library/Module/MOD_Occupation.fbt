@@ -34,41 +34,107 @@
     </FB>
     <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1100" y="3300" />
     <EventConnections>
-      <Connection Source="INIT" Destination="Ids.INIT" />
-      <Connection Source="Ids.INITO" Destination="Occupy.INIT" />
-      <Connection Source="Occupy.INITO" Destination="Release.INIT" />
-      <Connection Source="Release.INITO" Destination="PubOwner.INIT" />
-      <Connection Source="PubOwner.INITO" Destination="SubQuery.INIT" />
-      <Connection Source="SubQuery.INITO" Destination="PubUa.INIT" />
-      <Connection Source="PubUa.INITO" Destination="PubUa.REQ" />
-      <Connection Source="PubUa.INITO" Destination="INITO" />
-      <Connection Source="Occupy.IND" Destination="Logic.OCCUPY_REQ" />
-      <Connection Source="Logic.OCCUPY_RSP" Destination="Occupy.RSP" />
-      <Connection Source="Release.IND" Destination="Logic.RELEASE_REQ" />
-      <Connection Source="Logic.RELEASE_RSP" Destination="Release.RSP" />
-      <Connection Source="SubQuery.IND" Destination="Logic.QUERY_REQ" />
-      <Connection Source="Logic.CHG" Destination="PubOwner.REQ" />
-      <Connection Source="Logic.CHG" Destination="PubUa.REQ" />
+      <Connection Source="INIT" Destination="Ids.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.INITO" Destination="Occupy.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Occupy.INITO" Destination="Release.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Release.INITO" Destination="PubOwner.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubOwner.INITO" Destination="SubQuery.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubQuery.INITO" Destination="PubUa.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubUa.INITO" Destination="PubUa.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubUa.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Occupy.IND" Destination="Logic.OCCUPY_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.OCCUPY_RSP" Destination="Occupy.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Release.IND" Destination="Logic.RELEASE_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.RELEASE_RSP" Destination="Release.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubQuery.IND" Destination="Logic.QUERY_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.CHG" Destination="PubOwner.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.CHG" Destination="PubUa.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </EventConnections>
     <DataConnections>
-      <Connection Source="Module" Destination="Ids.Module" />
-      <Connection Source="UaRoot" Destination="Ids.UaRoot" />
-      <Connection Source="UaEnable" Destination="Occupy.QI" />
-      <Connection Source="UaEnable" Destination="Release.QI" />
-      <Connection Source="UaEnable" Destination="PubUa.QI" />
-      <Connection Source="Ids.IdOccupy" Destination="Occupy.ID" />
-      <Connection Source="Ids.IdRelease" Destination="Release.ID" />
-      <Connection Source="Ids.IdPub" Destination="PubUa.ID" />
-      <Connection Source="Ids.IdOwner" Destination="PubOwner.ID" />
-      <Connection Source="Ids.IdQuery" Destination="SubQuery.ID" />
-      <Connection Source="Occupy.RD_1" Destination="Logic.OccupySession" />
-      <Connection Source="Logic.Accepted" Destination="Occupy.SD_1" />
-      <Connection Source="Logic.ErrorID" Destination="Occupy.SD_2" />
-      <Connection Source="Release.RD_1" Destination="Logic.ReleaseSession" />
-      <Connection Source="Logic.Accepted" Destination="Release.SD_1" />
-      <Connection Source="Logic.ErrorID" Destination="Release.SD_2" />
-      <Connection Source="Logic.Owner" Destination="PubOwner.SD_1" />
-      <Connection Source="Logic.Occupied" Destination="PubUa.SD_1" />
+      <Connection Source="Module" Destination="Ids.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaRoot" Destination="Ids.UaRoot">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="Occupy.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="Release.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="PubUa.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdOccupy" Destination="Occupy.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdRelease" Destination="Release.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdPub" Destination="PubUa.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdOwner" Destination="PubOwner.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdQuery" Destination="SubQuery.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Occupy.RD_1" Destination="Logic.OccupySession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Accepted" Destination="Occupy.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ErrorID" Destination="Occupy.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Release.RD_1" Destination="Logic.ReleaseSession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Accepted" Destination="Release.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ErrorID" Destination="Release.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Owner" Destination="PubOwner.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Occupied" Destination="PubUa.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
     </DataConnections>
   </FBNetwork>
 </FBType>
