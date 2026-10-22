@@ -72,40 +72,40 @@
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <Group Name="StateMachine" Comment="The skill's states and when a Succeeded returns to Idle" x="1000" y="1000" width="3090" height="4000" locked="false" />
-    <Group Name="ModuleViews" Comment="The module's owner and state in, the activity count out" x="4390" y="1000" width="3830" height="1500" locked="false" />
-    <Group Name="OpcUa" Comment="The methods Stop, Abort and Reset, and the published State and ErrorID" x="8520" y="1000" width="2300" height="2700" locked="false" />
-    <Group Name="Release" Comment="At the end of a run of a module level skill: everything it holds given up" x="11120" y="1000" width="1250" height="1500" locked="false" />
-    <FB Name="Control" Type="modlib::SKILL_Control" x="300" y="500">
+    <Group Name="StateMachine" Comment="The skill's states and when a Succeeded returns to Idle" x="1000" y="1000" width="6410" height="3980" locked="false" />
+    <Group Name="ModuleViews" Comment="The module's owner and state in, the activity count out" x="1000" y="5280" width="8330" height="1480" locked="false" />
+    <Group Name="OpcUa" Comment="The methods Stop, Abort and Reset, and the published State and ErrorID" x="1000" y="7060" width="5980" height="2680" locked="false" />
+    <Group Name="Release" Comment="At the end of a run of a module level skill: everything it holds given up" x="7280" y="7060" width="2250" height="1590" locked="false" />
+    <FB Name="Control" Type="modlib::SKILL_Control" x="1270" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="StateMachine" />
     </FB>
-    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="300" y="500">
+    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="950" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="ModuleViews" />
     </FB>
-    <FB Name="Mode" Type="modlib::MOD_StateView" x="1530" y="500">
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="3660" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="ModuleViews" />
     </FB>
-    <FB Name="UaStop" Type="iec61499::net::SERVER_2_1" x="300" y="500">
+    <FB Name="UaStop" Type="iec61499::net::SERVER_2_1" x="1190" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
     </FB>
-    <FB Name="UaAbort" Type="iec61499::net::SERVER_2_1" x="1350" y="500">
+    <FB Name="UaAbort" Type="iec61499::net::SERVER_2_1" x="4080" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
     </FB>
-    <FB Name="UaReset" Type="iec61499::net::SERVER_2_1" x="300" y="1600">
+    <FB Name="UaReset" Type="iec61499::net::SERVER_2_1" x="1190" y="1250">
       <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
     </FB>
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="1350" y="1600">
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="3920" y="1250">
       <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
     </FB>
-    <FB Name="Act" Type="iec61499::net::PUBLISH_1" x="2940" y="500">
+    <FB Name="Act" Type="iec61499::net::PUBLISH_1" x="6690" y="150">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="ModuleViews" />
     </FB>
-    <FB Name="ToIdle" Type="iec61499::events::E_DELAY" x="2320" y="500">
+    <FB Name="ToIdle" Type="iec61499::events::E_DELAY" x="4890" y="150">
       <Parameter Name="DT" Value="T#1500ms" />
       <Attribute Name="GroupName" Type="STRING" Value="StateMachine" />
     </FB>
-    <FB Name="PubRelease" Type="iec61499::net::PUBLISH_1" x="300" y="500">
+    <FB Name="PubRelease" Type="iec61499::net::PUBLISH_1" x="1110" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Release" />
     </FB>
     <EventConnections>

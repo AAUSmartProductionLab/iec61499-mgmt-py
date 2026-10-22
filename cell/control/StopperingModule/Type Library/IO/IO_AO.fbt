@@ -35,10 +35,10 @@
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Route" Type="modlib::IO_RouteAO" x="1100" y="1000" />
-    <FB Name="Line" Type="eclipse4diac::io::pwmsysfs::PWMChip" x="2220" y="1000" />
-    <FB Name="Local" Type="eclipse4diac::io::QW" x="3340" y="1000" />
-    <FB Name="Bus" Type="iec61499::net::CLIENT_1_0" x="4280" y="1000" />
+    <FB Name="Route" Type="modlib::IO_RouteAO" x="1790" y="1000" />
+    <FB Name="Line" Type="eclipse4diac::io::pwmsysfs::PWMChip" x="4270" y="1000" />
+    <FB Name="Local" Type="eclipse4diac::io::QW" x="6470" y="1000" />
+    <FB Name="Bus" Type="iec61499::net::CLIENT_1_0" x="8610" y="1000" />
     <EventConnections>
       <Connection Source="INIT" Destination="Route.INIT">
         <Attribute Name="Visible" Value="false" />

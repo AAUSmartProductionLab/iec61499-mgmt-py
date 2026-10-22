@@ -26,26 +26,26 @@
     <OutputVars />
   </InterfaceList>
   <FBNetwork>
-    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="2370" height="2300" locked="false" />
-    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="3670" y="1000" width="2780" height="2600" locked="false" />
-    <FB Name="Logic" Type="filling::EL_Pump" x="300" y="500">
+    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="4650" height="2280" locked="false" />
+    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="5950" y="1000" width="5260" height="2580" locked="false" />
+    <FB Name="Logic" Type="filling::EL_Pump" x="950" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="1600" y="500">
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="3690" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Mode" Type="modlib::MOD_StateView" x="300" y="500">
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="950" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_2" x="1770" y="500">
+    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_2" x="3500" y="150">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="480" y="1600">
+    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="950" y="1250">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="1770" y="1600">
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="3700" y="1250">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>

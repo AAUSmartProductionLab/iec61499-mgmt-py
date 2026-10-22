@@ -47,49 +47,49 @@
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="2955" height="4400" locked="false" />
-    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="4255" y="1000" width="4410" height="3200" locked="false" />
-    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="5700" width="4470" height="4000" locked="false" />
-    <FB Name="Control" Type="modlib::SKILL_Core" x="300" y="500">
+    <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="7030" height="4380" locked="false" />
+    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="1000" y="5680" width="8235" height="3180" locked="false" />
+    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="9160" width="8770" height="3980" locked="false" />
+    <FB Name="Control" Type="modlib::SKILL_Core" x="1270" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="Logic" Type="filling::SL_MoveAxis" x="840" y="500">
+    <FB Name="Logic" Type="filling::SL_MoveAxis" x="1190" y="150">
       <Parameter Name="Equipment" Value="&quot;LinearAxis&quot;" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="2005" y="500">
+    <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="5050" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="Par_Position" Type="modlib::SKILL_Param_LREAL" x="480" y="3000">
+    <FB Name="Par_Position" Type="modlib::SKILL_Param_LREAL" x="1230" y="2650">
       <Parameter Name="Lower" Value="0.0" />
       <Parameter Name="Upper" Value="60.0" />
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="2005" y="3000">
+    <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="4930" y="2650">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_5" x="480" y="500">
+    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_5" x="950" y="150">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqView" Type="filling::EV_LinearAxis" x="1590" y="500">
+    <FB Name="EqView" Type="filling::EV_LinearAxis" x="3660" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="2770" y="500">
+    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="4525" y="150">
       <Parameter Name="DT" Value="T#500ms" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="Driver" Type="filling::EC_LinearAxis" x="3340" y="500">
+    <FB Name="Driver" Type="filling::EC_LinearAxis" x="7010" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="300" y="2300">
+    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="1070" y="1950">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_8" x="1770" y="2300">
+    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_8" x="3820" y="1950">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="3640" y="500">
+    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="6875" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
     <EventConnections>

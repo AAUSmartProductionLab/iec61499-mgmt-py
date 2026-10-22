@@ -40,47 +40,47 @@
     <OutputVars />
   </InterfaceList>
   <FBNetwork>
-    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="3465" height="3200" locked="false" />
-    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="4765" y="1000" width="4010" height="3600" locked="false" />
-    <Group Name="Inputs" Comment="The equipment's sensors: read every cycle, one block per IO point" x="9075" y="1000" width="1190" height="1400" locked="false" />
-    <Group Name="Outputs" Comment="The equipment's actuators: written on a change and every cycle, one block per IO point" x="1000" y="4900" width="3130" height="1700" locked="false" />
-    <FB Name="Logic" Type="filling::EL_LinearAxis" x="300" y="500">
+    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="7105" height="3180" locked="false" />
+    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="1000" y="4480" width="7930" height="3580" locked="false" />
+    <Group Name="Inputs" Comment="The equipment's sensors: read every cycle, one block per IO point" x="9230" y="4480" width="2910" height="1380" locked="false" />
+    <Group Name="Outputs" Comment="The equipment's actuators: written on a change and every cycle, one block per IO point" x="1000" y="8360" width="7850" height="1680" locked="false" />
+    <FB Name="Logic" Type="filling::EL_LinearAxis" x="950" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="1825" y="500">
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="3955" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="MoveT" Type="iec61499::events::E_DELAY" x="2695" y="500">
+    <FB Name="MoveT" Type="iec61499::events::E_DELAY" x="5705" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Mode" Type="modlib::MOD_StateView" x="300" y="500">
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="950" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_8" x="1710" y="500">
+    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_8" x="3500" y="150">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="3000" y="500">
+    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="6210" y="150">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_5" x="480" y="2200">
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_5" x="1150" y="1850">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="PubUa" Type="iec61499::net::PUBLISH_4" x="1530" y="2200">
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_4" x="3860" y="1850">
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="In_AtHome" Type="modlib::IO_DI" x="300" y="500">
+    <FB Name="In_AtHome" Type="modlib::IO_DI" x="1270" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Inputs" />
     </FB>
-    <FB Name="Out_Enable" Type="modlib::IO_DO" x="300" y="500">
+    <FB Name="Out_Enable" Type="modlib::IO_DO" x="1270" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
     </FB>
-    <FB Name="Out_Down" Type="modlib::IO_DO" x="1350" y="500">
+    <FB Name="Out_Down" Type="modlib::IO_DO" x="3880" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
     </FB>
-    <FB Name="Out_Step" Type="modlib::IO_AO" x="2290" y="500">
+    <FB Name="Out_Step" Type="modlib::IO_AO" x="6380" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
     </FB>
     <EventConnections>

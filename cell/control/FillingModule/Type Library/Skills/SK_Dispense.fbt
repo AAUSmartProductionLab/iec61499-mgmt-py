@@ -48,54 +48,54 @@
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="4615" height="4400" locked="false" />
-    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="5915" y="1000" width="4050" height="3000" locked="false" />
-    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="5700" width="3870" height="2800" locked="false" />
-    <FB Name="Control" Type="modlib::SKILL_Core" x="300" y="500">
+    <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="10515" height="4380" locked="false" />
+    <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="1000" y="5680" width="8145" height="2980" locked="false" />
+    <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="8960" width="7590" height="2780" locked="false" />
+    <FB Name="Control" Type="modlib::SKILL_Core" x="1270" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="Logic" Type="filling::SL_Dispense" x="570" y="500">
+    <FB Name="Logic" Type="filling::SL_Dispense" x="1190" y="150">
       <Parameter Name="Equipment" Value="&quot;Pump&quot;" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="UaStart" Type="iec61499::net::SERVER_2_3" x="1960" y="500">
+    <FB Name="UaStart" Type="iec61499::net::SERVER_2_3" x="4810" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="Par_Volume" Type="modlib::SKILL_Param_LREAL" x="3190" y="500">
+    <FB Name="Par_Volume" Type="modlib::SKILL_Param_LREAL" x="7820" y="150">
       <Parameter Name="Lower" Value="0.5" />
       <Parameter Name="Upper" Value="10.0" />
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="Par_FlowRate" Type="modlib::SKILL_Param_LREAL" x="435" y="3000">
+    <FB Name="Par_FlowRate" Type="modlib::SKILL_Param_LREAL" x="1230" y="2650">
       <Parameter Name="Lower" Value="0.1" />
       <Parameter Name="Upper" Value="5.0" />
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="PubParams" Type="iec61499::net::PUBLISH_2" x="1960" y="3000">
+    <FB Name="PubParams" Type="iec61499::net::PUBLISH_2" x="4690" y="2650">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_1" x="480" y="500">
+    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_1" x="950" y="150">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqView" Type="filling::EV_Pump" x="1590" y="500">
+    <FB Name="EqView" Type="filling::EV_Pump" x="3340" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="2410" y="500">
+    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="4435" y="150">
       <Parameter Name="DT" Value="T#500ms" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="Driver" Type="filling::EC_Pump" x="2760" y="500">
+    <FB Name="Driver" Type="filling::EC_Pump" x="5850" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="300" y="1700">
+    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="1070" y="1350">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_2" x="1770" y="1700">
+    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_2" x="3500" y="1350">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="3280" y="500">
+    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="6785" y="150">
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
     <EventConnections>

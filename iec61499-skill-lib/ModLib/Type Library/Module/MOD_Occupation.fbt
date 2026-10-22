@@ -22,17 +22,17 @@
     <OutputVars />
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Ids" Type="modlib::MOD_OccupationIds" x="1100" y="1000" />
-    <FB Name="Occupy" Type="iec61499::net::SERVER_2_1" x="2690" y="1000" />
-    <FB Name="Release" Type="iec61499::net::SERVER_2_1" x="3860" y="1000" />
-    <FB Name="Logic" Type="modlib::MOD_OccupationLogic" x="1100" y="2100" />
-    <FB Name="PubOwner" Type="iec61499::net::PUBLISH_1" x="2870" y="2100">
+    <FB Name="Ids" Type="modlib::MOD_OccupationIds" x="1750" y="1000" />
+    <FB Name="Occupy" Type="iec61499::net::SERVER_2_1" x="4620" y="1000" />
+    <FB Name="Release" Type="iec61499::net::SERVER_2_1" x="7310" y="1000" />
+    <FB Name="Logic" Type="modlib::MOD_OccupationLogic" x="1630" y="2100" />
+    <FB Name="PubOwner" Type="iec61499::net::PUBLISH_1" x="4460" y="2100">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="4040" y="2100">
+    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="7190" y="2100">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1100" y="3300" />
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1830" y="3300" />
     <EventConnections>
       <Connection Source="INIT" Destination="Ids.INIT">
         <Attribute Name="Visible" Value="false" />

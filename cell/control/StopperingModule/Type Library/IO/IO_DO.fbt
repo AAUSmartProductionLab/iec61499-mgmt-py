@@ -29,12 +29,12 @@
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Route" Type="modlib::IO_RouteDO" x="1100" y="1000" />
-    <FB Name="Line" Type="eclipse4diac::io::gpiochip::GPIOChip" x="2265" y="1000">
+    <FB Name="Route" Type="modlib::IO_RouteDO" x="1790" y="1000" />
+    <FB Name="Line" Type="eclipse4diac::io::gpiochip::GPIOChip" x="4270" y="1000">
       <Parameter Name="ReadWriteMode" Value="1" />
     </FB>
-    <FB Name="Local" Type="eclipse4diac::io::QX" x="3520" y="1000" />
-    <FB Name="Bus" Type="iec61499::net::CLIENT_1_0" x="4460" y="1000" />
+    <FB Name="Local" Type="eclipse4diac::io::QX" x="6605" y="1000" />
+    <FB Name="Bus" Type="iec61499::net::CLIENT_1_0" x="8745" y="1000" />
     <EventConnections>
       <Connection Source="INIT" Destination="Route.INIT">
         <Attribute Name="Visible" Value="false" />
