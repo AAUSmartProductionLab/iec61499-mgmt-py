@@ -556,6 +556,19 @@ def test_no_two_blocks_overlap_in_any_network(project):
         assert overlaps(boxes(net, size)) == []
 
 
+@pytest.mark.parametrize("project", ["FillingModule", "StopperingModule", "FillerModule"])
+def test_arranged_layouts_get_room_for_labels_and_comments(project):
+    """A layout arranged in the IDE is spread where it is too tight: in the applications and inside
+    every subapplication no block nor its labels overlap another, each fits in its group below the
+    group's comment, and no two groups overlap."""
+    from modgen.layout import Sizer, networks
+    size = Sizer(project_dir(project) / "Type Library")
+    for net in networks(ET.parse(system_file(project)).getroot()):
+        groups = {g.get("Name"): (float(g.get("x")), float(g.get("y")), float(g.get("x")) + float(g.get("width")),
+                                  float(g.get("y")) + float(g.get("height"))) for g in net.findall("Group")}
+        assert (overlaps(boxes(net, size, labelled=True)), outside(net, size), overlaps(groups)) == ([], [], [])
+
+
 @pytest.mark.parametrize("project", [LIBRARY_PROJECT, *[load(p).project for p in ALL]])
 def test_composite_types_leave_room_for_labels_and_comments(project):
     """Inside every composite type no block nor the labels of its hidden connections overlap
@@ -567,6 +580,30 @@ def test_composite_types_leave_room_for_labels_and_comments(project):
         if net is None or {"Std", "Generic"} & set(path.parts):
             continue
         assert (path.stem, overlaps(boxes(net, size, labelled=True)), outside(net, size)) == (path.stem, [], [])
+
+
+def test_a_layout_too_tight_is_spread_keeping_its_order(tmp_path):
+    """Blocks arranged in the IDE too close for their labels move apart, each staying in its row and
+    in the order they had."""
+    from modgen.layout import Sizer
+    spec = load(FILLER)
+    project = tmp_path / spec.project
+    generate(spec, project, tmp_path / "manifest.json")
+    path = project / f"{spec.project}.sys"
+    doc = ET.parse(path)
+    net = next(a for a in doc.getroot().iter("Application") if a.get("Name") == "Filler").find("SubAppNetwork")
+    squeezed = {el.get("Name"): (float(el.get("x")) / 4, el.get("y")) for el in net if el.tag in ("FB", "SubApp")}
+    for el in net:
+        if el.get("Name") in squeezed:
+            el.set("x", str(squeezed[el.get("Name")][0]))
+    doc.write(path, encoding="utf-8", xml_declaration=True)
+    generate(spec, project, tmp_path / "manifest.json")
+    net = next(a for a in ET.parse(path).getroot().iter("Application") if a.get("Name") == "Filler").find("SubAppNetwork")
+    assert overlaps(boxes(net, Sizer(project / "Type Library"), labelled=True)) == [] and outside(net, Sizer(project / "Type Library")) == []
+    after = {el.get("Name"): (float(el.get("x")), el.get("y")) for el in net if el.tag in ("FB", "SubApp")}
+    assert {k: y for k, (_, y) in after.items()} == {k: y for k, (_, y) in squeezed.items()}
+    order = lambda placed: sorted(placed, key=lambda k: (placed[k][1], placed[k][0]))  # noqa: E731
+    assert order(after) == order(squeezed)
 
 
 def test_a_skill_added_later_gets_a_free_place_in_its_group(tmp_path):

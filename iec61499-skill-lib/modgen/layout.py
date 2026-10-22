@@ -9,7 +9,8 @@ a block gets room for the longest of them on each side. A block in a group is pl
 the group's content, which begins below the group's title and its wrapped comment.
 
 ``relayout`` lays out one network from scratch; ``place_new`` gives the blocks that a layout
-arranged in the IDE does not have yet (a skill added since) a free place in their group.
+arranged in the IDE does not have yet (a skill added since) a free place in their group, and
+``make_room`` spreads such a layout where its blocks, labels or groups overlap.
 """
 from __future__ import annotations
 
@@ -178,6 +179,79 @@ def relayout(net, size, x0: float = 1000, y0: float = 1000):
         grid(loose, box, x0, y + row_h + GROUP_GAP if groups else y0, columns(len(loose), sequence=not groups))
 
 
+def make_room(root, size):
+    """Spread a layout arranged in the IDE where it is too tight, keeping its arrangement: a block
+    that overlaps one left of it (with their labels) moves right; a group grows to hold its blocks
+    below its comment; a group or block that then overlaps another moves right, or down if it was
+    below it. Nothing moves that has room."""
+    for net in networks(root):
+        box = measure(net, size)
+        blocks = [el for el in net if el.tag in ("FB", "SubApp")]
+        groups = {g.get("Name"): g for g in net if g.tag == "Group"}
+        items = [[g, None] for g in groups.values()] + [[b, box(b)] for b in blocks if group_of(b) not in groups]
+        before = {id(it[0]): extent(it) for it in items}         # where things were relative to each other
+        for name, g in groups.items():
+            members = [b for b in blocks if group_of(b) == name]
+            if not members:
+                continue
+            spread([[b, box(b)] for b in members])
+            left = min(float(b.get("x")) - box(b)[0] for b in members)
+            for b in members if left < PAD else ():
+                b.set("x", num(float(b.get("x")) + PAD - left))       # labels left of the group's edge
+            right = max(float(b.get("x")) + box(b)[1] + box(b)[3] for b in members) + PAD
+            bottom = max(float(b.get("y")) + box(b)[2] for b in members) + PAD
+            if right > float(g.get("width")):
+                g.set("width", num(right))
+            if header(g) + bottom > float(g.get("height")):
+                g.set("height", num(header(g) + bottom))
+        settle(items, before)
+
+
+def extent(item) -> tuple[float, float, float, float]:
+    """(left, top, right, bottom) of a group, or of a block with its labels: ``[element, box]``."""
+    el, b = item
+    x, y = float(el.get("x")), float(el.get("y"))
+    if b is None:
+        return x, y, x + float(el.get("width")), y + float(el.get("height"))
+    return x - b[0], y, x + b[1] + b[3], y + b[2]
+
+
+def spread(items):
+    """Blocks of one group (or of a network's level): each one, from the left, moves right of any
+    block left of it whose box with labels it overlaps."""
+    items = sorted(items, key=lambda it: extent(it)[0])
+    for i, it in enumerate(items):
+        for other in items[:i]:
+            a, b = extent(other), extent(it)
+            if a[1] < b[3] and b[1] < a[3] and b[0] < a[2] + GAP:
+                it[0].set("x", num(float(it[0].get("x")) + a[2] + GAP - b[0]))
+
+
+def settle(items, before):
+    """Groups and loose blocks of a network level: one that overlaps another moves down if it was
+    below it ``before`` (their extents), else right, until none overlap."""
+    for _ in range(100):
+        moved = False
+        for i, one in enumerate(items):
+            for two in items[i + 1:]:
+                a, b = extent(one), extent(two)
+                if not (a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]):
+                    continue
+                oa, ob = before[id(one[0])], before[id(two[0])]
+                if ob[1] >= oa[3] or (oa[1] < ob[3] and ob[0] >= oa[0]):
+                    first, second, (fa, sb), below = one, two, (a, b), ob[1] >= oa[3]
+                else:
+                    first, second, (fa, sb), below = two, one, (b, a), oa[1] >= ob[3]
+                el = second[0]
+                if below:
+                    el.set("y", num(float(el.get("y")) + fa[3] + GROUP_GAP - sb[1]))
+                else:
+                    el.set("x", num(float(el.get("x")) + fa[2] + GROUP_GAP - sb[0]))
+                moved = True
+        if not moved:
+            return
+
+
 def networks(root):
     """Every block network: of a system, the applications' and those of the subapplications in them;
     of a composite type, its network."""
@@ -187,7 +261,7 @@ def networks(root):
 def place_new(root, kept: set[int], size):
     """After a layout arranged in the IDE was kept: blocks it did not have yet go below the other
     blocks of their group (which grows to hold them), new groups below the other groups, a new block
-    in no group to the right of the others."""
+    in no group to the right of the others; then room is made where the layout is too tight."""
     for net in networks(root):
         elements = [el for el in net if el.tag in ("FB", "SubApp", "Group")]
         if not any(id(el) in kept for el in elements):
@@ -221,3 +295,4 @@ def place_new(root, kept: set[int], size):
             b.set("y", num(top))
             kept.add(id(b))
             g.set("height", num(max(float(g.get("height")), header(g) + top + h + PAD)))
+    make_room(root, size)
