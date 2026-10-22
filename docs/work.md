@@ -657,7 +657,9 @@ because with a wrong `.buildpath` it silently skips the system):
   copies in the resource view are drawn at the members' relative positions, so they overlap
   there (the check warns, the build passes); the application view is the one to read.
   The generator lays each application out as five groups (module level, equipment IO, a
-  catalogue of skill primitives, module level skills, procedures) and hides every INIT chain.
+  catalogue of skill primitives, module level skills, procedures). Since 22 Oct every connection
+  is hidden (drawn as labels at its ends), in the systems and inside the composite types, which
+  cannot be edited in the IDE.
 - **The resource starts the program** (21 Oct): `EMB_RES` has an `E_RESTART` of its own,
   `START`, so a module has none: `START.COLD` and `.WARM` go to the head of the INIT chain, drawn
   in each device's resource (`Filling_pi.GpioLines.INIT`). `load_application` takes those links
