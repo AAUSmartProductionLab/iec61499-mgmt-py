@@ -14,7 +14,7 @@ Figures (draw.io; open them at app.diagrams.net or in the draw.io desktop app, a
 | | Applications | Which application reads and writes which AAS, and which acts on the running module |
 | [figures/reconfiguration-pipeline.drawio](figures/reconfiguration-pipeline.drawio) | Reconfiguration pipeline | From a product's recipe through a changed skill to a changed IEC 61499 program, and back to the plan |
 | [figures/skill-hierarchies.drawio](figures/skill-hierarchies.drawio) | Hierarchies | The line's, a module's and its components' AASs as the web UI's tree shows them: the bill of material names the module and its components; Dispensing's steps run the components' primitives |
-| | Recipe to process | The product's, the process's and the module's AAS as trees: the binding refers to the recipe's step, the product parameter, the skill and its input |
+| | Recipe to process | The product's, the line's and the modules' AASs feed a process sequence (one card per step: what comes from which AAS); kept as the process AAS, whose rows are coloured by where they come from |
 
 They follow the style of the module architecture figure (Arial, grey panels, white cards, rounded
 pills, small blue tags, dashed for what is not built yet).
