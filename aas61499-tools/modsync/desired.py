@@ -118,7 +118,8 @@ def parameter(variable: dict) -> Parameter:
     default = qualifier(variable, "Default")
     return Parameter(type=typ, unit=qualifier(variable, "Unit"), minimum=value_of(qualifier(variable, "Minimum"), typ),
                      maximum=value_of(qualifier(variable, "Maximum"), typ),
-                     default=value_of(variable.get("value") if default is None else default, typ))
+                     default=value_of(variable.get("value") if default is None else default, typ),
+                     meaning=next(iter(also(variable)), None))
 
 
 def inside(inner: Parameter, outer: Parameter) -> bool:

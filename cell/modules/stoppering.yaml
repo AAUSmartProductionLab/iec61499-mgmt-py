@@ -66,7 +66,7 @@ skills:
     equipment: LinearAxis
     move_to: Position
     parameters:
-      Position: {unit: mm, minimum: 0.0, maximum: 60.0, default: 0.0, description: Where to move to}
+      Position: {unit: mm, minimum: 0.0, maximum: 60.0, default: 0.0, meaning: Position, description: Where to move to}
     timeout: 8s
   PressStopper:
     description: Press the stopper in, the piston out for the stroke and back in (open loop, by time)

@@ -66,6 +66,20 @@ def test_every_skill_primitive_has_a_type_that_says_what_it_contributes(vocabula
     assert {LAB.Filling, LAB.Stoppering, LAB.Capping, LAB.Inspection, LAB.Positioning} <= contributed
 
 
+def test_what_a_parameter_means_is_a_property_of_the_vocabulary_in_its_unit(vocabulary):
+    meant = 0
+    for spec in line_specs():
+        for name, skill in [*spec.skills.items(), *spec.composites.items()]:
+            for p, parameter in skill.parameters.items():
+                if parameter.meaning:
+                    meant += 1
+                    term = rdflib.URIRef(parameter.meaning if "://" in parameter.meaning else BASE + parameter.meaning)
+                    assert (term, RDFS.subClassOf, CSS.Property) in vocabulary, f"{spec.module}.{name}.{p}: {term}"
+                    unit = vocabulary.value(term, LAB.unit)
+                    assert (str(unit) if unit else None) == parameter.unit, f"{spec.module}.{name}.{p}: unit"
+    assert meant >= 5
+
+
 def test_a_product_can_require_only_process_capabilities(vocabulary):
     process, auxiliary = set(vocabulary.subjects(RDFS.subClassOf, LAB.ProcessCapability)), \
         set(vocabulary.subjects(RDFS.subClassOf, LAB.AuxiliaryCapability))
