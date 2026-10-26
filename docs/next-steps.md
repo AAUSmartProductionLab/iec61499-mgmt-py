@@ -129,9 +129,10 @@ path: the AAS is delivered with the module, the program is only compared with it
 | C2 | The scale's weight follows the dispensed volume (it is a constant 2.0 g) | module spec, simulator |
 | C3 | The Pi 4: host name `stoppering-module`, the installer's setup, system updates, the stoppering program. **Done 9 Oct**, checked across a reboot. Superseded: the stoppering module runs on the Pi 5 at 192.168.0.134 since 22 Oct, the Pi 4 is no longer used | Pi 4 |
 | C4 | Teaching material: the 4diac IDE monitors deployed modules; projects of what runs (`modsync project`); a three-FORTE pub/sub demo (outside the repository). **Done 21 Oct** | IDE, `modsync` |
-| C5 | **The HMI as a module of the BaSyx web UI** (decided 26 Oct, [decisions.md](decisions.md)): a Vue and TypeScript module in the fork (`basyx-aas-web-ui/`, a submodule) that reads the module's AAS itself, and a small TypeScript bridge (node-opcua) for OPC UA over WebSocket; then the HMI's Python service and pages are retired. **After A4, B1 and B2.** Replaces C1's reader work in Python | `basyx-aas-web-ui/`, `iec61499-opcua-hmi/` |
+| C5 | **The HMI as a module of the BaSyx web UI** (decided 26 Oct, [decisions.md](decisions.md)): a Vue and TypeScript module in the fork (`basyx-aas-web-ui/`, a submodule) that reads the module's AAS itself, and a small TypeScript bridge (node-opcua) for OPC UA over WebSocket; then the HMI's Python service and pages are retired. **After A4, B1 and B2.** Replaces C1's reader work in Python. The bridge is temporary (C6) | `basyx-aas-web-ui/`, `iec61499-opcua-hmi/` |
+| C6 | **The HMI from the AAS alone** (the target, 26 Oct): commands through the elements of the Skills submodel (Operations invoked on the AAS server and carried to the module's OPC UA methods, e.g. by BaSyx's operation delegation), state from the Variables submodel: each state a Property with its current value and a reference to its series in a time-series database (such as InfluxDB), from which the history is read. Needs what carries an Operation to OPC UA, a collector that writes the Variables and the database, and the modelling of [state-and-parameters.md](state-and-parameters.md) (S1 to S6, decision 13). Replaces C5's bridge. After the paper | `basyx-aas-web-ui/`, ARSO, `modreg`, a collector |
 
-C1 to C5 are not needed for the paper's claim; they go in when they block a figure or a run.
+C1 to C6 are not needed for the paper's claim; they go in when they block a figure or a run.
 
 ### E. aas-model of 18 Oct (new, 19 Oct)
 
@@ -206,7 +207,7 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 | Question | Blocks |
 | --- | --- |
 | **Waiting for you:** go to install the runtime and program of 22 Oct on both Pi 5s (the filling Pi at the bench; the stoppering Pi after its old container is removed) | B3 |
-| **Waiting for you:** the twelve decisions of the state and parameters model ([state-and-parameters.md](state-and-parameters.md), Sections 7 and 8.8); the modelling is picked up again after them | S1 to S5 |
+| **Waiting for you:** the thirteen decisions of the state and parameters model ([state-and-parameters.md](state-and-parameters.md), Sections 7, 8.8 and 9); the modelling is picked up again after them | S1 to S5 |
 | **Waiting for you:** how ARSO's submodels reach aas-model (fork and pull request, or push access) | E5 |
 | **Waiting for you:** go-ahead to commit the skill editor's fixes to the fork and the generation project's ARSO 0.8 | A2b, D2 |
 | Should module level skills become typed subapplications in the IDE (reusable, with an interface), or stay untyped (created online without type files)? | later |

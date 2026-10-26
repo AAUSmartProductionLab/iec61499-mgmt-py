@@ -375,3 +375,22 @@ skills' execution states around the event's time. That is the reason to build th
     proposed), or only the session?
 12. **Measured durations and success rates** kept in the Capability Description (as proposed),
     or only in the events?
+
+## 9. What the HMI will read (26 Oct)
+
+The HMI becomes a module of the BaSyx web UI ([next-steps.md](next-steps.md), C5 and C6). Its
+OPC UA bridge is temporary; the target is an HMI that uses the AAS alone:
+
+- **Commands** through the elements of the Skills submodel: a skill's Start, Stop, Abort and
+  Reset invoked as Operations on the AAS server, which carries them to the module.
+- **State** from the **Variables** submodel (aas-model's, left out of our resources since
+  19 Oct): each state a Property with its current value, and a reference to its series in a
+  time-series database (such as InfluxDB) from which the history is read.
+
+That makes S5 (current values written into the AAS) and S6 (the database) part of the HMI's
+path, and it bears on decisions 1 and 3.
+
+13. **Where states and measurements live**: in aas-model's Variables submodel (a Property per
+    value with a reference to its series in the database), as the HMI's target names it, with
+    Operational Data keeping the events; or as series inside Operational Data (Section 3, as
+    proposed before 26 Oct)?
