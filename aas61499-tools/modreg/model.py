@@ -148,13 +148,8 @@ class ModuleSkill(skills.Skill):
     and an element is read back as the class its name says."""
 
 
-class ModuleSkillSet(skills.Skills_2):
-    Skill: Dict[str, ModuleSkill] = {}
-
-
 class ModuleSkills(skills.Skills):
-    Skills: ModuleSkillSet = ModuleSkillSet()
-    Interfaces: skills.Interfaces = skills.Interfaces()
+    Skill: Dict[str, ModuleSkill] = {}
     Errors: skills.Errors = skills.Errors()
 
 

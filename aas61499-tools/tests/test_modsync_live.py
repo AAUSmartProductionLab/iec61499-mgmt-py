@@ -138,7 +138,7 @@ def test_a_parameter_changed_online_is_reported_described_and_pushed_back(module
     profiles = pytest.importorskip("modreg.profile")           # the registration extra
     from modreg import model
     env = model.build(profiles.describe(st.candidate.spec, "pc", st.snapshot, st.drift))
-    dispense = at(submodel(env, "Skills"), "Skills", "Dispensing", "Start", "Steps", "Step_0001")
+    dispense = at(submodel(env, "Skills"), "Dispensing", "Start", "Steps", "Step_0001")
     assert at(dispense, "NodeId")["value"] == "Dispense"
     assert float(at(dispense, "Bindings", "Binding_0001", "Value")["value"]) == 2.5
     done = push(module.client, module.host, module.port, module.cand, overrides=module.overrides)

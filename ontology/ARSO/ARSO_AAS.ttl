@@ -12,7 +12,7 @@
 
 <https://w3id.org/2025/arso>
   rdf:type owl:Ontology ;
-  owl:versionIRI <https://w3id.org/2025/arso/0.8.0> ;
+  owl:versionIRI <https://w3id.org/2025/arso/0.9.0> ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://admin-shell.io/aas/3/1/> ;
   owl:imports <https://w3id.org/2025/arso/modules/nameplate> ;
@@ -25,7 +25,13 @@
   owl:imports <https://w3id.org/2025/arso/modules/technical-data> ;
   owl:imports <https://w3id.org/2025/arso/modules/aimc> ;
   owl:imports <https://w3id.org/2025/arso/modules/control-configuration> ;
-  rdfs:comment """ARSO v0.8 — Domain extension ontology for Resource AAS.
+  rdfs:comment """ARSO v0.9 — Domain extension ontology for Resource AAS.
+
+  v0.9 (26 Oct 2026): the Skills submodel is ARSO's own template (Modules/skills.ttl, was
+  control-component.ttl): its skills are its own elements (no Skills container), the Interfaces
+  container is gone, an error is a property whose value is its code, and a skill states its type
+  as a supplemental semanticId beside its kind (the SemanticId property is only read in the
+  short form of older AASs).
 
   v0.8 (9 Oct 2026): what a command of a skill runs is a flow in the elements of the process
   planner's Production Sequence (a step has a NodeId, a Kind, a Name and an Order; Kind step runs

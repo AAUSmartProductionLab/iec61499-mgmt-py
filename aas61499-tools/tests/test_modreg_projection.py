@@ -27,21 +27,21 @@ def filling():
 
 def skill(aas: str, name: str) -> URIRef:
     """The individual the element of a skill describes."""
-    return URIRef(f"{BASE}/aas/{aas}/submodels/Skills/Skills/{name}#it")
+    return URIRef(f"{BASE}/aas/{aas}/submodels/Skills/{name}#it")
 
 
 def parameter(aas: str, name: str, p: str) -> URIRef:
-    return URIRef(f"{BASE}/aas/{aas}/submodels/Skills/Skills/{name}/Start/Start/{p}#it")
+    return URIRef(f"{BASE}/aas/{aas}/submodels/Skills/{name}/Start/Start/{p}#it")
 
 
 def test_elements_are_named_as_references_address_them_and_typed_by_the_structure(filling):
-    element = URIRef(f"{BASE}/aas/FillingModuleAAS/submodels/Skills/Skills/Dispensing")
+    element = URIRef(f"{BASE}/aas/FillingModuleAAS/submodels/Skills/Dispensing")
     assert (element, PA.idShort, None) in filling and (element, PA.semanticId, URIRef(f"{BASE}/skill")) in filling
     assert (element, PPRL.describes, skill("FillingModuleAAS", "Dispensing")) in filling
     assert any(str(t).startswith(str(ARSO)) for t in filling.objects(element, RDF.type))
     # A step's reference resolves to the element of the skill it runs, in the component's AAS.
-    runs = URIRef(f"{BASE}/aas/FillingModuleAAS/submodels/Skills/Skills/Dispensing/Start/Steps/Step_0001/Skill")
-    assert filling.value(runs, PA.refersTo) == URIRef(f"{BASE}/aas/FillingPumpAAS/submodels/Skills/Skills/Dispense")
+    runs = URIRef(f"{BASE}/aas/FillingModuleAAS/submodels/Skills/Dispensing/Start/Steps/Step_0001/Skill")
+    assert filling.value(runs, PA.refersTo) == URIRef(f"{BASE}/aas/FillingPumpAAS/submodels/Skills/Dispense")
 
 
 def test_skills_are_of_their_kind_and_type_and_use_the_skills_of_their_steps(filling):

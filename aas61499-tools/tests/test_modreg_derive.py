@@ -35,11 +35,11 @@ def test_what_is_derived_is_what_the_modules_offered_before(name):
     [offer] = offers(project(lean(spec), structure=False))
     assert (offer.name, offer.skill_name, offer.built) == (capability, skill, True)
     assert offer.keys == [("Submodel", f"{BASE}/aas/{spec.module}ModuleAAS/submodels/Skills"),
-                          ("SubmodelElementCollection", "Skills"), ("SubmodelElementCollection", skill)]
+                          ("SubmodelElementCollection", skill)]
     assert [(p.meaning, p.minimum, p.maximum, p.unit) for p in offer.properties] == \
            [(f"{BASE}/semantics/{p}", low, high, unit) for p, low, high, unit, _ in properties]
     for prop, (*_, parameter) in zip(offer.properties, properties):
-        assert prop.parameter.endswith(f"/Skills/Skills/{skill}/Start/Start/{parameter}")
+        assert prop.parameter.endswith(f"/Skills/{skill}/Start/Start/{parameter}")
 
 
 def test_a_skill_described_but_not_built_is_offered_after_a_reconfiguration():
@@ -56,7 +56,7 @@ def test_a_skill_described_but_not_built_is_offered_after_a_reconfiguration():
     assert found["Dispensing", "Filling"].built and not found["DoubleDose", "Filling"].built
     (volume,) = found["DoubleDose", "Filling"].properties
     assert (volume.meaning, volume.minimum, volume.maximum, volume.unit) == (f"{BASE}/semantics/FillVolume", "0.5", "10.0", "mL")
-    assert volume.parameter.endswith("/Skills/Skills/DoubleDose/Start/Start/Dose")
+    assert volume.parameter.endswith("/Skills/DoubleDose/Start/Start/Dose")
 
 
 # Derived anew from an AAS alone (modreg.offer.capabilities) ---------------------------------------

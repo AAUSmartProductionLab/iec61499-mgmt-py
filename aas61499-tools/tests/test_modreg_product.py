@@ -78,7 +78,7 @@ def bottle() -> ProductTypeAAS:
         ProcessOwner=ps.ProcessOwner(value=ref(("AssetAdministrationShell", "{aas_id}"))),
         ProcessReference=ps.ProcessReference(value=own("ProcessParameters", (SMC, "Processes"), (SMC, "Filling"))),
         Resource=ps.Resource(value=ref(("AssetAdministrationShell", resource))), SkillId=ps.SkillId(value="Dispensing"),
-        Skill=ps.Skill(value=ref(("Submodel", f"{resource}/submodels/Skills"), (SMC, "Skills"), (SMC, "Dispensing"))),
+        Skill=ps.Skill(value=ref(("Submodel", f"{resource}/submodels/Skills"), (SMC, "Dispensing"))),
         ExecutionMode=ps.ExecutionMode(value="station"),
         Bindings=ps.Bindings(Binding={"Binding_0000": ps.Binding(
             Name=ps.Name(value="Volume"), Value=ps.Value(value=""),

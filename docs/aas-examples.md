@@ -190,15 +190,14 @@ classDiagram
     value or range, unit
   }
   class Skills {
-    <<ARSO, from IDTA 02015>>
-    Interfaces (empty)
-    Errors: name, ErrorCode
+    <<ARSO>>
+    its skills, its own elements
+    Errors: name = code
   }
   class Skill {
     semanticId = skill
-    kind, a supplemental id: Primitive,
-    Composite or ModuleControl
-    SemanticId: what it does
+    supplemental ids: its kind (Primitive,
+    Composite or ModuleControl), its type
   }
   class Command {
     Start, Stop, Abort, Reset
@@ -459,7 +458,7 @@ flowchart BT
 | Tare() | FillingScaleAAS | Primitive | – (After 2.0) | – |
 | Weigh() → Weight [g] | FillingScaleAAS | Primitive | – (After 0.2) | – |
 
-- **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; FillVolume 0.5 to 10.0 mL; AbsoluteFillError 0.05 mL.
+- **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; AbsoluteFillError 0.05 mL; FillVolume 0.5 to 10.0 mL.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `FillingLinearAxisAAS`, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 45 data points; 32 mappings.

@@ -115,7 +115,7 @@ def test_a_skill_from_the_skill_editor_is_built_recorded_and_reached_through_its
             found = at(found, key["value"])
         return "/".join(part.split(":", 1)[1] for part in at(found, "forms", "href")["value"].split("/")[3:])
 
-    skill = at(submodel(recorded, "Skills"), "Skills", "DoubleDose")
+    skill = at(submodel(recorded, "Skills"), "DoubleDose")
     start = node(at(skill, "Start", "InterfaceReference")["value"])
     assert start == "Skills/DoubleDose/Start"
     interface = at(submodel(recorded, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata")
@@ -137,7 +137,7 @@ def test_a_limit_and_a_constant_changed_in_the_aas_hold_at_the_next_start(module
     """The largest volume is lowered to 8 mL and the dispensing step's flow rate doubled."""
     ua, a = module.ua, "orchestrator-1"
     wanted, components = copy.deepcopy(aas(module.cand.spec, "pc"))
-    dispensing = at(submodel(wanted, "Skills"), "Skills", "Dispensing")
+    dispensing = at(submodel(wanted, "Skills"), "Dispensing")
     at(dispensing, "Start", "Steps", "Step_0001", "Bindings", "Binding_0001", "Value")["value"] = "2.0"
     volume = next(v["value"] for v in at(dispensing, "Start", "Start")["inputVariables"] if v["value"]["idShort"] == "Volume")
     next(q for q in volume["qualifiers"] if q["type"] == "Maximum")["value"] = "8.0"

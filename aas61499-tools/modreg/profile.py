@@ -297,7 +297,7 @@ class Describer:
         return f"{component_identity(self.spec, item)[1] if item else self.module_id}/submodels/Skills"
 
     def skill_reference(self, name: str) -> ReferenceElement:
-        return ReferenceElement(value=path(self.home(name), (SMC, "Skills"), (SMC, name)))
+        return ReferenceElement(value=path(self.home(name), (SMC, name)))
 
     def variable(self, name: str, value_type: str, about: str, concept: str | None = None, pr: Parameter | None = None,
                  value=None, unit: str | None = None, means: str | None = None) -> OperationVariableProp:
@@ -369,7 +369,7 @@ class Describer:
         own = lambda v: path(where, *at, ("Operation", command), ("Property", v))    # noqa: E731
 
         def of_skill(name: str, variable: str) -> ModelReference:
-            return path(self.home(name), (SMC, "Skills"), (SMC, name), (SMC, "Start"), ("Operation", "Start"),
+            return path(self.home(name), (SMC, name), (SMC, "Start"), ("Operation", "Start"),
                         ("Property", variable))
 
         for order, step in enumerate(sequence):
@@ -439,7 +439,7 @@ class Describer:
         composite = name in spec.composites
         decl = spec.composites[name] if composite else spec.skills[name]
         item = decl.equipment if not composite and decl.equipment in self.components else None
-        offered, node, here = decl.offered, f"/Skills/{name}", ((SMC, "Skills"), (SMC, name))
+        offered, node, here = decl.offered, f"/Skills/{name}", ((SMC, name),)
         where = self.home(name)                         # as the module sees it (the mapping is the module's)
         interface = AID if item is None else f"{self.module_id}/submodels/AssetInterfacesDescription"
         # Every skill is the same kind of element; what kind of skill it is and what it does (its
@@ -505,7 +505,7 @@ class Describer:
         spec, made = self.spec, {}
 
         def control(name: str, meaning: str, about: str, key: str, node: str, procedure: str | None = None):
-            here = ((SMC, "Skills"), (SMC, name))
+            here = ((SMC, name),)
             skill = model.ModuleSkill(description=about)
             skill.supplemental_semantic_ids = [f"{COMMAND}/ModuleControl", meaning]
             start = self.command(arso.Start(), "Start", SKILLS, (*here, (SMC, "Start")), f"{COMMAND}/Start", about, key,
@@ -617,7 +617,7 @@ class Describer:
 
     def errors(self, held: arso.Errors) -> None:
         for name, code in ERROR_CODES.items():
-            put(held.Error, name, arso.Error(ErrorCode=prop(code, "xs:integer")))
+            put(held.SkillError, name, arso.SkillError(**prop(code, "xs:integer")))
 
     def build(self) -> list[tuple[ModuleTypeAAS | ComponentTypeAAS, str]]:
         """The module and its components, each with the id of its asset."""
@@ -645,9 +645,9 @@ class Describer:
             item = decl.equipment if decl is not None and decl.equipment in parts else None
             if name in control:
                 raise ValueError(f"{name} is a command of the module itself: a skill cannot be called that")
-            put((parts[item] if item else asset).skills.Skills.Skill, name, self.skill(name))
+            put((parts[item] if item else asset).skills.Skill, name, self.skill(name))
         for name, made in control.items():
-            put(asset.skills.Skills.Skill, name, made)
+            put(asset.skills.Skill, name, made)
         for held in (asset, *parts.values()):
             self.errors(held.skills.Errors)
         nodes = {}

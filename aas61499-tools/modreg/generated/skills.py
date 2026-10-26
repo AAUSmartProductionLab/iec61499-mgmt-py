@@ -11,12 +11,6 @@ from aas_pydantic import (
 from aas_pydantic.aas_model import AasIdString
 from aas_model.submodel_templates import SkillOperation as DelegatedOperation
 
-class Interfaces(SubmodelElementCollection):
-    id_short: AasIdString = "Interfaces"
-    semantic_id: str = ""
-    description: str = "Mandatory top-level container, always present and always empty."
-    pass
-
 class SemanticId(Property):
     id_short: AasIdString = "SemanticId"
     description: str = "What the skill does, as the short form of older AASs states it."
@@ -304,7 +298,7 @@ class StateMachine(Property):
 
 class Skill(SubmodelElementCollection):
     semantic_id: str = "https://smartproductionlab.aau.dk/skill"
-    description: str = "A named skill."
+    description: str = "A named skill, an element of the Skills submodel itself, recognised by its semanticId (no idShort \u2014 the skill name is user-defined)."
     SemanticId: Optional[SemanticId_t] = None
     Start: Optional[Start_t] = None
     Stop: Optional[Stop_t] = None
@@ -315,36 +309,23 @@ class Skill(SubmodelElementCollection):
     Contract: Optional[Contract_t] = None
     StateMachine: Optional[StateMachine_t] = None
 
-class Skills_2(SubmodelElementCollection):
-    id_short: AasIdString = "Skills"
-    semantic_id: str = ""
-    description: str = "Mandatory top-level container for all Skill entries."
-    Skill: Dict[str, Skill_t] = {}
-
-class ErrorCode(Property):
-    id_short: AasIdString = "ErrorCode"
-    description: str = "Numeric error code identifying this error."
-    value_type: str = "xs:string"
-
-class Error(SubmodelElementCollection):
-    semantic_id: str = ""
-    description: str = "A named error entry, if populated."
-    ErrorCode: ErrorCode_t
+class SkillError(Property):
+    description: str = "A named error; its value is the code an ErrorID carries."
+    value_type: str = "xs:integer"
 
 class Errors(SubmodelElementCollection):
     id_short: AasIdString = "Errors"
     semantic_id: str = ""
-    description: str = "Mandatory top-level container for global CC error entries: what the ErrorID in the answer of an Operation can be."
-    Error: Dict[str, Error_t] = {}
+    description: str = "What the ErrorID in the answer of an Operation can be: one property per error."
+    SkillError: Dict[str, SkillError_t] = {}
 
 class Skills(Submodel):
     id_short: AasIdString = "Skills"
     semantic_id: str = "https://smartproductionlab.aau.dk/ARSO/Skills/1/0/Submodel"
-    description: str = "The Skills submodel (ARSO): a resource's skills with their commands and steps, the Interfaces and Errors containers; began from IDTA 02015 Control Component Type."
+    description: str = "The Skills submodel (ARSO): a resource's skills with their commands and steps, and the errors they report."
     VERSION: ClassVar[str] = "1"
     REVISION: ClassVar[str] = "0"
-    Interfaces: Interfaces_t
-    Skills: Skills_2
+    Skill: Dict[str, Skill_t] = {}
     Errors: Errors_t
 
 # alias so field ``Name_t`` can name a class of the same id_short
@@ -433,18 +414,13 @@ Reset_t: TypeAlias = Reset
 Contract_t: TypeAlias = Contract
 # alias so field ``StateMachine_t`` can name a class of the same id_short
 StateMachine_t: TypeAlias = StateMachine
+# alias so field ``SkillError_t`` can name a class of the same id_short
+SkillError_t: TypeAlias = SkillError
 # alias so field ``Skill_t`` can name a class of the same id_short
 Skill_t: TypeAlias = Skill
-# alias so field ``ErrorCode_t`` can name a class of the same id_short
-ErrorCode_t: TypeAlias = ErrorCode
-# alias so field ``Error_t`` can name a class of the same id_short
-Error_t: TypeAlias = Error
-# alias so field ``Interfaces_t`` can name a class of the same id_short
-Interfaces_t: TypeAlias = Interfaces
 # alias so field ``Errors_t`` can name a class of the same id_short
 Errors_t: TypeAlias = Errors
 # ── Resolve forward references (Pydantic circular refs) ──
-Interfaces.model_rebuild()
 SemanticId.model_rebuild()
 InterfaceReference.model_rebuild()
 SkillOperation.model_rebuild()
@@ -490,8 +466,6 @@ Timeout.model_rebuild()
 Contract.model_rebuild()
 StateMachine.model_rebuild()
 Skill.model_rebuild()
-Skills_2.model_rebuild()
-ErrorCode.model_rebuild()
-Error.model_rebuild()
+SkillError.model_rebuild()
 Errors.model_rebuild()
 Skills.model_rebuild()

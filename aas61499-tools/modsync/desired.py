@@ -46,6 +46,7 @@ from .structure import driven_by, stated, structure
 from .sync import Refused, guard, lacking, online, summary
 
 BASE = "https://smartproductionlab.aau.dk"
+SKILL = f"{BASE}/skill"
 PRIMITIVE, COMPOSITE, CONTROL = (f"{BASE}/skill/{kind}" for kind in ("Primitive", "Composite", "ModuleControl"))
 # The kinds of step a module built by the module rules can run (ARSO knows more: parallel, decision, conditional).
 RUNS = ("step",)
@@ -88,6 +89,18 @@ def meaning(element: dict) -> str:
 def also(element: dict) -> list[str]:
     """The supplemental semanticIds of an element: the kind of a skill, what a step is called."""
     return [k["value"] for ref in element.get("supplementalSemanticIds") or [] for k in ref.get("keys", [])[:1]]
+
+
+def skill_path(held: dict | None, name: str) -> list[str]:
+    """Where a skill is in a Skills submodel: one of its own elements, or in an older AAS one of its
+    collection Skills."""
+    inner = at(held, "Skills")
+    return ["Skills", name] if inner is not None and meaning(inner) != SKILL else [name]
+
+
+def skills_in(held: dict | None) -> list[dict]:
+    """The skills of a Skills submodel (see ``skill_path``)."""
+    return [s for s in children(at(held, *skill_path(held, "")[:-1])) if meaning(s) == SKILL]
 
 
 def target(reference: dict | None) -> list[str]:
@@ -230,7 +243,7 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
         item = items.get(shell["assetInformation"].get("globalAssetId"))
         if item is None:
             raise NotDescribed(f"{shell['idShort']} is no component the module's Hierarchical Structures name")
-        for skill in children(at(submodel(env, "Skills"), "Skills")):
+        for skill in skills_in(submodel(env, "Skills")):
             start = at(skill, "Start", "Start")
             results = {v["idShort"]: v for v in variables(start, "outputVariables")}
             equipment[item].inputs.update({r: Input.model_construct(type=IEC[v["valueType"]], unit=qualifier(v, "Unit"))
@@ -292,7 +305,7 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
     # A skill that is described and not built yet has no action that calls it; it gets one when it
     # is built. One that is built is offered if a command of it names its action.
     built = {path.split(".")[0] for path, _, _ in instances(module) if path}
-    for skill in children(at(skills_, "Skills")):
+    for skill in skills_in(skills_):
         kinds, steps_ = also(skill), at(skill, "Start", "Steps")
         if CONTROL in kinds:
             # What the module runs itself while resetting or stopping; a step is called <procedure>/<step>.
@@ -571,10 +584,10 @@ def record(module: dict, reading: Reading, done: list[str] | None = None, trigge
         listed["value"].append(known[path])
 
     for name, comp in spec.composites.items():
-        note(f"{name}.Control", ["Skills", name])
+        note(f"{name}.Control", skill_path(skills_, name))
         for command, branch, steps_ in (("Start", "Execute", comp.execute), ("Stop", "Stop", comp.stop)):
             for k, step in enumerate(steps_):
-                note(f"{name}.{branch}.{step.name}", ["Skills", name, command, "Steps", f"Step_{k:04d}"])
+                note(f"{name}.{branch}.{step.name}", [*skill_path(skills_, name), command, "Steps", f"Step_{k:04d}"])
     for path, entry in known.items():                     # every recorded instance: what runs there now
         if (typ := snap.fbs.get(path)) is not None:
             entry["value"] = [e for e in entry["value"] if e["idShort"] not in ("FBType", "TypeHash")]
@@ -593,7 +606,7 @@ def record(module: dict, reading: Reading, done: list[str] | None = None, trigge
             prop("Time", now), prop("Trigger", trigger or "the AAS describes what the program did not have"),
             prop("Result", "; ".join(done))]})
     reachable = [name for name, comp in spec.composites.items() if comp.offered and f"{name}.Control" in snap.fbs
-                 and at(skills_, "Skills", name, "Start", "InterfaceReference") is None]
+                 and at(skills_, *skill_path(skills_, name), "Start", "InterfaceReference") is None]
     try:
         from modreg.offer import capabilities, offered      # needs the registration extra (aas-model, rdflib)
     except ImportError:

@@ -946,10 +946,6 @@
         },
         {
          "type_": "SubmodelElementCollection",
-         "value": "Skills"
-        },
-        {
-         "type_": "SubmodelElementCollection",
          "value": "Dispensing"
         }
        ],
@@ -1076,10 +1072,6 @@
         },
         {
          "type_": "SubmodelElementCollection",
-         "value": "Skills"
-        },
-        {
-         "type_": "SubmodelElementCollection",
          "value": "Stoppering"
         }
        ],
@@ -1158,10 +1150,6 @@
         },
         {
          "type_": "SubmodelElementCollection",
-         "value": "Skills"
-        },
-        {
-         "type_": "SubmodelElementCollection",
          "value": "Capping"
         }
        ],
@@ -1237,10 +1225,6 @@
         {
          "type_": "Submodel",
          "value": "https://smartproductionlab.aau.dk/aas/InspectionModuleAAS/submodels/Skills"
-        },
-        {
-         "type_": "SubmodelElementCollection",
-         "value": "Skills"
         },
         {
          "type_": "SubmodelElementCollection",
