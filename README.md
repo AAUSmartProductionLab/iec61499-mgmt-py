@@ -34,18 +34,18 @@ repository) and `arduino_cpp_examples/` (the ESP32 station code the modules were
 ## Quick start
 
 ```powershell
-python -m pip install -e ".[test]"
+python -m pip install -e ".[test,registration,opcua]"
 python -m pytest -q                                            # offline tests of every folder
 
 python -m modgen                                               # regenerate ModLib and the module projects
 runtime/build-modules.ps1                                      # IDE check + export, one FORTE with every module (C:\4diac-fbe)
-python -m pytest -q --module-forte-exe runtime/fbe/build/modules-win/output/bin/forte.exe   # + live tests
+python -m pytest -q --module-forte-exe runtime/fbe/build/modules-win/forte/build/forte/forte.exe   # + live tests
 python cell/sim/run_module.py cell/modules/filling.yaml        # simulator + FORTE + module, OPC UA at opc.tcp://localhost:4840
 
 runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate  # FORTE for the Raspberry Pi (aarch64)
 python deploy/pi.py install                                    # FORTE in Docker on the Pi of cell/modules/filling.yaml
-python deploy/pi.py module                                     # run the module on its Pi
-python -m modsync pull --host 192.168.0.191                    # which module runs there, drift from its spec, its AAS
+python deploy/pi.py module                                     # run the module on its Pi (--spec cell/modules/stoppering.yaml: the other Pi)
+python -m modsync pull --host 192.168.0.134                    # which module runs there, drift from its spec, its AAS
 python -m modsync project --host 192.168.0.203                 # a 4diac IDE project of what runs there (projects/)
 ```
 
@@ -93,7 +93,7 @@ modreg profile filling --target pi                             # profiles/Fillin
 modreg check filling --target pi --ontology ontology/ARSO      # does its AAS follow the ontology?
 modreg serve --ontology ontology/ARSO --basyx http://<host>:8081   # the service, on port 8090
 modreg register filling --target pi --service http://<host>:8090   # send the profile to it
-modsync pull --host 192.168.0.191 --register http://<host>:8090    # ... or with what runs on the module
+modsync pull --host 192.168.0.203 --register http://<host>:8090    # ... or with what runs on the module
 ```
 
 `--register` works with `modsync describe`, `pull`, `push` and `watch` (a module is registered

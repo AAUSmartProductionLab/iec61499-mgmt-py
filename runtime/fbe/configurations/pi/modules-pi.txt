@@ -1,4 +1,4 @@
-// 4diac FORTE for a Raspberry Pi 4 (64-bit Linux) with every generated module (modules/*.yaml):
+// 4diac FORTE for a Raspberry Pi 4 or 5 (64-bit Linux) with every generated module (modules/*.yaml):
 // OPC UA, Modbus, GPIO via /dev/gpiochip (IO=GPIOCHIP in the FBE defaults), and the ModLib and
 // module exports in .cache/modules. One static aarch64 binary for all Pis; each Pi deploys only
 // its own module. The FBE downloads the cross compiler once. Build with

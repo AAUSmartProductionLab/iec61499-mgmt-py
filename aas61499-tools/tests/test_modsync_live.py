@@ -6,7 +6,7 @@ level skill online, pull from the CLI.
 On a Raspberry Pi instead (FORTE in its container, deploy/pi.py install): the filling module's PC
 application runs there, its Modbus IO pointed at the simulator on this machine.
 
-    python -m pytest aas61499-tools/tests/test_modsync_live.py --pi-host 192.168.0.191 --sim-host <this machine>
+    python -m pytest aas61499-tools/tests/test_modsync_live.py --pi-host 192.168.0.203 --sim-host <this machine>
 """
 from contextlib import ExitStack, contextmanager
 from pathlib import Path

@@ -1,6 +1,6 @@
 """OPC UA client for a generated module (the objects below /Objects/<Module>), used by the live tests.
 
-    ua = ModuleUa(4840, "Filling", host="192.168.0.191")
+    ua = ModuleUa(4840, "Filling", host="192.168.0.203")
     ua.call("Occupation/Occupy", "session-1")          # -> [Accepted, ErrorID]
     ua.expect("Module/State", 2)
 """
