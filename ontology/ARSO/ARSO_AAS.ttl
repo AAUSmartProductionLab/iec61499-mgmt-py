@@ -31,7 +31,8 @@
   control-component.ttl): its skills are its own elements (no Skills container), the Interfaces
   container is gone, an error is a property whose value is its code, and a skill states its type
   as a supplemental semanticId beside its kind (the SemanticId property is only read in the
-  short form of older AASs).
+  short form of older AASs). Operational Data: a data point is a Property of the submodel; the
+  collection per variable around an InterfaceReference is gone (the mapping says the source).
 
   v0.8 (9 Oct 2026): what a command of a skill runs is a flow in the elements of the process
   planner's Production Sequence (a step has a NodeId, a Kind, a Name and an Order; Kind step runs

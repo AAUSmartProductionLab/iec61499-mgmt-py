@@ -22,7 +22,7 @@
    "description": [
     {
      "language": "en",
-     "text": "Custom — Runtime variable bindings."
+     "text": "Custom — what the resource shows as it runs: a data point per value, fed from the interface by the mapping."
     }
    ],
    "submodelElements": [
@@ -53,62 +53,6 @@
       }
      ],
      "valueType": "xs:decimal"
-    },
-    {
-     "modelType": "SubmodelElementCollection",
-     "idShort": "OperationalDataVariable__00__",
-     "description": [
-      {
-       "language": "en",
-       "text": "A named variable entry."
-      }
-     ],
-     "qualifiers": [
-      {
-       "type": "SMT/Cardinality",
-       "valueType": "xs:string",
-       "kind": "TemplateQualifier",
-       "value": "ZeroToMany",
-       "semanticId": {
-        "type": "ExternalReference",
-        "keys": [
-         {
-          "type": "GlobalReference",
-          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
-         }
-        ]
-       }
-      }
-     ],
-     "value": [
-      {
-       "modelType": "ReferenceElement",
-       "idShort": "InterfaceReference",
-       "description": [
-        {
-         "language": "en",
-         "text": "Points to an AID property (.../InteractionMetadata/properties/{key}) in the same AAS (variables_builder.py hardcodes the properties path segment, never actions/events)."
-        }
-       ],
-       "qualifiers": [
-        {
-         "type": "SMT/Cardinality",
-         "valueType": "xs:string",
-         "kind": "TemplateQualifier",
-         "value": "ZeroToOne",
-         "semanticId": {
-          "type": "ExternalReference",
-          "keys": [
-           {
-            "type": "GlobalReference",
-            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
-           }
-          ]
-         }
-        }
-       ]
-      }
-     ]
     }
    ]
   }
