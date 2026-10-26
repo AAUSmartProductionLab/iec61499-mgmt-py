@@ -24,6 +24,7 @@ Figures (draw.io; open them at app.diagrams.net or in the draw.io desktop app, a
 | | Layers (programs) | The same, with each program drawn as its window standing on its layer |
 | | Layers (illustrated) | The same layers drawn further: the stations open in front and reach over the vial with their tools, shuttles with black rims, names on signs above the stations; the programs as windows with the server they run on at the side; the agents as a product and miniature modules, the AASs as stacks, people at the planner and the HMI; the HMI with a state machine and buttons per module, a trend and alarms. Only the lines that matter, along x, y and z |
 | | Layers (slide) | The same layers for a slide: a few objects with a word or two on each, the layers apart, big cards naming them on the right |
+| [figures/slides.drawio](figures/slides.drawio) | 01 to 19 | One figure per slide of [presentation/presentation.md](presentation/presentation.md): 16:9 pages, big type, few elements, no title of their own; 01 is the line alone, for the title slide |
 
 They follow the style of the module architecture figure (Arial, grey panels, white cards, rounded
 pills, small blue tags, dashed for what is not built yet).
