@@ -340,7 +340,7 @@ class Errors(SubmodelElementCollection):
 class Skills(Submodel):
     id_short: AasIdString = "Skills"
     semantic_id: str = "https://smartproductionlab.aau.dk/ARSO/Skills/1/0/Submodel"
-    description: str = "IDTA 02015 CCType \u2014 Control Component Type (Interfaces, Skills, Errors), ARSO-flattened."
+    description: str = "The Skills submodel (ARSO): a resource's skills with their commands and steps, the Interfaces and Errors containers; began from IDTA 02015 Control Component Type."
     VERSION: ClassVar[str] = "1"
     REVISION: ClassVar[str] = "0"
     Interfaces: Interfaces_t

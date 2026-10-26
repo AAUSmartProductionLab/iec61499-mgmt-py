@@ -62,7 +62,7 @@ own copy.
   steps are possible) is the general form and may now order structures too.
 - Resolved properties `hasSubProcess`, `consumes`, `produces`, `hasRequiredCapability`.
 
-**ARSO 0.4 → 0.5** (`ARSO_AAS.ttl`, `Modules/control-component.ttl`, new `Modules/control-configuration.ttl`)
+**ARSO 0.4 → 0.5** (`ARSO_AAS.ttl`, `Modules/control-component.ttl` (since 26 Oct `Modules/skills.ttl`: the Skills submodel is its own template, no longer IDTA's Control Component Type), new `Modules/control-configuration.ttl`)
 - **Scope fix:** the restrictions ARSO stated on every `aas:AssetAdministrationShell` (exactly one
   Nameplate, exactly one Hierarchical Structures, represents exactly one `css:Resource`, ...) now
   apply to a new class `arso:ResourceAAS`. Loaded together with APSO they would otherwise have

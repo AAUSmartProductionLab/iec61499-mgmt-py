@@ -107,7 +107,7 @@ submodels:
 | Asset Interfaces Description | IDTA 02017-1-1 with W3C WoT terms | One OPC UA interface: every method as an action (arguments in call order), every published variable as a property, each with its browse path | Extended |
 | Asset Interfaces Mapping Configuration | IDTA 02027 (2/0) | Which interface property feeds which data point, and which action each command's Operation calls | Extended |
 | Capability Description | IDTA 02020 | The capabilities the module offers, with values or ranges and units, each realized by a skill; derived from the skills since 26 Oct (qualifiers `Derived`, and `Availability` for a skill not built yet; [ppr-model.md](ppr-model.md), section 5) | One change |
-| Skills | ours (ARSO 0.8), from IDTA 02015 Control Component Type | The skills the module composes and the module's own commands (Occupy, Release, Reset, Start, Stop, Abort, Clear), each as its commands; error codes | Custom |
+| Skills | ours (ARSO 0.8, `Modules/skills.ttl`); began from IDTA 02015 Control Component Type and is no longer that template | The skills the module composes and the module's own commands (Occupy, Release, Reset, Start, Stop, Abort, Clear), each as its commands; error codes | Custom |
 | Operational Data | ours (ARSO) | One decimal data point per published variable: states, error ids, parameters and results of the last run, equipment inputs | Custom |
 | Control Configuration | ours (ARSO) | Runtime and endpoint, the rule set the program follows, what it was generated from, whether the running program still matches, type hashes, and which block of the program each skill and step is | Custom |
 

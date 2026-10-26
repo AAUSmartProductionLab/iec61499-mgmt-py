@@ -22,7 +22,7 @@
    "description": [
     {
      "language": "en",
-     "text": "IDTA 02015 CCType — Control Component Type (Interfaces, Skills, Errors), ARSO-flattened."
+     "text": "The Skills submodel (ARSO): a resource's skills with their commands and steps, the Interfaces and Errors containers; began from IDTA 02015 Control Component Type."
     }
    ],
    "submodelElements": [
