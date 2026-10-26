@@ -16,9 +16,9 @@ on the way; what comes next is in [next-steps.md](next-steps.md). The repository
 | FORTE builds for Windows and the Raspberry Pi (aarch64, static), FORTE patches (IO handle fix, sysfs PWM module) | `runtime/` | Done |
 | Raspberry Pi: FORTE in Docker, install and deployment | `deploy/`, `runtime/install.sh` | Done on both Pi 5s (`filling-module`, `stoppering-module`), clock kept across reboots. The Pi 4 (192.168.0.191) that ran the stoppering module until 22 Oct is no longer used |
 | `modsync`: read what runs on a module, compare it with its spec or with its AAS, push changes online; the AAS as the desired state (`verify`, `reconfigure`, `record`) | `aas61499-tools/modsync` | Done; on FORTE on the PC and on the Pi 5 |
-| `modreg`: the AASs of the line, a module and its components in ARSO 0.8, as profiles on the lab's shared model (aas-model); ontology check; registration service; the interface of a skill built online | `aas61499-tools/modreg`, `aas-model/` (submodule), `ontology/` | Done on aas-model `6a03f78` (18 Oct, moved 19 Oct); not used against the lab's AAS server |
+| `modreg`: the AASs of the line, a module and its components in ARSO 0.9, as profiles on the lab's shared model (aas-model); ontology check; registration service; the interface of a skill built online | `aas61499-tools/modreg`, `aas-model/` (submodule), `ontology/` | Done on aas-model `6a03f78` (18 Oct, moved 19 Oct); not used against the lab's AAS server |
 | Product AAS with its plan, plan check, the example line | `modreg/product.py`, `cell/examples` | Done; published to the local AAS server |
-| `modlink` and the HMI | `iec61499-opcua-hmi/` (submodule since 19 Oct) | `modlink` reads ARSO 0.8; the HMI's own reader rewritten for 0.8 (`hmi/aas.py`, not committed: 7 of the HMI's tests fail with it until its stand-in module follows) |
+| `modlink` and the HMI | `iec61499-opcua-hmi/` (submodule since 19 Oct) | `modlink` reads ARSO 0.9 (and 0.8, 0.7); the HMI's own reader rewritten for 0.8 (`hmi/aas.py`, not committed: 7 of the HMI's tests fail with it until its stand-in module follows) |
 | Skill editor (BaSyx web UI fork) | fork `basyx-aas-web-ui` | First version pushed; fixes from the look in a browser not yet committed |
 | Capability matching inside a plan executor, the experiment runner (B1, B2), agents | – | Not started (see [next-steps.md](next-steps.md)) |
 

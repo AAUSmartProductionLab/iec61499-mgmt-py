@@ -70,8 +70,8 @@ Template "ours" means a submodel template of our own, generated from the ontolog
 | --- | --- | --- | --- |
 | Nameplate | IDTA 02006 | What the resource is | Yes |
 | Hierarchical Structures | IDTA 02011 | Its parts: a line's modules, a module's components | Yes |
-| Capability Description | IDTA 02020, role Offered | What it offers, with ranges, each capability realized by a skill; to be derived from the skills (section 5) | Written from the spec; derivation planned |
-| Skills | ours (ARSO 0.8) | Each skill as its commands; the Start's variables are the parameters with limits; a composite's steps | Yes |
+| Capability Description | IDTA 02020, role Offered | What it offers, with ranges, each capability realized by a skill; derived from the skills (section 5) | Yes, derived since 26 Oct |
+| Skills | ours (ARSO 0.9) | Each skill as its commands, directly in the submodel; the Start's variables are the parameters with limits; a composite's steps; the error codes | Yes |
 | Asset Interfaces Description | IDTA 02017 (+ aas-model's actions) | The OPC UA endpoint and every action and property | Yes |
 | Asset Interfaces Mapping Configuration | IDTA 02027 | Which interface element feeds which data, which action an Operation calls | Yes |
 | Operational Data | ours | States, measurements and events as series SMCs shaped as IDTA's Time Series, each with a `Latest` property and a reference to its history in a time-series database | Data points today; series planned ([state-and-parameters.md](state-and-parameters.md)) |

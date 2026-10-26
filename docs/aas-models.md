@@ -11,7 +11,7 @@ It describes what is **built**, and says where a model exists only on paper. The
 
 | What | Where it was read from |
 | --- | --- |
-| Resource AASs: line, module, component | `modreg` in this repository and the AASs it builds for the example line; ARSO 0.8 (`ontology/ARSO`) |
+| Resource AASs: line, module, component | `modreg` in this repository and the AASs it builds for the example line; ARSO 0.9 (`ontology/ARSO`) |
 | Product AAS, plan, stations of the planner | the demo data on the local AAS server (37 AASs, 31 sequences), which a newer planner than the pushed one wrote; and the planner's process sequence module (fork `basyx-aas-web-ui`, branch `feat/process-sequence-pharma`, commit `058a03e`) for its README and readers |
 | Product AAS and plan as built here | `modreg` (`product.py`), the templates in `aas61499-tools/modreg/templates`, and the vial of the example line |
 | Intended product and process models | APSO 0.2, AProSO 0.1 and PPRL 0.1 (`ontology/`), [aas-implementation-plan.md](archive/aas-implementation-plan.md) (30 Sep, the product and process parts) |
@@ -66,8 +66,8 @@ flowchart LR
 
 | AAS | One per | Built by | Checked against |
 | --- | --- | --- | --- |
-| Module, component | module; component as built into one | `modreg` from the module spec or the running module | ARSO 0.8: `modreg check`, and the closed SHACL validation of the generator (all fourteen resource AASs of the example line conform, 9 Oct) |
-| Line | line | `modreg` from a profile (`cell/examples/example_line.py`) | ARSO 0.8: `modreg check`, and the generator's validation |
+| Module, component | module; component as built into one | `modreg` from the module spec or the running module | ARSO 0.9: `modreg check`, and the closed SHACL validation of the generator (all fourteen resource AASs of the example line conform, 9 Oct) |
+| Line | line | `modreg` from a profile (`cell/examples/example_line.py`) | ARSO 0.9: `modreg check`, and the generator's validation |
 | Product | product, and each part that has its own plan | the planner (demo data), and `modreg` from the product's profile | its pydantic type (`ProductTypeAAS`); no ontology (APSO is not applied to it) |
 | Plan | product (a submodel of the product AAS, not an AAS of its own) | the planner, and `modreg` as part of the product | its pydantic class; against the resources by following its links (`cell/examples/plan_check.py`); AProSO is not applied to it |
 
@@ -107,7 +107,7 @@ submodels:
 | Asset Interfaces Description | IDTA 02017-1-1 with W3C WoT terms | One OPC UA interface: every method as an action (arguments in call order), every published variable as a property, each with its browse path | Extended |
 | Asset Interfaces Mapping Configuration | IDTA 02027 (2/0) | Which interface property feeds which data point, and which action each command's Operation calls | Extended |
 | Capability Description | IDTA 02020 | The capabilities the module offers, with values or ranges and units, each realized by a skill; derived from the skills since 26 Oct (qualifiers `Derived`, and `Availability` for a skill not built yet; [ppr-model.md](ppr-model.md), section 5) | One change |
-| Skills | ours (ARSO 0.8, `Modules/skills.ttl`); began from IDTA 02015 Control Component Type and is no longer that template | The skills the module composes and the module's own commands (Occupy, Release, Reset, Start, Stop, Abort, Clear), each as its commands; error codes | Custom |
+| Skills | ours (ARSO 0.9, `Modules/skills.ttl`); began from IDTA 02015 Control Component Type and is no longer that template | The skills the module composes and the module's own commands (Occupy, Release, Reset, Start, Stop, Abort, Clear), each as its commands, directly in the submodel; the error codes (`Errors`, a property each) | Custom |
 | Operational Data | ours (ARSO) | One decimal data point per published variable: states, error ids, parameters and results of the last run, equipment inputs | Custom |
 | Control Configuration | ours (ARSO) | Runtime and endpoint, the rule set the program follows, what it was generated from, whether the running program still matches, type hashes, and which block of the program each skill and step is | Custom |
 
@@ -119,27 +119,32 @@ open) and **Technical Data** (IDTA 02003; the generator writes it).
 
 ### 2.1 What a skill is
 
-A skill is its commands, and nothing else. The filling module's `Dispensing`:
+A skill is its commands, and nothing else. The skills are the Skills submodel's own elements,
+beside its `Errors`. The filling module's, with its `Dispensing`:
 
 ```
-Dispensing                      semanticId .../skill, and .../skill/Composite beside it (its kind)
-├─ SemanticId                   .../skills/Dispensing                 (what it does)
-├─ Start                        semanticId .../skill/Start
-│   ├─ InterfaceReference       → the action Dispensing_Start of the interface
-│   ├─ Start  (Operation)       in: Session, Volume [mL, 0.5..10]   out: Accepted, ErrorID, Weight [g]
-│   └─ Steps
-│       ├─ Step_0000   NodeId NeedleDown, Kind step, Order 0
-│       │               Skill → MoveAxis (FillingLinearAxisAAS)
-│       │               Bindings: Position = 40.0
-│       ├─ Step_0001   NodeId Dispense, Kind step, Order 1
-│       │               Skill → Dispense (FillingPumpAAS)
-│       │               Bindings: Volume ← Start/Volume, FlowRate = 1.0
-│       ├─ Step_0002   NodeId Home, Kind step, Order 2      Skill → Home (FillingLinearAxisAAS)
-│       └─ Step_0003   NodeId Weigh, Kind step, Order 3     Skill → Weigh (FillingScaleAAS)
-│                       Outputs: Weight [g] ← the Weight of Weigh
-├─ Stop                         InterfaceReference, Stop (Operation), Steps: Step_0000 Skill → Home
-├─ Abort                        InterfaceReference, Abort (Operation)
-└─ Reset                        InterfaceReference, Reset (Operation)
+Skills (submodel)
+├─ Dispensing                      semanticId .../skill; beside it .../skill/Composite (its kind)
+│   │                              and .../skills/Dispensing (its type: what it does)
+│   ├─ Start                       semanticId .../skill/Start
+│   │   ├─ InterfaceReference      → the action Dispensing_Start of the interface
+│   │   ├─ Start  (Operation)      in: Session, Volume [mL, 0.5..10]   out: Accepted, ErrorID, Weight [g]
+│   │   └─ Steps
+│   │       ├─ Step_0000   NodeId NeedleDown, Kind step, Order 0
+│   │       │               Skill → MoveAxis (FillingLinearAxisAAS)
+│   │       │               Bindings: Position = 40.0
+│   │       ├─ Step_0001   NodeId Dispense, Kind step, Order 1
+│   │       │               Skill → Dispense (FillingPumpAAS)
+│   │       │               Bindings: Volume ← Start/Volume, FlowRate = 1.0
+│   │       ├─ Step_0002   NodeId Home, Kind step, Order 2      Skill → Home (FillingLinearAxisAAS)
+│   │       └─ Step_0003   NodeId Weigh, Kind step, Order 3     Skill → Weigh (FillingScaleAAS)
+│   │                       Outputs: Weight [g] ← the Weight of Weigh
+│   ├─ Stop                        InterfaceReference, Stop (Operation), Steps: Step_0000 Skill → Home
+│   ├─ Abort                       InterfaceReference, Abort (Operation)
+│   └─ Reset                       InterfaceReference, Reset (Operation)
+├─ Occupy, Release, Reset, ...     the module's own commands (kind ModuleControl)
+└─ Errors                          a property per error, its value the code: PreconditionViolated 1,
+                                   InvariantViolated 2, Timeout 3, ...
 ```
 
 - A **command** (Start, Stop, Abort, Reset; the same four on every skill, with a generic semantic
@@ -159,8 +164,9 @@ Dispensing                      semanticId .../skill, and .../skill/Composite be
   bounds it (`Contract`: Requires, Ensures or After, Invariant, Timeout). It is in the AAS of the
   component it moves. A **composite** is in the AAS of the module that composes it. The same shape
   would describe a skill of the line made of skills of its modules.
-- Every skill element has the semantic id `.../skill`; what kind it is, is a supplemental id:
-  `Primitive`, `Composite` or `ModuleControl`.
+- Every skill element has the semantic id `.../skill`; what kind it is, is a supplemental id
+  (`Primitive`, `Composite` or `ModuleControl`), and so is what it does, its type (a class of the
+  Skills vocabulary, `.../skills/<Name>`).
 - The module's own commands are skills of the kind **ModuleControl** in the same list: `Occupy`,
   `Release`, `Reset`, `Start`, `Stop`, `Abort`, `Clear`. Each is called by its `Start`. What the
   module runs itself while resetting and stopping are the steps of `Reset` and of `Stop`. A skill
@@ -214,7 +220,7 @@ mean. The mapping joins the two.
 
 Skills, against IDTA 02015 Control Component Type:
 
-- Kept: the `Interfaces`, `Skills` and `Errors` containers; per skill a `SemanticId`.
+- Kept: the `Errors` container, an error a property since 0.9.
 - Dropped: the per-skill Modes, Disabled and Errors structure and the device-level interface entries.
 - Ours (ARSO 0.7): the commands with their `InterfaceReference`, Operation and `Steps`; `Contract`.
   Everything `modreg` writes in Skills and Control Configuration is declared in ARSO.
@@ -223,6 +229,10 @@ Skills, against IDTA 02015 Control Component Type:
   one; the Module submodel is gone, its commands are skills of the kind ModuleControl. The Skills
   submodel of the filling module has 176 elements (49 before, without the module's commands): most
   of the growth is the fields of the flow and the seven skills of the module itself.
+- Changed with 0.9 (26 Oct): the skills are the submodel's own elements (the `Skills` container is
+  gone); the empty `Interfaces` container is gone (a command refers to its AID action); an error
+  is a property whose value is its code (not a collection holding one `ErrorCode`); a skill's type
+  is a supplemental id beside its kind (the `SemanticId` property only in the short form).
 - Still valid, for the AAS generator's MQTT stations: the short form of a skill (`SemanticId`, one
   Operation and one `InterfaceReference` directly in the skill).
 - Gone with 0.7: `Kind`, `Parameters`, `RealizesProperty`, `Uses`, `Execute` and `Stop` lists,
@@ -395,11 +405,11 @@ Inside the resource the chain continues with section 2.2: capability → skill �
    modules and the planner follow IDTA 02020 (decided 6 Oct). Both are accepted by the validator.
 6. **The interface terms aas-model writes that ARSO does not declare** (key, type, title,
    operation type, browse path). Skills and Control Configuration are declared in full.
-7. **Two forms of a skill, one ARSO.** This repository has ARSO 0.8; the AAS generation project's
+7. **Two forms of a skill, one ARSO.** This repository has ARSO 0.9; the AAS generation project's
    pushed copy is still 0.7 (its update to 0.8 is in a working copy, not committed). It builds the
    short form of a skill, which both versions keep valid; its validation accepts both forms, and
    tells a module, a component and a system apart by the asset type. `modlink` (HMI repository, a
-   submodule here since 19 Oct) reads 0.8, 0.7 and the short form. The HMI's own reader, its
+   submodule here since 19 Oct) reads 0.9, 0.8, 0.7 and the short form. The HMI's own reader, its
    built-in module descriptions and its simulator are still those of the modules before 8 Oct.
 8. **ARSO's resource AAS and aas-model's `Resource`.** Since 16 to 18 Oct aas-model authors
    resources in Python as a `Resource` with Control Component Instance, Variables and Parameters.
