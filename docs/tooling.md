@@ -194,8 +194,18 @@ python -m modreg profile filling --target pi --host 192.168.0.203    # ... with 
 python -m modreg build profiles/FillingModuleAAS.json                # the AAS -> aas/
 python -m modreg check profiles/FillingModuleAAS.json --ontology ontology/ARSO
 python -m modreg generate --ontology ontology/ARSO                   # after an ontology change: templates and classes (commit both)
+python -m modreg graph filling --target pi --out filling.ttl         # the AASs as RDF with what they describe (PPRL)
 python -m modsync describe cell/modules/filling.yaml --target pi     # the AASs from the spec alone -> aas/
 ```
+
+**Capabilities are derived from the skills** (`modreg/derive.py`, the rule in
+`ontology/PPRL/derivation`, on the projection in `modreg/projection.py`): a module spec's
+`capabilities` state only the facts of the machine; which skill realizes a capability and the
+ranges its parameters set follow from the skill types (`ontology/Vocabulary/skills.ttl`) and what
+each parameter means (the spec's `meaning`). `modsync record` derives them anew after a build;
+`modreg serve` does it on the AAS server for a module (`POST /capabilities/<shell>`), as the skill
+editor is to after saving. A new primitive type: add it to `skills.ttl` with the capability it
+contributes (a test fails otherwise).
 
 **A new submodel or element**: ARSO first (ask), then `modreg generate`, then the profile code
 (`modreg/profile.py`), then the readers (`modsync/desired.py`, and `modlink` in the HMI submodule if
