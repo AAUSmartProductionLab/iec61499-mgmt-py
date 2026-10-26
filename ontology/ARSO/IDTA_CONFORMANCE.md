@@ -18,7 +18,7 @@ APSO is out of scope.
 | `technical-data.ttl` | 02003 | 26 | 26 (was 0) | Filled in; now built |
 | `aimc.ttl` | 02027 | 15 | 15 | New; built |
 | `skills.ttl` (was `control-component.ttl`) | 02015 (not supplied) | 45 | 32 | ARSO's own Skills submodel; began from 02015 |
-| `operational-data.ttl` | none (ARSO-specific) | 5 | 1 | n/a |
+| `operational-data.ttl` | none (ARSO-specific) | 3 | 1 | n/a |
 | `parameters.ttl` | none (ARSO-specific) | 3 | 1 | n/a |
 
 ## Added to the ontology
@@ -114,9 +114,9 @@ should stay; they are listed so the delta is visible.
    `ManufacturerProductType`, `FirmwareVersion`, `UniqueFacilityIdentifier`,
    `CompanyLogo`, `Markings` and `AssetSpecificProperties`.
 8. **OperationalData.** `OperationalDataSubmodel` requires `some arso:Datapoint`
-   (a Decimal Property), but the builder emits `OperationalDataVariableSMC`
-   collections. It passes today only because the generated shapes do not enforce
-   that restriction.
+   (a Decimal Property), which `modreg` writes. The AAS generation project's builder
+   emits a collection per variable around an InterfaceReference, which ARSO 0.9 no
+   longer declares (the mapping says which interface property feeds a data point).
 9. **Generated shapes are stale.** `shapes.generated.shacl.ttl` predates the
    TechnicalData annotations and the AIMC module, so their OWL restrictions
    (for example exactly one `GeneralInformation` or `MappingConfigurations`)
