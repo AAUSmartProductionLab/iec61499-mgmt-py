@@ -239,6 +239,22 @@ pprl:executedBy rdf:type owl:ObjectProperty ;
   rdfs:range css:Resource ;
   rdfs:comment "The resource chosen for a leaf process step (AProSO Binding.Resource)." .
 
+pprl:means rdf:type owl:AnnotationProperty ;
+  rdfs:comment "What a skill parameter sets, in a product's terms: a property class of the lab's vocabulary (the parameter's supplemental semantic id). A capability property of that class can be realized by the parameter." .
+
+pprl:handedFrom rdf:type owl:ObjectProperty ;
+  rdfs:domain css:SkillParameter ;
+  rdfs:range css:SkillParameter ;
+  rdfs:comment "A parameter of the skill a step runs is handed the value of a parameter of the composite skill running the step (ARSO step Binding with a SourceElement)." .
+
+pprl:FBInstance rdf:type owl:Class ;
+  rdfs:comment "An instance of a function block in a module's control program (ARSO Control Configuration, Instances)." .
+
+pprl:implementedBy rdf:type owl:ObjectProperty ;
+  rdfs:domain css:Skill ;
+  rdfs:range pprl:FBInstance ;
+  rdfs:comment "The block of the control program that carries out a skill. A skill that is described but not built has none: it is offered only after a reconfiguration." .
+
 
 #################################################################
 # 3. DERIVED: candidates of a process step

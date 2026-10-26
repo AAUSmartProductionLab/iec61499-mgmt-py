@@ -7,6 +7,7 @@
     modreg serve --ontology ontology/ARSO --basyx http://<host>:8081       # the registration service
     modreg register filling --target pi --service http://<host>:8090       # send the module's profile to it
     modreg generate --ontology ontology/ARSO              # templates of the ontology's own submodels, and all classes
+    modreg graph filling --target pi --out filling.ttl    # the module's AASs as RDF, with what they describe (PPRL)
 
 A profile is an AAS on the lab's shared model (aas-model) without what its type says anyway; the
 service validates it, builds the AAS, checks it against the ontology and publishes it. A module
@@ -29,6 +30,7 @@ from modsync.sync import inspect, relative
 try:
     from . import model, profile as profiles, templates
     from .ontology import Blueprint, check
+    from .projection import project
     from .service import AasServer, Registry, send, serve
 except ImportError as e:
     sys.exit(f"modreg needs the registration extra ({e}): python -m pip install -e \".[registration]\"")
@@ -105,6 +107,9 @@ def main(argv=None) -> int:
     source(p, "profile (.json) or module spec")
     p.add_argument("--service", required=True, help="the registration service, e.g. http://<host>:8090")
     p.add_argument("--check", action="store_true", help="only validate and check, do not register")
+    p = sub.add_parser("graph", help="write the AASs of a module as RDF with the individuals and relations they describe")
+    source(p, "profile (.json) or module spec")
+    p.add_argument("--out", default="graph.ttl", help="Turtle file to write")
     args = parser.parse_args(argv)
 
     if args.command == "generate":
@@ -122,6 +127,11 @@ def main(argv=None) -> int:
             server.serve_forever()
         except KeyboardInterrupt:
             pass
+        return 0
+    if args.command == "graph":
+        graph = project([model.build(profile) for profile in given(args)])
+        graph.serialize(args.out, format="turtle")
+        print(f"{len(graph)} triples: {args.out}")
         return 0
     try:
         failed = False

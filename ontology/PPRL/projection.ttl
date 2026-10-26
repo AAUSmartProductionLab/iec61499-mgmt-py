@@ -1,0 +1,68 @@
+@prefix pa:   <https://w3id.org/2025/pprl/aas#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#################################################################
+# The projection of an AAS into RDF (modreg/projection.py).
+#
+# Pass 1 writes every element of an AAS (JSON) in these terms: its
+# place, its ids, its value and qualifiers, and what its references
+# point to, resolved to the element itself. An element is named by
+# the id of its submodel and the idShorts below it, as a model
+# reference addresses it (a list item by its index); a shell and a
+# submodel by their ids. The structure ontology (ARSO, and APSO and
+# AProSO once remade) types each element by its semanticId.
+#
+# Pass 2 and 3 are the rules in projection/*.rq (SPARQL CONSTRUCT,
+# applied in the order of their names): they make the individuals an
+# element describes (pprl:describes) from its supplemental semantic
+# id, and the relations of PPRL and CSS from the references.
+#################################################################
+
+<https://w3id.org/2025/pprl/aas>
+  rdf:type owl:Ontology ;
+  owl:versionInfo "0.1" ;
+  rdfs:comment "The terms an AAS is written in when it is projected into RDF for the PPRL rules." .
+
+pa:Element rdf:type owl:Class ;
+  rdfs:comment "A shell, a submodel or a submodel element of an AAS." .
+
+pa:submodel rdf:type owl:ObjectProperty ;
+  rdfs:comment "A shell has this submodel." .
+
+pa:element rdf:type owl:ObjectProperty ;
+  rdfs:comment "A submodel, collection, list, entity or operation contains this element (an operation: its variables)." .
+
+pa:input rdf:type owl:ObjectProperty ;
+  rdfs:comment "An operation's input variable (also a pa:element of it)." .
+
+pa:output rdf:type owl:ObjectProperty ;
+  rdfs:comment "An operation's output variable (also a pa:element of it)." .
+
+pa:idShort rdf:type owl:DatatypeProperty .
+pa:modelType rdf:type owl:DatatypeProperty .
+pa:valueType rdf:type owl:DatatypeProperty .
+
+pa:value rdf:type owl:DatatypeProperty ;
+  rdfs:comment "The value of a property, or of a qualifier." .
+
+pa:min rdf:type owl:DatatypeProperty ; rdfs:comment "The lower end of a range." .
+pa:max rdf:type owl:DatatypeProperty ; rdfs:comment "The upper end of a range." .
+
+pa:semanticId rdf:type owl:ObjectProperty ;
+  rdfs:comment "What the element is in its template." .
+
+pa:supplementalSemanticId rdf:type owl:ObjectProperty ;
+  rdfs:comment "What the element means in the domain." .
+
+pa:refersTo rdf:type owl:ObjectProperty ;
+  rdfs:comment "What a reference element points to: the element (a model reference) or the IRI (an external one)." .
+
+pa:first rdf:type owl:ObjectProperty ; rdfs:comment "The first element of a relationship." .
+pa:second rdf:type owl:ObjectProperty ; rdfs:comment "The second element of a relationship." .
+
+pa:qualifier rdf:type owl:ObjectProperty ;
+  rdfs:comment "A qualifier of the element, with its pa:type and pa:value." .
+
+pa:type rdf:type owl:DatatypeProperty ; rdfs:comment "The type of a qualifier." .

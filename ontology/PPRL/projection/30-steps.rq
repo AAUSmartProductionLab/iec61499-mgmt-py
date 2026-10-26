@@ -1,0 +1,27 @@
+# The steps of a skill's commands (ARSO 0.8, in the elements of the Production Sequence): the skill
+# uses the skill each step runs, and a parameter of that skill is handed the value of a parameter of
+# the skill running the step (a binding with a SourceElement; one with a Value is a constant).
+PREFIX pa:   <https://w3id.org/2025/pprl/aas#>
+PREFIX pprl: <https://w3id.org/2025/pprl#>
+
+CONSTRUCT {
+  ?skill pprl:usesSkill ?used .
+  ?handed pprl:handedFrom ?source .
+}
+WHERE {
+  ?element pprl:describes ?skill ; pa:element ?command .
+  ?command pa:element ?steps .
+  ?steps pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Steps/1/0> ; pa:element ?step .
+  ?step pa:element ?runs .
+  ?runs pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Skill/1/0> ; pa:refersTo ?usedElement .
+  ?usedElement pprl:describes ?used .
+  OPTIONAL {
+    ?step pa:element ?bindings .
+    ?bindings pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Bindings/1/0> ; pa:element ?binding .
+    ?binding pa:element ?from , ?to .
+    ?from pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/SourceElement/1/0> ; pa:refersTo ?sourceVariable .
+    ?to pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/InputReference/1/0> ; pa:refersTo ?handedVariable .
+    ?sourceVariable pprl:describes ?source .
+    ?handedVariable pprl:describes ?handed .
+  }
+}
