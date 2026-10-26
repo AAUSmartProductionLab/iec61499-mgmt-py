@@ -100,8 +100,9 @@ was running.
    a flow: add, remove or reorder steps, choose the component skill a step runs, hand an input a
    constant or a parameter, set a parameter's default and limits, or describe a new skill from an
    existing one. It warns of what the module could not carry out and saves the Skills submodel.
-   A new skill is now *described, not built*: its capability is listed as "offered after a
-   reconfiguration".
+   A new skill is now *described, not built*. It has no capability yet, and the matching does
+   not tell a described skill from a built one: both come with deriving capabilities from skills
+   ([ppr-model.md](ppr-model.md), section 5; plan step F3).
 2. **Compare.** `python -m modsync reconfigure <AAS folder or server> --host <module>` reads the
    AAS (what is wanted) and the running program (what is), both into the same structure, and
    finds three kinds of differences:
@@ -161,7 +162,7 @@ Anything beyond that (a new primitive, new equipment) is a new build, not a reco
 | 2 | Its Filling process requires the capability Filling with that volume | Built |
 | 3 | The filling module offers Filling for 0.5 to 10 mL; the meanings match | Built |
 | 4 | Filling is realized by the skill Dispensing; its parameter Volume carries the meaning FillVolume | Built |
-| 5 | The plan's step is assigned to the module and Dispensing, Volume bound to the product's FillVolume | **Missing**: the planner cannot read the modules' ARSO skills yet |
+| 5 | The plan's step is assigned to the module and Dispensing, Volume bound to the product's FillVolume | Built: the planner reads the modules' ARSO skills and binds Volume to FillVolume by their meaning (web UI fork, `ac9eb64`) |
 | 6 | Someone runs the step: occupies the module, calls Dispensing with Volume = 2 | **Missing** as an executor (agents, future work); `modlink` does it for one module, the HMI by hand |
 | 7 | The call becomes `Skills/Dispensing/Start(Session, 2.0)` over OPC UA | Built |
 | 8 | Dispensing hands Volume to its Dispense step; the pump runs; the axis moves; the scale is read | Built (no pump yet: a time stands in) |
@@ -171,8 +172,8 @@ product's requirement lies outside what the module offers (the matching says so)
 limit or describe the new skill in the module's AAS with the skill editor, and run `modsync
 reconfigure`. Section 5 does the rest. Not built: deriving the module's change from the product
 automatically, and agents that bid for the steps of a plan and trigger the reconfiguration
-themselves (future work after the paper). A skill described but not built already shows up in
-matching as "offered after a reconfiguration", which is what such an agent would act on.
+themselves (future work after the paper). A skill described but not built is to show up in
+matching as "offered after a reconfiguration" (F3), which is what such an agent would act on.
 
 ## 7. Back to the 4diac IDE
 
@@ -206,5 +207,5 @@ modreg serve --ontology ontology/ARSO --basyx http://<host>:8081   # registratio
 | Module AAS | ARSO 0.8 resource AASs, built and checked against the ontology, published locally | Registration on the lab's server; live values in Operational Data |
 | Operating from the AAS | `modlink`, the HMI | – |
 | Changing from the AAS | Skill editor; verify, create a skill, change a value, record; online on PC and Pi | Reordering or removing steps online; the editor's last fixes committed |
-| Changing from a product | Matching of required and offered capabilities; the three cases defined | The planner reading the modules' skills; an executor of plans; deriving a module change from a product automatically (agents) |
+| Changing from a product | Matching of required and offered capabilities, the planner binding a step to a module's skill; the three cases defined | Capabilities derived from skills and "offered after a reconfiguration" (F3); an executor of plans; deriving a module change from a product automatically (agents) |
 | Back to the IDE | `modsync project` | Programs that do not follow the module rules |
