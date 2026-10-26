@@ -2,6 +2,8 @@
 
 Needs the ``registration`` extra (aas-model, rdflib); skipped without it.
 """
+import copy
+
 import pytest
 
 pytest.importorskip("aas_model")
@@ -9,9 +11,11 @@ pytest.importorskip("rdflib")
 
 from modgen import SPECS, load                                              # noqa: E402
 from modreg.derive import offers                                            # noqa: E402
+from modreg.offer import capabilities                                       # noqa: E402
 from modreg.profile import lean                                             # noqa: E402
 from modreg.projection import project                                       # noqa: E402
 from test_modsync import composed                                           # noqa: E402
+from test_modsync_desired import aas, wanting                               # noqa: E402
 
 BASE = "https://smartproductionlab.aau.dk"
 # What each module of the line offers, as its specs stated it by hand before 26 Oct: the capability,
@@ -53,3 +57,68 @@ def test_a_skill_described_but_not_built_is_offered_after_a_reconfiguration():
     (volume,) = found["DoubleDose", "Filling"].properties
     assert (volume.meaning, volume.minimum, volume.maximum, volume.unit) == (f"{BASE}/semantics/FillVolume", "0.5", "10.0", "mL")
     assert volume.parameter.endswith("/Skills/Skills/DoubleDose/Start/Start/Dose")
+
+
+# Derived anew from an AAS alone (modreg.offer.capabilities) ---------------------------------------
+
+def capability_set(env: dict) -> dict:
+    """The offered capabilities of an AAS by container, without the ids aas-model draws anew."""
+    def bare(element):
+        if isinstance(element, dict):
+            return {k: bare(v) for k, v in element.items() if k != "embeddedDataSpecifications"}
+        return [bare(v) for v in element] if isinstance(element, list) else element
+    description = next(s for s in env["submodels"] if s["idShort"] == "CapabilityDescription")
+    return {box["idShort"]: bare(box) for box in description["submodelElements"][0]["value"]}
+
+
+def marks(box: dict, *path: str) -> dict:
+    element = box
+    for step in path:
+        element = next(c for c in element["value"] if c["idShort"] == step)
+    return {q["type"]: q["value"] for q in element.get("qualifiers", [])}
+
+
+@pytest.fixture(scope="module")
+def delivered():
+    return aas(load(SPECS / "filling.yaml"))
+
+
+def test_a_delivered_module_derives_what_it_was_delivered_with(delivered):
+    module, components = delivered
+    assert capability_set(capabilities(module, components)) == capability_set(module)
+
+
+def test_a_skill_described_in_the_aas_gets_a_capability_of_its_own(delivered):
+    """DoubleDose described (as the skill editor saves it), not built: Filling keeps its container
+    and facts; DoubleDose offers Filling in a container of its own, after a reconfiguration."""
+    module, components = wanting(composed().spec, delivered[0])
+    module["submodels"] = [next(s for s in delivered[0]["submodels"] if s["idShort"] == "CapabilityDescription")
+                           if s["idShort"] == "CapabilityDescription" else s for s in module["submodels"]]
+    found = capability_set(capabilities(module, components))
+    assert list(found) == ["Filling", "Filling_DoubleDose"]
+    assert found["Filling"] == capability_set(delivered[0])["Filling"]
+    double = found["Filling_DoubleDose"]
+    assert marks(double, "Capability") == {"CapabilityRoleQualifier/Offered": "true", "Derived": "true",
+                                           "Availability": "AfterReconfiguration"}
+    facts = {c["idShort"] for c in next(c for c in double["value"] if c["idShort"] == "PropertySet")["value"]}
+    assert facts == {"ContainerType", "GraspDiameter", "AbsoluteFillError", "FillVolume"}
+    assert marks(double, "PropertySet", "FillVolume", "Value")["Derived"] == "true"
+    realized = next(c for c in double["value"] if c["idShort"] == "CapabilityRelations")["value"][0]["second"]
+    assert realized["keys"][-1]["value"] == "DoubleDose"
+
+
+def test_a_capability_written_by_hand_stays_and_one_no_skill_offers_goes(delivered):
+    module, components = delivered
+    module = copy.deepcopy(module)
+    boxes = next(s for s in module["submodels"] if s["idShort"] == "CapabilityDescription")["submodelElements"][0]["value"]
+    by_hand = copy.deepcopy(boxes[0])
+    by_hand["idShort"] = "Weighing"
+    capability = next(c for c in by_hand["value"] if c["idShort"] == "Capability")
+    capability["supplementalSemanticIds"][0]["keys"][0]["value"] = f"{BASE}/semantics/Weighing"
+    capability["qualifiers"] = [q for q in capability["qualifiers"] if q["type"] != "Derived"]
+    gone = copy.deepcopy(boxes[0])
+    gone["idShort"] = "Stoppering"
+    next(c for c in gone["value"] if c["idShort"] == "Capability")["supplementalSemanticIds"][0]["keys"][0]["value"] = \
+        f"{BASE}/semantics/Stoppering"
+    boxes += [by_hand, gone]
+    assert list(capability_set(capabilities(module, components))) == ["Filling", "Weighing"]

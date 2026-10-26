@@ -16,17 +16,22 @@ the module rules.
 - the mappings from property to data point and from each command's Operation to its action;
 - in the skill itself, the reference of each command to its action, and how its Operation is
   invoked. A command the description left out (Abort, Reset) is added: a built skill has all four.
+
+``capabilities`` derives the module's offered capabilities anew from its skills (``modreg.derive``),
+after a skill was built online or described in the skill editor.
 """
 from __future__ import annotations
 
 import base64
 import copy
 
-from modgen.spec import ModuleSpec
+from modgen.spec import Capability as CapabilitySpec, CapabilityProperty, ModuleSpec
 
 from . import model
+from .derive import local, offers as derived_offers
 from .model import ModuleTypeAAS
-from .profile import Describer, put
+from .profile import OFFERED_SET, Describer, capability_description, put
+from .projection import project, target
 
 
 def children(element: dict | None) -> list[dict]:
@@ -124,3 +129,90 @@ def offered(module: dict, spec: ModuleSpec, skills: list[str]) -> dict:
             if operation is not None and invoking is not None and invoking.get("qualifiers"):
                 operation["qualifiers"] = invoking["qualifiers"]
     return module
+
+
+def qualifiers(element: dict | None) -> dict[str, str]:
+    return {q.get("type"): q.get("value") for q in (element or {}).get("qualifiers") or []}
+
+
+def english(texts: list[dict] | None) -> str:
+    return next((t.get("text", "") for t in texts or [] if t.get("language") == "en"), "")
+
+
+def stated_facts(description: dict | None) -> tuple[dict, dict, list[dict]]:
+    """What a Capability Description states beyond the skills: per capability class (meaning ->
+    (name, its facts)), the names its containers have (capability, skill element) -> idShort, and
+    the containers written by hand (no Derived mark on the capability)."""
+    stated, named, by_hand = {}, {}, []
+    for box in children(at(description, OFFERED_SET)):
+        capability = at(box, "Capability")
+        if capability is None or not capability.get("supplementalSemanticIds"):
+            continue
+        iri = capability["supplementalSemanticIds"][0]["keys"][0]["value"]
+        name = english(capability.get("displayName")) or local(iri)
+        if qualifiers(capability).get("Derived") != "true":
+            by_hand.append(box)
+        for relation in children(at(box, "CapabilityRelations")):
+            if relation.get("modelType") == "RelationshipElement" and relation.get("second"):
+                named[(iri, str(target(relation["second"])))] = box["idShort"]
+        facts = {}
+        for container in children(at(box, "PropertySet")):
+            value = at(container, "Value")
+            if value is None or qualifiers(value).get("Derived") == "true":
+                continue
+            meaning = value["supplementalSemanticIds"][0]["keys"][0]["value"]
+            unit = qualifiers(value).get("Unit")
+            if value["modelType"] == "Range":
+                facts[container["idShort"]] = CapabilityProperty(minimum=float(value["min"]), maximum=float(value["max"]),
+                                                                 unit=unit, semantic_id=meaning)
+            else:
+                kind, text = value.get("valueType"), value.get("value")
+                found = float(text) if kind == "xs:double" else text == "true" if kind == "xs:boolean" else text
+                facts[container["idShort"]] = CapabilityProperty(value=found, unit=unit, semantic_id=meaning)
+        about = english(capability.get("description"))
+        old = stated.get(iri, (name, CapabilitySpec()))[1]
+        stated[iri] = (name, CapabilitySpec(
+            description=old.description or ("" if ", realized by " in about else about),
+            properties={**old.properties, **facts}))
+    return stated, named, by_hand
+
+
+def capabilities(module: dict, components: list[dict]) -> dict:
+    """The module's AAS with its offered capabilities derived anew from its skills and those of its
+    components (``modreg.derive``): what a skill sets is replaced, the facts the description states
+    for a capability are kept, a container keeps its name, a capability written by hand that no
+    skill offers stays, and one a skill no longer offers goes. A skill described but not built
+    offers its capability after a reconfiguration."""
+    module = copy.deepcopy(module)
+    old = next((s for s in module["submodels"] if s["idShort"] == "CapabilityDescription"), None)
+    stated, named, by_hand = stated_facts(old)
+    found = derived_offers(project([module, *components], structure=False))
+    description = capability_description(found, stated, named)
+    derived = {o.capability for o in found}
+    kept = [box for box in by_hand if at(box, "Capability")["supplementalSemanticIds"][0]["keys"][0]["value"] not in derived]
+    if description is None and not kept:
+        module["submodels"] = [s for s in module["submodels"] if s is not old]
+        return module
+    shell = module["assetAdministrationShells"][0]
+    asset = ModuleTypeAAS(id_short=shell["idShort"], id=shell["id"],
+                          asset_type=shell["assetInformation"].get("assetType") or f"{model.RESOURCE}/Module",
+                          derived_from=model.RESOURCE_TEMPLATE)
+    if description is not None:
+        asset.capability_description = description
+    lean = asset.model_copy(update={f: None for f in type(asset).model_fields
+                                    if f != "capability_description" and hasattr(getattr(asset, f), "id_short")})
+    model.inject_ids(lean)
+    built = model.environment(lean)
+    new = next((s for s in built["submodels"] if s["idShort"] == "CapabilityDescription"), None)
+    if new is None:                                       # only containers written by hand are left
+        new = copy.deepcopy(old)
+        at(new, OFFERED_SET)["value"] = []
+    at(new, OFFERED_SET)["value"] += [box for box in kept if box["idShort"] not in {b["idShort"] for b in children(at(new, OFFERED_SET))}]
+    if old is not None:
+        new["id"] = old["id"]
+        module["submodels"] = [new if s is old else s for s in module["submodels"]]
+    else:
+        module["submodels"].append(new)
+        shell.setdefault("submodels", []).append({"type": "ModelReference", "keys": [{"type": "Submodel", "value": new["id"]}]})
+    return module
+

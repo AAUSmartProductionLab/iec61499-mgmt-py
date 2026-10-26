@@ -537,7 +537,8 @@ def prop(id_short: str, value: str) -> dict:
     return {"idShort": id_short, "modelType": "Property", "valueType": "xs:string", "value": value}
 
 
-def record(module: dict, reading: Reading, done: list[str] | None = None, trigger: str = "") -> dict:
+def record(module: dict, reading: Reading, done: list[str] | None = None, trigger: str = "",
+           components: list[dict] | None = None) -> dict:
     """The module's AAS with its Control Configuration saying what runs: every described skill and
     step with its instance, block type and the hash FORTE reports, when it was read, and (with
     ``done``, what a reconfiguration did) one more entry in the change log.
@@ -545,7 +546,8 @@ def record(module: dict, reading: Reading, done: list[str] | None = None, trigge
     A skill that was built and has no action of the interface yet (it was described, then created
     online) also gets its interface: actions, properties, data points and mappings, written by the
     rules a module's AAS is written by (``modreg.offer``; without the registration extra the AAS
-    stays without them)."""
+    stays without them). With the AASs of the ``components``, the capabilities the module offers
+    are derived anew from its skills (``modreg.offer.capabilities``)."""
     module = copy.deepcopy(module)
     config, skills_ = submodel(module, "ControlConfiguration"), submodel(module, "Skills")
     if config is None:
@@ -592,10 +594,13 @@ def record(module: dict, reading: Reading, done: list[str] | None = None, trigge
             prop("Result", "; ".join(done))]})
     reachable = [name for name, comp in spec.composites.items() if comp.offered and f"{name}.Control" in snap.fbs
                  and at(skills_, "Skills", name, "Start", "InterfaceReference") is None]
+    try:
+        from modreg.offer import capabilities, offered      # needs the registration extra (aas-model, rdflib)
+    except ImportError:
+        return module
     if reachable:
-        try:
-            from modreg.offer import offered                # needs the registration extra (aas-model)
-        except ImportError:
-            return module
         module = offered(module, spec, reachable)
+    if components is not None:
+        # What the module offers follows from its skills: one that is built now is offered now.
+        module = capabilities(module, components)
     return module

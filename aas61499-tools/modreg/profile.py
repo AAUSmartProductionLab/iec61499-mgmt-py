@@ -691,18 +691,23 @@ def capability_property(name: str, iri: str, value: CapabilityProperty, derived:
     return cd.PropertyContainer(PropertyProperty={"Value": cd.PropertyProperty(value=text(value.value), value_type=kind, **about)})
 
 
-def capability_description(found: list[Offer], stated: dict[str, tuple[str, CapabilitySpec]]
-                           ) -> model.ModuleCapabilityDescription | None:
+def capability_description(found: list[Offer], stated: dict[str, tuple[str, CapabilitySpec]],
+                           named: dict[tuple[str, str], str] | None = None) -> model.ModuleCapabilityDescription | None:
     """The capabilities ``found`` (derived from the skills), each with its meaning (marked Derived),
     the properties its skill sets (marked Derived), the facts ``stated`` for its class (meaning ->
     (name, what is stated)), and the skill realizing it (CapabilityRealizedBy, a reference into the
     Skills submodel; the skill does not refer back). A skill that is described but not built offers
     it only after a reconfiguration (Availability). Two skills offering one capability: each gets a
-    container of its own, named after the capability and the skill."""
-    containers, count = {}, Counter(o.capability for o in found)
+    container of its own, named after the capability and the skill, unless ``named`` (capability,
+    skill element) -> idShort keeps the name it has."""
+    containers, count, named = {}, Counter(o.capability for o in found), named or {}
+    taken = set(named.values())
     for offer in found:
         name, cap = stated.get(offer.capability, (offer.name, None))
-        id_short = name if count[offer.capability] == 1 else f"{name}_{offer.skill_name}"
+        id_short = named.get((offer.capability, offer.skill))
+        if id_short is None:
+            id_short = name if count[offer.capability] == 1 and name not in taken else f"{name}_{offer.skill_name}"
+            taken.add(id_short)
         # The booleans are xs:boolean in the AAS (model.typed_qualifiers): aas-model cannot convert them.
         marks = [Qualifier(type_="CapabilityRoleQualifier/Offered", value="true", semantic_id=OFFERED, kind="ConceptQualifier"),
                  Qualifier(type_="Derived", value="true", kind="ConceptQualifier")]
