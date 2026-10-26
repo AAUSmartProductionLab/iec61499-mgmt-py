@@ -8,9 +8,10 @@
 #################################################################
 # SMT STRUCTURE OVERVIEW
 #################################################################
-# Design note: ARSO flattens IDTA 02015 ControlComponentType. It keeps CCType's
-# mandatory Interfaces/Skills/Errors containers; endpoint binding lives in the
-# AID module, and a skill links to the AID actions that call it.
+# Design note: the Skills submodel is ARSO's own template. It began as a flattened
+# IDTA 02015 Control Component Type and is no longer that template; it keeps
+# CCType's Interfaces/Skills/Errors containers. Endpoint binding lives in the AID
+# module, and a skill links to the AID actions that call it.
 #
 # v0.7: a skill is its commands (Start, Stop, Abort, Reset). A command holds the
 # action that calls it, its Operation (parameters, results and the answer are the
@@ -90,12 +91,12 @@
 # ONTOLOGY METADATA
 #################################################################
 
-<https://w3id.org/2025/arso/modules/control-component>
+<https://w3id.org/2025/arso/modules/skills>
   rdf:type owl:Ontology ;
   owl:imports <https://admin-shell.io/aas/3/1/> ;
-  rdfs:comment """ARSO module: Control Component / Skills -- an ARSO-flattened adaptation of IDTA 02015-2-0 ControlComponentType (February 2025). See the design note above for how this diverges from the full standard.
+  rdfs:comment """ARSO module: the Skills submodel -- a resource's skills as their commands, the steps they run and the errors they report. It began as an adaptation of IDTA 02015-2-0 Control Component Type (February 2025) and is its own template now; see the design note above.
 
-  Submodel semanticId: https://admin-shell.io/idta/ControlComponentType/1/0
+  Submodel semanticId: https://smartproductionlab.aau.dk/ARSO/Skills/1/0/Submodel (IDTA 02015's https://admin-shell.io/idta/ControlComponentType/1/0 is still recognised, for older AASs)
   Cross-submodel: InterfaceReference targets are validated in SPARQL SHACL (arso-rules.shacl.ttl).""" .
 
 
@@ -108,7 +109,7 @@ arso:SkillsSubmodel rdf:type owl:Class ;
   rdfs:label "Skills Submodel" ;
   arso:semanticId "https://admin-shell.io/idta/ControlComponentType/1/0" ,
                   "https://smartproductionlab.aau.dk/ARSO/Skills/1/0/Submodel" ;
-  rdfs:comment "IDTA 02015 CCType — Control Component Type (Interfaces, Skills, Errors), ARSO-flattened; see design note above." .
+  rdfs:comment "The Skills submodel (ARSO): a resource's skills with their commands and steps, the Interfaces and Errors containers; began from IDTA 02015 Control Component Type." .
 
 
 #################################################################
