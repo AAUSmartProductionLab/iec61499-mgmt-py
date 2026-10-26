@@ -26,6 +26,7 @@ with (its manifest), ``model.environment`` into the AAS.
 """
 from __future__ import annotations
 
+from collections import Counter
 import hashlib
 import json
 
@@ -46,11 +47,13 @@ from aas_pydantic.submodel_templates.nameplate import ManufacturerProductDesigna
 
 from modgen.library import q
 from modgen.module import parameter_port
-from modgen.spec import ModuleSpec, Parameter
+from modgen.spec import Capability as CapabilitySpec, CapabilityProperty, ModuleSpec, Parameter
 from modsync.compare import Drift, expected, expected_values
 from modsync.device import Snapshot, literal
 
 from . import model
+from .derive import Offer, local, offers as derived_offers
+from .projection import project
 from .generated import control_configuration as cc, skills as arso
 from .generated.operational_data import Datapoint
 from .lab import nameplate
@@ -229,13 +232,12 @@ class Describer:
         self.module_id = identity(spec)[1]
         # The components: every item of equipment that a skill moves.
         self.components = [item for item in spec.equipment if any(d.equipment == item for d in spec.skills.values())]
-        # What a parameter of a skill means in a product's terms: the capability property it sets.
-        self.means = {(cap.realized_by, value.parameter): meaning(prop_name, value.semantic_id)
-                      for cap in spec.capabilities.values() for prop_name, value in cap.properties.items() if value.parameter}
+        # The capabilities are derived from the AASs this writes; the pass that derives them writes none.
+        self.derive = True
 
     def means_of(self, skill: str, p: str) -> str | None:
         """What a parameter of a skill means: as the spec says, else (a module level skill's) what
-        the parameter of a step it is handed to means, else the capability property it sets."""
+        the parameter of a step it is handed to means."""
         composite = self.spec.composites.get(skill)
         said = (composite or self.spec.skills[skill]).parameters[p].meaning
         if said:
@@ -244,7 +246,7 @@ class Describer:
             handed = [q for q, v in step.bind.items() if v == p]
             if found := next((m for q in handed if (m := self.means_of(step.skill, q))), None):
                 return found
-        return self.means.get((skill, p))
+        return None
 
     # Interface -------------------------------------------------------------------------------
 
@@ -568,42 +570,16 @@ class Describer:
                     MappingConfigurations=AimcMappingConfigurations(value=mappings))
 
     def capabilities(self) -> model.ModuleCapabilityDescription | None:
-        """The capabilities the module offers (IDTA 02020): each with its meaning, its properties
-        (a value or a range, with a unit) and the skill realizing it (CapabilityRealizedBy, a
-        reference into the Skills submodel). The skill does not refer back: a parameter of it that
-        sets a property of the capability means what that property means (``variable``)."""
-        containers = {}
-        for name, cap in self.spec.capabilities.items():
-            capability = Capability(
-                id_short="Capability", semantic_id=CAPABILITY, supplemental_semantic_ids=[meaning(name, cap.semantic_id)],
-                display_name={"en": name}, description=cap.description or f"{name}, realized by {cap.realized_by}",
-                # xs:boolean in the AAS (model.typed_qualifiers): aas-model cannot convert it.
-                qualifiers=[Qualifier(type_="CapabilityRoleQualifier/Offered", value="true",
-                                      semantic_id=OFFERED, kind="ConceptQualifier")])
-            properties = {}
-            for prop, value in cap.properties.items():
-                about = dict(id_short="Value", supplemental_semantic_ids=[meaning(prop, value.semantic_id)],
-                             display_name={"en": prop}, description=value.description,
-                             qualifiers=[Qualifier(type_="Unit", value=value.unit, kind="ConceptQualifier")] if value.unit else [])
-                if value.value is None:
-                    element = cd.PropertyContainer(PropertyRange={"Value": cd.PropertyRange(
-                        min=text(value.minimum), max=text(value.maximum), value_type="xs:double", **about)})
-                else:
-                    kind = "xs:boolean" if isinstance(value.value, bool) else "xs:string" if isinstance(value.value, str) else "xs:double"
-                    element = cd.PropertyContainer(PropertyProperty={"Value": cd.PropertyProperty(
-                        value=text(value.value), value_type=kind, **about)})
-                put(properties, prop, element)
-            realized = model.RealizedBySkill(
-                id_short="RealizedBy", first=capability_path(name), second=path(self.home(cap.realized_by), (SMC, "Skills"), (SMC, cap.realized_by)))
-            containers[name] = model.ModuleCapabilityContainer(
-                id_short=name, Capability=capability,
-                PropertySet={"PropertySet": cd.PropertySet(id_short="PropertySet", PropertyContainer=properties)} if properties else {},
-                CapabilityRelations=model.ModuleCapabilityRelations(id_short="CapabilityRelations",
-                                                                    CapabilityRealizedBy={"RealizedBy": realized}))
-        if not containers:
+        """The capabilities the module offers (IDTA 02020), derived from its skills (``offers``),
+        with the facts of the machine the spec states for each. A capability the spec states that
+        no skill offers is refused."""
+        if not self.derive:
             return None
-        return model.ModuleCapabilityDescription(id_short="CapabilityDescription", CapabilitySet={
-            OFFERED_SET: model.ModuleCapabilitySet(id_short=OFFERED_SET, CapabilityContainer=containers)})
+        found = offers(self.spec)
+        stated = {meaning(name, cap.semantic_id): (name, cap) for name, cap in self.spec.capabilities.items()}
+        if unknown := sorted(name for iri, (name, _) in stated.items() if iri not in {o.capability for o in found}):
+            raise ValueError(f"{self.spec.module} states the capabilities {unknown}, which none of its skills offers")
+        return capability_description(found, stated)
 
     def control_configuration(self) -> model.ModuleControlConfiguration:
         snap, drift, t = self.snap, self.drift, self.spec.targets[self.target]
@@ -699,6 +675,87 @@ class Describer:
         return [(ModuleTypeAAS.model_validate(asset.model_dump()), asset_id),
                 *[(ComponentTypeAAS.model_validate(part.model_dump()), component_identity(spec, item)[2])
                   for item, part in parts.items()]]
+
+
+def capability_property(name: str, iri: str, value: CapabilityProperty, derived: bool):
+    """A property of a capability: a value or a range, in a unit; ``derived``: a skill sets it."""
+    marks = [Qualifier(type_="Unit", value=value.unit, kind="ConceptQualifier")] if value.unit else []
+    if derived:
+        marks.append(Qualifier(type_="Derived", value="true", kind="ConceptQualifier"))
+    about = dict(id_short="Value", supplemental_semantic_ids=[iri], display_name={"en": name},
+                 description=value.description, qualifiers=marks)
+    if value.value is None:
+        return cd.PropertyContainer(PropertyRange={"Value": cd.PropertyRange(
+            min=text(value.minimum), max=text(value.maximum), value_type="xs:double", **about)})
+    kind = "xs:boolean" if isinstance(value.value, bool) else "xs:string" if isinstance(value.value, str) else "xs:double"
+    return cd.PropertyContainer(PropertyProperty={"Value": cd.PropertyProperty(value=text(value.value), value_type=kind, **about)})
+
+
+def capability_description(found: list[Offer], stated: dict[str, tuple[str, CapabilitySpec]]
+                           ) -> model.ModuleCapabilityDescription | None:
+    """The capabilities ``found`` (derived from the skills), each with its meaning (marked Derived),
+    the properties its skill sets (marked Derived), the facts ``stated`` for its class (meaning ->
+    (name, what is stated)), and the skill realizing it (CapabilityRealizedBy, a reference into the
+    Skills submodel; the skill does not refer back). A skill that is described but not built offers
+    it only after a reconfiguration (Availability). Two skills offering one capability: each gets a
+    container of its own, named after the capability and the skill."""
+    containers, count = {}, Counter(o.capability for o in found)
+    for offer in found:
+        name, cap = stated.get(offer.capability, (offer.name, None))
+        id_short = name if count[offer.capability] == 1 else f"{name}_{offer.skill_name}"
+        # The booleans are xs:boolean in the AAS (model.typed_qualifiers): aas-model cannot convert them.
+        marks = [Qualifier(type_="CapabilityRoleQualifier/Offered", value="true", semantic_id=OFFERED, kind="ConceptQualifier"),
+                 Qualifier(type_="Derived", value="true", kind="ConceptQualifier")]
+        if not offer.built:
+            marks.append(Qualifier(type_="Availability", value="AfterReconfiguration", kind="ConceptQualifier"))
+        capability = Capability(
+            id_short="Capability", semantic_id=CAPABILITY, supplemental_semantic_ids=[offer.capability],
+            display_name={"en": name}, description=(cap.description if cap else "") or f"{name}, realized by {offer.skill_name}",
+            qualifiers=marks)
+        properties = {}
+        for prop, value in (cap.properties.items() if cap else ()):
+            put(properties, prop, capability_property(prop, meaning(prop, value.semantic_id), value, derived=False))
+        for found_prop in offer.properties:
+            prop = local(found_prop.meaning)
+            value = (CapabilityProperty(value=found_prop.value, unit=found_prop.unit) if found_prop.value is not None else
+                     CapabilityProperty(minimum=float(found_prop.minimum), maximum=float(found_prop.maximum), unit=found_prop.unit))
+            put(properties, prop, capability_property(prop, found_prop.meaning, value, derived=True))
+        realized = model.RealizedBySkill(id_short="RealizedBy", first=capability_path(id_short),
+                                         second=path(offer.keys[0][1], *offer.keys[1:]))
+        containers[id_short] = model.ModuleCapabilityContainer(
+            id_short=id_short, Capability=capability,
+            PropertySet={"PropertySet": cd.PropertySet(id_short="PropertySet", PropertyContainer=properties)} if properties else {},
+            CapabilityRelations=model.ModuleCapabilityRelations(id_short="CapabilityRelations",
+                                                                CapabilityRealizedBy={"RealizedBy": realized}))
+    if not containers:
+        return None
+    return model.ModuleCapabilityDescription(id_short="CapabilityDescription", CapabilitySet={
+        OFFERED_SET: model.ModuleCapabilitySet(id_short=OFFERED_SET, CapabilityContainer=containers)})
+
+
+_OFFERS: dict[str, tuple[Offer, ...]] = {}         # spec (as JSON) -> what its skills offer
+
+
+def lean(spec: ModuleSpec) -> list[dict]:
+    """The AASs of the module and its components with only what the derivation reads, the Skills
+    and the Control Configuration: the other submodels (the interface above all) take seconds."""
+    describer = Describer(spec, next(iter(spec.targets)), None, None, None, None)
+    describer.derive = False
+    envs = []
+    for asset, asset_id in describer.build():
+        kept = asset.model_copy(update={f: None for f in type(asset).model_fields
+                                        if f not in ("skills", "control_configuration") and hasattr(getattr(asset, f), "id_short")})
+        model.inject_ids(kept)
+        envs.append(model.environment(kept, asset_id))
+    return envs
+
+
+def offers(spec: ModuleSpec) -> list[Offer]:
+    """The capabilities the module's skills offer (modreg.derive); once per spec."""
+    key = spec.model_dump_json()
+    if key not in _OFFERS:
+        _OFFERS[key] = tuple(derived_offers(project(lean(spec), structure=False)))
+    return list(_OFFERS[key])
 
 
 def describe_all(spec: ModuleSpec, target: str, snap: Snapshot | None = None, drift: Drift | None = None,

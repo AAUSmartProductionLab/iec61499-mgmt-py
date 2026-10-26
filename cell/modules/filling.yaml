@@ -109,17 +109,16 @@ procedures:
   Stopping: [Home]
 
 # What the module offers to a product's processes: its AAS's Capability Description (IDTA 02020,
-# role Offered), each capability realized by an offered skill (CapabilityRealizedBy). Meanings
-# default to https://smartproductionlab.aau.dk/semantics/<Name>. The values are illustrative (as
-# the vial filling station of the process planner's pharma example) until the station is measured;
-# FillVolume is set by Dispensing's Volume parameter; without a pump the volume is a time at the
-# station's flow rate (Dispense).
+# role Offered). Which capability a skill offers and the properties its parameters set are derived
+# from the skills (modreg.derive: Dispensing runs Dispense, which contributes Filling; its Volume
+# means FillVolume, so its limits are the offered range). Stated here are the facts of the machine
+# no skill sets. Meanings default to https://smartproductionlab.aau.dk/semantics/<Name>. The values
+# are illustrative (as the vial filling station of the process planner's pharma example) until the
+# station is measured.
 capabilities:
   Filling:
     description: Fill a liquid into an open vial under the needle and weigh it
-    realized_by: Dispensing
     properties:
       ContainerType: {value: vial}
       GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
-      FillVolume: {minimum: 0.5, maximum: 10.0, unit: mL, parameter: Volume}
       AbsoluteFillError: {value: 0.05, unit: mL}
