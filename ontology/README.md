@@ -23,6 +23,7 @@ in [conceptual-model.md](conceptual-model.md). What the AASs hold as built is in
 | `ARSO/` | ARSO 0.8 | Resource AAS of a line, a module and a component: Nameplate, Hierarchical Structures, AID, AIMC, Skills, Capabilities, Operational Data, Parameters, Technical Data, Control Configuration |
 | `AProSO/` | AProSO 0.1 (new) | Process AAS: ProcessInformation, ProcessStructure (process map with flow), CapabilityBindings, Validation, Policy |
 | `PPRL/` | PPRL 0.1 (new) | What lies between them: the CSS concept an AAS element describes, process decomposition and order, resource parts, required and offered capabilities and matching, skill composition, occupation, binding, parameter value flow, derived candidates, change classes |
+| `Vocabulary/` | Lab vocabulary 0.1 | What the elements of the AASs mean (their supplemental semantic ids): capabilities, of two kinds (process: a product can require it; auxiliary: it serves other skills), and their properties (`capabilities.ttl`); the commands and kinds of a skill (`commands.ttl`); the skill types of the components and the capability each contributes (`skills.ttl`) |
 
 `AAS/` and `CSS/` are unchanged copies of ontologies published by others (the AAS v3.1 RDF
 ontology of the IDTA, `https://admin-shell.io/aas/3/1/`; the CSS ontology of Helmut Schmidt
