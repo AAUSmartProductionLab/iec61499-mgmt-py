@@ -1,6 +1,6 @@
 # States, measurements, events and parameters in the resource AAS: a plan
 
-Plan of 21 Oct 2026 (relation to skills added 22 Oct, Section 8), not built. How a resource AAS (line, module, component) tracks what happens
+Plan of 21 Oct 2026 (relation to skills added 22 Oct, Section 8; Operational Data's series decided 26 Oct), not built. How a resource AAS (line, module, component) tracks what happens
 to the resource over time, using the structure of IDTA's Time Series Data template inside a
 submodel of our own; how states, measurements and events are told apart; and what goes into the
 Parameters submodel instead. The database behind the history is left out on purpose: the model
@@ -50,10 +50,11 @@ Rules for the cases in between:
 
 ## 3. Operational Data as states, measurements and events
 
-**Proposal:** Operational Data (ARSO's, version 2) holds three collections, `States`,
-`Measurements` and `Events`. Each entry is one series: an SMC with the inside of IDTA 02008 Time
-Series Data 1.1 (`Metadata` with its `Record` template, `Segments`), a kind, and where its values
-come from.
+**Decided 26 Oct:** Operational Data (ARSO's, version 2) holds three collections, `States`,
+`Measurements` and `Events` (the logs). Each entry is one series: an SMC with the inside of IDTA
+02008 Time Series Data 1.1 (`Metadata` with its `Record` template, `Segments`), so a series is on
+the level of an SMC instead of a submodel as in the template; a kind; where its values come from;
+and a `Latest` property with the live value, which the template has no place for.
 
 ```
 OperationalData                                   .../ARSO/OperationalData/2/0/Submodel
@@ -65,23 +66,23 @@ OperationalData                                   .../ARSO/OperationalData/2/0/S
 │         │         ├─ Time        UtcTime        IDTA's UTC time (semantic id: see Time)
 │         │         └─ State       xs:int         semanticId: the meaning (…/state/operational),
 │         │                                       its codes in a ConceptDescription (value list)
+│         ├─ Latest                               Property      the live value (the mapping writes here)
 │         ├─ Segments                             IDTA  .../TimeSeries/Segments/1/1
-│         │    ├─ Latest          InternalSegment one Record: the current value and its time
-│         │    │                                  (the mapping writes here)
-│         │    └─ History         LinkedSegment   Endpoint + Query (filled by the database part)
+│         │    └─ History         LinkedSegment   Endpoint + Query: the series in the database
 │         ├─ Source              ReferenceElement the interface property it comes from (AID)
 │         └─ Trigger             Property         OnChange
 ├─ Measurements
 │    └─ LinearAxis_ActualPosition                 SMC   MeasurementSeries
 │         ├─ Metadata / Record: Time, ActualPosition (xs:double, Unit mm, Min 0, Max 160)
-│         ├─ Segments: Latest, History
+│         ├─ Latest (xs:double, mm), Segments: History
 │         ├─ Source, Trigger (Sampled 100 ms | Deadband 0.1 mm)
 │         └─ Origin             Property         Sensor | Estimated | Simulated
 └─ Events
      └─ SkillExecutions                           SMC   EventLog
           ├─ Metadata / Record: Time, Event (Started | Succeeded | Failed | Aborted),
           │                     Skill, Session, Parameters (JSON), Results (JSON), ErrorID
-          └─ Segments: Latest (the last few), History
+          ├─ Latest                    SMC   the fields of the last event
+          └─ Segments: History
 ```
 
 **Telling the kinds apart**, twice, so people and programs both see it:
@@ -121,11 +122,15 @@ each without the kind, the interface reference or the origin. Inside Operational
   can also carry one standard Time Series submodel per kind whose Record holds all variables of
   that kind; that is the standard's own wide form, and it can be generated from ours.
 
+**Latest.** IDTA's template has no place for a live value: every value is a Record in a segment.
+So each series has a `Latest` of its own beside `Metadata` and `Segments`: a Property with the
+current value (a series whose record has two values, a skill's State and ErrorID, an SMC with a
+Property per value; an event log the fields of its last event). It replaces today's data point
+as the target of the interface mapping (AIMC), so a client without the database, the HMI among
+them, reads and follows the current value in the AAS.
+
 **Segments.**
 
-- `Latest`: an InternalSegment with one Record, the current value with its time. It replaces
-  today's data point as the target of the interface mapping (AIMC), so a client without the
-  database still reads the current value from the AAS. For an event log: the last few events.
 - `History`: a LinkedSegment, its Endpoint and Query left for the database part. One query per
   series. In a time series database the series' idShort or semantic id is the measurement, the
   kind and the resource are tags, the Record's values the fields.
@@ -208,7 +213,7 @@ Parameters still read, and add those as optional children (the same way Skills w
 | S2 | **Templates and classes.** Submodel templates from ARSO (`modreg generate`), reusing aas_pydantic's Time Series element classes so the IDTA semantic ids are the same objects; the same into aas-model (`arso-submodels`) | `modreg/templates`, aas-model | Generated classes read and write the examples |
 | S3 | **ConceptDescriptions** with value lists for the PackML states, the skill states, the error codes, occupation | `modreg` | The AASs carry them; the HMI's state names come from them |
 | S4 | **The module's profile.** Sort today's 45 data points by kind (Section 2); skill parameters' values out of Operational Data; the axis' and scale's series into their component AASs; the mapping (AIMC) writes into each series' `Latest`; events: skill executions (Section 8.5), occupation, reconfigurations; lifecycle series per skill; Parameters from the module spec (the axis' settings, timeouts) with `ChangedBy` | `modreg/profile.py`, `modsync` (reconfigurations as events) | The example line's AASs are built this way and pass the check; `modlink` and the HMI still work |
-| S5 | **Write the Latest values.** A small collector that reads the OPC UA properties and writes each series' Latest record (no database): the AAS shows the current state | `modlink` or a service | The HMI's and the AAS server's values agree |
+| S5 | **Write the Latest values.** A small collector that reads the OPC UA properties and writes each series' `Latest` property (no database): the AAS shows the current state | `modlink` or a service | The HMI's and the AAS server's values agree |
 | S6 | **The database** (left out here): LinkedSegment endpoints and queries, the collector writing history | – | Later |
 
 S1 to S4 change ARSO, the generated classes and every module's AAS, so they come after the
@@ -217,9 +222,9 @@ time for a figure (the downtime of a reconfiguration is a state series, so B1 ma
 
 ## 7. Decisions needed
 
-1. **Series inside Operational Data (SMC per series, as proposed) or standard Time Series
-   submodels** (one per kind, wide records)? Proposed: inside Operational Data, the standard form
-   generated when a client needs it.
+1. ~~Series inside Operational Data or standard Time Series submodels?~~ **Decided 26 Oct:**
+   inside Operational Data, an SMC per series shaped as IDTA's template, with a `Latest`
+   property for the live value (Section 3).
 2. **One series per value, or grouped** (a skill's State and ErrorID together, as proposed)?
 3. **Component data in the component's AAS** (as proposed), or all in the module's AAS as today?
 4. **Skill results**: only in the execution events (as proposed), or also a measurement series?
@@ -383,14 +388,10 @@ OPC UA bridge is temporary; the target is an HMI that uses the AAS alone:
 
 - **Commands** through the elements of the Skills submodel: a skill's Start, Stop, Abort and
   Reset invoked as Operations on the AAS server, which carries them to the module.
-- **State** from the **Variables** submodel (aas-model's, left out of our resources since
-  19 Oct): each state a Property with its current value, and a reference to its series in a
-  time-series database (such as InfluxDB) from which the history is read.
+- **State** from the **Operational Data** submodel: each series' `Latest` property with its
+  current value, and its `History` segment, the reference to the series in a time-series
+  database (such as InfluxDB) from which the history is read (Section 3).
 
 That makes S5 (current values written into the AAS) and S6 (the database) part of the HMI's
-path, and it bears on decisions 1 and 3.
-
-13. **Where states and measurements live**: in aas-model's Variables submodel (a Property per
-    value with a reference to its series in the database), as the HMI's target names it, with
-    Operational Data keeping the events; or as series inside Operational Data (Section 3, as
-    proposed before 26 Oct)?
+path. Where the states live was decided with it (decision 1): in Operational Data, not in
+aas-model's Variables submodel.

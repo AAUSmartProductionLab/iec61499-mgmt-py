@@ -158,7 +158,7 @@ block it):
 If time runs short, cut C (clients), E4 and E5, then B3 on real hardware (keep the Pi with
 simulated IO), then A3. Not to be cut: A1, A2, B1, B2.
 
-**Waiting for the user** (do not decide these yourself): the go for the two Pis above; the thirteen
+**Waiting for the user** (do not decide these yourself): the go for the two Pis above; the eleven open
 decisions of [state-and-parameters.md](state-and-parameters.md); how the `arso-submodels` branch
 reaches aas-model; the go to commit the skill editor's fixes and the generation project's ARSO 0.8;
 whether module level skills become typed subapplications in the IDE; when to commit the HMI's 0.8
