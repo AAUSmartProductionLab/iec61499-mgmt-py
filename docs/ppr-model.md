@@ -13,9 +13,8 @@ Figures (draw.io; open them at app.diagrams.net or in the draw.io desktop app, a
 | [figures/ppr-models.drawio](figures/ppr-models.drawio) | Models and ontologies | The three AASs with their submodels and references, and the ontologies their ids point into |
 | | Applications | Which application reads and writes which AAS, and which acts on the running module |
 | [figures/reconfiguration-pipeline.drawio](figures/reconfiguration-pipeline.drawio) | Reconfiguration pipeline | From a product's recipe through a changed skill to a changed IEC 61499 program, and back to the plan |
-| [figures/skill-hierarchies.drawio](figures/skill-hierarchies.drawio) | Equipment and skills | The bill of material (line, modules, components) beside the skills: each skill is in the AAS of what carries it out |
-| | A composite skill | Dispensing as a tree: its steps run primitives of the components its bill of material names |
-| | Recipe to process | A step of the product's recipe bound to a resource's skill; the binding is the process AAS's |
+| [figures/skill-hierarchies.drawio](figures/skill-hierarchies.drawio) | Hierarchies | The line's, a module's and its components' AASs as the web UI's tree shows them: the bill of material names the module and its components; Dispensing's steps run the components' primitives |
+| | Recipe to process | The product's, the process's and the module's AAS as trees: the binding refers to the recipe's step, the product parameter, the skill and its input |
 
 They follow the style of the module architecture figure (Arial, grey panels, white cards, rounded
 pills, small blue tags, dashed for what is not built yet).
