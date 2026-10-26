@@ -6,7 +6,10 @@ stand-in that records what is published; nothing here talks to the lab's.
 """
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import gzip
+from pathlib import Path
 import threading
+import urllib.parse
 import urllib.request
 
 import pytest
@@ -69,6 +72,19 @@ class FakeAasServer:
                 self.end_headers()
 
             do_PUT = do_POST = do_DELETE = handle_one       # noqa: N815
+
+            def do_GET(self):                               # noqa: N802
+                url = urllib.parse.urlsplit(self.path)
+                kind, _, encoded = url.path.strip("/").partition("/")
+                if encoded:
+                    found = fake.items.get((kind, encoded))
+                else:
+                    found = {"result": [v for (k, _), v in fake.items.items() if k == kind], "paging_metadata": {}}
+                data = json.dumps(found).encode()
+                self.send_response(200 if found is not None else 404)
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
 
             def log_message(self, *args):
                 pass
@@ -140,6 +156,33 @@ def test_registering_a_module_publishes_its_aas(service, aas_server, stoppering)
     with urllib.request.urlopen(request, timeout=30) as response:
         assert len(json.loads(response.read())["published"]) == 9
     assert aas_server.items == {} and get(f"{url}/profiles") == []
+
+
+def test_the_skill_editor_has_the_capabilities_derived_anew(service, aas_server):
+    """After the skill editor saved the Skills submodel, it asks the service to derive the module's
+    capabilities anew: the service reads the module and its components from the AAS server and
+    puts the Capability Description back."""
+    url, _ = service
+    for profile in profiles.describe_all(load(SPECS / "filling.yaml"), "pi"):
+        assert send(url, profile)[0] == 201
+
+    def derive() -> dict:
+        request = urllib.request.Request(f"{url}/capabilities/FillingModuleAAS", b"", method="POST")
+        with urllib.request.urlopen(request, timeout=60) as response:
+            assert response.headers["Access-Control-Allow-Origin"] == "*"         # the web UI is another origin
+            return json.loads(response.read())
+
+    answer = derive()
+    assert [(c["idShort"], c["skill"], c.get("Availability")) for c in answer["capabilities"]] == [("Filling", "Dispensing", None)]
+    assert answer["stored"].endswith(": ")                                     # nothing changed, nothing put
+    edited = json.loads(gzip.decompress((Path(__file__).parent / "data" / "FillingSkills-edited.json.gz").read_bytes()))
+    aas_server.items[("submodels", b64(edited["id"]))] = edited                 # as the skill editor saves it
+    answer = derive()
+    assert [(c["idShort"], c["skill"], c.get("Availability")) for c in answer["capabilities"]] == \
+           [("Filling", "Dispensing", None), ("Filling_DoubleDose", "DoubleDose", "AfterReconfiguration")]
+    assert answer["stored"].endswith(": CapabilityDescription") and aas_server.calls[-1] == "PUT submodels"
+    stored = aas_server.items[("submodels", b64(f"{profiles.identity(load(SPECS / 'filling.yaml'))[1]}/submodels/CapabilityDescription"))]
+    assert [box["idShort"] for box in stored["submodelElements"][0]["value"]] == ["Filling", "Filling_DoubleDose"]
 
 
 def test_checking_registers_nothing(service, aas_server):

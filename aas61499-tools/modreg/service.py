@@ -19,6 +19,8 @@ HTTP (JSON):
     GET    /profiles            the registered resources
     GET    /profiles/<idShort>  one registration; /profile the profile, /aas the AAS
     DELETE /profiles/<idShort>  forget a resource (and remove its AAS from the server)
+    POST   /capabilities/<shell>  derive a module's offered capabilities anew from its skills, on the
+                                  AAS server, and put them back (the skill editor, after saving)
     GET    /health
 """
 from __future__ import annotations
@@ -35,8 +37,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from modsync import desired
+
 from . import model
+from .offer import at as offer_at, capabilities, children as offer_children
 from .ontology import Blueprint, check
+from .profile import OFFERED_SET
 
 
 class Refused(Exception):
@@ -175,6 +181,29 @@ class Registry:
                 self.file(registration.id_short, kind).write_text(json.dumps(content, indent=1), encoding="utf-8")
         return registration
 
+    def derive(self, shell: str) -> dict:
+        """The offered capabilities of a module on the AAS server derived anew from its skills and
+        those of its components (``modreg.offer.capabilities``), and put back: after the skill
+        editor saved the Skills submodel, or a skill was built."""
+        if self.server is None:
+            raise Refused(400, "derive", ["the service has no AAS server (--basyx) to read the module from"])
+        try:
+            module, components = desired.load(self.server.url, shell)
+        except desired.NotDescribed as e:
+            raise Refused(404, "derive", [str(e)]) from e
+        derived = capabilities(module, components)
+        stored = desired.store(self.server.url, derived, module)
+        found = []
+        for box in offer_children(offer_at(desired.submodel(derived, "CapabilityDescription"), OFFERED_SET)):
+            capability = offer_at(box, "Capability")
+            relation = next(iter(offer_children(offer_at(box, "CapabilityRelations"))), {})
+            found.append({"idShort": box["idShort"],
+                          "capability": capability["supplementalSemanticIds"][0]["keys"][0]["value"],
+                          "skill": (relation.get("second") or {}).get("keys", [{}])[-1].get("value"),
+                          **{q["type"]: q["value"] for q in capability.get("qualifiers", [])
+                             if q["type"] in ("Derived", "Availability")}})
+        return {"shell": derived["assetAdministrationShells"][0]["idShort"], "stored": stored, "capabilities": found}
+
     def registrations(self) -> list[dict]:
         return [json.loads(p.read_text(encoding="utf-8")) for p in sorted(self.folder.glob("*.registration.json"))]
 
@@ -201,6 +230,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(data)))
+        # The web UI (another origin) calls it from the browser: the lab network, no credentials.
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(data)
 
@@ -214,6 +245,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.answer(200, {"status": "ok", "types": list(model.TYPES), "strict": r.strict,
                                          "ontology": str(r.blueprint.folder) if r.blueprint else None,
                                          "aas_server": r.server.url if r.server else None})
+            if method == "POST" and parts[:1] == ["capabilities"] and len(parts) == 2:
+                return self.answer(200, self.registry.derive(urllib.parse.unquote(parts[1])))
             if parts[:1] != ["profiles"] or len(parts) > 3:
                 return self.answer(404, {"error": f"no {url.path}"})
             if method == "POST" and len(parts) == 1:
@@ -246,6 +279,13 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):       # noqa: N802
         self.route("DELETE")
+
+    def do_OPTIONS(self):      # noqa: N802 (a browser asks before it posts JSON to another origin)
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
 
     def log_message(self, format, *args):       # noqa: A002
         print(f"{self.address_string()} {format % args}", flush=True)
