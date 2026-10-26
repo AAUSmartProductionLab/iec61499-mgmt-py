@@ -1,5 +1,8 @@
 # Working on this repository
 
+New here? Read [docs/onboarding.md](docs/onboarding.md) first: the objective, what is where,
+the rules, the state of the work and the next steps.
+
 ## Git
 
 - Commit and push straight to `main`. No pull request and no feature branch unless asked for one.
