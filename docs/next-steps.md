@@ -152,6 +152,24 @@ plain `Resource`.
 | E5 | **ARSO's submodels in aas-model.** Templates and generated classes of Skills, Control Configuration, Operational Data, Process Parameters and Production Sequence, and the types Module, Component, ProductionSystem, Product. **Built 19 Oct on a local branch** (`arso-submodels`, 230 tests); not pushed: no access to aas-model. Then `modreg` uses aas-model's classes instead of its own | The branch is in aas-model (fork and pull request, or access) and `modreg` points at it |
 
 
+### F. The product, process and resource model (new, 26 Oct)
+
+The model as a whole, its ontologies and its figures: [ppr-model.md](ppr-model.md). F1 to F4 are
+done before the paper: they close the product-driven loop the paper shows (a product's need, a
+changed skill, the planner matching it again); the rest follows after it.
+
+| # | Step | When | Done when |
+| --- | --- | --- | --- |
+| F1 | **Skill types in the vocabulary**: each primitive's type and the capability it contributes; which capabilities a product can require and which only serve other skills (Positioning). Changes `ontology/Vocabulary`: with your go | Before the paper | Every primitive of the line's modules has a type |
+| F2 | **The projection** of the Skills and Capability Description submodels into RDF: elements typed by their `semanticId`, individuals by their `supplementalSemanticId`, references made relations | Before the paper | The filling module's skills, steps and capabilities are a graph PPRL's rules run on |
+| F3 | **Capabilities derived from skills**, in `modreg`, marked as derived, written back; called by the skill editor on save, `modsync record` and `modreg profile`; a described skill that is not built is offered "after a reconfiguration", in the planner's matching too. Closes the gaps: a new skill without a capability, a changed limit the capability does not follow | Before the paper | What is derived equals the capabilities the specs state today; a skill made in the editor is offered after a reconfiguration, then offered |
+| F4 | **The overview and its figures**: [ppr-model.md](ppr-model.md), `docs/figures/ppr-models.drawio`, `docs/figures/reconfiguration-pipeline.drawio`. Drafted 26 Oct | Before the paper | They serve as the paper's figures |
+| F5 | **APSO and AProSO remade** like ARSO from the submodels that are built; `modreg`'s Production Sequence template brought to the planner's 3.0; templates and element descriptions of all our submodels generated from the ontologies | After | A product AAS and a process AAS are checked as a resource AAS is |
+| F6 | **The process AAS**: its templates; the planner writes the bindings into it instead of the product's Production Sequence | After | One product has a process AAS per line |
+| F7 | **Ids**: the per-instance semantic ids moved out (identity by reference), `modlink`'s join of a data point to its variable changed with them | After | Every semantic id names a concept an ontology declares |
+| F8 | **The rest of the vocabulary**: variables and states (aligned with the lab's `apex` ids), equipment and product kinds, DIN 8580 and VDI 2860 | After | The inventory of ids finds none outside an ontology |
+
+
 ### D. Writing
 
 Outline and figures by 1 Nov; experiment runs and text from 2 Nov; submission 18 Nov.
@@ -219,6 +237,7 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 | A skill that is described but not built is told by its missing instance in the Control Configuration (as tried). Does it also get a state of its own that a client can read (described, deployed)? | A3 |
 | A change that needs a restart (a sequence changed, a skill removed) is refused. For the baseline a boot file is needed, and the AAS does not hold the wiring: is the vendor's boot file part of what is delivered? | B2 |
 | Which changes does the paper show: a constant and a new skill, or more? | B1 |
+| Where do F1 to F3 go in the order of what is cut if time runs short? | F |
 | Two components of one kind in a module (the two cameras) need one skill name twice | later |
 | What a component's AAS holds besides its skills (a nameplate?) | later |
 | Step values are also in the interface description; leave them out there? Operational Data in groups? | later |
