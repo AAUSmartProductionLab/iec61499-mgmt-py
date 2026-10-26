@@ -150,13 +150,13 @@ def test_a_skill_is_its_commands(stoppering, stoppering_all):
     spec, _ = stoppering
     envs = list(stoppering_all.values())
     described_ = submodel(stoppering_all["StopperingModuleAAS"], "Skills")
-    assert names(described_) == ["Interfaces", "Skills", "Errors"]
+    # The module's own skills are those it composes and its own commands (the primitives are with
+    # their components), then the errors they report: a property each, its value the code.
+    assert names(described_) == [*spec.composites, *CONTROL, "Errors"] == ["Stoppering", *CONTROL, "Errors"]
     assert described_["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/Skills/1/0/Submodel"
-    assert at(described_, "Errors", "Timeout", "ErrorCode")["value"] == "3"
-    # The module's own skills are those it composes and its own commands: the primitives are with
-    # their components.
-    assert names(at(described_, "Skills")) == [*spec.composites, *CONTROL] == ["Stoppering", *CONTROL]
-    stoppering_ = at(described_, "Skills", "Stoppering")
+    timeout = at(described_, "Errors", "Timeout")
+    assert (timeout["modelType"], timeout["valueType"], timeout["value"]) == ("Property", "xs:integer", "3")
+    stoppering_ = at(described_, "Stoppering")
     # A skill, what kind of skill, and what it does: the element's semantic id, then its supplemental ones.
     assert ids(stoppering_) == [f"{BASE}/skill", f"{BASE}/skill/Composite", f"{BASE}/skills/Stoppering"]
     assert names(stoppering_) == ["Start", "Stop", "Abort", "Reset"]
@@ -202,8 +202,8 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     assert shell["assetInformation"]["assetType"] == f"{BASE}/Resource/Component/LinearAxis"
     assert shell["assetInformation"]["globalAssetId"] == f"{BASE}/assets/StopperingLinearAxis"
     assert [s["idShort"] for s in axis["submodels"]] == ["Skills"]
-    assert names(at(submodel(axis, "Skills"), "Skills")) == ["Home", "MoveAxis"]
-    move, decl = at(submodel(axis, "Skills"), "Skills", "MoveAxis"), spec.skills["MoveAxis"]
+    assert names(submodel(axis, "Skills")) == ["Home", "MoveAxis", "Errors"]
+    move, decl = at(submodel(axis, "Skills"), "MoveAxis"), spec.skills["MoveAxis"]
     assert ids(move) == [f"{BASE}/skill", f"{BASE}/skill/Primitive", f"{BASE}/skills/MoveAxis"] and "Steps" not in names(at(move, "Start"))
     # The module carries the skill out: the command's action is in the module's interface.
     action = at(move, "Start", "InterfaceReference")["value"]
@@ -225,7 +225,7 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     assert at(move, "Contract", "Requires")["value"] == "Homed"            # an axis that knows where it is
     assert at(move, "Contract", "Ensures")["value"] == decl.ensures
     assert at(move, "Contract", "Timeout")["value"] == "8s" and "Invariant" not in names(at(move, "Contract"))
-    press = at(submodel(stoppering_all["StopperingPistonAAS"], "Skills"), "Skills", "PressStopper")
+    press = at(submodel(stoppering_all["StopperingPistonAAS"], "Skills"), "PressStopper")
     assert at(press, "Contract", "After")["value"] == "3.0"
     # The module lists its components as its parts, each found by its asset id.
     nodes = children(at(submodel(stoppering_all["StopperingModuleAAS"], "HierarchicalStructures"), "EntryNode"))
@@ -241,7 +241,7 @@ def test_a_step_is_connected_to_the_variables_of_its_command():
     found = described(spec)
     envs, module_aas = list(found.values()), found["FillingModuleAAS"]
     assert list(found) == ["FillingModuleAAS", "FillingLinearAxisAAS", "FillingPumpAAS", "FillingScaleAAS"]
-    dispensing = at(submodel(module_aas, "Skills"), "Skills", "Dispensing")
+    dispensing = at(submodel(module_aas, "Skills"), "Dispensing")
     start = at(dispensing, "Start", "Start")
     assert variables(start, "inputVariables") == ["Session", "Volume"]
     assert variables(start, "outputVariables") == ["Accepted", "ErrorID", "Weight"]
@@ -263,7 +263,7 @@ def test_a_step_is_connected_to_the_variables_of_its_command():
     assert resolve(envs, at(given, "ResultReference")["value"])["idShort"] == "Weight"
     assert at(given, "ResultReference")["value"]["keys"][0]["value"].endswith("FillingScaleAAS/submodels/Skills")
     # The step's skill takes what it is handed under the same name.
-    pump = at(submodel(found["FillingPumpAAS"], "Skills"), "Skills", "Dispense")
+    pump = at(submodel(found["FillingPumpAAS"], "Skills"), "Dispense")
     assert variables(at(pump, "Start", "Start"), "inputVariables") == ["Session", "Volume", "FlowRate"]
     assert at(pump, "Contract", "After")["value"] == "Volume / FlowRate"
     # The primitive says what its parameters mean; the skill handing Volume on means the same.
@@ -274,7 +274,7 @@ def test_a_step_is_connected_to_the_variables_of_its_command():
     assert ids(volume) == [f"{BASE}/skills/Dispensing/Parameters/Volume", f"{BASE}/semantics/FillVolume"]
     capability = at(submodel(module_aas, "CapabilityDescription"), "OfferedCapabilities", "Filling")
     assert f"{BASE}/semantics/FillVolume" in ids(at(capability, "PropertySet", "FillVolume", "Value"))
-    assert not [r for path, r in references(submodel(module_aas, "Skills"), "Skills") if "CapabilityDescription" in r["keys"][0]["value"]]
+    assert not [r for path, r in references(submodel(module_aas, "Skills"), "") if "CapabilityDescription" in r["keys"][0]["value"]]
     # A result carries the unit of the equipment input behind it, through the step for a composite.
     properties = at(submodel(module_aas, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", "properties")
     for key in ("Weigh_Result_Weight", "Dispensing_Result_Weight"):
@@ -287,14 +287,14 @@ def test_a_skill_the_module_does_not_offer_has_a_start_nothing_calls():
     data = yaml.safe_load((SPECS / "filling.yaml").read_text(encoding="utf-8"))
     data["skills"]["Dispense"]["offered"] = False
     found = described(ModuleSpec.model_validate(data))
-    pump = at(submodel(found["FillingPumpAAS"], "Skills"), "Skills", "Dispense")
+    pump = at(submodel(found["FillingPumpAAS"], "Skills"), "Dispense")
     assert names(pump) == ["Start", "Contract"] and names(at(pump, "Start")) == ["Start"]
     assert ids(pump)[1:] == [f"{BASE}/skill/Primitive", f"{BASE}/skills/Dispense"]   # its kind and its type
     assert variables(at(pump, "Start", "Start"), "inputVariables") == ["Session", "Volume", "FlowRate"]
     actions = at(submodel(found["FillingModuleAAS"], "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", "actions")
     assert not [a for a in names(actions) if a.startswith("Dispense_")]
     # It still runs as a step, and the block that is that step is known.
-    step = children(at(submodel(found["FillingModuleAAS"], "Skills"), "Skills", "Dispensing", "Start", "Steps"))[1]
+    step = children(at(submodel(found["FillingModuleAAS"], "Skills"), "Dispensing", "Start", "Steps"))[1]
     assert resolve(list(found.values()), at(step, "Skill")["value"]) is pump
     instances = at(submodel(found["FillingModuleAAS"], "ControlConfiguration"), "Instances")
     assert "Dispense" not in names(instances) and "Dispensing_Execute_Dispense" in names(instances)
@@ -307,7 +307,7 @@ def test_steps_publish_like_skills_where_the_program_puts_them():
     spec = load(SPECS / "filling.yaml")
     env = model.build(profiles.describe(spec, "pi"))
     values = expected_values(spec, expected(spec, "pi"))
-    dispensing = at(submodel(env, "Skills"), "Skills", "Dispensing")
+    dispensing = at(submodel(env, "Skills"), "Dispensing")
     steps = [*children(at(dispensing, "Start", "Steps")), *children(at(dispensing, "Stop", "Steps"))]
     assert len(steps) == len(spec.composites["Dispensing"].execute) + len(spec.composites["Dispensing"].stop)
     instances = {i["idShort"]: i for i in children(at(submodel(env, "ControlConfiguration"), "Instances"))}
@@ -339,7 +339,7 @@ def test_the_modules_own_commands_are_skills_of_a_kind_of_their_own(stoppering, 
     spec, _ = stoppering
     envs, env = list(stoppering_all.values()), stoppering_all["StopperingModuleAAS"]
     assert "Module" not in [s["idShort"] for s in env["submodels"]]
-    skills = at(submodel(env, "Skills"), "Skills")
+    skills = submodel(env, "Skills")
     root = "/0:Objects/1:Stoppering"
     for command in CONTROL:
         held = at(skills, command)
@@ -499,11 +499,11 @@ def test_the_aimc_maps_every_action_and_property_onto_an_element(stoppering_all)
     # command, in the module's AAS or in a component's.
     assert fed["MoveAxis_Parameter_Position"][0]["idShort"] == "MoveAxis_Parameter_Position"
     assert fed["Stoppering_Execute_HeadDown_Parameter_Position"][0]["idShort"] == "Stoppering_Execute_HeadDown_Parameter_Position"
-    axis = at(submodel(stoppering_all["StopperingLinearAxisAAS"], "Skills"), "Skills", "MoveAxis")
+    axis = at(submodel(stoppering_all["StopperingLinearAxisAAS"], "Skills"), "MoveAxis")
     assert invoked["MoveAxis_Stop"][0] is at(axis, "Stop", "Stop")
-    assert invoked["Module_Reset"][0] is at(submodel(env, "Skills"), "Skills", "Reset", "Start", "Start")
-    assert invoked["Occupation_Occupy"][0] is at(submodel(env, "Skills"), "Skills", "Occupy", "Start", "Start")
-    assert invoked["Stoppering_Start"][0] is at(submodel(env, "Skills"), "Skills", "Stoppering", "Start", "Start")
+    assert invoked["Module_Reset"][0] is at(submodel(env, "Skills"), "Reset", "Start", "Start")
+    assert invoked["Occupation_Occupy"][0] is at(submodel(env, "Skills"), "Occupy", "Start", "Start")
+    assert invoked["Stoppering_Start"][0] is at(submodel(env, "Skills"), "Stoppering", "Start", "Start")
 
 
 def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
@@ -550,7 +550,7 @@ def test_a_module_that_was_read_shows_what_runs_there():
     assert len(names(at(config, "Types"))) == len(set(app.fbs.values()))
     # A parameter shows the value the module runs with; a block the type and hash it has there.
     axis = submodel(found["StopperingLinearAxisAAS"], "Skills")
-    assert float(at(axis, "Skills", "MoveAxis", "Start", "Start", "Position")["value"]) == 5.5
+    assert float(at(axis, "MoveAxis", "Start", "Start", "Position")["value"]) == 5.5
     instance = at(config, "Instances", "MoveAxis")
     assert at(instance, "FBType")["value"] == app.fbs["MoveAxis"]
     assert at(instance, "TypeHash")["value"] == f"v2:{app.fbs['MoveAxis']}"

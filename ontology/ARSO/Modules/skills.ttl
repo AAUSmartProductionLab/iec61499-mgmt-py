@@ -9,9 +9,8 @@
 # SMT STRUCTURE OVERVIEW
 #################################################################
 # Design note: the Skills submodel is ARSO's own template. It began as a flattened
-# IDTA 02015 Control Component Type and is no longer that template; it keeps
-# CCType's Interfaces/Skills/Errors containers. Endpoint binding lives in the AID
-# module, and a skill links to the AID actions that call it.
+# IDTA 02015 Control Component Type and is no longer that template. Endpoint binding
+# lives in the AID module, and a skill's commands refer to the AID actions that call them.
 #
 # v0.7: a skill is its commands (Start, Stop, Abort, Reset). A command holds the
 # action that calls it, its Operation (parameters, results and the answer are the
@@ -35,10 +34,12 @@
 #   "conditional" a Condition and Steps. A resource's control has to be able to
 #   carry out the kinds its AAS uses; what it cannot, its tools refuse.
 #
+# v0.9 (26 Oct): the skills are the submodel's own elements (no Skills container), the
+# Interfaces container is gone (a command refers to the AID action that calls it), and an
+# error is a property whose value is its code (no SMC around one ErrorCode).
+#
 # Skills (Submodel)
-#   ├─ Interfaces [SMC, 1] — always present, empty (CCType's mandatory container)
-#   ├─ Skills [SMC, 1]
-#   │    └─ {skill_name} [SMC Skill, 0..*] — semanticId .../skill; its kind and its
+#   ├─ {skill_name} [SMC Skill, 0..*] — semanticId .../skill; its kind and its
 #   │         │    type (what it does) supplemental semanticIds (26 Oct)
 #   │         ├─ SemanticId [Property, xs:string, 0..1] — the type, only in the short form
 #   │         │    older AASs carry; a skill's type is a supplemental semanticId
@@ -77,8 +78,8 @@
 #   │         │    that starts it (arso:SkillInterfaceRefActionShape /
 #   │         │    arso:SkillInterfaceRefTargetShape in arso-rules.shacl.ttl)
 #   │         └─ StateMachine [Property, xs:string, 0..1] — asynchronous skills
-#   └─ Errors [SMC, 1] — always present; {error}: ErrorCode. What the ErrorID of
-#        an Operation's answer can be
+#   └─ Errors [SMC, 1] — always present; {error} [Property, xs:integer, 0..*]: its
+#        value the code. What the ErrorID of an Operation's answer can be
 #
 # What is not here, and where it is instead: a skill's state, error and results
 # are data points (Operational Data), fed from the interface by the mapping
@@ -110,35 +111,18 @@ arso:SkillsSubmodel rdf:type owl:Class ;
   rdfs:label "Skills Submodel" ;
   arso:semanticId "https://admin-shell.io/idta/ControlComponentType/1/0" ,
                   "https://smartproductionlab.aau.dk/ARSO/Skills/1/0/Submodel" ;
-  rdfs:comment "The Skills submodel (ARSO): a resource's skills with their commands and steps, the Interfaces and Errors containers; began from IDTA 02015 Control Component Type." .
+  rdfs:comment "The Skills submodel (ARSO): a resource's skills with their commands and steps, and the errors they report." .
 
 
 #################################################################
-# ELEMENT TYPES — Interfaces container (submodel level)
+# ELEMENT TYPES — Skill (submodel level)
 #################################################################
-
-arso:CCInterfacesSMC rdf:type owl:Class ;
-  rdfs:subClassOf aas:SubmodelElementCollection ;
-  arso:parentClass arso:SkillsSubmodel ;
-  arso:idShort "Interfaces" ;
-  rdfs:comment "SMC Interfaces — mandatory top-level container, always present and always empty. ARSO handles interface binding per command (its InterfaceReference), not via device-level entries here." .
-
-
-#################################################################
-# ELEMENT TYPES — Skills container and Skill
-#################################################################
-
-arso:CCSkillsSMC rdf:type owl:Class ;
-  rdfs:subClassOf aas:SubmodelElementCollection ;
-  arso:parentClass arso:SkillsSubmodel ;
-  arso:idShort "Skills" ;
-  rdfs:comment "SMC Skills — mandatory top-level container for all Skill entries. Always present, may be empty." .
 
 arso:SkillSMC rdf:type owl:Class ;
   rdfs:subClassOf aas:SubmodelElementCollection ;
-  arso:parentClass arso:CCSkillsSMC ;
+  arso:parentClass arso:SkillsSubmodel ;
   arso:semanticId "https://smartproductionlab.aau.dk/skill" ;
-  rdfs:comment "SMC {skill_name} — a named skill. Applied unconditionally to every direct child of Skills (no idShort — the skill name is user-defined). Contains its commands (Start, Stop, Abort, Reset) or, in the short form, an Operation and an InterfaceReference. Its supplemental semanticIds say what kind of skill it is (https://smartproductionlab.aau.dk/skill/Primitive: its commands run nothing; .../skill/Composite: a command runs other skills; .../skill/ModuleControl) and what it does, its type (a class of the lab's Skills vocabulary, https://smartproductionlab.aau.dk/skills/<Type>)." .
+  rdfs:comment "SMC {skill_name} — a named skill, an element of the Skills submodel itself, recognised by its semanticId (no idShort — the skill name is user-defined). Contains its commands (Start, Stop, Abort, Reset) or, in the short form, an Operation and an InterfaceReference. Its supplemental semanticIds say what kind of skill it is (https://smartproductionlab.aau.dk/skill/Primitive: its commands run nothing; .../skill/Composite: a command runs other skills; .../skill/ModuleControl) and what it does, its type (a class of the lab's Skills vocabulary, https://smartproductionlab.aau.dk/skills/<Type>)." .
 
 arso:SkillSemanticIdProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
@@ -443,46 +427,34 @@ arso:SkillStateMachineProperty rdf:type owl:Class ;
 # ELEMENT TYPES — Errors (submodel level)
 #################################################################
 
-arso:CCErrorsSMC rdf:type owl:Class ;
+arso:SkillErrorsSMC rdf:type owl:Class ;
   rdfs:subClassOf aas:SubmodelElementCollection ;
   arso:parentClass arso:SkillsSubmodel ;
   arso:idShort "Errors" ;
-  rdfs:comment "SMC Errors — mandatory top-level container for global CC error entries: what the ErrorID in the answer of an Operation can be. Always present, may be empty." .
+  rdfs:comment "SMC Errors — what the ErrorID in the answer of an Operation can be: one property per error. Always present, may be empty." .
 
-arso:ErrorSMC rdf:type owl:Class ;
-  rdfs:subClassOf aas:SubmodelElementCollection ;
-  arso:parentClass arso:CCErrorsSMC ;
-  rdfs:comment "SMC {error_name} — a named error entry, if populated." .
-
-arso:ErrorCodeProperty rdf:type owl:Class ;
+arso:SkillErrorProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
-  arso:parentClass arso:ErrorSMC ;
-  arso:idShort "ErrorCode" ;
-  rdfs:comment "Property ErrorCode (xs:integer) — numeric error code identifying this error." .
+  arso:parentClass arso:SkillErrorsSMC ;
+  rdfs:comment "Property {error_name} (xs:integer) — a named error; its value is the code an ErrorID carries." .
 
 
 #################################################################
 # CONTAINMENT CONSTRAINTS
 #################################################################
 
-# SkillsSubmodel must contain exactly one Interfaces, Skills, and Errors container
-arso:SkillsSubmodel rdfs:subClassOf [
+# An error's value is its code
+arso:SkillErrorProperty rdfs:subClassOf [
   rdf:type owl:Restriction ;
-  owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ;
-  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
-  owl:onClass arso:CCInterfacesSMC ] .
+  owl:onProperty <https://admin-shell.io/aas/3/1/Property/valueType> ;
+  owl:hasValue <https://admin-shell.io/aas/3/1/DataTypeDefXsd/Integer> ] .
 
+# SkillsSubmodel holds its skills and exactly one Errors container
 arso:SkillsSubmodel rdfs:subClassOf [
   rdf:type owl:Restriction ;
   owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ;
   owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
-  owl:onClass arso:CCSkillsSMC ] .
-
-arso:SkillsSubmodel rdfs:subClassOf [
-  rdf:type owl:Restriction ;
-  owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ;
-  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
-  owl:onClass arso:CCErrorsSMC ] .
+  owl:onClass arso:SkillErrorsSMC ] .
 
 # A Skill says what it does in its supplemental semanticIds; the SemanticId property of the short
 # form is optional. How it is called is in its commands or, in the short form, in the skill itself:
@@ -561,9 +533,3 @@ arso:SkillContractSMC rdfs:subClassOf
     owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractInvariantProperty ],
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
     owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractTimeoutProperty ] .
-
-# Each Error entry must contain ErrorCode (mandatory)
-arso:ErrorSMC rdfs:subClassOf [
-  rdf:type owl:Restriction ;
-  owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
-  owl:someValuesFrom arso:ErrorCodeProperty ] .

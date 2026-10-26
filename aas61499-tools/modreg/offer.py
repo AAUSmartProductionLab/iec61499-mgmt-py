@@ -83,7 +83,7 @@ def offered(module: dict, spec: ModuleSpec, skills: list[str]) -> dict:
                           asset_type=shell["assetInformation"].get("assetType") or f"{model.RESOURCE}/Module",
                           derived_from=model.RESOURCE_TEMPLATE)
     for name in skills:
-        put(asset.skills.Skills.Skill, name, describer.skill(name))
+        put(asset.skills.Skill, name, describer.skill(name))
     describer.interface_and_data(asset)
     asset.asset_interfaces_mapping_configuration = describer.mappings()
     # The same way a module's AAS is built: profile, then the AAS it describes.
@@ -117,7 +117,7 @@ def offered(module: dict, spec: ModuleSpec, skills: list[str]) -> dict:
         at(data, "Transformation")["value"] = base64.b64encode(text.encode("utf-8")).decode("ascii")
 
     for name in skills:
-        described, complete = at(submodel(module, "Skills"), "Skills", name), at(submodel(built, "Skills"), "Skills", name)
+        described, complete = at(submodel(module, "Skills"), name), at(submodel(built, "Skills"), name)
         for command in [c for c in children(complete) if c.get("modelType") == "SubmodelElementCollection" and at(c, "InterfaceReference")]:
             mine = at(described, command["idShort"])
             if mine is None:

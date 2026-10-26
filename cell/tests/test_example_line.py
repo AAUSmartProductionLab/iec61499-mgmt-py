@@ -164,7 +164,7 @@ def test_every_component_has_an_aas_of_its_own_and_the_line_names_its_modules(li
     assert kinds["LinearAxis"] == ["FillingLinearAxisAAS", "StopperingLinearAxisAAS", "CappingLinearAxisAAS"]
     for name in kinds["LinearAxis"]:
         held = next(s for s in components[name]["submodels"] if s["idShort"] == "Skills")
-        assert [s["idShort"] for s in children(at(held, "Skills"))] == ["Home", "MoveAxis"]
+        assert [s["idShort"] for s in children(held)] == ["Home", "MoveAxis", "Errors"]
     assets = {plan_check.shell_of(env)["assetInformation"]["globalAssetId"]: name for name, env in {**resources, **components}.items()}
     # A module's parts are its components ...
     filling = next(s for s in resources["FillingModuleAAS"]["submodels"] if s["idShort"] == "HierarchicalStructures")
@@ -180,6 +180,6 @@ def test_every_component_has_an_aas_of_its_own_and_the_line_names_its_modules(li
     assert [assets.get(n["globalAssetId"]) for n in nodes][1:5] == list(resources)
     # The steps of a module's skill run skills of its components.
     envs = [*resources.values(), *components.values()]
-    dispensing = at(next(s for s in resources["FillingModuleAAS"]["submodels"] if s["idShort"] == "Skills"), "Skills", "Dispensing")
+    dispensing = at(next(s for s in resources["FillingModuleAAS"]["submodels"] if s["idShort"] == "Skills"), "Dispensing")
     ran = [resolve(envs, at(step, "Skill")["value"]) for step in children(at(dispensing, "Start", "Steps"))]
     assert [s["idShort"] for s in ran] == ["MoveAxis", "Dispense", "Home", "Weigh"]

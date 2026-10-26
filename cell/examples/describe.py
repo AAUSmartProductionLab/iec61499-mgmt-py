@@ -15,6 +15,8 @@ sys.path.insert(0, str(HERE))
 import example_line                                             # noqa: E402
 from plan_check import at, children, resolve, semantic_ids, shell_of, unit_of    # noqa: E402
 
+SKILL = "https://smartproductionlab.aau.dk/skill"
+
 LINE_STRUCTURE = '''```mermaid
 classDiagram
   direction LR
@@ -111,15 +113,14 @@ classDiagram
     value or range, unit
   }
   class Skills {
-    <<ARSO, from IDTA 02015>>
-    Interfaces (empty)
-    Errors: name, ErrorCode
+    <<ARSO>>
+    its skills, its own elements
+    Errors: name = code
   }
   class Skill {
     semanticId = skill
-    kind, a supplemental id: Primitive,
-    Composite or ModuleControl
-    SemanticId: what it does
+    supplemental ids: its kind (Primitive,
+    Composite or ModuleControl), its type
   }
   class Command {
     Start, Stop, Abort, Reset
@@ -378,6 +379,11 @@ def ran(envs: list[dict], command: dict | None) -> list[str]:
     return found
 
 
+def skills_in(held: dict | None) -> list[dict]:
+    """The skills of a Skills submodel: its elements of the semantic id skill (not its Errors)."""
+    return [s for s in children(held) if semantic_ids(s)[:1] == [SKILL]]
+
+
 def kind_of(skill: dict) -> str:
     """Primitive, Composite or ModuleControl: the supplemental id of a skill element."""
     return (semantic_ids(skill)[1:] or ["/"])[0].rsplit("/", 1)[-1]
@@ -390,13 +396,13 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
     by_asset = {shell_of(c)["assetInformation"]["globalAssetId"]: c for c in components.values()}
     own = {p["idShort"]: by_asset[p["globalAssetId"]] for p in parts if p.get("globalAssetId") in by_asset}
     envs = [env, *own.values()]
-    composites = [s for s in children(at(skills_sm, "Skills")) if kind_of(s) != "ModuleControl"]
-    control = [s for s in children(at(skills_sm, "Skills")) if kind_of(s) == "ModuleControl"]
+    composites = [s for s in skills_in(skills_sm) if kind_of(s) != "ModuleControl"]
+    control = [s for s in skills_in(skills_sm) if kind_of(s) == "ModuleControl"]
     capabilities = [c for capability_set in children(submodel(env, "CapabilityDescription")) for c in children(capability_set)]
     interface = at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata")
     config = submodel(env, "ControlConfiguration")
     built = "planned" not in at(config, "ModuleSpec")["value"]
-    skills_of = lambda c: children(at(submodel(c, "Skills"), "Skills"))                   # noqa: E731
+    skills_of = lambda c: skills_in(submodel(c, "Skills"))                                 # noqa: E731
 
     lines = [f"### {name}", "",
              f"`{shell['id']}`, asset `{shell['assetInformation']['globalAssetId']}`. "
@@ -534,12 +540,12 @@ def document() -> str:
         module = by_asset.get(part["globalAssetId"])
         lines.append(f"  {shell_of(module)['idShort'] if module else part['idShort'] + ' (not described yet)'}")
         if module:
-            composites = children(at(submodel(module, "Skills"), "Skills"))
+            composites = skills_in(submodel(module, "Skills"))
             lines += [f"    skill {signature(s)}" for s in composites]
             for inner in children(at(submodel(module, "HierarchicalStructures"), "EntryNode")):
                 component = by_asset.get(inner.get("globalAssetId"))
                 if component:
-                    held = ", ".join(signature(s) for s in children(at(submodel(component, "Skills"), "Skills")))
+                    held = ", ".join(signature(s) for s in skills_in(submodel(component, "Skills")))
                     lines.append(f"    {shell_of(component)['idShort']}: {held}")
     lines += ["```", "",
               "| AAS | Kind | Submodels |",

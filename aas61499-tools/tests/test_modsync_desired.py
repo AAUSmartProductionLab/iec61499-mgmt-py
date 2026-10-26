@@ -87,7 +87,7 @@ def test_a_program_that_was_changed_differs_from_its_aas(delivered):
 def test_a_constant_and_a_limit_changed_in_the_aas_are_written_online(delivered):
     """The engineer raises the flow rate of the dispensing step and lowers the largest volume."""
     module, components = copy.deepcopy(delivered)
-    dispensing = at(submodel(module, "Skills"), "Skills", "Dispensing")
+    dispensing = at(submodel(module, "Skills"), "Dispensing")
     at(dispensing, "Start", "Steps", "Step_0001", "Bindings", "Binding_0001", "Value")["value"] = "2.0"
     volume = next(v["value"] for v in at(dispensing, "Start", "Start")["inputVariables"] if v["value"]["idShort"] == "Volume")
     next(q for q in volume["qualifiers"] if q["type"] == "Maximum")["value"] = "8.0"
@@ -146,7 +146,7 @@ def test_what_was_built_is_recorded_in_the_control_configuration(with_double_dos
     assert built["Dispensing.Execute.Dispense"][1].startswith("v2:SHA3-512:")      # the delivered ones get their hash too
     config = submodel(recorded, "ControlConfiguration")
     step = at(config, "Instances", "DoubleDose_Execute_NeedleDown", "Skill")["value"]["keys"]
-    assert [k["value"] for k in step[1:]] == ["Skills", "DoubleDose", "Start", "Steps", "Step_0000"]
+    assert [k["value"] for k in step[1:]] == ["DoubleDose", "Start", "Steps", "Step_0000"]
     assert at(config, "SyncState")["value"] == "InSync"
     change = at(config, "ChangeLog")["value"][-1]
     assert at(change, "Trigger")["value"] == "changeover to two doses"
@@ -202,7 +202,7 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
     module, components = copy.deepcopy(delivered)
     module["submodels"] = [edited if s["idShort"] == "Skills" else s for s in module["submodels"]]
     made = described(module, components).composites["DoubleDose"]
-    assert at(edited, "Skills", "DoubleDose", "Start", "InterfaceReference") is None and made.offered
+    assert at(edited, "DoubleDose", "Start", "InterfaceReference") is None and made.offered
     assert [(s.name, s.skill) for s in made.execute] == [("NeedleDown", "MoveAxis"), ("Dispense", "Dispense"),
                                                          ("Dispense_2", "Dispense"), ("Home", "Home"), ("Weigh", "Weigh")]
     assert made.execute[2].bind == {"Volume": "Volume", "FlowRate": 1.0} and made.results == {"Weight": "Weigh.Weight"}
@@ -246,10 +246,10 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
         got = own(at(submodel(recorded, there[0]), *there[1:])["value"])
         assert got == own(at(submodel(whole, there[0]), *there[1:])["value"]) and len(got) > 3
     assert own(submodel(recorded, "OperationalData")["submodelElements"]) == own(submodel(whole, "OperationalData")["submodelElements"])
-    start = at(submodel(recorded, "Skills"), "Skills", "DoubleDose", "Start")
+    start = at(submodel(recorded, "Skills"), "DoubleDose", "Start")
     assert at(start, "InterfaceReference")["value"]["keys"][-1]["value"] == "DoubleDose_Start"
     assert {q["type"] for q in at(start, "Start")["qualifiers"]} == {"invocationDelegation", "Synchronous"}
-    assert [c["idShort"] for c in at(submodel(recorded, "Skills"), "Skills", "DoubleDose")["value"]
+    assert [c["idShort"] for c in at(submodel(recorded, "Skills"), "DoubleDose")["value"]
             if c["modelType"] == "SubmodelElementCollection"] == ["Start", "Stop", "Abort", "Reset"]
     mappings = lambda env: at(submodel(env, "AssetInterfacesMappingConfiguration"), "MappingConfigurations")["value"]   # noqa: E731
     assert len(mappings(recorded)) == len(mappings(whole)) == len(mappings(module)) + 4
@@ -286,18 +286,18 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
     assert sorted(put) == ["AssetInterfacesDescription", "AssetInterfacesMappingConfiguration", "ControlConfiguration",
                            "OperationalData", "Skills"] and "Skills" in where
     # A binding that hands nothing is refused.
-    at(edited, "Skills", "DoubleDose", "Start", "Steps", "Step_0000", "Bindings", "Binding_0000", "Value")["value"] = ""
+    at(edited, "DoubleDose", "Start", "Steps", "Step_0000", "Bindings", "Binding_0000", "Value")["value"] = ""
     with pytest.raises(desired.NotDescribed, match="is handed nothing"):
         described(module, components)
 
 
 def step_of(module: dict, step: str) -> dict:
-    return at(submodel(module, "Skills"), "Skills", "Dispensing", "Start", "Steps", step)
+    return at(submodel(module, "Skills"), "Dispensing", "Start", "Steps", step)
 
 
 def test_a_description_the_module_cannot_carry_out_is_refused(delivered):
     module, components = copy.deepcopy(delivered)
-    step = at(submodel(module, "Skills"), "Skills", "Dispensing", "Start", "Steps", "Step_0000")
+    step = at(submodel(module, "Skills"), "Dispensing", "Start", "Steps", "Step_0000")
     at(step, "Skill")["value"]["keys"][-1]["value"] = "Polish"
     with pytest.raises(desired.NotDescribed, match="Polish, which no component of the module has"):
         described(module, components)
@@ -309,7 +309,7 @@ def test_a_description_the_module_cannot_carry_out_is_refused(delivered):
         described(module, components)
     # A skill may not offer more than the component it hands the value to can do (the pump: 10 mL).
     module, components = copy.deepcopy(delivered)
-    start = at(submodel(module, "Skills"), "Skills", "Dispensing", "Start", "Start")
+    start = at(submodel(module, "Skills"), "Dispensing", "Start", "Start")
     volume = next(v["value"] for v in start["inputVariables"] if v["value"]["idShort"] == "Volume")
     next(q for q in volume["qualifiers"] if q["type"] == "Maximum")["value"] = "12.0"
     with pytest.raises(desired.NotDescribed, match="more than Dispense takes"):
@@ -321,7 +321,7 @@ def test_a_description_the_module_cannot_carry_out_is_refused(delivered):
         described(module, components)
     # The order of the steps is their Order, not their place in the collection.
     module, components = copy.deepcopy(delivered)
-    steps = at(submodel(module, "Skills"), "Skills", "Dispensing", "Start", "Steps")
+    steps = at(submodel(module, "Skills"), "Dispensing", "Start", "Steps")
     steps["value"].reverse()
     assert [s.name for s in described(module, components).composites["Dispensing"].execute] == \
         ["NeedleDown", "Dispense", "Home", "Weigh"]
