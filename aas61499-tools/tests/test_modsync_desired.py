@@ -207,6 +207,12 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
                                                          ("Dispense_2", "Dispense"), ("Home", "Home"), ("Weigh", "Weigh")]
     assert made.execute[2].bind == {"Volume": "Volume", "FlowRate": 1.0} and made.results == {"Weight": "Weigh.Weight"}
     assert (made.parameters["Volume"].default, made.parameters["Volume"].maximum) == (0.5, 5.0)
+    # Described, not built: it offers Filling after a reconfiguration, in the range of its Volume.
+    from modreg.offer import capabilities
+    double = at(submodel(capabilities(module, components), "CapabilityDescription"), "OfferedCapabilities", "Filling_DoubleDose")
+    assert {q["type"]: q["value"] for q in at(double, "Capability")["qualifiers"]}["Availability"] == "AfterReconfiguration"
+    assert (at(double, "PropertySet", "FillVolume", "Value")["min"], at(double, "PropertySet", "FillVolume", "Value")["max"]) \
+        == ("0.5", "5.0")
     forte = FakeForte(filling())
     done, after = reconfigure(forte, "pi", 61499, module, components)
     assert done[0].startswith("create DoubleDose: ") and after.differences.empty
@@ -223,6 +229,10 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
     # Recorded, the skill is reachable: its commands name their actions, and the interface, the data
     # points and the mappings are those of a module that was delivered with this skill.
     recorded = record(module, after, done, "two doses")
+    # Recorded with its components' AASs, the capabilities are derived anew: built, it offers now.
+    double = at(submodel(record(module, after, done, "two doses", components), "CapabilityDescription"),
+                "OfferedCapabilities", "Filling_DoubleDose")
+    assert "Availability" not in {q["type"] for q in at(double, "Capability")["qualifiers"]}
     whole = model.build(profiles.describe(ModuleSpec.model_validate(data), "pi"))
     def bare(element):
         """Without the ids aas-model draws anew for every build."""
