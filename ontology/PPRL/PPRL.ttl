@@ -247,6 +247,10 @@ pprl:handedFrom rdf:type owl:ObjectProperty ;
   rdfs:range css:SkillParameter ;
   rdfs:comment "A parameter of the skill a step runs is handed the value of a parameter of the composite skill running the step (ARSO step Binding with a SourceElement)." .
 
+pprl:DerivedCapability rdf:type owl:Class ;
+  rdfs:subClassOf pprl:OfferedCapability ;
+  rdfs:comment "An offered capability derived from the skill realizing it (ontology/PPRL/derivation): of a class the types of the skill's steps contribute, specified by the properties its parameters and its steps' constants set." .
+
 pprl:FBInstance rdf:type owl:Class ;
   rdfs:comment "An instance of a function block in a module's control program (ARSO Control Configuration, Instances)." .
 

@@ -1,0 +1,55 @@
+# Capabilities derived from skills (docs/ppr-model.md, section 5), on the projection of a module's AASs.
+#
+# A module level skill offers each process capability the types of its steps contribute
+# (lab:contributes). The offer is specified by every property the vocabulary says characterizes that
+# capability (lab:characterizes) and that the skill sets: through a parameter that means it, or
+# that hands its value to a step's parameter meaning it (a range: the parameter's limits), or
+# through a constant a step hands to such a parameter (a value). Facts of the machine (the
+# container it takes) are not set by a skill; the module states them.
+PREFIX pa:   <https://w3id.org/2025/pprl/aas#>
+PREFIX pprl: <https://w3id.org/2025/pprl#>
+PREFIX css:  <http://www.w3id.org/hsu-aut/css#>
+PREFIX lab:  <https://smartproductionlab.aau.dk/semantics/>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+CONSTRUCT {
+  ?offer a pprl:DerivedCapability , pprl:OfferedCapability , ?capability ;
+         css:isRealizedBySkill ?skill ;
+         css:isSpecifiedBy ?property .
+  ?property a ?propertyClass ;
+            css:isRealizedBySkillParameter ?parameter ;
+            rdf:value ?value .
+}
+WHERE {
+  ?skill a pprl:CompositeSkill ; pprl:usesSkill ?used .
+  ?used a ?type .
+  ?type lab:contributes ?capability .
+  ?capability rdfs:subClassOf+ lab:ProcessCapability .
+  BIND(IRI(CONCAT(STR(?skill), "/offers/", REPLACE(STR(?capability), "^.*[/#]", ""))) AS ?offer)
+  OPTIONAL {
+    {
+      ?skill css:hasParameter ?parameter .
+      ?parameter a css:InputParameter .
+      { ?parameter pprl:means ?propertyClass }
+      UNION
+      { ?handed pprl:handedFrom ?parameter ; pprl:means ?propertyClass }
+    }
+    UNION
+    {
+      ?skillElement pprl:describes ?skill ; pa:element ?command .
+      ?command pa:semanticId <https://smartproductionlab.aau.dk/skill/Start> ; pa:element ?steps .
+      ?steps pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Steps/1/0> ; pa:element ?step .
+      ?step pa:element ?bindings .
+      ?bindings pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Bindings/1/0> ; pa:element ?binding .
+      ?binding pa:element ?constant , ?to .
+      ?constant pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Value/1/0> ; pa:value ?value .
+      ?to pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/InputReference/1/0> ; pa:refersTo ?toVariable .
+      ?toVariable pprl:describes ?toParameter .
+      ?toParameter pprl:means ?propertyClass .
+    }
+    ?propertyClass lab:characterizes ?capability .
+  }
+  # Outside the OPTIONAL: its group is evaluated on its own, where ?offer is not bound yet.
+  BIND(IRI(CONCAT(STR(?offer), "/", REPLACE(STR(?propertyClass), "^.*[/#]", ""))) AS ?property)
+}
