@@ -5,7 +5,9 @@ submodels connect inside one AAS and across AASs. Written on 7 Oct 2026 so that 
 modules, the HMI and the AAS generator are described in one place; the resource side was rewritten
 on 8 Oct 2026 (a skill as its commands; components and the line as AASs of their own).
 
-It describes what is **built**, and says where a model exists only on paper. Sources:
+It describes what is **built**, and says where a model exists only on paper. The target model
+(product, process and resource AAS, their ontologies and applications, decided 26 Oct) is in
+[ppr-model.md](ppr-model.md). Sources:
 
 | What | Where it was read from |
 | --- | --- |
@@ -294,8 +296,9 @@ APSO describes a product AAS differently. Neither is wrong; only one is built:
 ## 4. The plan: Production Sequence
 
 Semantic id `https://smartproductionlab.aau.dk/SubmodelTemplate/ProductionSequence/2/0`, schema
-`production-sequence/2.0`, as the planner on the local server writes it (the pushed branch still
-has 1.0, with scopes). One submodel per sequence, in the AAS of the product it plans: the
+`production-sequence/2.0`, as the planner on the local server wrote it on 7 Oct. The planner now
+writes `ProductionSequence/3/0` (local sub-recipes embedded, decisions, grouped conditions);
+`modreg`'s template is still 2.0 (plan step F5). One submodel per sequence, in the AAS of the product it plans: the
 product's own sequence (`Role` Primary, identifier
 `https://smartproductionlab.aau.dk/sm/process-plan/{base64url(AAS id)}`) and one more for every
 sequence it calls (`Role` Subprocess).
@@ -345,7 +348,7 @@ AProSO describes a process AAS of its own. The mapping:
 | 2 | Process needs a capability | process in Process Parameters (`RequiredCapability`) | Required capability in the product's Capability Description | Built in the planner |
 | 3 | Required matches offered | Required capability of the product | Offered capability of a resource | Built in the planner and in `modlink` as code: same meaning, values within range, same unit. As an ontology check: planned |
 | 4 | Step assigned to a station | step `Resource` | resource AAS | Built in the planner |
-| 5 | Step assigned to a skill | step `Skill`, found through the capability's `RealizedBy` | skill of the resource | Built for the planner's stations. For a module `RealizedBy` leads to an ARSO skill, which the planner cannot read |
+| 5 | Step assigned to a skill | step `Skill`, found through the capability's `RealizedBy` | skill of the resource | Built, for the planner's stations and (since the web UI fork's `ac9eb64`) for a module's ARSO skills |
 | 6 | Value handed to the skill | step `Binding` (source: a process parameter) | an input variable of the skill's Start | Built in the planner's model; nothing executes it yet |
 | 7 | Line consists of modules | line's Hierarchical Structures (asset ids) | module AASs | Built for the example line (`FillingLineAAS`) |
 | 8 | Module consists of components | module's Hierarchical Structures (asset ids) | component AASs | Built |
@@ -363,7 +366,7 @@ Inside the resource the chain continues with section 2.2: capability â†’ skill â
 | 4. 2 mL lies in the range, the meanings are the same | matching | Built (planner, `modlink`) |
 | 5. Filling is realized by the skill Dispensing | module, `RealizedBy` | Built |
 | 6. Its parameter Volume sets FillVolume | module: the input `Volume` of Dispensing's Start carries the meaning `.../semantics/FillVolume` | Built |
-| 7. The plan's step is assigned to Dispensing, and Volume is bound to the product's FillVolume | plan, step `Resource`, `Skill`, `Bindings` | **Missing:** the planner cannot read a module's skills |
+| 7. The plan's step is assigned to Dispensing, and Volume is bound to the product's FillVolume | plan, step `Resource`, `Skill`, `Bindings` | Built: the planner reads the module's ARSO skills and binds Volume to FillVolume by their meaning |
 | 8. Someone runs the step: occupies the module, invokes Dispensing with Volume = 2 | executor (agents) | **Missing** |
 | 9. The Operation becomes the OPC UA call `Skills/Dispensing/Start(Session, 2.0)` | module, Mapping Configuration and interface description | Built (`modlink` runs a capability of one module with given values; the HMI uses it) |
 | 10. Dispensing hands Volume to its Dispense step; the flow rate is a constant of that step | module program; described by the step (`Volume` â†’ the command's variable, `FlowRate` = 1.0) | Built |
@@ -377,8 +380,9 @@ Inside the resource the chain continues with section 2.2: capability â†’ skill â
    ARSO Skills (the skill's idShort; its parameters as the input variables of its Start, with unit
    and limits on them). Same content, different shape. **Decided 7 Oct:** the resource's skill definition
    (ARSO Skills) is the one that holds; the web UI and the planner are adjusted to read it (plan
-   step 2.2). Until then steps 7 and 8 above cannot be done for a module in the planner. The vial of
-   the example line already refers to the modules' ARSO skills.
+   step 2.2). **Done** in the web UI fork (`ac9eb64`): the planner reads ARSO skills, takes a
+   skill's parameters from its Start's input variables and binds them by meaning. The vial of the
+   example line refers to the modules' ARSO skills.
 2. **Process AAS or submodel.** AProSO: an AAS per product and line. Planner: a submodel of the
    product. Consequence of the planner's way: one plan per product, so the same product on two
    lines needs something more.
