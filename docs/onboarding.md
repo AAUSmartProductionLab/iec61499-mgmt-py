@@ -117,7 +117,7 @@ the user for it when needed and pass it only for that command.
 | --- | --- | --- | --- |
 | Pi 5 `filling-module` | 192.168.0.203, `admin` | Filling module: TB6600 stepper driver on GPIO18 (PWM channel 2), 27, 17; limit switch on GPIO23, not mounted (pressed by hand) | Program and runtime of 21 Oct morning. **To do, with the user at the bench:** `deploy/pi.py install --forte runtime/bin/forte-aarch64`, then `deploy/pi.py module`, then Occupy and Reset (homes) |
 | Pi 5 `stoppering-module` | 192.168.0.134, `admin` | Stoppering module since 22 Oct (spec `cell/modules/stoppering.yaml`, board `pi5`); wiring not known | Renamed from filling-module on 26 Oct (kept across reboots); the runtime is copied and its image built, but the new container could not start: the running one (from 20 Oct, old filling program) was created outside the compose project and holds the name `forte`. **To do, with the user's go:** `docker rm -f forte && cd ~/forte && docker compose up -d` on the Pi, then `deploy/pi.py module --spec cell/modules/stoppering.yaml`. Its old program is saved as `~/forte/boot/forte.fboot.before-stoppering` |
-| Pi 4 `stoppering-module` | 192.168.0.191, `iiot_gateway` | Ran the stoppering module 9 to 22 Oct; no longer in any spec | Shares the host name with the Pi 5 above; what becomes of it is the user's decision |
+| Pi 4 `stoppering-module` | 192.168.0.191, `iiot_gateway` | Nothing: **no longer used** (since 26 Oct). It ran the stoppering module 9 to 22 Oct and is in no spec | Do not deploy to it or use it in tests. Its old host name equals the Pi 5's above: address the Pis by IP. Older docs and examples that name 192.168.0.191 are out of date |
 
 FORTE runs in Docker on each Pi (`~/forte`, `docker compose ps | logs -f`); the program is the boot
 file `~/forte/boot/forte.fboot`. A program runs only on a FORTE built with its block types: after a
@@ -157,7 +157,7 @@ simulated IO), then A3. Not to be cut: A1, A2, B1, B2.
 decisions of [state-and-parameters.md](state-and-parameters.md); how the `arso-submodels` branch
 reaches aas-model; the go to commit the skill editor's fixes and the generation project's ARSO 0.8;
 whether module level skills become typed subapplications in the IDE; when to commit the HMI's 0.8
-reader; what becomes of the Pi 4.
+reader.
 
 ## Outside this repository
 
