@@ -4,3 +4,7 @@
 [submodule "iec61499-opcua-hmi"]
 	path = iec61499-opcua-hmi
 	url = https://github.com/AAUSmartProductionLab/iec61499-opcua-hmi
+[submodule "basyx-aas-web-ui"]
+	path = basyx-aas-web-ui
+	url = https://github.com/MartinJensen37/basyx-aas-web-ui.git
+	branch = feat/process-sequence-pharma
