@@ -10,9 +10,10 @@ Every AAS is built by ``modreg`` from a profile: the pydantic dump of its type (
 - The profile of a product is a file in this folder (``<Product>AAS.json``, a ``ProductTypeAAS``):
   what it consists of, the processes it needs and the plan that assigns them to the resources.
 
-The plan of each product is then followed into the resources (``plan_check``), every AAS is
-written to ``<folder>/<idShort>.json``, and with ``--publish`` sent to an AAS server (created, or
-replaced if it is there already).
+The plan of each product is then followed into the resources (``plan_check``), and each product
+gets a process AAS on the line (``process_aas``, a draft: its recipe bound to the resources).
+Every AAS is written to ``<folder>/<idShort>.json``, and with ``--publish`` sent to an AAS server
+(created, or replaced if it is there already).
 """
 from __future__ import annotations
 
@@ -33,6 +34,7 @@ from modreg import model, profile as profiles           # noqa: E402
 from modreg.service import AasServer                    # noqa: E402
 
 import plan_check                                        # noqa: E402
+import process_aas                                       # noqa: E402
 
 # The resources of the example line, in the order a vial passes them.
 RESOURCES = [SPECS / "filling.yaml", SPECS / "stoppering.yaml", SPECS / "planned" / "capping.yaml",
@@ -109,6 +111,13 @@ def build() -> tuple[dict[str, dict], dict[str, dict]]:
     return resources, products
 
 
+def processes(resources: dict[str, dict], products: dict[str, dict], system: dict) -> dict[str, dict]:
+    """The process AAS of every product on the line, by idShort: its recipe bound to the resources,
+    with what the plan check found."""
+    made = [process_aas.process(env, system, plan_check.check(env, resources)) for env in products.values()]
+    return {plan_check.shell_of(env)["idShort"]: env for env in made}
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", default="aas", help="folder the AASs are written to")
@@ -118,7 +127,8 @@ def main(argv=None) -> int:
     resources, products = build()
     broken = {name: found for name, env in products.items() if (found := plan_check.check(env, resources))}
     system = line(resources)
-    everything = {plan_check.shell_of(system)["idShort"]: system, **resources, **components(), **products}
+    everything = {plan_check.shell_of(system)["idShort"]: system, **resources, **components(), **products,
+                  **processes(resources, products, system)}
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     for name, env in everything.items():

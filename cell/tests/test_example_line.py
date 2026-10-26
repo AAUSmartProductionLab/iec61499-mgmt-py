@@ -146,6 +146,36 @@ def test_a_plan_that_does_not_fit_is_told(line, change, told):
     assert any(told in f for f in found), found
 
 
+def test_the_process_aas_binds_the_recipe_to_the_resources_by_reference(line):
+    """Each step of the vial's recipe is bound in the process AAS: the step, the resource, the skill,
+    and each input of the skill with what it is handed; every link resolves, and an input and the
+    product parameter it is handed mean the same."""
+    resources, products = line
+    system = example_line.line(resources)
+    [process] = example_line.processes(resources, products, system).values()
+    envs = [process, system, *resources.values(), *example_line.components().values(), *products.values()]
+    shell = plan_check.shell_of(process)
+    assert shell["idShort"] == "Vial2mLOnFillingLineAAS" and shell["assetInformation"]["assetKind"] == "Type"
+    assert [s["idShort"] for s in process["submodels"]] == ["ProcessInformation", "Bindings", "Validation"]
+    information, bindings, validation = process["submodels"]
+    assert at(information, "Product")["value"]["keys"][0]["value"] == plan_check.shell_of(products["Vial2mLAAS"])["id"]
+    assert at(validation, "Result")["value"] == "Fits"
+    assert [b["idShort"] for b in children(bindings)] == ["Filling", "Stoppering", "Capping", "Inspection"]
+    filling = at(bindings, "Filling")
+    assert resolve(envs, at(filling, "Step")["value"])["idShort"] == "Step_0000"
+    assert resolve(envs, at(filling, "Skill")["value"])["idShort"] == "Dispensing"
+    [volume] = children(at(filling, "Bindings"))
+    given = resolve(envs, at(volume, "SourceElement")["value"])
+    takes = resolve(envs, at(volume, "InputReference")["value"])
+    assert (given["idShort"], takes["idShort"]) == ("FillVolume", "Volume")
+    assert set(plan_check.semantic_ids(given)) & set(plan_check.semantic_ids(takes))
+    for binding in children(bindings):
+        for name in ("Step", "Skill"):
+            assert resolve(envs, at(binding, name)["value"]) is not None, (binding["idShort"], name)
+        for given in children(at(binding, "Bindings")):
+            assert resolve(envs, at(given, "InputReference")["value"]) is not None, binding["idShort"]
+
+
 def test_every_component_has_an_aas_of_its_own_and_the_line_names_its_modules(line):
     """The bill of material of the resources: line -> modules -> components, each part found by its
     asset id; and the hierarchy of skills: a module's skill runs the skills of its components."""

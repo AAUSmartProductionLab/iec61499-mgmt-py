@@ -514,16 +514,18 @@ def document() -> str:
     resources, products = example_line.build()
     components = example_line.components()
     system = example_line.line(resources)
+    processes = example_line.processes(resources, products, system)
     by_asset = {shell_of(e)["assetInformation"]["globalAssetId"]: e for e in [*resources.values(), *components.values()]}
     lines = [
         "# The example line: its AASs",
         "",
-        f"{1 + len(resources) + len(components) + len(products)} AASs built to the framework: the line, its modules "
-        "(filling, stoppering, capping, inspection; loading",
-        "and unloading are named but not described yet), the components of each module, and one product",
-        "planned on them (a 2 mL vial). Each product's plan is followed into the resources when they are",
-        "built; a plan that does not fit is refused. What the submodels are and how they link is in",
-        "[aas-models.md](aas-models.md).",
+        f"{1 + len(resources) + len(components) + len(products) + len(processes)} AASs built to the framework: "
+        "the line, its modules (filling, stoppering, capping, inspection; loading",
+        "and unloading are named but not described yet), the components of each module, one product",
+        "planned on them (a 2 mL vial) and its process on the line. Each product's plan is followed into",
+        "the resources when they are built; a plan that does not fit is refused. The process AAS (a",
+        "draft) holds the plan's bindings: per step the resource, the skill and what each of its inputs is",
+        "handed, each a reference. What the submodels are and how they link is in [aas-models.md](aas-models.md).",
         "",
         "This file is written by `python cell/examples/describe.py`. Every AAS is built by `modreg` from a",
         "profile, the pydantic dump of its type: the profiles of a module and of its components are made",
@@ -550,9 +552,10 @@ def document() -> str:
     lines += ["```", "",
               "| AAS | Kind | Submodels |",
               "| --- | --- | --- |"]
-    for env in [system, *resources.values(), *components.values(), *products.values()]:
+    for env in [system, *resources.values(), *components.values(), *products.values(), *processes.values()]:
         asset_type = shell_of(env)["assetInformation"].get("assetType", "")
-        kind = asset_type.split("/Resource/")[-1].lower() if "/Resource/" in asset_type else "product"
+        kind = (asset_type.split("/Resource/")[-1].lower() if "/Resource/" in asset_type
+                else "process (draft)" if asset_type.endswith("/Process") else "product")
         lines.append(f"| `{shell_of(env)['idShort']}` | {kind} | {', '.join(s['idShort'] for s in env['submodels'])} |")
     lines += ["", "## Class diagram: the resources", "",
               "A line is made of modules and a module of components. What kind of resource an AAS is, is its",
