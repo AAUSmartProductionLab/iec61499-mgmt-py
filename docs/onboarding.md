@@ -39,7 +39,7 @@ repository. In short:
 | `runtime/` | FORTE builds for the PC and the Pi (patches, FBE configurations, `build-modules.ps1`), the packaged Pi binary `runtime/bin/forte-aarch64` |
 | `deploy/` | The Pi: FORTE in Docker, `pi.py` (install, module, log) |
 | `cell/` | Module specs, the generated projects (`cell/control/`), simulator, the example line's AASs |
-| `aas-model/`, `iec61499-opcua-hmi/` | Submodules: the lab's pydantic AAS model; the HMI with `modlink` |
+| `aas-model/`, `iec61499-opcua-hmi/`, `basyx-aas-web-ui/` | Submodules: the lab's pydantic AAS model; the HMI with `modlink`; the BaSyx web UI fork with the process planner and the skill editor |
 | `ontology/`, `docs/` | Ontologies (ARSO and others); working documents |
 
 The documents in `docs/`: [tooling.md](tooling.md) (every tool, command and check),
@@ -169,8 +169,9 @@ reader.
 - HMI and `modlink`: https://github.com/AAUSmartProductionLab/iec61499-opcua-hmi (submodule here).
 - The lab's AAS model: https://github.com/tristan-schwoerer/aas-model (submodule here).
 - The process planner and skill editor: the user's fork https://github.com/MartinJensen37/basyx-aas-web-ui,
-  branch `feat/process-sequence-pharma`. Work in a clone of your own on a short path; the user's own
-  clone in `C:\Users\marti\Documents\repos\basyx-aas-web-ui` is used by another session.
+  branch `feat/process-sequence-pharma`; a submodule here since 26 Oct (`basyx-aas-web-ui/`). The
+  user's own clone in `C:\Users\marti\Documents\repos\basyx-aas-web-ui` is used by another session:
+  leave it alone.
 - The ARSO generation and SHACL validation project: https://github.com/MartinJensen37/ARSO_Ontology_AAS_Generation.
 - The lab's AAS infrastructure (registration over MQTT, BaSyx): https://github.com/aausmartproductionlab/AP2030-UNS.
 - The overall plug-and-produce architecture is a note in the user's own notes; ask for it before
