@@ -233,6 +233,19 @@ class Describer:
         self.means = {(cap.realized_by, value.parameter): meaning(prop_name, value.semantic_id)
                       for cap in spec.capabilities.values() for prop_name, value in cap.properties.items() if value.parameter}
 
+    def means_of(self, skill: str, p: str) -> str | None:
+        """What a parameter of a skill means: as the spec says, else (a module level skill's) what
+        the parameter of a step it is handed to means, else the capability property it sets."""
+        composite = self.spec.composites.get(skill)
+        said = (composite or self.spec.skills[skill]).parameters[p].meaning
+        if said:
+            return said if "://" in said else meaning(said)
+        for step in composite.execute if composite else ():
+            handed = [q for q, v in step.bind.items() if v == p]
+            if found := next((m for q in handed if (m := self.means_of(step.skill, q))), None):
+                return found
+        return self.means.get((skill, p))
+
     # Interface -------------------------------------------------------------------------------
 
     def action(self, key: str, node: str, title: str, parameters: dict[str, Parameter] | None = None) -> str:
@@ -442,7 +455,7 @@ class Describer:
             # Of an offered skill the value as deployed; of one that only runs as a step the type's default.
             value = current(parameter_port(spec, name, p), pr, self.snap) if offered else pr.default
             inputs.append(self.variable(p, XSD[pr.type], pr.description or f"Parameter {p}", f"{skill_id(name)}/Parameters/{p}",
-                                        pr, value, means=self.means.get((name, p))))
+                                        pr, value, means=self.means_of(name, p)))
             if offered:
                 key = self.property(f"{name}_Parameter_{p}", f"{node}/Parameters/{p}", pr.type,
                                     f"{name} {p} of the current or last run", pr.unit)

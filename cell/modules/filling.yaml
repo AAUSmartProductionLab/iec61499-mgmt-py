@@ -70,15 +70,16 @@ skills:
     equipment: LinearAxis
     move_to: Position
     parameters:
-      Position: {unit: mm, minimum: 0.0, maximum: 60.0, default: 0.0, description: Where to move to}
+      Position: {unit: mm, minimum: 0.0, maximum: 60.0, default: 0.0, meaning: Position, description: Where to move to}
     timeout: 30s
   Dispense:
     description: Dispense a volume at the station's flow rate (open loop, by time, until a pump is wired)
     equipment: Pump
     command: Run
     parameters:
-      Volume: {unit: mL, minimum: 0.5, maximum: 10.0, default: 1.0, description: Volume to dispense}
-      FlowRate: {unit: mL/s, minimum: 0.1, maximum: 5.0, default: 1.0, description: Flow rate of the station (calibration)}
+      Volume: {unit: mL, minimum: 0.5, maximum: 10.0, default: 1.0, meaning: FillVolume, description: Volume to dispense}
+      FlowRate: {unit: mL/s, minimum: 0.1, maximum: 5.0, default: 1.0, meaning: FlowRate,
+                 description: Flow rate of the station (calibration)}
     after: Volume / FlowRate
   Tare:
     description: Tare the scale

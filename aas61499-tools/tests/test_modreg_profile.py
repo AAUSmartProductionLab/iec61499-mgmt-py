@@ -219,7 +219,8 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     assert float(declared["Maximum"]) == decl.parameters["Position"].maximum and declared["Unit"] == "mm"
     assert position["embeddedDataSpecifications"][0]["dataSpecificationContent"]["unit"] == "mm"
     data = submodel(stoppering_all["StopperingModuleAAS"], "OperationalData")
-    assert ids(position) == ids(at(data, "MoveAxis_Parameter_Position")) == [f"{BASE}/skills/MoveAxis/Parameters/Position"]
+    assert ids(position)[:1] == ids(at(data, "MoveAxis_Parameter_Position")) == [f"{BASE}/skills/MoveAxis/Parameters/Position"]
+    assert ids(position)[1:] == [f"{BASE}/semantics/Position"]              # what it means, as the spec says
     # What starts, ends and bounds it.
     assert at(move, "Contract", "Requires")["value"] == "Homed"            # an axis that knows where it is
     assert at(move, "Contract", "Ensures")["value"] == decl.ensures
@@ -265,6 +266,9 @@ def test_a_step_is_connected_to_the_variables_of_its_command():
     pump = at(submodel(found["FillingPumpAAS"], "Skills"), "Skills", "Dispense")
     assert variables(at(pump, "Start", "Start"), "inputVariables") == ["Session", "Volume", "FlowRate"]
     assert at(pump, "Contract", "After")["value"] == "Volume / FlowRate"
+    # The primitive says what its parameters mean; the skill handing Volume on means the same.
+    assert ids(at(pump, "Start", "Start", "Volume"))[1:] == [f"{BASE}/semantics/FillVolume"]
+    assert ids(at(pump, "Start", "Start", "FlowRate"))[1:] == [f"{BASE}/semantics/FlowRate"]
     # Nothing points from the skill to the capability: the parameter means what the capability's
     # property means, which is how a product's value finds it.
     assert ids(volume) == [f"{BASE}/skills/Dispensing/Parameters/Volume", f"{BASE}/semantics/FillVolume"]

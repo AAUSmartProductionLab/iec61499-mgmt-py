@@ -258,6 +258,9 @@ class Parameter(Model):
     maximum: float | None = None
     default: float | int | bool
     description: str = ""
+    # What the parameter means: a property of the lab's vocabulary by name (FillVolume) or an IRI. A
+    # module level skill's parameter means what the parameter of a step it is handed to means.
+    meaning: str | None = None
 
     @model_validator(mode="after")
     def bounds(self):
