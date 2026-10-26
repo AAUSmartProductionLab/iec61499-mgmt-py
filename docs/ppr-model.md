@@ -85,7 +85,7 @@ Three layers:
 
 | Layer | What | Tied to the AAS by |
 | --- | --- | --- |
-| Domain vocabulary (`ontology/Vocabulary`) | What things mean: capabilities, properties, commands (built); skill types, variables and states, equipment and product kinds (to do). Classes below CSS, aligned to VDI 2206, VDI 3682, IEC 61360, PackML | `supplementalSemanticId` |
+| Domain vocabulary (`ontology/Vocabulary`) | What things mean: capabilities of two kinds (process: a product can require it; auxiliary: it serves other skills), properties, commands, skill types with the capability each contributes (built 26 Oct); variables and states, equipment and product kinds (to do). Classes below CSS, aligned to VDI 2206, VDI 3682, IEC 61360, PackML | `supplementalSemanticId` |
 | PPRL | Relations between individuals (`hasPart`, `hasSubProcess`, `requiresCapability`, `matches`, `isRealizedBySkill`, `usesSkill`, `boundTo`, `takesValueFrom`, ...) and rules (derived candidates, derived capabilities) | Made from the references the AASs hold, by the projection (section 4) |
 | APSO, AProSO, ARSO | What each element of an AAS is, one ontology per kind of AAS, with the restrictions it must satisfy | `semanticId`: a class names the semantic id of the elements it describes (`arso:semanticId`) |
 
@@ -126,7 +126,10 @@ The projection runs in three passes: type each element by its `semanticId` (as `
 for ARSO today), create an individual for each element with a `supplementalSemanticId`
 (`pprl:describes`), turn the references into the relations above (rules kept in PPRL as data). One
 projection serves the checks, the matching and the derivation; the AAS generation project's
-converter and `modreg`'s check become one.
+converter and `modreg`'s check become one. **Built 26 Oct** for the resource AASs' Skills,
+Capability Description and Control Configuration (`modreg/projection.py`, rules in
+`ontology/PPRL/projection`, `modreg graph` writes the graph); the product side, Hierarchical
+Structures and the process AAS are still to do.
 
 ## 5. Capabilities derived from skills
 
@@ -140,12 +143,19 @@ written into the Capability Description, not typed by hand:
 | Properties a step's constant sets | FlowRate 1.0 mL/s | The constant and its meaning |
 | Facts of the machine | ContainerType vial, GraspDiameter, AbsoluteFillError | Not from the skill: stated once per module (later its Technical Data); the vocabulary lists which a capability needs |
 
-Derived elements carry a marker (derived, from which skill), so a derivation replaces only what it
-derived. One implementation in `modreg`, called by the skill editor on save, by `modsync record`
-after a reconfiguration and by `modreg profile`; the module spec's `capabilities` keep only the
-facts of the machine. A described skill that is not built yet (no instances in the Control
-Configuration) is offered "after a reconfiguration". Aggregates (DoubleDose fills twice the Volume)
-need a rule of their own and come later.
+**Built 26 Oct.** The rule is `ontology/PPRL/derivation/10-capabilities.rq`, run on the projection
+(`modreg/derive.py`). What a parameter means is stated on a primitive's parameter (the spec's
+`meaning`, written as its supplemental semantic id); a module level skill's parameter inherits it
+through the step it is handed to. Derived elements carry the qualifier `Derived`, so a derivation
+replaces only what it derived; facts and capabilities written by hand stay, and a container keeps
+its name (two skills offering one capability: `<Capability>_<Skill>`). A described skill that is
+not built yet (no instance in the Control Configuration) offers its capability with
+`Availability = AfterReconfiguration`. Written by `modreg profile` (the module spec's
+`capabilities` keep only the facts of the machine; a capability no skill offers is refused), by
+`modsync record` (with the components' AASs) and by `POST /capabilities/<shell>` of `modreg serve`,
+which the skill editor is to call after saving. Still to do: the skill editor calling it, the
+planner showing the availability. Aggregates (DoubleDose fills twice the Volume) need a rule of
+their own and come later.
 
 ## 6. Submodel templates of our own
 
@@ -165,8 +175,8 @@ the paper.
 | Application | Reads | Writes | Acts on the module | Built |
 | --- | --- | --- | --- | --- |
 | Process sequence planner (web UI module) | Product AAS; offered capabilities and skills of the resources | The recipe (product AAS), the bindings (process AAS) | – | Yes; the process AAS is planned |
-| Skill editor (web UI plugin) | A module's Skills and its components' | The module's Skills | – | Yes; its fixes not committed |
-| `modreg` | Specs, profiles, the ontologies | Every AAS (built, checked, registered); derived capabilities | – | Yes; derivation planned |
+| Skill editor (web UI plugin) | A module's Skills and its components' | The module's Skills | – | Yes; its fixes not committed; calling the derivation after saving is to do |
+| `modreg` | Specs, profiles, the ontologies | Every AAS (built, checked, registered); derived capabilities | – | Yes |
 | `modsync` | Skills, Control Configuration, the running program | Control Configuration, the interface of a new skill, the boot file | Creates, writes, verifies (management protocol) | Yes |
 | `modlink`, HMI | Interface description, mapping, Skills | – | Occupies, calls skills (OPC UA) | Yes; the HMI moves into the web UI (C5), later the AAS alone (C6) |
 | Agents | Process and resource AAS | Bindings per order | Through `modlink` and `modsync` | After the paper |
@@ -178,9 +188,9 @@ From [figures/reconfiguration-pipeline.drawio](figures/reconfiguration-pipeline.
 | # | Step | Application | Built |
 | --- | --- | --- | --- |
 | 1 | The product's recipe: processes, parameters, required capabilities | Planner | Yes |
-| 2 | Match required against offered: offered now, offered after a reconfiguration, not offered | Planner | Yes, but "after a reconfiguration" |
+| 2 | Match required against offered: offered now, offered after a reconfiguration, not offered | Planner | Yes; "after a reconfiguration" is in the AAS (`Availability`), the planner does not show it yet |
 | 3 | Not offered: change a skill (a new one from an existing one, a limit, a constant) | Skill editor | Yes |
-| 4 | Derive the capabilities from the changed skills | `modreg` | No (F3) |
+| 4 | Derive the capabilities from the changed skills | `modreg` (`serve`, `profile`), `modsync record` | Yes; the skill editor does not call it yet |
 | 5 | Compare the Skills with the running program; check; guard | `modsync` | Yes |
 | 6 | Apply online: instances, values, connections by the module rules; INIT | `modsync`, FORTE | Yes |
 | B2 | Or, as the baseline: a new boot file and a restart | `pi.py`, FORTE | No (B2) |
@@ -194,7 +204,7 @@ Steps 5 to 8 against B2 are what the evaluation times (B1, B2).
 
 | Before 18 Nov | After |
 | --- | --- |
-| Skill types in the vocabulary, each with the capability it contributes | Variables and states (aligned with the lab's `apex` ids), equipment and product kinds, DIN 8580 and VDI 2860 |
-| The projection of Skills and Capability Description | The projection of everything else |
-| Capabilities derived from skills, written back (F3); "after a reconfiguration" in the matching | APSO and AProSO remade; templates and element descriptions for all our submodels |
+| Skill types in the vocabulary, each with the capability it contributes (done 26 Oct) | Variables and states (aligned with the lab's `apex` ids), equipment and product kinds, DIN 8580 and VDI 2860 |
+| The projection of Skills and Capability Description (done 26 Oct) | The projection of everything else |
+| Capabilities derived from skills, written back (done 26 Oct); the skill editor calling it and "after a reconfiguration" in the planner (to do, web UI) | APSO and AProSO remade; templates and element descriptions for all our submodels |
 | The figures and this model as the paper's overview | The process AAS and the planner writing into it; per-instance ids moved out |

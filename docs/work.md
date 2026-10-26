@@ -504,6 +504,17 @@ because with a wrong `.buildpath` it silently skips the system):
 
 ## Learnings
 
+- **Capabilities derived from skills (26 Oct).** The rule runs as SPARQL on rdflib. A `BIND` inside
+  an `OPTIONAL` sees none of the variables bound outside it (the group is evaluated on its own):
+  a property's IRI made from `?offer` there came out unbound, and every offer lost its
+  properties. Bind outside the `OPTIONAL`. Deriving needs the AASs a spec gives, and building
+  them through a profile takes seconds per module (`model.build`); deriving reads only the Skills
+  and the Control Configuration, so `profile.lean` builds just those (0.1 s) and the offers are
+  kept per spec. A `ModuleSpec` does not survive its own JSON (steps are written short), so the
+  JSON is only the key. aas-model draws new ids into the embedded data specifications at every
+  build: a submodel built again is never equal to the one before, so compare without them before
+  putting it back on a server.
+
 - **Creating a program part online** (FORTE 3.3, 1 Oct 2026): CREATE takes dotted names and makes
   the subapp containers; instances created in a running resource stay idle until a management
   START each; `WRITE` with `Source="$e"` fires an event input (`MonitoringTriggerEvent`, as the
