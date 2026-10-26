@@ -128,10 +128,10 @@ path: the AAS is delivered with the module, the program is only compared with it
 | C1 | The HMI's own AAS reader, its built-in module descriptions and its stand-in module still describe the modules before 8 Oct. **Reader rewritten for 0.8 on 20 Oct** (operates the filling Pi; not committed in the submodule). Left: its tests, the stand-in module's skills (Home, MoveAxis, Dispense, Tare, Weigh), the built-ins dropped, one `modlink` test | `iec61499-opcua-hmi/` (submodule) |
 | C2 | The scale's weight follows the dispensed volume (it is a constant 2.0 g) | module spec, simulator |
 | C3 | The Pi 4: host name `stoppering-module`, the installer's setup, system updates, the stoppering program. **Done 9 Oct**, checked across a reboot. Superseded: the stoppering module runs on the Pi 5 at 192.168.0.134 since 22 Oct, the Pi 4 is no longer used | Pi 4 |
-
 | C4 | Teaching material: the 4diac IDE monitors deployed modules; projects of what runs (`modsync project`); a three-FORTE pub/sub demo (outside the repository). **Done 21 Oct** | IDE, `modsync` |
+| C5 | **The HMI as a module of the BaSyx web UI** (decided 26 Oct, [decisions.md](decisions.md)): a Vue and TypeScript module in the fork (`basyx-aas-web-ui/`, a submodule) that reads the module's AAS itself, and a small TypeScript bridge (node-opcua) for OPC UA over WebSocket; then the HMI's Python service and pages are retired. **After A4, B1 and B2.** Replaces C1's reader work in Python | `basyx-aas-web-ui/`, `iec61499-opcua-hmi/` |
 
-C1 to C4 are not needed for the paper's claim; they go in when they block a figure or a run.
+C1 to C5 are not needed for the paper's claim; they go in when they block a figure or a run.
 
 ### E. aas-model of 18 Oct (new, 19 Oct)
 
