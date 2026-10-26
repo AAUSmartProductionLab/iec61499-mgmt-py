@@ -59,13 +59,16 @@ Template "ours" means a submodel template of our own, generated from the ontolog
 | Capability Description | IDTA 02020, role Required | The capabilities the processes require, with values or acceptable ranges | Yes |
 | Production Sequence | ours (the planner's, 3.0) | The recipe: steps that run processes, calls of sub-recipes, parallel, decision and optional flows, conditions | Yes, with bindings that move to the process AAS |
 
-**Process AAS** (all planned)
+**Process AAS** (a draft since 26 Oct: `cell/examples/process_aas.py` makes the vial's on the example
+line, `Vial2mLOnFillingLineAAS`, from the bindings the planner keeps in the product today; no
+template or ontology yet. Its asset is the process; it carries the product's and the line's asset ids
+as specific asset ids, so it is found from either)
 
 | Submodel | Template | Holds |
 | --- | --- | --- |
-| Process Information | ours | The product and the line (references to their AASs), revision, status, approval |
-| Bindings | ours | Per step of the product's recipe (by its `NodeId`): the resource, the skill, the binding of each skill parameter (a constant or a process parameter of the product), the candidates the matching found |
-| Validation | ours | The plan check's result: every step bound, every binding in range, when and by whom |
+| Process Information | ours | The product and the line (references to their AASs), the recipe it binds and its revision, status; approval to come |
+| Bindings | ours | Per step of the product's recipe (by its `NodeId`): the step, the resource, the skill (references), and per input of the skill what it is handed (a process parameter of the product or a constant) with a reference to the input itself; the elements are the planner's (Production Sequence ids). To come: the candidates the matching found |
+| Validation | ours | The plan check's result (`Result`, `Findings`); when and by whom to come |
 
 **Resource AAS** (a module; a line has Hierarchical Structures of its modules, a component its Skills)
 
