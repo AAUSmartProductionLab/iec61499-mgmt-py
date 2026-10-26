@@ -139,6 +139,14 @@ def english(texts: list[dict] | None) -> str:
     return next((t.get("text", "") for t in texts or [] if t.get("language") == "en"), "")
 
 
+def bare(element):
+    """An element without its embedded data specifications, whose ids aas-model draws anew for
+    every build."""
+    if isinstance(element, dict):
+        return {k: bare(v) for k, v in element.items() if k != "embeddedDataSpecifications"}
+    return [bare(v) for v in element] if isinstance(element, list) else element
+
+
 def stated_facts(description: dict | None) -> tuple[dict, dict, list[dict]]:
     """What a Capability Description states beyond the skills: per capability class (meaning ->
     (name, its facts)), the names its containers have (capability, skill element) -> idShort, and
@@ -210,6 +218,8 @@ def capabilities(module: dict, components: list[dict]) -> dict:
     at(new, OFFERED_SET)["value"] += [box for box in kept if box["idShort"] not in {b["idShort"] for b in children(at(new, OFFERED_SET))}]
     if old is not None:
         new["id"] = old["id"]
+        if bare(new) == bare(old):                     # only the ids aas-model draws anew differ
+            return module
         module["submodels"] = [new if s is old else s for s in module["submodels"]]
     else:
         module["submodels"].append(new)
