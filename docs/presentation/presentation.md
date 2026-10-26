@@ -2,8 +2,8 @@
 
 A brief for a design session that builds a PowerPoint deck (16:9) on this work. It gives the story,
 the slides one by one, the figures to use and the facts to get right. The figures are PNG files in
-[figures/](figures/), exported from the draw.io files in [../figures/](../figures/). State of the
-work: 27 Oct 2026.
+[figures/](figures/), exported from the draw.io files in [../figures/](../figures/); the animations
+for some slides are described in [animations.md](animations.md). State of the work: 27 Oct 2026.
 
 ## The talk
 
@@ -49,6 +49,14 @@ The story runs in four parts:
 
 ## The figures
 
+**One figure per slide.** `slides-01-…png` to `slides-19-…png` are made for the slides: 16:9, 2400 ×
+1350, big type, few elements, no title of their own (the slide has it). Each matches the slide of
+the same number below. `slides-01-title-the-line.png` is the line alone, for the title slide. In
+these PNGs a pixel is the draw.io page's coordinate times 1.5 (the page is 1600 × 900), which is what
+a click animation's regions are given in.
+
+**Detailed figures**, as alternatives, for backup slides or for questions:
+
 | File | What it shows | Shape |
 | --- | --- | --- |
 | `module-tools-8-layers-slide.png` | The production system in five layers above the line, few words, big names on the right | Tall (3545×4462) |
@@ -71,45 +79,48 @@ Each slide: its title (the message), what goes on it, the figure, and notes for 
 
 ### 1. Title
 
+- **Figure:** `slides-01-title-the-line.png`.
 - **Title:** Modules that describe themselves: IEC 61499 control driven by the Asset Administration
   Shell
 - **Subtitle:** Verify, operate and change a running module from its program and its AAS
 - `[Presenter name]`, Aalborg University, Smart Production Lab; date.
-- **Figure:** `module-tools-8-layers-slide.png`, cropped to the line at the bottom (the stations
-  with their orange lids on the maglev table), as a picture on the side or the background.
+- **Detailed alternative:** `module-tools-8-layers-slide.png`, cropped to the line at the bottom.
 
 ### 2. A filling line has to change often
 
+- **Figure:** `slides-02-change-often.png`.
 - Pharmaceutical filling: small batches, many products, frequent changeovers.
 - The line is built from modules: filling, stoppering, capping, inspection; robots load and unload.
 - The modules come from vendors. Changing what one does today means engineering and a redeployment:
   the module stops.
-- **Figure:** `module-tools-3-production-system.png`, the isometric line on the left of it.
+- **Detailed alternative:** `module-tools-3-production-system.png`, the isometric line on the left of it.
 - **Notes:** The question is not how to program one module, but how a line integrates and changes
   modules it did not build.
 
 ### 3. Our line: six modules around a maglev table
 
+- **Figure:** `slides-03-our-line.png`.
 - Transport: a B&R ACOPOS 6D maglev table with shuttles that carry the vials.
 - Loading and unloading: Kuka robots with grippers. Filling, stoppering, capping, inspection
   stations.
 - Each module runs on its own Raspberry Pi 5. Filling and stoppering are built; capping and
   inspection are specified, not built.
-- **Figure:** `module-tools-3-production-system.png` (whole).
+- **Detailed alternative:** `module-tools-3-production-system.png` (whole).
 - **Notes:** The vial is filled, stoppered, capped and inspected on its way. The modules began as
   ESP32 stations and are now generated IEC 61499 programs.
 
 ### 4. What we want: a module is enough with its program and its AAS
 
+- **Figure:** `slides-04-the-claim.png`.
 - Large quote: *A module that is delivered with an IEC 61499 program and an AAS can be verified,
   operated and changed online from those two alone, without the files it was generated from.*
 - Below it, small: it has to work for a vendor's module that comes with nothing else.
-- **Figure:** none, or a small crop of one station from the slide figure.
 - **Notes:** This is the claim of the CIRP CMS paper (due 18 Nov 2026). Our own generator is one
   way to build such a module, not something an integrator has.
 
 ### 5. Three things to specify
 
+- **Figure:** `slides-05-three-things-to-specify.png`.
 - Three cards with icons:
   1. **How a module is built:** its control structure and interface (the module rules).
   2. **What its AAS holds:** the information model (the resource ontology ARSO).
@@ -119,7 +130,9 @@ Each slide: its title (the message), what goes on it, the figure, and notes for 
 
 ### 6. The production system in layers
 
-- **Figure:** `module-tools-8-layers-slide.png`, large; its own cards name the layers.
+- **Figure:** `slides-06-the-layers.png`.
+- **Animation:** `layers-walk` (click); see [animations.md](animations.md).
+- **Detailed alternative:** `module-tools-8-layers-slide.png` (tall), its own cards name the layers.
 - Bottom to top: the line; digital assets (parts, IO, identity); behaviour (IEC 61499 programs on
   FORTE); AAS models and orchestration; applications (plan, change, operate).
 - **Notes:** The next slides walk up the layers. Lines between layers: a station and its parts; a
@@ -127,110 +140,126 @@ Each slide: its title (the message), what goes on it, the figure, and notes for 
 
 ### 7. Digital assets: line, module, component
 
+- **Figure:** `slides-07-digital-assets.png`.
 - Every module is a linear axis (a stepper with a limit switch) plus one process component (the
   filling pump, the stoppering piston, the cap crimper, the cameras).
 - The parts are wired to the module's Pi (GPIO, PWM); each has an AAS with its asset id.
 - The line's AAS names its modules; a module's AAS names its components.
-- **Figure:** `skill-hierarchies-3-hierarchies-paper.png`; optionally beside it a crop of the asset
+- **Detailed alternative:** `skill-hierarchies-3-hierarchies-paper.png`; optionally beside it a crop of the asset
   tiles (second layer) from `module-tools-7-layers-illustrated.png`.
 - **Notes:** The same components and the same two axis skills recur in every module, which is what
   makes generation and checking possible.
 
 ### 8. Behaviour: every module follows the same rules in IEC 61499
 
+- **Figure:** `slides-08-module-rules.png`.
+- **Animation:** `skill-call` (autoplay), on a new slide after this one; see [animations.md](animations.md).
 - Each module runs one IEC 61499 program on Eclipse 4diac FORTE.
 - Fixed for every module: occupation (one client at a time), the module state machine (PackML), one
   state machine every skill shares, an OPC UA server.
 - A skill primitive runs one command on one equipment item until a sensor, timer or timeout; a
   module level skill is a sequence of steps over the primitives.
-- **Figure:** `module-tools-2-tools-and-forte-paper.png`, or the behaviour layer cropped from
+- **Detailed alternative:** `module-tools-2-tools-and-forte-paper.png`, or the behaviour layer cropped from
   `module-tools-7-layers-illustrated.png` (function blocks, PackML, a skill's state machine).
 - **Notes:** Because every module follows these rules, a tool can read a program back and know what
   each block is, and can add a skill online in a known pattern.
 
 ### 9. The information model: three kinds of AAS
 
+- **Figure:** `slides-09-three-kinds-of-aas.png`.
 - Following ISA-88: **product AAS** (the general recipe: what the product needs), **process AAS**
   (the master recipe: the recipe bound to one line), **resource AAS** (line, module, component: what
   it offers and how it is called).
 - Each element's `semanticId` points into an ontology (ARSO for resources), its
   `supplementalSemanticId` into a domain vocabulary (what it means).
-- **Figure:** `ppr-models-1-models-and-ontologies.png`.
+- **Detailed alternative:** `ppr-models-1-models-and-ontologies.png`.
 - **Notes:** A reconfiguration changes the resource AAS and at most the process AAS; the product AAS
   is not touched. One owner per AAS: product designer, line engineer, vendor. The process AAS is a
   draft today.
 
 ### 10. What a module's AAS holds
 
+- **Figure:** `slides-10-a-module-s-aas.png`.
+- **Animation:** `verify-readback` (autoplay); see [animations.md](animations.md).
 - Skills: each skill's commands, parameters with limits, and for a composite its steps.
 - Capability Description: what it offers, derived from its skills.
 - Interface description and mapping: the OPC UA endpoint and every action and variable.
 - Control Configuration: what was built (instances, block types, type hashes, the change log).
-- **Figure:** the Resource AAS box cropped from `ppr-models-1-models-and-ontologies.png`, or a list.
+- **Detailed alternative:** the Resource AAS box cropped from `ppr-models-1-models-and-ontologies.png`, or a list.
 - **Notes:** Skills say what is wanted; the Control Configuration says what was built. Comparing the
   two with the running program is what verification and online change stand on.
 
 ### 11. From a product's recipe to the modules' skills
 
+- **Figure:** `slides-11-from-recipe-to-skills.png`.
 - The planner takes the product's recipe and matches each step's required capability against the
   capabilities the modules offer.
 - Each step is bound to a module's skill with its parameters: the process AAS.
 - Three answers: offered now, offered after a reconfiguration, not offered.
-- **Figure:** `skill-hierarchies-4-recipe-to-process-paper.png`.
+- **Detailed alternative:** `skill-hierarchies-4-recipe-to-process-paper.png`.
 - **Notes:** "Offered after a reconfiguration" is what makes changing a module part of planning.
 
 ### 12. The tools around the AAS
 
+- **Figure:** `slides-12-the-tools.png`.
 - `modreg`: builds, checks and registers the AASs; derives capabilities from skills.
 - Process sequence planner and skill editor: modules of the BaSyx web UI.
 - `modsync`: compares the AAS with the running program, changes it online, verifies, records.
 - `modlink` and the HMI: operate a module over OPC UA from its AAS.
 - Agents: planned, after the paper.
-- **Figure:** `ppr-models-2-applications.png`.
+- **Detailed alternative:** `ppr-models-2-applications.png`.
 
 ### 13. The reconfiguration pipeline
 
+- **Figure:** `slides-13-the-pipeline.png`.
+- **Animation:** `pipeline-flow` (autoplay) or `pipeline-walk` (click); see [animations.md](animations.md).
 - Nine steps: recipe, match, change a skill, derive capabilities, compare and check, apply online,
   verify, record, bind and run.
 - The baseline it is measured against: a new boot file and a restart.
-- **Figure:** `reconfiguration-pipeline-1-reconfiguration-pipeline.png`.
+- **Detailed alternative:** `reconfiguration-pipeline-1-reconfiguration-pipeline.png`.
 - **Notes:** Steps 5 to 8 against the baseline are what the evaluation times. Example: the filling
   module gets a new skill, DoubleDose, made from Dispensing.
 
 ### 14. Changing a running program, block by block
 
+- **Figure:** `slides-14-online-change.png`.
+- **Animation:** `online-change` (autoplay, already built in the deck); see [animations.md](animations.md).
 - Over FORTE's management protocol: create blocks, write values, connect, start; read the program
   back to verify.
 - Online: a new skill, a step's constant, a parameter's limits. Removing needs a new boot file.
-- **Figure:** `module-tools-1-tools-and-forte.png` (crop to the function block network if needed).
+- **Detailed alternative:** `module-tools-1-tools-and-forte.png` (crop to the function block network if needed).
 - **Notes:** The module keeps running while a skill is added. The new blocks join the program's INIT
   chain, and the record amends the boot file, so the change survives a restart.
 
 ### 15. What runs today
 
+- **Figure:** `slides-15-what-runs-today.png`.
 - Every module on its own Raspberry Pi 5; FORTE in Docker; the program as a boot file.
 - The filling module's axis moves on its Pi under FORTE, started from the HMI.
 - A BaSyx AAS server and web UI hold the example line's AASs: the line, its modules, their
   components, the product.
 - Python tools: `modreg`, `modsync`, `modlink`; the web UI fork with the planner and the skill editor.
-- **Figure:** `module-tools-7-layers-illustrated.png` (whole, beside a short text column).
+- **Detailed alternative:** `module-tools-7-layers-illustrated.png` (whole, beside a short text column).
 - **Notes:** Verify, change a value, create a skill and record work online on the PC and on the
   Pi 5.
 
 ### 16. From a module spec to a running module
 
+- **Figure:** `slides-16-from-spec-to-module.png`.
+- **Animation:** `first-deployment` (autoplay); see [animations.md](animations.md).
 - Our own route for building a conforming module: a module spec (YAML), `modgen` generates the 4diac
   project, the 4diac IDE checks and exports it, FORTE is built for the PC and the Pi, the program is
   deployed.
 - `modreg` builds the module's AAS from the same spec; `modsync project` writes the 4diac project of
   what runs, so the IDE stays usable.
-- **Figure:** `module-tools-1-tools-and-forte.png`, upper part (the tools); or a simple flow drawn on
+- **Detailed alternative:** `module-tools-1-tools-and-forte.png`, upper part (the tools); or a simple flow drawn on
   the slide: spec → modgen → 4diac IDE → FORTE build → Pi.
 - **Notes:** The spec is ours; a vendor's module has none. After delivery the AAS and the running
   program are enough.
 
 ### 17. Built and missing
 
+- **Figure:** `slides-17-built-and-missing.png`.
 A two-column table (built / missing):
 
 | Part | Built | Missing |
@@ -243,6 +272,7 @@ A two-column table (built / missing):
 
 ### 18. Next: the evaluation and the paper
 
+- **Figure:** `slides-18-the-evaluation.png`.
 - Scenario runner: plug a module in (register, verify, operate), change a constant, create a new
   skill; each timed (downtime, commands sent, time to verify), unattended.
 - Baseline: the same changes by a new boot file and a restart, side by side.
@@ -252,12 +282,13 @@ A two-column table (built / missing):
 
 ### 19. After the paper, and summary
 
+- **Figure:** `slides-19-after-the-paper.png`.
 - After the paper: the process AAS written by the planner; agents (a product agent per order and a
   resource agent per module bid for the steps); time series in the operational data; the HMI inside
   the web UI.
 - Summary in three lines: modules built by fixed rules; described by their AAS; verified, operated
   and changed online from program and AAS alone.
-- **Figure:** `module-tools-8-layers-slide.png` again, small, or the agents crop from
+- **Detailed alternative:** `module-tools-8-layers-slide.png` again, small, or the agents crop from
   `module-tools-7-layers-illustrated.png` (a vial and miniature modules).
 - Thanks and contact.
 
