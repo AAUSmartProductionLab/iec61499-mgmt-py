@@ -17,7 +17,7 @@ APSO is out of scope.
 | `capabilities.ttl` | 02020 | 25 | 26 (was 5) | Filled in |
 | `technical-data.ttl` | 02003 | 26 | 26 (was 0) | Filled in; now built |
 | `aimc.ttl` | 02027 | 15 | 15 | New; built |
-| `skills.ttl` (was `control-component.ttl`) | 02015 (not supplied) | 11 | 2 | ARSO's own Skills submodel; began from 02015 |
+| `skills.ttl` (was `control-component.ttl`) | 02015 (not supplied) | 45 | 32 | ARSO's own Skills submodel; began from 02015 |
 | `operational-data.ttl` | none (ARSO-specific) | 5 | 1 | n/a |
 | `parameters.ttl` | none (ARSO-specific) | 3 | 1 | n/a |
 
@@ -64,8 +64,9 @@ should stay; they are listed so the delta is visible.
    `arso-rules.shacl.ttl` require Skill, Capability, OperationalData, Parameters
    and AIMC references to resolve inside the same AAS. No IDTA template
    expresses cross-submodel constraints.
-6. **Flattened Skills.** `skills.ttl` (until 26 Oct `control-component.ttl`) adapts IDTA 02015 CCType to a
-   flatter shape; see the design note in that file.
+6. **Flattened Skills.** `skills.ttl` (until 26 Oct `control-component.ttl`) began from IDTA 02015 CCType
+   and keeps none of its containers but `Errors`: the skills are the submodel's own elements, and an
+   error is a property whose value is its code (0.9); see the design note in that file.
 7. **AIMC sources are AID properties only.** IDTA 02027 lets a Source reference
    any interface element; ARSO rejects actions and events. Sinks are unchecked,
    as IDTA allows any submodel element there.

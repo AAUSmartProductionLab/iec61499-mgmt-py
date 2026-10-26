@@ -16,7 +16,7 @@ module is built by in [module-rules.md](module-rules.md), how each tool works in
 flowchart LR
     subgraph Describe
         spec[Module spec<br/>cell/modules/*.yaml]
-        aas[Module AAS + component AASs<br/>ARSO 0.8: Skills, Control Configuration, interface, ...]
+        aas[Module AAS + component AASs<br/>ARSO 0.9: Skills, Control Configuration, interface, ...]
         product[Product AAS<br/>process parameters, required capabilities, plan]
         editor[Skill editor<br/>BaSyx web UI plugin]
     end
@@ -204,7 +204,7 @@ modreg serve --ontology ontology/ARSO --basyx http://<host>:8081   # registratio
 | Part | Built | Missing |
 | --- | --- | --- |
 | Spec to program to running module | Generation, IDE check, FORTE for PC and Pi, deployment, IDE monitoring | – |
-| Module AAS | ARSO 0.8 resource AASs, built and checked against the ontology, published locally | Registration on the lab's server; live values in Operational Data |
+| Module AAS | ARSO 0.9 resource AASs, built and checked against the ontology, published locally | Registration on the lab's server; live values in Operational Data |
 | Operating from the AAS | `modlink`, the HMI | – |
 | Changing from the AAS | Skill editor; verify, create a skill, change a value, record; online on PC and Pi | Reordering or removing steps online; the editor's last fixes committed |
 | Changing from a product | Matching of required and offered capabilities, the planner binding a step to a module's skill; the three cases defined | Capabilities derived from skills and "offered after a reconfiguration" (F3); an executor of plans; deriving a module change from a product automatically (agents) |
