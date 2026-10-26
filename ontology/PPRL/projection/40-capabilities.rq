@@ -1,0 +1,41 @@
+# A Capability element (IDTA 02020) describes a capability of the vocabulary class it means, offered
+# or required by its role qualifier. The properties in its container specify it; its RealizedBy
+# relationship names the skill realizing it.
+PREFIX pa:   <https://w3id.org/2025/pprl/aas#>
+PREFIX pprl: <https://w3id.org/2025/pprl#>
+PREFIX css:  <http://www.w3id.org/hsu-aut/css#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+CONSTRUCT {
+  ?element pprl:describes ?capability .
+  ?capability a ?class , ?offered , ?required ; css:isSpecifiedBy ?property ; css:isRealizedBySkill ?skill .
+  ?valueElement pprl:describes ?property .
+  ?property a ?propertyClass .
+}
+WHERE {
+  ?element pa:modelType "Capability" ; pa:supplementalSemanticId ?class .
+  ?class rdfs:subClassOf+ css:Capability .
+  ?container pa:element ?element .
+  OPTIONAL {
+    ?element pa:qualifier ?q1 .
+    ?q1 pa:type "CapabilityRoleQualifier/Offered" ; pa:value "true" .
+    BIND(pprl:OfferedCapability AS ?offered)
+  }
+  OPTIONAL {
+    ?element pa:qualifier ?q2 .
+    ?q2 pa:type "CapabilityRoleQualifier/Required" ; pa:value "true" .
+    BIND(pprl:RequiredCapability AS ?required)
+  }
+  OPTIONAL {
+    ?container pa:element/pa:element/pa:element ?valueElement .
+    ?valueElement pa:supplementalSemanticId ?propertyClass .
+    ?propertyClass rdfs:subClassOf+ css:Property .
+    BIND(IRI(CONCAT(STR(?valueElement), "#it")) AS ?property)
+  }
+  OPTIONAL {
+    ?container pa:element/pa:element ?relation .
+    ?relation pa:first ?element ; pa:second ?skillElement .
+    ?skillElement pprl:describes ?skill .
+  }
+  BIND(IRI(CONCAT(STR(?element), "#it")) AS ?capability)
+}

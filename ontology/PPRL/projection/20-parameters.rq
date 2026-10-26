@@ -1,0 +1,28 @@
+# The variables of a skill's Start operation are its parameters (inputs) and results (outputs); the
+# session and the answer (Accepted, ErrorID) belong to the protocol and are left out. What a
+# parameter means is its supplemental semantic id, a property class of the vocabulary.
+PREFIX pa:   <https://w3id.org/2025/pprl/aas#>
+PREFIX pprl: <https://w3id.org/2025/pprl#>
+PREFIX css:  <http://www.w3id.org/hsu-aut/css#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+CONSTRUCT {
+  ?variable pprl:describes ?parameter .
+  ?parameter a css:SkillParameter , ?direction ; pprl:means ?meaning .
+  ?skill css:hasParameter ?parameter .
+}
+WHERE {
+  ?element pprl:describes ?skill .
+  ?skill a css:Skill .
+  ?element pa:element ?command .
+  ?command pa:semanticId <https://smartproductionlab.aau.dk/skill/Start> ; pa:element ?operation .
+  ?operation pa:modelType "Operation" .
+  { ?operation pa:input ?variable . BIND(css:InputParameter AS ?direction) }
+  UNION
+  { ?operation pa:output ?variable . BIND(css:OutputParameter AS ?direction) }
+  FILTER NOT EXISTS {
+    ?variable pa:semanticId <https://smartproductionlab.aau.dk/ControlComponent/Skill/OperationVariable/1/0>
+  }
+  OPTIONAL { ?variable pa:supplementalSemanticId ?meaning . ?meaning rdfs:subClassOf+ css:Property }
+  BIND(IRI(CONCAT(STR(?variable), "#it")) AS ?parameter)
+}
