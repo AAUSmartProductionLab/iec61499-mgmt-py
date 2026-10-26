@@ -157,9 +157,9 @@ def test_a_skill_is_its_commands(stoppering, stoppering_all):
     # their components.
     assert names(at(described_, "Skills")) == [*spec.composites, *CONTROL] == ["Stoppering", *CONTROL]
     stoppering_ = at(described_, "Skills", "Stoppering")
-    assert ids(stoppering_) == [f"{BASE}/skill", f"{BASE}/skill/Composite"]      # a skill, and what kind of skill
-    assert at(stoppering_, "SemanticId")["value"] == f"{BASE}/skills/Stoppering"   # what it does
-    assert names(stoppering_) == ["SemanticId", "Start", "Stop", "Abort", "Reset"]
+    # A skill, what kind of skill, and what it does: the element's semantic id, then its supplemental ones.
+    assert ids(stoppering_) == [f"{BASE}/skill", f"{BASE}/skill/Composite", f"{BASE}/skills/Stoppering"]
+    assert names(stoppering_) == ["Start", "Stop", "Abort", "Reset"]
     for command in ("Start", "Stop", "Abort", "Reset"):
         held = at(stoppering_, command)
         assert ids(held) == [f"{BASE}/skill/{command}"]                          # the same on every skill
@@ -204,7 +204,7 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     assert [s["idShort"] for s in axis["submodels"]] == ["Skills"]
     assert names(at(submodel(axis, "Skills"), "Skills")) == ["Home", "MoveAxis"]
     move, decl = at(submodel(axis, "Skills"), "Skills", "MoveAxis"), spec.skills["MoveAxis"]
-    assert ids(move) == [f"{BASE}/skill", f"{BASE}/skill/Primitive"] and "Steps" not in names(at(move, "Start"))
+    assert ids(move) == [f"{BASE}/skill", f"{BASE}/skill/Primitive", f"{BASE}/skills/MoveAxis"] and "Steps" not in names(at(move, "Start"))
     # The module carries the skill out: the command's action is in the module's interface.
     action = at(move, "Start", "InterfaceReference")["value"]
     assert action["keys"][0]["value"] == submodel(stoppering_all["StopperingModuleAAS"], "AssetInterfacesDescription")["id"]
@@ -288,7 +288,8 @@ def test_a_skill_the_module_does_not_offer_has_a_start_nothing_calls():
     data["skills"]["Dispense"]["offered"] = False
     found = described(ModuleSpec.model_validate(data))
     pump = at(submodel(found["FillingPumpAAS"], "Skills"), "Skills", "Dispense")
-    assert names(pump) == ["SemanticId", "Start", "Contract"] and names(at(pump, "Start")) == ["Start"]
+    assert names(pump) == ["Start", "Contract"] and names(at(pump, "Start")) == ["Start"]
+    assert ids(pump)[1:] == [f"{BASE}/skill/Primitive", f"{BASE}/skills/Dispense"]   # its kind and its type
     assert variables(at(pump, "Start", "Start"), "inputVariables") == ["Session", "Volume", "FlowRate"]
     actions = at(submodel(found["FillingModuleAAS"], "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", "actions")
     assert not [a for a in names(actions) if a.startswith("Dispense_")]
@@ -342,14 +343,14 @@ def test_the_modules_own_commands_are_skills_of_a_kind_of_their_own(stoppering, 
     root = "/0:Objects/1:Stoppering"
     for command in CONTROL:
         held = at(skills, command)
-        assert ids(held) == [f"{BASE}/skill", f"{BASE}/skill/ModuleControl"]
-        assert [n for n in names(held) if n != "SemanticId"] == ["Start"] and ids(at(held, "Start")) == [f"{BASE}/skill/Start"]
+        assert ids(held)[:2] == [f"{BASE}/skill", f"{BASE}/skill/ModuleControl"]
+        assert names(held) == ["Start"] and ids(at(held, "Start")) == [f"{BASE}/skill/Start"]
         node = f"Occupation/1:{command}" if command in ("Occupy", "Release") else f"Module/1:{command}"
         action = resolve(envs, at(held, "Start", "InterfaceReference")["value"])
         assert at(action, "forms", "href")["value"] == f"{root}/1:{node}"
         assert variables(at(held, "Start", "Start"), "outputVariables") == ["Accepted", "ErrorID"]
-    assert at(skills, "Reset", "SemanticId")["value"] == "https://w3id.org/2026/apex/semantic/state/operational/Reset"
-    assert at(skills, "Occupy", "SemanticId")["value"] == f"{BASE}/skills/Occupy"
+    assert ids(at(skills, "Reset"))[2:] == ["https://w3id.org/2026/apex/semantic/state/operational/Reset"]
+    assert ids(at(skills, "Occupy"))[2:] == [f"{BASE}/skills/Occupy"]
     # What the module runs itself while resetting and stopping are the steps of Reset and of Stop.
     ran = {c: [resolve(envs, at(s, "Skill")["value"])["idShort"] for s in children(at(skills, c, "Start", "Steps"))]
            for c in ("Reset", "Stop")}

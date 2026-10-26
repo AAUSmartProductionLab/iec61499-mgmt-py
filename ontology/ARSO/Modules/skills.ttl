@@ -38,9 +38,10 @@
 # Skills (Submodel)
 #   ├─ Interfaces [SMC, 1] — always present, empty (CCType's mandatory container)
 #   ├─ Skills [SMC, 1]
-#   │    └─ {skill_name} [SMC Skill, 0..*] — semanticId .../skill; its kind a
-#   │         │    supplemental semanticId
-#   │         ├─ SemanticId [Property, xs:string, 1] — what the skill does
+#   │    └─ {skill_name} [SMC Skill, 0..*] — semanticId .../skill; its kind and its
+#   │         │    type (what it does) supplemental semanticIds (26 Oct)
+#   │         ├─ SemanticId [Property, xs:string, 0..1] — the type, only in the short form
+#   │         │    older AASs carry; a skill's type is a supplemental semanticId
 #   │         ├─ Start, Stop, Abort, Reset [SMC Command, 0..1 each] — semanticId
 #   │         │    │    https://smartproductionlab.aau.dk/skill/Start, ...
 #   │         │    ├─ InterfaceReference [ReferenceElement, 0..1] — the AID action
@@ -137,13 +138,13 @@ arso:SkillSMC rdf:type owl:Class ;
   rdfs:subClassOf aas:SubmodelElementCollection ;
   arso:parentClass arso:CCSkillsSMC ;
   arso:semanticId "https://smartproductionlab.aau.dk/skill" ;
-  rdfs:comment "SMC {skill_name} — a named skill. Applied unconditionally to every direct child of Skills (no idShort — the skill name is user-defined). Contains SemanticId (mandatory) and either its commands (Start, Stop, Abort, Reset) or, in the short form, an Operation and an InterfaceReference. Its own semanticId says whether it is a primitive (https://smartproductionlab.aau.dk/skill/Primitive: its commands run nothing) or a composite (.../skill/Composite: a command runs other skills)." .
+  rdfs:comment "SMC {skill_name} — a named skill. Applied unconditionally to every direct child of Skills (no idShort — the skill name is user-defined). Contains its commands (Start, Stop, Abort, Reset) or, in the short form, an Operation and an InterfaceReference. Its supplemental semanticIds say what kind of skill it is (https://smartproductionlab.aau.dk/skill/Primitive: its commands run nothing; .../skill/Composite: a command runs other skills; .../skill/ModuleControl) and what it does, its type (a class of the lab's Skills vocabulary, https://smartproductionlab.aau.dk/skills/<Type>)." .
 
 arso:SkillSemanticIdProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
   arso:parentClass arso:SkillSMC ;
   arso:idShort "SemanticId" ;
-  rdfs:comment "Property SemanticId (xs:string) — the skill's own semantic identifier URI: what it does (lab namespace convention, enforced via SHACL sh:pattern)." .
+  rdfs:comment "Property SemanticId (xs:string) — what the skill does, as the short form of older AASs states it. Since 26 Oct a skill states its type as a supplemental semanticId, as every other meaning is stated; this property is only read where that is missing." .
 
 
 #################################################################
@@ -483,12 +484,13 @@ arso:SkillsSubmodel rdfs:subClassOf [
   owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
   owl:onClass arso:CCErrorsSMC ] .
 
-# Each Skill says what it does. How it is called is in its commands or, in the short form, in the
-# skill itself: that it has one of the two is a rule (arso-rules.shacl.ttl), not a restriction.
+# A Skill says what it does in its supplemental semanticIds; the SemanticId property of the short
+# form is optional. How it is called is in its commands or, in the short form, in the skill itself:
+# that it has one of the two is a rule (arso-rules.shacl.ttl), not a restriction.
 arso:SkillSMC rdfs:subClassOf [
   rdf:type owl:Restriction ;
   owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
-  owl:someValuesFrom arso:SkillSemanticIdProperty ] .
+  owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:SkillSemanticIdProperty ] .
 
 arso:SkillSMC rdfs:subClassOf
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;

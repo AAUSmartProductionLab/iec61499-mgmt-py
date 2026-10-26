@@ -123,7 +123,7 @@
          "description": [
           {
            "language": "en",
-           "text": "The skill's own semantic identifier URI: what it does (lab namespace convention, enforced via SHACL sh:pattern)."
+           "text": "What the skill does, as the short form of older AASs states it."
           }
          ],
          "qualifiers": [
@@ -131,7 +131,7 @@
            "type": "SMT/Cardinality",
            "valueType": "xs:string",
            "kind": "TemplateQualifier",
-           "value": "One",
+           "value": "ZeroToOne",
            "semanticId": {
             "type": "ExternalReference",
             "keys": [

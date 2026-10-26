@@ -1,5 +1,6 @@
-# A skill element (ARSO Skills) describes a skill: of its kind (the supplemental semantic id) and of
-# its type (the value of its SemanticId property, a class of the Skills vocabulary for a primitive).
+# A skill element (ARSO Skills) describes a skill of its kind and of its type, both supplemental
+# semantic ids (the type a class of the Skills vocabulary for a primitive). Older AASs state the
+# type in a SemanticId property instead (the short form); it is read where it is given.
 PREFIX pa:   <https://w3id.org/2025/pprl/aas#>
 PREFIX pprl: <https://w3id.org/2025/pprl#>
 PREFIX css:  <http://www.w3id.org/hsu-aut/css#>
@@ -17,9 +18,13 @@ WHERE {
     (<https://smartproductionlab.aau.dk/skill/ModuleControl> css:Skill)
   }
   OPTIONAL {
-    ?element pa:element ?named .
-    ?named pa:idShort "SemanticId" ; pa:value ?text .
-    BIND(IRI(?text) AS ?type)
+    { ?element pa:supplementalSemanticId ?type .
+      FILTER(?type NOT IN (<https://smartproductionlab.aau.dk/skill/Primitive>, <https://smartproductionlab.aau.dk/skill/Composite>,
+                           <https://smartproductionlab.aau.dk/skill/ModuleControl>)) }
+    UNION
+    { ?element pa:element ?named .
+      ?named pa:idShort "SemanticId" ; pa:value ?text .
+      BIND(IRI(?text) AS ?type) }
   }
   BIND(IRI(CONCAT(STR(?element), "#it")) AS ?skill)
 }
