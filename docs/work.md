@@ -1,6 +1,6 @@
 # Working notes: IEC 61499 modules, their AAS and their reconfiguration
 
-State on 19 Oct 2026, branch `main`. What is built, how it is put together and what was learned
+State on 26 Oct 2026, branch `main`. What is built, how it is put together and what was learned
 on the way; what comes next is in [next-steps.md](next-steps.md). The repository map and the commands are in the
 [README](../README.md); the modules themselves (what was ported from the ESP32 stations) in
 [modules.md](modules.md); the OPC UA interface of each module is described by its AAS
@@ -12,15 +12,15 @@ on the way; what comes next is in [next-steps.md](next-steps.md). The repository
 | --- | --- | --- |
 | Management library (`iec61499_mgmt`): FORTE protocol client, typed commands, networks and plans, `.sys` flattening, boot files, type library, read-back | `iec61499-mgmt-py/` | Done, tested offline and live |
 | Module generator (`modgen`) and module library (`ModLib`, package `modlib`): occupation, PackML module state manager, skill state machine, parameters, IO for simulator, GPIO, PWM and Modbus | `iec61499-skill-lib/` | Done |
-| Filling and stoppering modules from their specs (capping and inspection as planned specs), simulator, OPC UA test client; a small test module (`filler`) with the generator's tests | `cell/`, `iec61499-skill-lib/tests` | Run on the PC against the simulator; filling on the Pi 5, stoppering on the Pi 4; no motion yet (stepper driver awaited) |
+| Filling and stoppering modules from their specs (capping and inspection as planned specs), simulator, OPC UA test client; a small test module (`filler`) with the generator's tests | `cell/`, `iec61499-skill-lib/tests` | Run on the PC against the simulator; each on its own Raspberry Pi 5 (filling 192.168.0.203, stoppering 192.168.0.134); the filling axis moves (TB6600 driver), the stoppering hardware is not wired |
 | FORTE builds for Windows and the Raspberry Pi (aarch64, static), FORTE patches (IO handle fix, sysfs PWM module) | `runtime/` | Done |
-| Raspberry Pi: FORTE in Docker, install and deployment | `deploy/`, `runtime/install.sh` | Done on both Pis (Pi 5 `filling-module`, Pi 4 `stoppering-module`), clock kept across reboots |
+| Raspberry Pi: FORTE in Docker, install and deployment | `deploy/`, `runtime/install.sh` | Done on both Pi 5s (`filling-module`, `stoppering-module`), clock kept across reboots. The Pi 4 (192.168.0.191) that ran the stoppering module until 22 Oct is no longer used |
 | `modsync`: read what runs on a module, compare it with its spec or with its AAS, push changes online; the AAS as the desired state (`verify`, `reconfigure`, `record`) | `aas61499-tools/modsync` | Done; on FORTE on the PC and on the Pi 5 |
-| `modreg`: the AASs of the line, a module and its components in ARSO 0.8, as profiles on the lab's shared model (aas-model); ontology check; registration service; the interface of a skill built online | `aas61499-tools/modreg`, `aas-model/` (submodule), `ontology/` | Done on aas-model of 1 Oct; the aas-model of 18 Oct needs an adaptation (see [next-steps.md](next-steps.md)); not used against the lab's AAS server |
+| `modreg`: the AASs of the line, a module and its components in ARSO 0.8, as profiles on the lab's shared model (aas-model); ontology check; registration service; the interface of a skill built online | `aas61499-tools/modreg`, `aas-model/` (submodule), `ontology/` | Done on aas-model `6a03f78` (18 Oct, moved 19 Oct); not used against the lab's AAS server |
 | Product AAS with its plan, plan check, the example line | `modreg/product.py`, `cell/examples` | Done; published to the local AAS server |
-| `modlink` and the HMI | `iec61499-opcua-hmi/` (submodule since 19 Oct) | `modlink` reads ARSO 0.8; the HMI's own reader is still that of before 8 Oct |
+| `modlink` and the HMI | `iec61499-opcua-hmi/` (submodule since 19 Oct) | `modlink` reads ARSO 0.8; the HMI's own reader rewritten for 0.8 (`hmi/aas.py`, not committed: 7 of the HMI's tests fail with it until its stand-in module follows) |
 | Skill editor (BaSyx web UI fork) | fork `basyx-aas-web-ui` | First version pushed; fixes from the look in a browser not yet committed |
-| Capability matching inside a plan executor, the experiment runner, agents | – | Not started (see [next-steps.md](next-steps.md)) |
+| Capability matching inside a plan executor, the experiment runner (B1, B2), agents | – | Not started (see [next-steps.md](next-steps.md)) |
 
 The first filling cell (per-skill PackML machines, the BPMN compiler and its contract check, the
 guarded changeover) was removed on 30 Sep 2026 once the generated modules replaced it; its ideas
@@ -141,17 +141,18 @@ python deploy/pi.py status | log | stop | start
   which the installer looks up); after the reboot `pwmchip0` has four channels, GPIO18 being
   channel 2 and GPIO19 channel 3 (Pi 4: 0 and 1); FORTE came back by itself. The filling module ran
   on it with its IO on the simulator; no pin has been driven yet.
-- The lab Pi (192.168.0.191, a Raspberry Pi 4) has `dtoverlay=pwm-2chan` (PWM0 on GPIO18, PWM1 on
+- The Raspberry Pi 4 (192.168.0.191; no longer used since 26 Oct, the stoppering module moved to the
+  Pi 5 at 192.168.0.134 on 22 Oct) has `dtoverlay=pwm-2chan` (PWM0 on GPIO18, PWM1 on
   GPIO19) and time synchronisation repaired (chrony). Since 9 Oct it is `stoppering-module` (the
   name is kept across reboots: cloud-init is told to preserve it), set up by `runtime/install.sh`
   like the Pi 5, with the same FORTE (`runtime/bin/forte-aarch64`), Ubuntu 26.04.1 with its
-  updates and Docker 29.9, and it runs the stoppering module: every GPIO line and the PWM channel
+  updates and Docker 29.9, and it ran the stoppering module (9 to 22 Oct): every GPIO line and the PWM channel
   acquired, the module Stopped, the program what its AAS describes. After a reboot all of that came
   back by itself within 45 s, the clock synchronised. Its program of July is kept as
   `~/forte/boot/forte.fboot.before-stoppering`. Nothing is known to be wired to its pins; no Reset
   was sent.
-- On the Pi's real pins, with nothing wired, the stoppering module's homing and cycle ran with
-  the right pulses and times. Wiring of motors, switches and servo is still to do.
+- On the Pi 4's real pins, with nothing wired, the stoppering module's homing and cycle ran with
+  the right pulses and times. The stoppering hardware is still to be wired (now to its Pi 5).
 - **The clock.** Neither Pi keeps time while it is off: a Pi 4 has no clock chip and the Pi 5's has
   no battery. Every start began on 27 Jul 2026 22:44 (the date built into Ubuntu's systemd) until a
   time server answered, and on a network without one the date stayed in July (files written then
@@ -235,7 +236,7 @@ without the module spec:
   AAS in 0.15 s over the network; DoubleDose created from its description, verified, added to the
   boot file on the Pi over SSH and recorded, 1.6 s in all (most of it the two SSH calls for the
   boot file). The type hashes the Pi's FORTE reports are those of the Windows build. No skill was
-  started, so nothing moved. The Pi 4 with the stoppering module verifies against its AAS too.
+  started, so nothing moved. The Pi 4 with the stoppering module verified against its AAS too.
 
 - **The interface of a built skill** (9 Oct, `modreg/offer.py`). A skill that was described and
   then built has no action that calls it and no data point that shows it. `record` adds them: the
@@ -834,7 +835,7 @@ toolchains, 4diac IDE 3.2.x.
 | I4 | The headless IDE does not resolve library dependencies | Vendored standard type declarations |
 | I5 | A generic comm FB's `ANY` pin is typed only by a connection to a typed FB pin, not by a composite interface pin | `MOD_OwnerLatch`. At least a clearer error than `INVALID_ID` |
 
-## Status against the plan's work packages (5 Oct 2026; updated 19 Oct)
+## Status against the plan's work packages (5 Oct 2026; updated 26 Oct)
 
 The work packages of the first plan. Since 8 Oct the plan is [next-steps.md](next-steps.md); the
 notes in brackets say what changed since 5 Oct.
@@ -843,8 +844,8 @@ notes in brackets say what changed since 5 Oct.
 | --- | --- | --- |
 | 1 Repos and runtime | FORTE with custom FBs, type hashes, runtime | **Done**, incl. the Pi (aarch64 static build in Docker, sysfs PWM module and the handle fix as FORTE patches, one FORTE with every module, install scripts). No CI |
 | 2 Skill library | Skill base, patterns, facades | **Done**: `modlib` (skill state machine and core, parameters, occupation, PackML module state manager, IO primitives) |
-| 3 Cell control | Skills, IO, module, procedures, online change | **Done in simulation**: filling and stoppering from their specs, on the PC and on the lab Pi's FORTE; a module level skill created online while another runs. Hardware not wired |
-| 4 Models | AAS templates, AAS server, interface and mapping | **Resource side done**: module AAS in ARSO's structure through aas-model, checked against ARSO, registration service. (Since: capability description, line and component AASs, ARSO 0.8, product AAS with its plan.) **Missing**: time series, registration with the lab's server, the move to aas-model of 18 Oct |
+| 3 Cell control | Skills, IO, module, procedures, online change | **Done in simulation**: filling and stoppering from their specs, on the PC and on the Pis' FORTE; a module level skill created online while another runs. The filling axis moves on its Pi 5 (since 20 Oct); the stoppering hardware is not wired |
+| 4 Models | AAS templates, AAS server, interface and mapping | **Resource side done**: module AAS in ARSO's structure through aas-model, checked against ARSO, registration service. (Since: capability description, line and component AASs, ARSO 0.8, product AAS with its plan.) Moved to aas-model of 18 Oct (19 Oct). **Missing**: time series, registration with the lab's server |
 | 5 Translator and diff | Process description, translation, diff | Drift between spec and running program (`modsync`: online or restart). The process side (a process map instead of BPMN) is designed in `ontology/`, not implemented |
 | 6 Contracts | Forward check, derived contract | Skills carry requires, ensures and invariant, checked in the controller. Not yet checked against a process |
 | 7 Manager | Guarded change cycle, record, boot file | `modsync push` (guarded, verified, boot file). (Since 8 Oct: the AAS as the desired state, `modsync verify` and `reconfigure` with the change log in the Control Configuration.) **Missing**: the product-driven cycle (product → process → binding → change), active procedure |
@@ -861,8 +862,7 @@ project repaired and both module AAS passing it, building blocks and the module 
 
 Smaller open items that are in no phase of that plan:
 
-- Publish the FORTE binary as a release asset so the `curl` installer works.
-- Wire both modules (the filling module's stepper waits for its TB6600 driver).
+- Mount the filling axis' limit switch and measure a move; wire the stoppering module to its Pi 5.
 - Split the work into repositories once one product runs end to end on two modules: six
   repositories, the ontologies first ([repositories.md](repositories.md)). Until then keep the
   folders independent. CI.

@@ -1,12 +1,12 @@
 # Next steps
 
-Plan of 8 Oct 2026, reviewed and updated on 21 Oct; it replaces the plan of 6 Oct
+Plan of 8 Oct 2026, reviewed and updated on 21 and 26 Oct; it replaces the plan of 6 Oct
 ([archive](archive/next-steps-2026-10-06.md)). The whole pipeline in one place is
 [pipeline.md](pipeline.md); what is built and how is in [work.md](work.md); what each AAS holds in
 [aas-models.md](aas-models.md); what was decided in [decisions.md](decisions.md); how the work
 divides into repositories in [repositories.md](repositories.md).
 
-## State on 21 Oct (evening)
+## State on 26 Oct
 
 | Area | Built | Missing |
 | --- | --- | --- |
@@ -16,11 +16,13 @@ divides into repositories in [repositories.md](repositories.md).
 | aas-model (E) | `modreg` on aas-model `6a03f78` (E1, 19 Oct); ARSO knows AID 1.2 (E2); resources are aas-model's `Resource` with ARSO's submodels, `modreg serve` is the registration service (E3 built). ARSO's submodels, Module, Component, ProductionSystem and Product added to aas-model on a local branch (`arso-submodels`, 230 tests pass) | That branch reaching aas-model (fork and pull request, or push access: your decision); one module registered on a disposable server (E3); the findings for aas-model's author (E4) |
 | Clients (C) | `modlink` reads 0.8; the HMI operates the filling module on its Pi from its AAS; its reader rewritten for 0.8 (`hmi/aas.py`, not committed in the submodule) | The HMI's tests, its stand-in module's skills and its built-in descriptions (C1); the planner's skill list leaves out ModuleControl; the planner reading ARSO skills |
 | Program structure (new, 21 Oct) | Deployed inside the application's container, so the 4diac IDE monitors what the tools deployed; started by the resource's own START block; one address per IO point (`gpio[...]`, `pwm[...]`, `modbus[...]`, `sim`) and the IO blocks set up their own Pi lines (no line blocks; stand-ins for GPIOChip and PWMChip in the Windows FORTE); compact layout, a layout arranged in the IDE kept per application | Typed subapplications for module level skills (asked, not decided) |
-| Hardware | Filling module on its own Pi 5 (192.168.0.203): TB6600 straight on the pins, normally open limit switch on GPIO23 (pressed by hand), homing until the switch (60 s at most), MoveAxis at 2 kHz, 12.5 mm/s. The program of 21 Oct (container naming, START) runs there and verifies; the HMI moves the axis. The Pi runtime with the new IO blocks is built, tested under emulation and committed | **Installing that runtime and the new program on the filling Pi** (needs you at the bench: Reset homes); the switch mounted; a move measured with a ruler; Dispensing on the real axis; the stoppering axis wired (its Pi 4 is off) |
+| Hardware | Filling module on its own Pi 5 (192.168.0.203): TB6600 straight on the pins, normally open limit switch on GPIO23 (pressed by hand), homing until the switch (60 s at most), MoveAxis at 2 kHz, 12.5 mm/s. The program of 21 Oct (container naming, START) runs there and verifies; the HMI moves the axis. The Pi runtime of 22 Oct (new IO blocks, renamed skill pins, release in Control) is built, tested under emulation and committed. The stoppering module's Pi is the Pi 5 at 192.168.0.134 since 22 Oct (runtime copied, image built); the Pi 4 is no longer used | **Installing that runtime and the new program on both Pi 5s** (needs you: on the filling Pi at the bench, Reset homes; on the stoppering Pi the old container is removed first, see [onboarding.md](onboarding.md)); the switch mounted; a move measured with a ruler; Dispensing on the real axis; the stoppering axis wired |
 
 The week of 19 to 25 Oct was planned for E, A4, B1 and B2. E was done. The rest of the week went
 into the hardware and into the program's structure, which the paper's figures and the teaching
-both use, so A4, B1 and B2 move to the coming days (see the timeline).
+both use, so A4, B1 and B2 move to the coming days (see the timeline). 22 to 26 Oct went into the skill blocks'
+pins and release, the layouts, the stoppering module's move to its Pi 5 and the guides for new
+sessions ([onboarding.md](onboarding.md), [tooling.md](tooling.md)); A4, B1 and B2 are next.
 
 ## What the paper delivers
 
@@ -117,7 +119,7 @@ path: the AAS is delivered with the module, the program is only compared with it
 | --- | --- | --- |
 | B1 | **Scenario runner.** Plug in a module (register, verify, operate); change a constant; create a new skill. Each timed: downtime, commands sent, time to verify | The scenarios run unattended and write their numbers |
 | B2 | **Baseline.** The same changes by a new boot file and a restart | Numbers side by side |
-| B3 | **Hardware.** The filling module on the Raspberry Pi 5 with the stepper. **Axis moving since 20 Oct**, homing on the limit switch and operated from the HMI since 21 Oct. Next: install the runtime and program of 21 Oct (IO blocks that set up their lines), mount the switch, measure a 20 mm move, run Dispensing on the real axis. The stoppering module on the Pi 4 if time allows | The scenarios run on the Pi with the axis moving |
+| B3 | **Hardware.** The filling module on the Raspberry Pi 5 with the stepper. **Axis moving since 20 Oct**, homing on the limit switch and operated from the HMI since 21 Oct. Next: install the runtime and program of 22 Oct (IO blocks that set up their lines), mount the switch, measure a 20 mm move, run Dispensing on the real axis. The stoppering module on its Pi 5 (192.168.0.134) if time allows | The scenarios run on the Pi with the axis moving |
 
 ### C. Keeping the clients in step
 
@@ -125,7 +127,7 @@ path: the AAS is delivered with the module, the program is only compared with it
 | --- | --- | --- |
 | C1 | The HMI's own AAS reader, its built-in module descriptions and its stand-in module still describe the modules before 8 Oct. **Reader rewritten for 0.8 on 20 Oct** (operates the filling Pi; not committed in the submodule). Left: its tests, the stand-in module's skills (Home, MoveAxis, Dispense, Tare, Weigh), the built-ins dropped, one `modlink` test | `iec61499-opcua-hmi/` (submodule) |
 | C2 | The scale's weight follows the dispensed volume (it is a constant 2.0 g) | module spec, simulator |
-| C3 | The Pi 4: host name `stoppering-module`, the installer's setup, system updates, the stoppering program. **Done 9 Oct**, checked across a reboot | Pi 4 |
+| C3 | The Pi 4: host name `stoppering-module`, the installer's setup, system updates, the stoppering program. **Done 9 Oct**, checked across a reboot. Superseded: the stoppering module runs on the Pi 5 at 192.168.0.134 since 22 Oct, the Pi 4 is no longer used | Pi 4 |
 
 | C4 | Teaching material: the 4diac IDE monitors deployed modules; projects of what runs (`modsync project`); a three-FORTE pub/sub demo (outside the repository). **Done 21 Oct** | IDE, `modsync` |
 
@@ -159,9 +161,9 @@ Outline and figures by 1 Nov; experiment runs and text from 2 Nov; submission 18
 | --- | --- |
 | 9 to 18 Oct | A2 (writing a description), A3 (both done) |
 | 19 to 21 Oct | E1 to E3 (done); the filling hardware moving (B3, started); program structure and A5 (done) |
-| 22 to 25 Oct | The new runtime and program on the filling Pi; A4; B1 (scenario runner, with simulated IO on the PC first) |
-| 26 Oct to 1 Nov | B2 (baseline by restart); B3 runs on the Pi with the axis; outline and figures |
-| 2 to 18 Nov | Experiment runs, writing |
+| 22 to 26 Oct | Skill block pins and release, layouts, the stoppering module to its Pi 5, guides for new sessions (done) |
+| 27 Oct to 1 Nov | A4; B1 (scenario runner, with simulated IO on the PC first); B2 (baseline by restart); the new runtime and program on both Pi 5s; outline and figures |
+| 2 to 18 Nov | B3 runs on the Pi with the axis; experiment runs, writing |
 
 B has not started and is what the paper cannot do without: from now on it comes before anything
 in C or E that does not block it. If time runs out, cut in this order: C, E4 and E5, then B3 on
@@ -203,14 +205,14 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 
 | Question | Blocks |
 | --- | --- |
-| **Waiting for you:** go to install the runtime and program of 21 Oct on the filling Pi (at the bench) | B3 |
+| **Waiting for you:** go to install the runtime and program of 22 Oct on both Pi 5s (the filling Pi at the bench; the stoppering Pi after its old container is removed) | B3 |
 | **Waiting for you:** the twelve decisions of the state and parameters model ([state-and-parameters.md](state-and-parameters.md), Sections 7 and 8.8); the modelling is picked up again after them | S1 to S5 |
 | **Waiting for you:** how ARSO's submodels reach aas-model (fork and pull request, or push access) | E5 |
 | **Waiting for you:** go-ahead to commit the skill editor's fixes to the fork and the generation project's ARSO 0.8 | A2b, D2 |
 | Should module level skills become typed subapplications in the IDE (reusable, with an interface), or stay untyped (created online without type files)? | later |
 | Commit the HMI's 0.8 reader to the submodule now, or with its tests and stand-in module (C1)? | C1 |
 | `modsync reconfigure` puts the recorded AAS back where it came from (a file, or every changed submodel on the AAS server). The registration service keeps its own copy of a module's profile and does not learn of the change | A4 |
-| The HMI's own reader still reads the modules of before 8 Oct; the generation project's pushed ARSO copy and closed validation are 0.7 (0.8 in a working copy); `modlink` reads 0.8 | C1, D2 |
+| The HMI's committed reader still reads the modules of before 8 Oct (its 0.8 rewrite fails 7 of its tests until the stand-in module follows); the generation project's pushed ARSO copy and closed validation are 0.7 (0.8 in a working copy); `modlink` reads 0.8 | C1, D2 |
 | ARSO's Condition follows the planner's elements of 8 Oct; the planner got grouped AND and OR conditions on 9 Oct. Follow it when a decision step is built | A2b |
 | The planner lists every skill with a Start; with 0.8 that includes the module's own commands. Leave them out there by their kind (ModuleControl) | A2b |
 | A skill that is described but not built is told by its missing instance in the Control Configuration (as tried). Does it also get a state of its own that a client can read (described, deployed)? | A3 |

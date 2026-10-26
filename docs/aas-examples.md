@@ -422,7 +422,7 @@ capability is realized by a module level skill.
 
 ### FillingModuleAAS
 
-`https://smartproductionlab.aau.dk/aas/FillingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/FillingModule`. Built: its program is generated and runs on FORTE (against the simulator; the hardware is not wired yet).
+`https://smartproductionlab.aau.dk/aas/FillingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/FillingModule`. Built: its program is generated and runs on FORTE, on the PC against the simulator and on its own Raspberry Pi 5.
 
 ```mermaid
 flowchart BT
@@ -467,7 +467,7 @@ flowchart BT
 
 ### StopperingModuleAAS
 
-`https://smartproductionlab.aau.dk/aas/StopperingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/StopperingModule`. Built: its program is generated and runs on FORTE (against the simulator; the hardware is not wired yet).
+`https://smartproductionlab.aau.dk/aas/StopperingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/StopperingModule`. Built: its program is generated and runs on FORTE, on the PC against the simulator and on its own Raspberry Pi 5.
 
 ```mermaid
 flowchart BT

@@ -400,7 +400,7 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
 
     lines = [f"### {name}", "",
              f"`{shell['id']}`, asset `{shell['assetInformation']['globalAssetId']}`. "
-             + ("Built: its program is generated and runs on FORTE (against the simulator; the hardware is not wired yet)."
+             + ("Built: its program is generated and runs on FORTE, on the PC against the simulator and on its own Raspberry Pi 5."
                 if built else
                 "**Planned only:** described from a spec; there is no program and no hardware behind it yet."), "",
              "```mermaid", "flowchart BT"]

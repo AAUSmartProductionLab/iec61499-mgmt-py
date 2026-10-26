@@ -2,7 +2,9 @@
 
 The specs are `cell/modules/filling.yaml` and `cell/modules/stoppering.yaml`, the generated 4diac
 projects `cell/control/FillingModule` and `cell/control/StopperingModule`. Both run against the
-simulator (`cell/sim/module_sim.py`) in `cell/tests/`; the motors and switches are not wired yet.
+simulator (`cell/sim/module_sim.py`) in `cell/tests/`. Each runs on its own Raspberry Pi 5: the
+filling module on 192.168.0.203, where its axis is wired and moves; the stoppering module on
+192.168.0.134, whose wiring is not known yet.
 
 Both began as ports of ESP32 stations (`arduino_cpp_examples/Physical-Stations`: `FillingModule.cpp`,
 `StopperingModule.cpp`; a local reference copy, not in the repository). Since 8 Oct 2026 they are
@@ -19,7 +21,7 @@ process component (the filling pump, the stoppering piston). The line is six mod
 | Inspection | top camera, side camera | planned: `cell/modules/planned/inspection.yaml`, no program |
 | Unloading | Kuka robot, gripper | not described yet; the robot has its own Raspberry Pi |
 
-We call them **modules** (not stations or units). Each module runs on its own Raspberry Pi 4 and
+We call them **modules** (not stations or units). Each module runs on its own Raspberry Pi and
 is deployed on its own; it is orchestrated only through OPC UA methods and variables (MQTT may
 come back later as an option). The structure of a generated module is in [work.md](work.md).
 
@@ -38,10 +40,8 @@ The ESP32 code has three layers. Only the bottom one is module-specific.
 
 Since 8 Oct 2026 the module is built from the components every module of the line is built from
 (a linear axis and one process component), no longer as the ESP32 station was: the needle is lifted
-by a stepper motor with a limit switch, as on a 3D printer. It runs on a Raspberry Pi 5
-(192.168.0.203 since 20 Oct; the Pi 5 at 192.168.0.134 was another one), the stoppering module on
-the Raspberry Pi 5 at 192.168.0.134 since 22 Oct (before, the Raspberry Pi 4 at 192.168.0.191). The axis is wired as below to a TB6600 driver, straight to
-the Pi's pins (21 Oct; a 3.3 V to 5 V level converter in between, as on 20 Oct, is not needed); its
+by a stepper motor with a limit switch, as on a 3D printer. It runs on the Raspberry Pi 5 at
+192.168.0.203. The axis is wired as below to a TB6600 driver, straight to the Pi's pins (21 Oct; a 3.3 V to 5 V level converter in between, as on 20 Oct, is not needed); its
 limit switch is wired but not mounted yet. The travel is a placeholder until the axis is measured.
 
 **The axis** is a RATTMMOTOR linear stage (300 mm stroke) with an SFU1605 ball screw (5 mm per turn)
@@ -56,19 +56,10 @@ the Pi's pins (the TB6600's optocoupler inputs take 3.3 V):
 | PUL+ (PUL− on GND) | `Step` | one step per pulse: the Pi's PWM at 2 kHz while the axis moves |
 | DIR+ (DIR− on GND) | `Down` | high is "forward"; which way that is depends on how the motor is connected |
 | ENA+ (ENA− on GND) | `Enable` | ENA+ high switches the driver off: the motor is on while the line is low, so the Pi's line is set active low |
-| 6, 7 | Min, Max | not used | the board only passes the signals of its own endstop sockets through to these pins; it does not act on them |
 
 The home switch is an ordinary limit switch at the top, wired straight to the Pi: between GPIO23
 (Pi pin 16) and GND, closing when pressed. The Pi's pull-up holds the line high otherwise, and the
-line is set active low, so `AtHome` is true while the switch is pressed. The trimpot on the board
-sets the motor current, not the step size.
-
-To check before wiring (not stated on that page; from the A3982's data sheet as I remember it, so
-verify): the board feeds its logic and the endstops with 5 V from its own regulator. A high input
-then needs 3.5 V, more than the Pi's 3.3 V gives for certain, and the endstop signal is 5 V, more
-than a Pi input tolerates. A level shifter between the Pi and the board solves both. The A3982 does
-full or half steps (its MS1 input); which one the board is set to decides the steps per millimetre
-together with the screw.
+line is set active low, so `AtHome` is true while the switch is pressed.
 
 **Equipment IO** (each item is a component of the module, of a kind that other modules have too)
 
