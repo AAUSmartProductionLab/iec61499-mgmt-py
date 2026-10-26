@@ -9,24 +9,29 @@ from rdflib import Namespace, RDFS  # noqa: E402
 
 from modgen import SPECS, load, specs  # noqa: E402
 
-VOCABULARY = Path(__file__).resolve().parents[2] / "ontology" / "Vocabulary" / "capabilities.ttl"
+VOCABULARY = Path(__file__).resolve().parents[2] / "ontology" / "Vocabulary"
 BASE = "https://smartproductionlab.aau.dk/semantics/"
 LAB = Namespace(BASE)
+SKILLS = Namespace("https://smartproductionlab.aau.dk/skills/")
 CSS = Namespace("http://www.w3id.org/hsu-aut/css#")
 
 
 @pytest.fixture(scope="module")
 def vocabulary():
     graph = rdflib.Graph()
-    graph.parse(VOCABULARY, format="turtle")
+    for path in sorted(VOCABULARY.glob("*.ttl")):
+        graph.parse(path, format="turtle")
     return graph
+
+
+def line_specs():
+    """The line's modules, the planned ones too: they are described before they are built."""
+    return [load(path) for path in [*specs(), *sorted((SPECS / "planned").glob("*.yaml"))]]
 
 
 def test_every_offered_capability_and_property_is_in_the_vocabulary(vocabulary):
     offered = 0
-    # The planned modules too: they are described before they are built.
-    for path in [*specs(), *sorted((SPECS / "planned").glob("*.yaml"))]:
-        spec = load(path)
+    for spec in line_specs():
         for name, capability in spec.capabilities.items():
             offered += 1
             meaning = rdflib.URIRef(capability.semantic_id or BASE + name)
@@ -41,6 +46,33 @@ def test_every_offered_capability_and_property_is_in_the_vocabulary(vocabulary):
                 given = value.value if value.value is not None else value.minimum
                 assert kind == ("string" if isinstance(given, str) else "number"), f"{spec.module}.{name}.{prop}"
     assert offered >= 4
+
+
+def test_every_skill_primitive_has_a_type_that_says_what_it_contributes(vocabulary):
+    """A module's offered capabilities are derived from the types of the skills its composites run."""
+    contributed = set()
+    for spec in line_specs():
+        for name in spec.skills:
+            kind = SKILLS[name]
+            assert (kind, RDFS.subClassOf, CSS.Skill) in vocabulary, f"{spec.module}.{name}: no skill type {kind}"
+            for capability in vocabulary.objects(kind, LAB.contributes):
+                assert (capability, RDFS.subClassOf, CSS.Capability) in vocabulary, f"{name} contributes {capability}"
+                contributed.add(capability)
+        # The capability a module offers is one its composite's steps contribute.
+        for cap_name, capability in spec.capabilities.items():
+            steps = {step.skill for step in spec.composites[capability.realized_by].execute}
+            assert any((SKILLS[s], LAB.contributes, LAB[cap_name]) in vocabulary for s in steps), \
+                f"{spec.module}: no step of {capability.realized_by} contributes {cap_name}"
+    assert {LAB.Filling, LAB.Stoppering, LAB.Capping, LAB.Inspection, LAB.Positioning} <= contributed
+
+
+def test_a_product_can_require_only_process_capabilities(vocabulary):
+    process, auxiliary = set(vocabulary.subjects(RDFS.subClassOf, LAB.ProcessCapability)), \
+        set(vocabulary.subjects(RDFS.subClassOf, LAB.AuxiliaryCapability))
+    assert not process & auxiliary
+    assert {LAB.Filling, LAB.Stoppering} <= process and {LAB.Positioning, LAB.Weighing} <= auxiliary
+    every = set(vocabulary.subjects(RDFS.subClassOf, CSS.Capability)) - {LAB.ProcessCapability, LAB.AuxiliaryCapability}
+    assert every == process | auxiliary, f"capabilities of neither kind: {every - process - auxiliary}"
 
 
 def test_the_fill_volume_is_set_by_a_skill_parameter():
