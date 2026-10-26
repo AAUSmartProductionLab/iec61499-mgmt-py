@@ -43,7 +43,7 @@ repository. In short:
 | `ontology/`, `docs/` | Ontologies (ARSO and others); working documents |
 
 The documents in `docs/`: [tooling.md](tooling.md) (every tool, command and check),
-[pipeline.md](pipeline.md) (from AAS to running code, and how code is changed), [next-steps.md](next-steps.md) (the plan), [decisions.md](decisions.md),
+[pipeline.md](pipeline.md) (from AAS to running code, and how code is changed), [ppr-model.md](ppr-model.md) (the product, process and resource model with its figures in `figures/`), [next-steps.md](next-steps.md) (the plan), [decisions.md](decisions.md),
 [work.md](work.md) (what was built, how, and every learning; long, search it),
 [module-rules.md](module-rules.md), [modules.md](modules.md) (the two modules and their hardware),
 [aas-models.md](aas-models.md), [aas-examples.md](aas-examples.md),
