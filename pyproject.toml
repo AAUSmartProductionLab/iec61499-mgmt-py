@@ -36,5 +36,8 @@ modgen = "iec61499-skill-lib/modgen"
 modsync = "aas61499-tools/modsync"
 modreg = "aas61499-tools/modreg"
 
+[tool.setuptools.package-data]
+modreg = ["templates/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["iec61499-mgmt-py/tests", "iec61499-skill-lib/tests", "aas61499-tools/tests", "deploy/tests", "cell/tests"]
