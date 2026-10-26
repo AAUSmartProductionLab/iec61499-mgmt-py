@@ -1,7 +1,7 @@
 """python -m modreg: profiles of the modules and the service that registers them.
 
     modreg profile filling --target pi                    # the profiles of the module and its components -> profiles/
-    modreg profile filling --target pi --host 192.168.0.191   # ... with what runs on the module
+    modreg profile filling --target pi --host 192.168.0.203   # ... with what runs on the module
     modreg build profiles/FillingModuleAAS.json           # the AAS a profile describes -> aas/
     modreg check profiles/FillingModuleAAS.json --ontology ontology/ARSO   # does the AAS follow the ontology?
     modreg serve --ontology ontology/ARSO --basyx http://<host>:8081       # the registration service

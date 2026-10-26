@@ -7,7 +7,7 @@ On a Raspberry Pi instead (FORTE in its container, installed with deploy/pi.py i
 test deploys the module there as the boot file and the Pi's FORTE reaches the simulator on this
 machine over Modbus TCP; no header pin is used.
 
-    python -m pytest cell/tests/test_module_live.py --pi-host 192.168.0.191 --sim-host 192.168.0.131
+    python -m pytest cell/tests/test_module_live.py --pi-host 192.168.0.203 --sim-host 192.168.0.131
 """
 from contextlib import contextmanager
 from pathlib import Path
