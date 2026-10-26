@@ -12,7 +12,7 @@ pytest.importorskip("aas_model")
 pytest.importorskip("rdflib")
 
 from aas_model.resource_template import MqttOperationalStation, Resource      # noqa: E402
-from modgen import SPECS, load                                              # noqa: E402
+from modgen import SPECS, library_specs, load                               # noqa: E402
 from modgen.spec import ModuleSpec                                          # noqa: E402
 from modreg import model, profile as profiles                               # noqa: E402
 from modreg.ontology import Blueprint, check                                # noqa: E402
@@ -439,11 +439,33 @@ def test_offered_capabilities_are_realized_by_skills_as_a_planner_reads_them():
                                                            env["assetAdministrationShells"][0]["submodels"]]
 
 
-def test_a_module_without_capabilities_has_no_capability_description():
+def test_capabilities_are_derived_from_the_skills_and_the_spec_adds_the_facts():
+    """Without the facts the spec states, Dispensing still offers Filling with the range of its
+    Volume: what a skill sets is derived (marked so), the machine's facts are not."""
     data = yaml.safe_load((SPECS / "filling.yaml").read_text(encoding="utf-8"))
     data.pop("capabilities")
-    env = model.build(profiles.describe(ModuleSpec.model_validate(data), "pi"))
+    [bare] = offered_capabilities(model.build(profiles.describe(ModuleSpec.model_validate(data), "pi")))
+    assert list(bare["properties"]) == [f"{BASE}/semantics/FillVolume"]
+    env = model.build(profiles.describe(load(SPECS / "filling.yaml"), "pi"))
+    capability = at(submodel(env, "CapabilityDescription"), "OfferedCapabilities", "Filling")
+    marked = lambda element: {q["type"]: q["value"] for q in element.get("qualifiers", [])}  # noqa: E731
+    assert marked(at(capability, "Capability"))["Derived"] == "true" and "Availability" not in marked(at(capability, "Capability"))
+    assert marked(at(capability, "PropertySet", "FillVolume", "Value"))["Derived"] == "true"
+    assert "Derived" not in marked(at(capability, "PropertySet", "ContainerType", "Value"))
+
+
+def test_a_module_whose_skills_offer_nothing_has_no_capability_description():
+    """The generator's test module: its skill types are in no vocabulary, so nothing is derived."""
+    spec = next(load(p) for p in library_specs())
+    env = model.build(profiles.describe(spec, next(iter(spec.targets))))
     assert "CapabilityDescription" not in [s["idShort"] for s in env["submodels"]]
+
+
+def test_a_capability_the_spec_states_that_no_skill_offers_is_refused():
+    data = yaml.safe_load((SPECS / "filling.yaml").read_text(encoding="utf-8"))
+    data["capabilities"]["Capping"] = {"properties": {"CapDiameter": {"minimum": 13.0, "maximum": 20.0, "unit": "mm"}}}
+    with pytest.raises(ValueError, match=r"states the capabilities \['Capping'\], which none of its skills offers"):
+        profiles.describe(ModuleSpec.model_validate(data), "pi")
 
 
 def interaction(env: dict, kind: str) -> dict:

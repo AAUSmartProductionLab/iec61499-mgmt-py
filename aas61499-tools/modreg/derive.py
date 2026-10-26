@@ -38,6 +38,7 @@ class Offer:
     skill: str                           # the element of the skill realizing it
     built: bool                          # the program carries the skill out; else offered after a reconfiguration
     properties: list[Property] = field(default_factory=list)
+    keys: list[tuple[str, str]] = field(default_factory=list)    # model reference to the skill: (type, value)
 
     @property
     def name(self) -> str:
@@ -58,6 +59,18 @@ def qualifier(graph: Graph, element, kind: str) -> str | None:
             value = graph.value(q, PA.value)
             return None if value is None else str(value)
     return None
+
+
+def keys(graph: Graph, element) -> list[tuple[str, str]]:
+    """The keys of a model reference to an element: its submodel, then the idShorts down to it."""
+    found = []
+    while element is not None:
+        model_type = str(graph.value(element, PA.modelType))
+        if model_type == "Submodel":
+            return [("Submodel", str(element)), *reversed(found)]
+        found.append((model_type, str(graph.value(element, PA.idShort))))
+        element = graph.value(None, PA.element, element)
+    raise ValueError("an element outside a submodel")
 
 
 def offers(graph: Graph, derivation: Path = DERIVATION) -> list[Offer]:
@@ -82,6 +95,6 @@ def offers(graph: Graph, derivation: Path = DERIVATION) -> list[Offer]:
             else:
                 properties.append(Property(str(meaning), str(unit) if unit else None, value=str(graph.value(prop, RDF.value))))
         found.append(Offer(str(capability), str(element), (skill, PPRL.implementedBy, None) in graph,
-                           sorted(properties, key=lambda p: p.meaning)))
+                           sorted(properties, key=lambda p: p.meaning), keys(graph, element)))
     return sorted(found, key=lambda o: (o.skill, o.capability))
 

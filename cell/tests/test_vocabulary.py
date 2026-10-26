@@ -58,11 +58,11 @@ def test_every_skill_primitive_has_a_type_that_says_what_it_contributes(vocabula
             for capability in vocabulary.objects(kind, LAB.contributes):
                 assert (capability, RDFS.subClassOf, CSS.Capability) in vocabulary, f"{name} contributes {capability}"
                 contributed.add(capability)
-        # The capability a module offers is one its composite's steps contribute.
-        for cap_name, capability in spec.capabilities.items():
-            steps = {step.skill for step in spec.composites[capability.realized_by].execute}
+        # A capability the spec states facts of is one a step of its module level skills contributes.
+        steps = {step.skill for composite in spec.composites.values() for step in composite.execute}
+        for cap_name in spec.capabilities:
             assert any((SKILLS[s], LAB.contributes, LAB[cap_name]) in vocabulary for s in steps), \
-                f"{spec.module}: no step of {capability.realized_by} contributes {cap_name}"
+                f"{spec.module}: no step of its skills contributes {cap_name}"
     assert {LAB.Filling, LAB.Stoppering, LAB.Capping, LAB.Inspection, LAB.Positioning} <= contributed
 
 
@@ -89,10 +89,10 @@ def test_a_product_can_require_only_process_capabilities(vocabulary):
     assert every == process | auxiliary, f"capabilities of neither kind: {every - process - auxiliary}"
 
 
-def test_the_fill_volume_is_set_by_a_skill_parameter():
-    """A required fill volume has to reach the controller: the capability names the parameter."""
-    spec = load(SPECS / "filling.yaml")
-    volume = spec.capabilities["Filling"].properties["FillVolume"]
-    skill = spec.composites[spec.capabilities["Filling"].realized_by]
-    assert volume.parameter == "Volume" and skill.parameters["Volume"].unit == volume.unit == "mL"
-    assert (skill.parameters["Volume"].minimum, skill.parameters["Volume"].maximum) == (volume.minimum, volume.maximum)
+def test_the_fill_volume_is_set_by_a_skill_parameter(vocabulary):
+    """A required fill volume has to reach the controller: Dispense contributes Filling, and its
+    Volume means FillVolume, a property of Filling (so a skill handing Volume on offers its range)."""
+    volume = load(SPECS / "filling.yaml").skills["Dispense"].parameters["Volume"]
+    assert volume.meaning == "FillVolume" and volume.unit == "mL"
+    assert (SKILLS.Dispense, LAB.contributes, LAB.Filling) in vocabulary
+    assert (LAB.FillVolume, LAB.characterizes, LAB.Filling) in vocabulary

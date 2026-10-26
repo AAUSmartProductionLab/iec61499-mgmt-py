@@ -65,7 +65,6 @@ composites:
 capabilities:
   Inspection:
     description: Inspect a closed vial with the camera and decide whether it passes
-    realized_by: Inspection
     properties:
       ContainerType: {value: vial}
       GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}

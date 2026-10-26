@@ -53,13 +53,11 @@ def raw(path=FILLER):
     (lambda d: d["equipment"]["NeedleAxis"]["outputs"]["Up"].update(gpio=5), "share gpio"),
     (lambda d: d["equipment"]["NeedleAxis"]["outputs"]["Up"].pop("modbus"), "Up has no Modbus address"),
     (lambda d: d.update(targets={}), "At least one target"),
-    (lambda d: d.update(capabilities={"Filling": {"realized_by": "Pump"}}), "not a skill the module offers"),
-    (lambda d: d.update(capabilities={"Filling": {"realized_by": "Fill", "properties": {
-        "Volume": {"minimum": 0.5, "maximum": 2.0, "parameter": "Speed"}}}}), "has no parameter Speed"),
-    (lambda d: d.update(capabilities={"Filling": {"realized_by": "Fill", "properties": {
+    (lambda d: d.update(capabilities={"Filling": {"properties": {
         "Volume": {"value": 1.0, "minimum": 0.5, "maximum": 2.0}}}}), "a value or a range"),
-    (lambda d: d.update(capabilities={"Filling": {"realized_by": "Fill", "properties": {
+    (lambda d: d.update(capabilities={"Filling": {"properties": {
         "Volume": {"minimum": 2.0, "maximum": 0.5}}}}), "minimum <= maximum"),
+    (lambda d: d.update(capabilities={"Filling": {"realized_by": "Fill"}}), "Extra inputs are not permitted"),
 ])
 def test_invalid_specs_are_rejected(mutate, message):
     data = raw()
@@ -68,9 +66,10 @@ def test_invalid_specs_are_rejected(mutate, message):
         ModuleSpec.model_validate(data)
 
 
-def test_a_capability_is_realized_by_an_offered_skill():
+def test_a_capability_states_the_facts_of_the_machine():
+    """Which skill realizes it is derived from the skills (modreg.derive), not stated."""
     data = raw()
-    data["capabilities"] = {"Filling": {"realized_by": "Fill", "properties": {
+    data["capabilities"] = {"Filling": {"properties": {
         "ContainerType": {"value": "vial"}, "Depth": {"minimum": 0.0, "maximum": 50.0, "unit": "mm"}}}}
     spec = ModuleSpec.model_validate(data)
     assert spec.capabilities["Filling"].properties["Depth"].unit == "mm"

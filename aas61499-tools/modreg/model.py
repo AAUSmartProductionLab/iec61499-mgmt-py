@@ -435,7 +435,7 @@ def with_units(element) -> None:
 
 
 BOOLEAN_QUALIFIERS = ("CapabilityRoleQualifier/Required", "CapabilityRoleQualifier/Offered",
-                      "CapabilityRoleQualifier/NotAssigned")
+                      "CapabilityRoleQualifier/NotAssigned", "Derived")
 
 
 def typed_qualifiers(element) -> None:

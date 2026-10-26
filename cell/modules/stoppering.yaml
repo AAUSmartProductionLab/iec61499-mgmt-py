@@ -96,7 +96,6 @@ procedures:
 capabilities:
   Stoppering:
     description: Place a rubber stopper on a filled vial and press it in
-    realized_by: Stoppering
     properties:
       ContainerType: {value: vial}
       GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}

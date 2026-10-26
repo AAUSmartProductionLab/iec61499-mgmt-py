@@ -423,14 +423,12 @@ class Aas(Model):
 
 class CapabilityProperty(Model):
     """One property of an offered capability: a value (the container type it takes) or a range
-    (the fill volumes it can do), in a unit. ``parameter`` names the parameter of the realizing
-    skill that sets the property, if one does."""
+    (the grasp diameters it holds), in a unit."""
     value: float | bool | str | None = None
     minimum: float | None = None
     maximum: float | None = None
     unit: str | None = None
     semantic_id: str | None = None       # default <base>/semantics/<property name>
-    parameter: str | None = None
     description: str = ""
 
     @model_validator(mode="after")
@@ -444,9 +442,9 @@ class CapabilityProperty(Model):
 
 
 class Capability(Model):
-    """A capability the module offers (IDTA 02020, role Offered), realized by one of its offered
-    skills or module level skills."""
-    realized_by: str = Ident
+    """What the module states of a capability it offers (IDTA 02020, role Offered) beyond its
+    skills: the facts of the machine (the container it takes). Which skill realizes it and the
+    properties a skill's parameters set are derived from the skills (modreg.derive)."""
     description: str = ""
     semantic_id: str | None = None       # default <base>/semantics/<capability name>
     properties: dict[str, CapabilityProperty] = Field(default_factory=dict)
@@ -562,16 +560,11 @@ class ModuleSpec(Model):
                     raise ValueError(f"{name}.after: {divisor} divides, so its minimum has to be above 0")
 
     def check_capability(self, name, cap: Capability):
-        """A capability is realized by a skill the module offers; a property names its parameter."""
+        """A capability and its properties are named by identifiers (that a skill offers it is
+        checked where it is derived)."""
         for ident in [name, *cap.properties]:
             if not re.match(IDENT, ident):
                 raise ValueError(f"Not an identifier: capability {name}, {ident}")
-        skill = self.skills.get(cap.realized_by) or self.composites.get(cap.realized_by)
-        if skill is None or not skill.offered:
-            raise ValueError(f"capability {name}: {cap.realized_by} is not a skill the module offers")
-        for prop, value in cap.properties.items():
-            if value.parameter is not None and value.parameter not in skill.parameters:
-                raise ValueError(f"capability {name}.{prop}: {cap.realized_by} has no parameter {value.parameter}")
 
     def check_steps(self, owner, seq: list[Step], parent_params: dict[str, Parameter]):
         """Steps name skill primitives (composites of composites come later), bind known parameters, are unique.

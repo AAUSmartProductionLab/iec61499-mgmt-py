@@ -73,7 +73,6 @@ procedures:
 capabilities:
   Capping:
     description: Put a cap on a stoppered vial and crimp it
-    realized_by: Capping
     properties:
       ContainerType: {value: vial}
       GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
