@@ -16,8 +16,8 @@ Figures (draw.io; open them at app.diagrams.net or in the draw.io desktop app, a
 | [figures/skill-hierarchies.drawio](figures/skill-hierarchies.drawio) | Hierarchies | The line's, a module's and its components' AASs as the web UI's tree shows them: the bill of material names the module and its components; Dispensing's steps run the components' primitives |
 | | Recipe to process | The product's, the line's and the modules' AASs feed a process sequence (one card per step: what comes from which AAS); kept as the process AAS, whose rows are coloured by where they come from |
 | | Hierarchies (paper), Recipe to process (paper) | The same two, cut down for the paper: no title, only the rows the argument needs |
-| [figures/module-tools.drawio](figures/module-tools.drawio) | Tools and FORTE | The filling module's spec, 4diac project, AAS, the blocks running on FORTE and the OPC UA nodes they serve; what modgen, the build, the deployment, modsync and modlink read, write and send (management protocol, OPC UA) |
-| | Tools and FORTE (paper) | The same, as small cards and two short trees |
+| [figures/module-tools.drawio](figures/module-tools.drawio) | Tools and FORTE | The tools (spec, modgen, 4diac project, build, deployment, AAS, modsync, modlink) above the filling module's program drawn as its function block network (as in the module architecture figure): the INIT chain, Dispensing with its wiring, and create, read, update and delete on it (the boot file; DoubleDose created online and appended; a step's constant written; deleting only by a new boot file); the OPC UA nodes the blocks serve |
+| | Tools and FORTE (paper) | The same, as small cards and Dispensing's network with the online change |
 
 They follow the style of the module architecture figure (Arial, grey panels, white cards, rounded
 pills, small blue tags, dashed for what is not built yet).
