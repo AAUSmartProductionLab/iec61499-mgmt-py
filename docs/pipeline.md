@@ -12,6 +12,9 @@ module is built by in [module-rules.md](module-rules.md), how each tool works in
 
 ## 1. The picture
 
+The same with the module itself drawn out (the blocks running on FORTE, the OPC UA nodes they
+serve, and what each tool reads, writes and sends): [figures/module-tools.drawio](figures/module-tools.drawio).
+
 ```mermaid
 flowchart LR
     subgraph Describe
