@@ -41,8 +41,8 @@ cmd:Reset rdf:type owl:Class ; rdfs:subClassOf cmd:Command ;
 # The element that describes a skill carries the id of a skill as
 # its semanticId (https://smartproductionlab.aau.dk/skill, ARSO 0.8)
 # and one of these as a supplemental semanticId: it says what may be
-# in the element. What the skill does is its own id (the element's
-# SemanticId property).
+# in the element. What the skill does, its type, is a second
+# supplemental semanticId (Skills vocabulary, skills.ttl).
 #################################################################
 
 cmd:Skill rdf:type owl:Class ;

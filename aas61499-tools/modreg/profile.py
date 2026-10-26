@@ -442,9 +442,10 @@ class Describer:
         offered, node, here = decl.offered, f"/Skills/{name}", ((SMC, "Skills"), (SMC, name))
         where = self.home(name)                         # as the module sees it (the mapping is the module's)
         interface = AID if item is None else f"{self.module_id}/submodels/AssetInterfacesDescription"
-        # Every skill is the same kind of element; what kind of skill it is, is said beside it.
-        skill = model.ModuleSkill(description=decl.description or f"Skill {name}", SemanticId=prop(skill_id(name)))
-        skill.supplemental_semantic_ids = [f"{COMMAND}/{'Composite' if composite else 'Primitive'}"]
+        # Every skill is the same kind of element; what kind of skill it is and what it does (its
+        # type) are said beside it, as supplemental semantic ids.
+        skill = model.ModuleSkill(description=decl.description or f"Skill {name}")
+        skill.supplemental_semantic_ids = [f"{COMMAND}/{'Composite' if composite else 'Primitive'}", skill_id(name)]
 
         def told(command: str, about: str, **more):
             says = [f"{COMMAND}/{command}", skill_id(name)]
@@ -505,8 +506,8 @@ class Describer:
 
         def control(name: str, meaning: str, about: str, key: str, node: str, procedure: str | None = None):
             here = ((SMC, "Skills"), (SMC, name))
-            skill = model.ModuleSkill(description=about, SemanticId=prop(meaning))
-            skill.supplemental_semantic_ids = [f"{COMMAND}/ModuleControl"]
+            skill = model.ModuleSkill(description=about)
+            skill.supplemental_semantic_ids = [f"{COMMAND}/ModuleControl", meaning]
             start = self.command(arso.Start(), "Start", SKILLS, (*here, (SMC, "Start")), f"{COMMAND}/Start", about, key,
                                  node, says=[meaning])
             if procedure in spec.procedures:

@@ -19,7 +19,7 @@ class Interfaces(SubmodelElementCollection):
 
 class SemanticId(Property):
     id_short: AasIdString = "SemanticId"
-    description: str = "The skill's own semantic identifier URI: what it does (lab namespace convention, enforced via SHACL sh:pattern)."
+    description: str = "What the skill does, as the short form of older AASs states it."
     value_type: str = "xs:string"
 
 class InterfaceReference(ReferenceElement):
@@ -305,7 +305,7 @@ class StateMachine(Property):
 class Skill(SubmodelElementCollection):
     semantic_id: str = "https://smartproductionlab.aau.dk/skill"
     description: str = "A named skill."
-    SemanticId: SemanticId_t
+    SemanticId: Optional[SemanticId_t] = None
     Start: Optional[Start_t] = None
     Stop: Optional[Stop_t] = None
     Abort: Optional[Abort_t] = None
