@@ -42,8 +42,8 @@ repository. In short:
 | `aas-model/`, `iec61499-opcua-hmi/` | Submodules: the lab's pydantic AAS model; the HMI with `modlink` |
 | `ontology/`, `docs/` | Ontologies (ARSO and others); working documents |
 
-The documents in `docs/`: [pipeline.md](pipeline.md) (from AAS to running code, and how code is
-changed), [next-steps.md](next-steps.md) (the plan), [decisions.md](decisions.md),
+The documents in `docs/`: [tooling.md](tooling.md) (every tool, command and check),
+[pipeline.md](pipeline.md) (from AAS to running code, and how code is changed), [next-steps.md](next-steps.md) (the plan), [decisions.md](decisions.md),
 [work.md](work.md) (what was built, how, and every learning; long, search it),
 [module-rules.md](module-rules.md), [modules.md](modules.md) (the two modules and their hardware),
 [aas-models.md](aas-models.md), [aas-examples.md](aas-examples.md),
@@ -83,6 +83,10 @@ Rules from the user; [CLAUDE.md](../CLAUDE.md) holds the git rules.
 
 ## Environment
 
+Every tool with its commands and how each kind of change is checked (tests, the IDE's checks,
+FORTE's management protocol, running a module, deploying to a Pi, building and publishing the AASs)
+is in **[tooling.md](tooling.md)**. Read it before changing or running anything.
+
 ```powershell
 python -m venv .venv; .venv/Scripts/python.exe -m pip install -e ".[test,registration,opcua]"
 $env:PYTHONUTF8 = 1
@@ -97,8 +101,9 @@ runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate # FORTE for the Pi
   the `aas-model` submodule is checked out at the local branch `arso-submodels`, not at the pinned
   `6a03f78`. Leave it until the user decides how that branch reaches aas-model.
 - The 4diac IDE (3.3, updated in place in its 3.2.1 folder) is at
-  `C:\Users\marti\Downloads\4diac-ide_3.2.1-win32.win32.x86_64\4diac-ide\`; `runtime/validate.ps1`
-  runs it headless. The FORTE build environment (4diac FBE) is `C:\4diac-fbe`.
+  `C:\Users\marti\Downloads\4diac-ide_3.2.1-win32.win32.x86_64\4diac-ide\`; `runtime/check-project.ps1`
+  runs its checks headless, `runtime/validate.ps1` also its export (used by `build-modules.ps1`). The
+  FORTE build environment (4diac FBE) is `C:\4diac-fbe`.
 - The Windows `forte.exe` in `runtime/fbe/build/modules-win/output/bin/` is from 21 Oct: a newer
   build (22 Oct) is in `runtime/fbe/build/modules-win/forte/build/forte/forte.exe` and could not be
   installed while the teaching demo's FORTEs run from the old file. Run the live tests with the
