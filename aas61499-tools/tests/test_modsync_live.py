@@ -204,7 +204,8 @@ def test_cli_pull_writes_the_aas(module, tmp_path):
     assert (f"Filling ({len(module.cand.app.fbs)} instances), {len(module.overrides)} differences from "
             "cell/modules/filling.yaml target pc" in run.stdout)
     # What was built is the record's, outside the AAS.
-    assert submodel(json.loads((tmp_path / "FillingModuleAAS.json").read_text(encoding="utf-8")), "ControlConfiguration") is None
+    written = json.loads((tmp_path / "FillingModuleAAS.json").read_text(encoding="utf-8"))
+    assert "ControlConfiguration" not in [sm["idShort"] for sm in written["submodels"]]
     config = json.loads((tmp_path / "records" / "FillingModuleAAS.json").read_text(encoding="utf-8"))
     assert at(config, "SyncState")["value"] == "Drift"
     assert at(config, "Runtime", "ManagementEndpoint")["value"] == f"{module.host}:{module.port}"
