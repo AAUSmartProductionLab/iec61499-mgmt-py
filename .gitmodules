@@ -8,3 +8,6 @@
 	path = basyx-aas-web-ui
 	url = https://github.com/MartinJensen37/basyx-aas-web-ui.git
 	branch = feat/process-sequence-pharma
+[submodule "planar-controller"]
+	path = planar-controller
+	url = https://github.com/AAUSmartProductionLab/planar-controller
