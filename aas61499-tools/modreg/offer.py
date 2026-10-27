@@ -19,19 +19,25 @@ the module rules.
 
 ``capabilities`` derives the module's offered capabilities anew from its skills (``modreg.derive``),
 after a skill was built online or described in the skill editor.
+
+``described_skill`` describes a new module level skill in the module's AAS as the skill editor saves
+one (a planned skill, ``modplan``): its parameters and steps, not built (Deployment Described), and
+no interface yet; ``modsync reconfigure`` builds it and ``modsync record`` gives it its interface.
 """
 from __future__ import annotations
 
 import base64
 import copy
 
-from modgen.spec import Capability as CapabilitySpec, CapabilityProperty, ModuleSpec
+from modgen.spec import Capability as CapabilitySpec, CapabilityProperty, Composite, ModuleSpec
 from modsync.aasjson import at, children, submodel
+from modsync.described import described
 
 from . import model
 from .derive import local, offers as derived_offers
 from .model import ModuleTypeAAS
-from .profile import OFFERED_SET, Describer, capability_description, put
+from .generated import skills as arso
+from .profile import OFFERED_SET, Describer, capability_description, prop, put
 from .projection import project, target
 
 
@@ -114,6 +120,31 @@ def offered(module: dict, spec: ModuleSpec, skills: list[str]) -> dict:
             operation, invoking = at(mine, command["idShort"]), at(command, command["idShort"])
             if operation is not None and invoking is not None and invoking.get("qualifiers"):
                 operation["qualifiers"] = invoking["qualifiers"]
+    return module
+
+
+def described_skill(module: dict, components: list[dict], name: str, skill: Composite) -> dict:
+    """The module's AAS with ``skill`` described as ``name`` in its Skills submodel (replacing one of
+    that name), as the skill editor saves a skill: its parameters, steps and results, not built
+    (Deployment Described), with no action of the interface yet."""
+    spec = described(module, components)
+    # Not offered while it is only described: it gets its actions once it is built (``offered``).
+    spec = spec.model_copy(update={"composites": {**spec.composites, name: skill.model_copy(update={"offered": False})}})
+    shell = module["assetAdministrationShells"][0]
+    interface = at(submodel(module, "AssetInterfacesDescription"), "interface_opcua")
+    describer = Describer(spec, "", None, None, None, at(interface, "EndpointMetadata", "base")["value"])
+    describer.module_id = shell["id"]
+    asset = ModuleTypeAAS(id_short=shell["idShort"], id=shell["id"],
+                          asset_type=shell["assetInformation"].get("assetType") or f"{model.RESOURCE}/Module",
+                          derived_from=model.RESOURCE_TEMPLATE)
+    made = describer.skill(name)
+    made.Deployment = arso.Deployment(**prop("Described"))
+    put(asset.skills.Skill, name, made)
+    built = model.build(model.profile(ModuleTypeAAS.model_validate(asset.model_dump()),
+                                      global_asset_id=shell["assetInformation"].get("globalAssetId", "")))
+    module = copy.deepcopy(module)
+    skills = submodel(module, "Skills")
+    skills["submodelElements"] = [e for e in skills["submodelElements"] if e.get("idShort") != name] + [at(submodel(built, "Skills"), name)]
     return module
 
 
