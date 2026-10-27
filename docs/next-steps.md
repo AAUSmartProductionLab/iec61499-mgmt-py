@@ -13,7 +13,8 @@ divides into repositories in [repositories.md](repositories.md).
 | Reconfigure from the AAS (A) | Verify, create a skill, change a value, record, operate the result: on FORTE on the PC and on the Pi 5. A skill written by the skill editor is built and run from its AAS alone. **New:** `modsync project` writes the 4diac project of what runs (a skill added online included) and checks that it deploys that program | One Python interface for all of it (A4, started). The editor's fixes from its look in a browser are not committed to the fork (waiting for your go-ahead) |
 | Evaluation (B) | – | **Not started:** the scenario runner, the baseline by restart, the runs on the Pi. This is now the paper's largest gap |
 | Models (D2) | ARSO 0.11 for the line, module and component (27 Oct: a primitive's Conditions and Completion; the components' capabilities in the module's Capability Description); product AAS with its plan; ontologies; [pipeline.md](pipeline.md) describes the whole chain | The generation project's ARSO copy and closed validation at 0.8 (working copy, not committed) |
-| Planning (D5, new 27 Oct) | The design ([skill-planning.md](skill-planning.md)) and ARSO 0.11 | **Next:** G1 to G7 below |
+| Planning (D5, new 27 Oct) | The design ([skill-planning.md](skill-planning.md)) and ARSO 0.11 | **Next:** G1 to G7 below, by Friday 30 Oct |
+| Locations and the planar table (H, new 27 Oct) | The design ([locations-and-layout.md](locations-and-layout.md)); the controller as a submodule | H1 to H5 |
 | aas-model (E) | `modreg` on aas-model `6a03f78` (E1, 19 Oct); ARSO knows AID 1.2 (E2); resources are aas-model's `Resource` with ARSO's submodels, `modreg serve` is the registration service (E3 built). ARSO's submodels, Module, Component, ProductionSystem and Product added to aas-model on a local branch (`arso-submodels`, 230 tests pass) | That branch reaching aas-model (fork and pull request, or push access: your decision); one module registered on a disposable server (E3); the findings for aas-model's author (E4) |
 | Clients (C) | `modlink` reads 0.8; the HMI operates the filling module on its Pi from its AAS; its reader rewritten for 0.8 (`hmi/aas.py`, not committed in the submodule) | The HMI's tests, its stand-in module's skills and its built-in descriptions (C1); the planner's skill list leaves out ModuleControl (the planner reads ARSO skills since the fork's `ac9eb64`) |
 | Program structure (new, 21 Oct) | Deployed inside the application's container, so the 4diac IDE monitors what the tools deployed; started by the resource's own START block; one address per IO point (`gpio[...]`, `pwm[...]`, `modbus[...]`, `sim`) and the IO blocks set up their own Pi lines (no line blocks; stand-ins for GPIOChip and PWMChip in the Windows FORTE); compact layout, a layout arranged in the IDE kept per application | Typed subapplications for module level skills (asked, not decided) |
@@ -107,8 +108,10 @@ Later a resource agent calls the same function when a bid that needs a reconfigu
 
 ### G. Planning new skills (deliverable D5, new 27 Oct; next)
 
-Decided 27 Oct: this comes first. The design is [skill-planning.md](skill-planning.md); the steps
-follow its section 8, the cases its section 10.
+Decided 27 Oct: this comes first and runs by **Friday 30 Oct** (evenings too). Planning is one
+contribution of several: it has to work on the modules' cases, not to push planning research, so G6
+and G7 are the first to cut. The design is [skill-planning.md](skill-planning.md); the steps follow
+its section 8, the cases its section 10.
 
 | # | Step | Where | Done when |
 | --- | --- | --- | --- |
@@ -120,6 +123,20 @@ follow its section 8, the cases its section 10.
 | G5 | **Discovery** in place of the derivation from `lab:contributes` | `modreg`, PPRL | Cases T9 to T12 |
 | G6 | **HDDL and PDDL** from the same domain; a planner of each kind (PANDA, ENHSP) and VAL | `modplan` | The cases plan through them too; every plan validates |
 | G7 | **In the skill editor**: the checker's findings on a hand-written flow; "plan this capability" | web UI fork | A finding shows on a flow in the editor |
+
+### H. Locations, points and the planar table (new, 27 Oct)
+
+Asked for on 27 Oct; the design is [locations-and-layout.md](locations-and-layout.md). After G; before
+or after the paper is open.
+
+| # | Step | Where | Done when |
+| --- | --- | --- | --- |
+| H0 | **The planar controller as a submodule.** **Done 27 Oct** (`planar-controller/`) | – | – |
+| H1 | **Frames**: the pose of a part in its parent on its entity in Hierarchical Structures (AutomationML's Frame); Asset Location (IDTA 02045) on the line | ARSO, `modreg`, specs | The example line's modules and components have frames; one point composes into the line's frame |
+| H2 | **Points**: transfer, processing, pick and place points as co-managed entities with a meaning | ARSO, Vocabulary, `modreg` | The filling module's transfer point is known in the table's frame |
+| H3 | **The planar table's AAS**: the table a module, each shuttle a component with `MoveToPosition` and its occupation, the controller's OPC UA as the interface | `modreg`, a spec of the table | `modreg check` passes; `modlink` runs `MoveToPosition` from the AAS on the controller's simulation |
+| H4 | **The layout**: the flyways as entities with their frames, from the controller (the layout over OPC UA), registered again when it changes | `planar-controller`, `modreg` | A changed layout in the simulation shows in the AAS |
+| H5 | **The stations from the AAS**: the line scenario takes the shuttles' targets from the modules' transfer points | `planar-controller/tests` | The scenario runs with no hard-coded stations |
 
 ### A. Reconfigure from the AAS (deliverable D3)
 
@@ -204,8 +221,8 @@ Outline and figures by 1 Nov; experiment runs and text from 2 Nov; submission 18
 | 9 to 18 Oct | A2 (writing a description), A3 (both done) |
 | 19 to 21 Oct | E1 to E3 (done); the filling hardware moving (B3, started); program structure and A5 (done) |
 | 22 to 26 Oct | Skill block pins and release, layouts, the stoppering module to its Pi 5, guides for new sessions (done) |
-| 27 Oct to 1 Nov | G0 (done 27 Oct); G1 to G5, the planner on the filling module; outline and figures |
-| 2 to 8 Nov | A4; B1 (scenario runner, with simulated IO on the PC first, a planned skill among the scenarios); B2 (baseline by restart); G6; the new runtime and program on both Pi 5s |
+| 27 to 30 Oct | G0 (done 27 Oct); G1 to G5 by Friday 30 Oct, evenings too: the planner runs on the filling module |
+| 31 Oct to 8 Nov | Outline and figures by 1 Nov; A4; B1 (scenario runner, with simulated IO on the PC first, a planned skill among the scenarios); B2 (baseline by restart); the new runtime and program on both Pi 5s; G6 and G7 if time allows |
 | 9 to 18 Nov | B3 runs on the Pi with the axis; experiment runs, writing |
 
 G comes first (decided 27 Oct). B has not started and is what the paper cannot do without: it comes
@@ -227,7 +244,7 @@ after step A4, the reconfiguration as functions. What is missing:
 | 3 | Messages and protocol | Call for proposals, proposal, accept or reject, result (VDI/VDE 2193), and what carries them (the lab runs MQTT; SPADE needs an XMPP server) |
 | 4 | A resource agent per module | Matches a request against its own AAS; answers yes, yes after a reconfiguration, or no, with a time; on acceptance plans the skill if none realizes it (D5), reconfigures and runs it |
 | 5 | A product agent | Walks the process, compares bids, records what was done to the product |
-| 6 | Transport agents | A vial moves between the modules on the shuttles of the ACOPOS 6D table. Their control is Python code, not IEC 61499: the table needs a resource AAS (a Transport capability, an interface the agent can call) and an agent like a module's. It also shows the model on a resource that is not IEC 61499 |
+| 6 | Transport agents | A vial moves between the modules on the shuttles of the planar table (Planar Motor; `planar-controller/`, Python over OPC UA, built like a module). The table needs a resource AAS (H3, H4: a Transport capability, the interface the agent calls, the layout) and an agent like a module's. It also shows the model on a resource that is not IEC 61499 |
 | 7 | Reservation | A module can be occupied now, not booked for later |
 | 8 | A matcher both sides use | Required against offered capability, including "after a reconfiguration" |
 | 9 | Failure handling | A skill that fails, a module that goes away: ask again |
@@ -262,7 +279,8 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 | A change that needs a restart (a sequence changed, a skill removed) is refused. For the baseline a boot file is needed, and the AAS does not hold the wiring: is the vendor's boot file part of what is delivered? | B2 |
 | Which changes does the paper show: a constant and a new skill, or more? | B1 |
 | Where do F1 to F3 go in the order of what is cut if time runs short? | F |
-| Where do G6 (HDDL and PDDL) and G7 (the editor) go in that order? G1 to G5 carry the planning contribution | G |
+| ~~Where do G6 (HDDL and PDDL) and G7 (the editor) go in that order?~~ They are cut first; G1 to G5 carry the planning contribution (27 Oct) | G |
+| H (locations, points, the planar table) before the paper, or after it? | H |
 | Two components of one kind in a module (the two cameras) need one skill name twice | later |
 | What a component's AAS holds besides its skills (a nameplate?) | later |
 | Step values are also in the interface description; leave them out there? Operational Data in groups? | later |
@@ -270,7 +288,7 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 | An interface action names its command as a supplemental semantic id; should it be the semanticId? | later |
 | What belongs in the Parameters submodel (it does not hold a skill's parameters)? | later |
 | Does the plan become an AAS of its own, per product and line? (With bidding it becomes per order) | agents |
-| The ACOPOS 6D table: where is its Python code, and which interface does it offer (OPC UA, MQTT, a library)? | transport agents |
+| ~~The planar table: where is its Python code, and which interface does it offer?~~ `planar-controller` (submodule since 27 Oct), OPC UA like a module | transport agents |
 | The agents' framework and inner structure (SPADE or plain asyncio over MQTT; fixed plans or BDI) | agents |
 | The module specs (YAML) still hold the wiring of each IO point per target; describing it in the AAS is an idea for later | later |
 

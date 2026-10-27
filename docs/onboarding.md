@@ -47,6 +47,7 @@ The documents in `docs/`: [tooling.md](tooling.md) (every tool, command and chec
 [tools.md](tools.md) (what modgen, modsync, modlink and modreg each do, and how),
 [mapping.md](mapping.md) (an AAS skill as IEC 61499 blocks and back; the AAS as the target state),
 [skill-planning.md](skill-planning.md) (composing skills by planning from the Capability Description),
+[locations-and-layout.md](locations-and-layout.md) (frames along the hierarchy, points, the planar table's layout),
 [design-decisions.md](design-decisions.md) (the decisions the method rests on, with why; for the
 paper), the proposals [skill-authoring.md](skill-authoring.md) (the editor, the planner and their
 backend) and [control-configuration.md](control-configuration.md), [ppr-model.md](ppr-model.md) (the product, process and resource model with its figures in `figures/`), [next-steps.md](next-steps.md) (the plan), [decisions.md](decisions.md),
@@ -157,6 +158,7 @@ before anything that does not block it):
    next the vocabulary's capabilities, properties and constraints (G1), `modreg` writing the
    components' capabilities into the module's Capability Description (G2), the domain model and the
    checker (G3), the planner (G4) and discovery (G5), tried on the filling module's cases T1 to T12.
+   Running by Friday 30 Oct; it need not push planning research, and G6 and G7 are cut first.
 2. **A4, one Python interface** for verify, create a skill and set a value (`modsync`; started:
    `desired.load`, `read`, `reconfigure`, `record`, `store`), so a script, the HMI and later an
    agent call the same functions.
@@ -168,6 +170,10 @@ before anything that does not block it):
 5. **B3, on the Pi**: the runtime and program on both Pi 5s (see the table; needs the user), then
    the scenarios on the Pi with the axis moving.
 6. Outline and figures by 1 Nov, experiment runs and text from 2 Nov.
+
+Also asked for (27 Oct), after G: **H, locations, points and the planar table**
+([locations-and-layout.md](locations-and-layout.md)): frames along the Hierarchical Structures,
+transfer and pick points, the planar table (`planar-controller/`) as a module with its flyway layout.
 
 If time runs short, cut C (clients), E4 and E5, then B3 on real hardware (keep the Pi with
 simulated IO), then A3. Not to be cut: A1, A2, B1, B2.
