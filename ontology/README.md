@@ -20,7 +20,7 @@ in [conceptual-model.md](conceptual-model.md). What the AASs hold as built is in
 | `AAS/` | AAS v3.1 RDF ontology | The metamodel (unchanged) |
 | `CSS/` | CSS 2.0.2 | Capability, Skill, Service reference model (updated from 2.0.1 on 30 Sep 2026: fixes the domain of `behaviorConformsTo`) |
 | `APSO/` | APSO 0.2 | Product AAS: BatchInformation, BoM, Requirements, Bill of Process |
-| `ARSO/` | ARSO 0.9 | Resource AAS of a line, a module and a component: Nameplate, Hierarchical Structures, AID, AIMC, Skills, Capabilities, Operational Data, Parameters, Technical Data, Control Configuration |
+| `ARSO/` | ARSO 0.11 | Resource AAS of a line, a module and a component: Nameplate, Hierarchical Structures, AID, AIMC, Skills, Capabilities, Operational Data, Parameters, Technical Data, Control Configuration |
 | `AProSO/` | AProSO 0.1 (new) | Process AAS: ProcessInformation, ProcessStructure (process map with flow), CapabilityBindings, Validation, Policy |
 | `PPRL/` | PPRL 0.1 (new) | What lies between them: the CSS concept an AAS element describes, process decomposition and order, resource parts, required and offered capabilities and matching, skill composition, occupation, binding, parameter value flow, derived candidates, change classes. `projection.ttl` and `projection/*.rq`: how an AAS becomes RDF and which individuals and relations its elements describe (`modreg graph`, `aas61499-tools/modreg/projection.py`) |
 | `Vocabulary/` | Lab vocabulary 0.1 | What the elements of the AASs mean (their supplemental semantic ids): capabilities, of two kinds (process: a product can require it; auxiliary: it serves other skills), and their properties (`capabilities.ttl`); the commands and kinds of a skill (`commands.ttl`); the skill types of the components and the capability each contributes (`skills.ttl`) |
@@ -92,6 +92,13 @@ section 2)
   and property terms of aas-model's AID extension (`.../aid/ActionDefinition/1/0`,
   `synchronous`, `input`, `output`, `uav_componentOf`, `readOnly`).
 
+**ARSO 0.8 → 0.11** (26 and 27 Oct; the version notes are in `ARSO_AAS.ttl`)
+- 0.9: the Skills submodel is ARSO's own template; 0.10: what was built leaves the AAS
+  (`RuleSet`, `Deployment`).
+- 0.11: a primitive's `Contract` becomes `Conditions` (Precondition, Postcondition, Invariant)
+  and `Completion` (After, Timeout), the run-time form of what its capability states for planning
+  ([docs/skill-planning.md](../docs/skill-planning.md)).
+
 ## Checks
 
 The ontologies were the **design guide** only until 2 Oct 2026; since then ARSO is also the
@@ -123,7 +130,7 @@ still differs:
    writes into the Asset Interfaces Description (key, type, title, observable, unit, op, input
    and output schemas, `uav_browsePath`, `uav_componentOf`), about 380 per module.
 2. What ARSO names but does not declare, so the classes are hand-written in `modreg/model.py`:
-   the terms of a skill's Contract, the children of a Step and of Implementation, the item types
+   the children of a Step and of Implementation, the item types
    of Uses and Occupies.
 3. A skill that is not offered has no Operation and no interface action, which ARSO asks of every
    skill; such a skill is not listed, and steps name it by an external reference.

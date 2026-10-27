@@ -148,11 +148,16 @@ classDiagram
     parallel, decision: Branches
     decision, conditional: Condition
   }
-  class Contract {
+  class Conditions {
     of a primitive
-    Requires
-    Ensures or After
-    Invariant, Timeout
+    Precondition
+    Postcondition
+    Invariant
+  }
+  class Completion {
+    of a primitive
+    After
+    Timeout
   }
   class OperationalData {
     <<ARSO>>
@@ -178,7 +183,8 @@ classDiagram
   Capability *-- "0..*" CapabilityProperty
   Skills *-- "0..*" Skill
   Skill *-- "1..4" Command
-  Skill *-- "0..1" Contract
+  Skill *-- "0..1" Conditions
+  Skill *-- "0..1" Completion
   Command *-- "1" Operation
   Operation *-- "2..*" Variable
   Command *-- "0..*" Step : Steps
@@ -427,8 +433,9 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
                      f"| {' → '.join(ran(envs, at(s, 'Stop'))) or '–'} |")
     for part, component in own.items():
         for s in skills_of(component):
-            contract = "; ".join(f"{c['idShort']} {c['value']}" for c in children(at(s, "Contract")))
-            lines.append(f"| {signature(s)} | {shell_of(component)['idShort']} | {kind_of(s)} | – ({contract}) | – |")
+            terms = [*children(at(s, "Conditions")), *children(at(s, "Completion"))]
+            said = "; ".join(f"{c['idShort']} {c['value']}" for c in terms)
+            lines.append(f"| {signature(s)} | {shell_of(component)['idShort']} | {kind_of(s)} | – ({said}) | – |")
     lines.append("")
     for c in capabilities:
         properties = "; ".join(f"{p['idShort']} {shown(at(p, 'Value'))}" for p in children(at(c, "PropertySet")))
@@ -556,7 +563,7 @@ def document() -> str:
               "linear axes). A part is found by its asset id.", "", LINE_STRUCTURE, "",
               "## Class diagram: a module AAS", "",
               "What the AAS holds: its submodels and their main elements. A component's AAS holds only Skills,",
-              "with the same Skill, Command, Operation and Contract.", "", RESOURCE_STRUCTURE, "",
+              "with the same Skill, Command, Operation, Conditions and Completion.", "", RESOURCE_STRUCTURE, "",
               "Then how those elements refer to each other. Every solid arrow is a reference stored in the AAS,",
               "named like the element that carries it; a dashed arrow is a link by a shared id.", "", RESOURCE_LINKS, "",
               "## Class diagram: a product AAS", "",

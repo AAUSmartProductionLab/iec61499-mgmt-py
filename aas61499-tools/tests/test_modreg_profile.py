@@ -226,12 +226,13 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     data = submodel(stoppering_all["StopperingModuleAAS"], "OperationalData")
     assert ids(position)[:1] == ids(at(data, "MoveAxis_Parameter_Position")) == [f"{BASE}/skills/MoveAxis/Parameters/Position"]
     assert ids(position)[1:] == [f"{BASE}/semantics/Position"]              # what it means, as the spec says
-    # What starts, ends and bounds it.
-    assert at(move, "Contract", "Requires")["value"] == "Homed"            # an axis that knows where it is
-    assert at(move, "Contract", "Ensures")["value"] == decl.ensures
-    assert at(move, "Contract", "Timeout")["value"] == "8s" and "Invariant" not in names(at(move, "Contract"))
+    # What starts, ends and bounds it: its conditions, and how it completes.
+    assert at(move, "Conditions", "Precondition")["value"] == "Homed"      # an axis that knows where it is
+    assert at(move, "Conditions", "Postcondition")["value"] == decl.ensures
+    assert "Invariant" not in names(at(move, "Conditions"))
+    assert names(at(move, "Completion")) == ["Timeout"] and at(move, "Completion", "Timeout")["value"] == "8s"
     press = at(submodel(stoppering_all["StopperingPistonAAS"], "Skills"), "PressStopper")
-    assert at(press, "Contract", "After")["value"] == "3.0"
+    assert names(at(press, "Completion")) == ["After"] and at(press, "Completion", "After")["value"] == "3.0"
     # The module lists its components as its parts, each found by its asset id.
     nodes = children(at(submodel(stoppering_all["StopperingModuleAAS"], "HierarchicalStructures"), "EntryNode"))
     assert [(n["idShort"], n["entityType"], n["globalAssetId"]) for n in nodes] == [
@@ -270,7 +271,7 @@ def test_a_step_is_connected_to_the_variables_of_its_command():
     # The step's skill takes what it is handed under the same name.
     pump = at(submodel(found["FillingPumpAAS"], "Skills"), "Dispense")
     assert variables(at(pump, "Start", "Start"), "inputVariables") == ["Session", "Volume", "FlowRate"]
-    assert at(pump, "Contract", "After")["value"] == "Volume / FlowRate"
+    assert at(pump, "Completion", "After")["value"] == "Volume / FlowRate"
     # The primitive says what its parameters mean; the skill handing Volume on means the same.
     assert ids(at(pump, "Start", "Start", "Volume"))[1:] == [f"{BASE}/semantics/FillVolume"]
     assert ids(at(pump, "Start", "Start", "FlowRate"))[1:] == [f"{BASE}/semantics/FlowRate"]
@@ -293,7 +294,8 @@ def test_a_skill_the_module_does_not_offer_has_a_start_nothing_calls():
     data["skills"]["Dispense"]["offered"] = False
     found = described(ModuleSpec.model_validate(data))
     pump = at(submodel(found["FillingPumpAAS"], "Skills"), "Dispense")
-    assert names(pump) == ["Start", "Contract"] and names(at(pump, "Start")) == ["Start"]
+    # Nothing has to hold for it, so it has no Conditions; a time ends it (Completion).
+    assert names(pump) == ["Start", "Completion"] and names(at(pump, "Start")) == ["Start"]
     assert ids(pump)[1:] == [f"{BASE}/skill/Primitive", f"{BASE}/skills/Dispense"]   # its kind and its type
     assert variables(at(pump, "Start", "Start"), "inputVariables") == ["Session", "Volume", "FlowRate"]
     actions = at(submodel(found["FillingModuleAAS"], "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", "actions")

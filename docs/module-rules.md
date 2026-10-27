@@ -191,7 +191,7 @@ like any module level skill. Besides the steps (rule 1 of a sequence, unchanged)
 | In the program | In the AAS |
 | --- | --- |
 | Equipment item that a skill moves | A component: an AAS of its own (`<Module><Item>AAS`), a part in the module's Hierarchical Structures |
-| Skill primitive | In its component's Skills: `Skills/<Skill>` with the semantic id `skill`, the kind `skill/Primitive` and its type `skills/<Skill>` as supplemental ids, its commands and its `Contract` |
+| Skill primitive | In its component's Skills: `Skills/<Skill>` with the semantic id `skill`, the kind `skill/Primitive` and its type `skills/<Skill>` as supplemental ids, its commands, its `Conditions` and its `Completion` |
 | Module level skill | In the module's Skills: `Skills/<Skill>` with the semantic id `skill`, the kind `skill/Composite` and its type, and its commands |
 | A command (the method, what it takes and answers) | `<Skill>/<Command>`: `InterfaceReference` to the action, the Operation named like the command |
 | A parameter, a result | An input or output variable of the Start Operation, with value, unit and limits |

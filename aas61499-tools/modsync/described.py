@@ -76,12 +76,13 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
             results = {v["idShort"]: v for v in variables(start, "outputVariables")}
             equipment[item].inputs.update({r: Input.model_construct(type=IEC[v["valueType"]], unit=qualifier(v, "Unit"))
                                            for r, v in results.items()})
-            contract = at(skill, "Contract")
+            # What ends a primitive: its Conditions and Completion (ARSO 0.11), in an older AAS its Contract.
+            term = lambda *path: (at(skill, *path) or {}).get("value")  # noqa: E731
             skills[skill["idShort"]] = Skill.model_construct(
                 equipment=item, parameters={v["idShort"]: parameter(v) for v in variables(start, "inputVariables")},
                 results={r: r for r in results}, offered=at(skill, "Start", "InterfaceReference") is not None,
-                ensures=(at(contract, "Ensures") or {}).get("value"),
-                timeout=(at(contract, "Timeout") or {}).get("value") or "10s")
+                ensures=term("Conditions", "Postcondition") or term("Contract", "Ensures"),
+                timeout=term("Completion", "Timeout") or term("Contract", "Timeout") or "10s")
 
     def condition(element: dict, where: str):
         """A decision's condition: a comparison of a parameter of the skill (OperandType parameter:

@@ -131,7 +131,7 @@ classDiagram
 ## Class diagram: a module AAS
 
 What the AAS holds: its submodels and their main elements. A component's AAS holds only Skills,
-with the same Skill, Command, Operation and Contract.
+with the same Skill, Command, Operation, Conditions and Completion.
 
 ```mermaid
 classDiagram
@@ -222,11 +222,16 @@ classDiagram
     parallel, decision: Branches
     decision, conditional: Condition
   }
-  class Contract {
+  class Conditions {
     of a primitive
-    Requires
-    Ensures or After
-    Invariant, Timeout
+    Precondition
+    Postcondition
+    Invariant
+  }
+  class Completion {
+    of a primitive
+    After
+    Timeout
   }
   class OperationalData {
     <<ARSO>>
@@ -252,7 +257,8 @@ classDiagram
   Capability *-- "0..*" CapabilityProperty
   Skills *-- "0..*" Skill
   Skill *-- "1..4" Command
-  Skill *-- "0..1" Contract
+  Skill *-- "0..1" Conditions
+  Skill *-- "0..1" Completion
   Command *-- "1" Operation
   Operation *-- "2..*" Variable
   Command *-- "0..*" Step : Steps
@@ -442,8 +448,8 @@ flowchart BT
 | Skill | Held by | Kind | Start runs | Stop runs |
 | --- | --- | --- | --- | --- |
 | Dispensing(Volume = 1.0 mL) → Weight [g] | the module | Composite | MoveAxis (Position = 40.0) → Dispense (Volume ← Volume, FlowRate = 1.0) → Home → Weigh (Weight → Weight) | Home |
-| Home() | FillingLinearAxisAAS | Primitive | – (Ensures AtHome; Timeout 60s) | – |
-| MoveAxis(Position = 0.0 mm) | FillingLinearAxisAAS | Primitive | – (Requires Homed; Ensures NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 30s) | – |
+| Home() | FillingLinearAxisAAS | Primitive | – (Postcondition AtHome; Timeout 60s) | – |
+| MoveAxis(Position = 0.0 mm) | FillingLinearAxisAAS | Primitive | – (Precondition Homed; Postcondition NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 30s) | – |
 | Dispense(Volume = 1.0 mL, FlowRate = 1.0 mL/s) | FillingPumpAAS | Primitive | – (After Volume / FlowRate) | – |
 | Tare() | FillingScaleAAS | Primitive | – (After 2.0) | – |
 | Weigh() → Weight [g] | FillingScaleAAS | Primitive | – (After 0.2) | – |
@@ -483,8 +489,8 @@ flowchart BT
 | Skill | Held by | Kind | Start runs | Stop runs |
 | --- | --- | --- | --- | --- |
 | Stoppering() | the module | Composite | MoveAxis (Position = 40.0) → PressStopper → Home | Home |
-| Home() | StopperingLinearAxisAAS | Primitive | – (Ensures AtHome; Timeout 8s) | – |
-| MoveAxis(Position = 0.0 mm) | StopperingLinearAxisAAS | Primitive | – (Requires Homed; Ensures NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 8s) | – |
+| Home() | StopperingLinearAxisAAS | Primitive | – (Postcondition AtHome; Timeout 8s) | – |
+| MoveAxis(Position = 0.0 mm) | StopperingLinearAxisAAS | Primitive | – (Precondition Homed; Postcondition NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 8s) | – |
 | PressStopper() | StopperingPistonAAS | Primitive | – (After 3.0) | – |
 | RetractPiston() | StopperingPistonAAS | Primitive | – (After 3.0) | – |
 
@@ -522,8 +528,8 @@ flowchart BT
 | Skill | Held by | Kind | Start runs | Stop runs |
 | --- | --- | --- | --- | --- |
 | Capping() | the module | Composite | MoveAxis (Position = 40.0) → Crimp → Home | Home |
-| Home() | CappingLinearAxisAAS | Primitive | – (Ensures AtHome; Timeout 8s) | – |
-| MoveAxis(Position = 0.0 mm) | CappingLinearAxisAAS | Primitive | – (Requires Homed; Ensures NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 8s) | – |
+| Home() | CappingLinearAxisAAS | Primitive | – (Postcondition AtHome; Timeout 8s) | – |
+| MoveAxis(Position = 0.0 mm) | CappingLinearAxisAAS | Primitive | – (Precondition Homed; Postcondition NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 8s) | – |
 | Crimp(Duration = 1.5 s) | CappingCrimperAAS | Primitive | – (After Duration) | – |
 
 - **Capability Capping** (`https://smartproductionlab.aau.dk/semantics/Capping`), realized by Capping: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; CapDiameter 13.0 to 20.0 mm.
@@ -558,8 +564,8 @@ flowchart BT
 | Skill | Held by | Kind | Start runs | Stop runs |
 | --- | --- | --- | --- | --- |
 | Inspection() → TopPassed, SidePassed | the module | Composite | CaptureTop (Passed → TopPassed) → CaptureSide (Passed → SidePassed) | – |
-| CaptureTop() → Passed | InspectionTopCameraAAS | Primitive | – (Ensures Done; Timeout 3s) | – |
-| CaptureSide() → Passed | InspectionSideCameraAAS | Primitive | – (Ensures Done; Timeout 3s) | – |
+| CaptureTop() → Passed | InspectionTopCameraAAS | Primitive | – (Postcondition Done; Timeout 3s) | – |
+| CaptureSide() → Passed | InspectionSideCameraAAS | Primitive | – (Postcondition Done; Timeout 3s) | – |
 
 - **Capability Inspection** (`https://smartproductionlab.aau.dk/semantics/Inspection`), realized by Inspection: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; InspectionMethod vision.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset, Start, Stop, Abort, Clear.
