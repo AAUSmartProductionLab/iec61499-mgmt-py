@@ -47,9 +47,10 @@ component (its set, its primitive) but is described in the module, where the con
 the other components and the product can refer to it. A component's own AAS keeps only its skills, as
 now.
 
-In ARSO (0.11, with the rename of section 5), `CapabilityRealizedBy` may then point to a skill of a
-component, in the words ARSO already uses for the skill of a step: "of the same AAS or of an AAS that
-is a part of it in HierarchicalStructures (downward only)". **Needs the user's go.**
+ARSO 0.11 (27 Oct) allows it: `CapabilityRealizedBy` may point to a skill of a component, in the
+words ARSO already uses for the skill of a step, "of the same AAS or of an AAS that is a part of it in
+HierarchicalStructures (downward only)". It also declares the constraint elements and the conventions
+of section 3 (`ontology/ARSO/Modules/capabilities.ttl`).
 
 ## 3. Constraints and state
 
@@ -140,7 +141,7 @@ Referenced, Position 0.0, Tared. Every composed skill starts and ends there; nob
 ## 5. The skill's runtime conditions (ARSO 0.11)
 
 The `Contract` of a primitive stays the executable check over the module's signals, renamed to the
-words of 02020 and CSS:
+words of 02020 and CSS (done 27 Oct):
 
 | ARSO 0.10 | ARSO 0.11 | Example |
 | --- | --- | --- |
@@ -219,8 +220,10 @@ CSS, with inputs as preconditions and outputs as effects: the same view of state
    properties Referenced, Tared, Volume (a dose), FillPosition ⊑ Position, ContentVolume and Weighed (of
    the product), FillWeight (a result); the constraints that hold of a kind of capability; the ontology
    checks. Dispense's parameter Volume then means Volume, not FillVolume.
-2. ARSO 0.11: `Contract` → `Conditions` and `Completion`; `CapabilityRealizedBy` to a component's skill
-   (needs the user's go); modreg, modsync and modgen follow.
+2. ARSO 0.11: `Contract` → `Conditions` and `Completion`; `CapabilityRealizedBy` to a component's skill;
+   the constraint elements and conventions. **Done 27 Oct**: modreg writes `Conditions` and
+   `Completion`, modsync also reads a 0.10 `Contract`; a module spec keeps its words (`requires`,
+   `ensures`, `after`, `timeout`).
 3. modreg: the component sets with their constraints (from the vocabulary and the spec), `SameProperty`
    to the data points; the Offered capabilities with their Pre and Post.
 4. The projection of the constraints; the domain model and the simulator (the checker).
