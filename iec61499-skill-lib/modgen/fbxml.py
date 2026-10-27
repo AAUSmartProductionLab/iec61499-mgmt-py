@@ -381,16 +381,6 @@ class TypeFile:
         return self.qualified
 
 
-class Struct(TypeFile):
-    """Structured data type (.dtp)."""
-    ext = ".dtp"
-    kind = "Struct"
-
-    def __init__(self, project, package, name, comment, members, folder):
-        self.header(project, "DataType", name, comment, package, folder)
-        declare(elem(self.root, "StructuredType"), members)
-
-
 class FB(TypeFile):
     """FB type with an interface list."""
 

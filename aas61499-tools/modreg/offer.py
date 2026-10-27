@@ -26,27 +26,13 @@ import base64
 import copy
 
 from modgen.spec import Capability as CapabilitySpec, CapabilityProperty, ModuleSpec
+from modsync.aasjson import at, children, submodel
 
 from . import model
 from .derive import local, offers as derived_offers
 from .model import ModuleTypeAAS
 from .profile import OFFERED_SET, Describer, capability_description, put
 from .projection import project, target
-
-
-def children(element: dict | None) -> list[dict]:
-    kids = (element or {}).get("submodelElements") or (element or {}).get("value") or []
-    return [k for k in kids if isinstance(k, dict)] if isinstance(kids, list) else []
-
-
-def at(element: dict | None, *path: str) -> dict | None:
-    for step in path:
-        element = next((c for c in children(element) if c.get("idShort") == step), None)
-    return element
-
-
-def submodel(env: dict, id_short: str) -> dict:
-    return next(s for s in env["submodels"] if s["idShort"] == id_short)
 
 
 def add(holder: dict, elements: list[dict], key: str = "value") -> None:
