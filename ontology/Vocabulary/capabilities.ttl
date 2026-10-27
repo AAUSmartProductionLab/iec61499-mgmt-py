@@ -1,5 +1,6 @@
 @prefix lab:  <https://smartproductionlab.aau.dk/semantics/> .
 @prefix css:  <http://www.w3id.org/hsu-aut/css#> .
+@prefix pprl: <https://w3id.org/2025/pprl#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -20,25 +21,38 @@
 # Filling, Stoppering and Capping; VDI 2860 for the handling
 # capabilities). The names are those of the process planner's examples
 # (vial, prefilled syringe, cartridge).
+#
+# 0.2 (28 Oct): what a capability needs, does and keeps, for planning
+# (PPRL's pre, post and invariant; docs/skill-planning.md). A component's
+# capability is realized by a primitive (lab:realizes on the skill type);
+# a process capability is defined by what it does to the product. The
+# properties planning needs are states of a resource (Referenced, Tared)
+# and of the product (ContentVolume, Weighed, Stoppered, Capped,
+# Inspected). What holds only on one module (the needle in the vial) is
+# not here: the module's AAS states it.
 #################################################################
 
 <https://smartproductionlab.aau.dk/semantics>
   rdf:type owl:Ontology ;
-  owl:versionInfo "0.1" ;
+  owl:versionInfo "0.2" ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
+  owl:imports <https://w3id.org/2025/pprl> ;
   rdfs:comment "Capabilities and capability properties of aseptic filling lines for vials, prefilled syringes and cartridges (AAU Smart Production Lab)." .
 
 lab:unit rdf:type owl:AnnotationProperty ;
   rdfs:comment "The unit the values of a property are given in (as written in the AAS)." .
 
 lab:valueType rdf:type owl:AnnotationProperty ;
-  rdfs:comment "The kind of value a property takes: number or string." .
+  rdfs:comment "The kind of value a property takes: number, string or boolean." .
 
 lab:characterizes rdf:type owl:AnnotationProperty ;
   rdfs:comment "A capability this property describes." .
 
 lab:contributes rdf:type owl:AnnotationProperty ;
   rdfs:comment "Said of a skill type (Skills vocabulary): the capability a skill of this type brings to a skill that runs it as a step. A module's offered capabilities are derived from it: a composite skill offers the process capabilities its steps contribute." .
+
+lab:realizes rdf:type owl:AnnotationProperty ;
+  rdfs:comment "Said of a skill type (Skills vocabulary): the capability of its component a primitive of this type realizes, with what that capability needs, does and keeps (0.2). It is a part of the module's capabilities, never offered on its own." .
 
 
 #################################################################
@@ -60,10 +74,41 @@ lab:AuxiliaryCapability rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
   rdfs:comment "A capability that serves other skills: offered only through the skills that use it, never required by a product." .
 
 lab:Positioning rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
-  rdfs:label "Positioning" ; rdfs:comment "Move an axis to a position, or to its reference." .
+  rdfs:label "Positioning" ; rdfs:comment "Move an axis to a position measured from its reference." ;
+  pprl:pre  [ pprl:onProperty lab:Referenced ; pprl:expression "= true" ] ;
+  pprl:post [ pprl:onProperty lab:Position ; pprl:expression "given" ] .
+
+lab:Referencing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Referencing" ; rdfs:comment "Move an axis to its reference, where its position is known." ;
+  pprl:post [ pprl:onProperty lab:Referenced ; pprl:expression "= true" ] ,
+            [ pprl:onProperty lab:Position ; pprl:expression "= 0.0" ] .
+
+lab:Dosing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Dosing" ; rdfs:comment "Deliver a volume of liquid through a pump's outlet, into the container." ;
+  pprl:post [ pprl:onProperty lab:ContentVolume ; pprl:expression "+= Volume" ] ,
+            [ pprl:onProperty lab:Weighed ; pprl:expression "= false" ] .
 
 lab:Weighing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
-  rdfs:label "Weighing" ; rdfs:comment "Weigh what is on a scale, or tare it." .
+  rdfs:label "Weighing" ; rdfs:comment "Weigh what is on a scale." ;
+  pprl:pre  [ pprl:onProperty lab:Tared ; pprl:expression "= true" ] ;
+  pprl:post [ pprl:onProperty lab:Weight ; pprl:expression "measured" ] ,
+            [ pprl:onProperty lab:Weighed ; pprl:expression "= true" ] .
+
+lab:Taring rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Taring" ; rdfs:comment "Set a scale to zero." ;
+  pprl:post [ pprl:onProperty lab:Tared ; pprl:expression "= true" ] .
+
+lab:Pressing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Pressing" ; rdfs:comment "Press a stopper into the container with a piston." ;
+  pprl:post [ pprl:onProperty lab:Stoppered ; pprl:expression "= true" ] .
+
+lab:Crimping rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Crimping" ; rdfs:comment "Crimp a cap onto the container." ;
+  pprl:post [ pprl:onProperty lab:Capped ; pprl:expression "= true" ] .
+
+lab:Imaging rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Imaging" ; rdfs:comment "Take an image of the container and judge it." ;
+  pprl:post [ pprl:onProperty lab:Inspected ; pprl:expression "= true" ] .
 
 lab:Unpacking rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
   rdfs:label "Unpacking" ; rdfs:comment "Take containers out of their packaging." .
@@ -72,16 +117,23 @@ lab:Loading rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCap
   rdfs:label "Loading" ; rdfs:comment "Place a container on the carrier that takes it through the line." .
 
 lab:Filling rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
-  rdfs:label "Filling" ; rdfs:comment "Fill a volume of liquid into an open container." .
+  rdfs:label "Filling" ; rdfs:comment "Fill a volume of liquid into an open container." ;
+  pprl:pre  [ pprl:onProperty lab:ContentVolume ; pprl:expression "= 0.0" ] ;
+  pprl:post [ pprl:onProperty lab:ContentVolume ; pprl:expression "= FillVolume" ] .
 
 lab:Stoppering rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
-  rdfs:label "Stoppering" ; rdfs:comment "Place a stopper on a filled container and press it in." .
+  rdfs:label "Stoppering" ; rdfs:comment "Place a stopper on a filled container and press it in." ;
+  pprl:pre  [ pprl:onProperty lab:ContentVolume ; pprl:expression "> 0.0" ] ;
+  pprl:post [ pprl:onProperty lab:Stoppered ; pprl:expression "= true" ] .
 
 lab:Capping rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
-  rdfs:label "Capping" ; rdfs:comment "Put a cap on a stoppered container and fasten it." .
+  rdfs:label "Capping" ; rdfs:comment "Put a cap on a stoppered container and fasten it." ;
+  pprl:pre  [ pprl:onProperty lab:Stoppered ; pprl:expression "= true" ] ;
+  pprl:post [ pprl:onProperty lab:Capped ; pprl:expression "= true" ] .
 
 lab:Inspection rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
-  rdfs:label "Inspection" ; rdfs:comment "Inspect a container and decide whether it passes." .
+  rdfs:label "Inspection" ; rdfs:comment "Inspect a container and decide whether it passes." ;
+  pprl:post [ pprl:onProperty lab:Inspected ; pprl:expression "= true" ] .
 
 lab:Unloading rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
   rdfs:label "Unloading" ; rdfs:comment "Take a container off its carrier." .
@@ -126,17 +178,72 @@ lab:CapDiameter rdf:type owl:Class ; rdfs:subClassOf css:Property ;
 
 lab:Position rdf:type owl:Class ; rdfs:subClassOf css:Property ;
   rdfs:label "Position" ; lab:valueType "number" ; lab:unit "mm" ;
-  rdfs:comment "Where an axis is to go, measured from its reference." ;
-  lab:characterizes lab:Positioning .
+  rdfs:comment "Where an axis is, or is to go, measured from its reference." ;
+  lab:characterizes lab:Positioning , lab:Referencing .
+
+lab:Referenced rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Referenced" ; lab:valueType "boolean" ;
+  rdfs:comment "An axis knows where it is: it has been at its reference since it was switched on." ;
+  lab:characterizes lab:Positioning , lab:Referencing .
+
+lab:FillPosition rdf:type owl:Class ; rdfs:subClassOf css:Property , lab:Position ;
+  rdfs:label "Fill position" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where the needle is in the container: the position of the axis at which a pump doses into it." ;
+  lab:characterizes lab:Dosing .
+
+lab:Volume rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Volume" ; lab:valueType "number" ; lab:unit "mL" ;
+  rdfs:comment "A volume a pump delivers in one dose." ;
+  lab:characterizes lab:Dosing .
 
 lab:FlowRate rdf:type owl:Class ; rdfs:subClassOf css:Property ;
   rdfs:label "Flow rate" ; lab:valueType "number" ; lab:unit "mL/s" ;
-  rdfs:comment "How fast a pump delivers liquid; a setting of the station, not asked for by a product." .
+  rdfs:comment "How fast a pump delivers liquid; a setting of the station, not asked for by a product." ;
+  lab:characterizes lab:Dosing .
 
 lab:Weight rdf:type owl:Class ; rdfs:subClassOf css:Property ;
   rdfs:label "Weight" ; lab:valueType "number" ; lab:unit "g" ;
   rdfs:comment "What a scale reads." ;
   lab:characterizes lab:Weighing .
+
+lab:Tared rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Tared" ; lab:valueType "boolean" ;
+  rdfs:comment "A scale reads zero for what it carried when it was tared." ;
+  lab:characterizes lab:Weighing , lab:Taring .
+
+lab:FillWeight rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Fill weight" ; lab:valueType "number" ; lab:unit "g" ;
+  rdfs:comment "The weight of the container after filling, for the batch record: a result of filling." ;
+  lab:characterizes lab:Filling ;
+  pprl:knownWhen [ pprl:onProperty lab:Weighed ; pprl:expression "= true" ] .
+
+
+# Properties of the product: a process changes or checks them (0.2) ------------
+
+lab:ContentVolume rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Content volume" ; lab:valueType "number" ; lab:unit "mL" ;
+  rdfs:comment "The volume of liquid in the container." ;
+  lab:characterizes lab:Dosing , lab:Filling , lab:Stoppering .
+
+lab:Weighed rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Weighed" ; lab:valueType "boolean" ;
+  rdfs:comment "The container has been weighed since it was last filled." ;
+  lab:characterizes lab:Dosing , lab:Weighing .
+
+lab:Stoppered rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Stoppered" ; lab:valueType "boolean" ;
+  rdfs:comment "A stopper is pressed into the container." ;
+  lab:characterizes lab:Pressing , lab:Stoppering , lab:Capping .
+
+lab:Capped rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Capped" ; lab:valueType "boolean" ;
+  rdfs:comment "A cap is crimped onto the container." ;
+  lab:characterizes lab:Crimping , lab:Capping .
+
+lab:Inspected rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Inspected" ; lab:valueType "boolean" ;
+  rdfs:comment "The container has been inspected." ;
+  lab:characterizes lab:Imaging , lab:Inspection .
 
 lab:InspectionMethod rdf:type owl:Class ; rdfs:subClassOf css:Property ;
   rdfs:label "Inspection method" ; lab:valueType "string" ;
