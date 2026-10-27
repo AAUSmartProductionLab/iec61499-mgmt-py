@@ -14,6 +14,10 @@ The AAS as the desired state (no module spec is read; the AASs are a folder of A
     python -m modsync reconfigure http://localhost:8081 --shell FillingModuleAAS --dry-run   # what would change
     python -m modsync reconfigure aas --host 192.168.0.203                 # bring the module to its AAS, record it
 
+What was built (instances, block types, hashes, the change log, where the module is managed) is the
+integrator's record, outside the AAS: --records names a folder (default records/) or the
+registration service (http://<host>:8090), which keeps it at /build/<idShort>.
+
 Run on the module's own computer with --host localhost: push then writes the boot file in ~/forte
 and restarts the FORTE container there (elsewhere it does so over SSH).
 The AASs of the module and of its components go to aas/<idShort>.json, built by modreg (which needs
@@ -36,6 +40,7 @@ from .sync import LocalDeployer, PiDeployer, Refused, Status, candidates, inspec
 
 OUT = Path("aas")
 PROJECTS = Path("projects")
+RECORDS = "records"
 
 
 def publish(status: Status | None, args, spec=None, target=None, path=None):
@@ -49,14 +54,18 @@ def publish(status: Status | None, args, spec=None, target=None, path=None):
         return
     if status is not None:
         c, snap = status.candidate, status.snapshot
-        found = profiles.describe_all(c.spec, c.target, snap, status.drift, relative(c.path), f"opc.tcp://{snap.host}:4840")
+        found, record = profiles.describe_with_record(c.spec, c.target, snap, status.drift, relative(c.path),
+                                                      f"opc.tcp://{snap.host}:4840")
     else:
-        found = profiles.describe_all(spec, target, spec_path=relative(path))
+        found, record = profiles.describe_with_record(spec, target, spec_path=relative(path))
+    built = []
     for profile in found:
         out = Path(args.out) / f"{profile['id_short']}.json"
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps(model.build(profile), indent=1), encoding="utf-8")
+        built.append(model.build(profile))
+        out.write_text(json.dumps(built[-1], indent=1), encoding="utf-8")
         print(f"  AAS: {out}")
+    print(f"  record of what was built: {desired.store_record(args.records, built[0], record)}")
     if args.register:
         register(found, args)
 
@@ -115,12 +124,13 @@ def against_the_aas(args) -> int:
     """verify and reconfigure: the module against the AASs in ``args.aas``."""
     try:
         module, components = desired.load(args.aas, args.shell)
+        record = desired.load_record(args.records, module)
     except (desired.NotDescribed, OSError) as exc:
         sys.exit(f"{args.aas}: {exc}")
-    stated_host, stated_port = desired.endpoint(module)
+    stated_host, stated_port = desired.endpoint(record)
     host, port = args.host or stated_host, args.port or stated_port or 61499
     if host is None:
-        sys.exit("Give --host: the AAS states no management endpoint")
+        sys.exit(f"Give --host: there is no record of where the module is managed in {args.records}")
     name = module["assetAdministrationShells"][0]["idShort"]
     with Client(host, port, timeout=5) as client:
         try:
@@ -131,11 +141,11 @@ def against_the_aas(args) -> int:
             pass
         try:
             if args.command == "verify":
-                reading, done = desired.read(client, host, port, module, components), None
+                reading, done = desired.read(client, host, port, module, components, record_=record), None
             else:
                 deployer = LocalDeployer(port=port) if is_local(host) else PiDeployer(host, args.user, port) if args.user else None
                 done, reading = desired.reconfigure(client, host, port, module, components, deployer,
-                                                    force=args.force, dry_run=args.dry_run)
+                                                    force=args.force, dry_run=args.dry_run, record_=record)
         except (desired.NotDescribed, Refused) as exc:
             sys.exit(f"{name} at {host}:{port}: {exc}")
     found = reading.differences
@@ -144,7 +154,9 @@ def against_the_aas(args) -> int:
     for line in [*found.lines()[:40], *(done or [])]:
         print(f"  {line}")
     if found.empty and (args.command == "verify" and args.record or done and len(done) > 1 and not args.dry_run):
-        print(f"  recorded in {desired.store(args.aas, desired.record(module, reading, done, getattr(args, 'trigger', ''), components), module)}")
+        recorded, record = desired.record(module, reading, done, getattr(args, "trigger", ""), components, record)
+        print(f"  AAS: {desired.store(args.aas, recorded, module)}")
+        print(f"  record of what was built: {desired.store_record(args.records, recorded, record)}")
     return 0 if found.empty or args.command == "reconfigure" and args.dry_run else 1
 
 
@@ -181,10 +193,13 @@ def main():
         p = sub.add_parser(name)
         p.add_argument("aas", help="The AASs of the module and its components: a folder of AAS files, or an AAS server (http://<host>:8081)")
         p.add_argument("--shell", help="The module's AAS (idShort), when there are several")
-        p.add_argument("--host", help="FORTE host (default: the management endpoint the AAS states)")
-        p.add_argument("--port", type=int, help="FORTE management port (default: the AAS's, else 61499)")
+        p.add_argument("--host", help="FORTE host (default: the management endpoint the record states)")
+        p.add_argument("--port", type=int, help="FORTE management port (default: the record's, else 61499)")
+        p.add_argument("--records", default=RECORDS, help="Where the record of what was built is kept: a folder, or the "
+                       "registration service (http://<host>:8090)")
         if name == "verify":
-            p.add_argument("--record", action="store_true", help="Write the block types and hashes found into the Control Configuration")
+            p.add_argument("--record", action="store_true", help="Write down what was found: Deployment in the AAS, the "
+                           "instances, block types and hashes in the record")
         else:
             p.add_argument("--user", help="SSH login of the module's computer, to add the change to its boot file")
             p.add_argument("--dry-run", action="store_true", help="Only show what would change")
@@ -200,6 +215,8 @@ def main():
         p = sub.add_parser(name)
         p.add_argument("--out", default=str(OUT), help="Folder for the AAS JSON files")
         p.add_argument("--register", metavar="URL", help="Also send the module's profile to this registration service (modreg serve)")
+        p.add_argument("--records", default=RECORDS, help="Where the record of what was built goes: a folder, or the "
+                       "registration service (http://<host>:8090)")
         if name in ("describe", "push"):
             p.add_argument("spec", help="Module spec: a file, or a module's name (filling)")
         elif name == "pull":

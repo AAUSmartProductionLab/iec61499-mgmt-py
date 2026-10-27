@@ -27,9 +27,9 @@ def test_a_delivered_module_is_what_its_aas_describes(module):    # noqa: F811
     reading = read(module.client, module.host, module.port, delivered, components)
     assert reading.differences.empty, reading.differences.lines()
     # Once the hashes FORTE reports are recorded, they are verified too.
-    recorded = record(delivered, reading)
-    assert all(digest.startswith("v2:SHA3-512:") for _, _, digest in instances(recorded))
-    assert read(module.client, module.host, module.port, recorded, components).differences.empty
+    recorded, config = record(delivered, reading)
+    assert all(digest.startswith("v2:SHA3-512:") for _, _, digest in instances(config))
+    assert read(module.client, module.host, module.port, recorded, components, record_=config).differences.empty
 
 
 def test_a_skill_described_in_the_aas_is_created_while_another_runs(module, tmp_path):   # noqa: F811
@@ -72,10 +72,10 @@ def test_a_skill_described_in_the_aas_is_created_while_another_runs(module, tmp_
     assert ua.value("Skills/DoubleDose/Results/Weight") == pytest.approx(2.0)
 
     # What was built is recorded, with the hashes of this FORTE, and holds when read again.
-    recorded = record(wanted, after, done, "changeover to two doses")
-    built = {path: digest for path, _, digest in instances(recorded)}
+    recorded, config = record(wanted, after, done, "changeover to two doses")
+    built = {path: digest for path, _, digest in instances(config)}
     assert built["DoubleDose.Execute.Dispense_2"].startswith("v2:SHA3-512:")
-    assert read(module.client, module.host, module.port, recorded, components).differences.empty
+    assert read(module.client, module.host, module.port, recorded, components, record_=config).differences.empty
     # The IDE project of what runs has the new skill, and deploys exactly the program that runs.
     status = inspect(module.client, module.host, module.port, [module.cand])
     project = write_project(module.client, module.host, module.port, status, tmp_path)
@@ -90,7 +90,7 @@ def test_a_skill_described_in_the_aas_is_created_while_another_runs(module, tmp_
             assert time.monotonic() < deadline, "the boot file was not loaded"
             time.sleep(0.2)
         time.sleep(0.5)
-        assert read(client, module.host, port, recorded, components).differences.empty
+        assert read(client, module.host, port, recorded, components, record_=config).differences.empty
 
 
 def test_a_skill_from_the_skill_editor_is_built_recorded_and_reached_through_its_aas(module):   # noqa: F811
@@ -106,7 +106,7 @@ def test_a_skill_from_the_skill_editor_is_built_recorded_and_reached_through_its
     delivered["submodels"] = [edited if s["idShort"] == "Skills" else s for s in delivered["submodels"]]
     done, after = reconfigure(module.client, module.host, module.port, delivered, components)
     assert done[0].startswith("create DoubleDose: "), done
-    recorded = record(delivered, after, done, "two doses, from the skill editor")
+    recorded = record(delivered, after, done, "two doses, from the skill editor")[0]
 
     def node(reference: dict) -> str:
         """The browse path below the module's root of the interface element a reference names."""

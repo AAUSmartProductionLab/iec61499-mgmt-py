@@ -33,17 +33,26 @@ def aas(spec: ModuleSpec, target: str = "pi") -> tuple[dict, list[dict]]:
 
 
 def wanting(spec: ModuleSpec, built: dict) -> tuple[dict, list[dict]]:
-    """The AASs that describe ``spec`` while their record of what was built is still ``built``'s:
-    what an engineer's change to the AAS of a delivered module looks like."""
+    """The AASs that describe ``spec`` on a module that was delivered as ``built``: a skill ``built``
+    does not have is described, not built (Deployment Described). What an engineer's change to the
+    AAS of a delivered module looks like."""
     module, components = aas(spec)
-    module["submodels"] = [submodel(built, "ControlConfiguration") if s["idShort"] == "ControlConfiguration" else s
-                           for s in module["submodels"]]
+    have = {s["idShort"] for s in desired.skills_in(submodel(built, "Skills"))}
+    for skill in desired.skills_in(submodel(module, "Skills")):
+        if skill["idShort"] not in have:
+            at(skill, "Deployment")["value"] = "Described"
     return module, components
 
 
 @pytest.fixture(scope="module")
 def delivered():
     return aas(load(FILLING))
+
+
+@pytest.fixture(scope="module")
+def delivered_record():
+    """What the integrator's record says was built on the delivered module."""
+    return profiles.describe_with_record(load(FILLING), "pi")[1]
 
 
 @pytest.fixture(scope="module")
@@ -60,15 +69,17 @@ def test_the_aas_describes_what_the_module_spec_states(path):
     assert stated(found) == stated(spec)
 
 
-def test_a_delivered_module_is_what_its_aas_describes(delivered):
-    reading = read(FakeForte(filling()), "pi", 61499, *delivered)
+def test_a_delivered_module_is_what_its_aas_describes(delivered, delivered_record):
+    reading = read(FakeForte(filling()), "pi", 61499, *delivered, record_=delivered_record)
     assert reading.differences.empty, reading.differences.lines()
     assert (reading.spec.module, reading.spec.package, reading.spec.opcua_root) == ("Filling", "filling", "/Objects/Filling")
     # The record of what was built names instances the program has, with their block types.
-    assert ("Dispensing.Execute.Dispense", "filling::SK_Dispense", None) in instances(delivered[0])
+    assert ("Dispensing.Execute.Dispense", "filling::SK_Dispense", None) in instances(delivered_record)
+    # Without a record the AAS and the program are enough.
+    assert read(FakeForte(filling()), "pi", 61499, *delivered).differences.empty
 
 
-def test_a_program_that_was_changed_differs_from_its_aas(delivered):
+def test_a_program_that_was_changed_differs_from_its_aas(delivered, delivered_record):
     forte = FakeForte(filling())
     forte.values["Dispensing.Execute.Dispense.FlowRate"] = "2.5"
     found = read(forte, "pi", 61499, *delivered).differences
@@ -76,7 +87,7 @@ def test_a_program_that_was_changed_differs_from_its_aas(delivered):
     assert found.lines() == ["Dispensing.Execute.Dispense.FlowRate = 2.5, the AAS describes 1.0"]
     # Another block where a step is described is nothing an online change repairs.
     forte.fbs["Dispensing.Execute.Home"] = "filling::SK_Tare"
-    found = read(forte, "pi", 61499, *delivered).differences
+    found = read(forte, "pi", 61499, *delivered, record_=delivered_record).differences
     assert not found.online
     assert any("Dispensing.Execute" in line and "the program runs" in line for line in found.restart)
     assert found.built == ["Dispensing.Execute.Home is filling::SK_Tare, recorded as filling::SK_Home"]
@@ -105,10 +116,10 @@ def test_a_constant_and_a_limit_changed_in_the_aas_are_written_online(delivered)
 
 
 def test_a_skill_that_is_described_and_not_built_is_created_online(delivered, with_double_dose):
-    """DoubleDose is in the Skills submodel; the Control Configuration records no instance of it."""
+    """DoubleDose is in the Skills submodel, described and not built."""
     module, components = with_double_dose
     assert "DoubleDose" in described(module, components).composites
-    assert not any(path.startswith("DoubleDose") for path, _, _ in instances(module))
+    assert desired.deployment(at(submodel(module, "Skills"), "DoubleDose")) == "Described"
     forte = FakeForte(filling(), state="Execute", occupied=True)          # an orchestrator is working
     found = read(forte, "pi", 61499, module, components).differences
     assert found.create == ["DoubleDose"] and found.online and not found.values
@@ -134,17 +145,20 @@ def test_a_skill_that_is_described_and_not_built_is_created_online(delivered, wi
     assert not any("$e" in line for line in saved)
 
 
-def test_what_was_built_is_recorded_in_the_control_configuration(with_double_dose):
+def test_what_was_built_is_recorded(with_double_dose, delivered_record):
+    """The AAS says the skill is built now (Deployment); the record outside it says which blocks it is."""
     module, components = with_double_dose
     forte = FakeForte(filling())
-    done, after = reconfigure(forte, "pi", 61499, module, components)
-    recorded = record(module, after, done, "changeover to two doses")
-    assert submodel(module, "ControlConfiguration") != submodel(recorded, "ControlConfiguration")      # a copy
-    built = {path: (typ, digest) for path, typ, digest in instances(recorded)}
+    done, after = reconfigure(forte, "pi", 61499, module, components, record_=delivered_record)
+    recorded, config = record(module, after, done, "changeover to two doses", record_=delivered_record)
+    assert desired.deployment(at(submodel(recorded, "Skills"), "DoubleDose")) == "Built"
+    assert desired.deployment(at(submodel(module, "Skills"), "DoubleDose")) == "Described"         # a copy
+    assert config is not delivered_record and not any(p.startswith("DoubleDose") for p, _, _ in instances(delivered_record))
+    assert submodel(recorded, "ControlConfiguration") is None
+    built = {path: (typ, digest) for path, typ, digest in instances(config)}
     assert built["DoubleDose.Control"] == ("modlib::SKILL_Core", f"v2:SHA3-512:{len('modlib::SKILL_Core')}")
     assert built["DoubleDose.Execute.NeedleDown"][0] == "filling::SK_MoveAxis"
     assert built["Dispensing.Execute.Dispense"][1].startswith("v2:SHA3-512:")      # the delivered ones get their hash too
-    config = submodel(recorded, "ControlConfiguration")
     step = at(config, "Instances", "DoubleDose_Execute_NeedleDown", "Skill")["value"]["keys"]
     assert [k["value"] for k in step[1:]] == ["DoubleDose", "Start", "Steps", "Step_0000"]
     assert at(config, "SyncState")["value"] == "InSync"
@@ -152,49 +166,57 @@ def test_what_was_built_is_recorded_in_the_control_configuration(with_double_dos
     assert at(change, "Trigger")["value"] == "changeover to two doses"
     assert at(change, "Result")["value"].startswith("create DoubleDose: ")
     # With the record, the hashes are part of what is verified.
+    assert at(config, "Runtime", "ManagementEndpoint")["value"] == "pi:61499"
     forte.fbs["DoubleDose.Execute.NeedleDown"] = "filling::SK_Home"
     assert any("recorded as filling::SK_MoveAxis" in line
-               for line in read(forte, "pi", 61499, recorded, components).differences.built)
+               for line in read(forte, "pi", 61499, recorded, components, record_=config).differences.built)
 
 
-def test_from_the_command_line_with_the_aas_in_a_folder(with_double_dose, tmp_path, monkeypatch, capsys):
-    """verify, then reconfigure: the AASs are files, the module is where its AAS says it is."""
+def test_from_the_command_line_with_the_aas_in_a_folder(with_double_dose, delivered_record, tmp_path, monkeypatch, capsys):
+    """verify, then reconfigure: the AASs are files, the module is where the record of what was built
+    says it is."""
     import json
 
     import modsync.__main__ as cli
     module, components = with_double_dose
+    folder, records = tmp_path / "aas", tmp_path / "records"
+    folder.mkdir()
     for env in (module, *components):
-        (tmp_path / f"{env['assetAdministrationShells'][0]['idShort']}.json").write_text(json.dumps(env), encoding="utf-8")
-    assert desired.endpoint(module) == ("192.168.0.203", 61499)
+        (folder / f"{env['assetAdministrationShells'][0]['idShort']}.json").write_text(json.dumps(env), encoding="utf-8")
+    desired.store_record(str(records), module, delivered_record)
+    assert desired.endpoint(desired.load_record(str(records), module)) == ("192.168.0.203", 61499)
     forte, asked = FakeForte(filling()), []
     monkeypatch.setattr(cli, "Client", lambda host, port, timeout: asked.append((host, port)) or forte)
     monkeypatch.setattr(cli, "is_local", lambda host: False)
 
     def run(*argv) -> tuple[int, str]:
-        monkeypatch.setattr("sys.argv", ["modsync", *argv])
+        monkeypatch.setattr("sys.argv", ["modsync", *argv, "--records", str(records)])
         with pytest.raises(SystemExit) as exit_:
             cli.main()
         return exit_.value.code, capsys.readouterr().out
 
-    code, out = run("verify", str(tmp_path))
+    code, out = run("verify", str(folder))
     assert code == 1 and "1 differences from its AAS (FillingModuleAAS)" in out
     assert "described, not in the program: DoubleDose" in out and asked == [("192.168.0.203", 61499)]
-    code, out = run("reconfigure", str(tmp_path), "--dry-run")
+    code, out = run("reconfigure", str(folder), "--dry-run")
     assert code == 0 and "create DoubleDose: " in out and "DoubleDose.Control" not in forte.fbs
-    code, out = run("reconfigure", str(tmp_path), "--trigger", "two doses")
-    assert code == 0 and "as its AAS describes it" in out and "recorded in" in out
-    # The file now records what was built, and the module verifies against it.
-    written = desired.load(str(tmp_path))[0]
-    assert any(path == "DoubleDose.Control" and digest for path, _, digest in instances(written))
-    assert at(at(submodel(written, "ControlConfiguration"), "ChangeLog")["value"][-1], "Trigger")["value"] == "two doses"
-    assert run("verify", str(tmp_path))[0] == 0
+    code, out = run("reconfigure", str(folder), "--trigger", "two doses")
+    assert code == 0 and "as its AAS describes it" in out and "record of what was built: " in out
+    # The AAS says the skill is built, the record which blocks it is; the module verifies against both.
+    written = desired.load(str(folder))[0]
+    assert desired.deployment(at(submodel(written, "Skills"), "DoubleDose")) == "Built"
+    kept = desired.load_record(str(records), written)
+    assert any(path == "DoubleDose.Control" and digest for path, _, digest in instances(kept))
+    assert at(at(kept, "ChangeLog")["value"][-1], "Trigger")["value"] == "two doses"
+    assert run("verify", str(folder))[0] == 0
 
 
 def test_a_skill_written_in_the_skill_editor_is_built(delivered):
     """The web UI's skill editor (basyx-aas-web-ui fork, ProcessSequence/skills) saves the Skills
     submodel. tests/data/FillingSkills-edited.json.gz is what it wrote in its own test: a new skill
-    DoubleDose made from Dispensing, with a second dispensing step and other limits. It has no
-    action of the interface yet; built, it is callable like the others."""
+    DoubleDose made from Dispensing, with a second dispensing step and other limits, described and
+    not built (Deployment Described). It has no action of the interface yet; built, it is callable
+    like the others."""
     import gzip
     import json
     from pathlib import Path
@@ -228,9 +250,9 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
     assert forte.values["DoubleDose.Control.Methods"] == "TRUE" and forte.values["DoubleDose.Volume.Upper"] == "5.0"
     # Recorded, the skill is reachable: its commands name their actions, and the interface, the data
     # points and the mappings are those of a module that was delivered with this skill.
-    recorded = record(module, after, done, "two doses")
+    recorded = record(module, after, done, "two doses")[0]
     # Recorded with its components' AASs, the capabilities are derived anew: built, it offers now.
-    double = at(submodel(record(module, after, done, "two doses", components), "CapabilityDescription"),
+    double = at(submodel(record(module, after, done, "two doses", components)[0], "CapabilityDescription"),
                 "OfferedCapabilities", "Filling_DoubleDose")
     assert "Availability" not in {q["type"] for q in at(double, "Capability")["qualifiers"]}
     whole = model.build(profiles.describe(ModuleSpec.model_validate(data), "pi"))
@@ -260,7 +282,7 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
     arso = Blueprint(Path(__file__).resolve().parents[2] / "ontology" / "ARSO")
     assert check(recorded, arso).ok and len(check(recorded, arso).unknown) == len(check(whole, arso).unknown)
     assert read(forte, "pi", 61499, recorded, components).differences.empty
-    assert record(recorded, after) == record(record(recorded, after), after)          # nothing is added twice
+    assert record(recorded, after)[0] == record(record(recorded, after)[0], after)[0]   # nothing is added twice
     # Stored on an AAS server, every submodel the record changed is put back, and no other.
     import http.server
     import threading
@@ -283,7 +305,7 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
     finally:
         server.shutdown()
         server.server_close()
-    assert sorted(put) == ["AssetInterfacesDescription", "AssetInterfacesMappingConfiguration", "ControlConfiguration",
+    assert sorted(put) == ["AssetInterfacesDescription", "AssetInterfacesMappingConfiguration",
                            "OperationalData", "Skills"] and "Skills" in where
     # A binding that hands nothing is refused.
     at(edited, "DoubleDose", "Start", "Steps", "Step_0000", "Bindings", "Binding_0000", "Value")["value"] = ""

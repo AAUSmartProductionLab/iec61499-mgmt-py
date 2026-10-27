@@ -9,6 +9,7 @@ import json
 import gzip
 from pathlib import Path
 import threading
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -126,9 +127,9 @@ def test_registering_a_module_publishes_its_aas(service, aas_server, stoppering)
     profile = stoppering
     status, answer = send(url, profile)
     assert status == 201 and answer["id_short"] == "StopperingModuleAAS" and not answer["unchanged"]
-    assert len(answer["submodels"]) == 8      # with the Capability Description
+    assert len(answer["submodels"]) == 7      # with the Capability Description, without what was built
     # Created on the AAS server: every submodel, then the shell.
-    assert aas_server.calls.count("POST submodels") == 8 and aas_server.calls[-1] == "POST shells"
+    assert aas_server.calls.count("POST submodels") == 7 and aas_server.calls[-1] == "POST shells"
     shell = aas_server.items[("shells", b64(answer["id"]))]
     assert shell["assetInformation"]["globalAssetId"] == profile["global_asset_id"]
     # Kept by the service: the profile as sent and the AAS built from it.
@@ -141,21 +142,31 @@ def test_registering_a_module_publishes_its_aas(service, aas_server, stoppering)
     status, again = send(url, profile)
     assert status == 200 and again["unchanged"] and again["registered_at"] == answer["registered_at"]
     assert len(aas_server.calls) == before
-    # Read again later with nothing changed on the module: still the same registration.
-    later = {**profile, "control_configuration": {**profile["control_configuration"], "ReadAt": {"value": "2026-10-02T12:00:00+00:00"}}}
-    assert send(url, later)[1]["unchanged"] and len(aas_server.calls) == before
+    # The record of what was built on the module is kept beside it, not in its AAS.
+    record = {"idShort": "ControlConfiguration", "modelType": "Submodel", "id": f"{answer['id']}/submodels/ControlConfiguration",
+              "submodelElements": [{"idShort": "ReadAt", "modelType": "Property", "valueType": "xs:string",
+                                    "value": "2026-10-02T12:00:00+00:00"}]}
+    with pytest.raises(urllib.error.HTTPError):
+        get(f"{url}/build/StopperingModuleAAS")
+    request = urllib.request.Request(f"{url}/build/StopperingModuleAAS", json.dumps(record).encode(), method="PUT",
+                                     headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(request, timeout=30) as response:
+        assert json.loads(response.read()) == {"kept": "StopperingModuleAAS"}
+    assert get(f"{url}/build/StopperingModuleAAS") == record and len(aas_server.calls) == before
 
     # A changed profile replaces the AAS.
     changed = json.loads(json.dumps(profile))
     changed["nameplate"] = {"SerialNumber": {"value": "STOP-0002"}}
     status, renewed = send(url, changed)
     assert status == 201 and renewed["digest"] != answer["digest"]
-    assert aas_server.calls[before:].count("PUT submodels") == 8 and "POST submodels" not in aas_server.calls[before:]
+    assert aas_server.calls[before:].count("PUT submodels") == 7 and "POST submodels" not in aas_server.calls[before:]
 
     request = urllib.request.Request(f"{url}/profiles/StopperingModuleAAS", method="DELETE")
     with urllib.request.urlopen(request, timeout=30) as response:
-        assert len(json.loads(response.read())["published"]) == 9
+        assert len(json.loads(response.read())["published"]) == 8
     assert aas_server.items == {} and get(f"{url}/profiles") == []
+    with pytest.raises(urllib.error.HTTPError):                    # the record goes with it
+        get(f"{url}/build/StopperingModuleAAS")
 
 
 def test_the_skill_editor_has_the_capabilities_derived_anew(service, aas_server):
@@ -210,7 +221,7 @@ def test_an_aas_that_breaks_the_ontology_is_refused(tmp_path, tiny, aas_server):
 def test_strict_refuses_what_the_ontology_does_not_describe(tmp_path, loose):
     profile = {"aas_type": "ModuleTypeAAS", "id_short": "EmptyModuleAAS"}
     registration = Registry(tmp_path / "lenient", loose).register(profile)
-    assert len(registration.unknown) == len(registration.submodels) == 7       # the tiny ontology knows none of them
+    assert len(registration.unknown) == len(registration.submodels) == 6       # the tiny ontology knows none of them
     with pytest.raises(Refused, match="is not in the ontology") as refused:
         Registry(tmp_path / "strict", loose, strict=True).register(profile)
     assert refused.value.status == 422
@@ -229,7 +240,7 @@ def test_the_command_line(service, tmp_path, capsys):
     written = tmp_path / "profiles" / "StopperingModuleAAS.json"
     assert json.loads(written.read_text(encoding="utf-8"))["aas_type"] == "ModuleTypeAAS"
     assert main(["build", str(written), "--out", str(tmp_path / "aas")]) == 0
-    assert len(json.loads((tmp_path / "aas" / "StopperingModuleAAS.json").read_text(encoding="utf-8"))["submodels"]) == 8
+    assert len(json.loads((tmp_path / "aas" / "StopperingModuleAAS.json").read_text(encoding="utf-8"))["submodels"]) == 7
     assert main(["register", str(written), "--service", url]) == 0
     assert "registered: StopperingModuleAAS" in capsys.readouterr().out
     assert main(["register", str(written), "--service", url]) == 0

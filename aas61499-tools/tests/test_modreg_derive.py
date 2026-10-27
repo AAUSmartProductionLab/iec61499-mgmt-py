@@ -43,14 +43,14 @@ def test_what_is_derived_is_what_the_modules_offered_before(name):
 
 
 def test_a_skill_described_but_not_built_is_offered_after_a_reconfiguration():
-    """DoubleDose is described in the Skills submodel, but the record of what was built is the
-    delivered module's: no block of the program carries it out, so it offers Filling only once it
-    is built. Its parameter Dose states no meaning; it hands its value to Dispense's Volume, which
-    means FillVolume, so the offer has that range."""
+    """DoubleDose is described in the Skills submodel, not built (Deployment Described): no block of
+    the program carries it out, so it offers Filling only once it is built. Its parameter Dose states
+    no meaning; it hands its value to Dispense's Volume, which means FillVolume, so the offer has
+    that range."""
     module, *components = lean(composed().spec)
-    delivered = lean(load(SPECS / "filling.yaml"))[0]
-    module["submodels"] = [next(s for s in delivered["submodels"] if s["idShort"] == "ControlConfiguration")
-                           if s["idShort"] == "ControlConfiguration" else s for s in module["submodels"]]
+    skills = next(s for s in module["submodels"] if s["idShort"] == "Skills")
+    double = next(s for s in skills["submodelElements"] if s["idShort"] == "DoubleDose")
+    next(e for e in double["value"] if e["idShort"] == "Deployment")["value"] = "Described"
     found = {(o.skill_name, o.name): o for o in offers(project([module, *components], structure=False))}
     assert set(found) == {("Dispensing", "Filling"), ("DoubleDose", "Filling")}
     assert found["Dispensing", "Filling"].built and not found["DoubleDose", "Filling"].built

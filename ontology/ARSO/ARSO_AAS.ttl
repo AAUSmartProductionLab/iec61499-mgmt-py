@@ -12,7 +12,7 @@
 
 <https://w3id.org/2025/arso>
   rdf:type owl:Ontology ;
-  owl:versionIRI <https://w3id.org/2025/arso/0.9.0> ;
+  owl:versionIRI <https://w3id.org/2025/arso/0.10.0> ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://admin-shell.io/aas/3/1/> ;
   owl:imports <https://w3id.org/2025/arso/modules/nameplate> ;
@@ -25,7 +25,13 @@
   owl:imports <https://w3id.org/2025/arso/modules/technical-data> ;
   owl:imports <https://w3id.org/2025/arso/modules/aimc> ;
   owl:imports <https://w3id.org/2025/arso/modules/control-configuration> ;
-  rdfs:comment """ARSO v0.9 — Domain extension ontology for Resource AAS.
+  rdfs:comment """ARSO v0.10 — Domain extension ontology for Resource AAS.
+
+  v0.10 (27 Oct 2026): what was built leaves the AAS. The Skills submodel states the rule set the
+  resource's program is built by (RuleSet) and, per skill, whether it is built or only described
+  (Deployment); the instances, block types and hashes, the change log and the management endpoint
+  are the integrator's record, kept outside the AAS. The Control Configuration module stays as the
+  schema of that record; a resource AAS no longer carries the submodel.
 
   v0.9 (26 Oct 2026): the Skills submodel is ARSO's own template (Modules/skills.ttl, was
   control-component.ttl): its skills are its own elements (no Skills container), the Interfaces
