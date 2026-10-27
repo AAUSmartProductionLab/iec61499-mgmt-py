@@ -1,7 +1,8 @@
 # Authoring skills: the skill editor, the planner and a backend for both
 
-Proposal of 27 Oct 2026, **for your decision**. How the two web UI modules (the process sequence
-planner and the skill editor) are to change, so that:
+Proposal of 27 Oct 2026; decided the same day (phase 2 before the paper) and **built the same day:
+phases 1 and 2** (section 7). How the two web UI modules (the process sequence planner and the skill
+editor) are to change, so that:
 
 - the Skills submodel opens on an **overview**, and a single skill opens in the **editor**;
 - a skill can have **branches, conditions and parallel steps**, edited with the planner's own
@@ -242,7 +243,18 @@ dry run first) builds it. Later a resource agent calls the same `propose`, `chec
 | 3 | `POST /skills/propose` and "make a skill for this" in the planner (first level of section 5) | 3 to 5 days | After phase 1; before the paper only if time allows |
 | 4 | Preconditions and effects in the vocabulary; composing sequences by planning; the agents calling the same service | Weeks | After the paper |
 
-**Decisions needed:**
+**State on 27 Oct:** phase 1 built (the overview, the skill view, one skill saved, the derivation
+after saving, `Availability` in the planner; `Deployment` and `RuleSet` in the AAS). Phase 2 built:
+ModLib's `SKILL_Join2` to `4`, `SKILL_Condition_LREAL` and `_BOOL`, `SKILL_Merge`; rule set 2 in
+[module-rules.md](module-rules.md); the spec, the generator, modsync's read-back from the program
+and from the AAS, modreg's AAS and derivation (a step counts when it runs on every path); the editor
+with parallel blocks, decisions and conditional steps (its own step and block cards; the planner's
+graph layout, not yet its components); tried on FORTE on this PC (two decisions and a parallel block
+created online while the module ran, and run). FORTE for the Pi is built and in `runtime/bin`, **not
+installed on the Pis** (waits for you at the bench). Not built: `POST /skills/check` (the editor
+checks in TypeScript, kept the same as modsync's rules by a shared fixture), phase 3.
+
+**Decisions needed (answered 27 Oct: C; phase 2 before the paper; the fork committed):**
 
 1. The Control Configuration: option A, B or C ([control-configuration.md](control-configuration.md)).
 2. Does the paper show a skill with a branch? It decides whether phase 2 comes before B1 and B2.
