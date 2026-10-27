@@ -181,8 +181,10 @@ def test_filler_flattens_to_module_level_equipment_skills_and_procedures():
     # Children are private (no methods) and keep the composite's equipment lock.
     assert written["Fill.Execute.MoveNeedleDown.Methods"] == "FALSE"
     assert written["Fill.Execute.MoveNeedleDown.Holder"] == '"Fill"'
-    assert written["Fill.Execute.MoveNeedleDown.ReleaseAfter"] == "FALSE"  # MoveNeedleUp comes next
-    assert written["Fill.Execute.MoveNeedleUp.ReleaseAfter"] == "TRUE"     # releases the needle
+    # They keep it to the end of the run: the composite's Control gives everything up then.
+    assert written["Fill.Execute.MoveNeedleDown.ReleaseAfter"] == "FALSE"
+    assert written["Fill.Execute.MoveNeedleUp.ReleaseAfter"] == "FALSE"
+    assert written["Fill.Control.ReleaseAll"] == "TRUE"
     # Procedure children release after each step.
     assert written["Resetting.MoveNeedleUp.ReleaseAfter"] == "TRUE"
     assert "MoveNeedleDown.Distance" not in written                        # the type's default applies

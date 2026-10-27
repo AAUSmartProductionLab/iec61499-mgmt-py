@@ -134,8 +134,10 @@ in, and `DONE` (with the results), `FAILED` (with `ErrorID`) and `INITO` out.
 
 1. One instance per step, named like the step, of the step's skill primitive type, with `Module`,
    `UaRoot`, `UaEnable = TRUE`, `UaPath = <path>/Execute/<step>` (`<path>/Stopping/<step>` in a stop
-   sequence), `Methods = FALSE`, `Holder = <Skill>`, and `ReleaseAfter = TRUE` only on the last step
-   that uses its equipment item.
+   sequence), `Methods = FALSE`, `Holder = <Skill>` and `ReleaseAfter = FALSE`: the steps keep the
+   skill's equipment, and `Control` gives up everything the skill holds when a run ends (rule 6 of
+   the connections). (Rule set 1 set `ReleaseAfter = TRUE` on the last step that uses an item; a program
+   by rule set 1 is still read alike.)
 2. A constant bound to a step's parameter is the value of that input. A parameter of the skill
    bound to it is a data connection from the sequence's input. Either stays within the limits of
    the step's parameter and has its type: a skill started by a parent does not check its values
@@ -166,12 +168,12 @@ like any module level skill. Besides the steps (rule 1 of a sequence, unchanged)
 
 1. Two branches of a parallel block use no equipment item in common: every step holds the skill's
    items under the skill's name.
-2. Every step of a flow has `ReleaseAfter = FALSE`: which step uses an item last depends on the
-   path. `Control` gives up everything the skill holds when a run ends (rule 3.6).
+2. As in a sequence, every step has `ReleaseAfter = FALSE`: which step uses an item last would depend
+   on the path.
 3. A result of the skill comes from a step outside every decision, so it is set on every path.
 4. The INIT chain runs through the steps in the order they are written; the flow blocks have no
    `INIT`, like `SKILL_FailMerge`.
-5. A flow without blocks is a sequence and is built as above, unchanged.
+5. A sequence is a flow without blocks: one pattern builds and reads both.
 
 ## 4. What changes online
 

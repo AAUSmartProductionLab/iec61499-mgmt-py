@@ -1,6 +1,6 @@
 # Can modsync, modlink and modgen be simpler?
 
-Analysis of 27 Oct 2026, **for your decision**. How the tools work is [tools.md](tools.md).
+Analysis of 27 Oct 2026. **Done the same day: 1, 3, 4 and 8**; 2 after B1 and B2, 5 and 6 with C5, 7 not now. How the tools work is [tools.md](tools.md).
 
 ## The short answer
 

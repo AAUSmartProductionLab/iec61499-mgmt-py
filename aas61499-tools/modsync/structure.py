@@ -220,18 +220,8 @@ def structure(fbs: dict[str, str], connections, value: Callable[[str], str | Non
         return lane(entry, set())
 
     def steps(prefix: str) -> list[dict]:
-        """The steps of the sequence ``prefix``, in the order their SUCCESS starts the next; a flow
-        with parallel blocks or decisions (rule set 2) is read by ``flow``."""
-        if any(n.startswith(prefix + ".") and t.startswith((JOIN, CONDITION, MERGE)) for n, t in fbs.items()):
-            return flow(prefix)
-        depth = prefix.count(".") + 1
-        names = [n for n, t in fbs.items() if n.startswith(prefix + ".") and n.count(".") == depth and t.startswith(primitive)]
-        follows = {s[:-len(".SUCCESS")]: d[:-len(".START")] for s, d in connections
-                   if s.endswith(".SUCCESS") and d.endswith(".START") and s in {n + ".SUCCESS" for n in names}}
-        found = [n for n in names if n not in follows.values()][:1]
-        while found and found[-1] in follows:
-            found.append(follows[found[-1]])
-        return [step(name) for name in found]
+        """The steps of the sequence ``prefix``: a flow, of steps one after the other or with blocks."""
+        return flow(prefix)
 
     composites = {}
     for name in [n for n in order if fbs.get(f"{n}.Control") == CORE]:

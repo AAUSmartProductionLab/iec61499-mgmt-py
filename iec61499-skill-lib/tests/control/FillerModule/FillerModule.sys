@@ -78,12 +78,6 @@
             <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
-            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
             <Connection Source="START" Destination="MoveNeedleUp.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
@@ -91,6 +85,12 @@
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
@@ -128,12 +128,6 @@
             <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
-            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
             <Connection Source="START" Destination="MoveNeedleUp.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
@@ -141,6 +135,12 @@
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
@@ -228,14 +228,11 @@
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Holder" Value="&quot;Fill&quot;" />
-                <Parameter Name="ReleaseAfter" Value="TRUE" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="9430" y="1000" />
               <EventConnections>
-                <Connection Source="INIT" Destination="MoveNeedleDown.INIT">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
+                <Connection Source="MoveNeedleDown.SUCCESS" Destination="MoveNeedleUp.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="START" Destination="MoveNeedleDown.START">
@@ -244,10 +241,22 @@
                 <Connection Source="MoveNeedleUp.SUCCESS" Destination="DONE">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleDown.INITO" Destination="MoveNeedleUp.INIT">
+                <Connection Source="MoveNeedleDown.FAILURE" Destination="Fail1.FAIL_1">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleDown.SUCCESS" Destination="MoveNeedleUp.START">
+                <Connection Source="MoveNeedleUp.FAILURE" Destination="Fail1.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail1.FAIL" Destination="FAILED">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="INIT" Destination="MoveNeedleDown.INIT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="MoveNeedleDown.INITO" Destination="MoveNeedleUp.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="HALT" Destination="MoveNeedleDown.HALT">
@@ -268,17 +277,11 @@
                 <Connection Source="RESET" Destination="MoveNeedleUp.RESET">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleDown.FAILURE" Destination="Fail1.FAIL_1">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="MoveNeedleUp.FAILURE" Destination="Fail1.FAIL_2">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Fail1.FAIL" Destination="FAILED">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
               </EventConnections>
               <DataConnections>
+                <Connection Source="Depth" Destination="MoveNeedleDown.Distance">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
                 <Connection Source="MoveNeedleDown.ErrorID" Destination="Fail1.Error1">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
@@ -286,9 +289,6 @@
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="Fail1.Error" Destination="ErrorID">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Depth" Destination="MoveNeedleDown.Distance">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
               </DataConnections>
@@ -321,19 +321,22 @@
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Holder" Value="&quot;Fill&quot;" />
-                <Parameter Name="ReleaseAfter" Value="TRUE" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <EventConnections>
-                <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
                 <Connection Source="START" Destination="MoveNeedleUp.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="MoveNeedleUp.SUCCESS" Destination="DONE">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="HALT" Destination="MoveNeedleUp.HALT">
@@ -343,9 +346,6 @@
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="RESET" Destination="MoveNeedleUp.RESET">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
               </EventConnections>
@@ -586,12 +586,6 @@
             <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
-            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
             <Connection Source="START" Destination="MoveNeedleUp.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
@@ -599,6 +593,12 @@
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
@@ -636,12 +636,6 @@
             <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
-            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
             <Connection Source="START" Destination="MoveNeedleUp.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
@@ -649,6 +643,12 @@
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
@@ -736,14 +736,11 @@
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Holder" Value="&quot;Fill&quot;" />
-                <Parameter Name="ReleaseAfter" Value="TRUE" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="9430" y="1000" />
               <EventConnections>
-                <Connection Source="INIT" Destination="MoveNeedleDown.INIT">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
+                <Connection Source="MoveNeedleDown.SUCCESS" Destination="MoveNeedleUp.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="START" Destination="MoveNeedleDown.START">
@@ -752,10 +749,22 @@
                 <Connection Source="MoveNeedleUp.SUCCESS" Destination="DONE">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleDown.INITO" Destination="MoveNeedleUp.INIT">
+                <Connection Source="MoveNeedleDown.FAILURE" Destination="Fail1.FAIL_1">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleDown.SUCCESS" Destination="MoveNeedleUp.START">
+                <Connection Source="MoveNeedleUp.FAILURE" Destination="Fail1.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail1.FAIL" Destination="FAILED">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="INIT" Destination="MoveNeedleDown.INIT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="MoveNeedleDown.INITO" Destination="MoveNeedleUp.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="HALT" Destination="MoveNeedleDown.HALT">
@@ -776,17 +785,11 @@
                 <Connection Source="RESET" Destination="MoveNeedleUp.RESET">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="MoveNeedleDown.FAILURE" Destination="Fail1.FAIL_1">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="MoveNeedleUp.FAILURE" Destination="Fail1.FAIL_2">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Fail1.FAIL" Destination="FAILED">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
               </EventConnections>
               <DataConnections>
+                <Connection Source="Depth" Destination="MoveNeedleDown.Distance">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
                 <Connection Source="MoveNeedleDown.ErrorID" Destination="Fail1.Error1">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
@@ -794,9 +797,6 @@
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="Fail1.Error" Destination="ErrorID">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Depth" Destination="MoveNeedleDown.Distance">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
               </DataConnections>
@@ -829,19 +829,22 @@
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Holder" Value="&quot;Fill&quot;" />
-                <Parameter Name="ReleaseAfter" Value="TRUE" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <EventConnections>
-                <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
                 <Connection Source="START" Destination="MoveNeedleUp.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="MoveNeedleUp.SUCCESS" Destination="DONE">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="INIT" Destination="MoveNeedleUp.INIT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="MoveNeedleUp.INITO" Destination="INITO">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="HALT" Destination="MoveNeedleUp.HALT">
@@ -851,9 +854,6 @@
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="RESET" Destination="MoveNeedleUp.RESET">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="MoveNeedleUp.FAILURE" Destination="FAILED">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
               </EventConnections>
