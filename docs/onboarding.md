@@ -39,7 +39,7 @@ repository. In short:
 | `runtime/` | FORTE builds for the PC and the Pi (patches, FBE configurations, `build-modules.ps1`), the packaged Pi binary `runtime/bin/forte-aarch64` |
 | `deploy/` | The Pi: FORTE in Docker, `pi.py` (install, module, log) |
 | `cell/` | Module specs, the generated projects (`cell/control/`), simulator, the example line's AASs |
-| `aas-model/`, `iec61499-opcua-hmi/`, `basyx-aas-web-ui/` | Submodules: the lab's pydantic AAS model; the HMI with `modlink`; the BaSyx web UI fork with the process planner and the skill editor |
+| `aas-model/`, `iec61499-opcua-hmi/`, `basyx-aas-web-ui/`, `planar-controller/` | Submodules: the lab's pydantic AAS model; the HMI with `modlink`; the BaSyx web UI fork with the process planner and the skill editor; the planar table's controller (Python, OPC UA like a module) |
 | `ontology/`, `docs/` | Ontologies (ARSO and others); working documents |
 
 The documents in `docs/`: [tooling.md](tooling.md) (every tool, command and check),

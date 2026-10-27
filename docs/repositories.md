@@ -9,6 +9,7 @@ so far sits in four places:
 | [iec61499-opcua-hmi](https://github.com/AAUSmartProductionLab/iec61499-opcua-hmi) | `modlink`, the HMI, an OPC UA stand-in for a module (`sim/`), the Linux FORTE build (`tools/forte`), the end-to-end test. A submodule of this repository since 19 Oct (`iec61499-opcua-hmi/`), so that both can be changed together |
 | [ARSO_Ontology_AAS_Generation](https://github.com/MartinJensen37/ARSO_Ontology_AAS_Generation) | The LLM generator with its editor, an AAS builder, AAS → RDF, SHACL validation, a copy of ARSO (the same files as here since 6 Oct, updated by hand) |
 | [basyx-aas-web-ui](https://github.com/MartinJensen37/basyx-aas-web-ui), branch `feat/process-sequence-pharma` | The process sequence planner: one module folder (`aas-web-ui/src/pages/modules/ProcessSequence`) in a fork of the BaSyx web UI |
+| [planar-controller](https://github.com/AAUSmartProductionLab/planar-controller) | The Planar Motor table (PMC) over OPC UA, built like the generated modules: the table and each xbot (shuttle) with occupation, module state and skills (`MoveToPosition`), a multi-xbot planner. Python, not IEC 61499. A submodule since 27 Oct (`planar-controller/`) |
  Several parts
 exist twice (the ontology, the AAS validation, the AAS builder) and several are bundled with
 something they do not depend on (`modlink` inside the HMI, the registration service inside the
