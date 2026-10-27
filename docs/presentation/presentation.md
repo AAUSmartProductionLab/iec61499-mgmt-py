@@ -130,7 +130,9 @@ Each slide: its title (the message), what goes on it, the figure, and notes for 
 
 ### 6. The production system in layers
 
-- **Figure:** `slides-06-the-layers.png`.
+- **Figure:** `slides-06b-the-layers-wide.png`: the layers across the whole slide, each a long shelf with
+  its objects large and named. `slides-06-the-layers.png` is the same as five bands of words, if the slide
+  needs room for text.
 - **Animation:** `layers-walk` (click); see [animations.md](animations.md).
 - **Detailed alternative:** `module-tools-8-layers-slide.png` (tall), its own cards name the layers.
 - Bottom to top: the line; digital assets (parts, IO, identity); behaviour (IEC 61499 programs on
