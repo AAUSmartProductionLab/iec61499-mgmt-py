@@ -1,6 +1,6 @@
 # Next steps
 
-Plan of 8 Oct 2026, reviewed and updated on 21 and 26 Oct; it replaces the plan of 6 Oct
+Plan of 8 Oct 2026, reviewed and updated on 21, 26 and 27 Oct; it replaces the plan of 6 Oct
 ([archive](archive/next-steps-2026-10-06.md)). The whole pipeline in one place is
 [pipeline.md](pipeline.md); what is built and how is in [work.md](work.md); what each AAS holds in
 [aas-models.md](aas-models.md); what was decided in [decisions.md](decisions.md); how the work
@@ -12,7 +12,8 @@ divides into repositories in [repositories.md](repositories.md).
 | --- | --- | --- |
 | Reconfigure from the AAS (A) | Verify, create a skill, change a value, record, operate the result: on FORTE on the PC and on the Pi 5. A skill written by the skill editor is built and run from its AAS alone. **New:** `modsync project` writes the 4diac project of what runs (a skill added online included) and checks that it deploys that program | One Python interface for all of it (A4, started). The editor's fixes from its look in a browser are not committed to the fork (waiting for your go-ahead) |
 | Evaluation (B) | – | **Not started:** the scenario runner, the baseline by restart, the runs on the Pi. This is now the paper's largest gap |
-| Models (D2) | ARSO 0.9 for the line, module and component; product AAS with its plan; ontologies; [pipeline.md](pipeline.md) describes the whole chain | The generation project's ARSO copy and closed validation at 0.8 (working copy, not committed) |
+| Models (D2) | ARSO 0.11 for the line, module and component (27 Oct: a primitive's Conditions and Completion; the components' capabilities in the module's Capability Description); product AAS with its plan; ontologies; [pipeline.md](pipeline.md) describes the whole chain | The generation project's ARSO copy and closed validation at 0.8 (working copy, not committed) |
+| Planning (D5, new 27 Oct) | The design ([skill-planning.md](skill-planning.md)) and ARSO 0.11 | **Next:** G1 to G7 below |
 | aas-model (E) | `modreg` on aas-model `6a03f78` (E1, 19 Oct); ARSO knows AID 1.2 (E2); resources are aas-model's `Resource` with ARSO's submodels, `modreg serve` is the registration service (E3 built). ARSO's submodels, Module, Component, ProductionSystem and Product added to aas-model on a local branch (`arso-submodels`, 230 tests pass) | That branch reaching aas-model (fork and pull request, or push access: your decision); one module registered on a disposable server (E3); the findings for aas-model's author (E4) |
 | Clients (C) | `modlink` reads 0.8; the HMI operates the filling module on its Pi from its AAS; its reader rewritten for 0.8 (`hmi/aas.py`, not committed in the submodule) | The HMI's tests, its stand-in module's skills and its built-in descriptions (C1); the planner's skill list leaves out ModuleControl (the planner reads ARSO skills since the fork's `ac9eb64`) |
 | Program structure (new, 21 Oct) | Deployed inside the application's container, so the 4diac IDE monitors what the tools deployed; started by the resource's own START block; one address per IO point (`gpio[...]`, `pwm[...]`, `modbus[...]`, `sim`) and the IO blocks set up their own Pi lines (no line blocks; stand-ins for GPIOChip and PWMChip in the Windows FORTE); compact layout, a layout arranged in the IDE kept per application | Typed subapplications for module level skills (asked, not decided) |
@@ -29,18 +30,24 @@ sessions ([onboarding.md](onboarding.md), [tooling.md](tooling.md)); A4, B1 and 
 The CIRP CMS full paper is due 18 Nov 2026. Its claim:
 
 > A module that is delivered with an IEC 61499 program and an AAS can be verified, operated and
-> changed online from those two alone, without the files it was generated from.
+> changed online from those two alone, without the files it was generated from; new skills are
+> planned from its skill and capability models and created online the same way.
 
-That is four deliverables:
+Its contributions (decided 27 Oct): **the models** (skills and capabilities in the AAS, D2), **the
+planning** of new behaviour from them (D5), **the IEC 61499 module architecture** that makes skills
+(D1), and **updating** a running module online through IEC 61499's management interface (`modsync`,
+D3); D4 evaluates them. That is five deliverables:
 
 | # | Deliverable | What it is | State |
 | --- | --- | --- | --- |
 | D1 | Module rules | How a module is built: the module library (module state machine, occupation, skill state machine), the fixed pattern of a module level skill, what may change online ([module-rules.md](module-rules.md)) | Built |
-| D2 | Information model | The resource AAS in ARSO 0.9: the line, each module and each component ([aas-models.md](aas-models.md)) | Built; the generation project's ARSO copy and closed validation are at 0.8 in a working copy, not committed |
+| D2 | Information model | The resource AAS in ARSO 0.11: the line, each module and each component ([aas-models.md](aas-models.md)); the skill model (commands, steps, a primitive's Conditions and Completion) and the capability model the planner reads (the module's Capability Description with its components' capabilities and their constraints) | Built to 0.11; the components' capabilities and constraints are written by G2; the generation project's ARSO copy and closed validation are at 0.8 in a working copy, not committed |
 | D3 | Method and tools | Register, verify, operate, reconfigure, record | Built for a value and for a new skill: `modsync verify`, `reconfigure`, the record, the skill editor (9 Oct), on the PC and on the Pi 5 (9 Oct); `modsync project` (21 Oct). Missing: the one Python interface (A4) |
-| D4 | Evaluation | The same changes online and by full redeployment, timed, on a Raspberry Pi | Not built: the most urgent part |
+| D4 | Evaluation | The same changes online and by full redeployment, timed, on a Raspberry Pi; the planning cases (T1 to T12 of [skill-planning.md](skill-planning.md)) | Not built: the most urgent part after D5 |
+| D5 | Planning (new, 27 Oct) | A module plans a new skill from its Capability Description (HTN hybrid; HDDL and PDDL generated for standard planners), and `modsync` creates it online like any described skill ([skill-planning.md](skill-planning.md)) | Designed; ARSO 0.11 done; **next** (G) |
 
-Agents are not part of the paper; they are its future work ([after the paper](#after-the-paper)).
+Agents are not part of the paper; they are its future work ([after the paper](#after-the-paper)). The
+line is run by agents, so only a module plans: the planner is what a module's agent will call.
 
 ## Which part of the model is used for what
 
@@ -98,6 +105,22 @@ Later a resource agent calls the same function when a bid that needs a reconfigu
 
 ## The plan to 18 Nov
 
+### G. Planning new skills (deliverable D5, new 27 Oct; next)
+
+Decided 27 Oct: this comes first. The design is [skill-planning.md](skill-planning.md); the steps
+follow its section 8, the cases its section 10.
+
+| # | Step | Where | Done when |
+| --- | --- | --- | --- |
+| G0 | **Design and ARSO.** **Done 27 Oct:** the design; ARSO 0.11 (a primitive's Conditions and Completion, written by `modreg`, read by `modsync`; the components' capabilities in the module's Capability Description, `BasicConstraint` expressions, `SameProperty` to the data points) | `docs`, `ontology/ARSO`, `modreg`, `modsync` | – |
+| G1 | **Vocabulary 0.2**: the capabilities Referencing, Dosing, Taring; the properties Referenced, Tared, Volume, FillPosition, ContentVolume, Weighed, FillWeight; the constraints each kind of capability has; the ontology checks | `ontology/Vocabulary` | Every primitive of the filling and stoppering modules realizes a capability that has its constraints; the checks pass |
+| G2 | **The module's Capability Description by `modreg`**: a set per component with its capabilities (NotAssigned), realized by its primitives, their constraints from the vocabulary and from the spec (what holds on this module); `SameProperty` to the data points; the Offered capabilities with their Pre and Post | `modreg`, module specs | `modreg check` passes on both modules; the filling module's description is the table of section 4 |
+| G3 | **Projection, domain model and checker**: the constraints into RDF; the planning domain from it; a simulator that runs a flow and reports a condition that does not hold, with the step that would make it hold | `ontology/PPRL/projection`, a new tool (`modplan`) | Cases T6 to T8 |
+| G4 | **The planner** (GTPyhop): the methods, goal regression, the rest state, lifting to parallel blocks, the flow written into the Skills submodel as `Described` | `modplan` | Cases T1 to T5; `modsync reconfigure` creates a planned skill on FORTE and it runs |
+| G5 | **Discovery** in place of the derivation from `lab:contributes` | `modreg`, PPRL | Cases T9 to T12 |
+| G6 | **HDDL and PDDL** from the same domain; a planner of each kind (PANDA, ENHSP) and VAL | `modplan` | The cases plan through them too; every plan validates |
+| G7 | **In the skill editor**: the checker's findings on a hand-written flow; "plan this capability" | web UI fork | A finding shows on a flow in the editor |
+
 ### A. Reconfigure from the AAS (deliverable D3)
 
 | # | Step | Where | Done when |
@@ -117,7 +140,7 @@ path: the AAS is delivered with the module, the program is only compared with it
 
 | # | Step | Done when |
 | --- | --- | --- |
-| B1 | **Scenario runner.** Plug in a module (register, verify, operate); change a constant; create a new skill. Each timed: downtime, commands sent, time to verify | The scenarios run unattended and write their numbers |
+| B1 | **Scenario runner.** Plug in a module (register, verify, operate); change a constant; create a new skill, one written and one planned (G4). Each timed: downtime, commands sent, time to verify, time to plan | The scenarios run unattended and write their numbers |
 | B2 | **Baseline.** The same changes by a new boot file and a restart | Numbers side by side |
 | B3 | **Hardware.** The filling module on the Raspberry Pi 5 with the stepper. **Axis moving since 20 Oct**, homing on the limit switch and operated from the HMI since 21 Oct. Next: install the runtime and program of 22 Oct (IO blocks that set up their lines), mount the switch, measure a 20 mm move, run Dispensing on the real axis. The stoppering module on its Pi 5 (192.168.0.134) if time allows | The scenarios run on the Pi with the axis moving |
 
@@ -181,12 +204,13 @@ Outline and figures by 1 Nov; experiment runs and text from 2 Nov; submission 18
 | 9 to 18 Oct | A2 (writing a description), A3 (both done) |
 | 19 to 21 Oct | E1 to E3 (done); the filling hardware moving (B3, started); program structure and A5 (done) |
 | 22 to 26 Oct | Skill block pins and release, layouts, the stoppering module to its Pi 5, guides for new sessions (done) |
-| 27 Oct to 1 Nov | A4; B1 (scenario runner, with simulated IO on the PC first); B2 (baseline by restart); the new runtime and program on both Pi 5s; outline and figures |
-| 2 to 18 Nov | B3 runs on the Pi with the axis; experiment runs, writing |
+| 27 Oct to 1 Nov | G0 (done 27 Oct); G1 to G5, the planner on the filling module; outline and figures |
+| 2 to 8 Nov | A4; B1 (scenario runner, with simulated IO on the PC first, a planned skill among the scenarios); B2 (baseline by restart); G6; the new runtime and program on both Pi 5s |
+| 9 to 18 Nov | B3 runs on the Pi with the axis; experiment runs, writing |
 
-B has not started and is what the paper cannot do without: from now on it comes before anything
-in C or E that does not block it. If time runs out, cut in this order: C, E4 and E5, then B3 on
-real hardware (keep the Pi with simulated IO), then A3. Not to be cut: A1, A2, B1, B2.
+G comes first (decided 27 Oct). B has not started and is what the paper cannot do without: it comes
+before anything in C or E that does not block it. If time runs out, cut in this order: C, E4 and E5,
+then B3 on real hardware (keep the Pi with simulated IO), then A3. Not to be cut: A1, A2, B1, B2.
 
 ## After the paper
 
@@ -201,7 +225,7 @@ after step A4, the reconfiguration as functions. What is missing:
 | 1 | An unbound process | The plan names a resource and a skill per step. With bidding the product type holds required capabilities and their order; the binding is the result of a negotiation, per order. AProSO already describes it this way (candidates, then the chosen one) |
 | 2 | An order | Nothing says "20 vials of 2.5 mL" and starts a product agent |
 | 3 | Messages and protocol | Call for proposals, proposal, accept or reject, result (VDI/VDE 2193), and what carries them (the lab runs MQTT; SPADE needs an XMPP server) |
-| 4 | A resource agent per module | Matches a request against its own AAS; answers yes, yes after a reconfiguration, or no, with a time; on acceptance reconfigures and runs the skill |
+| 4 | A resource agent per module | Matches a request against its own AAS; answers yes, yes after a reconfiguration, or no, with a time; on acceptance plans the skill if none realizes it (D5), reconfigures and runs it |
 | 5 | A product agent | Walks the process, compares bids, records what was done to the product |
 | 6 | Transport agents | A vial moves between the modules on the shuttles of the ACOPOS 6D table. Their control is Python code, not IEC 61499: the table needs a resource AAS (a Transport capability, an interface the agent can call) and an agent like a module's. It also shows the model on a resource that is not IEC 61499 |
 | 7 | Reservation | A module can be occupied now, not booked for later |
@@ -238,6 +262,7 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 | A change that needs a restart (a sequence changed, a skill removed) is refused. For the baseline a boot file is needed, and the AAS does not hold the wiring: is the vendor's boot file part of what is delivered? | B2 |
 | Which changes does the paper show: a constant and a new skill, or more? | B1 |
 | Where do F1 to F3 go in the order of what is cut if time runs short? | F |
+| Where do G6 (HDDL and PDDL) and G7 (the editor) go in that order? G1 to G5 carry the planning contribution | G |
 | Two components of one kind in a module (the two cameras) need one skill name twice | later |
 | What a component's AAS holds besides its skills (a nameplate?) | later |
 | Step values are also in the interface description; leave them out there? Operational Data in groups? | later |
