@@ -343,6 +343,29 @@ and tare the scale at once.
   run; one comparison, or all or one of several) and checks a flow by the same rules; it writes a flow
   exactly as modreg does (a shared fixture, `fixtures/fillingFlows.json`, written by modreg).
 
+## ARSO 0.11: conditions, and the capability model new skills are planned from (27 Oct)
+
+The design is [skill-planning.md](skill-planning.md); the plan's G in [next-steps.md](next-steps.md).
+
+- **Conditions and Completion.** A primitive's `Contract` is split into `Conditions` (Precondition,
+  Postcondition, Invariant) and `Completion` (After, Timeout); an empty one is left out (Dispense has
+  no Conditions). `modreg generate` made the classes; the skill's is `Conditions_2` in Python because
+  a decision's group is `Conditions` too (the element reads back by its parent's field, so the name
+  matters only to the code). `modsync` reads both forms (an AAS of 0.10 has its `Contract`); the
+  module specs keep their words (`requires`, `ensures`, `after`, `timeout`). The HMI's reader
+  (`hmi/aas.py`, uncommitted in the submodule) reads both forms in the working copy.
+- **The Capability Description** (`Modules/capabilities.ttl`): `CapabilityRealizedBy` may name a
+  component's skill; the constraint elements (`ConstraintType`, `BasicConstraint`,
+  `PropertyConditionalType`, `TransitionConditionalType`) and the conventions are declared. Nothing
+  writes them yet (G2).
+- **Learned from IDTA 02020** (sections 1.6.1, 1.8.1): `ComposedOf`, `ConstraintHasProperty` and
+  `TransitionConstrainedBy` are relations inside one submodel; only `CapabilityRealizedBy` and
+  `SameProperty` point outside. So a module's description holds its components' capabilities, as
+  02020's painting-station example does. A transition `Invariant` means the other capability runs
+  at the same time, not that it must not. A `BasicConstraint` is a Property meant for an expression.
+- **The ontology checks** (`ontology/checks`) need `owlrl` and `pyshacl`, which the project's
+  environment lacks: they run with this PC's own Python (42 passed).
+
 ## Registration: the AAS of a module (modreg)
 
 Decided on 2 Oct 2026: the resource ontology (ARSO, `ontology/ARSO`) says what a resource AAS
