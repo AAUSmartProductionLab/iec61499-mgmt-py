@@ -139,7 +139,7 @@ unoccupied; a client occupies it and sends Reset.
 
 The state per area and the timeline are in [next-steps.md](next-steps.md); this is the short form.
 
-**Built:** the module library and rules (D1); the information model in ARSO 0.9 (D2); verify,
+**Built:** the module library and rules (D1); the information model in ARSO 0.11 (D2); verify,
 reconfigure (a value, a new skill), record, operate from the AAS alone, on FORTE on the PC and on
 the Pi 5 (D3); `modsync project` writes the 4diac project of what runs. The program structure was
 reworked 21 to 22 Oct (deployed inside the application's container so the IDE monitors it, the
@@ -147,19 +147,27 @@ resource's START, one address string per IO point, renamed and commented skill b
 inside the skill's Control, compact layouts, every connection hidden). The filling axis moves on
 its Pi under FORTE and from the HMI.
 
-**Next, in this order** (the plan's priorities; the evaluation comes before anything that does not
-block it):
+The paper's contributions (27 Oct): the skill and capability models, planning new skills from them,
+the IEC 61499 module architecture that makes skills, and updating a running module online.
 
-1. **A4, one Python interface** for verify, create a skill and set a value (`modsync`; started:
+**Next, in this order** (the plan's priorities; planning first since 27 Oct, then the evaluation
+before anything that does not block it):
+
+1. **G, planning new skills** ([skill-planning.md](skill-planning.md)): ARSO 0.11 is done (G0);
+   next the vocabulary's capabilities, properties and constraints (G1), `modreg` writing the
+   components' capabilities into the module's Capability Description (G2), the domain model and the
+   checker (G3), the planner (G4) and discovery (G5), tried on the filling module's cases T1 to T12.
+2. **A4, one Python interface** for verify, create a skill and set a value (`modsync`; started:
    `desired.load`, `read`, `reconfigure`, `record`, `store`), so a script, the HMI and later an
    agent call the same functions.
-2. **B1, the scenario runner**: plug a module in (register, verify, operate), change a constant,
-   create a new skill; each timed (downtime, commands sent, time to verify); unattended, writing its
-   numbers. With simulated IO on the PC first (`cell/sim/run_module.py`).
-3. **B2, the baseline**: the same changes by a new boot file and a restart; numbers side by side.
-4. **B3, on the Pi**: the runtime and program on both Pi 5s (see the table; needs the user), then
+3. **B1, the scenario runner**: plug a module in (register, verify, operate), change a constant,
+   create a new skill (written, and planned); each timed (downtime, commands sent, time to verify,
+   time to plan); unattended, writing its numbers. With simulated IO on the PC first
+   (`cell/sim/run_module.py`).
+4. **B2, the baseline**: the same changes by a new boot file and a restart; numbers side by side.
+5. **B3, on the Pi**: the runtime and program on both Pi 5s (see the table; needs the user), then
    the scenarios on the Pi with the axis moving.
-5. Outline and figures by 1 Nov, experiment runs and text from 2 Nov.
+6. Outline and figures by 1 Nov, experiment runs and text from 2 Nov.
 
 If time runs short, cut C (clients), E4 and E5, then B3 on real hardware (keep the Pi with
 simulated IO), then A3. Not to be cut: A1, A2, B1, B2.
