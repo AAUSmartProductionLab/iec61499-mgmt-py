@@ -115,22 +115,13 @@
           </FB>
           <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="8855" y="1000" />
           <EventConnections>
-            <Connection Source="INIT" Destination="RetractPiston.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Home.INITO" Destination="INITO">
+            <Connection Source="RetractPiston.SUCCESS" Destination="Home.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="START" Destination="RetractPiston.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Home.SUCCESS" Destination="DONE">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="RetractPiston.INITO" Destination="Home.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="RetractPiston.SUCCESS" Destination="Home.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="RetractPiston.FAILURE" Destination="Fail1.FAIL_1">
@@ -140,6 +131,15 @@
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Fail1.FAIL" Destination="FAILED">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="INIT" Destination="RetractPiston.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.INITO" Destination="INITO">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="RetractPiston.INITO" Destination="Home.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
@@ -183,12 +183,6 @@
             <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
-            <Connection Source="INIT" Destination="Home.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Home.INITO" Destination="INITO">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
             <Connection Source="START" Destination="Home.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
@@ -196,6 +190,12 @@
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Home.FAILURE" Destination="FAILED">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="INIT" Destination="Home.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
@@ -270,7 +270,7 @@
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="ReleaseAfter" Value="TRUE" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <FB Name="Home" Type="stoppering::SK_Home" x="9605" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
@@ -279,15 +279,15 @@
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="ReleaseAfter" Value="TRUE" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="12520" y="1000" />
               <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="15130" y="1000" />
               <EventConnections>
-                <Connection Source="INIT" Destination="HeadDown.INIT">
+                <Connection Source="HeadDown.SUCCESS" Destination="PressStopper.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Home.INITO" Destination="INITO">
+                <Connection Source="PressStopper.SUCCESS" Destination="Home.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="START" Destination="HeadDown.START">
@@ -296,16 +296,31 @@
                 <Connection Source="Home.SUCCESS" Destination="DONE">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
+                <Connection Source="HeadDown.FAILURE" Destination="Fail1.FAIL_1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="PressStopper.FAILURE" Destination="Fail1.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail2.FAIL" Destination="FAILED">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="INIT" Destination="HeadDown.INIT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.INITO" Destination="INITO">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
                 <Connection Source="HeadDown.INITO" Destination="PressStopper.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="HeadDown.SUCCESS" Destination="PressStopper.START">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
                 <Connection Source="PressStopper.INITO" Destination="Home.INIT">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="PressStopper.SUCCESS" Destination="Home.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="HALT" Destination="HeadDown.HALT">
@@ -333,21 +348,6 @@
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="RESET" Destination="Home.RESET">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="HeadDown.FAILURE" Destination="Fail1.FAIL_1">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="PressStopper.FAILURE" Destination="Fail1.FAIL_2">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Fail2.FAIL" Destination="FAILED">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
               </EventConnections>
@@ -397,19 +397,22 @@
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="ReleaseAfter" Value="TRUE" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <EventConnections>
-                <Connection Source="INIT" Destination="Home.INIT">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Home.INITO" Destination="INITO">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
                 <Connection Source="START" Destination="Home.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="Home.SUCCESS" Destination="DONE">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.FAILURE" Destination="FAILED">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="INIT" Destination="Home.INIT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.INITO" Destination="INITO">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="HALT" Destination="Home.HALT">
@@ -419,9 +422,6 @@
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="RESET" Destination="Home.RESET">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Home.FAILURE" Destination="FAILED">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
               </EventConnections>
@@ -675,22 +675,13 @@
           </FB>
           <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="8855" y="1000" />
           <EventConnections>
-            <Connection Source="INIT" Destination="RetractPiston.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Home.INITO" Destination="INITO">
+            <Connection Source="RetractPiston.SUCCESS" Destination="Home.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="START" Destination="RetractPiston.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Home.SUCCESS" Destination="DONE">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="RetractPiston.INITO" Destination="Home.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="RetractPiston.SUCCESS" Destination="Home.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="RetractPiston.FAILURE" Destination="Fail1.FAIL_1">
@@ -700,6 +691,15 @@
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Fail1.FAIL" Destination="FAILED">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="INIT" Destination="RetractPiston.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.INITO" Destination="INITO">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="RetractPiston.INITO" Destination="Home.INIT">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
@@ -743,12 +743,6 @@
             <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
           <EventConnections>
-            <Connection Source="INIT" Destination="Home.INIT">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
-            <Connection Source="Home.INITO" Destination="INITO">
-              <Attribute Name="Visible" Value="false" />
-            </Connection>
             <Connection Source="START" Destination="Home.START">
               <Attribute Name="Visible" Value="false" />
             </Connection>
@@ -756,6 +750,12 @@
               <Attribute Name="Visible" Value="false" />
             </Connection>
             <Connection Source="Home.FAILURE" Destination="FAILED">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="INIT" Destination="Home.INIT">
+              <Attribute Name="Visible" Value="false" />
+            </Connection>
+            <Connection Source="Home.INITO" Destination="INITO">
               <Attribute Name="Visible" Value="false" />
             </Connection>
           </EventConnections>
@@ -830,7 +830,7 @@
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="ReleaseAfter" Value="TRUE" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <FB Name="Home" Type="stoppering::SK_Home" x="9605" y="1000">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
@@ -839,15 +839,15 @@
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="ReleaseAfter" Value="TRUE" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="12520" y="1000" />
               <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="15130" y="1000" />
               <EventConnections>
-                <Connection Source="INIT" Destination="HeadDown.INIT">
+                <Connection Source="HeadDown.SUCCESS" Destination="PressStopper.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="Home.INITO" Destination="INITO">
+                <Connection Source="PressStopper.SUCCESS" Destination="Home.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="START" Destination="HeadDown.START">
@@ -856,16 +856,31 @@
                 <Connection Source="Home.SUCCESS" Destination="DONE">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
+                <Connection Source="HeadDown.FAILURE" Destination="Fail1.FAIL_1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="PressStopper.FAILURE" Destination="Fail1.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Fail2.FAIL" Destination="FAILED">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="INIT" Destination="HeadDown.INIT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.INITO" Destination="INITO">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
                 <Connection Source="HeadDown.INITO" Destination="PressStopper.INIT">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
-                <Connection Source="HeadDown.SUCCESS" Destination="PressStopper.START">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
                 <Connection Source="PressStopper.INITO" Destination="Home.INIT">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="PressStopper.SUCCESS" Destination="Home.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="HALT" Destination="HeadDown.HALT">
@@ -893,21 +908,6 @@
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="RESET" Destination="Home.RESET">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="HeadDown.FAILURE" Destination="Fail1.FAIL_1">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="PressStopper.FAILURE" Destination="Fail1.FAIL_2">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Fail1.FAIL" Destination="Fail2.FAIL_1">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Home.FAILURE" Destination="Fail2.FAIL_2">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Fail2.FAIL" Destination="FAILED">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
               </EventConnections>
@@ -957,19 +957,22 @@
                 <Parameter Name="UaEnable" Value="TRUE" />
                 <Parameter Name="Methods" Value="FALSE" />
                 <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
-                <Parameter Name="ReleaseAfter" Value="TRUE" />
+                <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
               <EventConnections>
-                <Connection Source="INIT" Destination="Home.INIT">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Home.INITO" Destination="INITO">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
                 <Connection Source="START" Destination="Home.START">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="Home.SUCCESS" Destination="DONE">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.FAILURE" Destination="FAILED">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="INIT" Destination="Home.INIT">
+                  <Attribute Name="Visible" Value="false" />
+                </Connection>
+                <Connection Source="Home.INITO" Destination="INITO">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="HALT" Destination="Home.HALT">
@@ -979,9 +982,6 @@
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
                 <Connection Source="RESET" Destination="Home.RESET">
-                  <Attribute Name="Visible" Value="false" />
-                </Connection>
-                <Connection Source="Home.FAILURE" Destination="FAILED">
                   <Attribute Name="Visible" Value="false" />
                 </Connection>
               </EventConnections>

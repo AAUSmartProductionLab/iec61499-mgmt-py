@@ -28,8 +28,8 @@ from .fbxml import (STD, Basic, Composite, Project, Simple, SubNet, Wiring, arra
 from .library import ERRORS, cat, lit, q, ua
 from .layout import Sizer, networks, place_new, relayout
 from .pins import domain
-from .spec import (ACTUAL, HOMED, MOVE, MOVING, AllOf, AnyOf, Comparison, Decision, Equipment, ModuleSpec, Output, Parallel,
-                   Parameter, Skill, Step, linear, ms, names, walk)
+from .spec import (ACTUAL, HOMED, MOVE, MOVING, AllOf, Comparison, Equipment, ModuleSpec, Parallel, Parameter, Skill, Step,
+                   ms, names, walk)
 
 IO_TYPE = {("in", "BOOL"): "DI", ("in", "LREAL"): "AI", ("out", "BOOL"): "DO", ("out", "LREAL"): "AO"}
 # GPIOChip BiasMode. FORTE 3.3.0 indexes {as is, disable, pull-up, pull-down} with an enum
@@ -778,64 +778,16 @@ def skill_instance(net, spec: ModuleSpec, step: Step, x, y, ua_path: str, token:
     return fb(net, step.name, f"{spec.package}::SK_{step.skill}", x, y, **params)
 
 
-def sequence(net, spec: ModuleSpec, name: str, steps: list[Step], x, y, ua_prefix: str, token: str | None,
+def sequence(net, spec: ModuleSpec, name: str, steps: list, x, y, ua_prefix: str, token: str | None,
              comment: str, params: dict[str, Parameter] | None = None, results: dict[str, str] | None = None,
              parent_events: bool = True):
-    """Subapp running ``steps`` in order: START -> DONE, any FAILURE -> FAILED(ErrorID).
+    """Subapp running ``steps``: START -> DONE, any FAILURE -> FAILED(ErrorID). Steps one after the
+    other are a flow without blocks; one pattern builds both (``flow``).
 
-    ``token``: the lock token of a module level skill (children keep its equipment); None for a
-    procedure (each child takes and releases equipment itself). A flow with parallel blocks or
-    decisions is built by ``flow``.
+    ``token``: the lock token of a module level skill (its steps keep its equipment); None for a
+    procedure (each step takes and releases its equipment itself).
     """
-    if not linear(steps):
-        return flow(net, spec, name, steps, x, y, ua_prefix, token, comment, params, results, parent_events)
-    params, results = params or {}, results or {}
-    ei = {"INIT": ([], "EInit"), "START": list(params)}
-    if parent_events:
-        ei.update({"HALT": [], "ABORT": [], "RESET": []})
-    rtypes = {r: result_type(spec, steps, src) for r, src in results.items()}
-    eo = {"INITO": ([], "EInit"), "DONE": list(results), "FAILED": ["ErrorID"]}
-    _, inner = subapp(net, name, x, y, comment, ei, eo, {n: pr.type for n, pr in params.items()},
-                      {"ErrorID": "UINT", **rtypes})
-    ua_root = wstr(spec.opcua_root)
-    names = []
-    for i, step in enumerate(steps):
-        eq = spec.skills[step.skill].equipment
-        last_use = token is None or not any(spec.skills[s.skill].equipment == eq for s in steps[i + 1:])
-        skill_instance(inner, spec, step, 1000 + i * 5000, 1000, f"{ua_prefix}/{step.name}",
-                       token or ua_prefix.strip("/"), last_use, False, ua_root)
-        names.append(step.name)
-    ev = [("INIT", names[0] + ".INIT"), (names[-1] + ".INITO", "INITO"), ("START", names[0] + ".START"),
-          (names[-1] + ".SUCCESS", "DONE")]
-    da = []
-    for a, z in zip(names, names[1:]):
-        ev += [(a + ".INITO", z + ".INIT"), (a + ".SUCCESS", z + ".START")]
-    if parent_events:
-        for e in ["HALT", "ABORT", "RESET"]:
-            ev += [(e, f"{n}.{e}") for n in names]
-    # Failures merged pairwise (a data input takes one connection).
-    if len(names) == 1:
-        ev.append((names[0] + ".FAILURE", "FAILED"))
-        da.append((names[0] + ".ErrorID", "ErrorID"))
-    else:
-        prev_ev, prev_err = names[0] + ".FAILURE", names[0] + ".ErrorID"
-        for i, n in enumerate(names[1:], 1):
-            m = f"Fail{i}"
-            fb(inner, m, q("SKILL_FailMerge"), 1000 + i * 5000, 4000)
-            ev += [(prev_ev, f"{m}.FAIL_1"), (n + ".FAILURE", f"{m}.FAIL_2")]
-            da += [(prev_err, f"{m}.Error1"), (n + ".ErrorID", f"{m}.Error2")]
-            prev_ev, prev_err = f"{m}.FAIL", f"{m}.Error"
-        ev.append((prev_ev, "FAILED"))
-        da.append((prev_err, "ErrorID"))
-    for step in steps:
-        for pname, v in step.bind.items():
-            if isinstance(v, str):
-                da.append((v, f"{step.name}.{pname}"))
-    for r, src in results.items():
-        st, _, res = src.partition(".")
-        da.append((f"{st}.R_{res}", r))
-    connections(inner, ev, da)
-    return name
+    return flow(net, spec, name, steps, x, y, ua_prefix, token, comment, params, results, parent_events)
 
 
 @dataclass
@@ -854,9 +806,10 @@ def flow(net, spec: ModuleSpec, name: str, nodes: list, x, y, ua_prefix: str, to
     or halts the others when one fails; a decision's conditions (SKILL_Condition_<type>, named
     ``<decision>_C<k>``) choose a branch, which ends in its SKILL_Merge (named like the decision).
 
-    Every step holds the skill's equipment under the skill's name and gives up nothing itself: which
-    step uses an item last depends on the path, and the skill's Control releases everything when a
-    run ends. Results come from steps that run on every path."""
+    Every step of a module level skill holds the skill's equipment under the skill's name and gives up
+    nothing itself: which step uses an item last depends on the path, and the skill's Control releases
+    everything when a run ends. A procedure's steps take and give up their own. Results come from steps
+    that run on every path."""
     params, results = params or {}, results or {}
     ei = {"INIT": ([], "EInit"), "START": list(params)}
     if parent_events:
