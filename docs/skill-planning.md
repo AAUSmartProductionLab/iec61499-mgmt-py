@@ -1,155 +1,148 @@
-# Composing skills from the ontology (HTN hybrid)
+# Composing skills from capabilities (HTN hybrid)
 
-Design of 27 Oct 2026: a new module level skill is **composed by a planner** from what the AASs say
-about capabilities, not copied from an existing skill. The planner is a hybrid of hierarchical task
-networks (HTN) and goal regression, as GTPyhop (Nau, 2021) supports. What it plans with is stated in
-the Capability Descriptions (IDTA 02020) of the module and its components, with the constraints
-02020 already has (pre-, postcondition and invariant, on properties and between capabilities):
+Design of 27 Oct 2026. A module makes a new module level skill by **planning** it from what its own
+AAS says about capabilities, instead of having it written by hand. The planner is a hybrid of
+hierarchical task networks (HTN) and goal regression, as GTPyhop (Nau, 2021) supports; the same
+domain is also generated as HDDL and PDDL for standard planners. The plan becomes a flow in the AAS
+like any skill the editor makes, and the rules of rule set 2 make it a program ([mapping.md](mapping.md),
+[figures/skill-blocks.drawio](figures/skill-blocks.drawio)).
 
-| Planning element | What it is here | Where it comes from |
-| --- | --- | --- |
-| **Action** (operator) | A capability of a component, realized by one of its primitive skills | The component's Capability Description: its capabilities, their **property constraints** (Pre, Post, Invariant) |
-| **State** | The values of capability properties, per component (the axis's `Position`, the scale's `Tared`) | The vocabulary's properties; no separate state variables |
-| **Task method** (task → subtasks) | A process capability of the module → the component capabilities it is composed of | The module's Capability Description: **ComposedOfSet**, and the constraints that hold between the parts |
-| **Goal method** (a value → a capability) | "Make a property have a value" → the capability whose Post sets it | Generated from the Post constraints |
-| **Final goal** | The module's rest state: every skill leaves the module so that the next can start | The effects of the module's Reset procedure (section 5) |
-
-The result is a total order of steps. It is lifted to a partial order: steps on different components
-with nothing between them become a parallel block, unless an invariant forbids it. The flow then goes
-into the AAS like any skill the editor makes, and the rules of rule set 2 make it a program. Why the
-wiring rules matter for this: [mapping.md](mapping.md) and
-[figures/skill-blocks.drawio](figures/skill-blocks.drawio).
-
-The same model **checks** a flow written by hand. It runs the states through every path and reports
-a precondition that does not hold, with the step that would make it hold. The editor shows that as a
+The same model **checks** a flow written by hand: it runs the state through every path and reports a
+condition that does not hold, with the step that would make it hold. The editor shows that as a
 recommendation.
 
-Related work: Köcher et al. (2023, arXiv 2312.08801) plan with SMT from capabilities modelled after
-CSS, with inputs as preconditions and outputs as effects; Nabizada et al. (CASE 2026, arXiv
-2606.02167) generate PDDL from AAS capability descriptions. Neither plans from the 02020
-`ConstraintSet`, nor compiles the plan into an IEC 61499 program created online.
+## 1. Levels, and what is planned
 
-## 1. Two levels of capability
-
-| Level | Whose AAS | Capabilities | Who asks for them | Says |
-| --- | --- | --- | --- | --- |
-| **Component** | The axis, the pump, the scale | Auxiliary (`Referencing`, `Positioning`, `Dosing`, `Taring`, `Weighing`), each realized by one primitive | Nobody outside the module: no product requires them | What holds of the component wherever it is used: MoveAxis needs the axis homed and leaves it at the position asked for |
-| **Module** | The filling module | Process (`Filling`), offered, realized by a composite skill if one exists | A product's required capability | What it is composed of and what holds between the parts **on this module**: the pump doses only with the needle at the fill position; the scale is read with the needle out of the vial |
-
-A component capability is a part of a module capability (`CapabilityComposedOf`), never offered on
-its own. The constraints between the parts belong to the module, not to the components: the pump
-needs the needle in the vial only when it fills, not when it is primed, and only on a module where
-the needle is on that axis. The module's integrator states them; the component's vendor states the
-rest.
-
-A module capability that is composed of parts but realized by no skill is offered "after a
-reconfiguration": the planner can make the skill. Today the derivation finds a module's capabilities
-from its skills (`lab:contributes`); with compositions it finds them from the parts the skills' steps
-realize (section 6).
-
-The product side has the same structure (required capabilities, transition constraints for the
-order of a recipe), so the same planner can later work one level up, on a line.
-
-## 2. The form of a constraint
-
-02020 leaves the form open: a `BasicConstraint` is a string, a `CustomConstraint` a collection one
-defines. Chosen: a **CustomConstraint with an operator and an expected value**, the words of a flow
-Condition (`eq`, `ne`, `gt`, `gte`, `lt`, `lte`), flat:
-
-```
-PropertyConstraintContainer    DosingAtFillPosition
-  ConstraintType               CustomConstraint
-  PropertyConditionalType      Pre
-  CustomConstraint
-    Part                       ReferenceElement → the pump's Dosing        (whose start; absent: this capability's)
-    Operator                   eq
-    Expected                   ReferenceElement → Filling's FillPosition   (or a Property with the value)
-  ConstraintPropertyRelations
-    ConstraintHasProperty      this container → the axis's Position
-```
-
-| Kind | Operator | Expected | Means |
-| --- | --- | --- | --- |
-| Pre | eq, ne, gt, … | a value or a property | Holds when the capability (or the `Part`) starts |
-| Post | eq | a value | Holds when it has succeeded |
-| Post | – | – | The property ends with the value the capability was given (an input) or found (an output) |
-| Invariant | – | – | Nothing else changes the property while it runs |
-
-Why this form: the planner reads it as triples, with no expression to parse, and its state is a map
-from (component, property meaning) to a value, which is what GTPyhop works on. Only `eq` is
-**achieved** (a goal method finds the capability whose Post sets the value); the other operators are
-**checked**. A value holds until a Post of another capability sets the same property (the frame rule,
-as Köcher et al.'s continuation constraints). Two capabilities of one component that have a property
-of the same meaning share it: `Referencing` and `Positioning` both set the axis's `Position`.
-
-A `TransitionConstraintContainer` (02020) orders two capabilities with no value involved: Weighing
-**Pre** Dosing (weigh after filling). In the module, its first element is a part (the scale's
-Weighing), not the module's own capability: the constraint holds only within this composition. That
-is a liberty with the template's wording, which has the container's own capability in mind.
-
-## 3. The lab's content (Vocabulary 0.2)
-
-New capabilities and properties in `capabilities.ttl`, all auxiliary except what Filling had:
-
-| Term | Kind | Characterizes |
+| Level | Who decides | Planned here |
 | --- | --- | --- |
-| `lab:Referencing` ⊑ `lab:Positioning` | capability | Move an axis to its reference, where its position is known |
-| `lab:Dosing` | capability | Deliver a volume of liquid through a pump's outlet |
-| `lab:Taring` ⊑ `lab:Weighing` | capability | Set a scale to zero |
-| `lab:Referenced` (Boolean) | property | Referencing, Positioning |
-| `lab:Volume` (mL) | property | Dosing |
-| `lab:Tared` (Boolean) | property | Taring, Weighing |
-| `lab:FillPosition` ⊑ `lab:Position` (mm) | property | Filling: where the needle is in the container |
-| `lab:FillWeight` (g) | property | Filling: the weight of the container after filling, a result |
+| Line | Agents: products and modules negotiate; nothing plans the line centrally | No |
+| Module | The module (its agent): which skill carries out a capability it is asked for | **Yes**: composite skills from its components' capabilities; now and then a composite of composites |
+| Component | – | No: its skills are primitives (block types) |
 
-The constraints of the component capabilities, on the capability classes (written into each
-component's AAS by modreg):
+Each level plans only with the level directly below it, from its own AAS. A module's problem is small
+and has a fixed cast, its components and the one product in it, so its state is a handful of property
+values and every capability is about known things. A relational model (many interchangeable objects,
+as carriers on a transport system) is not needed and not attempted. Optimality is not a goal: the
+first valid plan in the order the methods are tried is taken, the integrator's way first.
 
-| Capability | Realized by | Pre | Post | Invariant |
-| --- | --- | --- | --- | --- |
-| Referencing | Home | – | Referenced eq true, Position eq 0.0 | – |
-| Positioning | MoveAxis | Referenced eq true | Position (given) | – |
-| Dosing | Dispense | – | Volume (given) | – |
-| Taring | Tare | – | Tared eq true | – |
-| Weighing | Weigh | Tared eq true | Weight (found) | – |
+A module answers a requirement in one of three ways: a built skill realizes it; a skill is described
+or can be planned (offered "after a reconfiguration"); or it cannot. The planner turns the second
+answer into a skill.
 
-```turtle
-lab:Positioning
-  pprl:pre  [ a css:PropertyConstraint ; pprl:onProperty lab:Referenced ; pprl:operator "eq" ; pprl:expected true ] ;
-  pprl:post [ a css:PropertyConstraint ; pprl:onProperty lab:Position ] .
+## 2. The module's Capability Description is its planning domain
+
+Everything the planner reads is in one submodel, the module's Capability Description (IDTA 02020).
+02020 keeps its relations (`ComposedOf`, `ConstraintHasProperty`, `TransitionConstrainedBy`) inside one
+submodel (its section 1.8.1); only `CapabilityRealizedBy` and `SameProperty` point outside. Its own
+painting-station example does the same: "paint" is composed of spray, dosing, store and pressure
+adjust.
+
+| CapabilitySet | Capabilities | Role | Realized by |
+| --- | --- | --- | --- |
+| `OfferedCapabilities` (exists) | Process capabilities: Filling | Offered | A composite skill of the module, if one exists |
+| One per component (`LinearAxis`, `Pump`, `Scale`), as 02020's best practice has a set per asset | The component's capabilities: Referencing, Positioning; Dosing; Taring, Weighing | NotAssigned (neither offered nor required) | The component's primitive |
+
+A component capability is a part of module capabilities, never offered to a product. It belongs to the
+component (its set, its primitive) but is described in the module, where the constraints that involve
+the other components and the product can refer to it. A component's own AAS keeps only its skills, as
+now.
+
+In ARSO (0.11, with the rename of section 5), `CapabilityRealizedBy` may then point to a skill of a
+component, in the words ARSO already uses for the skill of a step: "of the same AAS or of an AAS that
+is a part of it in HierarchicalStructures (downward only)". **Needs the user's go.**
+
+## 3. Constraints and state
+
+**A constraint** is a 02020 `PropertyConstraintContainer` with a `BasicConstraint`: a Property holding
+a one-operator expression, about the property its `ConstraintHasProperty` names, with an operand that
+is a value or another property of the same capability.
+
+| Kind (`PropertyConditionalType`) | Expression | Means |
+| --- | --- | --- |
+| Pre | `= 40.0`, `= true`, `= FillPosition`, `!= …`, `< …`, `>= …` | Holds when the capability starts |
+| Post | `= …` | Holds when it has succeeded |
+| Post | `+= Volume` | The property has grown by the value of another property |
+| Post | `given` | Ends at the value the capability was given (an input, with a Range) |
+| Post | `measured` | Ends at what the capability measured (an output) |
+| Invariant | `unchanged` | Nothing changes it while the capability runs |
+
+The planner splits an expression into operator and operand. `=` and `+=` are **achieved** (a goal
+method finds a capability whose Post makes them hold); the other comparisons are **checked**. A value
+holds until a Post sets it again (the frame rule).
+
+**A property is a state variable**, identified by:
+
+1. its `SameProperty`, if it has one: the data point of the module's Operational Data it names
+   (`LinearAxis_ActualPosition`, `LinearAxis_Homed`, `Scale_Weight`). Every capability that points at
+   the same data point talks about the same state; the start state can be read live; and the runtime
+   conditions (section 5) talk about the same signals;
+2. otherwise its meaning, if that is a property of the product (vocabulary): the product in the module;
+3. otherwise its meaning, on the component whose CapabilitySet holds it (the scale's `Tared`, which has
+   no signal).
+
+The order of the steps follows from the state, so the filling module needs no transition constraint.
+02020 has them for orders that no state expresses. In 02020 a transition **Invariant** means that the
+other capability must run **at the same time** ("supplying lubricant during a milling operation"),
+which would be a parallel block; not used yet.
+
+## 4. The filling module
+
+| Set | Capability | Realized by | Properties | Pre | Post | Invariant |
+| --- | --- | --- | --- | --- | --- | --- |
+| LinearAxis | Referencing | Home | Position, Referenced | – | Referenced `= true`, Position `= 0.0` | – |
+| LinearAxis | Positioning | MoveAxis | Position (0–60 mm), Referenced | Referenced `= true` | Position `given` | – |
+| Pump | Dosing | Dispense | Volume (0.5–10 mL), FlowRate, FillPosition (40.0 mm), NeedlePosition, ContentVolume, Weighed | NeedlePosition `= FillPosition` | ContentVolume `+= Volume`, Weighed `= false` | NeedlePosition `unchanged` |
+| Scale | Taring | Tare | Tared | – | Tared `= true` | – |
+| Scale | Weighing | Weigh | Tared, Weight, NeedlePosition, Weighed | Tared `= true`, NeedlePosition `= 0.0` | Weight `measured`, Weighed `= true` | NeedlePosition `unchanged` |
+| Offered | Filling | Dispensing | FillVolume, FillWeight (a result), ContainerType, GraspDiameter, AbsoluteFillError, ContentVolume | ContentVolume `= 0.0` | ContentVolume `= FillVolume` | – |
+
+Position and NeedlePosition name `LinearAxis_ActualPosition`, Referenced names `LinearAxis_Homed`,
+Weight names `Scale_Weight`; ContentVolume and Weighed are the product's. A requirement's **result**
+adds a goal: FillWeight needs Weighed `= true` at the end (the vocabulary says which state a result
+needs), so a requirement without it is planned without weighing.
+
+One container written out:
+
+```
+CapabilityContainer  Dosing                    lab:Dosing, NotAssigned                  (set Pump)
+  PropertySet
+    Volume           Range 0.5–10.0 mL         lab:Volume
+    FlowRate         Range 0.1–5.0 mL/s        lab:FlowRate
+    FillPosition     40.0 mm                   lab:FillPosition
+    NeedlePosition   –                         lab:Position, SameProperty → OperationalData/LinearAxis_ActualPosition
+    ContentVolume    –                         lab:ContentVolume
+    Weighed          –                         lab:Weighed
+  CapabilityRelations
+    CapabilityRealizedBy → the pump's Skills/Dispense
+    ConstraintSet
+      Pre        NeedlePosition   "= FillPosition"
+      Post       ContentVolume    "+= Volume"
+      Post       Weighed          "= false"
+      Invariant  NeedlePosition   "unchanged"
 ```
 
-`pprl:pre`, `pprl:post`, `pprl:invariant`, `pprl:onProperty`, `pprl:operator` and `pprl:expected` are
-new in PPRL 0.2 (annotation properties, as `lab:contributes` is: they are said of classes). A skill
-type says which capability it realizes (`lab:realizes`: Home → Referencing, MoveAxis → Positioning,
-Dispense → Dosing, Tare → Taring, Weigh → Weighing), which replaces `lab:contributes`.
-
-The filling module's composition, in its spec (modreg writes the 02020 elements from it):
+**Where it comes from.** modreg writes the description. What holds of a kind of capability wherever
+it is used (Positioning needs the axis referenced) is in the vocabulary, on the capability classes.
+What holds on this module (the needle in the vial, the vial on the scale) is in the module's spec,
+next to the skill; a sketch:
 
 ```yaml
-capabilities:
-  Filling:
-    properties:
-      FillPosition: {value: 40.0, unit: mm}        # a placeholder, as NeedleDown's constant today
-    composed_of:
-      parts: {Positioning: LinearAxis, Dosing: FillingPump, Weighing: Scale}
-      same: {FillVolume: FillingPump.Volume, FillWeight: Scale.Weight}     # 02020 SameProperty
-      constraints:
-        - {pre: Dosing, property: LinearAxis.Position, eq: FillPosition}  # the needle in the vial
-        - {pre: Weighing, after: Dosing}                                   # a transition constraint
-        - {pre: Weighing, property: LinearAxis.Position, eq: 0.0}         # the needle out of the vial
-        - {invariant: Weighing, property: LinearAxis.Position}            # no motion while weighing
+  Dispense:
+    needs: {LinearAxis.Position: {FillPosition: 40.0}}     # the needle in the vial
+    keeps: [LinearAxis.Position]                            # still while dosing
+    product: {ContentVolume: += Volume, Weighed: false}
 ```
 
-`SameProperty` binds the module's properties to the parts': a requirement's FillVolume becomes the
-Volume the pump is given, and the scale's Weight is the FillWeight the product asked for.
+**The rest state** is what the steps of the Reset procedure (`[Home, Tare]`) give from nothing known:
+Referenced, Position 0.0, Tared. Every composed skill starts and ends there; nobody states that rule
+(the spec's "homing after every operation" is what it encodes).
 
-## 4. The skill's runtime conditions (ARSO 0.11)
+## 5. The skill's runtime conditions (ARSO 0.11)
 
 The `Contract` of a primitive stays the executable check over the module's signals, renamed to the
 words of 02020 and CSS:
 
-| ARSO 0.10 | ARSO 0.11 | |
+| ARSO 0.10 | ARSO 0.11 | Example |
 | --- | --- | --- |
 | `Contract` / `Requires` | `Conditions` / `Precondition` | `Homed` |
 | `Contract` / `Ensures` | `Conditions` / `Postcondition` | `NOT Moving AND ABS(ActualPosition - Position) < 0.001` |
@@ -157,56 +150,114 @@ words of 02020 and CSS:
 | `Contract` / `After` | `Completion` / `After` | Ends the skill after a duration, if it has no Postcondition |
 | `Contract` / `Timeout` | `Completion` / `Timeout` | |
 
-They are linked to the capability's constraints by what is there already: the primitive realizes the
-capability (`CapabilityRealizedBy`), so its `Precondition` is the runtime form of that capability's
-Pre constraints. No reference is added. A later check can say whether the two agree.
+They are linked to the capability's constraints by what is there: the primitive realizes the
+capability, and both talk about the same data points (`SameProperty`). A check can compare them; later
+one can be written from the other.
 
-## 5. How the planner reads it
+## 6. The planners
 
-1. The projection of the module's and the components' AASs (`modreg graph`) and the vocabulary in
-   one graph. A new projection query turns the 02020 constraints into `css:PropertyConstraint` and
-   `css:TransitionConstraint`.
-2. SPARQL makes the domain: for each component capability an action (Pre, Post, Invariant); for each
-   module capability a method per composition (its parts, ordered by the transition and Part
-   constraints); for each property a Post sets, a goal method; the named values (FillPosition).
-3. The start state is the rest state: the Reset procedure's steps, applied to "nothing known", give
-   Referenced = true, Position = 0.0, Tared = true. Every composed skill must end there; nobody
-   states that rule (the spec's comment, "homing after every operation", is what it encodes).
-4. GTPyhop is given the task `Filling(FillVolume=2.0, FillWeight)` and the rest state as a goal.
-5. The plan is lifted to a partial order, parameters are bound by `SameProperty` (Volume becomes a
-   parameter of the new skill with the requirement's range), and the flow is written in the
-   planner's elements.
-6. The derivation checks that the new skill offers the required capability.
+1. **One domain model** (Python), made by SPARQL from the projection of the module's AASs and the
+   vocabulary: the state variables (section 3); an action per NotAssigned capability; a task per
+   process capability with its Pre and Post; the methods; the rest state; the named values.
+2. **One simulator** on it: the checker of the editor, and the validation of every plan.
+3. **GTPyhop** plans on it directly, numbers included. For a task the methods are tried in this order:
+   1. the capability's compositions (02020 `ComposedOfSet`), the integrator's way, if stated: the parts
+      as subtasks, ordered by the state;
+   2. an existing composite skill that realizes the capability: its steps as subtasks. This is how a
+      composite of composites is planned: the inner one is inlined, since a step of rule set 2 runs a
+      primitive;
+   3. the generated method: reach each goal of the capability's Post, then the rest state.
 
-## 6. Changes, in order
+   A goal ("ContentVolume = 2.0") is reached by "it already holds" or by a capability whose Post makes
+   it hold, after its own Pre (goal regression).
+4. **The plan is lifted** to a partial order: steps on different components with no state between them
+   become a parallel block, unless an invariant forbids it (Weigh keeps the needle still, so Home and
+   Weigh stay apart). The flow is written in the planner's elements; the derivation checks that the new
+   skill offers the capability.
+5. **HDDL and PDDL are generated** from the same model, for standard planners, for the evaluation, and
+   to validate plans with VAL:
+   - HDDL: the same tasks and methods, the goals as compound tasks with methods, so any HDDL planner
+     runs it without task insertion; values become objects (`fill`, `ref`, the requested volume);
+     deletes are generated (a property has one value);
+   - PDDL 2.1 with numbers (ENHSP) for `+=`, which HDDL 1.0 cannot express: a volume above one dose;
+   - invariants stay outside both: plans are sequential, and invariants matter only when lifting.
 
-1. Vocabulary 0.2 and PPRL 0.2 (section 3), with the ontology checks.
-2. ARSO 0.11: `Contract` → `Conditions` and `Completion` in ARSO, modreg, modsync and modgen.
-3. modreg: a Capability Description in each component's AAS (its capabilities, realized by its
-   primitives, with their constraints); the module's composition from the spec.
-4. The projection of the constraints; the derivation of a module's capabilities from its
-   compositions instead of `lab:contributes`.
-5. The planner and the checker (GTPyhop), then the recommendations in the editor.
+**Discovery.** With the generated methods a process capability is planned without any composition.
+For each process capability of the vocabulary the module has no skill for, the planner tries its Post
+from the rest state; if a plan exists, the module offers it after a reconfiguration, with the range the
+limits of the plan's capabilities give. This replaces the derivation from `lab:contributes`.
 
-## 7. Open points
+## 7. Compared with AAS2PDDL (Nabizada et al., CASE 2026, arXiv 2606.02167)
+
+They generate PDDL from four planning submodels in each component AAS
+([AAS-Planning-Metamodel](https://github.com/hsu-aut/AAS-Planning-Metamodel)): TypeHierarchy (types),
+DataElementTypes (predicates), Capabilities (VDI 3682
+process operators whose inputs and outputs are tagged Requirement or Assurance and Equal or NotEqual,
+bound to parameters by references) and Instances (objects, initial state, goals). Their `move` action
+(3 parameters, 4 preconditions, 4 effects, 14 lines of PDDL) is 77 AAS elements. Here nothing
+planning-specific is modelled:
+
+| PDDL / HDDL | AAS2PDDL | Here |
+| --- | --- | --- |
+| Types, objects | TypeHierarchy, Instances | Not needed: a module is one fixed cast of components and a product |
+| State | Predicates with typed parameters | Capability properties with a meaning, one value each |
+| Actions, parameters | Process operators, parameter collections | NotAssigned capabilities, their properties with a Range |
+| Preconditions, effects | Inputs and outputs; delete effects written by hand | Pre and Post constraints; deletes generated |
+| Invariants | – | Invariant constraints |
+| Initial state, goal | Instances (the goal in a component's AAS) | The rest state or the live values; the requirement |
+| Tasks, methods | – | Process capabilities; compositions, existing composites, generated methods |
+| Numbers | Future work | Ranges, values, `+=` |
+
+Their model is general where this one is not: many interchangeable objects and relations between them
+(carriers on belts) are what lifted PDDL is for, and what a transport system would need inside it. A
+module does not. Köcher et al. (2023, arXiv 2312.08801) plan with SMT from capabilities modelled after
+CSS, with inputs as preconditions and outputs as effects: the same view of state.
+
+## 8. Changes, in order
+
+1. Vocabulary 0.2: the capabilities Referencing ⊑ Positioning, Dosing, Taring ⊑ Weighing; the
+   properties Referenced, Tared, Volume (a dose), FillPosition ⊑ Position, ContentVolume and Weighed (of
+   the product), FillWeight (a result); the constraints that hold of a kind of capability; the ontology
+   checks. Dispense's parameter Volume then means Volume, not FillVolume.
+2. ARSO 0.11: `Contract` → `Conditions` and `Completion`; `CapabilityRealizedBy` to a component's skill
+   (needs the user's go); modreg, modsync and modgen follow.
+3. modreg: the component sets with their constraints (from the vocabulary and the spec), `SameProperty`
+   to the data points; the Offered capabilities with their Pre and Post.
+4. The projection of the constraints; the domain model and the simulator (the checker).
+5. GTPyhop, the lifting, writing the flow; discovery in place of `lab:contributes`.
+6. HDDL and PDDL generation; a planner of each kind and VAL, for the evaluation.
+7. The recommendations in the editor.
+
+## 9. Open points
 
 | Point | Proposal |
 | --- | --- |
-| A requirement without FillWeight still gets a weighing | Two compositions of Filling (with and without Weighing); the planner takes the one whose Posts cover the goals |
-| Position 0.0 by Home or by MoveAxis(0) | Both are plans; goal methods are tried in order, Referencing first (it also restores Referenced), as the module's own skill does |
+| Position 0.0 by Home or by MoveAxis(0) | Both are plans (DoubleDose uses MoveAxis(0)); Referencing is tried first, as the spec homes after every operation |
+| Which HDDL planner | PANDA (pandaPI), which plans partial-order HDDL; check what runs on Windows |
+| Numbers in PDDL | Values as objects with an amount; the candidate doses are the requested volume, the limits and what is left |
 | Decisions in a composed skill ("top up if light") | Not planned in the first version; offered as a pattern |
 | Tare with the container on the scale (a net weight) | Not modelled |
-| More than one dose for a volume above the pump's range | Not planned in the first version |
+| The range of a discovered offer with `+=` | Bounded by the container's capacity, which the vocabulary does not have yet |
 
-## 8. The test case with the filling module
+## 10. Test cases with the filling module
 
-The module's own skills are the ground truth:
+The module's skills are the ground truth: Dispensing (the spec) and the test skills DoubleDose
+(`aas61499-tools/tests/test_modsync.py`), Checked and Ready (`aas61499-tools/tests/test_modsync_flow_live.py`).
 
 | Case | Given | Expected |
 | --- | --- | --- |
-| T1 Rest | The goal of the Reset procedure, from nothing known | Home ∥ Tare |
-| T2 Filling | `Filling(FillVolume 2.0, FillWeight)` | MoveAxis(40.0) → Dispense(2.0) → Home → Weigh, as Dispensing |
-| T3 Moved fill position | T2 after FillPosition is set to 35.0 in the module's AAS | MoveAxis(35.0) → …: the value comes from the AAS |
-| T4 Check: missing step | Dispensing without NeedleDown | Dispense's Pre (Position eq FillPosition) fails; MoveAxis(40.0) recommended before it |
-| T5 Check: invariant | Home ∥ Weigh | Weigh's invariant on Position is broken by Home |
-| T6 Check: own skills | Every skill of the module | No finding |
+| T1 Rest | The rest state as the goal, from nothing known | Home ∥ Tare, as Ready |
+| T2 Filling | `Filling(FillVolume 2.0)` with the result FillWeight | MoveAxis(40.0) → Dispense(2.0) → Home → Weigh, as Dispensing |
+| T3 No result | `Filling(FillVolume 2.0)` without FillWeight | MoveAxis(40.0) → Dispense(2.0) → Home |
+| T4 Moved fill position | T2 after FillPosition is set to 35.0 in the AAS | MoveAxis(35.0) → …: the value comes from the AAS |
+| T5 Two doses | T2 with Dispense limited to 1.0 mL per dose | Two doses of 1.0 mL, as DoubleDose (numbers: GTPyhop, ENHSP) |
+| T6 Check: missing step | Dispensing without NeedleDown | Dosing's Pre fails; MoveAxis(40.0) recommended before it |
+| T7 Check: invariant | Home ∥ Weigh | Weigh's invariant (the needle still) is broken by Home |
+| T8 Check: the module's skills | Dispensing, DoubleDose, Ready, Checked | No finding, except Checked: it weighs with the needle in the vial (it was written to test decisions) |
+| T9 DoubleDose's offer | DoubleDose, two doses of Dose (0.5–10 mL) | FillVolume 1.0–20.0; today's derivation says 0.5–10.0 |
+| T10 Discovery | Every composite deleted | Filling offered after a reconfiguration |
+| T11 No scale | The scale removed | Filling offered without FillWeight; with FillWeight refused |
+| T12 Missing constraint | "Needle at the fill position" removed | The plan fills with the needle up: the integration constraints carry the meaning |
+
+Each case also runs through HDDL and PDDL where it fits, every plan through VAL, and the times are
+recorded.
