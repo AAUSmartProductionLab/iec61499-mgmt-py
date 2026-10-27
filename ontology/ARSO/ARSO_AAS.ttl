@@ -29,7 +29,12 @@
 
   v0.11 (27 Oct 2026): the capability model is what new skills are planned from
   (docs/skill-planning.md). A primitive's Contract becomes Conditions (Precondition, Postcondition,
-  Invariant) and Completion (After, Timeout).
+  Invariant) and Completion (After, Timeout). A module's Capability Description also holds the
+  capabilities of its components (role NotAssigned, a CapabilitySet per component), each realized
+  by a primitive in the component's AAS: CapabilityRealizedBy may name a skill of an AAS that is a
+  part of this one. A property constraint is a BasicConstraint expression over the properties of
+  its capability, and a property names the state it is with SameProperty (a data point of
+  Operational Data).
 
   v0.10 (27 Oct 2026): what was built leaves the AAS. The Skills submodel states the rule set the
   resource's program is built by (RuleSet) and, per skill, whether it is built or only described
@@ -240,7 +245,7 @@ arso:usesSkill rdf:type owl:ObjectProperty ;
 arso:realizedBySkill rdf:type owl:ObjectProperty ;
   rdfs:domain arso:CapabilityContainerSMC ;
   rdfs:range arso:SkillSMC ;
-  rdfs:comment "Resolved CapabilityRealizedBy: the skill that realizes an offered capability (same AAS)." .
+  rdfs:comment "Resolved CapabilityRealizedBy: the skill that realizes a capability, of the same AAS or of an AAS that is a part of it (a component's primitive, v0.11)." .
 
 #################################################################
 #################################################################

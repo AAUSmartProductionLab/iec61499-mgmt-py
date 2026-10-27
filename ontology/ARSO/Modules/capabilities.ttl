@@ -23,7 +23,39 @@
 #                  ├─ ComposedOfSet [SMC, 0..1]
 #                  ├─ GeneralizedBySet [SMC, 0..1]
 #                  └─ ConstraintSet [SMC, 0..*]
-# Cross-submodel note: CapabilityRealizedBy.second must reference a Skill in the same AAS.
+#                       ├─ PropertyConstraintContainer [SMC, 0..*]
+#                       │    ├─ ConstraintType [Property, 1] — BasicConstraint here
+#                       │    ├─ BasicConstraint [Property, 1] — the expression (below)
+#                       │    ├─ PropertyConditionalType [Property, 1] — Pre, Post, Invariant, ...
+#                       │    └─ ConstraintPropertyRelations [SMC, 1]
+#                       │         └─ ConstraintHasProperty [RelationshipElement, 1..*]
+#                       └─ TransitionConstraintContainer [SMC, 0..*]
+#                            ├─ TransitionConstrainedBy [RelationshipElement, 1]
+#                            └─ TransitionConditionalType [Property, 1]
+# Cross-submodel note: CapabilityRealizedBy.second references a Skill in the Skills submodel of
+# the same AAS or of an AAS that is a part of it in HierarchicalStructures (downward only), as a
+# step's Skill does (v0.11).
+#
+# How a resource uses it (v0.11; docs/skill-planning.md): a module's Capability Description is
+# what new skills of it are planned from, so everything the planner reads is in this one
+# submodel (IDTA 02020 keeps ComposedOf, ConstraintHasProperty and TransitionConstrainedBy inside
+# one submodel).
+# - CapabilitySet OfferedCapabilities: the module's process capabilities, role Offered, each
+#   realized by a composite skill of the module if one exists.
+# - One CapabilitySet per component, named like it: the component's capabilities, role
+#   NotAssigned (no product asks for them), each realized by one of its primitives. They are parts
+#   of the module's capabilities (ComposedOf), never offered on their own.
+# - A property constraint is a BasicConstraint: an expression over the properties of its own
+#   capability, about the property its ConstraintHasProperty names. "<op> <operand>", op one of
+#   = != < <= > >= +=, the operand a value or the idShort of another property of the capability;
+#   or a word: given (Post: it ends at the value it was given), measured (Post: at what it
+#   measured), unchanged (Invariant: nothing else changes it meanwhile). A planner achieves = and
+#   +=; it checks the others.
+# - A property is a state: the data point its SameProperty names (second: a Property of the
+#   module's Operational Data), the same for every capability that names it; without one, the
+#   product's if its meaning is a property of the product, else the component's whose set holds it.
+# - A transition constraint orders capabilities where no state does; its Invariant means the other
+#   capability runs at the same time (IDTA 02020: "supplying lubricant during a milling operation").
 
 #################################################################
 # ONTOLOGY METADATA
@@ -35,7 +67,7 @@
   rdfs:comment """ARSO module: Capability Description (IDTA 02020-1-0).
 
   Submodel semanticId: https://admin-shell.io/idta/SubmodelTemplate/CapabilityDescription/1/0
-  Cross-submodel: CapabilityRealizedBy.second must reference a Skill in the Skills SM of the same AAS (enforced via SPARQL SHACL).""" .
+  Cross-submodel: CapabilityRealizedBy.second references a Skill in the Skills SM of the same AAS or of an AAS that is a part of it in HierarchicalStructures (downward only); SameProperty.second a Property of the module's Operational Data.""" .
 
 
 #################################################################
@@ -95,7 +127,7 @@ arso:PropertyContainerSMC rdf:type owl:Class ;
 arso:SamePropertyRel rdf:type owl:Class ;
   rdfs:subClassOf aas:RelationshipElement ;
   arso:semanticId "https://admin-shell.io/idta/CapabilityDescription/SameProperty/1/0" ;
-  rdfs:comment "RelationshipElement SameProperty — links the property in this PropertyContainer (first) to an identical property in another Submodel or external source (second)." .
+  rdfs:comment "RelationshipElement SameProperty — links the property in this PropertyContainer (first) to an identical property in another Submodel or external source (second). For a state of the resource (v0.11): the data point of Operational Data it is; capabilities whose properties name the same data point talk about the same state." .
 
 arso:PropertyCommentMLP rdf:type owl:Class ;
   rdfs:subClassOf aas:MultiLanguageProperty ;
@@ -120,7 +152,7 @@ arso:CapabilityRealizedBySML rdf:type owl:Class ;
 arso:CapabilityRealizedByRel rdf:type owl:Class ;
   rdfs:subClassOf aas:RelationshipElement ;
   arso:parentClass arso:CapabilityRealizedBySML ;
-  rdfs:comment "RelationshipElement CapabilityRealizedBy — first: Capability in this SM; second: Skill in the Skills Submodel of the same AAS. Cross-SM enforcement via SPARQL SHACL. Applied unconditionally to every direct child of a CapabilityRealizedBySML (no idShort — SML entries are unnamed list items)." .
+  rdfs:comment "RelationshipElement CapabilityRealizedBy — first: Capability in this SM; second: Skill in the Skills Submodel of the same AAS or of an AAS that is a part of it in HierarchicalStructures (downward only): a component's primitive realizes the component's capability (v0.11). Applied unconditionally to every direct child of a CapabilityRealizedBySML (no idShort — SML entries are unnamed list items)." .
 
 
 #################################################################
@@ -196,6 +228,26 @@ arso:TransitionConstrainedByRel rdf:type owl:Class ;
   rdfs:subClassOf aas:RelationshipElement ;
   arso:semanticId "https://admin-shell.io/idta/CapabilityDescription/TransitionConstrainedBy/1/0" ;
   rdfs:comment "RelationshipElement TransitionConstrainedBy — first: constrained Capability; second: constraining Capability from another CapabilityContainer." .
+
+arso:ConstraintTypeProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:semanticId "https://admin-shell.io/idta/CapabilityDescription/ConstraintType/1/0" ;
+  rdfs:comment "Property ConstraintType (xs:string) — the form of a PropertyConstraintContainer's constraint: BasicConstraint, CustomConstraint, OCLConstraint or OperationConstraint, the one element of that name it holds (SM-CapabilityDescription-3). A resource's are BasicConstraint (v0.11)." .
+
+arso:BasicConstraintProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:semanticId "https://admin-shell.io/idta/CapabilityDescription/PropertyConstraintType/BasicConstraint/1/0" ;
+  rdfs:comment "Property BasicConstraint (xs:string) — the constraint as an expression over the properties of its capability, about the property its ConstraintHasProperty names (v0.11): '<op> <operand>', op one of = != < <= > >= +=, the operand a value or the idShort of another property of the capability ('= 40.0', '= FillPosition', '+= Volume'); or a word: given or measured (Post), unchanged (Invariant)." .
+
+arso:PropertyConditionalTypeProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:semanticId "https://admin-shell.io/idta/CapabilityDescription/PropertyConditionalType/1/0" ;
+  rdfs:comment "Property PropertyConditionalType (xs:string) — when the constraint holds: Pre (before the capability is applied), Post (after it), Invariant (while it runs), or PrePost, PreInvariant, InvariantPost, PrePostInvariant." .
+
+arso:TransitionConditionalTypeProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:semanticId "https://admin-shell.io/idta/CapabilityDescription/TransitionConditionalType/1/0" ;
+  rdfs:comment "Property TransitionConditionalType (xs:string) — when the constraining capability (second) is applied: Pre (before the constrained one, first), Post (after it), Invariant (during it, at the same time), or PrePost, PreInvariant, InvariantPost, PrePostInvariant." .
 
 
 #################################################################
@@ -276,14 +328,24 @@ arso:PropertyConstraintContainerSMC rdfs:subClassOf [
   owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
   owl:someValuesFrom arso:ConstraintPropertyRelationsSMC ] .
 
+# ... and says what form its constraint has and when it holds (both mandatory, v0.11)
+arso:PropertyConstraintContainerSMC rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:someValuesFrom arso:ConstraintTypeProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:someValuesFrom arso:PropertyConditionalTypeProperty ] .
+
 # ConstraintPropertyRelations must contain at least one ConstraintHasProperty
 arso:ConstraintPropertyRelationsSMC rdfs:subClassOf [
   rdf:type owl:Restriction ;
   owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
   owl:someValuesFrom arso:ConstraintHasPropertyRel ] .
 
-# TransitionConstraintContainer must contain TransitionConstrainedBy (1)
+# TransitionConstraintContainer must contain TransitionConstrainedBy (1) and its TransitionConditionalType (1, v0.11)
 arso:TransitionConstraintContainerSMC rdfs:subClassOf [
   rdf:type owl:Restriction ;
   owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
-  owl:someValuesFrom arso:TransitionConstrainedByRel ] .
+  owl:someValuesFrom arso:TransitionConstrainedByRel ] ,
+  [ rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+  owl:someValuesFrom arso:TransitionConditionalTypeProperty ] .
