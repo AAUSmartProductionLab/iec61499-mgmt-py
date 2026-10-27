@@ -95,7 +95,7 @@ FORTE's management protocol, running a module, deploying to a Pi, building and p
 is in **[tooling.md](tooling.md)**. Read it before changing or running anything.
 
 ```powershell
-python -m venv .venv; .venv/Scripts/python.exe -m pip install -e ".[test,registration,opcua]"
+python -m venv .venv; .venv/Scripts/python.exe -m pip install -e ".[test,registration,opcua,planning]"
 $env:PYTHONUTF8 = 1
 .venv/Scripts/python.exe -m pytest -q                         # offline, about 2 to 4 min
 .venv/Scripts/python.exe -m pytest -q --module-forte-exe runtime/fbe/build/modules-win/forte/build/forte/forte.exe   # + live tests, about 12 min (see below)

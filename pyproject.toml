@@ -18,6 +18,8 @@ registration = [
     "basyx-python-sdk>=2.1,<3",
     "rdflib>=7,<8",
 ]
+# Planning new skills (modplan): GTPyhop and the vocabulary.
+planning = ["gtpyhop-core==2.0.2", "rdflib>=7,<8"]
 test = ["pytest>=7,<9", "asyncua>=1.1", "basyx-python-sdk>=2,<3"]
 
 [project.scripts]
@@ -28,13 +30,14 @@ modreg = "modreg.__main__:main"
 
 # One folder per future repository; the Python packages live inside them.
 [tool.setuptools]
-packages = ["iec61499_mgmt", "modgen", "modsync", "modreg", "modreg.generated"]
+packages = ["iec61499_mgmt", "modgen", "modsync", "modreg", "modreg.generated", "modplan"]
 
 [tool.setuptools.package-dir]
 iec61499_mgmt = "iec61499-mgmt-py/iec61499_mgmt"
 modgen = "iec61499-skill-lib/modgen"
 modsync = "aas61499-tools/modsync"
 modreg = "aas61499-tools/modreg"
+modplan = "aas61499-tools/modplan"
 
 [tool.setuptools.package-data]
 modreg = ["templates/*.json"]
