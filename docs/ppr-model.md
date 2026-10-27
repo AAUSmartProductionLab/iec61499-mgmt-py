@@ -90,7 +90,7 @@ as specific asset ids, so it is found from either)
 | Asset Interfaces Description | IDTA 02017 (+ aas-model's actions) | The OPC UA endpoint and every action and property | Yes |
 | Asset Interfaces Mapping Configuration | IDTA 02027 | Which interface element feeds which data, which action an Operation calls | Yes |
 | Operational Data | ours | States, measurements and events as series SMCs shaped as IDTA's Time Series, each with a `Latest` property and a reference to its history in a time-series database | Data points today; series planned ([state-and-parameters.md](state-and-parameters.md)) |
-| Control Configuration | ours | What was built: instances, block types, type hashes, the rule set, the change log | Yes |
+| (in Skills) `RuleSet`, `Deployment` | ours (ARSO 0.10) | The rule set the program is built by; per module level skill, `Built` or `Described`. What was built in detail (instances, block types, hashes, the change log) is the integrator's record outside the AAS ([control-configuration.md](control-configuration.md)) | Yes, since 27 Oct |
 | Parameters | ours | The resource's settings (microsteps, speed, timeouts) | Planned |
 | Technical Data | IDTA 02003 | Fixed facts (screw lead, motor current) | Planned |
 
@@ -164,7 +164,7 @@ written into the Capability Description, not typed by hand:
 through the step it is handed to. Derived elements carry the qualifier `Derived`, so a derivation
 replaces only what it derived; facts and capabilities written by hand stay, and a container keeps
 its name (two skills offering one capability: `<Capability>_<Skill>`). A described skill that is
-not built yet (no instance in the Control Configuration) offers its capability with
+not built yet (`Deployment = Described`, since 27 Oct; before, no instance in the Control Configuration) offers its capability with
 `Availability = AfterReconfiguration`. Written by `modreg profile` (the module spec's
 `capabilities` keep only the facts of the machine; a capability no skill offers is refused), by
 `modsync record` (with the components' AASs) and by `POST /capabilities/<shell>` of `modreg serve`,
@@ -192,7 +192,7 @@ the paper.
 | Process sequence planner (web UI module) | Product AAS; offered capabilities and skills of the resources | The recipe (product AAS), the bindings (process AAS) | – | Yes; the process AAS is planned |
 | Skill editor (web UI plugin) | A module's Skills and its components' | The module's Skills | – | Yes; its fixes not committed; calling the derivation after saving is to do |
 | `modreg` | Specs, profiles, the ontologies | Every AAS (built, checked, registered); derived capabilities | – | Yes |
-| `modsync` | Skills, Control Configuration, the running program | Control Configuration, the interface of a new skill, the boot file | Creates, writes, verifies (management protocol) | Yes |
+| `modsync` | Skills, the integrator's record, the running program | `Deployment`, the interface of a new skill, the record, the boot file | Creates, writes, verifies (management protocol) | Yes |
 | `modlink`, HMI | Interface description, mapping, Skills | – | Occupies, calls skills (OPC UA) | Yes; the HMI moves into the web UI (C5), later the AAS alone (C6) |
 | Agents | Process and resource AAS | Bindings per order | Through `modlink` and `modsync` | After the paper |
 
@@ -210,7 +210,7 @@ From [figures/reconfiguration-pipeline.drawio](figures/reconfiguration-pipeline.
 | 6 | Apply online: instances, values, connections by the module rules; INIT | `modsync`, FORTE | Yes |
 | B2 | Or, as the baseline: a new boot file and a restart | `pi.py`, FORTE | No (B2) |
 | 7 | Verify by reading the program back | `modsync` | Yes |
-| 8 | Record: Control Configuration, the new skill's interface, the boot file | `modsync` | Yes |
+| 8 | Record: `Deployment`, the new skill's interface, the integrator's record, the boot file | `modsync` | Yes |
 | 9 | Match again, bind in the process AAS, run: occupy, Start over OPC UA | Planner, `modlink` | Matching and running yes; the process AAS no |
 
 Steps 5 to 8 against B2 are what the evaluation times (B1, B2).

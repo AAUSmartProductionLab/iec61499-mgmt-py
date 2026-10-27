@@ -19,7 +19,7 @@ serve, and what each tool reads, writes and sends): [figures/module-tools.drawio
 flowchart LR
     subgraph Describe
         spec[Module spec<br/>cell/modules/*.yaml]
-        aas[Module AAS + component AASs<br/>ARSO 0.9: Skills, Control Configuration, interface, ...]
+        aas[Module AAS + component AASs<br/>ARSO 0.10: Skills, capabilities, interface, ...]
         product[Product AAS<br/>process parameters, required capabilities, plan]
         editor[Skill editor<br/>BaSyx web UI plugin]
     end
@@ -82,9 +82,12 @@ what lets the tools read a program back and change it later.
 | Skills (module and components) | Each skill as its commands (Start, Stop, Abort, Reset), each an Operation whose variables are the parameters (with limits, units, meanings) and results; a module level skill also its **steps**: which component skill runs, what each input is handed (a constant or a parameter of the skill), which step gives which result. The module's own commands (Occupy, Reset, ...) are skills too | `modlink`, the HMI, `modsync verify` and `reconfigure`, the skill editor |
 | Asset Interfaces Description | OPC UA endpoint and the browse path of every action and property | `modlink`, the HMI |
 | Mapping Configuration, Operational Data | Which interface element carries a skill's state, error, results | `modlink` |
-| Control Configuration | What was built: every skill and step instance with its block type and the type hash FORTE reports, the rule set, a change log | `modsync verify` |
+| (Skills, `RuleSet` and `Deployment`) | The rule set the program is built by; per module level skill, whether the program carries it out | `modsync`, the derivation (`Availability`), the planner |
 
-The Skills submodel says **what is wanted**; the Control Configuration says **what was built**.
+The Skills submodel says **what is wanted**, and with `Deployment` whether it is built. In detail
+what was built (every skill and step instance with its block type and the type hash FORTE reports,
+the change log, where the module is managed) is the integrator's record, kept outside the AAS since
+27 Oct ([control-configuration.md](control-configuration.md))
 
 ## 4. Operating the module from its AAS
 
@@ -121,7 +124,8 @@ was running.
    end of the INIT chain and started; then INIT is fired once into it. No restart.
 6. **Verify.** The program is read back and compared with the AAS again.
 7. **Keep it.** The change is added to the module's boot file, so a restart keeps it.
-8. **Record.** The Control Configuration gets the new instances with block types and type hashes,
+8. **Record.** The skill's `Deployment` becomes `Built`; the integrator's record (outside the AAS)
+   gets the new instances with block types and type hashes,
    the change log an entry; the interface description gets the new skill's actions and
    properties, so `modlink` and the HMI find it.
 

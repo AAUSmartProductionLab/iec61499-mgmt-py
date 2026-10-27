@@ -39,7 +39,6 @@ flowchart LR
     RM["Mapping Configuration"]
     RO["Operational Data"]
     RH["Hierarchical Structures<br/>its components"]
-    RK["Control Configuration"]
   end
   subgraph C["Component AAS (one per component)"]
     CS["Skills<br/>its primitives"]
@@ -59,7 +58,6 @@ flowchart LR
   CS -- "command called by" --> RI
   RM -- "maps" --> RI
   RM -- "feeds" --> RO
-  RK -. "names the block behind" .-> RS
   RH -. "asset id" .-> C
   LH -. "asset id" .-> R
 ```
@@ -107,9 +105,8 @@ submodels:
 | Asset Interfaces Description | IDTA 02017-1-1 with W3C WoT terms | One OPC UA interface: every method as an action (arguments in call order), every published variable as a property, each with its browse path | Extended |
 | Asset Interfaces Mapping Configuration | IDTA 02027 (2/0) | Which interface property feeds which data point, and which action each command's Operation calls | Extended |
 | Capability Description | IDTA 02020 | The capabilities the module offers, with values or ranges and units, each realized by a skill; derived from the skills since 26 Oct (qualifiers `Derived`, and `Availability` for a skill not built yet; [ppr-model.md](ppr-model.md), section 5) | One change |
-| Skills | ours (ARSO 0.9, `Modules/skills.ttl`); began from IDTA 02015 Control Component Type and is no longer that template | The skills the module composes and the module's own commands (Occupy, Release, Reset, Start, Stop, Abort, Clear), each as its commands, directly in the submodel; the error codes (`Errors`, a property each) | Custom |
+| Skills | ours (ARSO 0.10, `Modules/skills.ttl`); began from IDTA 02015 Control Component Type and is no longer that template | The skills the module composes and the module's own commands (Occupy, Release, Reset, Start, Stop, Abort, Clear), each as its commands, directly in the submodel; the error codes (`Errors`, a property each); the rule set the program is built by (`RuleSet`) and, per module level skill, whether the program carries it out (`Deployment`: `Built` or `Described`) | Custom |
 | Operational Data | ours (ARSO) | One decimal data point per published variable: states, error ids, parameters and results of the last run, equipment inputs | Custom |
-| Control Configuration | ours (ARSO) | Runtime and endpoint, the rule set the program follows, what it was generated from, whether the running program still matches, type hashes, and which block of the program each skill and step is | Custom |
 
 A component's AAS holds one submodel, Skills, with its primitives. Its interface is the module's:
 the module carries the skills out.
@@ -180,7 +177,7 @@ What is deliberately not in Skills:
 | Not there | Where it is instead |
 | --- | --- |
 | The skill's state, why it failed, its results as they are now | Operational Data: data points, fed from the interface by the mapping. A data point carries the semantic id of the Operation variable it shows |
-| Which block of the program a skill or a step is | Control Configuration, `Instances`: instance path, block type, type hash, and a reference to the skill or the step |
+| Which block of the program a skill or a step is | Since 27 Oct (ARSO 0.10) the integrator's record of what was built, outside the AAS ([control-configuration.md](control-configuration.md)): a Control Configuration submodel per module with `Instances` (instance path, block type, type hash, a reference to the skill or the step), the change log and the management endpoint. The AAS keeps only `RuleSet` and each skill's `Deployment` |
 | What a primitive occupies | The component whose AAS it is described in |
 | Which capability it realizes | The capability says which skill realizes it; a skill never refers back |
 | A list of the skills a composite uses | Its steps refer to them |
@@ -194,7 +191,7 @@ What is deliberately not in Skills:
 | Step | `Skill` | a skill, in this AAS or in a component's | What the step runs |
 | Step | an element named like a variable | a variable of the command's Operation | What is handed down, or which result it becomes |
 | Hierarchical Structures | a part's `globalAssetId` | the AAS of the component (or, for a line, of the module) | What it is made of |
-| Control Configuration | `Instances/<block>/Skill` | a skill or a step | Which block of the program it is |
+| The record of what was built (outside the AAS) | `Instances/<block>/Skill` | a skill or a step | Which block of the program it is |
 | Mapping Configuration | source → sink | interface property → data point | Where a published value lands in the AAS |
 | Mapping Configuration | source → sink | Operation of a command → interface action | Which call an invoked Operation becomes |
 

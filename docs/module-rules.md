@@ -175,6 +175,7 @@ and gives up its equipment itself. `Module.RUN_<NAME>` starts it, and its `DONE`
 | A step's constant; a value handed down | The step's `Bindings`: a `Binding` with `Value`, or with `SourceElement` referring to the command's variable; a result is an `Output` with `ResultReference` |
 | Procedures `Resetting`, `Stopping` | The steps of the `Start` of the skills `Reset` and `Stop` (kind `skill/ModuleControl`) |
 | Module commands, Occupy and Release | Skills of the kind `skill/ModuleControl` in the module's Skills, each called by its `Start` |
-| Which block is which skill or step | Control Configuration, `Instances`: `InstancePath`, `FBType`, `TypeHash`, `Skill` |
-| Block types and their hashes, as read | Control Configuration, `Types` |
-| The rule set | Control Configuration, `Rules` |
+| The rule set | Skills, `RuleSet` |
+| Whether the program carries a module level skill out | The skill's `Deployment`: `Built`, or `Described` (in the AAS only) |
+| Which block is which skill or step | Not in the AAS: the integrator's record (a Control Configuration submodel kept by the registration service or in a folder), `Instances`: `InstancePath`, `FBType`, `TypeHash`, `Skill`; it follows from the rules anyway |
+| Block types and their hashes, as read | The integrator's record, `Types` |

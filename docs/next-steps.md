@@ -52,13 +52,13 @@ Agents are not part of the paper; they are its future work ([after the paper](#a
 | Skills (in a module's and in each component's AAS) | `modreg`; the skill editor | `modlink`; `modsync verify` and `reconfigure` | How a skill is called (commands, variables with limits), what it is composed of (a flow of steps with their bindings), and the module's own commands |
 | Asset Interfaces Description | `modreg` | `modlink` | The OPC UA endpoint and the browse path of every action and property |
 | Asset Interfaces Mapping Configuration | `modreg` | `modlink` | Which interface element carries a skill's state, error and results |
-| Control Configuration | `modreg`; `modsync reconfigure` (the record) | `modsync verify` | Block type, instance and type hash of every skill and step; the rule set; the record of a change |
+| Skills: `RuleSet`, `Deployment` (since 27 Oct) | `modreg`; the skill editor (`Described`); `modsync record` (`Built`) | `modsync`, the derivation, the planner | The rule set the program is built by; whether a skill is built or only described. Block types, instances, hashes and the change log are the integrator's record, outside the AAS ([control-configuration.md](control-configuration.md)) |
 | Operational Data | `modreg` | `modlink`, through the mapping | What a value at the interface means (a skill's state, its error, a result). No live values are written into it |
 | Product AAS: bill of material, required capabilities, plan | `modreg` (product) | plan check | What a product needs; today the plan names a resource and a skill per step |
 
-The Steps of a skill and the Control Configuration are what the claim stands on. Since 8 Oct
-`modsync` reads both: the Skills submodel says what is wanted, the Control Configuration what was
-built.
+The Steps of a skill are what the claim stands on: the Skills submodel says what is wanted, and
+with `Deployment` whether it is built. The record of what was built is the integrator's, outside the
+AAS since 27 Oct.
 
 ## Where a reconfiguration comes from
 
@@ -92,7 +92,7 @@ module's AAS and its running program and does the following:
 3. Guard: the module is not executing and not occupied by someone else.
 4. Apply: online where the rules allow it, otherwise say that a restart is needed.
 5. Verify: read the program back, compare type hashes.
-6. Record: instances and the change in the Control Configuration; register the AAS again.
+6. Record: `Deployment` in the AAS; instances and the change in the integrator's record; register the AAS again.
 
 Later a resource agent calls the same function when a bid that needs a reconfiguration is accepted.
 
@@ -234,11 +234,10 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 | The HMI's committed reader still reads the modules of before 8 Oct (its 0.8 rewrite fails 7 of its tests until the stand-in module follows); the generation project's pushed ARSO copy and closed validation are 0.7 (0.8 in a working copy); `modlink` reads 0.8 | C1, D2 |
 | ARSO's Condition follows the planner's elements of 8 Oct; the planner got grouped AND and OR conditions on 9 Oct. Follow it when a decision step is built | A2b |
 | The planner lists every skill with a Start; with 0.8 that includes the module's own commands. Leave them out there by their kind (ModuleControl) | A2b |
-| A skill that is described but not built is told by its missing instance in the Control Configuration (as tried). Does it also get a state of its own that a client can read (described, deployed)? | A3 |
+| ~~Does a described skill get a state of its own that a client can read?~~ Yes: `Deployment` (`Built`, `Described`), since 27 Oct | A3 |
 | A change that needs a restart (a sequence changed, a skill removed) is refused. For the baseline a boot file is needed, and the AAS does not hold the wiring: is the vendor's boot file part of what is delivered? | B2 |
 | Which changes does the paper show: a constant and a new skill, or more? | B1 |
 | Where do F1 to F3 go in the order of what is cut if time runs short? | F |
-| **Waiting for you:** the Control Configuration in the AAS, in the backend, or split (proposal of 27 Oct: [control-configuration.md](control-configuration.md)) | F, the paper's AAS figures |
 | **Waiting for you:** the skill editor's overview and skill view, branches in a skill (rule set 2), recommendations from the ontology and their backend: what before the paper (proposal of 27 Oct: [skill-authoring.md](skill-authoring.md)) | A2b, F3, B1 |
 | Two components of one kind in a module (the two cameras) need one skill name twice | later |
 | What a component's AAS holds besides its skills (a nameplate?) | later |

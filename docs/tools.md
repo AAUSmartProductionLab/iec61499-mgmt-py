@@ -14,7 +14,7 @@ protocol to the module:
 | --- | --- | --- | --- | --- | --- |
 | **modgen** | Make the program: a module spec becomes a 4diac project | The module spec (YAML) | A 4diac project (block types, system, one application per target) | Nothing: it writes files | The vendor, once per module or per new primitive |
 | **modreg** | Make, check and publish the AAS | The module spec and, if given, the running program (through modsync); the ontologies | The AASs of the line, a module and its components; derived capabilities | Nothing | The vendor (first AAS), the integrator (registration), the skill editor (derivation) |
-| **modsync** | Keep the program and its description in step: read it back, compare, change it online, record | The running program (management protocol); the AAS, or the module spec | Management commands; the boot file; the Control Configuration and a built skill's interface in the AAS; a 4diac project of what runs | IEC 61499 management protocol (port 61499) | The integrator, at a changeover |
+| **modsync** | Keep the program and its description in step: read it back, compare, change it online, record | The running program (management protocol); the AAS, or the module spec; the record of what was built | Management commands; the boot file; a built skill's `Deployment` and interface in the AAS; the record of what was built; a 4diac project of what runs | IEC 61499 management protocol (port 61499) | The integrator, at a changeover |
 | **modlink** | Operate the module: occupy it, call its skills, follow its states | The AAS (to find the nodes); the module's OPC UA values | Nothing in the AAS | OPC UA (port 4840) | The HMI, scripts, the scenario runner, later the agents |
 
 Two libraries sit under them: **iec61499_mgmt** (the management protocol, boot files, `.sys`
@@ -166,7 +166,7 @@ structure and sorts every difference into one of four kinds:
 | `create` | A skill described but not in the program (DoubleDose) | Creates it online |
 | `values` | A step's constant, a parameter's default or limits differ | Writes it online (guarded) |
 | `restart` | Another order of steps, a skill the AAS no longer describes, other equipment | Refuses: needs a new boot file and a restart |
-| `built` | The Control Configuration records an instance or hash the program does not have | Refuses: the record is wrong |
+| `built` | The record of what was built names an instance or hash the program does not have | Refuses: the record is wrong |
 
 ### Changing online (`sync.online`, `desired.reconfigure`)
 
@@ -197,11 +197,16 @@ the FORTE container.
 
 ### Recording (`desired.record`, `desired.store`)
 
-After a change (or with `verify --record`), the module's AAS is updated:
+After a change (or with `verify --record`), the module's AAS and the record of what was built are
+updated:
 
-- the **Control Configuration** gets an instance entry for every skill and step that is built
-  (`InstancePath`, `FBType`, `TypeHash`, a reference to the skill element), `ReadAt`,
-  `SyncState`, and one more `ChangeLog` entry (time, trigger, what was done);
+- in the AAS, every module level skill the program carries out gets `Deployment = Built`;
+- the **record of what was built**, a Control Configuration submodel kept outside the AAS (in a
+  folder, `--records`, or at the registration service, `/build/<idShort>`), gets an instance entry
+  for every skill and step that is built (`InstancePath`, `FBType`, `TypeHash`, a reference to the
+  skill element), where the module is managed, `ReadAt`, `SyncState`, and one more `ChangeLog`
+  entry (time, trigger, what was done). `verify` and `reconfigure` take the management endpoint
+  from it when `--host` is not given;
 - a skill that was described and is now built gets **its interface** (`modreg.offer.offered`): the
   actions of its commands and the properties of its state, error, parameters and results in the
   Asset Interfaces Description, a data point for each in Operational Data, the mappings, and the

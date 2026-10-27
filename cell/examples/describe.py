@@ -13,9 +13,14 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import example_line                                             # noqa: E402
+from modgen import load                                         # noqa: E402
+from modreg.profile import identity                             # noqa: E402
 from plan_check import at, children, resolve, semantic_ids, shell_of, unit_of    # noqa: E402
 
 SKILL = "https://smartproductionlab.aau.dk/skill"
+# The modules described from a spec only: no program behind them yet.
+PLANNED = {identity(load(path))[0] for path in example_line.RESOURCES
+           if path.parent.name == "planned"}
 
 LINE_STRUCTURE = '''```mermaid
 classDiagram
@@ -156,16 +161,6 @@ classDiagram
     value (decimal)
     semanticId
   }
-  class ControlConfiguration {
-    <<ARSO>>
-    Rules, ModuleSpec, Target
-    ProgramDigest, SyncState
-    Differences, Types (name, hash)
-  }
-  class Instance {
-    InstancePath
-    FBType, TypeHash
-  }
 
   ModuleAAS *-- Nameplate
   ModuleAAS *-- HierarchicalStructures
@@ -174,7 +169,6 @@ classDiagram
   ModuleAAS *-- CapabilityDescription
   ModuleAAS *-- Skills
   ModuleAAS *-- OperationalData
-  ModuleAAS *-- ControlConfiguration
   HierarchicalStructures *-- "0..*" Part
   AssetInterfacesDescription *-- "1" Interface
   Interface *-- "0..*" Action
@@ -189,7 +183,6 @@ classDiagram
   Operation *-- "2..*" Variable
   Command *-- "0..*" Step : Steps
   OperationalData *-- "1..*" DataPoint
-  ControlConfiguration *-- "0..*" Instance : Instances
 ```'''
 
 RESOURCE_LINKS = '''```mermaid
@@ -400,8 +393,7 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
     control = [s for s in skills_in(skills_sm) if kind_of(s) == "ModuleControl"]
     capabilities = [c for capability_set in children(submodel(env, "CapabilityDescription")) for c in children(capability_set)]
     interface = at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata")
-    config = submodel(env, "ControlConfiguration")
-    built = "planned" not in at(config, "ModuleSpec")["value"]
+    built = name not in PLANNED
     skills_of = lambda c: skills_in(submodel(c, "Skills"))                                 # noqa: E731
 
     lines = [f"### {name}", "",
@@ -449,8 +441,9 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
               f"{len(children(at(interface, 'actions')))} actions and {len(children(at(interface, 'properties')))} properties; "
               f"{len(children(submodel(env, 'OperationalData')))} data points; "
               f"{len(children(at(submodel(env, 'AssetInterfacesMappingConfiguration'), 'MappingConfigurations')))} mappings.",
-              f"- **Control Configuration:** rules `{at(config, 'Rules')['value']}`, spec `{at(config, 'ModuleSpec')['value']}`, "
-              f"sync state {at(config, 'SyncState')['value']}, {len(children(at(config, 'Instances')))} blocks named as skills and steps.", ""]
+              f"- **Program:** built by the rule set `{at(skills_sm, 'RuleSet')['value']}`; module level skills "
+              + ", ".join(f"{s['idShort']} {at(s, 'Deployment')['value'].lower()}" for s in composites if at(s, "Deployment"))
+              + ". Which block is which skill or step is the integrator's record, outside the AAS.", ""]
     return lines
 
 
