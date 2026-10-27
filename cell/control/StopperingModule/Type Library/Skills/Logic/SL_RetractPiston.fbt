@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SL_RetractPiston" Comment="RetractPiston: Requires TRUE; holds Piston.Retract until 3.0 s; Invariant TRUE">
+<FBType Name="SL_RetractPiston" Comment="RetractPiston: Precondition TRUE; holds Piston.Retract until 3.0 s; Invariant TRUE">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="stoppering" />
@@ -11,7 +11,7 @@
         <With Var="Holder" />
         <With Var="ReleaseAfter" />
       </Event>
-      <Event Name="START" Type="Event" Comment="Start the run with the parameters (checks Requires first)" />
+      <Event Name="START" Type="Event" Comment="Start the run with the parameters (checks the Precondition first)" />
       <Event Name="HALT" Type="Event" Comment="Stop the run (ErrorID Interrupted)" />
       <Event Name="ABORT" Type="Event" Comment="Abort the run: the equipment off and given up" />
       <Event Name="TIMER" Type="Event" Comment="The run's timer expired" />

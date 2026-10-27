@@ -351,8 +351,11 @@ The design is [skill-planning.md](skill-planning.md); the plan's G in [next-step
   Postcondition, Invariant) and `Completion` (After, Timeout); an empty one is left out (Dispense has
   no Conditions). `modreg generate` made the classes; the skill's is `Conditions_2` in Python because
   a decision's group is `Conditions` too (the element reads back by its parent's field, so the name
-  matters only to the code). `modsync` reads both forms (an AAS of 0.10 has its `Contract`); the
-  module specs keep their words (`requires`, `ensures`, `after`, `timeout`). The HMI's reader
+  matters only to the code). `modsync` reads both forms (an AAS of 0.10 has its `Contract`). On
+  28 Oct the module specs took the same words: `requires` became `precondition`, `ensures`
+  `postcondition`; the generated blocks' comments follow, nothing else in them changed, so the
+  runtimes need no new build (verification compares a type's hash with what was recorded from the
+  running FORTE, not with the generated file). The HMI's reader
   (`hmi/aas.py`, uncommitted in the submodule) reads both forms in the working copy.
 - **The Capability Description** (`Modules/capabilities.ttl`): `CapabilityRealizedBy` may name a
   component's skill; the constraint elements (`ConstraintType`, `BasicConstraint`,
@@ -717,7 +720,7 @@ because with a wrong `.buildpath` it silently skips the system):
   it ("External event queue is full, external event dropped!"). The module builds set 256 (and
   `FORTE_CommunicationInterruptQueueSize` 64), and equipment publishes its state only on change
   plus a heartbeat every 20 samples (review R4), not on every Modbus poll.
-- **Unwired switches read as pressed** (pull-ups): the filling module's skills then succeed without driving. A skill's Invariant is only checked while it runs; put a sensor plausibility condition such as `NOT (AtTop AND AtBottom)` into `requires` as well, so a wiring fault is refused at the start (PreconditionViolated).
+- **Unwired switches read as pressed** (pull-ups): the filling module's skills then succeed without driving. A skill's Invariant is only checked while it runs; put a sensor plausibility condition such as `NOT (AtTop AND AtBottom)` into `precondition` (until 28 Oct `requires`) as well, so a wiring fault is refused at the start (PreconditionViolated).
 - **Testing the modules on the Pi without wiring**: the PC application (Modbus IO) deployed to the Pi, with its Modbus IDs pointed at `module_sim.py` on the laptop (`--pi-host`/`--sim-host`), runs the whole generated stack on the Pi's FORTE; the Windows firewall let the Pi reach the simulator.
 - **Groups, hidden connections and folded subapps in the IDE's files** (read from the IDE 3.2
   model with `javap`): a group is `<Group Name Comment x y width height locked>` in the network;

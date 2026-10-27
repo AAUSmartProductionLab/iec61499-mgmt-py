@@ -162,15 +162,15 @@ def stated(terms: dict) -> dict:
 def conditions(decl) -> arso.Conditions_2 | None:
     """What has to hold when a primitive starts, when it has succeeded and while it runs, as the
     module spec states it (``Conditions_2``: a decision's group of conditions is ``Conditions``)."""
-    terms = stated({"Precondition": decl.requires, "Postcondition": decl.ensures, "Invariant": decl.invariant})
+    terms = stated({"Precondition": decl.precondition, "Postcondition": decl.postcondition, "Invariant": decl.invariant})
     return arso.Conditions_2(**terms) if terms else None
 
 
 def completion(decl) -> arso.Completion | None:
     """How a primitive ends when no Postcondition ends it, and the longest it may run."""
     # A time ends it by itself: the longest it may run is said only where a sensor ends it.
-    terms = stated({"After": decl.after if decl.ensures is None else None,
-                    "Timeout": decl.timeout if decl.ensures is not None else None})
+    terms = stated({"After": decl.after if decl.postcondition is None else None,
+                    "Timeout": decl.timeout if decl.postcondition is not None else None})
     return arso.Completion(**terms) if terms else None
 
 

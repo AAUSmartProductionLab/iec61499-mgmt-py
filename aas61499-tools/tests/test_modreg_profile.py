@@ -228,7 +228,7 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     assert ids(position)[1:] == [f"{BASE}/semantics/Position"]              # what it means, as the spec says
     # What starts, ends and bounds it: its conditions, and how it completes.
     assert at(move, "Conditions", "Precondition")["value"] == "Homed"      # an axis that knows where it is
-    assert at(move, "Conditions", "Postcondition")["value"] == decl.ensures
+    assert at(move, "Conditions", "Postcondition")["value"] == decl.postcondition
     assert "Invariant" not in names(at(move, "Conditions"))
     assert names(at(move, "Completion")) == ["Timeout"] and at(move, "Completion", "Timeout")["value"] == "8s"
     press = at(submodel(stoppering_all["StopperingPistonAAS"], "Skills"), "PressStopper")

@@ -348,7 +348,7 @@ def stated(spec: ModuleSpec) -> dict:
         "equipment": list(spec.equipment),
         "skills": {n: {"offered": s.offered, "equipment": s.equipment, "parameters": parameters(s.parameters),
                        "results": list(s.results),
-                       "timeout": literal(tlit(s.timeout))[1] if s.ensures is not None else None}
+                       "timeout": literal(tlit(s.timeout))[1] if s.postcondition is not None else None}
                    for n, s in spec.skills.items()},
         "composites": {n: {"offered": c.offered, "parameters": parameters(c.parameters), "execute": steps(c.execute),
                            "stop": steps(c.stop), "results": dict(c.results)} for n, c in spec.composites.items()},

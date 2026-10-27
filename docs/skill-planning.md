@@ -222,8 +222,8 @@ CSS, with inputs as preconditions and outputs as effects: the same view of state
    checks. Dispense's parameter Volume then means Volume, not FillVolume.
 2. ARSO 0.11: `Contract` → `Conditions` and `Completion`; `CapabilityRealizedBy` to a component's skill;
    the constraint elements and conventions. **Done 27 Oct**: modreg writes `Conditions` and
-   `Completion`, modsync also reads a 0.10 `Contract`; a module spec keeps its words (`requires`,
-   `ensures`, `after`, `timeout`).
+   `Completion`, modsync also reads a 0.10 `Contract`. Since 28 Oct the module specs use the same words
+   (`precondition`, `postcondition`, `invariant`, `after`, `timeout`).
 3. modreg: the component sets with their constraints (from the vocabulary and the spec), `SameProperty`
    to the data points; the Offered capabilities with their Pre and Post.
 4. The projection of the constraints; the domain model and the simulator (the checker).
