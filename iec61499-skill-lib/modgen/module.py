@@ -13,11 +13,14 @@ variables State, ErrorID, Parameters/*, Results/*.
 
 Module level skill (composite): a subapp of the same library blocks, wired the same way, with the
 OPC UA publishers and the equipment release, and the ``Execute``/``Stop`` subapps holding private
-skill primitive instances in sequence. It needs no type of its own, so FORTE can create a new one
-online.
+skill primitive instances in sequence, or in a flow of parallel blocks and decisions made of the
+library's SKILL_Join<n>, SKILL_Condition_<type> and SKILL_Merge (rule set 2). It needs no type of
+its own, so FORTE can create a new one online.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+from itertools import count
 import xml.etree.ElementTree as ET
 
 from .fbxml import (STD, Basic, Composite, Project, Simple, SubNet, Wiring, arrange, connections, elem, fb,
@@ -25,7 +28,8 @@ from .fbxml import (STD, Basic, Composite, Project, Simple, SubNet, Wiring, arra
 from .library import ERRORS, cat, lit, q, ua
 from .layout import Sizer, networks, place_new, relayout
 from .pins import domain
-from .spec import ACTUAL, HOMED, MOVE, MOVING, Equipment, ModuleSpec, Output, Parameter, Skill, Step, ms, names
+from .spec import (ACTUAL, HOMED, MOVE, MOVING, AllOf, AnyOf, Comparison, Decision, Equipment, ModuleSpec, Output, Parallel,
+                   Parameter, Skill, Step, linear, ms, names, walk)
 
 IO_TYPE = {("in", "BOOL"): "DI", ("in", "LREAL"): "AI", ("out", "BOOL"): "DO", ("out", "LREAL"): "AO"}
 # GPIOChip BiasMode. FORTE 3.3.0 indexes {as is, disable, pull-up, pull-down} with an enum
@@ -780,8 +784,11 @@ def sequence(net, spec: ModuleSpec, name: str, steps: list[Step], x, y, ua_prefi
     """Subapp running ``steps`` in order: START -> DONE, any FAILURE -> FAILED(ErrorID).
 
     ``token``: the lock token of a module level skill (children keep its equipment); None for a
-    procedure (each child takes and releases equipment itself).
+    procedure (each child takes and releases equipment itself). A flow with parallel blocks or
+    decisions is built by ``flow``.
     """
+    if not linear(steps):
+        return flow(net, spec, name, steps, x, y, ua_prefix, token, comment, params, results, parent_events)
     params, results = params or {}, results or {}
     ei = {"INIT": ([], "EInit"), "START": list(params)}
     if parent_events:
@@ -824,6 +831,135 @@ def sequence(net, spec: ModuleSpec, name: str, steps: list[Step], x, y, ua_prefi
         for pname, v in step.bind.items():
             if isinstance(v, str):
                 da.append((v, f"{step.name}.{pname}"))
+    for r, src in results.items():
+        st, _, res = src.partition(".")
+        da.append((f"{st}.R_{res}", r))
+    connections(inner, ev, da)
+    return name
+
+
+@dataclass
+class Block:
+    """A part of a flow, as its connections see it: the event inputs that start it, the event outputs
+    that say it is done, and its failures (event output, ErrorID output) not handled inside it."""
+    starts: list[str]
+    done: list[str]
+    failures: list[tuple[str, str]] = field(default_factory=list)
+
+
+def flow(net, spec: ModuleSpec, name: str, nodes: list, x, y, ua_prefix: str, token: str | None, comment: str,
+         params: dict[str, Parameter] | None = None, results: dict[str, str] | None = None, parent_events: bool = True):
+    """Subapp running a flow (module rules, rule set 2): steps one after the other; a parallel block
+    starts its branches at once and its SKILL_Join<n> (named like the block) says when all are done,
+    or halts the others when one fails; a decision's conditions (SKILL_Condition_<type>, named
+    ``<decision>_C<k>``) choose a branch, which ends in its SKILL_Merge (named like the decision).
+
+    Every step holds the skill's equipment under the skill's name and gives up nothing itself: which
+    step uses an item last depends on the path, and the skill's Control releases everything when a
+    run ends. Results come from steps that run on every path."""
+    params, results = params or {}, results or {}
+    ei = {"INIT": ([], "EInit"), "START": list(params)}
+    if parent_events:
+        ei.update({"HALT": [], "ABORT": [], "RESET": []})
+    every = list(walk(nodes))
+    rtypes = {r: result_type(spec, every, src) for r, src in results.items()}
+    eo = {"INITO": ([], "EInit"), "DONE": list(results), "FAILED": ["ErrorID"]}
+    _, inner = subapp(net, name, x, y, comment, ei, eo, {n: pr.type for n, pr in params.items()},
+                      {"ErrorID": "UINT", **rtypes})
+    ua_root = wstr(spec.opcua_root)
+    ev: list[tuple[str, str]] = []
+    da: list[tuple[str, str]] = []
+    column = count()
+    holder = token or ua_prefix.strip("/")
+
+    def at() -> int:
+        return 1000 + next(column) * 5000
+
+    def merged(failures: list[tuple[str, str]], prefix: str, row: int) -> tuple[str, str]:
+        """One failure of several (SKILL_FailMerge pairwise: a data input takes one connection)."""
+        event, error = failures[0]
+        for i, (e, err) in enumerate(failures[1:], 1):
+            m = f"{prefix}{i}"
+            fb(inner, m, q("SKILL_FailMerge"), at(), row + 3000)
+            ev.extend([(event, f"{m}.FAIL_1"), (e, f"{m}.FAIL_2")])
+            da.extend([(error, f"{m}.Error1"), (err, f"{m}.Error2")])
+            event, error = f"{m}.FAIL", f"{m}.Error"
+        return event, error
+
+    def condition(c, owner: str, ids: count, row: int) -> tuple[str, list[str], list[str]]:
+        """(the event input that evaluates it, its YES outputs, its NO outputs)."""
+        if isinstance(c, Comparison):
+            inst = f"{owner}_C{next(ids)}"
+            typ = params[c.operand].type if c.operand in params else result_type(spec, every, c.operand)
+            value = ("TRUE" if c.value else "FALSE") if typ == "BOOL" else value_lit(c.value, typ)
+            fb(inner, inst, q(f"SKILL_Condition_{typ}"), at(), row, Expected=value, Operator=f"'{c.op}'")
+            step_, _, res = c.operand.partition(".")
+            da.append((c.operand if not res else f"{step_}.R_{res}", f"{inst}.Operand"))
+            return f"{inst}.EVAL", [f"{inst}.YES"], [f"{inst}.NO"]
+        parts = [condition(inner_, owner, ids, row) for inner_ in (c.all if isinstance(c, AllOf) else c.any)]
+        for a, b in zip(parts, parts[1:]):
+            ev.extend((out, b[0]) for out in (a[1] if isinstance(c, AllOf) else a[2]))
+        if isinstance(c, AllOf):
+            return parts[0][0], parts[-1][1], [o for part in parts for o in part[2]]
+        return parts[0][0], [o for part in parts for o in part[1]], parts[-1][2]
+
+    def node_block(node, row: int) -> Block:
+        if isinstance(node, Step):
+            skill_instance(inner, spec, node, at(), row, f"{ua_prefix}/{node.name}", holder, token is None, False, ua_root)
+            da.extend((v, f"{node.name}.{p_}") for p_, v in node.bind.items() if isinstance(v, str))
+            return Block([f"{node.name}.START"], [f"{node.name}.SUCCESS"], [(f"{node.name}.FAILURE", f"{node.name}.ErrorID")])
+        if isinstance(node, Parallel):
+            join, n = node.name, len(node.branches)
+            fb(inner, join, q(f"SKILL_Join{n}"), at(), row)
+            branches = [build(branch, row + (i + 1) * 6000) for i, branch in enumerate(node.branches)]
+            for i, b in enumerate(branches, 1):
+                ev.extend((d, f"{join}.DONE_{i}") for d in b.done)
+                event, error = merged(b.failures, f"{join}_Fail{i}_", row)
+                ev.append((event, f"{join}.FAILED_{i}"))
+                da.append((error, f"{join}.Error{i}"))
+            ev.extend((f"{join}.HALT", f"{s.name}.HALT") for branch in node.branches for s in walk(branch))
+            # The join first: it forgets the last run before a branch can report.
+            return Block([f"{join}.START", *[s for b in branches for s in b.starts]], [f"{join}.DONE"],
+                         [(f"{join}.FAILED", f"{join}.Error")])
+        meet = node.name
+        entry, yes, no = condition(node.condition, meet, count(1), row)
+        fb(inner, meet, q("SKILL_Merge"), at(), row)
+        then = build(node.then, row + 6000)
+        ev.extend((y_, s_) for y_ in yes for s_ in then.starts)
+        ev.extend((d, f"{meet}.EI1") for d in then.done)
+        failures = list(then.failures)
+        if node.otherwise:
+            other = build(node.otherwise, row + 12000)
+            ev.extend((n_, s_) for n_ in no for s_ in other.starts)
+            ev.extend((d, f"{meet}.EI2") for d in other.done)
+            failures += other.failures
+        else:
+            ev.extend((n_, f"{meet}.EI2") for n_ in no)
+        return Block([entry], [f"{meet}.EO"], failures)
+
+    def build(seq: list, row: int) -> Block:
+        whole: Block | None = None
+        for node in seq:
+            part = node_block(node, row)
+            if whole is None:
+                whole = part
+                continue
+            ev.extend((d, s_) for d in whole.done for s_ in part.starts)
+            whole = Block(whole.starts, part.done, whole.failures + part.failures)
+        return whole
+
+    top = build(nodes, y)
+    ev.extend(("START", s_) for s_ in top.starts)
+    ev.extend((d, "DONE") for d in top.done)
+    event, error = merged(top.failures, "Fail", y)
+    ev.append((event, "FAILED"))
+    da.append((error, "ErrorID"))
+    names_ = [s_.name for s_ in every]
+    ev += [("INIT", names_[0] + ".INIT"), (names_[-1] + ".INITO", "INITO")]
+    ev += [(a + ".INITO", b + ".INIT") for a, b in zip(names_, names_[1:])]
+    if parent_events:
+        for e in ["HALT", "ABORT", "RESET"]:
+            ev += [(e, f"{n_}.{e}") for n_ in names_]
     for r, src in results.items():
         st, _, res = src.partition(".")
         da.append((f"{st}.R_{res}", r))

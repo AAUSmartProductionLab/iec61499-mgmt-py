@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_Merge" Comment="Where the branches of a decision meet: EI1 or EI2 gives EO">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="EI1" Type="Event" Comment="The first branch of the decision is done" />
+      <Event Name="EI2" Type="Event" Comment="The second branch is done, or there was none to run" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="EO" Type="Event" Comment="The decision is done: the next step goes on" />
+    </EventOutputs>
+    <InputVars />
+    <OutputVars />
+  </InterfaceList>
+  <BasicFB>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="One" x="570" y="100">
+        <ECAction Output="EO" />
+      </ECState>
+      <ECState Name="Two" x="990" y="100">
+        <ECAction Output="EO" />
+      </ECState>
+      <ECTransition Source="START" Destination="One" Condition="EI1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Two" Condition="EI2" x="0" y="0" />
+      <ECTransition Source="One" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Two" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+  </BasicFB>
+</FBType>

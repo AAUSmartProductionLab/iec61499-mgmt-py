@@ -821,6 +821,82 @@ def make_parameters(p: Project):
                folder="Skills/Parameters").write()
 
 
+# How a module level skill's steps can run besides one after the other (module rules, rule set 2): the
+# branches of a parallel block, a condition deciding between two branches, and where they meet.
+JOINS = (2, 3, 4)
+OPERATORS = {"eq": "=", "ne": "<>", "gt": ">", "gte": ">=", "lt": "<", "lte": "<="}
+CONDITION_TYPES = {"LREAL": tuple(OPERATORS), "BOOL": ("eq", "ne")}
+
+
+def make_flow(p: Project):
+    """SKILL_Join<n>, SKILL_Condition_<type> and SKILL_Merge: the blocks a module level skill's flow is
+    made of besides its steps. They have no INIT: like SKILL_FailMerge they hold no resources.
+
+    SKILL_Join<n> ends a parallel block: START (with the block) forgets the last run; DONE_<i> and
+    FAILED_<i> report branch i. DONE when every branch is done; on the first failure HALT (to every
+    step of the block), then FAILED with that error once every branch has ended.
+
+    SKILL_Condition_<type>: EVAL compares Operand with Expected by Operator (eq, ne, gt, gte, lt,
+    lte) and answers YES or NO. SKILL_Merge: either branch of a decision ends in it, EO goes on."""
+    for n in JOINS:
+        branches = range(1, n + 1)
+        b = Basic(p, LIB, f"SKILL_Join{n}", f"Ends a parallel block of {n} branches: DONE when all are done; on the "
+                  "first failure HALT to the others, then FAILED with its error once all have ended",
+                  {"START": [], **{f"DONE_{i}": [] for i in branches}, **{f"FAILED_{i}": [f"Error{i}"] for i in branches}},
+                  {"DONE": [], "FAILED": ["Error"], "HALT": []},
+                  {f"Error{i}": "UINT" for i in branches}, {"Error": "UINT"},
+                  {**{f"Ended{i}": "BOOL" for i in branches}, "AnyFailed": "BOOL", "First": "UINT"}, folder="Skills/Flow")
+        every = " AND ".join(f"Ended{i}" for i in branches)
+        b.state("START")
+        b.state("Reset", " ".join(f"Ended{i} := FALSE;" for i in branches) + " AnyFailed := FALSE;")
+        b.state("Check")
+        b.state("Done", None, "DONE")
+        b.state("Fail", "Error := First;", "FAILED")
+        b.trans("START", "Reset", "START")
+        b.trans("Reset", "START", "1")
+        for i in branches:
+            b.state(f"Done{i}", f"Ended{i} := TRUE;")
+            b.state(f"First{i}", f"Ended{i} := TRUE; AnyFailed := TRUE; First := Error{i};", "HALT")
+            b.state(f"Later{i}", f"Ended{i} := TRUE;")
+            b.trans("START", f"Done{i}", f"DONE_{i}")
+            b.trans("START", f"First{i}", f"FAILED_{i}[NOT AnyFailed]")
+            b.trans("START", f"Later{i}", f"FAILED_{i}")
+            for state in (f"Done{i}", f"First{i}", f"Later{i}"):
+                b.trans(state, "Check", "1")
+        b.trans("Check", "Done", f"({every}) AND NOT AnyFailed")
+        b.trans("Check", "Fail", f"({every}) AND AnyFailed")
+        b.trans("Check", "START", "1")
+        b.trans("Done", "Reset", "1")
+        b.trans("Fail", "Reset", "1")
+        b.write()
+    for typ, ops in CONDITION_TYPES.items():
+        test = " OR ".join(f"((Operator = '{op}') AND (Operand {OPERATORS[op]} Expected))" for op in ops)
+        b = Basic(p, LIB, f"SKILL_Condition_{typ}", f"Compares Operand with Expected by Operator ({', '.join(ops)}): "
+                  "YES or NO", {"EVAL": ["Operand", "Expected", "Operator"]}, {"YES": [], "NO": []},
+                  {"Operand": typ, "Expected": typ, "Operator": ("STRING", "'eq'")}, {}, {"Holds": "BOOL"},
+                  folder="Skills/Flow")
+        b.state("START")
+        b.state("Eval", f"Holds := {test};")
+        b.state("Yes", None, "YES")
+        b.state("No", None, "NO")
+        b.trans("START", "Eval", "EVAL")
+        b.trans("Eval", "Yes", "Holds")
+        b.trans("Eval", "No", "1")
+        b.trans("Yes", "START", "1")
+        b.trans("No", "START", "1")
+        b.write()
+    b = Basic(p, LIB, "SKILL_Merge", "Where the branches of a decision meet: EI1 or EI2 gives EO",
+              {"EI1": [], "EI2": []}, {"EO": []}, {}, {}, None, folder="Skills/Flow")
+    b.state("START")
+    b.state("One", None, "EO")
+    b.state("Two", None, "EO")
+    b.trans("START", "One", "EI1")
+    b.trans("START", "Two", "EI2")
+    b.trans("One", "START", "1")
+    b.trans("Two", "START", "1")
+    b.write()
+
+
 def make_library(p: Project):
     """Write every module-independent type."""
     make_io(p)
@@ -831,3 +907,4 @@ def make_library(p: Project):
     make_skill_control(p)
     make_skill_core(p)
     make_parameters(p)
+    make_flow(p)
