@@ -1201,7 +1201,7 @@
              "description": [
               {
                "language": "en",
-               "text": "What a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope) or a comparison (ConditionType comparison: Operand, Operator, Expected, Unit)."
+               "text": "What a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope), a comparison (ConditionType comparison: Operand, Operator, Expected, Unit), or a group (ConditionType all or any: Conditions)."
               }
              ],
              "qualifiers": [
@@ -1222,6 +1222,43 @@
               }
              ],
              "value": [
+              {
+               "modelType": "Property",
+               "idShort": "Order",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://smartproductionlab.aau.dk/ProductionSequence/Order/1/0"
+                 }
+                ]
+               },
+               "description": [
+                {
+                 "language": "en",
+                 "text": "The position among its siblings, from 0; it decides the order, not the place in the collection."
+                }
+               ],
+               "qualifiers": [
+                {
+                 "type": "SMT/Cardinality",
+                 "valueType": "xs:string",
+                 "kind": "TemplateQualifier",
+                 "value": "ZeroToOne",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                   }
+                  ]
+                 }
+                }
+               ],
+               "valueType": "xs:string"
+              },
               {
                "modelType": "Property",
                "idShort": "Unit",
@@ -1260,6 +1297,75 @@
                "valueType": "xs:string"
               },
               {
+               "modelType": "SubmodelElementCollection",
+               "idShort": "Conditions",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://smartproductionlab.aau.dk/ProductionSequence/Conditions/1/0"
+                 }
+                ]
+               },
+               "description": [
+                {
+                 "language": "en",
+                 "text": "The conditions of a group: all of them hold (ConditionType all) or one does (any)."
+                }
+               ],
+               "qualifiers": [
+                {
+                 "type": "SMT/Cardinality",
+                 "valueType": "xs:string",
+                 "kind": "TemplateQualifier",
+                 "value": "ZeroToOne",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                   }
+                  ]
+                 }
+                }
+               ],
+               "value": [
+                {
+                 "modelType": "SubmodelElementCollection",
+                 "idShort": "Condition",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://smartproductionlab.aau.dk/ProductionSequence/Condition/1/0"
+                   }
+                  ]
+                 },
+                 "qualifiers": [
+                  {
+                   "type": "SMT/Cardinality",
+                   "valueType": "xs:string",
+                   "kind": "TemplateQualifier",
+                   "value": "OneToMany",
+                   "semanticId": {
+                    "type": "ExternalReference",
+                    "keys": [
+                     {
+                      "type": "GlobalReference",
+                      "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                     }
+                    ]
+                   }
+                  }
+                 ],
+                 "value": []
+                }
+               ]
+              },
+              {
                "modelType": "Property",
                "idShort": "ConditionType",
                "semanticId": {
@@ -1274,7 +1380,7 @@
                "description": [
                 {
                  "language": "en",
-                 "text": "EveryNthProduct or comparison."
+                 "text": "EveryNthProduct, comparison, all or any."
                 }
                ],
                "qualifiers": [
@@ -2795,7 +2901,7 @@
              "description": [
               {
                "language": "en",
-               "text": "What a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope) or a comparison (ConditionType comparison: Operand, Operator, Expected, Unit)."
+               "text": "What a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope), a comparison (ConditionType comparison: Operand, Operator, Expected, Unit), or a group (ConditionType all or any: Conditions)."
               }
              ],
              "qualifiers": [
@@ -2816,6 +2922,43 @@
               }
              ],
              "value": [
+              {
+               "modelType": "Property",
+               "idShort": "Order",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://smartproductionlab.aau.dk/ProductionSequence/Order/1/0"
+                 }
+                ]
+               },
+               "description": [
+                {
+                 "language": "en",
+                 "text": "The position among its siblings, from 0; it decides the order, not the place in the collection."
+                }
+               ],
+               "qualifiers": [
+                {
+                 "type": "SMT/Cardinality",
+                 "valueType": "xs:string",
+                 "kind": "TemplateQualifier",
+                 "value": "ZeroToOne",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                   }
+                  ]
+                 }
+                }
+               ],
+               "valueType": "xs:string"
+              },
               {
                "modelType": "Property",
                "idShort": "Unit",
@@ -2854,6 +2997,75 @@
                "valueType": "xs:string"
               },
               {
+               "modelType": "SubmodelElementCollection",
+               "idShort": "Conditions",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://smartproductionlab.aau.dk/ProductionSequence/Conditions/1/0"
+                 }
+                ]
+               },
+               "description": [
+                {
+                 "language": "en",
+                 "text": "The conditions of a group: all of them hold (ConditionType all) or one does (any)."
+                }
+               ],
+               "qualifiers": [
+                {
+                 "type": "SMT/Cardinality",
+                 "valueType": "xs:string",
+                 "kind": "TemplateQualifier",
+                 "value": "ZeroToOne",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                   }
+                  ]
+                 }
+                }
+               ],
+               "value": [
+                {
+                 "modelType": "SubmodelElementCollection",
+                 "idShort": "Condition",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://smartproductionlab.aau.dk/ProductionSequence/Condition/1/0"
+                   }
+                  ]
+                 },
+                 "qualifiers": [
+                  {
+                   "type": "SMT/Cardinality",
+                   "valueType": "xs:string",
+                   "kind": "TemplateQualifier",
+                   "value": "OneToMany",
+                   "semanticId": {
+                    "type": "ExternalReference",
+                    "keys": [
+                     {
+                      "type": "GlobalReference",
+                      "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                     }
+                    ]
+                   }
+                  }
+                 ],
+                 "value": []
+                }
+               ]
+              },
+              {
                "modelType": "Property",
                "idShort": "ConditionType",
                "semanticId": {
@@ -2868,7 +3080,7 @@
                "description": [
                 {
                  "language": "en",
-                 "text": "EveryNthProduct or comparison."
+                 "text": "EveryNthProduct, comparison, all or any."
                 }
                ],
                "qualifiers": [
@@ -4389,7 +4601,7 @@
              "description": [
               {
                "language": "en",
-               "text": "What a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope) or a comparison (ConditionType comparison: Operand, Operator, Expected, Unit)."
+               "text": "What a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope), a comparison (ConditionType comparison: Operand, Operator, Expected, Unit), or a group (ConditionType all or any: Conditions)."
               }
              ],
              "qualifiers": [
@@ -4410,6 +4622,43 @@
               }
              ],
              "value": [
+              {
+               "modelType": "Property",
+               "idShort": "Order",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://smartproductionlab.aau.dk/ProductionSequence/Order/1/0"
+                 }
+                ]
+               },
+               "description": [
+                {
+                 "language": "en",
+                 "text": "The position among its siblings, from 0; it decides the order, not the place in the collection."
+                }
+               ],
+               "qualifiers": [
+                {
+                 "type": "SMT/Cardinality",
+                 "valueType": "xs:string",
+                 "kind": "TemplateQualifier",
+                 "value": "ZeroToOne",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                   }
+                  ]
+                 }
+                }
+               ],
+               "valueType": "xs:string"
+              },
               {
                "modelType": "Property",
                "idShort": "Unit",
@@ -4448,6 +4697,75 @@
                "valueType": "xs:string"
               },
               {
+               "modelType": "SubmodelElementCollection",
+               "idShort": "Conditions",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://smartproductionlab.aau.dk/ProductionSequence/Conditions/1/0"
+                 }
+                ]
+               },
+               "description": [
+                {
+                 "language": "en",
+                 "text": "The conditions of a group: all of them hold (ConditionType all) or one does (any)."
+                }
+               ],
+               "qualifiers": [
+                {
+                 "type": "SMT/Cardinality",
+                 "valueType": "xs:string",
+                 "kind": "TemplateQualifier",
+                 "value": "ZeroToOne",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                   }
+                  ]
+                 }
+                }
+               ],
+               "value": [
+                {
+                 "modelType": "SubmodelElementCollection",
+                 "idShort": "Condition",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://smartproductionlab.aau.dk/ProductionSequence/Condition/1/0"
+                   }
+                  ]
+                 },
+                 "qualifiers": [
+                  {
+                   "type": "SMT/Cardinality",
+                   "valueType": "xs:string",
+                   "kind": "TemplateQualifier",
+                   "value": "OneToMany",
+                   "semanticId": {
+                    "type": "ExternalReference",
+                    "keys": [
+                     {
+                      "type": "GlobalReference",
+                      "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                     }
+                    ]
+                   }
+                  }
+                 ],
+                 "value": []
+                }
+               ]
+              },
+              {
                "modelType": "Property",
                "idShort": "ConditionType",
                "semanticId": {
@@ -4462,7 +4780,7 @@
                "description": [
                 {
                  "language": "en",
-                 "text": "EveryNthProduct or comparison."
+                 "text": "EveryNthProduct, comparison, all or any."
                 }
                ],
                "qualifiers": [
@@ -5983,7 +6301,7 @@
              "description": [
               {
                "language": "en",
-               "text": "What a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope) or a comparison (ConditionType comparison: Operand, Operator, Expected, Unit)."
+               "text": "What a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope), a comparison (ConditionType comparison: Operand, Operator, Expected, Unit), or a group (ConditionType all or any: Conditions)."
               }
              ],
              "qualifiers": [
@@ -6004,6 +6322,43 @@
               }
              ],
              "value": [
+              {
+               "modelType": "Property",
+               "idShort": "Order",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://smartproductionlab.aau.dk/ProductionSequence/Order/1/0"
+                 }
+                ]
+               },
+               "description": [
+                {
+                 "language": "en",
+                 "text": "The position among its siblings, from 0; it decides the order, not the place in the collection."
+                }
+               ],
+               "qualifiers": [
+                {
+                 "type": "SMT/Cardinality",
+                 "valueType": "xs:string",
+                 "kind": "TemplateQualifier",
+                 "value": "ZeroToOne",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                   }
+                  ]
+                 }
+                }
+               ],
+               "valueType": "xs:string"
+              },
               {
                "modelType": "Property",
                "idShort": "Unit",
@@ -6042,6 +6397,75 @@
                "valueType": "xs:string"
               },
               {
+               "modelType": "SubmodelElementCollection",
+               "idShort": "Conditions",
+               "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                 {
+                  "type": "GlobalReference",
+                  "value": "https://smartproductionlab.aau.dk/ProductionSequence/Conditions/1/0"
+                 }
+                ]
+               },
+               "description": [
+                {
+                 "language": "en",
+                 "text": "The conditions of a group: all of them hold (ConditionType all) or one does (any)."
+                }
+               ],
+               "qualifiers": [
+                {
+                 "type": "SMT/Cardinality",
+                 "valueType": "xs:string",
+                 "kind": "TemplateQualifier",
+                 "value": "ZeroToOne",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                   }
+                  ]
+                 }
+                }
+               ],
+               "value": [
+                {
+                 "modelType": "SubmodelElementCollection",
+                 "idShort": "Condition",
+                 "semanticId": {
+                  "type": "ExternalReference",
+                  "keys": [
+                   {
+                    "type": "GlobalReference",
+                    "value": "https://smartproductionlab.aau.dk/ProductionSequence/Condition/1/0"
+                   }
+                  ]
+                 },
+                 "qualifiers": [
+                  {
+                   "type": "SMT/Cardinality",
+                   "valueType": "xs:string",
+                   "kind": "TemplateQualifier",
+                   "value": "OneToMany",
+                   "semanticId": {
+                    "type": "ExternalReference",
+                    "keys": [
+                     {
+                      "type": "GlobalReference",
+                      "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+                     }
+                    ]
+                   }
+                  }
+                 ],
+                 "value": []
+                }
+               ]
+              },
+              {
                "modelType": "Property",
                "idShort": "ConditionType",
                "semanticId": {
@@ -6056,7 +6480,7 @@
                "description": [
                 {
                  "language": "en",
-                 "text": "EveryNthProduct or comparison."
+                 "text": "EveryNthProduct, comparison, all or any."
                 }
                ],
                "qualifiers": [

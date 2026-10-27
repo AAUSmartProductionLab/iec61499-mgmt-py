@@ -8,8 +8,8 @@ from:
 - the components (Hierarchical Structures) are the equipment;
 - a component's skills are the skill primitives, each with its parameters, limits and results;
 - a skill of the module of the kind Composite is a module level skill: its parameters, the
-  primitives it runs in order, what each step is handed (a constant, or a parameter of the skill)
-  and which step gives a result;
+  primitives it runs in order (or, rule set 2, in parallel blocks and decisions), what each step is
+  handed (a constant, or a parameter of the skill) and which step gives a result;
 - the steps of the module's own Reset and Stop (skills of the kind ModuleControl) are the procedures;
 - a skill's Deployment says whether the program carries it out (Built) or it is only described.
 
@@ -43,18 +43,19 @@ from iec61499_mgmt.protocol import Client, Command
 from iec61499_mgmt.sysfile import FlatApplication, flatten
 from modgen.fbxml import connections as wire, fb
 from modgen.module import module_skill
-from modgen.spec import Composite, Equipment, Input, ModuleSpec, Parameter, Skill, Step
+from modgen.spec import (AllOf, AnyOf, Comparison, Composite, Decision, Equipment, Input, ModuleSpec, Parallel, Parameter,
+                         Skill, Step)
 
 from .compare import Drift
 from .device import BOOT, Snapshot, literal, read_structure, read_values
-from .structure import driven_by, stated, structure
+from .structure import driven_by, shape, stated, structure, walk
 from .sync import Refused, guard, lacking, online, summary
 
 BASE = "https://smartproductionlab.aau.dk"
 SKILL = f"{BASE}/skill"
 PRIMITIVE, COMPOSITE, CONTROL = (f"{BASE}/skill/{kind}" for kind in ("Primitive", "Composite", "ModuleControl"))
-# The kinds of step a module built by the module rules can run (ARSO knows more: parallel, decision, conditional).
-RUNS = ("step",)
+# The kinds of step a module built by the module rules can run (rule set 2: parallel blocks and decisions).
+RUNS = ("step", "parallel", "decision", "conditional")
 IEC = {"xs:double": "LREAL", "xs:boolean": "BOOL", "xs:short": "INT", "xs:int": "DINT", "xs:unsignedShort": "UINT"}
 MODULE_TYPE = f"{BASE}/Resource/Module"
 # The variables every command has; a command's other variables are its parameters and results.
@@ -305,18 +306,52 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
                 ensures=(at(contract, "Ensures") or {}).get("value"),
                 timeout=(at(contract, "Timeout") or {}).get("value") or "10s")
 
-    def sequence(steps_: dict | None, operation: dict | None, results: dict[str, str] | None = None) -> list[Step]:
+    def condition(element: dict, where: str):
+        """A decision's condition: a comparison of a parameter of the skill (OperandType parameter:
+        SourceElement) or a result of a step (output: StepId, OutputId) with a value, or a group."""
+        get = lambda element_, name_: (at(element_, name_) or {}).get("value")  # noqa: E731
+        kind = get(element, "ConditionType")
+        if kind in ("all", "any"):
+            parts = [condition(c, where) for c in sorted(children(at(element, "Conditions")), key=lambda c: int(get(c, "Order") or 0))]
+            if not parts:
+                raise NotDescribed(f"{where}: an empty group of conditions")
+            return AllOf.model_construct(all=parts) if kind == "all" else AnyOf.model_construct(any=parts)
+        if kind != "comparison":
+            raise NotDescribed(f"{where}: a condition of the kind {kind} (the control compares values only)")
+        operand, expected = at(element, "Operand"), at(element, "Expected")
+        if get(operand, "OperandType") == "output":
+            what = f"{get(operand, 'StepId')}.{get(operand, 'OutputId')}"
+        else:
+            what = (target(at(operand, "SourceElement")) or [""])[-1]
+        raw = get(expected, "Value")
+        value = str(raw).strip().lower() == "true" if get(expected, "DataType") == "boolean" else float(raw)
+        return Comparison.model_construct(operand=what, op=get(element, "Operator"), value=value)
+
+    def sequence(steps_: dict | None, operation: dict | None, results: dict[str, str] | None = None) -> list:
         """The steps below ``steps_`` in their Order. A step's Bindings hand each input of its skill
         a constant (Value) or a parameter of the skill it is a step of (SourceElement: an input
-        variable of ``operation``); its Outputs say which results of the command it gives."""
+        variable of ``operation``); its Outputs say which results of the command it gives. A step of
+        the kind parallel holds Branches, a decision a Condition and two Branches, a conditional a
+        Condition and its own Steps."""
         inputs = {v["idShort"]: parameter(v) for v in variables(operation, "inputVariables")}
         get = lambda element, name_: (at(element, name_) or {}).get("value")  # noqa: E731
         found = []
         for step in sorted(children(steps_), key=lambda s: int(get(s, "Order") or 0)):
             name_, kind = get(step, "NodeId") or step["idShort"], get(step, "Kind") or "step"
             if kind not in RUNS:
-                raise NotDescribed(f"step {name_} is of the kind {kind}: the control of this module runs steps one after "
-                                   "the other only")
+                raise NotDescribed(f"step {name_} is of the kind {kind}, which the control of this module cannot run")
+            branches = [sequence(at(b, "Steps"), operation, results)
+                        for b in sorted(children(at(step, "Branches")), key=lambda b: int(get(b, "Order") or 0))]
+            if kind == "parallel":
+                found.append(Parallel.model_construct(name=name_, branches=branches))
+                continue
+            if kind in ("decision", "conditional"):
+                if kind == "decision" and len(branches) != 2:
+                    raise NotDescribed(f"step {name_}: a decision has two branches, not {len(branches)}")
+                then, otherwise = (branches[0], branches[1]) if kind == "decision" else (sequence(at(step, "Steps"), operation, results), [])
+                found.append(Decision.model_construct(name=name_, condition=condition(at(step, "Condition"), f"step {name_}"),
+                                                      then=then, otherwise=otherwise))
+                continue
             skill = (target(at(step, "Skill")) or [None])[-1]
             if skill not in skills:
                 raise NotDescribed(f"step {name_} runs {skill}, which no component of the module has")
@@ -372,8 +407,17 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
             # A skill that is described and not built yet has no action that calls it; it gets one
             # when it is built. One that is built is offered if a command of it names its action.
             offered=at(skill, "Start", "InterfaceReference") is not None or deployment(skill) != "Built")
-    return ModuleSpec.model_construct(module=name, package=package, opcua_root=opcua_root, equipment=equipment,
+    spec = ModuleSpec.model_construct(module=name, package=package, opcua_root=opcua_root, equipment=equipment,
                                       skills=skills, composites=composites, procedures=procedures)
+    # A flow is checked by the rules a module spec is: names, equipment of parallel branches, what a
+    # condition compares.
+    for skill_name, comp in composites.items():
+        try:
+            spec.check_flow(skill_name, comp.execute, comp.parameters)
+            spec.check_flow(skill_name, comp.stop, comp.parameters)
+        except ValueError as exc:
+            raise NotDescribed(str(exc)) from exc
+    return spec
 
 
 def instances(record_: dict | None) -> list[tuple[str, str, str | None]]:
@@ -466,11 +510,13 @@ def differences(wanted: dict, running: dict, spec: ModuleSpec) -> Differences:
         return Parameter(type=typ, default=value).literal()
 
     def sequence(prefix: str, described_: list[dict], have: list[dict]):
-        if [(s["skill"], s["name"]) for s in described_] != [(s["skill"], s["name"]) for s in have]:
-            found.restart.append(f"{prefix}: the AAS describes the steps {[s['name'] for s in described_]}, "
-                                 f"the program runs {[s['name'] for s in have]}")
+        if shape(described_) != shape(have):
+            found.restart.append(f"{prefix}: the AAS describes the steps {[s['name'] for s in walk(described_)]}, "
+                                 f"the program runs {[s['name'] for s in walk(have)]}"
+                                 + ("" if [s["name"] for s in walk(described_)] != [s["name"] for s in walk(have)]
+                                    else " (in another flow)"))
             return
-        for a, b in zip(described_, have):
+        for a, b in zip(walk(described_), walk(have)):
             for p, v in a["bind"].items():
                 r = b["bind"].get(p)
                 if v == r:
@@ -649,11 +695,27 @@ def record(module: dict, reading: Reading, done: list[str] | None = None, trigge
                 *[{"type": "SubmodelElementCollection", "value": k} for k in keys]]}}]}
         listed.setdefault("value", []).append(known[path])
 
+    def steps_at(steps_: dict | None, keys: list[str]) -> dict[str, list[str]]:
+        """Where each step of a flow is in the AAS, by its NodeId: Steps/Step_<k>, inside a parallel
+        block or a decision below its Branches/Branch_<j>, inside a conditional below its own Steps."""
+        found = {}
+        for step in children(steps_):
+            here_ = [*keys, "Steps", step["idShort"]]
+            found[(at(step, "NodeId") or {}).get("value") or step["idShort"]] = here_
+            for b in children(at(step, "Branches")):
+                found.update(steps_at(at(b, "Steps"), [*here_, "Branches", b["idShort"]]))
+            found.update(steps_at(at(step, "Steps"), here_))
+        return found
+
     for name, comp in spec.composites.items():
         note(f"{name}.Control", skill_path(skills_, name))
-        for command, branch, steps_ in (("Start", "Execute", comp.execute), ("Stop", "Stop", comp.stop)):
-            for k, step in enumerate(steps_):
-                note(f"{name}.{branch}.{step.name}", [*skill_path(skills_, name), command, "Steps", f"Step_{k:04d}"])
+        for command, branch in (("Start", "Execute"), ("Stop", "Stop")):
+            held_ = at(skills_, *skill_path(skills_, name), command)
+            for node, keys in steps_at(at(held_, "Steps"), [*skill_path(skills_, name), command]).items():
+                note(f"{name}.{branch}.{node}", keys)
+                # The conditions of a decision are part of it.
+                for path_ in [p_ for p_ in snap.fbs if p_.startswith(f"{name}.{branch}.{node}_C")]:
+                    note(path_, keys)
         # The program carries it out: the AAS says so.
         if f"{name}.Control" in snap.fbs:
             held = at(skills_, *skill_path(skills_, name))

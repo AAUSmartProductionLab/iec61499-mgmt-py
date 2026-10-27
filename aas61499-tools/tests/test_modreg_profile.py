@@ -551,9 +551,9 @@ def test_a_module_that_was_read_shows_what_runs_there():
     env = found["StopperingModuleAAS"]
     config = record(spec, "pi", snap, drift, "cell/modules/stoppering.yaml", "opc.tcp://192.168.0.50:4840")
     assert at(config, "SyncState")["value"] == "Drift" and len(names(at(config, "Differences"))) == 1
-    assert at(config, "Rules")["value"] == f"{BASE}/rules/module/1"          # docs/module-rules.md
+    assert at(config, "Rules")["value"] == f"{BASE}/rules/module/2"          # docs/module-rules.md
     # The AAS states the rule set and that its module level skills are built; the rest is the record's.
-    assert at(submodel(env, "Skills"), "RuleSet")["value"] == f"{BASE}/rules/module/1"
+    assert at(submodel(env, "Skills"), "RuleSet")["value"] == f"{BASE}/rules/module/2"
     assert at(submodel(env, "Skills"), "Stoppering", "Deployment")["value"] == "Built"
     assert "ControlConfiguration" not in [sm["idShort"] for sm in env["submodels"]]
     assert at(config, "Runtime", "ManagementEndpoint")["value"] == "192.168.0.50:61499"

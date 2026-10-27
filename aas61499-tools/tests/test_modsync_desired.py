@@ -336,10 +336,10 @@ def test_a_description_the_module_cannot_carry_out_is_refused(delivered):
     next(q for q in volume["qualifiers"] if q["type"] == "Maximum")["value"] = "12.0"
     with pytest.raises(desired.NotDescribed, match="more than Dispense takes"):
         described(module, components)
-    # ARSO describes more kinds of step than this module's control runs.
+    # ARSO describes more kinds of step than this module's control runs (a call of another flow).
     module, components = copy.deepcopy(delivered)
-    at(step_of(module, "Step_0000"), "Kind")["value"] = "parallel"
-    with pytest.raises(desired.NotDescribed, match="of the kind parallel"):
+    at(step_of(module, "Step_0000"), "Kind")["value"] = "call"
+    with pytest.raises(desired.NotDescribed, match="of the kind call"):
         described(module, components)
     # The order of the steps is their Order, not their place in the collection.
     module, components = copy.deepcopy(delivered)

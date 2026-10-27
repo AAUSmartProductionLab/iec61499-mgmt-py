@@ -46,7 +46,7 @@
 #
 # Skills (Submodel)
 #   ├─ RuleSet [Property, xs:string, 0..1] — the URI of the rule set the program is built by
-#   │    (v0.10), e.g. https://smartproductionlab.aau.dk/rules/module/1
+#   │    (v0.10), e.g. https://smartproductionlab.aau.dk/rules/module/2
 #   ├─ {skill_name} [SMC Skill, 0..*] — semanticId .../skill; its kind and its
 #   │         │    type (what it does) supplemental semanticIds (26 Oct)
 #   │         ├─ Deployment [Property, xs:string, 0..1] — Built | Described (v0.10);
@@ -217,7 +217,7 @@ arso:FlowNameProperty rdf:type owl:Class ;
 
 arso:FlowOrderProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
-  arso:parentClass arso:SkillStepSMC , arso:FlowBranchSMC ;
+  arso:parentClass arso:SkillStepSMC , arso:FlowBranchSMC , arso:StepConditionSMC ;
   arso:idShort "Order" ;
   arso:semanticId "https://smartproductionlab.aau.dk/ProductionSequence/Order/1/0" ;
   rdfs:comment "Property Order (xs:nonNegativeInteger) — the position among its siblings, from 0; it decides the order, not the place in the collection." .
@@ -326,17 +326,24 @@ arso:BranchIdProperty rdf:type owl:Class ;
 
 arso:StepConditionSMC rdf:type owl:Class ;
   rdfs:subClassOf aas:SubmodelElementCollection ;
-  arso:parentClass arso:SkillStepSMC ;
+  arso:parentClass arso:SkillStepSMC , arso:ConditionGroupSMC ;
   arso:idShort "Condition" ;
   arso:semanticId "https://smartproductionlab.aau.dk/ProductionSequence/Condition/1/0" ;
-  rdfs:comment "SMC Condition — what a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope) or a comparison (ConditionType comparison: Operand, Operator, Expected, Unit)." .
+  rdfs:comment "SMC Condition — what a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope), a comparison (ConditionType comparison: Operand, Operator, Expected, Unit), or a group (ConditionType all or any: Conditions). In a group it is Condition_0000, ... with its Order." .
+
+arso:ConditionGroupSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:parentClass arso:StepConditionSMC ;
+  arso:idShort "Conditions" ;
+  arso:semanticId "https://smartproductionlab.aau.dk/ProductionSequence/Conditions/1/0" ;
+  rdfs:comment "SMC Conditions — the conditions of a group: all of them hold (ConditionType all) or one does (any)." .
 
 arso:ConditionTypeProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
   arso:parentClass arso:StepConditionSMC ;
   arso:idShort "ConditionType" ;
   arso:semanticId "https://smartproductionlab.aau.dk/ProductionSequence/ConditionType/1/0" ;
-  rdfs:comment "Property ConditionType (xs:string) — everyNthProduct or comparison." .
+  rdfs:comment "Property ConditionType (xs:string) — everyNthProduct, comparison, all or any." .
 
 arso:ConditionOperatorProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
@@ -540,6 +547,13 @@ arso:SkillStepSMC rdfs:subClassOf
     owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:StepConditionSMC ],
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
     owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:CommandStepsSMC ] .
+
+# A group holds its conditions (each a Condition named Condition_0000, ...)
+arso:ConditionGroupSMC rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:StepConditionSMC ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "16"^^xsd:nonNegativeInteger ; owl:onClass arso:StepConditionSMC ] .
 
 # A Binding names its input; a Branch has its identifier, name and order
 arso:StepBindingSMC rdfs:subClassOf

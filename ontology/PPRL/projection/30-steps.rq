@@ -1,6 +1,8 @@
 # The steps of a skill's commands (ARSO 0.8, in the elements of the Production Sequence): the skill
 # uses the skill each step runs, and a parameter of that skill is handed the value of a parameter of
 # the skill running the step (a binding with a SourceElement; one with a Value is a constant).
+# A step runs on every path unless it is inside a decision or a conditional (rule set 2; the projection
+# marks those pprl:mayNotRun): only those count, so a parallel block's steps do, a decision's branches do not.
 PREFIX pa:   <https://w3id.org/2025/pprl/aas#>
 PREFIX pprl: <https://w3id.org/2025/pprl#>
 
@@ -11,8 +13,12 @@ CONSTRUCT {
 WHERE {
   ?element pprl:describes ?skill ; pa:element ?command .
   ?command pa:element ?steps .
-  ?steps pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Steps/1/0> ; pa:element ?step .
-  ?step pa:element ?runs .
+  ?steps pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Steps/1/0> .
+  # A step of the command, or of a branch of a parallel block (Step/Branches/Branch/Steps/Step), two deep.
+  { ?steps pa:element ?step } UNION { ?steps pa:element/pa:element/pa:element/pa:element/pa:element ?step }
+  UNION { ?steps pa:element/pa:element/pa:element/pa:element/pa:element/pa:element/pa:element/pa:element/pa:element ?step }
+  ?step pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Step/1/0> ; pa:element ?runs .
+  FILTER NOT EXISTS { ?step pprl:mayNotRun true }
   ?runs pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Skill/1/0> ; pa:refersTo ?usedElement .
   ?usedElement pprl:describes ?used .
   OPTIONAL {

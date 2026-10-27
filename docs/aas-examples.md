@@ -452,7 +452,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `FillingLinearAxisAAS`, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 45 data points; 32 mappings.
-- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/1`; module level skills Dispensing built. Which block is which skill or step is the integrator's record, outside the AAS.
+- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Dispensing built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### StopperingModuleAAS
 
@@ -492,7 +492,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (RetractPiston → Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `StopperingLinearAxisAAS`, Piston → `StopperingPistonAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 32 data points; 28 mappings.
-- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/1`; module level skills Stoppering built. Which block is which skill or step is the integrator's record, outside the AAS.
+- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Stoppering built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### CappingModuleAAS
 
@@ -530,7 +530,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `CappingLinearAxisAAS`, Crimper → `CappingCrimperAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 data points; 24 mappings.
-- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/1`; module level skills Capping built. Which block is which skill or step is the integrator's record, outside the AAS.
+- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Capping built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### InspectionModuleAAS
 
@@ -565,7 +565,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset, Start, Stop, Abort, Clear.
 - **Components:** TopCamera → `InspectionTopCameraAAS`, SideCamera → `InspectionSideCameraAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 22 data points; 20 mappings.
-- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/1`; module level skills Inspection built. Which block is which skill or step is the integrator's record, outside the AAS.
+- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Inspection built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ## The product
 
