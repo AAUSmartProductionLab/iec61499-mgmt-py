@@ -3,8 +3,9 @@
 A description for the paper's method and implementation sections, kept with the code (state of
 27 Oct 2026). Each tool is given by what it takes and gives, the algorithm it runs, and what it
 assumes. The rules the tools rely on are [module-rules.md](module-rules.md); the AAS they read is
-[aas-models.md](aas-models.md); how to run them is [tooling.md](tooling.md); what could be made
-simpler is [simplification.md](simplification.md).
+[aas-models.md](aas-models.md); how an AAS skill maps to IEC 61499 blocks, with figures, is
+[mapping.md](mapping.md); how to run them is [tooling.md](tooling.md); what could be made simpler is
+[simplification.md](simplification.md).
 
 ## 1. Three tools, one contract
 
