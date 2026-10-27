@@ -229,8 +229,9 @@ arduino_cpp_examples/
 # Other tools' local state
 .kilo/
 
-# modsync output (AAS JSON of the modules read)
+# modsync output (AAS JSON of the modules read, the records of what was built, projects of what runs)
 /aas/
+/records/
 /projects/
 
 # Left from when FORTE was prepared for a GitHub release

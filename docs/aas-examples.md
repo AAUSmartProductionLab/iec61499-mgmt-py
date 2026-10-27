@@ -69,10 +69,10 @@ FillingLineAAS
 | AAS | Kind | Submodels |
 | --- | --- | --- |
 | `FillingLineAAS` | system | HierarchicalStructures |
-| `FillingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData, ControlConfiguration |
-| `StopperingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData, ControlConfiguration |
-| `CappingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData, ControlConfiguration |
-| `InspectionModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData, ControlConfiguration |
+| `FillingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData |
+| `StopperingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData |
+| `CappingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData |
+| `InspectionModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData |
 | `FillingLinearAxisAAS` | component/linearaxis | Skills |
 | `FillingPumpAAS` | component/fillingpump | Skills |
 | `FillingScaleAAS` | component/scale | Skills |
@@ -235,16 +235,6 @@ classDiagram
     value (decimal)
     semanticId
   }
-  class ControlConfiguration {
-    <<ARSO>>
-    Rules, ModuleSpec, Target
-    ProgramDigest, SyncState
-    Differences, Types (name, hash)
-  }
-  class Instance {
-    InstancePath
-    FBType, TypeHash
-  }
 
   ModuleAAS *-- Nameplate
   ModuleAAS *-- HierarchicalStructures
@@ -253,7 +243,6 @@ classDiagram
   ModuleAAS *-- CapabilityDescription
   ModuleAAS *-- Skills
   ModuleAAS *-- OperationalData
-  ModuleAAS *-- ControlConfiguration
   HierarchicalStructures *-- "0..*" Part
   AssetInterfacesDescription *-- "1" Interface
   Interface *-- "0..*" Action
@@ -268,7 +257,6 @@ classDiagram
   Operation *-- "2..*" Variable
   Command *-- "0..*" Step : Steps
   OperationalData *-- "1..*" DataPoint
-  ControlConfiguration *-- "0..*" Instance : Instances
 ```
 
 Then how those elements refer to each other. Every solid arrow is a reference stored in the AAS,
@@ -464,7 +452,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `FillingLinearAxisAAS`, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 45 data points; 32 mappings.
-- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/filling.yaml`, sync state NotRead, 14 blocks named as skills and steps.
+- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/1`; module level skills Dispensing built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### StopperingModuleAAS
 
@@ -504,7 +492,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (RetractPiston → Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `StopperingLinearAxisAAS`, Piston → `StopperingPistonAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 32 data points; 28 mappings.
-- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/stoppering.yaml`, sync state NotRead, 12 blocks named as skills and steps.
+- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/1`; module level skills Stoppering built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### CappingModuleAAS
 
@@ -542,7 +530,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `CappingLinearAxisAAS`, Crimper → `CappingCrimperAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 data points; 24 mappings.
-- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/planned/capping.yaml`, sync state NotRead, 10 blocks named as skills and steps.
+- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/1`; module level skills Capping built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### InspectionModuleAAS
 
@@ -577,7 +565,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset, Start, Stop, Abort, Clear.
 - **Components:** TopCamera → `InspectionTopCameraAAS`, SideCamera → `InspectionSideCameraAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 22 data points; 20 mappings.
-- **Control Configuration:** rules `https://smartproductionlab.aau.dk/rules/module/1`, spec `cell/modules/planned/inspection.yaml`, sync state NotRead, 5 blocks named as skills and steps.
+- **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/1`; module level skills Inspection built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ## The product
 

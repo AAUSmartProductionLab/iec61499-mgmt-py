@@ -1,7 +1,9 @@
 # The Control Configuration: in the AAS or in the backend?
 
-Proposal of 27 Oct 2026, **for your decision**. Should a module's AAS keep the Control
-Configuration submodel, or can it live in a backend that only modgen and modsync use?
+Proposal of 27 Oct 2026. **Decided the same day: option C, and built** (ARSO 0.10; `RuleSet` and
+`Deployment` in the Skills submodel; the record kept by `modsync --records` in a folder or by the
+registration service at `/build/<idShort>`). The question was: should a module's AAS keep the
+Control Configuration submodel, or can it live in a backend that only modgen and modsync use?
 
 **Recommendation in short:** keep two facts in the AAS: the rule set the program follows, and
 whether each skill is built or only described. Move everything else into the integrator's backend
