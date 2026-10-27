@@ -36,7 +36,7 @@ repository) and `arduino_cpp_examples/` (the ESP32 station code the modules were
 ## Quick start
 
 ```powershell
-python -m pip install -e ".[test,registration,opcua]"
+python -m pip install -e ".[test,registration,opcua,planning]"
 python -m pytest -q                                            # offline tests of every folder
 
 python -m modgen                                               # regenerate ModLib and the module projects
