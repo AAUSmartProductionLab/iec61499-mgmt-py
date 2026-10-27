@@ -215,6 +215,10 @@ changes (a new skill without a capability, a changed limit the capability does n
 Derived, they cannot. "Offered after a reconfiguration" is the answer a product-driven change
 needs: the line can do it once a described skill is built.
 
+**To change (27 Oct).** With planning (3.9, 4.8), a module offers a capability after a
+reconfiguration also when a skill for it can be planned; the derivation from the skill types
+(`lab:contributes`) gives way to that (G5 in [next-steps.md](next-steps.md)).
+
 ### 3.5 Three ids, three jobs (Model)
 
 **Decision.** The `semanticId` says what an element is in its submodel template (ARSO, APSO,
@@ -253,6 +257,26 @@ time-series database.
 
 **Why.** An HMI or an agent then reads a module's state from its AAS like everything else, and the
 history stays out of the AAS. Not built yet; the HMI reads the values over OPC UA today.
+
+### 3.9 A module's Capability Description is what it plans from (Model)
+
+**Decision.** One Capability Description per module (IDTA 02020) holds its process capabilities
+(Offered) and, in a set per component, its components' capabilities (NotAssigned), each realized by
+a primitive. Pre- and postconditions and invariants are 02020 property constraints, written as a
+`BasicConstraint` expression over the capability's own properties (`= 40.0`, `+= Volume`,
+`unchanged`); a property names the state it is with `SameProperty` (a data point of Operational
+Data). A primitive's `Conditions` and `Completion` (ARSO 0.11) are the run-time form of the same.
+
+**Why.** 02020 already has the constraints a planner needs, and keeps its relations inside one
+submodel, so the module's description is the whole planning domain; nothing planning-specific is
+added. A module has a fixed cast (its components and the product in it), so its state is a handful
+of property values: no types, objects, predicates or delete effects to model. The planner's state and
+the run-time checks name the same data points.
+
+**Instead of.** Planning submodels per component that mirror PDDL (types, predicates, actions,
+instances), as AAS2PDDL does (Nabizada et al., 2026): general, but the engineer still thinks in
+PDDL, and the goal sits in a component's AAS. A capability description in each component's AAS
+(02020's relations would have to reach across AASs). Free expressions in a language of their own.
 
 ## 4. The tools and the method
 
@@ -318,6 +342,26 @@ client reads it.
 in the style of the product's sequence editor. A proposal to split it into an overview and a skill
 view and to give it the planner's flow kinds: [skill-authoring.md](skill-authoring.md).
 
+### 4.8 New skills are planned, then created online (Method)
+
+**Decision.** A module plans a new module level skill from its Capability Description with a hybrid
+of HTN and goal regression: the integrator's compositions and the existing composites are tried
+first, then methods generated from the capabilities' postconditions; a precondition that does not
+hold becomes a goal. The plan is lifted to parallel blocks where no state or invariant orders two
+steps, written into the Skills submodel as a described skill, and created online like any other
+(4.1). The same model checks a flow written by hand. HDDL and PDDL are generated from it for
+standard planners. Only the module plans: the line is run by agents; optimality is not a goal.
+
+**Why.** The planning problem of one module is small and its knowledge is local, so each agent can
+plan over its own AAS; the hierarchy (agents, modules, components) keeps relational models (many
+carriers, a transport network) out of it. Planning makes skills nobody described (two doses for a
+volume above one dose), and finds which capabilities a module can reach at all. Because rule set 2
+draws the wiring, a plan needs no more than the flow to become a program.
+
+**Instead of.** A skill written by hand for every need. A flat PDDL problem over the whole line
+(optimal, but large and relational, and it bypasses the agents). Copying and adapting an existing
+skill.
+
 ## 5. The hardware (Not in the paper, or as the setup only)
 
 | Decision | Why |
@@ -334,5 +378,6 @@ view and to give it the planner's flow kinds: [skill-authoring.md](skill-authori
 | Branches, conditions and parallel steps in a skill (rule set 2) before or after the paper | [skill-authoring.md](skill-authoring.md) |
 | Changing a skill's order online (delete and create while idle) | [skill-authoring.md](skill-authoring.md), section 3 |
 | Which changes the paper shows | [next-steps.md](next-steps.md), open questions |
+| The planner's open points (Home or MoveAxis(0), the HDDL planner, numbers in PDDL) | [skill-planning.md](skill-planning.md), section 9 |
 | Are Occupy and Release skills at all? | [next-steps.md](next-steps.md) |
 | The eleven decisions on states and parameters | [state-and-parameters.md](state-and-parameters.md) |

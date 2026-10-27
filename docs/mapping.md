@@ -49,7 +49,7 @@ program back and gets the flow it started from.
 
 ## 3. The mapping, element by element
 
-| AAS (Skills submodel, ARSO 0.10) | IEC 61499 program (module rules 2) | OPC UA (below `/Objects/<Module>`) |
+| AAS (Skills submodel, ARSO 0.11) | IEC 61499 program (module rules 2) | OPC UA (below `/Objects/<Module>`) |
 | --- | --- | --- |
 | A skill of the kind Composite, `Dispensing` | Subapplication `Dispensing`; `Dispensing.Control` (`SKILL_Core`), `UaStart` (`SERVER_2_<1+n>`), the publishers | `Skills/Dispensing/{Start,Stop,Abort,Reset}`, `State`, `ErrorID` |
 | `Deployment = Built` | `Dispensing.Control` exists | – |
