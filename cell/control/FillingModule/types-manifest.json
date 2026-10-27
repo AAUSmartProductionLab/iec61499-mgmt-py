@@ -264,6 +264,42 @@
     "exported": false
   },
   {
+    "type": "modlib::SKILL_Join2",
+    "kind": "BasicFB",
+    "file": "Skills/Flow/SKILL_Join2.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Join3",
+    "kind": "BasicFB",
+    "file": "Skills/Flow/SKILL_Join3.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Join4",
+    "kind": "BasicFB",
+    "file": "Skills/Flow/SKILL_Join4.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Condition_LREAL",
+    "kind": "BasicFB",
+    "file": "Skills/Flow/SKILL_Condition_LREAL.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Condition_BOOL",
+    "kind": "BasicFB",
+    "file": "Skills/Flow/SKILL_Condition_BOOL.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Merge",
+    "kind": "BasicFB",
+    "file": "Skills/Flow/SKILL_Merge.fbt",
+    "exported": false
+  },
+  {
     "type": "filling::EL_LinearAxis",
     "kind": "BasicFB",
     "file": "Equipment/Base/EL_LinearAxis.fbt",

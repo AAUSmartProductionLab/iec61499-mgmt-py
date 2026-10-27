@@ -5,8 +5,10 @@ A module has
   timed phases, e.g. a start boost or a brake pulse, and may take an argument such as an angle);
 - skill primitives: one equipment command until a sensor condition (``ensures``) or a time
   (``after``) says done, with parameters, contract and timeout;
-- module level skills (composites): a sequence of skill instances with its own parameters, and
-  an optional stop sequence;
+- module level skills (composites): a flow of skill instances with its own parameters, and an
+  optional stop flow. A flow runs its steps one after the other; a parallel block runs branches at
+  once, a decision one of two branches by a condition on a parameter or an earlier step's result
+  (rule set 2 of the module rules);
 - procedures the module state manager runs while Resetting and Stopping;
 - the capabilities it offers (for its AAS), each realized by an offered skill.
 
@@ -17,7 +19,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import re
-from typing import Literal, Union
+from typing import Iterator, Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 import yaml
@@ -341,37 +343,134 @@ class Step(Model):
     bind: dict[str, float | bool | str] = Field(default_factory=dict)   # constant or parent parameter name
 
 
-def steps(value):
-    """``[Skill, {Skill: {Param: value}}, {Skill: {...}, as: Name}]`` -> Step dicts with unique names."""
-    out, seen = [], {}
+OPERATORS = Literal["eq", "ne", "gt", "gte", "lt", "lte"]
+
+
+class Comparison(Model):
+    """``operand`` (a parameter of the skill, or ``<step>.<result>`` of a step that ran before) compared
+    with ``value`` by ``op``."""
+    operand: str = Field(pattern=r"^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)?$")
+    op: OPERATORS
+    value: float | bool
+
+
+class AllOf(Model):
+    all: list["Condition"] = Field(min_length=1)
+
+
+class AnyOf(Model):
+    any: list["Condition"] = Field(min_length=1)
+
+
+Condition = Union[Comparison, AllOf, AnyOf]
+
+
+class Parallel(Model):
+    """Branches that run at once; done when all are done. ``name`` is the block that joins them."""
+    name: str = Ident
+    branches: list[list["Node"]] = Field(min_length=2, max_length=4)
+
+
+class Decision(Model):
+    """One of two branches, chosen by ``condition`` when the steps before it are done; ``otherwise``
+    may be empty (a conditional step). ``name`` is the block where the branches meet."""
+    name: str = Ident
+    condition: Condition
+    then: list["Node"] = Field(min_length=1)
+    otherwise: list["Node"] = Field(default_factory=list)
+
+
+Node = Union[Step, Parallel, Decision]
+
+
+def walk(nodes: list) -> Iterator[Step]:
+    """Every step of a flow, in the order it is written (a branch's steps before the next branch's)."""
+    for node in nodes:
+        if isinstance(node, Step):
+            yield node
+        elif isinstance(node, Parallel):
+            for branch in node.branches:
+                yield from walk(branch)
+        else:
+            yield from walk(node.then)
+            yield from walk(node.otherwise)
+
+
+def always(nodes: list) -> Iterator[Step]:
+    """The steps of a flow that run whenever it succeeds: not those in a branch of a decision."""
+    for node in nodes:
+        if isinstance(node, Step):
+            yield node
+        elif isinstance(node, Parallel):
+            for branch in node.branches:
+                yield from always(branch)
+
+
+def blocks(nodes: list) -> Iterator[Parallel | Decision]:
+    """Every parallel block and decision of a flow."""
+    for node in nodes:
+        if isinstance(node, Parallel):
+            yield node
+            for branch in node.branches:
+                yield from blocks(branch)
+        elif isinstance(node, Decision):
+            yield node
+            yield from blocks(node.then)
+            yield from blocks(node.otherwise)
+
+
+def linear(nodes: list) -> bool:
+    """Steps one after the other only: a flow every rule set runs."""
+    return all(isinstance(node, Step) for node in nodes)
+
+
+def steps(value, seen: dict | None = None):
+    """``[Skill, {Skill: {Param: value}}, {Skill: {...}, as: Name}]`` -> Step dicts with unique names;
+    ``{parallel: [[...], [...]], as: Name}`` a parallel block, ``{if: condition, then: [...], else: [...],
+    as: Name}`` a decision. Names are unique across the whole flow (``seen``)."""
+    out, seen = [], {} if seen is None else seen
+
+    def named(kind: str, given: str | None) -> str:
+        seen[kind] = seen.get(kind, 0) + 1
+        return given or (kind if seen[kind] == 1 else f"{kind}_{seen[kind]}")
+
     for item in value or []:
         if isinstance(item, str):
-            skill, bind, name = item, {}, None
-        elif isinstance(item, dict):
-            item = dict(item)
-            name = item.pop("as", None)
+            out.append({"skill": item, "name": named(item, None), "bind": {}})
+            continue
+        if not isinstance(item, dict):
+            return value
+        item = dict(item)
+        name = item.pop("as", None)
+        if "parallel" in item:
+            out.append({"name": named("Parallel", name), "branches": [steps(branch, seen) for branch in item.pop("parallel")],
+                        **item})
+        elif "if" in item:
+            out.append({"name": named("Decision", name), "condition": item.pop("if"), "then": steps(item.pop("then", []), seen),
+                        "otherwise": steps(item.pop("else", []), seen), **item})
+        elif "skill" in item or "branches" in item or "condition" in item:
+            out.append({**item, **({"name": name} if name else {})})       # already in the long form
+        else:
             if len(item) != 1:
                 raise ValueError(f"A step names one skill: {item}")
             skill, bind = next(iter(item.items()))
-            bind = bind or {}
-        else:
-            return value
-        seen[skill] = seen.get(skill, 0) + 1
-        out.append({"skill": skill, "name": name or (skill if seen[skill] == 1 else f"{skill}_{seen[skill]}"),
-                    "bind": bind})
+            out.append({"skill": skill, "name": named(skill, name), "bind": bind or {}})
     return out
 
 
 class Composite(Model):
-    """Module level skill: a sequence of private skill instances, optionally a stop sequence."""
+    """Module level skill: a flow of private skill instances, optionally a stop flow."""
     description: str = ""
     parameters: dict[str, Parameter] = Field(default_factory=dict)
-    execute: list[Step]
-    stop: list[Step] = Field(default_factory=list)
+    execute: list[Node]
+    stop: list[Node] = Field(default_factory=list)
     results: dict[str, str] = Field(default_factory=dict)   # result name -> <step>.<result>
     offered: bool = True
 
-    short_steps = field_validator("execute", "stop", mode="before")(classmethod(lambda cls, v: steps(v)))
+    @field_validator("execute", "stop", mode="before")
+    @classmethod
+    def short_steps(cls, v):
+        return steps(v)
 
 
 class Modbus(Model):
@@ -487,13 +586,14 @@ class ModuleSpec(Model):
             # A module level skill's parameter latches are named like its parameters, next to these.
             if taken := {p for p in comp.parameters if p.upper() in RESERVED or p.upper().startswith("REL_")}:
                 raise ValueError(f"{name}: parameter names taken by the skill's own blocks {sorted(taken)}")
-            self.check_steps(name, comp.execute, comp.parameters)
-            self.check_steps(name, comp.stop, comp.parameters)
+            self.check_flow(name, comp.execute, comp.parameters)
+            self.check_flow(name, comp.stop, comp.parameters)
             for result, source in comp.results.items():
                 step, _, res = source.partition(".")
-                found = next((s for s in comp.execute if s.name == step), None)
+                found = next((s for s in always(comp.execute) if s.name == step), None)
                 if found is None or res not in self.skills[found.skill].results:
-                    raise ValueError(f"{name}.results.{result}: {source} is not a result of an execute step")
+                    raise ValueError(f"{name}.results.{result}: {source} is not a result of an execute step that runs "
+                                     "on every path (not in a branch of a decision)")
         for proc, seq in self.procedures.items():
             if not seq:
                 raise ValueError(f"{proc}: empty procedure")
@@ -565,6 +665,57 @@ class ModuleSpec(Model):
         for ident in [name, *cap.properties]:
             if not re.match(IDENT, ident):
                 raise ValueError(f"Not an identifier: capability {name}, {ident}")
+
+    def check_flow(self, owner, nodes: list, parent_params: dict[str, Parameter]):
+        """A flow: its steps (``check_steps``), names unique across steps and blocks, parallel branches on
+        different equipment (each step holds its equipment under the skill's name, so two branches would
+        command one item at once), and conditions on what is known when they are evaluated."""
+        self.check_steps(owner, list(walk(nodes)), parent_params)
+        taken = [s.name for s in walk(nodes)] + [b.name for b in blocks(nodes)]
+        if clash := sorted({n for n in taken if taken.count(n) > 1}):
+            raise ValueError(f"{owner}: names used twice in its flow {clash}")
+        if reserved := sorted(n for n in taken if n.upper() in RESERVED or re.fullmatch(r"(?i)fail\d+", n)):
+            raise ValueError(f"{owner}: names taken by the flow's own blocks {reserved}")
+
+        def check(seq: list, known: dict[str, str]) -> dict[str, str]:
+            """``known``: what a condition may compare (operand -> IEC type); returns what is known after ``seq``."""
+            known = dict(known)
+            for node in seq:
+                if isinstance(node, Step):
+                    skill = self.skills[node.skill]
+                    eq = self.equipment.get(skill.equipment) if skill.equipment else None
+                    known.update({f"{node.name}.{r}": eq.inputs[i].type for r, i in skill.results.items()} if eq else {})
+                elif isinstance(node, Parallel):
+                    items = [{e for s in walk(branch) for e in self.uses(s.skill)} for branch in node.branches]
+                    for i, a in enumerate(items):
+                        for b in items[i + 1:]:
+                            if shared := a & b:
+                                raise ValueError(f"{owner}.{node.name}: two branches use {sorted(shared)}")
+                    for branch in node.branches:
+                        known.update(check(branch, known))
+                else:
+                    self.check_condition(f"{owner}.{node.name}", node.condition, known)
+                    check(node.then, known)
+                    check(node.otherwise, known)
+            return known
+
+        check(nodes, {p: pr.type for p, pr in parent_params.items()})
+
+    def check_condition(self, where: str, condition, known: dict[str, str]):
+        if isinstance(condition, (AllOf, AnyOf)):
+            for inner in (condition.all if isinstance(condition, AllOf) else condition.any):
+                self.check_condition(where, inner, known)
+            return
+        typ = known.get(condition.operand)
+        if typ is None:
+            raise ValueError(f"{where}: {condition.operand} is neither a parameter of the skill nor a result of a step "
+                             "that has run when the condition is evaluated")
+        if typ not in ("LREAL", "BOOL"):
+            raise ValueError(f"{where}: {condition.operand} is {typ}; a condition compares LREAL or BOOL")
+        if (typ == "BOOL") != isinstance(condition.value, bool):
+            raise ValueError(f"{where}: {condition.operand} is {typ}, compared with {condition.value!r}")
+        if typ == "BOOL" and condition.op not in ("eq", "ne"):
+            raise ValueError(f"{where}: a BOOL is compared by eq or ne, not {condition.op}")
 
     def check_steps(self, owner, seq: list[Step], parent_params: dict[str, Parameter]):
         """Steps name skill primitives (composites of composites come later), bind known parameters, are unique.
@@ -643,9 +794,17 @@ class ModuleSpec(Model):
             eq = self.skills[skill].equipment
             return [eq] if eq else []
         comp = self.composites[skill]
-        return list(dict.fromkeys(e for s in comp.execute + comp.stop for e in self.uses(s.skill)))
+        return list(dict.fromkeys(e for s in [*walk(comp.execute), *walk(comp.stop)] for e in self.uses(s.skill)))
 
 
 def load(path: Path) -> ModuleSpec:
     """Read and validate a module specification (YAML)."""
     return ModuleSpec.model_validate(yaml.safe_load(Path(path).read_text(encoding="utf-8")))
+
+
+AllOf.model_rebuild()
+AnyOf.model_rebuild()
+Parallel.model_rebuild()
+Decision.model_rebuild()
+Composite.model_rebuild()
+ModuleSpec.model_rebuild()

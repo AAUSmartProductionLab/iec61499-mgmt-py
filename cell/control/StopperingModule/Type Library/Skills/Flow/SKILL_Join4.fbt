@@ -1,0 +1,175 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_Join4" Comment="Ends a parallel block of 4 branches: DONE when all are done; on the first failure HALT to the others, then FAILED with its error once all have ended">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="START" Type="Event" Comment="The parallel block starts: forget the last run" />
+      <Event Name="DONE_1" Type="Event" Comment="Branch 1 is done" />
+      <Event Name="DONE_2" Type="Event" Comment="Branch 2 is done" />
+      <Event Name="DONE_3" Type="Event" Comment="Branch 3 is done" />
+      <Event Name="DONE_4" Type="Event" Comment="Branch 4 is done" />
+      <Event Name="FAILED_1" Type="Event" Comment="Branch 1 failed (Error1)">
+        <With Var="Error1" />
+      </Event>
+      <Event Name="FAILED_2" Type="Event" Comment="Branch 2 failed (Error2)">
+        <With Var="Error2" />
+      </Event>
+      <Event Name="FAILED_3" Type="Event" Comment="Branch 3 failed (Error3)">
+        <With Var="Error3" />
+      </Event>
+      <Event Name="FAILED_4" Type="Event" Comment="Branch 4 failed (Error4)">
+        <With Var="Error4" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="DONE" Type="Event" Comment="Every branch is done" />
+      <Event Name="FAILED" Type="Event" Comment="A branch failed and every branch has ended (Error)">
+        <With Var="Error" />
+      </Event>
+      <Event Name="HALT" Type="Event" Comment="A branch failed: stop the others" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Error1" Type="UINT" Comment="Error code of branch 1" />
+      <VarDeclaration Name="Error2" Type="UINT" Comment="Error code of branch 2" />
+      <VarDeclaration Name="Error3" Type="UINT" Comment="Error code of branch 3" />
+      <VarDeclaration Name="Error4" Type="UINT" Comment="Error code of branch 4" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Error" Type="UINT" Comment="Error code of the branch that failed first" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Ended1" Type="BOOL" />
+      <VarDeclaration Name="Ended2" Type="BOOL" />
+      <VarDeclaration Name="Ended3" Type="BOOL" />
+      <VarDeclaration Name="Ended4" Type="BOOL" />
+      <VarDeclaration Name="AnyFailed" Type="BOOL" />
+      <VarDeclaration Name="First" Type="UINT" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Reset" x="570" y="100">
+        <ECAction Algorithm="Alg_Reset" />
+      </ECState>
+      <ECState Name="Check" x="990" y="100" />
+      <ECState Name="Done" x="1410" y="100">
+        <ECAction Output="DONE" />
+      </ECState>
+      <ECState Name="Fail" x="150" y="330">
+        <ECAction Algorithm="Alg_Fail" Output="FAILED" />
+      </ECState>
+      <ECState Name="Done1" x="570" y="330">
+        <ECAction Algorithm="Alg_Done1" />
+      </ECState>
+      <ECState Name="First1" x="990" y="330">
+        <ECAction Algorithm="Alg_First1" Output="HALT" />
+      </ECState>
+      <ECState Name="Later1" x="1410" y="330">
+        <ECAction Algorithm="Alg_Later1" />
+      </ECState>
+      <ECState Name="Done2" x="150" y="560">
+        <ECAction Algorithm="Alg_Done2" />
+      </ECState>
+      <ECState Name="First2" x="570" y="560">
+        <ECAction Algorithm="Alg_First2" Output="HALT" />
+      </ECState>
+      <ECState Name="Later2" x="990" y="560">
+        <ECAction Algorithm="Alg_Later2" />
+      </ECState>
+      <ECState Name="Done3" x="1410" y="560">
+        <ECAction Algorithm="Alg_Done3" />
+      </ECState>
+      <ECState Name="First3" x="150" y="790">
+        <ECAction Algorithm="Alg_First3" Output="HALT" />
+      </ECState>
+      <ECState Name="Later3" x="570" y="790">
+        <ECAction Algorithm="Alg_Later3" />
+      </ECState>
+      <ECState Name="Done4" x="990" y="790">
+        <ECAction Algorithm="Alg_Done4" />
+      </ECState>
+      <ECState Name="First4" x="1410" y="790">
+        <ECAction Algorithm="Alg_First4" Output="HALT" />
+      </ECState>
+      <ECState Name="Later4" x="150" y="1020">
+        <ECAction Algorithm="Alg_Later4" />
+      </ECState>
+      <ECTransition Source="START" Destination="Reset" Condition="START" x="0" y="0" />
+      <ECTransition Source="Reset" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Done1" Condition="DONE_1" x="0" y="0" />
+      <ECTransition Source="START" Destination="First1" Condition="FAILED_1[NOT AnyFailed]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Later1" Condition="FAILED_1" x="0" y="0" />
+      <ECTransition Source="Done1" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="First1" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="Later1" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Done2" Condition="DONE_2" x="0" y="0" />
+      <ECTransition Source="START" Destination="First2" Condition="FAILED_2[NOT AnyFailed]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Later2" Condition="FAILED_2" x="0" y="0" />
+      <ECTransition Source="Done2" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="First2" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="Later2" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Done3" Condition="DONE_3" x="0" y="0" />
+      <ECTransition Source="START" Destination="First3" Condition="FAILED_3[NOT AnyFailed]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Later3" Condition="FAILED_3" x="0" y="0" />
+      <ECTransition Source="Done3" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="First3" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="Later3" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Done4" Condition="DONE_4" x="0" y="0" />
+      <ECTransition Source="START" Destination="First4" Condition="FAILED_4[NOT AnyFailed]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Later4" Condition="FAILED_4" x="0" y="0" />
+      <ECTransition Source="Done4" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="First4" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="Later4" Destination="Check" Condition="1" x="0" y="0" />
+      <ECTransition Source="Check" Destination="Done" Condition="(Ended1 AND Ended2 AND Ended3 AND Ended4) AND NOT AnyFailed" x="0" y="0" />
+      <ECTransition Source="Check" Destination="Fail" Condition="(Ended1 AND Ended2 AND Ended3 AND Ended4) AND AnyFailed" x="0" y="0" />
+      <ECTransition Source="Check" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Done" Destination="Reset" Condition="1" x="0" y="0" />
+      <ECTransition Source="Fail" Destination="Reset" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Reset">
+      <ST>Ended1 := FALSE; Ended2 := FALSE; Ended3 := FALSE; Ended4 := FALSE; AnyFailed := FALSE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Fail">
+      <ST>Error := First;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Done1">
+      <ST>Ended1 := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_First1">
+      <ST>Ended1 := TRUE; AnyFailed := TRUE; First := Error1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Later1">
+      <ST>Ended1 := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Done2">
+      <ST>Ended2 := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_First2">
+      <ST>Ended2 := TRUE; AnyFailed := TRUE; First := Error2;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Later2">
+      <ST>Ended2 := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Done3">
+      <ST>Ended3 := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_First3">
+      <ST>Ended3 := TRUE; AnyFailed := TRUE; First := Error3;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Later3">
+      <ST>Ended3 := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Done4">
+      <ST>Ended4 := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_First4">
+      <ST>Ended4 := TRUE; AnyFailed := TRUE; First := Error4;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Later4">
+      <ST>Ended4 := TRUE;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>
