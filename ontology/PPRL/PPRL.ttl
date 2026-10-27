@@ -251,6 +251,10 @@ pprl:DerivedCapability rdf:type owl:Class ;
   rdfs:subClassOf pprl:OfferedCapability ;
   rdfs:comment "An offered capability derived from the skill realizing it (ontology/PPRL/derivation): of a class the types of the skill's steps contribute, specified by the properties its parameters and its steps' constants set." .
 
+pprl:mayNotRun rdf:type owl:DatatypeProperty ;
+  rdfs:range xsd:boolean ;
+  rdfs:comment "An element of a flow inside a decision or a conditional step (rule set 2): its steps run on some paths only, so they contribute no capability. Set by the projection." .
+
 pprl:DescribedSkill rdf:type owl:Class ;
   rdfs:subClassOf css:Skill ;
   rdfs:comment "A skill described in a resource's AAS that its program does not carry out yet (ARSO Skills, Deployment = Described): it is offered only after a reconfiguration." .

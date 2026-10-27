@@ -39,8 +39,12 @@ WHERE {
     {
       ?skillElement pprl:describes ?skill ; pa:element ?command .
       ?command pa:semanticId <https://smartproductionlab.aau.dk/skill/Start> ; pa:element ?steps .
-      ?steps pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Steps/1/0> ; pa:element ?step .
-      ?step pa:element ?bindings .
+      ?steps pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Steps/1/0> .
+      # A step of the command, or of a branch of a parallel block (Step/Branches/Branch/Steps/Step), two deep.
+      { ?steps pa:element ?step } UNION { ?steps pa:element/pa:element/pa:element/pa:element/pa:element ?step }
+      UNION { ?steps pa:element/pa:element/pa:element/pa:element/pa:element/pa:element/pa:element/pa:element/pa:element ?step }
+      ?step pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Step/1/0> ; pa:element ?bindings .
+      FILTER NOT EXISTS { ?step pprl:mayNotRun true }
       ?bindings pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Bindings/1/0> ; pa:element ?binding .
       ?binding pa:element ?constant , ?to .
       ?constant pa:semanticId <https://smartproductionlab.aau.dk/ProductionSequence/Value/1/0> ; pa:value ?value .

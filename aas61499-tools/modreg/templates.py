@@ -217,6 +217,20 @@ OPERATION = re.compile(r"^(class \w+)\(Operation\):", re.MULTILINE)
 SOURCE = re.compile(r"^Source: .*$", re.MULTILINE)
 
 
+# Classes of a template that the planner's Production Sequence template names alike but with other
+# fields: aas_pydantic reads an element back as the class its dump names, so these get names of
+# their own (the idShort stays).
+RENAMED = {"skills": {"Condition": "FlowCondition", "Conditions": "FlowConditions"}}
+
+
+def renamed(source: str, module: str) -> str:
+    for old, new in RENAMED.get(module, {}).items():
+        source = re.sub(rf"^class {old}\(", f"class {new}(", source, flags=re.MULTILINE)
+        source = re.sub(rf"^{old}_t: TypeAlias = {old}$", f"{old}_t: TypeAlias = {new}", source, flags=re.MULTILINE)
+        source = re.sub(rf"^{old}\.model_rebuild\(\)$", f"{new}.model_rebuild()", source, flags=re.MULTILINE)
+    return source
+
+
 def finished(source: str, template: str) -> str:
     """What the generator wrote, made independent of where it ran and readable back: the template
     is named by its place in this repository, and an Operation is aas-model's delegated Operation,
@@ -244,7 +258,7 @@ def generate(templates: list[Path], out: Path = GENERATED, aas_model: Path = AAS
     made = sorted(p for p in out.glob("*.py") if p.name != "__init__.py")
     sources = {template.stem.lower(): template.name for template in templates}
     for path in made:                                   # one line ending, whatever the platform wrote
-        source = finished(aliases_after_classes(path.read_text(encoding="utf-8")),
+        source = finished(renamed(aliases_after_classes(path.read_text(encoding="utf-8")), path.stem),
                           sources.get(path.stem.replace("_", ""), path.stem))
         path.write_text(source.rstrip() + "\n", encoding="utf-8", newline="\n")
     (out / "__init__.py").write_text(

@@ -8,6 +8,7 @@ from typing import Any, ClassVar, List, Dict, Optional, TypeAlias
 from aas_pydantic import (
     Operation, Property, ReferenceElement, Submodel, SubmodelElement, SubmodelElementCollection, SubmodelElementList,
 )
+from pydantic import Field
 from aas_pydantic.aas_model import AasIdString
 from aas_model.submodel_templates import SkillOperation as DelegatedOperation
 
@@ -145,10 +146,16 @@ class Branches(SubmodelElementCollection):
     description: str = "The branches of a parallel step (two or more, all have to end) or of a decision (exactly two)."
     FlowBranch: Dict[str, FlowBranch_t] = {}
 
+class FlowConditions(SubmodelElementCollection):
+    id_short: AasIdString = "Conditions"
+    semantic_id: str = "https://smartproductionlab.aau.dk/ProductionSequence/Conditions/1/0"
+    description: str = "The conditions of a group: all of them hold (ConditionType all) or one does (any)."
+    Condition: Dict[str, Condition_t] = Field(default_factory=dict, json_schema_extra={"idta_min_cardinality": 1})
+
 class ConditionType(Property):
     id_short: AasIdString = "ConditionType"
     semantic_id: str = "https://smartproductionlab.aau.dk/ProductionSequence/ConditionType/1/0"
-    description: str = "EveryNthProduct or comparison."
+    description: str = "EveryNthProduct, comparison, all or any."
     value_type: str = "xs:string"
 
 class Operator(Property):
@@ -197,11 +204,13 @@ class Operand(SubmodelElementCollection):
     OperandType: Optional[OperandType_t] = None
     StepId: Optional[StepId_t] = None
 
-class Condition(SubmodelElementCollection):
+class FlowCondition(SubmodelElementCollection):
     id_short: AasIdString = "Condition"
     semantic_id: str = "https://smartproductionlab.aau.dk/ProductionSequence/Condition/1/0"
-    description: str = "What a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope) or a comparison (ConditionType comparison: Operand, Operator, Expected, Unit)."
+    description: str = "What a decision or a conditional step looks at: every N-th run (ConditionType everyNthProduct: EveryNProducts, CounterScope), a comparison (ConditionType comparison: Operand, Operator, Expected, Unit), or a group (ConditionType all or any: Conditions)."
+    Order: Optional[Order_t] = None
     Unit: Optional[Unit_t] = None
+    Conditions: Optional[Conditions_t] = None
     ConditionType: Optional[ConditionType_t] = None
     Operator: Optional[Operator_t] = None
     EveryNProducts: Optional[EveryNProducts_t] = None
@@ -368,10 +377,14 @@ Order_t: TypeAlias = Order
 BranchId_t: TypeAlias = BranchId
 # alias so field ``FlowBranch_t`` can name a class of the same id_short
 FlowBranch_t: TypeAlias = FlowBranch
+# alias so field ``Condition_t`` can name a class of the same id_short
+Condition_t: TypeAlias = FlowCondition
 # alias so field ``OperandType_t`` can name a class of the same id_short
 OperandType_t: TypeAlias = OperandType
 # alias so field ``StepId_t`` can name a class of the same id_short
 StepId_t: TypeAlias = StepId
+# alias so field ``Conditions_t`` can name a class of the same id_short
+Conditions_t: TypeAlias = FlowConditions
 # alias so field ``ConditionType_t`` can name a class of the same id_short
 ConditionType_t: TypeAlias = ConditionType
 # alias so field ``Operator_t`` can name a class of the same id_short
@@ -394,8 +407,6 @@ Bindings_t: TypeAlias = Bindings
 Outputs_t: TypeAlias = Outputs
 # alias so field ``Branches_t`` can name a class of the same id_short
 Branches_t: TypeAlias = Branches
-# alias so field ``Condition_t`` can name a class of the same id_short
-Condition_t: TypeAlias = Condition
 # alias so field ``SkillStep_t`` can name a class of the same id_short
 SkillStep_t: TypeAlias = SkillStep
 # alias so field ``InterfaceReference_t`` can name a class of the same id_short
@@ -460,6 +471,7 @@ Outputs.model_rebuild()
 BranchId.model_rebuild()
 FlowBranch.model_rebuild()
 Branches.model_rebuild()
+FlowConditions.model_rebuild()
 ConditionType.model_rebuild()
 Operator.model_rebuild()
 EveryNProducts.model_rebuild()
@@ -468,7 +480,7 @@ Expected.model_rebuild()
 OperandType.model_rebuild()
 StepId.model_rebuild()
 Operand.model_rebuild()
-Condition.model_rebuild()
+FlowCondition.model_rebuild()
 SkillStep.model_rebuild()
 Steps.model_rebuild()
 Start.model_rebuild()

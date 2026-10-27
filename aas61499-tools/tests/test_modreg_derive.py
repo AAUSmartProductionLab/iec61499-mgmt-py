@@ -122,3 +122,17 @@ def test_a_capability_written_by_hand_stays_and_one_no_skill_offers_goes(deliver
         f"{BASE}/semantics/Stoppering"
     boxes += [by_hand, gone]
     assert list(capability_set(capabilities(module, components))) == ["Filling", "Weighing"]
+
+
+def test_a_flow_offers_what_its_steps_on_every_path_contribute():
+    """Rule set 2: a step in a parallel branch runs whenever the skill succeeds, so its capability
+    is offered; one inside a decision may not run, so it is not."""
+    from test_modsync_flow import composed
+    parallel = composed([{"parallel": [["Home"], [{"Dispense": {"Volume": "Volume", "FlowRate": 1.0}}]], "as": "AtOnce"}, "Weigh"])
+    found = {(o.skill_name, o.name): o for o in offers(project(lean(parallel), structure=False))}
+    assert ("Flow", "Filling") in found
+    (volume,) = found["Flow", "Filling"].properties
+    assert (volume.minimum, volume.maximum) == ("0.5", "5.0")
+    maybe = composed(["Weigh", {"if": {"operand": "Weigh.Weight", "op": "lt", "value": 0.1},
+                                "then": [{"Dispense": {"Volume": "Volume", "FlowRate": 1.0}}], "as": "Empty"}])
+    assert ("Flow", "Filling") not in {(o.skill_name, o.name) for o in offers(project(lean(maybe), structure=False))}

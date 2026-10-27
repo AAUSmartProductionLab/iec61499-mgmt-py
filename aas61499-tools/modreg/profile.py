@@ -51,7 +51,8 @@ from aas_pydantic.submodel_templates.nameplate import ManufacturerProductDesigna
 
 from modgen.library import q
 from modgen.module import parameter_port
-from modgen.spec import Capability as CapabilitySpec, CapabilityProperty, ModuleSpec, Parameter
+from modgen.spec import (AllOf, AnyOf, Capability as CapabilitySpec, CapabilityProperty, Decision, ModuleSpec, Parallel,
+                         Parameter, Step, walk)
 from modsync.compare import Drift, expected, expected_values
 from modsync.device import Snapshot, literal
 
@@ -85,8 +86,8 @@ ANSWER = {"type": "object", "properties": {"Accepted": {"type": "boolean"},
                                             "ErrorID": {"type": "integer", "minimum": 0, "maximum": 65535}}}
 # The concepts of the two values every resource of the lab has.
 MODULE_STATE = "https://w3id.org/2026/apex/semantic/state/operational"
-# The rules a generated module is built by (docs/module-rules.md).
-RULES = f"{BASE_URL}/rules/module/1"
+# The rules a generated module is built by (docs/module-rules.md); 2 adds parallel blocks and decisions to 1.
+RULES = f"{BASE_URL}/rules/module/2"
 OCCUPIED = "https://w3id.org/2026/apex/semantic/state/occupied"
 # What a skill can be told: a command means the same on every skill (ontology/Vocabulary/commands.ttl).
 COMMAND = f"{BASE_URL}/skill"
@@ -199,7 +200,7 @@ def result_input(spec: ModuleSpec, skill: str, result: str):
     the result of one of its execute steps."""
     if skill in spec.composites:
         step_name, _, inner = spec.composites[skill].results[result].partition(".")
-        step = next(s for s in spec.composites[skill].execute if s.name == step_name)
+        step = next(s for s in walk(spec.composites[skill].execute) if s.name == step_name)
         return result_input(spec, step.skill, inner)
     decl = spec.skills[skill]
     return spec.equipment[decl.equipment].inputs[decl.results[result]]
@@ -246,7 +247,7 @@ class Describer:
         said = (composite or self.spec.skills[skill]).parameters[p].meaning
         if said:
             return said if "://" in said else meaning(said)
-        for step in composite.execute if composite else ():
+        for step in walk(composite.execute) if composite else ():
             handed = [q for q, v in step.bind.items() if v == p]
             if found := next((m for q in handed if (m := self.means_of(step.skill, q))), None):
                 return found
@@ -360,7 +361,7 @@ class Describer:
         return made
 
     def steps(self, owner: str, sequence, node: str, key: str, concept: str, where: str, at: tuple, command: str,
-              results: dict[str, str] | None = None):
+              results: dict[str, str] | None = None, inside: tuple = ()):
         """What a command runs, as a flow in the planner's elements: steps Step_0000, ... with their
         NodeId (the name of the step's instance in the program), Kind, Name and Order. A step of
         the kind ``step`` refers to the skill it runs. Its Bindings say what each input of that
@@ -368,15 +369,78 @@ class Describer:
         command's Operation (SourceElement). Its Outputs say which results of the command it gives
         (``results``, output -> "<step>.<its result>"). A step means what its instance in the
         program is called (``concept``/<step>, a supplemental id): its state and what it publishes
-        below ``node`` are data points named from there."""
+        below ``node`` are data points named from there.
+
+        A parallel block (rule set 2) is a step of the kind ``parallel`` with its Branches, a decision
+        one of the kind ``decision`` with its Condition and two Branches (``conditional`` with its own
+        Steps when the second is empty); ``inside`` is where these Steps are below the command."""
         held = arso.Steps()
         own = lambda v: path(where, *at, ("Operation", command), ("Property", v))    # noqa: E731
+        here = lambda id_short: path(where, *at, *inside, (SMC, "Steps"), (SMC, id_short))  # noqa: E731
+        below = lambda id_short, *more: (*inside, (SMC, "Steps"), (SMC, id_short), *more)    # noqa: E731
+        everything = list(walk(self.spec.composites[owner.split(".")[0]].execute)) if owner.split(".")[0] in self.spec.composites else []
+        parameters = self.spec.composites[owner.split(".")[0]].parameters if owner.split(".")[0] in self.spec.composites else {}
+
+        def condition(c, order: int | None = None) -> arso.FlowCondition:
+            """A comparison, or a group of them (all, any), in the planner's elements."""
+            numbered = {"Order": arso.Order(value=str(order), value_type="xs:nonNegativeInteger")} if order is not None else {}
+            if isinstance(c, (AllOf, AnyOf)):
+                kind = "all" if isinstance(c, AllOf) else "any"
+                group = arso.FlowConditions()
+                for i, inner in enumerate(getattr(c, kind)):
+                    put(group.Condition, f"Condition_{i:04d}", condition(inner, i))
+                return arso.FlowCondition(ConditionType=arso.ConditionType(value=kind), Conditions=group, **numbered)
+            step_name, _, result = c.operand.partition(".")
+            if result:
+                ran = next(s for s in everything if s.name == step_name)
+                io = result_input(self.spec, ran.skill, result)
+                operand = arso.Operand(OperandType=arso.OperandType(value="output"), StepId=arso.StepId(value=step_name),
+                                       OutputId=arso.OutputId(value=result))
+                typ, unit = io.type, io.unit
+            else:
+                declared_ = parameters[c.operand]
+                operand = arso.Operand(OperandType=arso.OperandType(value="parameter"), StepId=arso.StepId(value=""),
+                                       SourceElement=arso.SourceElement(value=own(c.operand)))
+                typ, unit = declared_.type, declared_.unit
+            expected = arso.Expected(DataType=arso.DataType(value="boolean" if typ == "BOOL" else "number"),
+                                     Value=arso.Value(value=text(c.value) if isinstance(c.value, bool) else text(float(c.value)),
+                                                      value_type="xs:boolean" if typ == "BOOL" else "xs:double"))
+            return arso.FlowCondition(ConditionType=arso.ConditionType(value="comparison"), Operator=arso.Operator(value=c.op),
+                                  Unit=arso.Unit(value=unit or ""), Expected=expected, Operand=operand, **numbered)
+
+        def branch(order: int, id_short: str, name: str, nodes: list) -> arso.FlowBranch:
+            j = f"Branch_{order:04d}"
+            return arso.FlowBranch(BranchId=arso.BranchId(value=f"{name}_{order + 1}"), Name=arso.Name(value=f"{name} {order + 1}"),
+                                   Order=arso.Order(value=str(order), value_type="xs:nonNegativeInteger"),
+                                   Steps=self.steps(owner, nodes, node, key, concept, where, at, command, results,
+                                                    below(id_short, (SMC, "Branches"), (SMC, j))))
 
         def of_skill(name: str, variable: str) -> ModelReference:
             return path(self.home(name), (SMC, name), (SMC, "Start"), ("Operation", "Start"),
                         ("Property", variable))
 
         for order, step in enumerate(sequence):
+            id_short = f"Step_{order:04d}"
+            common = dict(NodeId=arso.NodeId(value=step.name), Name=arso.Name(value=step.name),
+                          Order=arso.Order(value=str(order), value_type="xs:nonNegativeInteger"))
+            if isinstance(step, Parallel):
+                made = arso.SkillStep(Kind=arso.Kind(value="parallel"), description=f"{step.name}: runs its branches at once",
+                                      Branches=arso.Branches(FlowBranch={f"Branch_{j:04d}": branch(j, id_short, step.name, b)
+                                                                         for j, b in enumerate(step.branches)}), **common)
+                self.instances[f"{owner}.{step.name}"] = (q(f"SKILL_Join{len(step.branches)}"), here(id_short))
+                put(held.SkillStep, id_short, made)
+                continue
+            if isinstance(step, Decision):
+                made = arso.SkillStep(Condition=condition(step.condition), description=f"{step.name}: runs a branch by its condition",
+                                      Kind=arso.Kind(value="decision" if step.otherwise else "conditional"), **common)
+                if step.otherwise:
+                    made.Branches = arso.Branches(FlowBranch={f"Branch_{j:04d}": branch(j, id_short, step.name, b)
+                                                              for j, b in enumerate((step.then, step.otherwise))})
+                else:
+                    made.Steps = self.steps(owner, step.then, node, key, concept, where, at, command, results, below(id_short))
+                self.instances[f"{owner}.{step.name}"] = (q("SKILL_Merge"), here(id_short))
+                put(held.SkillStep, id_short, made)
+                continue
             declared = self.spec.skills[step.skill].parameters
             made = arso.SkillStep(
                 NodeId=arso.NodeId(value=step.name), Kind=arso.Kind(value="step"), Name=arso.Name(value=step.name),
@@ -409,9 +473,7 @@ class Describer:
             if outputs.StepOutput:
                 made.Outputs = outputs
             self.step_variables(step, f"{node}/{step.name}", f"{key}_{step.name}", f"{concept}/{step.name}")
-            id_short = f"Step_{order:04d}"
-            self.instances[f"{owner}.{step.name}"] = (block_type(self.spec, step.skill),
-                                                      path(where, *at, (SMC, "Steps"), (SMC, id_short)))
+            self.instances[f"{owner}.{step.name}"] = (block_type(self.spec, step.skill), here(id_short))
             put(held.SkillStep, id_short, made)
         return held if held.SkillStep else None
 

@@ -59,8 +59,15 @@ class Projection:
         if o is not None:
             self.graph.add((s, p, o))
 
-    def element(self, iri: URIRef, element: dict, parent: set, ancestors: set, item: bool = False) -> set:
+    def element(self, iri: URIRef, element: dict, parent: set, ancestors: set, item: bool = False,
+                optional: bool = False) -> set:
+        """``optional``: the element is inside a decision or a conditional step of a flow (rule set 2),
+        so it may not run (``pprl:mayNotRun``)."""
         g, add = self.graph, self.add
+        if optional:
+            add(iri, PPRL.mayNotRun, Literal(True))
+        kind = next((c.get("value") for c in element.get("value") or [] if isinstance(c, dict) and c.get("idShort") == "Kind"), None)
+        optional = optional or (element.get("modelType") == "SubmodelElementCollection" and kind in ("decision", "conditional"))
         model_type = element.get("modelType", "")
         add(iri, RDF.type, PA.Element)
         add(iri, PA.modelType, Literal(model_type))
@@ -97,7 +104,7 @@ class Projection:
         for i, child in enumerate(element.get(member) or [] if member else []):
             here = URIRef(f"{iri}/{child.get('idShort') or i}")
             g.add((iri, PA.element, here))
-            self.element(here, child, classes, ancestors | classes, model_type == "SubmodelElementList")
+            self.element(here, child, classes, ancestors | classes, model_type == "SubmodelElementList", optional)
         for kind, term in VARIABLES if model_type == "Operation" else ():
             for variable in element.get(kind) or []:
                 child = variable["value"]
