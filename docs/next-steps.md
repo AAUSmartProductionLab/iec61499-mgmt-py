@@ -238,6 +238,8 @@ history in the AAS; registration on the lab's AAS server; the repository split a
 | A change that needs a restart (a sequence changed, a skill removed) is refused. For the baseline a boot file is needed, and the AAS does not hold the wiring: is the vendor's boot file part of what is delivered? | B2 |
 | Which changes does the paper show: a constant and a new skill, or more? | B1 |
 | Where do F1 to F3 go in the order of what is cut if time runs short? | F |
+| **Waiting for you:** the Control Configuration in the AAS, in the backend, or split (proposal of 27 Oct: [control-configuration.md](control-configuration.md)) | F, the paper's AAS figures |
+| **Waiting for you:** the skill editor's overview and skill view, branches in a skill (rule set 2), recommendations from the ontology and their backend: what before the paper (proposal of 27 Oct: [skill-authoring.md](skill-authoring.md)) | A2b, F3, B1 |
 | Two components of one kind in a module (the two cameras) need one skill name twice | later |
 | What a component's AAS holds besides its skills (a nameplate?) | later |
 | Step values are also in the interface description; leave them out there? Operational Data in groups? | later |
