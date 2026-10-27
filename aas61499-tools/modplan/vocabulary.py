@@ -57,6 +57,12 @@ class Vocabulary:
         """The state that holds once a result is known (pprl:knownWhen), as goals."""
         return self._stated(LAB[result], "Pre", PPRL.knownWhen)
 
+    def results(self, capability: str) -> list[str]:
+        """The properties describing ``capability`` that say when they are known: what a requirement
+        can ask of it as a result (a fill weight)."""
+        return sorted(local(p) for p in self.graph.subjects(LAB.characterizes, LAB[capability])
+                      if self.graph.value(p, PPRL.knownWhen) is not None)
+
     def realized(self, skill_type: str) -> str | None:
         """The capability of its component a primitive of the type realizes (lab:realizes)."""
         found = self.graph.value(SKILLS[skill_type], LAB.realizes)
