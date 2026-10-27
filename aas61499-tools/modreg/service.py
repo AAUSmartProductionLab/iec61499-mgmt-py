@@ -21,6 +21,8 @@ HTTP (JSON):
     DELETE /profiles/<idShort>  forget a resource (and remove its AAS from the server)
     POST   /capabilities/<shell>  derive a module's offered capabilities anew from its skills, on the
                                   AAS server, and put them back (the skill editor, after saving)
+    GET    /build/<idShort>     the record of what was built on a module (a Control Configuration
+    PUT    /build/<idShort>     submodel, kept here and not in the AAS: ARSO 0.10); modsync writes it
     GET    /health
 """
 from __future__ import annotations
@@ -71,10 +73,8 @@ class Registration:
 
 
 def digest(profile: dict) -> str:
-    """SHA-256 of what a profile says, which the time it was read at is not part of."""
-    said = {**profile, "control_configuration": {k: v for k, v in (profile.get("control_configuration") or {}).items()
-                                                 if k != "ReadAt"}}
-    return hashlib.sha256(json.dumps(said, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    """SHA-256 of what a profile says."""
+    return hashlib.sha256(json.dumps(profile, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
 def b64(identifier: str) -> str:
@@ -204,6 +204,13 @@ class Registry:
                              if q["type"] in ("Derived", "Availability")}})
         return {"shell": derived["assetAdministrationShells"][0]["idShort"], "stored": stored, "capabilities": found}
 
+    def keep_build(self, id_short: str, record: dict) -> None:
+        """Keep the record of what was built on a module (``modsync``'s record)."""
+        if not isinstance(record, dict) or record.get("modelType") != "Submodel":
+            raise Refused(400, "read", ["a record of what was built is a Control Configuration submodel"])
+        with self.lock:
+            self.file(id_short, "build").write_text(json.dumps(record, indent=1), encoding="utf-8")
+
     def registrations(self) -> list[dict]:
         return [json.loads(p.read_text(encoding="utf-8")) for p in sorted(self.folder.glob("*.registration.json"))]
 
@@ -216,7 +223,7 @@ class Registry:
                 done = self.server.remove(env) if self.server is not None else []
             except RuntimeError as e:
                 raise Refused(502, "publish", [str(e)]) from e
-            for kind in ("profile", "aas", "registration"):
+            for kind in ("profile", "aas", "registration", "build"):
                 self.file(id_short, kind).unlink(missing_ok=True)
         return done
 
@@ -235,6 +242,13 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def body(self):
+        length = int(self.headers.get("Content-Length") or 0)
+        try:
+            return json.loads(self.rfile.read(length))
+        except ValueError as e:
+            raise Refused(400, "read", [f"not JSON: {e}"]) from e
+
     def route(self, method: str):
         url = urllib.parse.urlsplit(self.path)
         parts = [p for p in url.path.split("/") if p]
@@ -247,14 +261,17 @@ class Handler(BaseHTTPRequestHandler):
                                          "aas_server": r.server.url if r.server else None})
             if method == "POST" and parts[:1] == ["capabilities"] and len(parts) == 2:
                 return self.answer(200, self.registry.derive(urllib.parse.unquote(parts[1])))
+            if parts[:1] == ["build"] and len(parts) == 2:
+                if method == "GET":
+                    found = self.registry.read(parts[1], "build")
+                    return self.answer(200, found) if found is not None else self.answer(404, {"error": f"no record of {parts[1]}"})
+                if method == "PUT":
+                    self.registry.keep_build(parts[1], self.body())
+                    return self.answer(200, {"kept": parts[1]})
             if parts[:1] != ["profiles"] or len(parts) > 3:
                 return self.answer(404, {"error": f"no {url.path}"})
             if method == "POST" and len(parts) == 1:
-                length = int(self.headers.get("Content-Length") or 0)
-                try:
-                    profile = json.loads(self.rfile.read(length))
-                except ValueError as e:
-                    raise Refused(400, "read", [f"not JSON: {e}"]) from e
+                profile = self.body()
                 if query.get("check", ["0"])[0] not in ("0", "false", ""):
                     return self.answer(200, {**self.registry.examine(profile)[1].body(), "checked_only": True})
                 registration = self.registry.register(profile)
@@ -277,13 +294,16 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):         # noqa: N802
         self.route("POST")
 
+    def do_PUT(self):          # noqa: N802
+        self.route("PUT")
+
     def do_DELETE(self):       # noqa: N802
         self.route("DELETE")
 
     def do_OPTIONS(self):      # noqa: N802 (a browser asks before it posts JSON to another origin)
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 

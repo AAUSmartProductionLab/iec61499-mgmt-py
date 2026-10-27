@@ -64,6 +64,34 @@
      "value": [
       {
        "modelType": "Property",
+       "idShort": "Deployment",
+       "description": [
+        {
+         "language": "en",
+         "text": "Built: the resource's program carries the skill out; Described: the skill is in the AAS only and is offered after a reconfiguration."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "valueType": "xs:string"
+      },
+      {
+       "modelType": "Property",
        "idShort": "SemanticId",
        "description": [
         {
@@ -6718,6 +6746,34 @@
        "valueType": "xs:string"
       }
      ]
+    },
+    {
+     "modelType": "Property",
+     "idShort": "RuleSet",
+     "description": [
+      {
+       "language": "en",
+       "text": "The rule set the resource's program is built by, named by its URI. It says that the program can be read back by the rules and that a described skill can be built online; a tool that does not know the rule set does not change the program."
+      }
+     ],
+     "qualifiers": [
+      {
+       "type": "SMT/Cardinality",
+       "valueType": "xs:string",
+       "kind": "TemplateQualifier",
+       "value": "ZeroToOne",
+       "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+         {
+          "type": "GlobalReference",
+          "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+         }
+        ]
+       }
+      }
+     ],
+     "valueType": "xs:string"
     },
     {
      "modelType": "SubmodelElementCollection",

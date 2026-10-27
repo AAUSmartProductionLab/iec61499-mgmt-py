@@ -11,14 +11,18 @@ from:
   primitives it runs in order, what each step is handed (a constant, or a parameter of the skill)
   and which step gives a result;
 - the steps of the module's own Reset and Stop (skills of the kind ModuleControl) are the procedures;
-- the Control Configuration records what was built: instance, block type and type hash.
+- a skill's Deployment says whether the program carries it out (Built) or it is only described.
+
+What was built in detail (instance, block type and type hash of every skill and step, the change
+log, where the module is managed) is the integrator's record, kept outside the AAS (ARSO 0.10): a
+Control Configuration submodel in a folder or at the registration service (``load_record``).
 
 ``described`` gives that as a module spec without wiring, ``differences`` compares it with the
 program FORTE reports (read by the module rules, ``structure``), and ``reconfigure`` applies what
 the rules allow online: a constant, a parameter's default or limits, and a module level skill
 that is described but not in the program. A reconfiguration is therefore a change to the AAS;
-this module carries it into the program. ``record`` writes what was built back into the Control
-Configuration.
+this module carries it into the program. ``record`` writes what was built: Deployment and the
+interface of a built skill into the AAS, the rest into the record.
 
 The AASs are read as plain JSON (an environment: shells and submodels), as an AAS server gives
 them.
@@ -31,6 +35,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 
@@ -195,13 +200,12 @@ def load(source: str, shell: str | None = None) -> tuple[dict, list[dict]]:
 def store(source: str, module: dict, loaded: dict | None = None) -> str:
     """Put the recorded AAS of the module back where it came from; returns where it went. On a
     server that is every submodel the record changed against ``loaded`` (the AAS as it was read):
-    the Control Configuration and, when a built skill got its interface, the interface description,
-    the data points, the mappings and the skills. Without ``loaded``, the Control Configuration."""
+    the skills (Deployment) and, when a built skill got its interface, the interface description,
+    the data points and the mappings; the capabilities. Without ``loaded``, every submodel."""
     shell = module["assetAdministrationShells"][0]
     if is_server(source):
         before = {s["id"]: s for s in (loaded or {}).get("submodels", [])}
-        changed = [s for s in module["submodels"]
-                   if (s != before.get(s["id"]) if loaded else s["idShort"] == "ControlConfiguration")]
+        changed = [s for s in module["submodels"] if not loaded or s != before.get(s["id"])]
         for model_ in changed:
             url = f"{source.rstrip('/')}/submodels/{b64(model_['id'])}"
             request = urllib.request.Request(url, json.dumps(model_).encode(), method="PUT",
@@ -214,11 +218,57 @@ def store(source: str, module: dict, loaded: dict | None = None) -> str:
     return str(path)
 
 
-def endpoint(module: dict) -> tuple[str | None, int | None]:
-    """Where the Control Configuration says the module's FORTE is managed: (host, port)."""
-    stated_ = (at(submodel(module, "ControlConfiguration"), "Runtime", "ManagementEndpoint") or {}).get("value") or ""
+# The integrator's record of what was built ---------------------------------------------------------
+#
+# A Control Configuration submodel (ARSO's module) per module, kept outside its AAS: in a folder as
+# ``<idShort>.json``, or at the registration service (``modreg serve``: ``/build/<idShort>``).
+
+CONFIGURATION = f"{BASE}/ARSO/ControlConfiguration/1/0/Submodel"
+
+
+def record_url(where: str, module: dict) -> str:
+    return f"{where.rstrip('/')}/build/{module['assetAdministrationShells'][0]['idShort']}"
+
+
+def load_record(where: str | None, module: dict) -> dict | None:
+    """The record of what was built for ``module``; None if there is none (yet)."""
+    if not where:
+        return None
+    if is_server(where):
+        try:
+            return fetch(record_url(where, module))
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                return None
+            raise
+    path = Path(where) / f"{module['assetAdministrationShells'][0]['idShort']}.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+
+def store_record(where: str, module: dict, record_: dict) -> str:
+    """Keep the record of ``module``; returns where it went."""
+    if is_server(where):
+        request = urllib.request.Request(record_url(where, module), json.dumps(record_).encode(), method="PUT",
+                                         headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(request, timeout=30):
+            pass
+        return record_url(where, module)
+    path = Path(where) / f"{module['assetAdministrationShells'][0]['idShort']}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(record_, indent=1), encoding="utf-8")
+    return str(path)
+
+
+def endpoint(record_: dict | None) -> tuple[str | None, int | None]:
+    """Where the record says the module's FORTE is managed: (host, port)."""
+    stated_ = (at(record_, "Runtime", "ManagementEndpoint") or {}).get("value") or ""
     host, _, port = stated_.rpartition(":")
     return (host or None, int(port)) if port.isdigit() else (stated_ or None, None)
+
+
+def deployment(skill: dict) -> str | None:
+    """What a skill's Deployment says: Built, Described, or None (not stated: built)."""
+    return (at(skill, "Deployment") or {}).get("value")
 
 
 # What the AAS describes ------------------------------------------------------------------------
@@ -302,9 +352,6 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
         return found
 
     composites, procedures = {}, {}
-    # A skill that is described and not built yet has no action that calls it; it gets one when it
-    # is built. One that is built is offered if a command of it names its action.
-    built = {path.split(".")[0] for path, _, _ in instances(module) if path}
     for skill in skills_in(skills_):
         kinds, steps_ = also(skill), at(skill, "Start", "Steps")
         if CONTROL in kinds:
@@ -322,15 +369,17 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
             parameters={v["idShort"]: parameter(v) for v in variables(start, "inputVariables")},
             execute=execute, stop=sequence(at(skill, "Stop", "Steps"), None),
             results={r: results[r] for r in declared_ if r in results},
-            offered=at(skill, "Start", "InterfaceReference") is not None or skill["idShort"] not in built)
+            # A skill that is described and not built yet has no action that calls it; it gets one
+            # when it is built. One that is built is offered if a command of it names its action.
+            offered=at(skill, "Start", "InterfaceReference") is not None or deployment(skill) != "Built")
     return ModuleSpec.model_construct(module=name, package=package, opcua_root=opcua_root, equipment=equipment,
                                       skills=skills, composites=composites, procedures=procedures)
 
 
-def instances(module: dict) -> list[tuple[str, str, str | None]]:
-    """What the Control Configuration records as built: (instance, block type, type hash or None)."""
+def instances(record_: dict | None) -> list[tuple[str, str, str | None]]:
+    """What the record says was built: (instance, block type, type hash or None)."""
     found = []
-    for instance in children(at(submodel(module, "ControlConfiguration"), "Instances")):
+    for instance in children(at(record_, "Instances")):
         get = lambda n: (at(instance, n) or {}).get("value")  # noqa: E731
         found.append((get("InstancePath"), get("FBType"), get("TypeHash")))
     return found
@@ -370,8 +419,10 @@ class Reading:
     differences: Differences
 
 
-def read(client: Client, host: str, port: int, module: dict, components: list[dict], resource: str = "RES") -> Reading:
-    """Read the running program and compare it with what the AASs describe."""
+def read(client: Client, host: str, port: int, module: dict, components: list[dict], resource: str = "RES",
+         record_: dict | None = None) -> Reading:
+    """Read the running program and compare it with what the AASs describe and, if there is one, with
+    what the record says was built."""
     snap = read_structure(client, host, port, resource)
     if snap.empty:
         raise NotDescribed(f"{host}:{port} runs no program")
@@ -390,7 +441,7 @@ def read(client: Client, host: str, port: int, module: dict, components: list[di
                   for n, s in wanted["skills"].items()}
     running = structure(snap.fbs, snap.connections, value, primitives)
     found = differences(wanted, running, spec)
-    for path, typ, digest in instances(module):
+    for path, typ, digest in instances(record_):
         if path.split(".")[0] in found.create:
             continue                                      # of a skill that is still to be built
         if path not in snap.fbs:
@@ -502,7 +553,8 @@ def amended(boot: str, commands: list[Command]) -> str:
 
 
 def reconfigure(client: Client, host: str, port: int, module: dict, components: list[dict], deployer=None,
-                force: bool = False, dry_run: bool = False, resource: str = "RES") -> tuple[list[str], Reading]:
+                force: bool = False, dry_run: bool = False, resource: str = "RES",
+                record_: dict | None = None) -> tuple[list[str], Reading]:
     """Bring the running module to what its AAS describes, online; returns what was done (or would
     be, with ``dry_run``) and the module as read afterwards.
 
@@ -511,7 +563,7 @@ def reconfigure(client: Client, host: str, port: int, module: dict, components: 
     nothing that runs and is created in any state. The change is verified by reading the program
     back against the AAS, then added to the module's boot file (``deployer``: where that file is).
     """
-    before = read(client, host, port, module, components, resource)
+    before = read(client, host, port, module, components, resource, record_)
     found = before.differences
     if found.empty:
         return ["the program is what the AAS describes, nothing to do"], before
@@ -530,7 +582,7 @@ def reconfigure(client: Client, host: str, port: int, module: dict, components: 
         guard(client, before.snapshot)
     for command in commands:
         client.execute(command)
-    after = read(client, host, port, module, components, resource)
+    after = read(client, host, port, module, components, resource, record_)
     lacks = [n for n in app.fbs if n not in after.snapshot.fbs]
     if not after.differences.empty or lacks:
         raise RuntimeError("The module differs from its AAS after the change: "
@@ -550,11 +602,20 @@ def prop(id_short: str, value: str) -> dict:
     return {"idShort": id_short, "modelType": "Property", "valueType": "xs:string", "value": value}
 
 
+def new_record(module: dict) -> dict:
+    """An empty record for a module that has none yet."""
+    return {"idShort": "ControlConfiguration", "modelType": "Submodel",
+            "id": f"{module['assetAdministrationShells'][0]['id']}/submodels/ControlConfiguration",
+            "semanticId": {"type": "ExternalReference", "keys": [{"type": "GlobalReference", "value": CONFIGURATION}]},
+            "submodelElements": []}
+
+
 def record(module: dict, reading: Reading, done: list[str] | None = None, trigger: str = "",
-           components: list[dict] | None = None) -> dict:
-    """The module's AAS with its Control Configuration saying what runs: every described skill and
-    step with its instance, block type and the hash FORTE reports, when it was read, and (with
-    ``done``, what a reconfiguration did) one more entry in the change log.
+           components: list[dict] | None = None, record_: dict | None = None) -> tuple[dict, dict]:
+    """What runs, written down: the module's AAS with every module level skill the program carries
+    out marked Built, and the record (``record_``, or a new one) with every described skill and step,
+    its instance, block type and the hash FORTE reports, where the module is managed, when it was
+    read, and (with ``done``, what a reconfiguration did) one more entry in the change log.
 
     A skill that was built and has no action of the interface yet (it was described, then created
     online) also gets its interface: actions, properties, data points and mappings, written by the
@@ -562,14 +623,19 @@ def record(module: dict, reading: Reading, done: list[str] | None = None, trigge
     stays without them). With the AASs of the ``components``, the capabilities the module offers
     are derived anew from its skills (``modreg.offer.capabilities``)."""
     module = copy.deepcopy(module)
-    config, skills_ = submodel(module, "ControlConfiguration"), submodel(module, "Skills")
-    if config is None:
-        raise NotDescribed("the module's AAS has no Control Configuration")
+    config = copy.deepcopy(record_) if record_ is not None else new_record(module)
+    skills_ = submodel(module, "Skills")
     snap, spec = reading.snapshot, reading.spec
-    listed = at(config, "Instances")
-    if listed is None:
-        listed = {"idShort": "Instances", "modelType": "SubmodelElementCollection", "value": []}
-        config["submodelElements"].append(listed)
+    elements = config.setdefault("submodelElements", [])
+
+    def element(id_short: str, empty: dict) -> dict:
+        found = at(config, id_short)
+        if found is None:
+            found = {"idShort": id_short, **empty}
+            elements.append(found)
+        return found
+
+    listed = element("Instances", {"modelType": "SubmodelElementCollection", "value": []})
     known = {(at(i, "InstancePath") or {}).get("value"): i for i in children(listed)}
 
     def note(path: str, keys: list[str]):
@@ -581,27 +647,37 @@ def record(module: dict, reading: Reading, done: list[str] | None = None, trigge
             {"idShort": "Skill", "modelType": "ReferenceElement", "value": {"type": "ModelReference", "keys": [
                 {"type": "Submodel", "value": skills_["id"]},
                 *[{"type": "SubmodelElementCollection", "value": k} for k in keys]]}}]}
-        listed["value"].append(known[path])
+        listed.setdefault("value", []).append(known[path])
 
     for name, comp in spec.composites.items():
         note(f"{name}.Control", skill_path(skills_, name))
         for command, branch, steps_ in (("Start", "Execute", comp.execute), ("Stop", "Stop", comp.stop)):
             for k, step in enumerate(steps_):
                 note(f"{name}.{branch}.{step.name}", [*skill_path(skills_, name), command, "Steps", f"Step_{k:04d}"])
+        # The program carries it out: the AAS says so.
+        if f"{name}.Control" in snap.fbs:
+            held = at(skills_, *skill_path(skills_, name))
+            stated_ = at(held, "Deployment")
+            if stated_ is None:
+                held.setdefault("value", []).insert(0, prop("Deployment", "Built"))
+            else:
+                stated_["value"] = "Built"
     for path, entry in known.items():                     # every recorded instance: what runs there now
         if (typ := snap.fbs.get(path)) is not None:
             entry["value"] = [e for e in entry["value"] if e["idShort"] not in ("FBType", "TypeHash")]
             entry["value"][1:1] = [prop("FBType", typ), *([prop("TypeHash", snap.hashes[typ])] if snap.hashes.get(typ) else [])]
+    runtime = element("Runtime", {"modelType": "SubmodelElementCollection", "value": []})
+    managed = at(runtime, "ManagementEndpoint")
+    if managed is None:
+        runtime.setdefault("value", []).append(prop("ManagementEndpoint", f"{snap.host}:{snap.port}"))
+    else:
+        managed["value"] = f"{snap.host}:{snap.port}"
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     for id_short, value in (("ReadAt", snap.read_at or now), ("SyncState", "InSync" if reading.differences.empty else "Drift")):
-        if (element := at(config, id_short)) is not None:
-            element["value"] = value
+        element(id_short, prop(id_short, value))["value"] = value
     if done:
-        log = at(config, "ChangeLog")
-        if log is None:
-            log = {"idShort": "ChangeLog", "modelType": "SubmodelElementList", "orderRelevant": True,
-                   "typeValueListElement": "SubmodelElementCollection", "value": []}
-            config["submodelElements"].append(log)
+        log = element("ChangeLog", {"modelType": "SubmodelElementList", "orderRelevant": True,
+                                    "typeValueListElement": "SubmodelElementCollection", "value": []})
         log["value"].append({"modelType": "SubmodelElementCollection", "value": [
             prop("Time", now), prop("Trigger", trigger or "the AAS describes what the program did not have"),
             prop("Result", "; ".join(done))]})
@@ -610,10 +686,10 @@ def record(module: dict, reading: Reading, done: list[str] | None = None, trigge
     try:
         from modreg.offer import capabilities, offered      # needs the registration extra (aas-model, rdflib)
     except ImportError:
-        return module
+        return module, config
     if reachable:
         module = offered(module, spec, reachable)
     if components is not None:
         # What the module offers follows from its skills: one that is built now is offered now.
         module = capabilities(module, components)
-    return module
+    return module, config

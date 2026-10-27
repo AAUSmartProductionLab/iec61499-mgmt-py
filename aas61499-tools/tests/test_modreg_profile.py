@@ -89,6 +89,11 @@ def described(spec, target="pi", *more, **options) -> dict[str, dict]:
     return {env["assetAdministrationShells"][0]["idShort"]: env for env in envs}
 
 
+def record(spec, target="pi", *more, **options) -> dict:
+    """The record of what was built on a module (a Control Configuration submodel, outside its AAS)."""
+    return profiles.describe_with_record(spec, target, *more, **options)[1]
+
+
 @pytest.fixture(scope="module")
 def stoppering_all(stoppering):
     return described(stoppering[0], spec_path="cell/modules/stoppering.yaml")
@@ -152,14 +157,14 @@ def test_a_skill_is_its_commands(stoppering, stoppering_all):
     described_ = submodel(stoppering_all["StopperingModuleAAS"], "Skills")
     # The module's own skills are those it composes and its own commands (the primitives are with
     # their components), then the errors they report: a property each, its value the code.
-    assert names(described_) == [*spec.composites, *CONTROL, "Errors"] == ["Stoppering", *CONTROL, "Errors"]
+    assert names(described_) == [*spec.composites, *CONTROL, "RuleSet", "Errors"] == ["Stoppering", *CONTROL, "RuleSet", "Errors"]
     assert described_["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/Skills/1/0/Submodel"
     timeout = at(described_, "Errors", "Timeout")
     assert (timeout["modelType"], timeout["valueType"], timeout["value"]) == ("Property", "xs:integer", "3")
     stoppering_ = at(described_, "Stoppering")
     # A skill, what kind of skill, and what it does: the element's semantic id, then its supplemental ones.
     assert ids(stoppering_) == [f"{BASE}/skill", f"{BASE}/skill/Composite", f"{BASE}/skills/Stoppering"]
-    assert names(stoppering_) == ["Start", "Stop", "Abort", "Reset"]
+    assert names(stoppering_) == ["Deployment", "Start", "Stop", "Abort", "Reset"]
     for command in ("Start", "Stop", "Abort", "Reset"):
         held = at(stoppering_, command)
         assert ids(held) == [f"{BASE}/skill/{command}"]                          # the same on every skill
@@ -296,21 +301,22 @@ def test_a_skill_the_module_does_not_offer_has_a_start_nothing_calls():
     # It still runs as a step, and the block that is that step is known.
     step = children(at(submodel(found["FillingModuleAAS"], "Skills"), "Dispensing", "Start", "Steps"))[1]
     assert resolve(list(found.values()), at(step, "Skill")["value"]) is pump
-    instances = at(submodel(found["FillingModuleAAS"], "ControlConfiguration"), "Instances")
+    assert "ControlConfiguration" not in names({"submodelElements": found["FillingModuleAAS"]["submodels"]})
+    instances = at(record(ModuleSpec.model_validate(data)), "Instances")
     assert "Dispense" not in names(instances) and "Dispensing_Execute_Dispense" in names(instances)
 
 
 def test_steps_publish_like_skills_where_the_program_puts_them():
     """A step's State, ErrorID, parameters and results are in the interface, at the path its
-    instance publishes them in the generated program; which instance a step is, is in the Control
-    Configuration."""
+    instance publishes them in the generated program; which instance a step is, is in the record of
+    what was built."""
     spec = load(SPECS / "filling.yaml")
     env = model.build(profiles.describe(spec, "pi"))
     values = expected_values(spec, expected(spec, "pi"))
     dispensing = at(submodel(env, "Skills"), "Dispensing")
     steps = [*children(at(dispensing, "Start", "Steps")), *children(at(dispensing, "Stop", "Steps"))]
     assert len(steps) == len(spec.composites["Dispensing"].execute) + len(spec.composites["Dispensing"].stop)
-    instances = {i["idShort"]: i for i in children(at(submodel(env, "ControlConfiguration"), "Instances"))}
+    instances = {i["idShort"]: i for i in children(at(record(spec), "Instances"))}
     by_step = {id(resolve(env, at(i, "Skill")["value"])): i for i in instances.values()}
     properties = at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", "properties")
     for step in steps:
@@ -369,7 +375,7 @@ def test_the_modules_own_commands_are_skills_of_a_kind_of_their_own(stoppering, 
     assert {"PackMLState", "OccupationState", "Procedure_Resetting_RetractPiston_State", "Procedure_Stopping_Home_ErrorID"} <= set(names(data))
     values = expected_values(spec, expected(spec, "pi"))
     assert values["Resetting.RetractPiston.UaPath"].strip('"') == "/Procedures/Resetting/RetractPiston"
-    instance = at(submodel(env, "ControlConfiguration"), "Instances", "Resetting_RetractPiston")
+    instance = at(record(spec), "Instances", "Resetting_RetractPiston")
     assert resolve(env, at(instance, "Skill")["value"]) is children(at(skills, "Reset", "Start", "Steps"))[0]
 
 
@@ -543,9 +549,13 @@ def test_a_module_that_was_read_shows_what_runs_there():
     drift = compare(app, values, snap, set())
     found = described(spec, "pi", snap, drift, "cell/modules/stoppering.yaml", "opc.tcp://192.168.0.50:4840")
     env = found["StopperingModuleAAS"]
-    config = submodel(env, "ControlConfiguration")
+    config = record(spec, "pi", snap, drift, "cell/modules/stoppering.yaml", "opc.tcp://192.168.0.50:4840")
     assert at(config, "SyncState")["value"] == "Drift" and len(names(at(config, "Differences"))) == 1
     assert at(config, "Rules")["value"] == f"{BASE}/rules/module/1"          # docs/module-rules.md
+    # The AAS states the rule set and that its module level skills are built; the rest is the record's.
+    assert at(submodel(env, "Skills"), "RuleSet")["value"] == f"{BASE}/rules/module/1"
+    assert at(submodel(env, "Skills"), "Stoppering", "Deployment")["value"] == "Built"
+    assert "ControlConfiguration" not in [sm["idShort"] for sm in env["submodels"]]
     assert at(config, "Runtime", "ManagementEndpoint")["value"] == "192.168.0.50:61499"
     assert len(names(at(config, "Types"))) == len(set(app.fbs.values()))
     # A parameter shows the value the module runs with; a block the type and hash it has there.

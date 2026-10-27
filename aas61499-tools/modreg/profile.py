@@ -20,9 +20,13 @@ with (its manifest), ``model.environment`` into the AAS.
   decimal data points. A data point means what the Operation variable it shows means (the same
   semantic id); nothing in Skills refers to it.
 - **Hierarchical Structures**: the components, each with an AAS of its own, found by its asset id.
-- **Control Configuration**: spec, target and program digest, and which block of the program each
-  skill and each step is (Instances); from a module that was read also the synchronisation state,
-  the differences and the type hashes.
+- **Skills** also say which rule set the program is built by (RuleSet) and, per module level
+  skill, that the program carries it out (Deployment Built).
+
+What was built is not part of the AAS (ARSO 0.10): ``describe_with_record`` also gives the
+integrator's record, a Control Configuration submodel kept outside the AAS: spec, target and
+program digest, which block of the program each skill and each step is (Instances), and from a
+module that was read the synchronisation state, the differences and the type hashes.
 """
 from __future__ import annotations
 
@@ -446,6 +450,9 @@ class Describer:
         # type) are said beside it, as supplemental semantic ids.
         skill = model.ModuleSkill(description=decl.description or f"Skill {name}")
         skill.supplemental_semantic_ids = [f"{COMMAND}/{'Composite' if composite else 'Primitive'}", skill_id(name)]
+        if composite:
+            # Generated from the spec, so the program carries it out.
+            skill.Deployment = arso.Deployment(**prop("Built"))
 
         def told(command: str, about: str, **more):
             says = [f"{COMMAND}/{command}", skill_id(name)]
@@ -650,6 +657,7 @@ class Describer:
             put(asset.skills.Skill, name, made)
         for held in (asset, *parts.values()):
             self.errors(held.skills.Errors)
+        asset.skills.RuleSet = arso.RuleSet(**prop(RULES))
         nodes = {}
         for item, eq in spec.equipment.items():
             # A component is found by its asset id; an item no skill moves is only a part.
@@ -672,7 +680,6 @@ class Describer:
         self.interface_and_data(asset)
         asset.capability_description = self.capabilities()
         asset.asset_interfaces_mapping_configuration = self.mappings()
-        asset.control_configuration = self.control_configuration()
         return [(ModuleTypeAAS.model_validate(asset.model_dump()), asset_id),
                 *[(ComponentTypeAAS.model_validate(part.model_dump()), component_identity(spec, item)[2])
                   for item, part in parts.items()]]
@@ -743,14 +750,14 @@ _OFFERS: dict[str, tuple[Offer, ...]] = {}         # spec (as JSON) -> what its 
 
 
 def lean(spec: ModuleSpec) -> list[dict]:
-    """The AASs of the module and its components with only what the derivation reads, the Skills
-    and the Control Configuration: the other submodels (the interface above all) take seconds."""
+    """The AASs of the module and its components with only what the derivation reads, the Skills:
+    the other submodels (the interface above all) take seconds."""
     describer = Describer(spec, next(iter(spec.targets)), None, None, None, None)
     describer.derive = False
     envs = []
     for asset, asset_id in describer.build():
         kept = asset.model_copy(update={f: None for f in type(asset).model_fields
-                                        if f not in ("skills", "control_configuration") and hasattr(getattr(asset, f), "id_short")})
+                                        if f != "skills" and hasattr(getattr(asset, f), "id_short")})
         model.inject_ids(kept)
         envs.append(model.environment(kept, asset_id))
     return envs
@@ -762,6 +769,25 @@ def offers(spec: ModuleSpec) -> list[Offer]:
     if key not in _OFFERS:
         _OFFERS[key] = tuple(derived_offers(project(lean(spec), structure=False)))
     return list(_OFFERS[key])
+
+
+def describe_with_record(spec: ModuleSpec, target: str, snap: Snapshot | None = None, drift: Drift | None = None,
+                         spec_path: str | None = None, opcua: str | None = None) -> tuple[list[dict], dict]:
+    """The profiles of the module (the first) and of its components, and the integrator's record of
+    what was built (``record``); with a snapshot, values, hashes and the sync state are the running ones."""
+    describer = Describer(spec, target, snap, drift, spec_path, opcua)
+    built = describer.build()
+    return [model.profile(asset, global_asset_id=asset_id) for asset, asset_id in built], record(describer, built[0][0])
+
+
+def record(describer: Describer, module: ModuleTypeAAS) -> dict:
+    """The record of what was built, as a Control Configuration submodel (ARSO's module), kept outside
+    the module's AAS: the AAS of ``module`` with only that submodel, and that submodel taken out."""
+    holder = module.model_copy(update={f: None for f in type(module).model_fields if hasattr(getattr(module, f), "id_short")})
+    holder.control_configuration = describer.control_configuration()
+    model.inject_ids(holder)
+    env = model.environment(holder)
+    return next(sm for sm in env["submodels"] if sm["idShort"] == "ControlConfiguration")
 
 
 def describe_all(spec: ModuleSpec, target: str, snap: Snapshot | None = None, drift: Drift | None = None,

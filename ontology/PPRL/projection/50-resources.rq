@@ -1,6 +1,6 @@
 # A shell with skills or offered capabilities describes a resource: it provides the skills and the
-# capabilities its own submodels describe. A skill is built when a block of the program carries it
-# out (ARSO Control Configuration: an instance whose Skill refers to the skill).
+# capabilities its own submodels describe. A skill whose Deployment is Described (ARSO 0.10) is in
+# the AAS only: the program does not carry it out yet, so it is offered after a reconfiguration.
 PREFIX pa:   <https://w3id.org/2025/pprl/aas#>
 PREFIX pprl: <https://w3id.org/2025/pprl#>
 PREFIX css:  <http://www.w3id.org/hsu-aut/css#>
@@ -8,9 +8,7 @@ PREFIX css:  <http://www.w3id.org/hsu-aut/css#>
 CONSTRUCT {
   ?shell pprl:describes ?resource .
   ?resource a css:Resource ; css:providesSkill ?skill ; css:providesCapability ?capability .
-  ?instanceElement pprl:describes ?instance .
-  ?instance a pprl:FBInstance .
-  ?built pprl:implementedBy ?instance .
+  ?described a pprl:DescribedSkill .
 }
 WHERE {
   {
@@ -28,14 +26,9 @@ WHERE {
   }
   UNION
   {
-    ?submodel pa:semanticId ?configuration ; pa:element ?instances .
-    FILTER(STRSTARTS(STR(?configuration), "https://smartproductionlab.aau.dk/ARSO/ControlConfiguration/"))
-    ?instances pa:idShort "Instances" ; pa:element ?instanceElement .
-    ?instanceElement pa:element ?refers .
-    ?refers pa:idShort "Skill" ; pa:refersTo ?skillElement .
-    ?skillElement pprl:describes ?built .
-    ?built a css:Skill .
-    BIND(IRI(CONCAT(STR(?instanceElement), "#it")) AS ?instance)
+    ?skillElement pprl:describes ?described ; pa:element ?deployment .
+    ?described a css:Skill .
+    ?deployment pa:idShort "Deployment" ; pa:value "Described" .
   }
   BIND(IRI(CONCAT(STR(?shell), "#it")) AS ?resource)
 }

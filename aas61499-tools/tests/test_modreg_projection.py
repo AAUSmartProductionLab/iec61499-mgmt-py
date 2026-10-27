@@ -79,7 +79,8 @@ def test_offered_capabilities_are_specified_and_realized_and_provided(filling):
     assert (URIRef(f"{BASE}/aas/FillingPumpAAS#it"), CSS.providesSkill, skill("FillingPumpAAS", "Dispense")) in filling
 
 
-def test_a_skill_the_program_carries_out_is_implemented_by_a_block(filling):
-    built = filling.value(skill("FillingModuleAAS", "Dispensing"), PPRL.implementedBy)
-    assert built == URIRef(f"{BASE}/aas/FillingModuleAAS/submodels/ControlConfiguration/Instances/Dispensing_Control#it")
-    assert (built, RDF.type, PPRL.FBInstance) in filling
+def test_a_skill_the_program_carries_out_is_not_only_described(filling):
+    """Deployment Built (ARSO 0.10): the program carries Dispensing out; only Described marks a
+    skill that is offered after a reconfiguration."""
+    assert (skill("FillingModuleAAS", "Dispensing"), RDF.type, PPRL.DescribedSkill) not in filling
+    assert not set(filling.subjects(RDF.type, PPRL.DescribedSkill))

@@ -11,6 +11,11 @@ from aas_pydantic import (
 from aas_pydantic.aas_model import AasIdString
 from aas_model.submodel_templates import SkillOperation as DelegatedOperation
 
+class Deployment(Property):
+    id_short: AasIdString = "Deployment"
+    description: str = "Built: the resource's program carries the skill out; Described: the skill is in the AAS only and is offered after a reconfiguration."
+    value_type: str = "xs:string"
+
 class SemanticId(Property):
     id_short: AasIdString = "SemanticId"
     description: str = "What the skill does, as the short form of older AASs states it."
@@ -299,6 +304,7 @@ class StateMachine(Property):
 class Skill(SubmodelElementCollection):
     semantic_id: str = "https://smartproductionlab.aau.dk/skill"
     description: str = "A named skill, an element of the Skills submodel itself, recognised by its semanticId (no idShort \u2014 the skill name is user-defined)."
+    Deployment: Optional[Deployment_t] = None
     SemanticId: Optional[SemanticId_t] = None
     Start: Optional[Start_t] = None
     Stop: Optional[Stop_t] = None
@@ -308,6 +314,11 @@ class Skill(SubmodelElementCollection):
     SkillOperation: Dict[str, SkillOperation_t] = {}
     Contract: Optional[Contract_t] = None
     StateMachine: Optional[StateMachine_t] = None
+
+class RuleSet(Property):
+    id_short: AasIdString = "RuleSet"
+    description: str = "The rule set the resource's program is built by, named by its URI. It says that the program can be read back by the rules and that a described skill can be built online; a tool that does not know the rule set does not change the program."
+    value_type: str = "xs:string"
 
 class SkillError(Property):
     description: str = "A named error; its value is the code an ErrorID carries."
@@ -326,6 +337,7 @@ class Skills(Submodel):
     VERSION: ClassVar[str] = "1"
     REVISION: ClassVar[str] = "0"
     Skill: Dict[str, Skill_t] = {}
+    RuleSet: Optional[RuleSet_t] = None
     Errors: Errors_t
 
 # alias so field ``Name_t`` can name a class of the same id_short
@@ -400,6 +412,8 @@ After_t: TypeAlias = After
 Invariant_t: TypeAlias = Invariant
 # alias so field ``Timeout_t`` can name a class of the same id_short
 Timeout_t: TypeAlias = Timeout
+# alias so field ``Deployment_t`` can name a class of the same id_short
+Deployment_t: TypeAlias = Deployment
 # alias so field ``SemanticId_t`` can name a class of the same id_short
 SemanticId_t: TypeAlias = SemanticId
 # alias so field ``Start_t`` can name a class of the same id_short
@@ -418,9 +432,12 @@ StateMachine_t: TypeAlias = StateMachine
 SkillError_t: TypeAlias = SkillError
 # alias so field ``Skill_t`` can name a class of the same id_short
 Skill_t: TypeAlias = Skill
+# alias so field ``RuleSet_t`` can name a class of the same id_short
+RuleSet_t: TypeAlias = RuleSet
 # alias so field ``Errors_t`` can name a class of the same id_short
 Errors_t: TypeAlias = Errors
 # ── Resolve forward references (Pydantic circular refs) ──
+Deployment.model_rebuild()
 SemanticId.model_rebuild()
 InterfaceReference.model_rebuild()
 SkillOperation.model_rebuild()
@@ -466,6 +483,7 @@ Timeout.model_rebuild()
 Contract.model_rebuild()
 StateMachine.model_rebuild()
 Skill.model_rebuild()
+RuleSet.model_rebuild()
 SkillError.model_rebuild()
 Errors.model_rebuild()
 Skills.model_rebuild()

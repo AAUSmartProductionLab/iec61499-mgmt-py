@@ -44,7 +44,12 @@
   controller in its resource AAS: which program runs, whether it still matches the
   source it was generated from, the type hashes the runtime reports, the active
   procedure and the log of reconfigurations. Written by modreg and by modsync's record
-  of a change (once named ControlSoftware; that semantic id is still accepted).""" .
+  of a change (once named ControlSoftware; that semantic id is still accepted).
+
+  Since v0.10 (27 Oct 2026) a resource AAS no longer carries this submodel: it is the schema of the
+  integrator's record of what was built, kept outside the AAS (the registration service). What
+  clients need of it is in the Skills submodel: the rule set (RuleSet) and whether a skill is built
+  (Deployment).""" .
 
 
 #################################################################

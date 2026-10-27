@@ -251,13 +251,17 @@ pprl:DerivedCapability rdf:type owl:Class ;
   rdfs:subClassOf pprl:OfferedCapability ;
   rdfs:comment "An offered capability derived from the skill realizing it (ontology/PPRL/derivation): of a class the types of the skill's steps contribute, specified by the properties its parameters and its steps' constants set." .
 
+pprl:DescribedSkill rdf:type owl:Class ;
+  rdfs:subClassOf css:Skill ;
+  rdfs:comment "A skill described in a resource's AAS that its program does not carry out yet (ARSO Skills, Deployment = Described): it is offered only after a reconfiguration." .
+
 pprl:FBInstance rdf:type owl:Class ;
-  rdfs:comment "An instance of a function block in a module's control program (ARSO Control Configuration, Instances)." .
+  rdfs:comment "An instance of a function block in a module's control program (the integrator's record of what was built, ARSO's Control Configuration module; no longer in the AAS)." .
 
 pprl:implementedBy rdf:type owl:ObjectProperty ;
   rdfs:domain css:Skill ;
   rdfs:range pprl:FBInstance ;
-  rdfs:comment "The block of the control program that carries out a skill. A skill that is described but not built has none: it is offered only after a reconfiguration." .
+  rdfs:comment "The block of the control program that carries out a skill, as the integrator's record states it." .
 
 
 #################################################################

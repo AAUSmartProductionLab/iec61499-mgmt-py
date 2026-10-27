@@ -196,13 +196,16 @@ def test_a_new_module_level_skill_is_created_online_while_another_runs(module, t
 def test_cli_pull_writes_the_aas(module, tmp_path):
     module.client.close()                # the CLI opens its own management connection
     run = subprocess.run([sys.executable, "-m", "modsync", "pull", "--spec", str(FILLING), "--target", "pc",
-                          "--host", module.host, "--port", str(module.port), "--out", str(tmp_path)],
+                          "--host", module.host, "--port", str(module.port), "--out", str(tmp_path),
+                          "--records", str(tmp_path / "records")],
                          cwd=ROOT, capture_output=True, text=True, timeout=60)
     assert run.returncode == 0, run.stderr
     # The test's Modbus endpoint differs from the spec's: reported as drift, needing a restart.
     assert (f"Filling ({len(module.cand.app.fbs)} instances), {len(module.overrides)} differences from "
             "cell/modules/filling.yaml target pc" in run.stdout)
-    config = submodel(json.loads((tmp_path / "FillingModuleAAS.json").read_text(encoding="utf-8")), "ControlConfiguration")
+    # What was built is the record's, outside the AAS.
+    assert submodel(json.loads((tmp_path / "FillingModuleAAS.json").read_text(encoding="utf-8")), "ControlConfiguration") is None
+    config = json.loads((tmp_path / "records" / "FillingModuleAAS.json").read_text(encoding="utf-8"))
     assert at(config, "SyncState")["value"] == "Drift"
     assert at(config, "Runtime", "ManagementEndpoint")["value"] == f"{module.host}:{module.port}"
     assert (tmp_path / "FillingPumpAAS.json").exists()          # the components' AASs are written with it

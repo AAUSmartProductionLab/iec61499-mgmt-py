@@ -94,7 +94,7 @@ def offers(graph: Graph, derivation: Path = DERIVATION) -> list[Offer]:
                                            parameter=str(variable)))
             else:
                 properties.append(Property(str(meaning), str(unit) if unit else None, value=str(graph.value(prop, RDF.value))))
-        found.append(Offer(str(capability), str(element), (skill, PPRL.implementedBy, None) in graph,
+        found.append(Offer(str(capability), str(element), (skill, RDF.type, PPRL.DescribedSkill) not in graph,
                            sorted(properties, key=lambda p: p.meaning), keys(graph, element)))
     return sorted(found, key=lambda o: (o.skill, o.capability))
 

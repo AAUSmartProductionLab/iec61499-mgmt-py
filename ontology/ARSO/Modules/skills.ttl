@@ -38,9 +38,19 @@
 # Interfaces container is gone (a command refers to the AID action that calls it), and an
 # error is a property whose value is its code (no SMC around one ErrorCode).
 #
+# v0.10 (27 Oct): what clients need of what was built. RuleSet: the rule set the resource's
+# program is built by, which says that it can be read back and given a described skill online.
+# Deployment, per skill: Built (the program carries it out) or Described (in the AAS only; it
+# is offered after a reconfiguration). The rest of the record (instances, hashes, change log)
+# is the integrator's, outside the AAS (Control Configuration module).
+#
 # Skills (Submodel)
+#   ├─ RuleSet [Property, xs:string, 0..1] — the URI of the rule set the program is built by
+#   │    (v0.10), e.g. https://smartproductionlab.aau.dk/rules/module/1
 #   ├─ {skill_name} [SMC Skill, 0..*] — semanticId .../skill; its kind and its
 #   │         │    type (what it does) supplemental semanticIds (26 Oct)
+#   │         ├─ Deployment [Property, xs:string, 0..1] — Built | Described (v0.10);
+#   │         │    absent: built (a primitive is a block type, always built)
 #   │         ├─ SemanticId [Property, xs:string, 0..1] — the type, only in the short form
 #   │         │    older AASs carry; a skill's type is a supplemental semanticId
 #   │         ├─ Start, Stop, Abort, Reset [SMC Command, 0..1 each] — semanticId
@@ -84,8 +94,8 @@
 # What is not here, and where it is instead: a skill's state, error and results
 # are data points (Operational Data), fed from the interface by the mapping
 # configuration; a data point and the Operation variable it shows share their
-# semanticId. Which block of the program a skill or a step is, is in the Control
-# Configuration (Instances). What a primitive occupies is the component whose
+# semanticId. Which block of the program a skill or a step is, is the integrator's
+# record (Control Configuration module), outside the AAS. What a primitive occupies is the component whose
 # AAS it is described in. Which capability a skill realizes is said by the
 # capability (CapabilityRealizedBy), never by the skill.
 
@@ -123,6 +133,18 @@ arso:SkillSMC rdf:type owl:Class ;
   arso:parentClass arso:SkillsSubmodel ;
   arso:semanticId "https://smartproductionlab.aau.dk/skill" ;
   rdfs:comment "SMC {skill_name} — a named skill, an element of the Skills submodel itself, recognised by its semanticId (no idShort — the skill name is user-defined). Contains its commands (Start, Stop, Abort, Reset) or, in the short form, an Operation and an InterfaceReference. Its supplemental semanticIds say what kind of skill it is (https://smartproductionlab.aau.dk/skill/Primitive: its commands run nothing; .../skill/Composite: a command runs other skills; .../skill/ModuleControl) and what it does, its type (a class of the lab's Skills vocabulary, https://smartproductionlab.aau.dk/skills/<Type>)." .
+
+arso:SkillsRuleSetProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:SkillsSubmodel ;
+  arso:idShort "RuleSet" ;
+  rdfs:comment "Property RuleSet (xs:string) — the rule set the resource's program is built by, named by its URI. It says that the program can be read back by the rules and that a described skill can be built online; a tool that does not know the rule set does not change the program." .
+
+arso:SkillDeploymentProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:SkillSMC ;
+  arso:idShort "Deployment" ;
+  rdfs:comment "Property Deployment (xs:string) — Built: the resource's program carries the skill out; Described: the skill is in the AAS only and is offered after a reconfiguration. Written by the tools that build a skill (Built) and by an editor that describes one (Described). Absent: built." .
 
 arso:SkillSemanticIdProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
@@ -456,6 +478,18 @@ arso:SkillsSubmodel rdfs:subClassOf [
   owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
   owl:onClass arso:SkillErrorsSMC ] .
 
+# At most one rule set; a skill's Deployment is Built or Described, once
+arso:SkillsSubmodel rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ;
+  owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+  owl:onClass arso:SkillsRuleSetProperty ] .
+
+arso:SkillDeploymentProperty rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Property/value> ;
+  owl:allValuesFrom [ rdf:type rdfs:Datatype ; owl:oneOf ( "Built" "Described" ) ] ] .
+
 # A Skill says what it does in its supplemental semanticIds; the SemanticId property of the short
 # form is optional. How it is called is in its commands or, in the short form, in the skill itself:
 # that it has one of the two is a rule (arso-rules.shacl.ttl), not a restriction.
@@ -463,6 +497,11 @@ arso:SkillSMC rdfs:subClassOf [
   rdf:type owl:Restriction ;
   owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
   owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:SkillSemanticIdProperty ] .
+
+arso:SkillSMC rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+  owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:SkillDeploymentProperty ] .
 
 arso:SkillSMC rdfs:subClassOf
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
