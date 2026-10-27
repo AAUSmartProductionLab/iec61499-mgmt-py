@@ -38,7 +38,7 @@ from defusedxml.ElementTree import parse
 
 from modgen.library import PARAM_RANGE, q
 from modgen.module import tlit
-from modgen.spec import AllOf, AnyOf, Decision, ModuleSpec, Parallel, Parameter, Step
+from modgen.spec import AllOf, AnyOf, Comparison, Decision, ModuleSpec, Parallel, Parameter, Step
 
 from .device import BOOT, literal
 
@@ -283,6 +283,27 @@ def walk(nodes: list[dict]):
             yield from walk(node["otherwise"])
         else:
             yield node
+
+
+def nodes_of(read: list[dict]) -> list:
+    """A flow as ``structure`` holds it, as the nodes of a module spec (Step, Parallel, Decision)."""
+    def condition(c: dict):
+        if "all" in c:
+            return AllOf(all=[condition(inner) for inner in c["all"]])
+        if "any" in c:
+            return AnyOf(any=[condition(inner) for inner in c["any"]])
+        return Comparison(operand=c["operand"], op=c["op"], value=c["value"])
+
+    found = []
+    for node in read:
+        if node.get("kind") == "parallel":
+            found.append(Parallel(name=node["name"], branches=[nodes_of(b) for b in node["branches"]]))
+        elif node.get("kind") == "decision":
+            found.append(Decision(name=node["name"], condition=condition(node["condition"]),
+                                  then=nodes_of(node["then"]), otherwise=nodes_of(node["otherwise"])))
+        else:
+            found.append(Step(skill=node["skill"], name=node["name"], bind=node["bind"]))
+    return found
 
 
 def shape(nodes: list[dict]) -> list:

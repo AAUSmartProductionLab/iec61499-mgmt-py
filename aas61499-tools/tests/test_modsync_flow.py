@@ -157,3 +157,11 @@ def test_a_condition_in_the_aas_names_what_it_compares():
     second = desired.at(condition, "Conditions", "Condition_0001")
     assert desired.target(desired.at(second, "Operand", "SourceElement"))[-1] == "Volume"
     assert desired.at(second, "Expected", "Value")["value"] == "1.0"
+
+
+@pytest.mark.parametrize("name", FLOWS)
+def test_a_flow_read_back_is_the_flow_of_a_spec_again(name):
+    """``modsync project`` writes the spec of what runs: a flow read back becomes the spec's nodes."""
+    from modsync.structure import nodes_of
+    spec = composed(FLOWS[name])
+    assert nodes_of(read_back(spec)["composites"]["Flow"]["execute"]) == spec.composites["Flow"].execute
