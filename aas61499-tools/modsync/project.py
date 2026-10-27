@@ -24,11 +24,11 @@ import xml.etree.ElementTree as ET
 from iec61499_mgmt.protocol import Client
 from modgen import generate, project_dir
 from modgen.fbxml import keep_layout
-from modgen.spec import Composite, Modbus, ModuleSpec, Parameter, Step
+from modgen.spec import Composite, Modbus, ModuleSpec, Parameter
 
 from .compare import Candidate
 from .device import literal, read_values
-from .structure import read_primitives, structure
+from .structure import read_primitives, structure, nodes_of
 from .sync import Status, inspect
 
 
@@ -65,8 +65,7 @@ def running_spec(client: Client, status: Status) -> tuple[ModuleSpec, list[str]]
                                    unit=old.unit if old else None, description=old.description if old else "")
         return made
 
-    def steps(read: list[dict]) -> list[Step]:
-        return [Step(skill=s["skill"], name=s["name"], bind=s["bind"]) for s in read]
+    steps = nodes_of
 
     composites = {}
     for name, c in found["composites"].items():
