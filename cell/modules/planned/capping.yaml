@@ -43,7 +43,7 @@ skills:
     description: Head up to the limit switch; from there its position is known
     equipment: LinearAxis
     command: Up
-    ensures: AtHome
+    postcondition: AtHome
     timeout: 8s
   MoveAxis:
     description: Head to Position, measured down from the limit switch; the direction follows from where it is

@@ -3,7 +3,7 @@
 A module has
 - equipment IO: the only owners of IO points, each with a command table (commands may run in
   timed phases, e.g. a start boost or a brake pulse, and may take an argument such as an angle);
-- skill primitives: one equipment command until a sensor condition (``ensures``) or a time
+- skill primitives: one equipment command until a sensor condition (``postcondition``) or a time
   (``after``) says done, with parameters, contract and timeout;
 - module level skills (composites): a flow of skill instances with its own parameters, and an
   optional stop flow. A flow runs its steps one after the other; a parallel block runs branches at
@@ -286,7 +286,7 @@ class Parameter(Model):
 
 
 class Skill(Model):
-    """Skill primitive: one equipment command until ``ensures`` holds or ``after`` has passed.
+    """Skill primitive: one equipment command until ``postcondition`` holds or ``after`` has passed.
 
     Without equipment it only waits (``after``). ``stop`` is the command sent at the end (default:
     the safe command); an abort always sends the safe command.
@@ -301,8 +301,8 @@ class Skill(Model):
     arg: str | float | None = None             # ST expression over parameters -> the command's argument
     stop: str | None = None
     parameters: dict[str, Parameter] = Field(default_factory=dict)
-    requires: str = "TRUE"
-    ensures: str | None = None                 # sensor condition (ST over equipment inputs and parameters)
+    precondition: str = "TRUE"
+    postcondition: str | None = None           # sensor condition (ST over equipment inputs and parameters)
     # Open loop: a number of seconds, or an ST expression over LREAL parameters giving them
     # (``Duration``, ``Volume / FlowRate``).
     after: str | float | None = None
@@ -318,18 +318,18 @@ class Skill(Model):
         if not isinstance(data, dict) or not data.get("move_to"):
             return data
         goal = data["move_to"]
-        if given := [k for k in ("command", "arg", "ensures", "after") if data.get(k) is not None]:
+        if given := [k for k in ("command", "arg", "postcondition", "after") if data.get(k) is not None]:
             raise ValueError(f"move_to sets these itself: {given}")
-        known = f"{HOMED} AND ({data['requires']})" if data.get("requires") else HOMED
-        return {**data, "command": MOVE, "arg": goal, "requires": known,
-                "ensures": f"NOT {MOVING} AND ABS({ACTUAL} - {goal}) < 0.001"}
+        known = f"{HOMED} AND ({data['precondition']})" if data.get("precondition") else HOMED
+        return {**data, "command": MOVE, "arg": goal, "precondition": known,
+                "postcondition": f"NOT {MOVING} AND ABS({ACTUAL} - {goal}) < 0.001"}
 
     @model_validator(mode="after")
     def ends(self):
         """Exactly one end condition; no equipment means no command."""
-        if (self.ensures is None) == (self.after is None):
-            raise ValueError("A skill ends either by ensures (a sensor) or by after (a time)")
-        if self.equipment is None and (self.command or self.ensures or self.results):
+        if (self.postcondition is None) == (self.after is None):
+            raise ValueError("A skill ends either by postcondition (a sensor) or by after (a time)")
+        if self.equipment is None and (self.command or self.postcondition or self.results):
             raise ValueError("A skill without equipment only waits (after)")
         if self.equipment is not None and self.command is None:
             raise ValueError("A skill with equipment needs a command")
@@ -646,7 +646,7 @@ class ModuleSpec(Model):
                         or goal.maximum > eq.position.maximum):
                     raise ValueError(f"{name}.{skill.move_to}: its range has to lie within the travel of "
                                      f"{skill.equipment} ({eq.position.minimum} to {eq.position.maximum})")
-        for field in ("requires", "ensures", "invariant", "arg"):
+        for field in ("precondition", "postcondition", "invariant", "arg"):
             value = getattr(skill, field)
             if isinstance(value, str) and (unknown := names(value) - known):
                 raise ValueError(f"{name}.{field}: unknown names {sorted(unknown)}")

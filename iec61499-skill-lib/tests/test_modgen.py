@@ -21,11 +21,11 @@ def raw(path=FILLER):
 
 
 @pytest.mark.parametrize("mutate, message", [
-    (lambda d: d["skills"]["MoveNeedleDown"].update(ensures="Position >= Depth"), "unknown names"),
+    (lambda d: d["skills"]["MoveNeedleDown"].update(postcondition="Position >= Depth"), "unknown names"),
     (lambda d: d["skills"]["MoveNeedleDown"].update(command="Stop"), "not a driving command"),
     (lambda d: d["skills"]["MoveNeedleDown"].update(equipment="Pump"), "unknown equipment"),
     (lambda d: d["skills"]["MoveNeedleDown"]["parameters"]["Distance"].update(default=80.0), "default outside"),
-    (lambda d: d["skills"]["MoveNeedleDown"].update(after=2.0), "either by ensures"),
+    (lambda d: d["skills"]["MoveNeedleDown"].update(after=2.0), "either by postcondition"),
     (lambda d: d["skills"].update(Dose={"parameters": {"Volume": {"default": 1.0}}, "after": "Volume / Rate",
                                         "offered": False}), "not an expression over LREAL parameters"),
     (lambda d: d["skills"].update(Dose={"parameters": {"Volume": {"default": 1.0}, "Rate": {"default": 1.0, "minimum": 0.0}},
@@ -365,8 +365,8 @@ def test_an_axis_with_a_position_moves_itself_to_where_it_is_told():
     assert list(axis.commands) == ["Stop", "Up", "Down", "MoveTo"]
     # The skill: where to, as the command's argument; it needs the position to be known and ends there.
     move = load(SPECS / "filling.yaml").skills["MoveAxis"]
-    assert (move.command, move.arg, move.requires) == ("MoveTo", "Position", "Homed")
-    assert move.ensures == "NOT Moving AND ABS(ActualPosition - Position) < 0.001"
+    assert (move.command, move.arg, move.precondition) == ("MoveTo", "Position", "Homed")
+    assert move.postcondition == "NOT Moving AND ABS(ActualPosition - Position) < 0.001"
     _, code = st("FillingModule", "Equipment/Commands", "EC_LinearAxis")
     assert "N_Move := TRUE;\n  N_Goal := Arg;" in code
     # The equipment: the direction from where it is, the time from the distance, then it is there.

@@ -62,7 +62,7 @@ skills:
     description: Needle up to the limit switch; from there its position is known
     equipment: LinearAxis
     command: Up
-    ensures: AtHome
+    postcondition: AtHome
     # Ends on the switch; the timeout only stops the motor if the switch never closes.
     timeout: 60s
   MoveAxis:

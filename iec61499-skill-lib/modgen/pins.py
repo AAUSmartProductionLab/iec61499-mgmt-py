@@ -236,7 +236,7 @@ KINDS = {
     },
     "SL_": {
         "INIT": "Initialise: name the channels and OPC UA variables",
-        "START": "Start the run with the parameters (checks Requires first)",
+        "START": "Start the run with the parameters (checks the Precondition first)",
         "HALT": "Stop the run (ErrorID Interrupted)",
         "ABORT": "Abort the run: the equipment off and given up",
         "TIMER": "The run's timer expired",

@@ -81,7 +81,7 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
             skills[skill["idShort"]] = Skill.model_construct(
                 equipment=item, parameters={v["idShort"]: parameter(v) for v in variables(start, "inputVariables")},
                 results={r: r for r in results}, offered=at(skill, "Start", "InterfaceReference") is not None,
-                ensures=term("Conditions", "Postcondition") or term("Contract", "Ensures"),
+                postcondition=term("Conditions", "Postcondition") or term("Contract", "Ensures"),
                 timeout=term("Completion", "Timeout") or term("Contract", "Timeout") or "10s")
 
     def condition(element: dict, where: str):

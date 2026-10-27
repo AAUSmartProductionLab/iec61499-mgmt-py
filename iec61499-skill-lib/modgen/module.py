@@ -7,7 +7,7 @@ its inputs and holder on its ``state`` channel and its inputs over OPC UA.
 
 Skill primitive ``SK_<Name>``: the shared ``SKILL_Core`` (state machine, Stop/Abort/Reset, State),
 the Start method with one ``SKILL_Param_<type>`` latch per parameter (range check, latching) and
-the execution ``SL_<Name>`` (one equipment command until ``ensures`` or ``after``; contract,
+the execution ``SL_<Name>`` (one equipment command until ``postcondition`` or ``after``; conditions,
 timeout, lock), with OPC UA methods Start(Session, parameters...), Stop, Abort, Reset and
 variables State, ErrorID, Parameters/*, Results/*.
 
@@ -442,7 +442,7 @@ def used_inputs(skill: Skill, eq: Equipment | None) -> list[str]:
     if eq is None:
         return []
     words = set()
-    for expr in [skill.requires, skill.ensures, skill.invariant, skill.arg]:
+    for expr in [skill.precondition, skill.postcondition, skill.invariant, skill.arg]:
         if isinstance(expr, str):
             words |= names(expr)
     words |= set(skill.results.values())
@@ -494,9 +494,9 @@ def make_skill_logic(p: Project, pkg: str, name: str, skill: Skill, eq: Equipmen
         eo["EQ_FREE"] = ["EquipmentFree"]
         iv.update({**{s: ins[s].type for s in used}, "EqHolder": "WSTRING"})
         ov.update({"C_Holder": "WSTRING", "C_Command": "USINT", "C_Arg": "LREAL", "C_Release": "BOOL", "EquipmentFree": "BOOL"})
-    what = (f"holds {skill.equipment}.{skill.command} until {skill.ensures or f'{after} s'}" if has_eq
+    what = (f"holds {skill.equipment}.{skill.command} until {skill.postcondition or f'{after} s'}" if has_eq
             else f"waits {after} s")
-    b = Basic(p, pkg, f"SL_{name}", f"{name}: Requires {skill.requires}; {what}; Invariant {skill.invariant}",
+    b = Basic(p, pkg, f"SL_{name}", f"{name}: Precondition {skill.precondition}; {what}; Invariant {skill.invariant}",
               ei, eo, iv, ov, {"Outcome": "USINT"} if has_eq else None, folder="Skills/Logic")
 
     # The final command releases the equipment when this is the last step using it (ReleaseAfter), in
@@ -557,7 +557,7 @@ def make_skill_logic(p: Project, pkg: str, name: str, skill: Skill, eq: Equipmen
     b.trans("Idle", "Init", "INIT")
     b.trans("Init", "Idle", "1")
     b.trans("Idle", "Check", "START")
-    b.trans("Check", "Reject", f"NOT ({skill.requires})")
+    b.trans("Check", "Reject", f"NOT ({skill.precondition})")
     if has_eq:
         b.trans("Idle", "Sample", "SAMPLE")
         b.trans("Sample", "Idle", "1")
@@ -569,11 +569,11 @@ def make_skill_logic(p: Project, pkg: str, name: str, skill: Skill, eq: Equipmen
         b.trans("WaitW", "Idle", "ABORT")
         b.trans("Recheck", "Check", "1")
         if not timed:
-            b.trans("Check", "AlreadyDone", skill.ensures)   # already there: succeed without driving
+            b.trans("Check", "AlreadyDone", skill.postcondition)   # already there: succeed without driving
         b.trans("Running", "Unsafe", f"SAMPLE[NOT ({skill.invariant})]")
         b.trans("Running", "Lost", f"SAMPLE[{busy}]")
         if not timed:
-            b.trans("Running", "Done", f"SAMPLE[{skill.ensures}]")
+            b.trans("Running", "Done", f"SAMPLE[{skill.postcondition}]")
             b.trans("Running", "TimedOut", "TIMER")
         else:
             b.trans("Running", "Done", "TIMER")
@@ -651,7 +651,7 @@ def make_skill(p: Project, pkg: str, name: str, skill: Skill, eq: Equipment | No
     make_skill_logic(p, pkg, name, skill, eq)
     iv = {"Module": "WSTRING", "UaRoot": "WSTRING", "UaPath": "WSTRING", "UaEnable": "BOOL", "Methods": "BOOL",
           "Holder": "WSTRING", "ReleaseAfter": ("BOOL", "TRUE"),
-          **({"Timeout": ("TIME", tlit(skill.timeout))} if skill.ensures is not None else {}),
+          **({"Timeout": ("TIME", tlit(skill.timeout))} if skill.postcondition is not None else {}),
           **{n: (pr.type, pr.literal()) for n, pr in params.items()}}
     ins = eq.inputs if eq else {}
     sent = message(eq, "N_", "NE_") if eq else []
@@ -693,7 +693,7 @@ def make_skill(p: Project, pkg: str, name: str, skill: Skill, eq: Equipment | No
     if params or results:
         c.da("UaRoot", "Logic.UaRoot")
         c.da("UaPath", "Logic.UaPath")
-    if skill.ensures is not None:
+    if skill.postcondition is not None:
         c.da("Timeout", "Logic.Timeout")
     if params:
         c.da("UaEnable", "PubParams.QI")

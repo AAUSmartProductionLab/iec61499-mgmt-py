@@ -45,14 +45,14 @@ skills:
     description: Take the image from above and wait for the camera's verdict
     equipment: TopCamera
     command: Capture
-    ensures: Done
+    postcondition: Done
     timeout: 3s
     results: {Passed: Passed}
   CaptureSide:
     description: Take the image from the side and wait for the camera's verdict
     equipment: SideCamera
     command: Capture
-    ensures: Done
+    postcondition: Done
     timeout: 3s
     results: {Passed: Passed}
 

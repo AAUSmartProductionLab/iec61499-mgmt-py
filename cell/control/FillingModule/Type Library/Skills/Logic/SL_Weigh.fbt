@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SL_Weigh" Comment="Weigh: Requires TRUE; holds Scale.Measure until 0.2 s; Invariant TRUE">
+<FBType Name="SL_Weigh" Comment="Weigh: Precondition TRUE; holds Scale.Measure until 0.2 s; Invariant TRUE">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filling" />
@@ -13,7 +13,7 @@
         <With Var="UaRoot" />
         <With Var="UaPath" />
       </Event>
-      <Event Name="START" Type="Event" Comment="Start the run with the parameters (checks Requires first)" />
+      <Event Name="START" Type="Event" Comment="Start the run with the parameters (checks the Precondition first)" />
       <Event Name="HALT" Type="Event" Comment="Stop the run (ErrorID Interrupted)" />
       <Event Name="ABORT" Type="Event" Comment="Abort the run: the equipment off and given up" />
       <Event Name="TIMER" Type="Event" Comment="The run's timer expired" />

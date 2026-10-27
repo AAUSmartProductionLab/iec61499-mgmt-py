@@ -44,15 +44,15 @@ skills:
     parameters:
       Distance: {type: LREAL, unit: mm, minimum: 0.0, maximum: 50.0, default: 50.0,
                  description: Target depth below the top position}
-    requires: NOT (AtTop AND AtBottom)
-    ensures: (Position >= Distance) OR AtBottom
+    precondition: NOT (AtTop AND AtBottom)
+    postcondition: (Position >= Distance) OR AtBottom
     invariant: NOT (AtTop AND AtBottom)
     timeout: 5s
   MoveNeedleUp:
     description: Raise the needle to the top end switch
     equipment: NeedleAxis
     command: Up
-    ensures: AtTop
+    postcondition: AtTop
     invariant: NOT (AtTop AND AtBottom)
     timeout: 5s
 
