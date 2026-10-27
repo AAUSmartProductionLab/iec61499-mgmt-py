@@ -49,7 +49,7 @@ cmd:Skill rdf:type owl:Class ;
   rdfs:label "Skill" ; rdfs:comment "Something a resource can do, described by its commands." .
 
 cmd:Primitive rdf:type owl:Class ; rdfs:subClassOf cmd:Skill ;
-  rdfs:label "Primitive" ; rdfs:comment "A skill of one component: its commands run no other skill. It states what starts, ends and bounds it (Contract)." .
+  rdfs:label "Primitive" ; rdfs:comment "A skill of one component: its commands run no other skill. It states what starts, ends and bounds it (Conditions, Completion)." .
 
 cmd:ModuleControl rdf:type owl:Class ; rdfs:subClassOf cmd:Skill ;
   rdfs:label "ModuleControl" ; rdfs:comment "A command of the resource itself, described as a skill: who may use it (Occupy, Release) and its state machine (Reset, Start, Stop, Abort, Clear). It is called by its Start; what the resource runs meanwhile are the steps of that Start." .

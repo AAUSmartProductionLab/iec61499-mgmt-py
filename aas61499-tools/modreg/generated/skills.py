@@ -270,19 +270,14 @@ class Reset(SubmodelElementCollection):
     SkillOperation: Dict[str, SkillOperation_t] = {}
     Steps: Optional[Steps_t] = None
 
-class Requires(Property):
-    id_short: AasIdString = "Requires"
-    description: str = "The precondition: what has to hold when the skill starts."
+class Precondition(Property):
+    id_short: AasIdString = "Precondition"
+    description: str = "What has to hold when the skill starts."
     value_type: str = "xs:string"
 
-class Ensures(Property):
-    id_short: AasIdString = "Ensures"
-    description: str = "The postcondition: the skill has succeeded when it holds (a sensor ends it)."
-    value_type: str = "xs:string"
-
-class After(Property):
-    id_short: AasIdString = "After"
-    description: str = "The open-loop duration: the skill has succeeded when it has passed, in seconds (a time ends it)."
+class Postcondition(Property):
+    id_short: AasIdString = "Postcondition"
+    description: str = "The skill has succeeded when it holds (a sensor ends it)."
     value_type: str = "xs:string"
 
 class Invariant(Property):
@@ -290,19 +285,29 @@ class Invariant(Property):
     description: str = "What has to hold all the while the skill runs."
     value_type: str = "xs:string"
 
+class Conditions_2(SubmodelElementCollection):
+    id_short: AasIdString = "Conditions"
+    semantic_id: str = ""
+    description: str = "Of a primitive skill: Precondition, Postcondition, Invariant (css:Constraint), expressions over the resource's signals and the skill's parameters, checked as it runs."
+    Precondition: Optional[Precondition_t] = None
+    Postcondition: Optional[Postcondition_t] = None
+    Invariant: Optional[Invariant_t] = None
+
+class After(Property):
+    id_short: AasIdString = "After"
+    description: str = "The open-loop duration: the skill has succeeded when it has passed, in seconds (a time ends it)."
+    value_type: str = "xs:string"
+
 class Timeout(Property):
     id_short: AasIdString = "Timeout"
     description: str = "The longest the skill may run, a duration."
     value_type: str = "xs:string"
 
-class Contract(SubmodelElementCollection):
-    id_short: AasIdString = "Contract"
+class Completion(SubmodelElementCollection):
+    id_short: AasIdString = "Completion"
     semantic_id: str = ""
-    description: str = "For primitive skills: Requires (precondition), Ensures (postcondition) or After (open-loop duration), Invariant, Timeout."
-    Requires: Optional[Requires_t] = None
-    Ensures: Optional[Ensures_t] = None
+    description: str = "Of a primitive skill: how it ends when no Postcondition ends it (After), and the longest it may run (Timeout)."
     After: Optional[After_t] = None
-    Invariant: Optional[Invariant_t] = None
     Timeout: Optional[Timeout_t] = None
 
 class StateMachine(Property):
@@ -321,7 +326,8 @@ class Skill(SubmodelElementCollection):
     Reset: Optional[Reset_t] = None
     InterfaceReference: Optional[InterfaceReference_t] = None
     SkillOperation: Dict[str, SkillOperation_t] = {}
-    Contract: Optional[Contract_t] = None
+    Conditions: Optional[Conditions_2] = None
+    Completion: Optional[Completion_t] = None
     StateMachine: Optional[StateMachine_t] = None
 
 class RuleSet(Property):
@@ -413,14 +419,14 @@ SkillStep_t: TypeAlias = SkillStep
 InterfaceReference_t: TypeAlias = InterfaceReference
 # alias so field ``SkillOperation_t`` can name a class of the same id_short
 SkillOperation_t: TypeAlias = SkillOperation
-# alias so field ``Requires_t`` can name a class of the same id_short
-Requires_t: TypeAlias = Requires
-# alias so field ``Ensures_t`` can name a class of the same id_short
-Ensures_t: TypeAlias = Ensures
-# alias so field ``After_t`` can name a class of the same id_short
-After_t: TypeAlias = After
+# alias so field ``Precondition_t`` can name a class of the same id_short
+Precondition_t: TypeAlias = Precondition
+# alias so field ``Postcondition_t`` can name a class of the same id_short
+Postcondition_t: TypeAlias = Postcondition
 # alias so field ``Invariant_t`` can name a class of the same id_short
 Invariant_t: TypeAlias = Invariant
+# alias so field ``After_t`` can name a class of the same id_short
+After_t: TypeAlias = After
 # alias so field ``Timeout_t`` can name a class of the same id_short
 Timeout_t: TypeAlias = Timeout
 # alias so field ``Deployment_t`` can name a class of the same id_short
@@ -435,8 +441,8 @@ Stop_t: TypeAlias = Stop
 Abort_t: TypeAlias = Abort
 # alias so field ``Reset_t`` can name a class of the same id_short
 Reset_t: TypeAlias = Reset
-# alias so field ``Contract_t`` can name a class of the same id_short
-Contract_t: TypeAlias = Contract
+# alias so field ``Completion_t`` can name a class of the same id_short
+Completion_t: TypeAlias = Completion
 # alias so field ``StateMachine_t`` can name a class of the same id_short
 StateMachine_t: TypeAlias = StateMachine
 # alias so field ``SkillError_t`` can name a class of the same id_short
@@ -487,12 +493,13 @@ Start.model_rebuild()
 Stop.model_rebuild()
 Abort.model_rebuild()
 Reset.model_rebuild()
-Requires.model_rebuild()
-Ensures.model_rebuild()
-After.model_rebuild()
+Precondition.model_rebuild()
+Postcondition.model_rebuild()
 Invariant.model_rebuild()
+Conditions_2.model_rebuild()
+After.model_rebuild()
 Timeout.model_rebuild()
-Contract.model_rebuild()
+Completion.model_rebuild()
 StateMachine.model_rebuild()
 Skill.model_rebuild()
 RuleSet.model_rebuild()

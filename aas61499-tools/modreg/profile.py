@@ -154,14 +154,24 @@ def declared_parameter(name: str, pr: Parameter, value) -> Property:
         qualifiers=[Qualifier(type_=k, value=text(v), kind="ConceptQualifier") for k, v in declared if v is not None])
 
 
-def contract(decl) -> arso.Contract:
-    """What starts, ends and bounds a primitive, as the module spec states it. A condition that is
-    plainly true is left out."""
-    done = {"Ensures": decl.ensures} if decl.ensures is not None else {"After": decl.after}
+def stated(terms: dict) -> dict:
+    """The terms as properties, without those not given or plainly true."""
+    return {k: prop(v) for k, v in terms.items() if v is not None and v != "TRUE"}
+
+
+def conditions(decl) -> arso.Conditions_2 | None:
+    """What has to hold when a primitive starts, when it has succeeded and while it runs, as the
+    module spec states it (``Conditions_2``: a decision's group of conditions is ``Conditions``)."""
+    terms = stated({"Precondition": decl.requires, "Postcondition": decl.ensures, "Invariant": decl.invariant})
+    return arso.Conditions_2(**terms) if terms else None
+
+
+def completion(decl) -> arso.Completion | None:
+    """How a primitive ends when no Postcondition ends it, and the longest it may run."""
     # A time ends it by itself: the longest it may run is said only where a sensor ends it.
-    terms = {"Requires": decl.requires, **done, "Invariant": decl.invariant,
-             "Timeout": decl.timeout if decl.ensures is not None else None}
-    return arso.Contract(**{k: prop(v) for k, v in terms.items() if v is not None and v != "TRUE"})
+    terms = stated({"After": decl.after if decl.ensures is None else None,
+                    "Timeout": decl.timeout if decl.ensures is not None else None})
+    return arso.Completion(**terms) if terms else None
 
 
 MODULE_METHODS = ["Reset", "Start", "Stop", "Abort", "Clear"]
@@ -498,7 +508,7 @@ class Describer:
 
     def skill(self, name: str) -> model.ModuleSkill:
         """A skill with its commands. A module level skill (composite) runs steps on Start and on
-        Stop; a primitive runs nothing and states what ends it (Contract). A skill the module offers
+        Stop; a primitive runs nothing and states what ends it (Conditions, Completion). A skill the module offers
         has an action per command and publishes its state, why it last failed, its parameters and
         its results as data points; one that only runs as a step has a Start that nothing calls."""
         spec = self.spec
@@ -547,7 +557,7 @@ class Describer:
             # A module level skill has no type of its own: it is its Control block, a SKILL_Core.
             self.instances[f"{name}.Control"] = (CONTROL_TYPE, path(where, *here))
         else:
-            skill.Contract = contract(decl)
+            skill.Conditions, skill.Completion = conditions(decl), completion(decl)
             if offered:
                 self.instances[name] = (block_type(spec, name), path(where, *here))
         if offered or (composite and decl.stop):

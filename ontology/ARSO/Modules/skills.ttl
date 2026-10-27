@@ -44,6 +44,11 @@
 # is offered after a reconfiguration). The rest of the record (instances, hashes, change log)
 # is the integrator's, outside the AAS (Control Configuration module).
 #
+# v0.11 (27 Oct): a primitive's Contract is split into Conditions (Precondition, Postcondition,
+# Invariant: the words of IDTA 02020 and CSS) and Completion (After, Timeout). They are the
+# run-time form of what the capability the primitive realizes states for planning (Capability
+# Description, property constraints).
+#
 # Skills (Submodel)
 #   ├─ RuleSet [Property, xs:string, 0..1] — the URI of the rule set the program is built by
 #   │    (v0.10), e.g. https://smartproductionlab.aau.dk/rules/module/2
@@ -79,9 +84,10 @@
 #   │         │              │    Branch_0000, ...: BranchId, Name, Order, Steps
 #   │         │              ├─ Condition [SMC, 0..1] — Kind decision, conditional
 #   │         │              └─ Steps [SMC, 0..1] — Kind conditional: its body
-#   │         ├─ Contract [SMC, 0..1] — of a primitive: Requires, Ensures | After,
-#   │         │    Invariant, Timeout (css:Constraint: pre-, post-condition,
-#   │         │    invariant)
+#   │         ├─ Conditions [SMC, 0..1] — of a primitive (v0.11): Precondition,
+#   │         │    Postcondition, Invariant (css:Constraint), over the resource's signals
+#   │         ├─ Completion [SMC, 0..1] — of a primitive (v0.11): After (an open-loop
+#   │         │    duration, when no Postcondition ends it), Timeout
 #   │         │  --- the short form: a skill described without its commands ---
 #   │         ├─ {skill_name} [Operation, 0..1] — the Operation that starts it
 #   │         ├─ InterfaceReference [ReferenceElement, 0..1] — the AID action
@@ -396,42 +402,48 @@ arso:OperandStepIdProperty rdf:type owl:Class ;
 
 
 #################################################################
-# ELEMENT TYPES — Contract of a primitive
+# ELEMENT TYPES — Conditions and Completion of a primitive (v0.11; Contract until v0.10)
 #################################################################
 
-arso:SkillContractSMC rdf:type owl:Class ;
+arso:SkillConditionsSMC rdf:type owl:Class ;
   rdfs:subClassOf aas:SubmodelElementCollection ;
   arso:parentClass arso:SkillSMC ;
-  arso:idShort "Contract" ;
-  rdfs:comment "SMC Contract — for primitive skills: Requires (precondition), Ensures (postcondition) or After (open-loop duration), Invariant, Timeout. Conditions over the resource's state variables (css:Constraint). Composing skills relies on these contracts." .
+  arso:idShort "Conditions" ;
+  rdfs:comment "SMC Conditions — of a primitive skill: Precondition, Postcondition, Invariant (css:Constraint), expressions over the resource's signals and the skill's parameters, checked as it runs. The capability the primitive realizes states the same over its properties, for planning (Capability Description, property constraints); both name the same data points. Was part of Contract until v0.10." .
 
-arso:ContractRequiresProperty rdf:type owl:Class ;
+arso:ConditionsPreconditionProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
-  arso:parentClass arso:SkillContractSMC ;
-  arso:idShort "Requires" ;
-  rdfs:comment "Property Requires (xs:string) — the precondition: what has to hold when the skill starts. An expression over the resource's state variables and the skill's parameters." .
+  arso:parentClass arso:SkillConditionsSMC ;
+  arso:idShort "Precondition" ;
+  rdfs:comment "Property Precondition (xs:string) — what has to hold when the skill starts. An expression over the resource's signals and the skill's parameters (was Requires)." .
 
-arso:ContractEnsuresProperty rdf:type owl:Class ;
+arso:ConditionsPostconditionProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
-  arso:parentClass arso:SkillContractSMC ;
-  arso:idShort "Ensures" ;
-  rdfs:comment "Property Ensures (xs:string) — the postcondition: the skill has succeeded when it holds (a sensor ends it). An expression over the resource's state variables and the skill's parameters." .
+  arso:parentClass arso:SkillConditionsSMC ;
+  arso:idShort "Postcondition" ;
+  rdfs:comment "Property Postcondition (xs:string) — the skill has succeeded when it holds (a sensor ends it). An expression over the resource's signals and the skill's parameters (was Ensures)." .
 
-arso:ContractAfterProperty rdf:type owl:Class ;
+arso:ConditionsInvariantProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
-  arso:parentClass arso:SkillContractSMC ;
+  arso:parentClass arso:SkillConditionsSMC ;
+  arso:idShort "Invariant" ;
+  rdfs:comment "Property Invariant (xs:string) — what has to hold all the while the skill runs. An expression over the resource's signals and the skill's parameters." .
+
+arso:SkillCompletionSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:parentClass arso:SkillSMC ;
+  arso:idShort "Completion" ;
+  rdfs:comment "SMC Completion — of a primitive skill: how it ends when no Postcondition ends it (After), and the longest it may run (Timeout). Was part of Contract until v0.10." .
+
+arso:CompletionAfterProperty rdf:type owl:Class ;
+  rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:SkillCompletionSMC ;
   arso:idShort "After" ;
   rdfs:comment "Property After (xs:string) — the open-loop duration: the skill has succeeded when it has passed, in seconds (a time ends it). A number or an expression over the skill's parameters." .
 
-arso:ContractInvariantProperty rdf:type owl:Class ;
+arso:CompletionTimeoutProperty rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
-  arso:parentClass arso:SkillContractSMC ;
-  arso:idShort "Invariant" ;
-  rdfs:comment "Property Invariant (xs:string) — what has to hold all the while the skill runs. An expression over the resource's state variables and the skill's parameters." .
-
-arso:ContractTimeoutProperty rdf:type owl:Class ;
-  rdfs:subClassOf aas:Property ;
-  arso:parentClass arso:SkillContractSMC ;
+  arso:parentClass arso:SkillCompletionSMC ;
   arso:idShort "Timeout" ;
   rdfs:comment "Property Timeout (xs:string) — the longest the skill may run, a duration." .
 
@@ -516,7 +528,9 @@ arso:SkillSMC rdfs:subClassOf
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
     owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:SkillStateMachineProperty ],
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
-    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:SkillContractSMC ] .
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:SkillConditionsSMC ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:SkillCompletionSMC ] .
 
 # A command has at most one action and one list of steps (that it has an Operation is a rule)
 arso:SkillCommandSMC rdfs:subClassOf
@@ -574,15 +588,17 @@ arso:FlowBranchSMC rdfs:subClassOf
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
     owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:CommandStepsSMC ] .
 
-# A Contract states each term at most once
-arso:SkillContractSMC rdfs:subClassOf
+# Conditions and Completion state each term at most once
+arso:SkillConditionsSMC rdfs:subClassOf
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
-    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractRequiresProperty ],
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ConditionsPreconditionProperty ],
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
-    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractEnsuresProperty ],
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ConditionsPostconditionProperty ],
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
-    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractAfterProperty ],
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ConditionsInvariantProperty ] .
+
+arso:SkillCompletionSMC rdfs:subClassOf
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
-    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractInvariantProperty ],
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:CompletionAfterProperty ],
   [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
-    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:ContractTimeoutProperty ] .
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:CompletionTimeoutProperty ] .

@@ -158,7 +158,8 @@ Skills (submodel)
   command it gives. ARSO also describes `parallel` (branches that all have to end), `decision` and
   `conditional` (a condition); the module rules, and so `modreg` and `modsync`, know `step` only.
 - A **primitive** runs nothing: its commands have no steps, and it states what starts, ends and
-  bounds it (`Contract`: Requires, Ensures or After, Invariant, Timeout). It is in the AAS of the
+  bounds it (`Conditions`: Precondition, Postcondition, Invariant; `Completion`: After, Timeout;
+  until ARSO 0.10 one `Contract`). It is in the AAS of the
   component it moves. A **composite** is in the AAS of the module that composes it. The same shape
   would describe a skill of the line made of skills of its modules.
 - Every skill element has the semantic id `.../skill`; what kind it is, is a supplemental id

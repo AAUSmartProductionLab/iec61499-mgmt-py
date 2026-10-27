@@ -6974,11 +6974,11 @@
       },
       {
        "modelType": "SubmodelElementCollection",
-       "idShort": "Contract",
+       "idShort": "Conditions",
        "description": [
         {
          "language": "en",
-         "text": "For primitive skills: Requires (precondition), Ensures (postcondition) or After (open-loop duration), Invariant, Timeout."
+         "text": "Of a primitive skill: Precondition, Postcondition, Invariant (css:Constraint), expressions over the resource's signals and the skill's parameters, checked as it runs."
         }
        ],
        "qualifiers": [
@@ -7001,11 +7001,11 @@
        "value": [
         {
          "modelType": "Property",
-         "idShort": "Requires",
+         "idShort": "Precondition",
          "description": [
           {
            "language": "en",
-           "text": "The precondition: what has to hold when the skill starts."
+           "text": "What has to hold when the skill starts."
           }
          ],
          "qualifiers": [
@@ -7029,39 +7029,11 @@
         },
         {
          "modelType": "Property",
-         "idShort": "Ensures",
+         "idShort": "Postcondition",
          "description": [
           {
            "language": "en",
-           "text": "The postcondition: the skill has succeeded when it holds (a sensor ends it)."
-          }
-         ],
-         "qualifiers": [
-          {
-           "type": "SMT/Cardinality",
-           "valueType": "xs:string",
-           "kind": "TemplateQualifier",
-           "value": "ZeroToOne",
-           "semanticId": {
-            "type": "ExternalReference",
-            "keys": [
-             {
-              "type": "GlobalReference",
-              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
-             }
-            ]
-           }
-          }
-         ],
-         "valueType": "xs:string"
-        },
-        {
-         "modelType": "Property",
-         "idShort": "After",
-         "description": [
-          {
-           "language": "en",
-           "text": "The open-loop duration: the skill has succeeded when it has passed, in seconds (a time ends it)."
+           "text": "The skill has succeeded when it holds (a sensor ends it)."
           }
          ],
          "qualifiers": [
@@ -7090,6 +7062,63 @@
           {
            "language": "en",
            "text": "What has to hold all the while the skill runs."
+          }
+         ],
+         "qualifiers": [
+          {
+           "type": "SMT/Cardinality",
+           "valueType": "xs:string",
+           "kind": "TemplateQualifier",
+           "value": "ZeroToOne",
+           "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+             {
+              "type": "GlobalReference",
+              "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+             }
+            ]
+           }
+          }
+         ],
+         "valueType": "xs:string"
+        }
+       ]
+      },
+      {
+       "modelType": "SubmodelElementCollection",
+       "idShort": "Completion",
+       "description": [
+        {
+         "language": "en",
+         "text": "Of a primitive skill: how it ends when no Postcondition ends it (After), and the longest it may run (Timeout)."
+        }
+       ],
+       "qualifiers": [
+        {
+         "type": "SMT/Cardinality",
+         "valueType": "xs:string",
+         "kind": "TemplateQualifier",
+         "value": "ZeroToOne",
+         "semanticId": {
+          "type": "ExternalReference",
+          "keys": [
+           {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+           }
+          ]
+         }
+        }
+       ],
+       "value": [
+        {
+         "modelType": "Property",
+         "idShort": "After",
+         "description": [
+          {
+           "language": "en",
+           "text": "The open-loop duration: the skill has succeeded when it has passed, in seconds (a time ends it)."
           }
          ],
          "qualifiers": [

@@ -221,7 +221,7 @@ pprl:CompositeSkill rdf:type owl:Class ;
 pprl:PrimitiveSkill rdf:type owl:Class ;
   rdfs:subClassOf css:Skill ;
   owl:disjointWith pprl:CompositeSkill ;
-  rdfs:comment "A skill that uses no other skill: one function of one equipment item, with a contract (pre-, postcondition, invariant as css:Constraint)." .
+  rdfs:comment "A skill that uses no other skill: one function of one equipment item, with its conditions (pre-, postcondition, invariant as css:Constraint)." .
 
 pprl:occupies rdf:type owl:ObjectProperty ;
   rdfs:domain css:Skill ;
