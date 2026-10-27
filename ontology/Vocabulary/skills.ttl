@@ -18,11 +18,16 @@
 # its skills. What a parameter of a skill means is said on the
 # parameter itself (its supplemental semantic id, a property of the
 # capability vocabulary).
+#
+# 0.2 (28 Oct): each type also says which capability of its component a
+# primitive of the type realizes (lab:realizes), with what that
+# capability needs, does and keeps (capabilities.ttl): what a module's
+# new skills are planned from.
 #################################################################
 
 <https://smartproductionlab.aau.dk/skills>
   rdf:type owl:Ontology ;
-  owl:versionInfo "0.1" ;
+  owl:versionInfo "0.2" ;
   owl:imports <https://smartproductionlab.aau.dk/semantics> ;
   rdfs:comment "The skill types of the components of aseptic filling lines and the capability each contributes (AAU Smart Production Lab)." .
 
@@ -31,33 +36,39 @@
 
 skl:MoveAxis rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   rdfs:label "MoveAxis" ; rdfs:comment "Move an axis to a position measured from its reference; needs the axis homed." ;
-  lab:contributes lab:Positioning .
+  lab:contributes lab:Positioning ;
+  lab:realizes lab:Positioning .
 
 skl:Home rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   rdfs:label "Home" ; rdfs:comment "Move an axis to its limit switch, where its position is known." ;
-  lab:contributes lab:Positioning .
+  lab:contributes lab:Positioning ;
+  lab:realizes lab:Referencing .
 
 
 # Filling ----------------------------------------------------------------------
 
 skl:Dispense rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   rdfs:label "Dispense" ; rdfs:comment "Dispense a volume of liquid through the needle." ;
-  lab:contributes lab:Filling .
+  lab:contributes lab:Filling ;
+  lab:realizes lab:Dosing .
 
 skl:Tare rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   rdfs:label "Tare" ; rdfs:comment "Set a scale to zero." ;
-  lab:contributes lab:Weighing .
+  lab:contributes lab:Weighing ;
+  lab:realizes lab:Taring .
 
 skl:Weigh rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   rdfs:label "Weigh" ; rdfs:comment "Read what is on a scale." ;
-  lab:contributes lab:Weighing .
+  lab:contributes lab:Weighing ;
+  lab:realizes lab:Weighing .
 
 
 # Stoppering -------------------------------------------------------------------
 
 skl:PressStopper rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   rdfs:label "PressStopper" ; rdfs:comment "Press a stopper into a container and draw the piston back." ;
-  lab:contributes lab:Stoppering .
+  lab:contributes lab:Stoppering ;
+  lab:realizes lab:Pressing .
 
 skl:RetractPiston rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   rdfs:label "RetractPiston" ; rdfs:comment "Draw a piston in, as after an abort; contributes no capability." .
@@ -67,15 +78,18 @@ skl:RetractPiston rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
 
 skl:Crimp rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   rdfs:label "Crimp" ; rdfs:comment "Crimp a cap onto a container." ;
-  lab:contributes lab:Capping .
+  lab:contributes lab:Capping ;
+  lab:realizes lab:Crimping .
 
 
 # Inspection -------------------------------------------------------------------
 
 skl:CaptureTop rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   rdfs:label "CaptureTop" ; rdfs:comment "Take an image of a container from above and judge it." ;
-  lab:contributes lab:Inspection .
+  lab:contributes lab:Inspection ;
+  lab:realizes lab:Imaging .
 
 skl:CaptureSide rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   rdfs:label "CaptureSide" ; rdfs:comment "Take an image of a container from the side and judge it." ;
-  lab:contributes lab:Inspection .
+  lab:contributes lab:Inspection ;
+  lab:realizes lab:Imaging .

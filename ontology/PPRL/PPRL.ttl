@@ -15,12 +15,13 @@
 
 <https://w3id.org/2025/pprl>
   rdf:type owl:Ontology ;
-  owl:versionIRI <https://w3id.org/2025/pprl/0.1.0> ;
+  owl:versionIRI <https://w3id.org/2025/pprl/0.2.0> ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://w3id.org/2025/apso> ;
   owl:imports <https://w3id.org/2025/arso> ;
   owl:imports <https://w3id.org/2025/aproso> ;
-  rdfs:comment """PPRL v0.1 — Product-Process-Resource link ontology (drafted 30 Sep 2026).
+  rdfs:comment """PPRL v0.2 — Product-Process-Resource link ontology (drafted 30 Sep 2026; v0.2 of
+  28 Oct adds what a capability needs, does and keeps, for planning: section 2e).
 
   APSO, ARSO and AProSO each describe the structure of one kind of AAS and can be
   checked on their own. This ontology holds what lies between them, on top of the CSS
@@ -266,6 +267,40 @@ pprl:implementedBy rdf:type owl:ObjectProperty ;
   rdfs:domain css:Skill ;
   rdfs:range pprl:FBInstance ;
   rdfs:comment "The block of the control program that carries out a skill, as the integrator's record states it." .
+
+
+#################################################################
+# 2e. PLANNING: what a capability needs, does and keeps (v0.2)
+#################################################################
+# Said of a capability class of a vocabulary, so annotations (as lab:contributes is): what holds of
+# every capability of the class wherever it is used. A module's Capability Description states the
+# same and what holds on that module, as IDTA 02020 property constraints (ARSO 0.11), and new skills
+# are planned from it (docs/skill-planning.md). A constraint is a blank node: the property class it
+# is about (onProperty) and the expression of its BasicConstraint (expression), in the language
+# ARSO's capabilities module states: '<op> <operand>' with op one of = != < <= > >= +=, the operand
+# a value or another property of the capability, or a word: given, measured, unchanged.
+
+pprl:pre rdf:type owl:AnnotationProperty ;
+  rdfs:comment "A precondition of a capability class: holds when a capability of the class starts." .
+
+pprl:post rdf:type owl:AnnotationProperty ;
+  rdfs:comment "A postcondition of a capability class: holds when a capability of the class has succeeded." .
+
+pprl:invariant rdf:type owl:AnnotationProperty ;
+  rdfs:comment "An invariant of a capability class: holds all the while a capability of the class runs." .
+
+pprl:onProperty rdf:type owl:AnnotationProperty ;
+  rdfs:comment "The property class a constraint is about." .
+
+pprl:expression rdf:type owl:AnnotationProperty ;
+  rdfs:comment "The constraint itself, as a BasicConstraint states it ('= true', '+= Volume', 'given')." .
+
+pprl:knownWhen rdf:type owl:AnnotationProperty ;
+  rdfs:comment "Said of a result property: the state that holds once it is known (a fill weight: the container has been weighed since it was filled). A requirement asking for the result adds it as a goal." .
+
+pprl:ProductProperty rdf:type owl:Class ;
+  rdfs:subClassOf css:Property ;
+  rdfs:comment "A property of the product a process changes or checks (the volume in a container), not of a resource. In a module's planning domain it is a state of the product in the module." .
 
 
 #################################################################
