@@ -1,12 +1,13 @@
 # How a module is built: the rules
 
-Rule set `https://smartproductionlab.aau.dk/rules/module/1`.
+Rule set `https://smartproductionlab.aau.dk/rules/module/2` (27 Oct 2026): rule set 1 and, in
+section 3, a flow: parallel blocks and decisions. A program by rule set 1 follows rule set 2.
 
 A module that follows these rules can be verified, operated and given a new skill online from its
 AAS and its running program alone. `modgen` generates such modules from a module spec, but the
 rules are the contract, not the generator: a module written by hand in an IEC 61499 IDE inside
-the same shell is as good. A module names the rule set it follows in its AAS (Control
-Configuration, `Rules`).
+the same shell is as good. A module names the rule set it follows in its AAS (Skills, `RuleSet`).
+A program that uses section 3's flows needs a FORTE built with the library's flow blocks.
 
 The structure of a generated module and the reasons behind it are in [work.md](work.md); the two
 lab modules in [modules.md](modules.md). Names in `<angle brackets>` are the module's own.
@@ -151,9 +152,30 @@ published below `/Procedures/<name>`, without `HALT`, `ABORT` and `RESET`; each 
 and gives up its equipment itself. `Module.RUN_<NAME>` starts it, and its `DONE` and `FAILED` go to
 `Module.<NAME>_DONE` and `Module.<NAME>_FAILED`.
 
+### A flow (rule set 2)
+
+A sequence's steps may also run in parallel blocks and decisions, nested as deep as needed. A flow
+is still only instances of library types and of the module's primitives, so it is created online
+like any module level skill. Besides the steps (rule 1 of a sequence, unchanged) it holds:
+
+| Block | Instance | Type | Connections |
+| --- | --- | --- | --- |
+| A parallel block of n branches (2 to 4) | `<block>`, its name | `modlib::SKILL_Join<n>` | The event that starts the block goes to `<block>.START` first, then to the first step of every branch. Branch i's last `SUCCESS` goes to `<block>.DONE_<i>`, its failures (merged by `<block>_Fail<i>_<k>`, `SKILL_FailMerge`) to `<block>.FAILED_<i>` with `Error<i>`. `<block>.HALT` goes to the `HALT` of every step in the block. `<block>.DONE` goes on; `<block>.FAILED` with `Error` is a failure of the flow |
+| A decision | `<block>`, its name | `modlib::SKILL_Merge` | The event that reaches the decision goes to the `EVAL` of its first condition. `YES` leads to the first step of the first branch, `NO` to the second branch's or, if it has none (a conditional step), to `<block>.EI2`. The first branch's last `SUCCESS` goes to `<block>.EI1`, the second's to `<block>.EI2`; `<block>.EO` goes on. The branches' failures are failures of the flow |
+| A comparison of a decision | `<block>_C<k>`, k from 1 | `modlib::SKILL_Condition_LREAL` or `_BOOL` | `Operand` from a parameter latch's `Value` (a parameter of the skill) or from a step's `R_<result>` (a step that has run on every path to it); `Expected` and `Operator` (`'eq'`, `'ne'`, `'gt'`, `'gte'`, `'lt'`, `'lte'`; a Boolean `eq` or `ne`) written as values. In a group where all must hold, `YES` evaluates the next comparison and every `NO` leads to the second branch; where one must hold, `NO` evaluates the next and every `YES` leads to the first branch |
+
+1. Two branches of a parallel block use no equipment item in common: every step holds the skill's
+   items under the skill's name.
+2. Every step of a flow has `ReleaseAfter = FALSE`: which step uses an item last depends on the
+   path. `Control` gives up everything the skill holds when a run ends (rule 3.6).
+3. A result of the skill comes from a step outside every decision, so it is set on every path.
+4. The INIT chain runs through the steps in the order they are written; the flow blocks have no
+   `INIT`, like `SKILL_FailMerge`.
+5. A flow without blocks is a sequence and is built as above, unchanged.
+
 ## 4. What changes online
 
-1. **A new module level skill**: the instances and connections of section 3 are created, its
+1. **A new module level skill**, also one with a flow: the instances and connections of section 3 are created, its
    `INIT` is linked to the end of the application's chain, and `Control.INIT` is triggered once.
 2. **A parameter value**: the input holding it is written; the skill takes it over at its next
    start. It is `<instance>.<parameter>` on a primitive instance (the default of an offered
@@ -172,6 +194,7 @@ and gives up its equipment itself. `Module.RUN_<NAME>` starts it, and its `DONE`
 | A command (the method, what it takes and answers) | `<Skill>/<Command>`: `InterfaceReference` to the action, the Operation named like the command |
 | A parameter, a result | An input or output variable of the Start Operation, with value, unit and limits |
 | `Execute` and `Stop` sequences | `Start/Steps` and `Stop/Steps`: `Step_0000`, ... in the elements of the planner's Production Sequence (`NodeId` = the instance name, `Kind` = `step`, `Order`), each with the `Skill` it runs |
+| A parallel block, a decision (rule set 2) | A step of the kind `parallel` with `Branches/Branch_<j>/Steps`; `decision` with a `Condition` and two `Branches`; `conditional` with a `Condition` and its own `Steps`. `NodeId` = the block's instance name. A `Condition` is a comparison (`ConditionType comparison`, `Operator`, `Expected` with `DataType` and `Value`, `Unit`, `Operand`: `OperandType parameter` with `SourceElement`, or `output` with `StepId` and `OutputId`) or a group (`all`, `any`) of `Conditions/Condition_<k>` with their `Order` |
 | A step's constant; a value handed down | The step's `Bindings`: a `Binding` with `Value`, or with `SourceElement` referring to the command's variable; a result is an `Output` with `ResultReference` |
 | Procedures `Resetting`, `Stopping` | The steps of the `Start` of the skills `Reset` and `Stop` (kind `skill/ModuleControl`) |
 | Module commands, Occupy and Release | Skills of the kind `skill/ModuleControl` in the module's Skills, each called by its `Start` |

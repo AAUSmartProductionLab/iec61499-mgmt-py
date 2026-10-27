@@ -307,6 +307,42 @@ it: parallel, decision and conditional steps (the control cannot run them), addi
 skill's parameters, deleting a skill. The interface description of a new skill is written when the
 change is recorded (above).
 
+## Rule set 2: parallel blocks and decisions in a skill (27 Oct)
+
+A module level skill's steps may run in parallel blocks and decisions ([module-rules.md](module-rules.md),
+section 3, *A flow*), so that a skill can, for example, weigh and top a light vial up, or home the axis
+and tare the scale at once.
+
+- **Library.** `SKILL_Join2` to `SKILL_Join4` (all branches done; on the first failure halt the
+  others, then fail once all have ended), `SKILL_Condition_LREAL` and `_BOOL` (operand, expected value,
+  operator; `YES` or `NO`), `SKILL_Merge` (where a decision's branches meet). No `INIT`. The 4diac IDE
+  checks them with no warning; they are in FORTE for Windows (built, not installed in `output/bin`
+  while the teaching demo runs: the build's `forte/build/forte/forte.exe`) and for the Pi
+  (`runtime/bin/forte-aarch64`, not installed on the Pis).
+- **Spec and generator.** `execute` and `stop` take `{parallel: [[...], [...]], as: Name}` and
+  `{if: condition, then: [...], else: [...], as: Name}`, a condition `{operand, op, value}` or
+  `{all: [...]}`, `{any: [...]}`. The spec refuses two parallel branches on one item, a condition on
+  what has not run, a result from inside a decision, a name used twice. A flow without blocks is
+  generated as before, byte for byte.
+- **modsync** reads a flow back from the program by the rules (the join a branch's success reaches
+  groups it; a decision's condition tree is rebuilt from the YES and NO chains of its comparisons,
+  groups merged into one canonical form), reads it from the AAS (the planner's elements: `Branches`,
+  `Condition`, `Conditions`), checks it as the spec does, compares the trees, creates a flow online
+  with the generator's pattern, and records every block of it.
+- **modreg** writes a flow into the AAS; ARSO 0.10 got `Conditions` (a group) and a condition's
+  `Order`. Two generated classes are renamed (`FlowCondition`, `FlowConditions`): the planner's own
+  template names a `Condition` with other fields, and aas_pydantic reads an element back by its class
+  name. The derivation counts the steps on every path (the projection marks elements inside a decision
+  `pprl:mayNotRun`; the steps of parallel branches are found at fixed depths, since an open path search
+  made the derivation five times slower).
+- **On FORTE** (this PC, the fresh build): `Checked` (dispense, weigh, two decisions, one with a
+  second branch) and `Ready` (home and tare at once) created from their AAS while the module was in
+  Execute and occupied, then run: the chosen branch ran, the other did not, the program verified
+  against the recorded AAS (`test_modsync_flow_live.py`).
+- **The editor** adds blocks, edits a decision's condition (a parameter, or a result of a step that has
+  run; one comparison, or all or one of several) and checks a flow by the same rules; it writes a flow
+  exactly as modreg does (a shared fixture, `fixtures/fillingFlows.json`, written by modreg).
+
 ## Registration: the AAS of a module (modreg)
 
 Decided on 2 Oct 2026: the resource ontology (ARSO, `ontology/ARSO`) says what a resource AAS
