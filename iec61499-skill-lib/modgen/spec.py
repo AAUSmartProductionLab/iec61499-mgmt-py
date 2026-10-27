@@ -310,6 +310,8 @@ class Skill(Model):
     timeout: str = Field(default="10s", pattern=DURATION)
     results: dict[str, str] = Field(default_factory=dict)   # result name -> equipment input
     offered: bool = True                       # OPC UA methods for the orchestrator
+    # What holds on this module of the capability the primitive realizes (the planner reads it).
+    capability: CapabilityUse | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -549,6 +551,23 @@ class Capability(Model):
     properties: dict[str, CapabilityProperty] = Field(default_factory=dict)
 
 
+class CapabilityUse(Model):
+    """What holds on this module of the capability a primitive realizes, beside what holds of it
+    wherever it is used (the lab's vocabulary; docs/skill-planning.md): named values, and conditions
+    on the state of another item (``<Item>.<meaning>``: the needle in the vial) or on a property of
+    the capability, each the expression of a constraint (``= FillPosition``, ``unchanged``)."""
+    values: dict[str, CapabilityProperty] = Field(default_factory=dict)
+    precondition: dict[str, str] = Field(default_factory=dict)
+    postcondition: dict[str, str] = Field(default_factory=dict)
+    invariant: dict[str, str] = Field(default_factory=dict)
+
+    def conditions(self) -> Iterator[tuple[str, str, str]]:
+        """(kind, about, expression) of every condition: Pre, Post and Invariant."""
+        for kind, said in (("Pre", self.precondition), ("Post", self.postcondition), ("Invariant", self.invariant)):
+            for about, expression in said.items():
+                yield kind, about, expression
+
+
 class ModuleSpec(Model):
     """One module: equipment, skill primitives, module level skills, procedures and the
     capabilities they realize."""
@@ -650,6 +669,14 @@ class ModuleSpec(Model):
             value = getattr(skill, field)
             if isinstance(value, str) and (unknown := names(value) - known):
                 raise ValueError(f"{name}.{field}: unknown names {sorted(unknown)}")
+        if skill.capability is not None:
+            for ident in skill.capability.values:
+                if not re.match(IDENT, ident):
+                    raise ValueError(f"{name}.capability: not an identifier: {ident}")
+            for kind, about, _ in skill.capability.conditions():
+                item, _, meant = about.rpartition(".")
+                if not re.match(IDENT, meant) or (item and item not in self.equipment):
+                    raise ValueError(f"{name}.capability: {kind} on {about}: not <Item>.<meaning> of an item of the module, nor a property")
         if isinstance(skill.after, str):
             used = names(skill.after)
             if not used or (bad := {n for n in used if n not in skill.parameters or skill.parameters[n].type != "LREAL"}):
@@ -807,4 +834,5 @@ AnyOf.model_rebuild()
 Parallel.model_rebuild()
 Decision.model_rebuild()
 Composite.model_rebuild()
+Skill.model_rebuild()
 ModuleSpec.model_rebuild()

@@ -333,6 +333,21 @@ def submodel(env: dict, id_short: str) -> dict:
     return next(s for s in env["submodels"] if s["idShort"] == id_short)
 
 
+def realizing(capability: dict) -> list[dict]:
+    """The CapabilityRealizedBy relations of a capability's container."""
+    return [r for r in children(at(capability, "CapabilityRelations")) if r.get("modelType") == "RelationshipElement"]
+
+
+def constraints_of(capability: dict) -> str:
+    """A capability's constraints in short: Pre Referenced = true, ..."""
+    found = []
+    for record in children(at(capability, "CapabilityRelations", "ConstraintSet")):
+        (relation,) = children(at(record, "ConstraintPropertyRelations"))
+        found.append(f"{at(record, 'PropertyConditionalType')['value']} {relation['second']['keys'][-2]['value']} "
+                     f"{at(record, 'BasicConstraint')['value']}")
+    return ", ".join(found)
+
+
 def last(ref: dict) -> str:
     return ref["keys"][-1]["value"]
 
@@ -397,7 +412,9 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
     envs = [env, *own.values()]
     composites = [s for s in skills_in(skills_sm) if kind_of(s) != "ModuleControl"]
     control = [s for s in skills_in(skills_sm) if kind_of(s) == "ModuleControl"]
-    capabilities = [c for capability_set in children(submodel(env, "CapabilityDescription")) for c in children(capability_set)]
+    sets = children(submodel(env, "CapabilityDescription"))
+    capabilities = [c for s in sets if s["idShort"] == "OfferedCapabilities" for c in children(s)]
+    parts = [(s["idShort"], c) for s in sets if s["idShort"] != "OfferedCapabilities" for c in children(s)]
     interface = at(submodel(env, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata")
     built = name not in PLANNED
     skills_of = lambda c: skills_in(submodel(c, "Skills"))                                 # noqa: E731
@@ -423,7 +440,7 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
             owner = target[0]["value"].split("/aas/")[1].split("/submodels/")[0]
             lines.append(f"  {node(name + s['idShort'])} -- \"{order}\" --> {node(owner + target[-1]['value'])}")
     for c in capabilities:
-        for relation in children(at(c, "CapabilityRelations")):
+        for relation in realizing(c):
             lines.append(f"  {node(name + 'cap' + c['idShort'])} -- realized by --> {node(name + last(relation['second']))}")
     lines += ["```", ""]
 
@@ -438,9 +455,16 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
             lines.append(f"| {signature(s)} | {shell_of(component)['idShort']} | {kind_of(s)} | – ({said}) | – |")
     lines.append("")
     for c in capabilities:
-        properties = "; ".join(f"{p['idShort']} {shown(at(p, 'Value'))}" for p in children(at(c, "PropertySet")))
-        realized = ", ".join(last(r["second"]) for r in children(at(c, "CapabilityRelations")))
-        lines.append(f"- **Capability {c['idShort']}** (`{semantic_ids(at(c, 'Capability'))[1]}`), realized by {realized}: {properties}.")
+        properties = "; ".join(f"{p['idShort']} {shown(at(p, 'Value'))}" for p in children(at(c, "PropertySet"))
+                               if at(p, "Value").get("value") is not None or at(p, "Value")["modelType"] == "Range")
+        realized = ", ".join(last(r["second"]) for r in realizing(c))
+        lines.append(f"- **Capability {c['idShort']}** (`{semantic_ids(at(c, 'Capability'))[1]}`), realized by {realized}: {properties}"
+                     + (f"; {constraints_of(c)}" if constraints_of(c) else "") + ".")
+    if parts:
+        lines.append("- **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills "
+                     "from), what each needs, does and keeps: "
+                     + "; ".join(f"{item}'s {c['idShort']} ({', '.join(last(r['second']) for r in realizing(c))}): {constraints_of(c)}"
+                                 for item, c in parts) + ".")
     commands = [c["idShort"] + (f" ({' → '.join(ran(envs, at(c, 'Start')))})" if ran(envs, at(c, "Start")) else "") for c in control]
     lines += [f"- **The module's own commands** (skills of the kind ModuleControl): {', '.join(commands)}.",
               "- **Components:** " + (", ".join(part + " → `" + shell_of(c)["idShort"] + "`" for part, c in own.items()) or "none") + ".",

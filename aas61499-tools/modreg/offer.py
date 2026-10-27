@@ -154,6 +154,9 @@ def stated_facts(description: dict | None) -> tuple[dict, dict, list[dict]]:
             value = at(container, "Value")
             if value is None or qualifiers(value).get("Derived") == "true":
                 continue
+            if value["modelType"] != "Range" and value.get("value") is None:
+                continue                                  # a state its constraints are about, not a fact
+
             meaning = value["supplementalSemanticIds"][0]["keys"][0]["value"]
             unit = qualifiers(value).get("Unit")
             if value["modelType"] == "Range":
@@ -184,7 +187,9 @@ def capabilities(module: dict, components: list[dict]) -> dict:
     description = capability_description(found, stated, named)
     derived = {o.capability for o in found}
     kept = [box for box in by_hand if at(box, "Capability")["supplementalSemanticIds"][0]["keys"][0]["value"] not in derived]
-    if description is None and not kept:
+    # The components' capabilities (a set per component) are not derived: they stay as they are.
+    others = [s for s in children(old) if s.get("idShort") != OFFERED_SET]
+    if description is None and not kept and not others:
         module["submodels"] = [s for s in module["submodels"] if s is not old]
         return module
     shell = module["assetAdministrationShells"][0]
@@ -198,10 +203,15 @@ def capabilities(module: dict, components: list[dict]) -> dict:
     model.inject_ids(lean)
     built = model.environment(lean)
     new = next((s for s in built["submodels"] if s["idShort"] == "CapabilityDescription"), None)
-    if new is None:                                       # only containers written by hand are left
+    if new is None:                     # nothing derived: what was written by hand and the components' sets
         new = copy.deepcopy(old)
-        at(new, OFFERED_SET)["value"] = []
-    at(new, OFFERED_SET)["value"] += [box for box in kept if box["idShort"] not in {b["idShort"] for b in children(at(new, OFFERED_SET))}]
+        new["submodelElements"] = [s for s in children(new) if s.get("idShort") == OFFERED_SET and kept]
+        if kept:
+            at(new, OFFERED_SET)["value"] = []
+    if kept:
+        at(new, OFFERED_SET)["value"] += [box for box in kept if box["idShort"] not in {b["idShort"] for b in children(at(new, OFFERED_SET))}]
+    have = {s.get("idShort") for s in children(new)}
+    new["submodelElements"] += [s for s in others if s.get("idShort") not in have]
     if old is not None:
         new["id"] = old["id"]
         if bare(new) == bare(old):                     # only the ids aas-model draws anew differ

@@ -392,8 +392,9 @@ def semantic(element: dict) -> str:
 def offered_capabilities(env: dict) -> list[dict]:
     """The offered capabilities of an AAS read the way the BaSyx web UI's process sequence module
     reads them (utils/capabilities.ts): standard containers by semanticId, the role by its boolean
-    qualifier, the meaning by supplemental semanticId, units from the first IEC 61360 data
-    specification, and the realizing skill by the CapabilityRealizedBy whose first is the capability."""
+    qualifier, the meaning by supplemental semanticId (none for a property container's SameProperty),
+    units from the first IEC 61360 data specification, and the realizing skill by the
+    CapabilityRealizedBy whose first is the capability. Its matching takes the role Offered only."""
     found = []
     for sm in env["submodels"]:
         if semantic(sm) != "https://admin-shell.io/idta/SubmodelTemplate/CapabilityDescription/1/0":
@@ -411,7 +412,7 @@ def offered_capabilities(env: dict) -> list[dict]:
                 for pset in (c for c in children(box) if semantic(c) == f"{IDTA_CAPABILITY}/PropertySet/1/0"):
                     for item in (c for c in children(pset) if semantic(c) == f"{IDTA_CAPABILITY}/PropertyContainer/1/0"):
                         for prop in children(item):
-                            meaning = prop["supplementalSemanticIds"][0]["keys"][0]["value"]
+                            meaning = ((prop.get("supplementalSemanticIds") or [{}])[0].get("keys") or [{}])[0].get("value", "")
                             unit = ((prop.get("embeddedDataSpecifications") or [{}])[0].get("dataSpecificationContent") or {}).get("unit", "")
                             properties[meaning] = {"kind": prop["modelType"], "unit": unit, "value": prop.get("value"),
                                                    "min": prop.get("min"), "max": prop.get("max"), "type": prop.get("valueType")}
@@ -421,7 +422,7 @@ def offered_capabilities(env: dict) -> list[dict]:
                 found.append({"role": [semantic(q).rsplit("/", 3)[-3] for q in role], "reference": reference,
                               "meanings": [r["keys"][0]["value"] for r in cap.get("supplementalSemanticIds", [])],
                               "properties": properties, "realized_by": realized})
-    return found
+    return [c for c in found if c["role"] == ["Offered"]]
 
 
 def test_offered_capabilities_are_realized_by_skills_as_a_planner_reads_them():
@@ -454,7 +455,8 @@ def test_capabilities_are_derived_from_the_skills_and_the_spec_adds_the_facts():
     data = yaml.safe_load((SPECS / "filling.yaml").read_text(encoding="utf-8"))
     data.pop("capabilities")
     [bare] = offered_capabilities(model.build(profiles.describe(ModuleSpec.model_validate(data), "pi")))
-    assert list(bare["properties"]) == [f"{BASE}/semantics/FillVolume"]
+    # What its skill sets, and the state of the product its constraints are about.
+    assert list(bare["properties"]) == [f"{BASE}/semantics/FillVolume", f"{BASE}/semantics/ContentVolume"]
     env = model.build(profiles.describe(load(SPECS / "filling.yaml"), "pi"))
     capability = at(submodel(env, "CapabilityDescription"), "OfferedCapabilities", "Filling")
     marked = lambda element: {q["type"]: q["value"] for q in element.get("qualifiers", [])}  # noqa: E731

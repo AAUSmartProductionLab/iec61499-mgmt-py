@@ -655,11 +655,16 @@ class Describer:
         no skill offers is refused."""
         if not self.derive:
             return None
+        from .capabilities import component_sets          # it builds on this module's helpers
         found = offers(self.spec)
         stated = {meaning(name, cap.semantic_id): (name, cap) for name, cap in self.spec.capabilities.items()}
         if unknown := sorted(name for iri, (name, _) in stated.items() if iri not in {o.capability for o in found}):
             raise ValueError(f"{self.spec.module} states the capabilities {unknown}, which none of its skills offers")
-        return capability_description(found, stated)
+        description, sets = capability_description(found, stated), component_sets(self.spec)
+        if sets:
+            description = description or model.ModuleCapabilityDescription(id_short="CapabilityDescription", CapabilitySet={})
+            description.CapabilitySet.update(sets)
+        return description
 
     def control_configuration(self) -> model.ModuleControlConfiguration:
         snap, drift, t = self.snap, self.drift, self.spec.targets[self.target]
@@ -765,10 +770,10 @@ def capability_property(name: str, iri: str, value: CapabilityProperty, derived:
     about = dict(id_short="Value", supplemental_semantic_ids=[iri], display_name={"en": name},
                  description=value.description, qualifiers=marks)
     if value.value is None:
-        return cd.PropertyContainer(PropertyRange={"Value": cd.PropertyRange(
+        return model.StatedProperty(PropertyRange={"Value": cd.PropertyRange(
             min=text(value.minimum), max=text(value.maximum), value_type="xs:double", **about)})
     kind = "xs:boolean" if isinstance(value.value, bool) else "xs:string" if isinstance(value.value, str) else "xs:double"
-    return cd.PropertyContainer(PropertyProperty={"Value": cd.PropertyProperty(value=text(value.value), value_type=kind, **about)})
+    return model.StatedProperty(PropertyProperty={"Value": cd.PropertyProperty(value=text(value.value), value_type=kind, **about)})
 
 
 def capability_description(found: list[Offer], stated: dict[str, tuple[str, CapabilitySpec]],
@@ -780,6 +785,7 @@ def capability_description(found: list[Offer], stated: dict[str, tuple[str, Capa
     it only after a reconfiguration (Availability). Two skills offering one capability: each gets a
     container of its own, named after the capability and the skill, unless ``named`` (capability,
     skill element) -> idShort keeps the name it has."""
+    from .capabilities import constrain_offer            # it builds on this module's helpers
     containers, count, named = {}, Counter(o.capability for o in found), named or {}
     taken = set(named.values())
     for offer in found:
@@ -809,9 +815,10 @@ def capability_description(found: list[Offer], stated: dict[str, tuple[str, Capa
                                          second=path(offer.keys[0][1], *offer.keys[1:]))
         containers[id_short] = model.ModuleCapabilityContainer(
             id_short=id_short, Capability=capability,
-            PropertySet={"PropertySet": cd.PropertySet(id_short="PropertySet", PropertyContainer=properties)} if properties else {},
+            PropertySet={"PropertySet": model.StatedPropertySet(id_short="PropertySet", PropertyContainer=properties)} if properties else {},
             CapabilityRelations=model.ModuleCapabilityRelations(id_short="CapabilityRelations",
                                                                 CapabilityRealizedBy={"RealizedBy": realized}))
+        constrain_offer(containers[id_short], OFFERED_SET, local(offer.capability))
     if not containers:
         return None
     return model.ModuleCapabilityDescription(id_short="CapabilityDescription", CapabilitySet={

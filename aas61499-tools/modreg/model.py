@@ -155,16 +155,46 @@ class ModuleSkills(skills.Skills):
 
 
 class RealizedBySkill(cd.CapabilityRealizedBy):
-    """IDTA 02020 leaves the skill open (an external reference); ARSO wants the Skill of the same
-    AAS's Skills submodel, so here it is a model reference to it."""
+    """IDTA 02020 leaves the skill open (an external reference); ARSO wants a Skill of the same AAS
+    or of a component's (its primitive), so here it is a model reference to it."""
     second: ModelReference = ModelReference()
+
+
+class SameAs(cd.SameProperty):
+    """IDTA 02020 leaves both ends open; here the property (first) names the data point of the
+    module's Operational Data it is (second), so that capabilities naming it talk of one state."""
+    first: ModelReference = ModelReference()
+    second: ModelReference = ModelReference()
+
+
+class StatedProperty(cd.PropertyContainer):
+    SameProperty: Dict[str, SameAs] = {}
+
+
+class StatedPropertySet(cd.PropertySet):
+    PropertyContainer: Dict[str, StatedProperty] = {}
+
+
+class BasicConstraintContainer(cd.PropertyConstraintContainer):
+    """A property constraint in the form a resource states it (ARSO 0.11): a BasicConstraint, an
+    expression over the capability's properties. IDTA 02020 has exactly one of four forms; the
+    generated class asks for all four."""
+    CustomConstraint: Optional[cd.CustomConstraint] = None
+    OCLConstraint: Optional[cd.OCLConstraint] = None
+    OperationConstraint: Optional[cd.OperationConstraint] = None
+
+
+class ModuleConstraintSet(cd.ConstraintSet):
+    PropertyConstraintContainer: Dict[str, BasicConstraintContainer] = {}
 
 
 class ModuleCapabilityRelations(cd.CapabilityRelations):
     CapabilityRealizedBy: Dict[str, RealizedBySkill] = {}
+    ConstraintSet: Dict[str, ModuleConstraintSet] = {}
 
 
 class ModuleCapabilityContainer(cd.CapabilityContainer):
+    PropertySet: Dict[str, StatedPropertySet] = {}
     CapabilityRelations: Optional[ModuleCapabilityRelations] = None
 
 
@@ -173,7 +203,8 @@ class ModuleCapabilitySet(cd.CapabilitySet):
 
 
 class ModuleCapabilityDescription(cd.CapabilityDescription):
-    """The capabilities a module offers, each realized by one of its skills."""
+    """The capabilities a module offers, each realized by one of its skills, and in a set per
+    component the capabilities of its components, each realized by a primitive (ARSO 0.11)."""
     CapabilitySet: Dict[str, ModuleCapabilitySet] = {}
 
 
