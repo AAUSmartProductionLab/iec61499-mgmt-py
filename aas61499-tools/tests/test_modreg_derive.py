@@ -101,7 +101,8 @@ def test_a_skill_described_in_the_aas_gets_a_capability_of_its_own(delivered):
     assert marks(double, "Capability") == {"CapabilityRoleQualifier/Offered": "true", "Derived": "true",
                                            "Availability": "AfterReconfiguration"}
     facts = {c["idShort"] for c in next(c for c in double["value"] if c["idShort"] == "PropertySet")["value"]}
-    assert facts == {"ContainerType", "GraspDiameter", "AbsoluteFillError", "FillVolume"}
+    # The facts, what it sets, and the state of the product its constraints are about (ContentVolume).
+    assert facts == {"ContainerType", "GraspDiameter", "AbsoluteFillError", "FillVolume", "ContentVolume"}
     assert marks(double, "PropertySet", "FillVolume", "Value")["Derived"] == "true"
     realized = next(c for c in double["value"] if c["idShort"] == "CapabilityRelations")["value"][0]["second"]
     assert realized["keys"][-1]["value"] == "DoubleDose"

@@ -454,7 +454,8 @@ flowchart BT
 | Tare() | FillingScaleAAS | Primitive | – (After 2.0) | – |
 | Weigh() → Weight [g] | FillingScaleAAS | Primitive | – (After 0.2) | – |
 
-- **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; AbsoluteFillError 0.05 mL; FillVolume 0.5 to 10.0 mL.
+- **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; AbsoluteFillError 0.05 mL; FillVolume 0.5 to 10.0 mL; Pre ContentVolume = 0.0, Post ContentVolume = FillVolume.
+- **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Pump's Dosing (Dispense): Post ContentVolume += Volume, Post Weighed = false, Pre LinearAxisPosition = FillPosition, Invariant LinearAxisPosition unchanged; Scale's Taring (Tare): Post Tared = true; Scale's Weighing (Weigh): Pre Tared = true, Post Weight measured, Post Weighed = true, Pre LinearAxisPosition = 0.0, Invariant LinearAxisPosition unchanged.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `FillingLinearAxisAAS`, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 45 data points; 32 mappings.
@@ -494,7 +495,8 @@ flowchart BT
 | PressStopper() | StopperingPistonAAS | Primitive | – (After 3.0) | – |
 | RetractPiston() | StopperingPistonAAS | Primitive | – (After 3.0) | – |
 
-- **Capability Stoppering** (`https://smartproductionlab.aau.dk/semantics/Stoppering`), realized by Stoppering: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; StopperDiameter 6.0 to 20.0 mm.
+- **Capability Stoppering** (`https://smartproductionlab.aau.dk/semantics/Stoppering`), realized by Stoppering: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; StopperDiameter 6.0 to 20.0 mm; Pre ContentVolume > 0.0, Post Stoppered = true.
+- **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Piston's Pressing (PressStopper): Post Stoppered = true.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (RetractPiston → Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `StopperingLinearAxisAAS`, Piston → `StopperingPistonAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 32 data points; 28 mappings.
@@ -532,7 +534,8 @@ flowchart BT
 | MoveAxis(Position = 0.0 mm) | CappingLinearAxisAAS | Primitive | – (Precondition Homed; Postcondition NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 8s) | – |
 | Crimp(Duration = 1.5 s) | CappingCrimperAAS | Primitive | – (After Duration) | – |
 
-- **Capability Capping** (`https://smartproductionlab.aau.dk/semantics/Capping`), realized by Capping: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; CapDiameter 13.0 to 20.0 mm.
+- **Capability Capping** (`https://smartproductionlab.aau.dk/semantics/Capping`), realized by Capping: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; CapDiameter 13.0 to 20.0 mm; Pre Stoppered = true, Post Capped = true.
+- **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Crimper's Crimping (Crimp): Post Capped = true.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `CappingLinearAxisAAS`, Crimper → `CappingCrimperAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 data points; 24 mappings.
@@ -567,7 +570,8 @@ flowchart BT
 | CaptureTop() → Passed | InspectionTopCameraAAS | Primitive | – (Postcondition Done; Timeout 3s) | – |
 | CaptureSide() → Passed | InspectionSideCameraAAS | Primitive | – (Postcondition Done; Timeout 3s) | – |
 
-- **Capability Inspection** (`https://smartproductionlab.aau.dk/semantics/Inspection`), realized by Inspection: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; InspectionMethod vision.
+- **Capability Inspection** (`https://smartproductionlab.aau.dk/semantics/Inspection`), realized by Inspection: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; InspectionMethod vision; Post Inspected = true.
+- **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: TopCamera's Imaging (CaptureTop): Post Inspected = true; SideCamera's Imaging (CaptureSide): Post Inspected = true.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset, Start, Stop, Abort, Clear.
 - **Components:** TopCamera → `InspectionTopCameraAAS`, SideCamera → `InspectionSideCameraAAS`.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 22 data points; 20 mappings.
