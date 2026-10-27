@@ -46,6 +46,7 @@ The documents in `docs/`: [tooling.md](tooling.md) (every tool, command and chec
 [pipeline.md](pipeline.md) (from AAS to running code, and how code is changed),
 [tools.md](tools.md) (what modgen, modsync, modlink and modreg each do, and how),
 [mapping.md](mapping.md) (an AAS skill as IEC 61499 blocks and back; the AAS as the target state),
+[skill-planning.md](skill-planning.md) (composing skills by planning from the Capability Description),
 [design-decisions.md](design-decisions.md) (the decisions the method rests on, with why; for the
 paper), the proposals [skill-authoring.md](skill-authoring.md) (the editor, the planner and their
 backend) and [control-configuration.md](control-configuration.md), [ppr-model.md](ppr-model.md) (the product, process and resource model with its figures in `figures/`), [next-steps.md](next-steps.md) (the plan), [decisions.md](decisions.md),
