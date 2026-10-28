@@ -47,7 +47,7 @@ reasons behind each choice, with what was chosen instead, are [design-decisions.
 | The product, process and resource models | Drafted | `figures/ppr-models.drawio` |
 | The Capability Description a planner reads: offered capabilities, a set per component, constraints, SameProperty | Drafted 28 Oct | `figures/capability-description.drawio` |
 | A planned skill: requirement, plan, flow, created online | Drafted 28 Oct | `figures/planned-skill.drawio` |
-| Evaluation: the scenarios online and by restart | From the results | `cell/eval/results` |
+| Evaluation: the scenarios online and by restart | Drafted 28 Oct, the PC's numbers (the Pi's to come): time down per change, online and by a restart; caption: a value is written while the module is Idle, so online it is down for the way back to Execute | `figures/evaluation-downtime.pdf`, made by `cell/eval/figures.py` from `cell/eval/results` |
 
 ## Evaluation, what the numbers are
 
