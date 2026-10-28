@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from aas_model.constants import BASE_URL
 from aas_model.product_template import (
-    BillOfMaterial, Part, PartQuantity, PartQuantityUnit, Product, ProductEntry, plan_id,
+    BillOfMaterial, ProductPart, PartQuantity, PartQuantityUnit, Product, ProductEntry, plan_id,
 )
 from aas_model.submodel_templates.product import process_parameters as pp, production_sequence as ps
 from aas_pydantic import Capability, Key, ModelReference, Property, Qualifier
@@ -77,14 +77,14 @@ def vial_2ml() -> Product:
             EntryNode=ProductEntry(
                 display_name={"en": "Vial 2 mL"}, global_asset_id=ASSET_ID,
                 Node={
-                    "Vial": Part(id_short="Vial", display_name={"en": "Glass vial 2R"},
-                                 Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece")),
-                    "Liquid": Part(id_short="Liquid", display_name={"en": "Demo liquid"},
-                                   Quantity=PartQuantity(value="2.0"), QuantityUnit=PartQuantityUnit(value="mL")),
-                    "Stopper": Part(id_short="Stopper", display_name={"en": "Rubber stopper 13 mm"},
-                                    Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece")),
-                    "Cap": Part(id_short="Cap", display_name={"en": "Crimp cap 13 mm"},
-                                Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece")),
+                    "Vial": ProductPart(id_short="Vial", display_name={"en": "Glass vial 2R"},
+                                        Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece")),
+                    "Liquid": ProductPart(id_short="Liquid", display_name={"en": "Demo liquid"},
+                                          Quantity=PartQuantity(value="2.0"), QuantityUnit=PartQuantityUnit(value="mL")),
+                    "Stopper": ProductPart(id_short="Stopper", display_name={"en": "Rubber stopper 13 mm"},
+                                           Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece")),
+                    "Cap": ProductPart(id_short="Cap", display_name={"en": "Crimp cap 13 mm"},
+                                       Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece")),
                 },
             ),
         ),

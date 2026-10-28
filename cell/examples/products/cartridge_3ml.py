@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from aas_model.constants import BASE_URL
 from aas_model.product_template import (
-    BillOfMaterial, Part, PartQuantity, PartQuantityUnit, Product, ProductEntry, plan_id,
+    BillOfMaterial, ProductPart, PartQuantity, PartQuantityUnit, Product, ProductEntry, plan_id,
 )
 from aas_model.submodel_templates.product import process_parameters as pp, production_sequence as ps
 from aas_pydantic import Capability, Key, ModelReference, Property, Qualifier
@@ -77,12 +77,12 @@ def cartridge_3ml() -> Product:
             EntryNode=ProductEntry(
                 display_name={"en": "Cartridge 3 mL"}, global_asset_id=ASSET_ID,
                 Node={
-                    "Cartridge": Part(id_short="Cartridge", display_name={"en": "Glass cartridge 3 mL"},
-                                      Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece")),
-                    "Liquid": Part(id_short="Liquid", display_name={"en": "Demo liquid"},
-                                   Quantity=PartQuantity(value="3.0"), QuantityUnit=PartQuantityUnit(value="mL")),
-                    "Stopper": Part(id_short="Stopper", display_name={"en": "Plunger stopper 10.3 mm"},
-                                    Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece")),
+                    "Cartridge": ProductPart(id_short="Cartridge", display_name={"en": "Glass cartridge 3 mL"},
+                                             Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece")),
+                    "Liquid": ProductPart(id_short="Liquid", display_name={"en": "Demo liquid"},
+                                          Quantity=PartQuantity(value="3.0"), QuantityUnit=PartQuantityUnit(value="mL")),
+                    "Stopper": ProductPart(id_short="Stopper", display_name={"en": "Plunger stopper 10.3 mm"},
+                                           Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece")),
                 },
             ),
         ),

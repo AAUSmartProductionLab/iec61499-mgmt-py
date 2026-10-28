@@ -21,7 +21,7 @@ from basyx.aas.adapter.json import AASToJsonEncoder, read_aas_json_file         
 
 from modreg import model                                                            # noqa: E402
 from aas_model.product_template import (                                            # noqa: E402
-    BillOfMaterial, Part, PartQuantity, PartQuantityUnit, Product, ProductEntry, plan_id,
+    BillOfMaterial, ProductPart, PartQuantity, PartQuantityUnit, Product, ProductEntry, plan_id,
 )
 from aas_model.submodel_templates.product import process_parameters as pp, production_sequence as ps  # noqa: E402
 
@@ -91,7 +91,7 @@ def bottle() -> Product:
         id_short="BottleAAS", id=f"{BASE}/aas/BottleAAS", display_name={"en": "Bottle"},
         hierarchical_structures=BillOfMaterial(
             id_short="HierarchicalStructures", ArcheType=Product.model_fields["hierarchical_structures"].default.ArcheType,
-            EntryNode=ProductEntry(global_asset_id=f"{BASE}/assets/Bottle", Node={"Bottle": Part(
+            EntryNode=ProductEntry(global_asset_id=f"{BASE}/assets/Bottle", Node={"Bottle": ProductPart(
                 Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece"))})),
         process_parameters=pp.ProcessParameters(id_short="ProcessParameters", Processes=pp.Processes(Process={"Filling": process})),
         capability_description=cd.CapabilityDescription(id_short="CapabilityDescription", CapabilitySet={
