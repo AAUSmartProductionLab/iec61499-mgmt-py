@@ -20,10 +20,10 @@ in [conceptual-model.md](conceptual-model.md). What the AASs hold as built is in
 | `AAS/` | AAS v3.1 RDF ontology | The metamodel (unchanged) |
 | `CSS/` | CSS 2.0.2 | Capability, Skill, Service reference model (updated from 2.0.1 on 30 Sep 2026: fixes the domain of `behaviorConformsTo`) |
 | `APSO/` | APSO 0.2 | Product AAS: BatchInformation, BoM, Requirements, Bill of Process |
-| `ARSO/` | ARSO 0.11 | Resource AAS of a line, a module and a component: Nameplate, Hierarchical Structures, AID, AIMC, Skills, Capabilities, Operational Data, Parameters, Technical Data, Control Configuration |
+| `ARSO/` | ARSO 0.12 | Resource AAS of a line, a module and a component: Nameplate, Hierarchical Structures, AID, AIMC, Skills, Capabilities, Operational Data, Parameters, Technical Data, Control Configuration |
 | `AProSO/` | AProSO 0.1 (new) | Process AAS: ProcessInformation, ProcessStructure (process map with flow), CapabilityBindings, Validation, Policy |
 | `PPRL/` | PPRL 0.2 | What lies between them: the CSS concept an AAS element describes, process decomposition and order, resource parts, required and offered capabilities and matching, skill composition, occupation, binding, parameter value flow, derived candidates, change classes; since 0.2 (28 Oct) what a capability needs, does and keeps, for planning (`pre`, `post`, `invariant`, `ProductProperty`). `projection.ttl` and `projection/*.rq`: how an AAS becomes RDF and which individuals and relations its elements describe (`modreg graph`, `aas61499-tools/modreg/projection.py`) |
-| `Vocabulary/` | Lab vocabulary 0.2 | What the elements of the AASs mean (their supplemental semantic ids): capabilities, of two kinds (process: a product can require it; auxiliary: it serves other skills), their properties and, since 0.2 (28 Oct), what each needs, does and keeps (`capabilities.ttl`); the commands and kinds of a skill (`commands.ttl`); the skill types of the components, the capability each contributes and the one of its component it realizes (`skills.ttl`) |
+| `Vocabulary/` | Lab vocabulary 0.3 | What the elements of the AASs mean (their supplemental semantic ids): capabilities, of two kinds (process: a product can require it; auxiliary: it serves other skills), their properties and, since 0.2 (28 Oct), what each needs, does and keeps; since 0.3 the meanings of a module's points of interest (`capabilities.ttl`); the commands and kinds of a skill (`commands.ttl`); the skill types of the components, the capability each contributes and the one of its component it realizes (`skills.ttl`) |
 
 `AAS/` and `CSS/` are unchanged copies of ontologies published by others (the AAS v3.1 RDF
 ontology of the IDTA, `https://admin-shell.io/aas/3/1/`; the CSS ontology of Helmut Schmidt
@@ -92,12 +92,15 @@ section 2)
   and property terms of aas-model's AID extension (`.../aid/ActionDefinition/1/0`,
   `synchronous`, `input`, `output`, `uav_componentOf`, `readOnly`).
 
-**ARSO 0.8 → 0.11** (26 and 27 Oct; the version notes are in `ARSO_AAS.ttl`)
+**ARSO 0.8 → 0.12** (26 to 28 Oct; the version notes are in `ARSO_AAS.ttl`)
 - 0.9: the Skills submodel is ARSO's own template; 0.10: what was built leaves the AAS
   (`RuleSet`, `Deployment`).
 - 0.11: a primitive's `Contract` becomes `Conditions` (Precondition, Postcondition, Invariant)
   and `Completion` (After, Timeout), the run-time form of what its capability states for planning
   ([docs/skill-planning.md](../docs/skill-planning.md)).
+- 0.12: a Node of Hierarchical Structures may say where its part is in its parent's frame
+  (`Frame`: AutomationML's frame attribute with IDTA 02075's ids); a co-managed Node with a meaning
+  is a point of interest ([docs/locations-and-layout.md](../docs/locations-and-layout.md)).
 
 ## Checks
 

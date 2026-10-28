@@ -140,7 +140,7 @@ unoccupied; a client occupies it and sends Reset.
 
 The state per area and the timeline are in [next-steps.md](next-steps.md); this is the short form.
 
-**Built:** the module library and rules (D1); the information model in ARSO 0.11 (D2); verify,
+**Built:** the module library and rules (D1); the information model in ARSO 0.12 (D2); verify,
 reconfigure (a value, a new skill), record, operate from the AAS alone, on FORTE on the PC and on
 the Pi 5 (D3); `modsync project` writes the 4diac project of what runs. The program structure was
 reworked 21 to 22 Oct (deployed inside the application's container so the IDE monitors it, the

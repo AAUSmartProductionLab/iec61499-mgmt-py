@@ -1,6 +1,7 @@
 # Locations, points and the planar table's layout
 
-Design of 27 Oct 2026, a proposal. Every resource AAS says where its parts are relative to itself, so
+Design of 27 Oct 2026. Frames and points (sections 1 and 2) are built since 28 Oct (ARSO 0.12,
+Vocabulary 0.3, `modreg/frames.py`); the planar table's AAS (section 3) is not yet. Every resource AAS says where its parts are relative to itself, so
 that any point of interest (where a shuttle stands for the vial to be filled, where a robot picks or
 places) is known in any frame, in particular in the planar table's, which is what a shuttle is moved
 in. And the planar table is described like any module, with its flyway layout in its AAS.
@@ -22,6 +23,21 @@ line  ←  PlanarTable                            the table in the line's frame
 The building is the root: its AAS (or the line's) gets IDTA 02045 Asset Location (address, a
 coordinate system with ground control points, the hall as an area), and everything inside is frames.
 
+**As built (28 Oct).** The Node gets a collection `Frame` (ARSO `FrameSMC`) with the Properties `X`,
+`Y`, `Z` (qualifier Unit mm) and `RX`, `RY`, `RZ` (deg), each with IDTA 02075's id. The rotation is
+taken as Rz Ry Rx about the parent's axes; that order is still to be checked against IEC 62714. In a
+module spec an item of equipment has a `location`, and the example line (`cell/examples/example_line.py`)
+lays its modules out around the planar table (`LAYOUT`). `modreg.frames` composes them:
+
+```python
+from modreg.frames import relative, where
+where(envs, "FillingLineAAS", "FillingModule", "Transfer")                        # in the line's frame
+relative(envs, "FillingLineAAS", ["PlanarTable"], ["FillingModule", "Transfer"])  # in the table's
+```
+
+`where` follows a path of Node idShorts from one AAS into the next by the Node's asset id. A module's
+frame has its origin at the middle of its front, at the table's height, Y out of the front, Z up.
+
 ## 2. Points
 
 A point of interest is a frame in a module that is no part of it: a **CoManagedEntity** (an entity
@@ -37,6 +53,12 @@ supplemental semantic id:
 The stations of `planar-controller/tests/line_scenario.py` (Infeed, Filling, Stoppering, Capping,
 Outfeed, hard-coded in table millimetres) then come from the AAS: the transfer point of each module in
 the table's frame.
+
+**As built (28 Oct).** A module spec's `points` (filling: `Transfer`, `Fill`; stoppering: `Transfer`,
+`Press`) become such Nodes, without an asset id. Whatever reads a module's parts skips them: in
+`modsync` that is `aasjson.parts`, and the web UI follows only Nodes with an asset id. With the
+placeholder layout, the filling and stoppering transfer points are the simulated table's stations
+Filling (240, 660, 0) and Stoppering (600, 660, 90) (`test_modreg_frames.py`).
 
 ## 3. The planar table as a module
 
