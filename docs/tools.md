@@ -311,7 +311,9 @@ vocabulary loaded), planning Filling with its weight 0.6 ms (median of 20). The 
 plan, describe, create online on FORTE with the simulator, run) is `tests/test_modplan_live.py`.
 The cases through the three planners (`cell/eval/planners.py`, five runs, medians): GTPyhop 1 to 2 ms,
 Aries on the HDDL 41 to 66 ms, ENHSP on the PDDL 282 to 348 ms (unified-planning starts each for every
-problem); all plans valid, Aries's the same steps and doses as GTPyhop's.
+problem); all plans valid. They differ: GTPyhop's are the module's own skills (Dispensing, with a second
+dose for 15 mL); Aries's have the same steps and doses but bring the needle back by MoveAxis(0) instead of
+Home; ENHSP's, where the weight is asked for, weigh the empty vial first, a step nothing needs.
 
 **Assumes** a module's state is a handful of properties of its components and of one product, each a
 known value, and that a skill starts and ends at rest. No relations between many objects (a transport
