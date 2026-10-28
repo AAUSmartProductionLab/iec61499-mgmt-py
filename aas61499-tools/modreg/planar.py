@@ -40,8 +40,7 @@ from modgen.spec import Location, ModuleSpec, Parameter, Skill
 from . import model
 from aas_model.submodel_templates.arso import skills as arso
 from aas_model.submodel_templates.coordinates import Coordinates
-from aas_model.submodel_templates.variables import MeasurementsGroup
-from .profile import Describer, coordinate, coordinate_ref, meaning, prop
+from .profile import Describer, coordinate, coordinate_ref, meaning, prop, record_field_ref
 
 NAMESPACE = "urn:aau:smartproductionlab:planar"
 TABLE = "PlanarTable"
@@ -155,7 +154,7 @@ def flyway(column: int, row: int) -> model.LocatedNode:
                              description=f"Flyway in column {column}, row {row}")
 
 
-def table_coordinates(table: Table) -> MeasurementsGroup:
+def table_coordinates(table: Table) -> Coordinates:
     """The table's base, the root of a line's coordinates, and each flyway's centre
     relative to it."""
     base = coordinate_ref("TableBase")
@@ -165,22 +164,23 @@ def table_coordinates(table: Table) -> MeasurementsGroup:
         name = f"Flyway_{column}_{row}"
         found[name] = coordinate(name, "Flyway", Location(x=(column + 0.5) * table.flyway, y=(row + 0.5) * table.flyway),
                                  base, description=f"The centre of the flyway in column {column}, row {row}")
-    return MeasurementsGroup(value={"Coordinates": Coordinates(coordinate=found)})
+    return Coordinates(coordinate=found)
 
 
-def shuttle_coordinates(table_aas: str) -> MeasurementsGroup:
+def shuttle_coordinates(table_aas: str) -> Coordinates:
     """The xbot, relative to the table's base (``table_aas``: the table's AAS id): its X, Y and
-    Yaw follow the pose the controller measures."""
-    return MeasurementsGroup(value={"Coordinates": Coordinates(coordinate={"Xbot": coordinate(
-        "Xbot", "Mover", None, coordinate_ref("TableBase", table_aas),
-        {"X": "Xbot_X", "Y": "Xbot_Y", "Yaw": "Xbot_Rz"}, description="Where the xbot is on the table")})})
+    Yaw are the fields of the pose the controller measures (Measurements/Xbot)."""
+    pose = {value: record_field_ref("Measurements", "Xbot", f"Xbot_{signal}")
+            for value, signal in (("X", "X"), ("Y", "Y"), ("Yaw", "Rz"))}
+    return Coordinates(coordinate={"Xbot": coordinate(
+        "Xbot", "Mover", None, coordinate_ref("TableBase", table_aas), pose, description="Where the xbot is on the table")})
 
 
 def describe_all(table: Table) -> list[dict]:
     """The profiles of the table (the first), then of each shuttle and its xbot."""
     built = PlanarDescriber(table_spec(), table, "Planar table (Planar Motor), through the planar controller").build()
     module = built[0][0]
-    module.variables.Measurements = table_coordinates(table)
+    module.variables.Measurements.value["Coordinates"] = table_coordinates(table)
     nodes = module.hierarchical_structures.EntryNode.Node
     for n in table.shuttles:
         nodes[shuttle(n)] = model.LocatedNode(id_short=shuttle(n), entity_type="SelfManagedEntity",
@@ -190,7 +190,7 @@ def describe_all(table: Table) -> list[dict]:
         nodes[f"Flyway_{column}_{row}"] = flyway(column, row)
     for n in table.shuttles:
         made = PlanarDescriber(shuttle_spec(n), table, f"Shuttle {n} of the planar table (an xbot)").build()
-        made[0][0].variables.Measurements = shuttle_coordinates(module.id)
+        made[0][0].variables.Measurements.value["Coordinates"] = shuttle_coordinates(module.id)
         built += made
     return [model.profile(found, global_asset_id=asset_id) for found, asset_id in built]
 

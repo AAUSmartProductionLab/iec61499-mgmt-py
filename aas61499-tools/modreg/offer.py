@@ -55,9 +55,14 @@ def targets(config: dict, which: str) -> list[str]:
 
 
 def feeds_data(config: dict) -> bool:
-    """The mapping from the interface's properties to the data points (the others invoke an action)."""
+    """A mapping from the interface's properties to a time series (the others invoke an action)."""
     return any(key["value"] == "properties" for entry in children(at(config, "Sources"))
                for key in at(entry, "Source")["value"]["keys"])
+
+
+def series_of_mapping(config: dict) -> tuple[str, ...]:
+    """The series a mapping writes rows to: the group and series of its sink's segment."""
+    return tuple(k["value"] for entry in children(at(config, "Sinks")) for k in at(entry, "Sink")["value"]["keys"][1:3])
 
 
 def lua(config: dict) -> str:
@@ -87,27 +92,25 @@ def offered(module: dict, spec: ModuleSpec, skills: list[str]) -> dict:
     for kind in ("actions", "properties"):
         add(at(submodel(module, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", kind),
             children(at(submodel(built, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", kind)))
-    add(submodel(module, "Variables"), children(submodel(built, "Variables")), "submodelElements")
+    # The new skills' values are series of their own (State/<Skill>): those the module has not got yet
+    # are added, each with the mapping that writes its rows.
+    variables = submodel(module, "Variables")
+    for group in children(submodel(built, "Variables")):
+        mine = at(variables, group["idShort"])
+        if mine is None:
+            variables.setdefault("submodelElements", []).append(group)
+        else:
+            add(mine, children(group))
 
     held = at(submodel(module, "AssetInterfacesMappingConfiguration"), "MappingConfigurations")
-    data = next(c for c in children(held) if feeds_data(c))
+    written = {series_of_mapping(c) for c in children(held) if feeds_data(c)}
     invoked = {t for c in children(held) if not feeds_data(c) for t in targets(c, "Sinks")}
     for config in children(at(submodel(built, "AssetInterfacesMappingConfiguration"), "MappingConfigurations")):
-        if not feeds_data(config):
-            if not set(targets(config, "Sinks")) <= invoked:
+        if feeds_data(config):
+            if series_of_mapping(config) not in written:
                 held["value"].append(config)
-            continue
-        fed = set(targets(data, "Sinks"))
-        new = [i for i, name in enumerate(targets(config, "Sinks")) if name not in fed]
-        for which in ("Sources", "Sinks"):
-            at(data, which)["value"] += [children(at(config, which))[i] for i in new]
-        # One more line of the transformation per property: it hands each source to its data point.
-        keys = [targets(config, "Sources")[i] for i in new]
-        text, end = lua(data), "\n    }\nend\n"
-        if not text.endswith(end):
-            raise ValueError("the mapping of the interface's properties has a transformation this tool did not write")
-        text = text[:-len(end)] + "".join(f"\n        {key} = sources.{key}," for key in keys) + end
-        at(data, "Transformation")["value"] = base64.b64encode(text.encode("utf-8")).decode("ascii")
+        elif not set(targets(config, "Sinks")) <= invoked:
+            held["value"].append(config)
 
     for name in skills:
         described, complete = at(submodel(module, "Skills"), name), at(submodel(built, "Skills"), name)

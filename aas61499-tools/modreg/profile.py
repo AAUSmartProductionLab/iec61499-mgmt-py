@@ -39,7 +39,9 @@ from aas_model.constants import AID_WOT_NAME, BASE_URL
 from aas_model.json_schema_aid import datapoint_from_schema
 from aas_model.resource_template import skill_operation
 from aas_model.resource_template._helpers import put
-from aas_model.resource_template.asset_interfaces_mapping_configuration import mapping_configuration, sink, source
+from aas_model.resource_template.asset_interfaces_mapping_configuration import (
+    mapping_configuration, series_segment_ref, sink, source,
+)
 from aas_model.submodel_templates import (
     Aimc, AimcMappingConfigurations, DmpActionInput, DmpActionOutput, DmpProperty, OpcuaAction,
     DmpProperties, OpcuaActions, ReadOnly, Synchronous, UavComponentOf,
@@ -65,7 +67,8 @@ from aas_model.submodel_templates.coordinates import (
     CoordinateRelativeTo, CoordinateSource, Coordinates, CoordinatePitch, CoordinateRoll, CoordinateX, CoordinateY,
     CoordinateYaw, CoordinateZ, RelativeCoordinate,
 )
-from aas_model.submodel_templates.variables import MeasurementsGroup, VariableProp
+from aas_model.submodel_templates.time_series import record_field, time_series
+from aas_model.submodel_templates.variables import MeasurementsGroup, StateGroup
 from .lab import nameplate
 from .model import Component, Module
 
@@ -137,6 +140,42 @@ def meaning(name: str, given: str | None = None) -> str:
 
 
 COORDINATES = ((SMC, "Measurements"), (SMC, "Coordinates"))
+# The module's own state, a series of its own.
+MODULE_STATE_POINTS = ("PackMLState", "OccupationState")
+# What a series holds, by its name, else by its group.
+SERIES_ABOUT = {
+    "Module": "The module's PackML state and its occupation, as they change",
+    "Procedures": "The steps of the module's procedures (resetting, stopping): their state and error, as they run",
+    "State": "A run of the skill {series}: its state, error, parameters and results, and those of its steps",
+    "Measurements": "The inputs of {series}, as they change",
+}
+
+
+def series_of(spec: ModuleSpec, name: str) -> tuple[str, str]:
+    """Where the value a module publishes as ``name`` is kept: the group of its Variables and the time
+    series in it. A series holds what changes together: the module's state and occupation (State/Module),
+    one skill's run with its steps (State/<Skill>), the procedures' (State/Procedures), and one item of
+    equipment's inputs (Measurements/<Item>)."""
+    if name in MODULE_STATE_POINTS:
+        return "State", "Module"
+    for item, eq in spec.equipment.items():
+        if name.startswith(f"{item}_") and name[len(item) + 1:] in eq.inputs:
+            return "Measurements", item
+    if name.startswith("Procedure_"):
+        return "State", "Procedures"
+    return "State", name.split("_", 1)[0]
+
+
+def record_field_ref(group: str, series: str, name: str, aas_id: str | None = None) -> ModelReference:
+    """The field ``name`` of the series ``group/series`` of the Variables of this AAS (``aas_id`` None)
+    or of the AAS ``aas_id``: where a value is found in the time series database."""
+    return path(DATA if aas_id is None else f"{aas_id}/submodels/Variables", (SMC, group), (SMC, series),
+                (SMC, "Metadata"), (SMC, "Record"), ("Property", name))
+
+
+def field_ref(spec: ModuleSpec, name: str) -> ModelReference:
+    """The record field of the value the module publishes as ``name``."""
+    return record_field_ref(*series_of(spec, name), name)
 
 
 def coordinate_ref(name: str, aas_id: str | None = None) -> ModelReference:
@@ -145,10 +184,10 @@ def coordinate_ref(name: str, aas_id: str | None = None) -> ModelReference:
 
 
 def coordinate(name: str, meant: str | None = None, location=None, relative_to: ModelReference | None = None,
-               sources: dict[str, str] | None = None, description: str = "") -> RelativeCoordinate:
+               sources: dict[str, ModelReference] | None = None, description: str = "") -> RelativeCoordinate:
     """A coordinate: ``location`` (x, y, z, rx, ry, rz; none: zero) relative to ``relative_to`` (none:
     a root, or not placed yet), in mm and degrees; ``meant`` a meaning of the vocabulary; ``sources``
-    the variable each moving value is (``{"Z": "LinearAxis_ActualPosition"}``)."""
+    the record field each moving value is (``{"Z": <Measurements/LinearAxis/.../LinearAxis_ActualPosition>}``)."""
     given = [float(getattr(location, a, 0.0)) if location is not None else 0.0 for a in ("x", "y", "z", "rx", "ry", "rz")]
     made = RelativeCoordinate(
         id_short=name, description=description, supplemental_semantic_ids=[meaning(meant)] if meant else [],
@@ -157,8 +196,8 @@ def coordinate(name: str, meant: str | None = None, location=None, relative_to: 
         Yaw=CoordinateYaw(value=text(given[5])))
     if relative_to is not None:
         made.RelativeTo = CoordinateRelativeTo(value=relative_to)
-    for value, point in (sources or {}).items():
-        made.source[f"{value}Source"] = CoordinateSource(id_short=f"{value}Source", value=path(DATA, ("Property", point)))
+    for value, field in (sources or {}).items():
+        made.source[f"{value}Source"] = CoordinateSource(id_short=f"{value}Source", value=field)
     return made
 
 
@@ -647,10 +686,10 @@ class Describer:
 
     # Submodels -------------------------------------------------------------------------------
 
-    def coordinates(self) -> MeasurementsGroup:
-        """Where the module and its points are (ARSO 0.13): its base, not placed until it is put on a
-        line; for an item with a location, its mount, and for an axis also its end effector, which
-        moves along the mount's Z axis as the axis' actual position; its points of interest."""
+    def coordinates(self) -> Coordinates:
+        """Where the module and its points are: its base, not placed until it is put on a line; for an
+        item with a location, its mount, and for an axis also its end effector, which moves along the
+        mount's Z axis as the axis' actual position (a record field); its points of interest."""
         spec, base = self.spec, coordinate_ref("ModuleBase")
         found = {"ModuleBase": coordinate("ModuleBase", "ModuleBase", description=f"The base of the {spec.module} module")}
         for item, eq in spec.equipment.items():
@@ -660,14 +699,14 @@ class Describer:
             if eq.position is not None and actual in self.datapoints:
                 found[f"{item}Mount"] = coordinate(f"{item}Mount", "Mount", eq.location, base,
                                                    description=f"Where {item} is mounted, at its zero; Z along its travel")
-                found[item] = coordinate(item, "EndEffector", None, coordinate_ref(f"{item}Mount"), {"Z": actual},
+                found[item] = coordinate(item, "EndEffector", None, coordinate_ref(f"{item}Mount"), {"Z": field_ref(spec, actual)},
                                          description=f"The tool point of {item}, its actual position along the mount's Z")
             else:
                 found[item] = coordinate(item, None, eq.location, base, description=eq.description or f"Equipment {item}")
         for name, point in spec.points.items():
             found[name] = coordinate(name, point.meaning, point.location, base,
                                      description=point.description or f"{point.meaning} of the {spec.module} module")
-        return MeasurementsGroup(value={"Coordinates": Coordinates(coordinate=found)})
+        return Coordinates(coordinate=found)
 
     def interface_and_data(self, asset: Module):
         """Put the actions, properties and data points described so far into ``asset``."""
@@ -679,25 +718,46 @@ class Describer:
             put(interface.InteractionMetadata.actions.property_name, key, action)
         for key, p in self.properties.items():
             put(interface.InteractionMetadata.properties.property_name, key, p)
-        # A data point is a variable, a decimal: states and counts as their number, a Boolean as 0 or 1.
-        # What it shows is its supplemental semantic id (aas-model's Variables).
-        for name, (_, concept, title) in self.datapoints.items():
-            asset.variables.variable[name] = VariableProp(
-                id_short=name, value="0", value_type="xs:decimal", supplemental_semantic_ids=[concept], description=title)
+        # No value is kept in the AAS: each is a field of a time series, whose rows are in the time
+        # series database; the series says where (aas-model's Variables, IDTA 02008 as SMCs). A field
+        # is a decimal (states and counts as their number, a Boolean as 0 or 1); what it shows is its
+        # supplemental semantic id.
+        made = {group: {series: time_series(
+                    name=f"{series} ({group})", measurement=f"{group}_{series}".lower(),
+                    description=SERIES_ABOUT.get(series, SERIES_ABOUT[group]).format(series=series),
+                    fields={name: record_field("xs:decimal", concept=concept, description=title)
+                            for name, (_, concept, title) in points.items()})
+                         for series, points in found.items()}
+                for group, found in self.series().items()}
+        if made.get("State"):
+            asset.variables.State = StateGroup(value=made["State"])
+        if made.get("Measurements"):
+            asset.variables.Measurements = MeasurementsGroup(value=made["Measurements"])
+
+    def series(self) -> dict[str, dict[str, dict[str, tuple[str, str, str]]]]:
+        """The values described so far by group and series (``series_of``): name -> (interface
+        property, concept, title)."""
+        found: dict[str, dict[str, dict[str, tuple[str, str, str]]]] = {}
+        for name, point in self.datapoints.items():
+            group, series = series_of(self.spec, name)
+            found.setdefault(group, {}).setdefault(series, {})[name] = point
+        return found
 
     def mappings(self) -> Aimc:
-        """How the interface reaches the other submodels (AIMC): every property of the interface
-        feeds its data point in Variables, and every action of the interface is invoked by one
+        """How the interface reaches the other submodels (AIMC): the properties of the interface give
+        the rows of the time series (one mapping per series: each property a field, the row written to
+        the series' segment in the database), and every action of the interface is invoked by one
         Operation (a command of a skill, in this AAS or in a component's; a command of the module)."""
-        def identity(id_short: str, feeds: dict[str, ModelReference]) -> object:
-            lines = "\n".join(f"        {key} = sources.{key}," for key in feeds)
-            return mapping_configuration(
-                id_short=id_short, sources=[source(key, affordance("properties", key)) for key in feeds],
-                sinks=[sink(key, sinks) for key, sinks in feeds.items()],
-                transformation=f"function aimc_main(sources)\n    return {{\n{lines}\n    }}\nend\n")
-
-        data = {key: path(DATA, ("Property", point)) for point, (key, _, _) in self.datapoints.items()}
-        mappings = [identity("OPCUA", data)]
+        mappings = []
+        for group, found in self.series().items():
+            for series, points in found.items():
+                lines = "\n".join(f"            {name} = sources.{name}," for name in points)
+                mappings.append(mapping_configuration(
+                    id_short=f"{group}_{series}",
+                    sources=[source(name, affordance("properties", key)) for name, (key, _, _) in points.items()],
+                    sinks=[sink("Live", series_segment_ref(group, series))],
+                    transformation=(f"-- A row of {group}/{series}: each property of the interface is the field of its name\n"
+                                    f"function aimc_main(sources)\n    return {{\n        Live = {{\n{lines}\n        }},\n    }}\nend\n")))
         for action, (at, arguments) in self.operations.items():
             fields = "\n".join(f"            {a} = op.{a}," for a in arguments)
             mappings.append(mapping_configuration(
@@ -814,7 +874,9 @@ class Describer:
         interface.EndpointMetadata.contentType.value = "application/octet-stream"
         interface.EndpointMetadata.securityDefinitions.nosec_sc = wot.nosec_sc(scheme=wot.Scheme(value="nosec"))
         self.interface_and_data(asset)
-        asset.variables.Measurements = self.coordinates()
+        # Beside the measurement series, where the module and its points are.
+        asset.variables.Measurements = asset.variables.Measurements or MeasurementsGroup()
+        asset.variables.Measurements.value["Coordinates"] = self.coordinates()
         asset.capability_description = self.capabilities()
         asset.asset_interfaces_mapping_configuration = self.mappings()
         return [(Module.model_validate(asset.model_dump()), asset_id),

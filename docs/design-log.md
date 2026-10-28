@@ -18,6 +18,23 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
+- **A module keeps no live value in its AAS: its values are time series in the database, and the
+  AAS says where.** *Journal.* Decided by the user.
+  - Why: the values change fast (a position while the axis moves, a weight while it fills). Pushing
+    each change into the AAS server loads it with writes nobody reads there, and keeps no history.
+    A time series database keeps every row; a reader asks it for the latest or for a span.
+  - The Variables of a module hold aas-model's time series SMCs (IDTA 02008 as SMCs): `State/Module`
+    (PackML state, occupation), `State/<Skill>` (one skill's run: its state, error, parameters and
+    results and its steps'), `State/Procedures`, `Measurements/<Item>` (an item of equipment's
+    inputs). A series groups what changes together, as aas-model asks, not one value each. Each field
+    is a decimal with its meaning as supplemental id; each series has a segment naming its InfluxDB
+    measurement (`state_dispensing`, `measurements_linearaxis`), tagged with the module's AAS.
+  - Instead of: a Property per value that the mapping keeps current (45 for the filling module), and
+    instead of aas-model's stations' both (a Property and a series).
+  - One mapping per series writes a row: each interface property is the field its SourceId names.
+    modlink finds what a skill's state shows through that (the field's meaning); a capability's
+    `SameAs` and a coordinate's `ZSource` refer to a record field. `Log` (the calls of skills) is
+    not written yet.
 - **A shuttle is its xbot: no AAS of the xbot apart from the shuttle's.** *Journal.* The shuttle's
   `MoveToPosition` is its own skill. Until now the xbot was a component (`PlanarShuttle<N>XbotAAS`)
   because it is the shuttle spec's equipment that the skill moves; but there is no part to tell
