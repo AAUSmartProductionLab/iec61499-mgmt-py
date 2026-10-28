@@ -8,20 +8,20 @@
       <Group Name="Procedures" Comment="Procedures the module state manager runs while Resetting and Stopping" x="9280" y="1000" width="5890" height="1730" locked="false" />
       <Group Name="SkillPrimitives" Comment="Skill primitives: one equipment command until a sensor or a time; OPC UA /Skills/&lt;name&gt;" x="1000" y="3530" width="6630" height="2730" locked="false" />
       <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="7930" y="3530" width="3855" height="2940" locked="false" />
-      <FB Name="Occupation" Type="modlib::MOD_Occupation" x="1065" y="500">
+      <FB Name="Occupation" Type="modlib::MOD_Occupation" x="1065" y="500" Comment="Who may command the module. A client calls Occupy(Session) at /Objects/Filler/Occupation first; until it calls Release, only commands with that session id are accepted. Every block hears the owner on loc[Filler/owner].">
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="Module" Type="modlib::MOD_StateManager" x="3710" y="500">
+      <FB Name="Module" Type="modlib::MOD_StateManager" x="3710" y="500" Comment="The module's PackML state. The owner calls Reset, Start, Stop, Abort or Clear at /Objects/Filler/Module; State is at /Objects/Filler/Module/State and on loc[Filler/state]. Reset runs the Resetting procedure, Stop the Stopping procedure; skills may be started only in Execute.">
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="StopTimeout" Value="T#10000ms" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="NeedleAxis" Type="filler::EQ_NeedleAxis" x="1700" y="500">
+      <FB Name="NeedleAxis" Type="filler::EQ_NeedleAxis" x="1700" y="500" Comment="Equipment NeedleAxis: Needle lift with down/up valves, end switches and a position sensor. The only block that touches its pins (AtTop = modbus[127.0.0.1:1504:1:10:d0:], AtBottom = modbus[127.0.0.1:1504:1:10:d1:], Position = modbus[127.0.0.1:1504:1:10:i1:], Down = modbus[127.0.0.1:1504:1:0::c0], Up = modbus[127.0.0.1:1504:1:0::c2]). Skills send it what to switch on loc[Filler/NeedleAxis/cmd]; it reports its inputs on loc[Filler/NeedleAxis/state] and at /Objects/Filler/Equipment/NeedleAxis.">
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
@@ -32,7 +32,7 @@
         <Parameter Name="Up_Address" Value="'modbus[127.0.0.1:1504:1:0::c2]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
-      <FB Name="MoveNeedleDown" Type="filler::SK_MoveNeedleDown" x="1380" y="500">
+      <FB Name="MoveNeedleDown" Type="filler::SK_MoveNeedleDown" x="1380" y="500" Comment="Skill MoveNeedleDown, offered on its own: Lower the needle to Distance mm below the top; the default is all the way down, using NeedleAxis. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Filler/Skills/MoveNeedleDown; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleDown&quot;" />
@@ -42,7 +42,7 @@
         <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="4670" y="500">
+      <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="4670" y="500" Comment="Skill MoveNeedleUp, offered on its own: Raise the needle to the top end switch, using NeedleAxis. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Filler/Skills/MoveNeedleUp; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleUp&quot;" />
@@ -68,7 +68,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000">
+          <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000" Comment="Step 1 of Resetting: runs the skill MoveNeedleUp. Its State and ErrorID are at /Objects/Filler/Procedures/Resetting/MoveNeedleUp; it keeps the equipment under the name Procedures/Resetting.">
             <Parameter Name="Module" Value="&quot;Filler&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/MoveNeedleUp&quot;" />
@@ -118,7 +118,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000">
+          <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000" Comment="Step 1 of Stopping: runs the skill MoveNeedleUp. Its State and ErrorID are at /Objects/Filler/Procedures/Stopping/MoveNeedleUp; it keeps the equipment under the name Procedures/Stopping.">
             <Parameter Name="Module" Value="&quot;Filler&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/MoveNeedleUp&quot;" />
@@ -165,7 +165,7 @@
           <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="1000" y="2900" width="3575" height="3440" locked="false" />
           <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="1000" y="6640" width="8915" height="2230" locked="false" />
           <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="5955" y="1000" width="5680" height="1930" locked="false" />
-          <FB Name="Control" Type="modlib::SKILL_Core" x="1065" y="500">
+          <FB Name="Control" Type="modlib::SKILL_Core" x="1065" y="500" Comment="The state machine of the skill Fill: checks a client's Start (occupation, module in Execute, not running, values in range), publishes State and ErrorID at /Objects/Filler/Skills/Fill, offers Stop, Abort and Reset there, starts Execute and runs Stop when the skill is stopped.">
             <Parameter Name="Module" Value="&quot;Filler&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Fill&quot;" />
@@ -175,17 +175,17 @@
             <Parameter Name="ReleaseAll" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="Core" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="1190" y="500">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="1190" y="500" Comment="The OPC UA method Start of Fill: a client's call (session id and parameters) arrives here; the parameters are checked, then Control answers Accepted or an error code.">
             <Parameter Name="QI" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="Depth" Type="modlib::SKILL_Param_LREAL" x="3920" y="500">
+          <FB Name="Depth" Type="modlib::SKILL_Param_LREAL" x="3920" y="500" Comment="The parameter Depth of Fill: default 50.0 (Lower 0.0, Upper 50.0); checks a client's value, then holds it for the run and hands it to the steps.">
             <Parameter Name="Default" Value="50.0" />
             <Parameter Name="Lower" Value="0.0" />
             <Parameter Name="Upper" Value="50.0" />
             <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="7835" y="500">
+          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="7835" y="500" Comment="Writes the parameters of the run to OPC UA: /Objects/Filler/Skills/Fill/Parameters/Depth">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;opc_ua[WRITE;/Objects/Filler/Skills/Fill/Parameters/Depth]&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Start" />
@@ -212,7 +212,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="MoveNeedleDown" Type="filler::SK_MoveNeedleDown" x="2500" y="1000">
+              <FB Name="MoveNeedleDown" Type="filler::SK_MoveNeedleDown" x="2500" y="1000" Comment="Step 1 of Fill / Execute: runs the skill MoveNeedleDown; Distance from Fill's Depth. Its State and ErrorID are at /Objects/Filler/Skills/Fill/Execute/MoveNeedleDown; it keeps the equipment under the name Fill.">
                 <Parameter Name="Module" Value="&quot;Filler&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Execute/MoveNeedleDown&quot;" />
@@ -221,7 +221,7 @@
                 <Parameter Name="Holder" Value="&quot;Fill&quot;" />
                 <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
-              <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="6340" y="1000">
+              <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="6340" y="1000" Comment="Step 2 of Fill / Execute: runs the skill MoveNeedleUp. Its State and ErrorID are at /Objects/Filler/Skills/Fill/Execute/MoveNeedleUp; it keeps the equipment under the name Fill.">
                 <Parameter Name="Module" Value="&quot;Filler&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Execute/MoveNeedleUp&quot;" />
@@ -230,7 +230,7 @@
                 <Parameter Name="Holder" Value="&quot;Fill&quot;" />
                 <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
-              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="9430" y="1000" />
+              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="9430" y="1000" Comment="Joins the failures of the steps into one (with its error code), so any step's failure ends the sequence." />
               <EventConnections>
                 <Connection Source="MoveNeedleDown.SUCCESS" Destination="MoveNeedleUp.START">
                   <Attribute Name="Visible" Value="false" />
@@ -314,7 +314,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000">
+              <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000" Comment="Step 1 of Fill / Stop: runs the skill MoveNeedleUp. Its State and ErrorID are at /Objects/Filler/Skills/Fill/Stopping/MoveNeedleUp; it keeps the equipment under the name Fill.">
                 <Parameter Name="Module" Value="&quot;Filler&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Stopping/MoveNeedleUp&quot;" />
@@ -516,20 +516,20 @@
       <Group Name="Procedures" Comment="Procedures the module state manager runs while Resetting and Stopping" x="9280" y="1000" width="5890" height="1730" locked="false" />
       <Group Name="SkillPrimitives" Comment="Skill primitives: one equipment command until a sensor or a time; OPC UA /Skills/&lt;name&gt;" x="1000" y="3530" width="6630" height="2730" locked="false" />
       <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="7930" y="3530" width="3850" height="2940" locked="false" />
-      <FB Name="Occupation" Type="modlib::MOD_Occupation" x="1065" y="500">
+      <FB Name="Occupation" Type="modlib::MOD_Occupation" x="1065" y="500" Comment="Who may command the module. A client calls Occupy(Session) at /Objects/Filler/Occupation first; until it calls Release, only commands with that session id are accepted. Every block hears the owner on loc[Filler/owner].">
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="Module" Type="modlib::MOD_StateManager" x="3710" y="500">
+      <FB Name="Module" Type="modlib::MOD_StateManager" x="3710" y="500" Comment="The module's PackML state. The owner calls Reset, Start, Stop, Abort or Clear at /Objects/Filler/Module; State is at /Objects/Filler/Module/State and on loc[Filler/state]. Reset runs the Resetting procedure, Stop the Stopping procedure; skills may be started only in Execute.">
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="StopTimeout" Value="T#10000ms" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="NeedleAxis" Type="filler::EQ_NeedleAxis" x="1695" y="500">
+      <FB Name="NeedleAxis" Type="filler::EQ_NeedleAxis" x="1695" y="500" Comment="Equipment NeedleAxis: Needle lift with down/up valves, end switches and a position sensor. The only block that touches its pins (AtTop = gpio[0:17:pull_up:active_low], AtBottom = gpio[0:27:pull_up:active_low], Position = sim, Down = gpio[0:5], Up = gpio[0:6]). Skills send it what to switch on loc[Filler/NeedleAxis/cmd]; it reports its inputs on loc[Filler/NeedleAxis/state] and at /Objects/Filler/Equipment/NeedleAxis.">
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
@@ -540,7 +540,7 @@
         <Parameter Name="Up_Address" Value="'gpio[0:6]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
-      <FB Name="MoveNeedleDown" Type="filler::SK_MoveNeedleDown" x="1380" y="500">
+      <FB Name="MoveNeedleDown" Type="filler::SK_MoveNeedleDown" x="1380" y="500" Comment="Skill MoveNeedleDown, offered on its own: Lower the needle to Distance mm below the top; the default is all the way down, using NeedleAxis. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Filler/Skills/MoveNeedleDown; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleDown&quot;" />
@@ -550,7 +550,7 @@
         <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="4670" y="500">
+      <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="4670" y="500" Comment="Skill MoveNeedleUp, offered on its own: Raise the needle to the top end switch, using NeedleAxis. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Filler/Skills/MoveNeedleUp; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Filler&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveNeedleUp&quot;" />
@@ -576,7 +576,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000">
+          <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000" Comment="Step 1 of Resetting: runs the skill MoveNeedleUp. Its State and ErrorID are at /Objects/Filler/Procedures/Resetting/MoveNeedleUp; it keeps the equipment under the name Procedures/Resetting.">
             <Parameter Name="Module" Value="&quot;Filler&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/MoveNeedleUp&quot;" />
@@ -626,7 +626,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000">
+          <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000" Comment="Step 1 of Stopping: runs the skill MoveNeedleUp. Its State and ErrorID are at /Objects/Filler/Procedures/Stopping/MoveNeedleUp; it keeps the equipment under the name Procedures/Stopping.">
             <Parameter Name="Module" Value="&quot;Filler&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/MoveNeedleUp&quot;" />
@@ -673,7 +673,7 @@
           <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="1000" y="2900" width="3575" height="3440" locked="false" />
           <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="1000" y="6640" width="8915" height="2230" locked="false" />
           <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="5955" y="1000" width="5680" height="1930" locked="false" />
-          <FB Name="Control" Type="modlib::SKILL_Core" x="1065" y="500">
+          <FB Name="Control" Type="modlib::SKILL_Core" x="1065" y="500" Comment="The state machine of the skill Fill: checks a client's Start (occupation, module in Execute, not running, values in range), publishes State and ErrorID at /Objects/Filler/Skills/Fill, offers Stop, Abort and Reset there, starts Execute and runs Stop when the skill is stopped.">
             <Parameter Name="Module" Value="&quot;Filler&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Fill&quot;" />
@@ -683,17 +683,17 @@
             <Parameter Name="ReleaseAll" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="Core" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="1190" y="500">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_2" x="1190" y="500" Comment="The OPC UA method Start of Fill: a client's call (session id and parameters) arrives here; the parameters are checked, then Control answers Accepted or an error code.">
             <Parameter Name="QI" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="Depth" Type="modlib::SKILL_Param_LREAL" x="3920" y="500">
+          <FB Name="Depth" Type="modlib::SKILL_Param_LREAL" x="3920" y="500" Comment="The parameter Depth of Fill: default 50.0 (Lower 0.0, Upper 50.0); checks a client's value, then holds it for the run and hands it to the steps.">
             <Parameter Name="Default" Value="50.0" />
             <Parameter Name="Lower" Value="0.0" />
             <Parameter Name="Upper" Value="50.0" />
             <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
-          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="7835" y="500">
+          <FB Name="PubParams" Type="iec61499::net::PUBLISH_1" x="7835" y="500" Comment="Writes the parameters of the run to OPC UA: /Objects/Filler/Skills/Fill/Parameters/Depth">
             <Parameter Name="QI" Value="TRUE" />
             <Parameter Name="ID" Value="&quot;opc_ua[WRITE;/Objects/Filler/Skills/Fill/Parameters/Depth]&quot;" />
             <Attribute Name="GroupName" Type="STRING" Value="Start" />
@@ -720,7 +720,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="MoveNeedleDown" Type="filler::SK_MoveNeedleDown" x="2500" y="1000">
+              <FB Name="MoveNeedleDown" Type="filler::SK_MoveNeedleDown" x="2500" y="1000" Comment="Step 1 of Fill / Execute: runs the skill MoveNeedleDown; Distance from Fill's Depth. Its State and ErrorID are at /Objects/Filler/Skills/Fill/Execute/MoveNeedleDown; it keeps the equipment under the name Fill.">
                 <Parameter Name="Module" Value="&quot;Filler&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Execute/MoveNeedleDown&quot;" />
@@ -729,7 +729,7 @@
                 <Parameter Name="Holder" Value="&quot;Fill&quot;" />
                 <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
-              <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="6340" y="1000">
+              <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="6340" y="1000" Comment="Step 2 of Fill / Execute: runs the skill MoveNeedleUp. Its State and ErrorID are at /Objects/Filler/Skills/Fill/Execute/MoveNeedleUp; it keeps the equipment under the name Fill.">
                 <Parameter Name="Module" Value="&quot;Filler&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Execute/MoveNeedleUp&quot;" />
@@ -738,7 +738,7 @@
                 <Parameter Name="Holder" Value="&quot;Fill&quot;" />
                 <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
-              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="9430" y="1000" />
+              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="9430" y="1000" Comment="Joins the failures of the steps into one (with its error code), so any step's failure ends the sequence." />
               <EventConnections>
                 <Connection Source="MoveNeedleDown.SUCCESS" Destination="MoveNeedleUp.START">
                   <Attribute Name="Visible" Value="false" />
@@ -822,7 +822,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000">
+              <FB Name="MoveNeedleUp" Type="filler::SK_MoveNeedleUp" x="2500" y="1000" Comment="Step 1 of Fill / Stop: runs the skill MoveNeedleUp. Its State and ErrorID are at /Objects/Filler/Skills/Fill/Stopping/MoveNeedleUp; it keeps the equipment under the name Fill.">
                 <Parameter Name="Module" Value="&quot;Filler&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Filler&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Fill/Stopping/MoveNeedleUp&quot;" />

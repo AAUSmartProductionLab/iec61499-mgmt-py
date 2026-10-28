@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="MOD_OwnerLatch" Comment="Local channel IDs of the occupation owner and its refresh query; types and forwards the received occupation owner">
+<FBType Name="MOD_OwnerLatch" Comment="Keeps the last owner heard on the owner channel. Technical: Local channel IDs of the occupation owner and its refresh query; types and forwards the received occupation owner">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />

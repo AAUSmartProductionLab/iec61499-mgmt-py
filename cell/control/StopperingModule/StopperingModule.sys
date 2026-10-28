@@ -8,20 +8,20 @@
       <Group Name="Procedures" Comment="Procedures the module state manager runs while Resetting and Stopping" x="4000" y="4400" width="3193.33" height="2123" locked="false" />
       <Group Name="SkillPrimitives" Comment="Skill primitives: one equipment command until a sensor or a time; OPC UA /Skills/&lt;name&gt;" x="1000" y="6800" width="6635" height="4493.33" locked="false" />
       <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="7935" y="6900" width="6655" height="3200" locked="false" />
-      <FB Name="Occupation" Type="modlib::MOD_Occupation" x="2400" y="893.33">
+      <FB Name="Occupation" Type="modlib::MOD_Occupation" x="2400" y="893.33" Comment="Who may command the module. A client calls Occupy(Session) at /Objects/Stoppering/Occupation first; until it calls Release, only commands with that session id are accepted. Every block hears the owner on loc[Stoppering/owner].">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="Module" Type="modlib::MOD_StateManager" x="5225" y="293.33">
+      <FB Name="Module" Type="modlib::MOD_StateManager" x="5225" y="293.33" Comment="The module's PackML state. The owner calls Reset, Start, Stop, Abort or Clear at /Objects/Stoppering/Module; State is at /Objects/Stoppering/Module/State and on loc[Stoppering/state]. Reset runs the Resetting procedure, Stop the Stopping procedure; skills may be started only in Execute.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="StopTimeout" Value="T#10000ms" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="LinearAxis" Type="stoppering::EQ_LinearAxis" x="1700" y="793.33">
+      <FB Name="LinearAxis" Type="stoppering::EQ_LinearAxis" x="1700" y="793.33" Comment="Equipment LinearAxis: Lift of the stoppering head, a stepper motor through a step and direction driver, with a limit switch at the top (home). The only block that touches its pins (AtHome = modbus[127.0.0.1:1503:1:10:d0:], Enable = modbus[127.0.0.1:1503:1:0::c0], Down = modbus[127.0.0.1:1503:1:0::c1], Step = modbus[127.0.0.1:1503:1:0::h0]). Skills send it what to switch on loc[Stoppering/LinearAxis/cmd]; it reports its inputs on loc[Stoppering/LinearAxis/state] and at /Objects/Stoppering/Equipment/LinearAxis.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
@@ -31,7 +31,7 @@
         <Parameter Name="Step_Address" Value="'modbus[127.0.0.1:1503:1:0::h0]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
-      <FB Name="Piston" Type="stoppering::EQ_Piston" x="4945" y="793.33">
+      <FB Name="Piston" Type="stoppering::EQ_Piston" x="4945" y="793.33" Comment="Equipment Piston: Small linear actuator that presses the stopper in, through an L298N (IN1 retract, IN2 extend); no sensors. The only block that touches its pins (Retract = modbus[127.0.0.1:1503:1:0::c2], Extend = modbus[127.0.0.1:1503:1:0::c3]). Skills send it what to switch on loc[Stoppering/Piston/cmd]; it reports its inputs on loc[Stoppering/Piston/state] and at /Objects/Stoppering/Equipment/Piston.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
@@ -39,7 +39,7 @@
         <Parameter Name="Extend_Address" Value="'modbus[127.0.0.1:1503:1:0::c3]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
-      <FB Name="Home" Type="stoppering::SK_Home" x="1360" y="393.33">
+      <FB Name="Home" Type="stoppering::SK_Home" x="1360" y="393.33" Comment="Skill Home, offered on its own: Head up to the limit switch; from there its position is known, using LinearAxis. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Stoppering/Skills/Home; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/Home&quot;" />
@@ -49,7 +49,7 @@
         <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="MoveAxis" Type="stoppering::SK_MoveAxis" x="4230" y="393.33">
+      <FB Name="MoveAxis" Type="stoppering::SK_MoveAxis" x="4230" y="393.33" Comment="Skill MoveAxis, offered on its own: Head to Position, measured down from the limit switch; the direction follows from where it is, using LinearAxis. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Stoppering/Skills/MoveAxis; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveAxis&quot;" />
@@ -59,7 +59,7 @@
         <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="1360" y="2293.33">
+      <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="1360" y="2293.33" Comment="Skill PressStopper, offered on its own: Press the stopper in, the piston out for the stroke and back in (open loop, by time), using Piston. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Stoppering/Skills/PressStopper; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/PressStopper&quot;" />
@@ -69,7 +69,7 @@
         <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="4615" y="2293.33">
+      <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="4615" y="2293.33" Comment="Skill RetractPiston, offered on its own: Piston back in for the stroke (open loop); for a piston left out by an abort, using Piston. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Stoppering/Skills/RetractPiston; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/RetractPiston&quot;" />
@@ -95,7 +95,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="2500" y="1000">
+          <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="2500" y="1000" Comment="Step 1 of Resetting: runs the skill RetractPiston. Its State and ErrorID are at /Objects/Stoppering/Procedures/Resetting/RetractPiston; it keeps the equipment under the name Procedures/Resetting.">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/RetractPiston&quot;" />
@@ -104,7 +104,7 @@
             <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
             <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
-          <FB Name="Home" Type="stoppering::SK_Home" x="5900" y="1000">
+          <FB Name="Home" Type="stoppering::SK_Home" x="5900" y="1000" Comment="Step 2 of Resetting: runs the skill Home. Its State and ErrorID are at /Objects/Stoppering/Procedures/Resetting/Home; it keeps the equipment under the name Procedures/Resetting.">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Home&quot;" />
@@ -113,7 +113,7 @@
             <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
             <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
-          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="8855" y="1000" />
+          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="8855" y="1000" Comment="Joins the failures of the steps into one (with its error code), so any step's failure ends the sequence." />
           <EventConnections>
             <Connection Source="RetractPiston.SUCCESS" Destination="Home.START">
               <Attribute Name="Visible" Value="false" />
@@ -173,7 +173,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="Home" Type="stoppering::SK_Home" x="2315" y="1000">
+          <FB Name="Home" Type="stoppering::SK_Home" x="2315" y="1000" Comment="Step 1 of Stopping: runs the skill Home. Its State and ErrorID are at /Objects/Stoppering/Procedures/Stopping/Home; it keeps the equipment under the name Procedures/Stopping.">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/Home&quot;" />
@@ -220,7 +220,7 @@
           <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="1000" y="2900" width="3475" height="3440" locked="false" />
           <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="1000" y="6640" width="2970" height="2040" locked="false" />
           <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="4975" y="1000" width="5680" height="1930" locked="false" />
-          <FB Name="Control" Type="modlib::SKILL_Core" x="1245" y="500">
+          <FB Name="Control" Type="modlib::SKILL_Core" x="1245" y="500" Comment="The state machine of the skill Stoppering: checks a client's Start (occupation, module in Execute, not running, values in range), publishes State and ErrorID at /Objects/Stoppering/Skills/Stoppering, offers Stop, Abort and Reset there, starts Execute and runs Stop when the skill is stopped.">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering&quot;" />
@@ -230,7 +230,7 @@
             <Parameter Name="ReleaseAll" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="Core" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="1190" y="500">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="1190" y="500" Comment="The OPC UA method Start of Stoppering: a client's call (session id and parameters) arrives here; the parameters are checked, then Control answers Accepted or an error code.">
             <Parameter Name="QI" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
@@ -253,7 +253,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="HeadDown" Type="stoppering::SK_MoveAxis" x="2500" y="1000">
+              <FB Name="HeadDown" Type="stoppering::SK_MoveAxis" x="2500" y="1000" Comment="Step 1 of Stoppering / Execute: runs the skill MoveAxis with Position = 40.0. Its State and ErrorID are at /Objects/Stoppering/Skills/Stoppering/Execute/HeadDown; it keeps the equipment under the name Stoppering.">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/HeadDown&quot;" />
@@ -263,7 +263,7 @@
                 <Parameter Name="ReleaseAfter" Value="FALSE" />
                 <Parameter Name="Position" Value="40.0" />
               </FB>
-              <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="6125" y="1000">
+              <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="6125" y="1000" Comment="Step 2 of Stoppering / Execute: runs the skill PressStopper. Its State and ErrorID are at /Objects/Stoppering/Skills/Stoppering/Execute/PressStopper; it keeps the equipment under the name Stoppering.">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/PressStopper&quot;" />
@@ -272,7 +272,7 @@
                 <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
-              <FB Name="Home" Type="stoppering::SK_Home" x="9605" y="1000">
+              <FB Name="Home" Type="stoppering::SK_Home" x="9605" y="1000" Comment="Step 3 of Stoppering / Execute: runs the skill Home. Its State and ErrorID are at /Objects/Stoppering/Skills/Stoppering/Execute/Home; it keeps the equipment under the name Stoppering.">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/Home&quot;" />
@@ -281,8 +281,8 @@
                 <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
-              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="12520" y="1000" />
-              <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="15130" y="1000" />
+              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="12520" y="1000" Comment="Joins the failures of the steps into one (with its error code), so any step's failure ends the sequence." />
+              <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="15130" y="1000" Comment="Joins the failures of the steps into one (with its error code), so any step's failure ends the sequence." />
               <EventConnections>
                 <Connection Source="HeadDown.SUCCESS" Destination="PressStopper.START">
                   <Attribute Name="Visible" Value="false" />
@@ -390,7 +390,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="Home" Type="stoppering::SK_Home" x="2500" y="1000">
+              <FB Name="Home" Type="stoppering::SK_Home" x="2500" y="1000" Comment="Step 1 of Stoppering / Stop: runs the skill Home. Its State and ErrorID are at /Objects/Stoppering/Skills/Stoppering/Stopping/Home; it keeps the equipment under the name Stoppering.">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Stopping/Home&quot;" />
@@ -568,20 +568,20 @@
       <Group Name="Procedures" Comment="Procedures the module state manager runs while Resetting and Stopping" x="4000" y="4400" width="3193.33" height="2123" locked="false" />
       <Group Name="SkillPrimitives" Comment="Skill primitives: one equipment command until a sensor or a time; OPC UA /Skills/&lt;name&gt;" x="1000" y="6800" width="6635" height="4493.33" locked="false" />
       <Group Name="EquipmentIO" Comment="Equipment IO: the only owners of the IO points; skills send them output values over local channels" x="7935" y="6900" width="6210" height="3200" locked="false" />
-      <FB Name="Occupation" Type="modlib::MOD_Occupation" x="2400" y="893.33">
+      <FB Name="Occupation" Type="modlib::MOD_Occupation" x="2400" y="893.33" Comment="Who may command the module. A client calls Occupy(Session) at /Objects/Stoppering/Occupation first; until it calls Release, only commands with that session id are accepted. Every block hears the owner on loc[Stoppering/owner].">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="Module" Type="modlib::MOD_StateManager" x="5225" y="293.33">
+      <FB Name="Module" Type="modlib::MOD_StateManager" x="5225" y="293.33" Comment="The module's PackML state. The owner calls Reset, Start, Stop, Abort or Clear at /Objects/Stoppering/Module; State is at /Objects/Stoppering/Module/State and on loc[Stoppering/state]. Reset runs the Resetting procedure, Stop the Stopping procedure; skills may be started only in Execute.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
         <Parameter Name="StopTimeout" Value="T#10000ms" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="LinearAxis" Type="stoppering::EQ_LinearAxis" x="1700" y="793.33">
+      <FB Name="LinearAxis" Type="stoppering::EQ_LinearAxis" x="1700" y="793.33" Comment="Equipment LinearAxis: Lift of the stoppering head, a stepper motor through a step and direction driver, with a limit switch at the top (home). The only block that touches its pins (AtHome = gpio[0:23:pull_up:active_low], Enable = gpio[0:17:active_low], Down = gpio[0:27], Step = pwm[0:2:1000000:/hostsys/class/pwm]). Skills send it what to switch on loc[Stoppering/LinearAxis/cmd]; it reports its inputs on loc[Stoppering/LinearAxis/state] and at /Objects/Stoppering/Equipment/LinearAxis.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
@@ -591,7 +591,7 @@
         <Parameter Name="Step_Address" Value="'pwm[0:2:1000000:/hostsys/class/pwm]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
-      <FB Name="Piston" Type="stoppering::EQ_Piston" x="4500" y="793.33">
+      <FB Name="Piston" Type="stoppering::EQ_Piston" x="4500" y="793.33" Comment="Equipment Piston: Small linear actuator that presses the stopper in, through an L298N (IN1 retract, IN2 extend); no sensors. The only block that touches its pins (Retract = gpio[0:5], Extend = gpio[0:6]). Skills send it what to switch on loc[Stoppering/Piston/cmd]; it reports its inputs on loc[Stoppering/Piston/state] and at /Objects/Stoppering/Equipment/Piston.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
@@ -599,7 +599,7 @@
         <Parameter Name="Extend_Address" Value="'gpio[0:6]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>
-      <FB Name="Home" Type="stoppering::SK_Home" x="1360" y="393.33">
+      <FB Name="Home" Type="stoppering::SK_Home" x="1360" y="393.33" Comment="Skill Home, offered on its own: Head up to the limit switch; from there its position is known, using LinearAxis. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Stoppering/Skills/Home; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/Home&quot;" />
@@ -609,7 +609,7 @@
         <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="MoveAxis" Type="stoppering::SK_MoveAxis" x="4230" y="393.33">
+      <FB Name="MoveAxis" Type="stoppering::SK_MoveAxis" x="4230" y="393.33" Comment="Skill MoveAxis, offered on its own: Head to Position, measured down from the limit switch; the direction follows from where it is, using LinearAxis. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Stoppering/Skills/MoveAxis; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/MoveAxis&quot;" />
@@ -619,7 +619,7 @@
         <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="1360" y="2293.33">
+      <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="1360" y="2293.33" Comment="Skill PressStopper, offered on its own: Press the stopper in, the piston out for the stroke and back in (open loop, by time), using Piston. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Stoppering/Skills/PressStopper; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/PressStopper&quot;" />
@@ -629,7 +629,7 @@
         <Parameter Name="ReleaseAfter" Value="TRUE" />
         <Attribute Name="GroupName" Type="STRING" Value="SkillPrimitives" />
       </FB>
-      <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="4615" y="2293.33">
+      <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="4615" y="2293.33" Comment="Skill RetractPiston, offered on its own: Piston back in for the stroke (open loop); for a piston left out by an abort, using Piston. A client calls Start (with the parameters), Stop, Abort or Reset at /Objects/Stoppering/Skills/RetractPiston; State, ErrorID, Parameters and Results are there too.">
         <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
         <Parameter Name="UaPath" Value="&quot;/Skills/RetractPiston&quot;" />
@@ -655,7 +655,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="2500" y="1000">
+          <FB Name="RetractPiston" Type="stoppering::SK_RetractPiston" x="2500" y="1000" Comment="Step 1 of Resetting: runs the skill RetractPiston. Its State and ErrorID are at /Objects/Stoppering/Procedures/Resetting/RetractPiston; it keeps the equipment under the name Procedures/Resetting.">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/RetractPiston&quot;" />
@@ -664,7 +664,7 @@
             <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
             <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
-          <FB Name="Home" Type="stoppering::SK_Home" x="5900" y="1000">
+          <FB Name="Home" Type="stoppering::SK_Home" x="5900" y="1000" Comment="Step 2 of Resetting: runs the skill Home. Its State and ErrorID are at /Objects/Stoppering/Procedures/Resetting/Home; it keeps the equipment under the name Procedures/Resetting.">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Resetting/Home&quot;" />
@@ -673,7 +673,7 @@
             <Parameter Name="Holder" Value="&quot;Procedures/Resetting&quot;" />
             <Parameter Name="ReleaseAfter" Value="TRUE" />
           </FB>
-          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="8855" y="1000" />
+          <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="8855" y="1000" Comment="Joins the failures of the steps into one (with its error code), so any step's failure ends the sequence." />
           <EventConnections>
             <Connection Source="RetractPiston.SUCCESS" Destination="Home.START">
               <Attribute Name="Visible" Value="false" />
@@ -733,7 +733,7 @@
           </OutputVars>
         </SubAppInterfaceList>
         <SubAppNetwork>
-          <FB Name="Home" Type="stoppering::SK_Home" x="2315" y="1000">
+          <FB Name="Home" Type="stoppering::SK_Home" x="2315" y="1000" Comment="Step 1 of Stopping: runs the skill Home. Its State and ErrorID are at /Objects/Stoppering/Procedures/Stopping/Home; it keeps the equipment under the name Procedures/Stopping.">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Procedures/Stopping/Home&quot;" />
@@ -780,7 +780,7 @@
           <Group Name="Core" Comment="The skill's state machine: Stop, Abort, Reset, State and ErrorID over OPC UA; gives up everything the skill holds when a run ends" x="1000" y="2900" width="3475" height="3440" locked="false" />
           <Group Name="Start" Comment="The Start method: one block per parameter (range check, value for this run), the values published" x="1000" y="6640" width="2970" height="2040" locked="false" />
           <Group Name="Sequences" Comment="What the skill does: Execute, and Stop when it is interrupted; private skill primitives in order" x="4975" y="1000" width="5680" height="1930" locked="false" />
-          <FB Name="Control" Type="modlib::SKILL_Core" x="1245" y="500">
+          <FB Name="Control" Type="modlib::SKILL_Core" x="1245" y="500" Comment="The state machine of the skill Stoppering: checks a client's Start (occupation, module in Execute, not running, values in range), publishes State and ErrorID at /Objects/Stoppering/Skills/Stoppering, offers Stop, Abort and Reset there, starts Execute and runs Stop when the skill is stopped.">
             <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
             <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
             <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering&quot;" />
@@ -790,7 +790,7 @@
             <Parameter Name="ReleaseAll" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="Core" />
           </FB>
-          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="1190" y="500">
+          <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="1190" y="500" Comment="The OPC UA method Start of Stoppering: a client's call (session id and parameters) arrives here; the parameters are checked, then Control answers Accepted or an error code.">
             <Parameter Name="QI" Value="TRUE" />
             <Attribute Name="GroupName" Type="STRING" Value="Start" />
           </FB>
@@ -813,7 +813,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="HeadDown" Type="stoppering::SK_MoveAxis" x="2500" y="1000">
+              <FB Name="HeadDown" Type="stoppering::SK_MoveAxis" x="2500" y="1000" Comment="Step 1 of Stoppering / Execute: runs the skill MoveAxis with Position = 40.0. Its State and ErrorID are at /Objects/Stoppering/Skills/Stoppering/Execute/HeadDown; it keeps the equipment under the name Stoppering.">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/HeadDown&quot;" />
@@ -823,7 +823,7 @@
                 <Parameter Name="ReleaseAfter" Value="FALSE" />
                 <Parameter Name="Position" Value="40.0" />
               </FB>
-              <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="6125" y="1000">
+              <FB Name="PressStopper" Type="stoppering::SK_PressStopper" x="6125" y="1000" Comment="Step 2 of Stoppering / Execute: runs the skill PressStopper. Its State and ErrorID are at /Objects/Stoppering/Skills/Stoppering/Execute/PressStopper; it keeps the equipment under the name Stoppering.">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/PressStopper&quot;" />
@@ -832,7 +832,7 @@
                 <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
-              <FB Name="Home" Type="stoppering::SK_Home" x="9605" y="1000">
+              <FB Name="Home" Type="stoppering::SK_Home" x="9605" y="1000" Comment="Step 3 of Stoppering / Execute: runs the skill Home. Its State and ErrorID are at /Objects/Stoppering/Skills/Stoppering/Execute/Home; it keeps the equipment under the name Stoppering.">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Execute/Home&quot;" />
@@ -841,8 +841,8 @@
                 <Parameter Name="Holder" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="ReleaseAfter" Value="FALSE" />
               </FB>
-              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="12520" y="1000" />
-              <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="15130" y="1000" />
+              <FB Name="Fail1" Type="modlib::SKILL_FailMerge" x="12520" y="1000" Comment="Joins the failures of the steps into one (with its error code), so any step's failure ends the sequence." />
+              <FB Name="Fail2" Type="modlib::SKILL_FailMerge" x="15130" y="1000" Comment="Joins the failures of the steps into one (with its error code), so any step's failure ends the sequence." />
               <EventConnections>
                 <Connection Source="HeadDown.SUCCESS" Destination="PressStopper.START">
                   <Attribute Name="Visible" Value="false" />
@@ -950,7 +950,7 @@
               </OutputVars>
             </SubAppInterfaceList>
             <SubAppNetwork>
-              <FB Name="Home" Type="stoppering::SK_Home" x="2500" y="1000">
+              <FB Name="Home" Type="stoppering::SK_Home" x="2500" y="1000" Comment="Step 1 of Stoppering / Stop: runs the skill Home. Its State and ErrorID are at /Objects/Stoppering/Skills/Stoppering/Stopping/Home; it keeps the equipment under the name Stoppering.">
                 <Parameter Name="Module" Value="&quot;Stoppering&quot;" />
                 <Parameter Name="UaRoot" Value="&quot;/Objects/Stoppering&quot;" />
                 <Parameter Name="UaPath" Value="&quot;/Skills/Stoppering/Stopping/Home&quot;" />

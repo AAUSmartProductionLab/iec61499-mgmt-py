@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EC_LinearAxis" Comment="Commands of LinearAxis as output values, in timed phases: Stop=0, Up=1, Down=2, MoveTo=3">
+<FBType Name="EC_LinearAxis" Comment="The equipment's command table: turns a command's name (Up, Down, Run, ...) into the output values to switch, phase by phase with their times. Technical: Commands of LinearAxis as output values, in timed phases: Stop=0, Up=1, Down=2, MoveTo=3">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="stoppering" />

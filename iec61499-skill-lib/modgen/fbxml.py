@@ -368,6 +368,10 @@ class TypeFile:
     def write(self):
         """Write the file and record it in the manifest; return the qualified name."""
         rel = Path(self.folder) / (self.name + self.ext)
+        from .explain import comment_type_network, type_comment     # plain words for the IDE
+        self.root.set("Comment", type_comment(self.name, self.root.get("Comment")))
+        if self.root.find("FBNetwork") is not None:
+            comment_type_network(self.name, self.root.find("FBNetwork"))
         from .pins import annotate                 # every pin of the interface gets its comment
         annotate(self.root, getattr(self.project, "domain", {}))
         settle = None

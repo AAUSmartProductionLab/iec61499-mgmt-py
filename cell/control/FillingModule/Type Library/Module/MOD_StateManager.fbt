@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="MOD_StateManager" Comment="Module state manager: OPC UA methods Reset/Start/Stop/Abort/Clear(Session) answer [Accepted, ErrorID]; publishes the PackML State over OPC UA and on the module's state channel; RUN_RESETTING and RUN_STOPPING start the procedures, which answer with *_DONE or *_FAILED">
+<FBType Name="MOD_StateManager" Comment="The module's PackML state: Stopped, Resetting, Idle, Execute, Stopping, Aborted. The owner changes it with the OPC UA methods Reset, Start, Stop, Abort and Clear. It runs the Resetting and Stopping procedures and publishes the state for clients and for every block. Technical: Module state manager: OPC UA methods Reset/Start/Stop/Abort/Clear(Session) answer [Accepted, ErrorID]; publishes the PackML State over OPC UA and on the module's state channel; RUN_RESETTING and RUN_STOPPING start the procedures, which answer with *_DONE or *_FAILED">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
@@ -30,26 +30,26 @@
     <OutputVars />
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Ids" Type="modlib::MOD_StateIds" x="1750" y="1000" />
-    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="4380" y="1000" />
-    <FB Name="Reset" Type="iec61499::net::SERVER_2_1" x="7110" y="1000" />
-    <FB Name="Start" Type="iec61499::net::SERVER_2_1" x="9760" y="1000" />
-    <FB Name="Stop" Type="iec61499::net::SERVER_2_1" x="1830" y="2500" />
-    <FB Name="Abort" Type="iec61499::net::SERVER_2_1" x="4460" y="2500" />
-    <FB Name="Clear" Type="iec61499::net::SERVER_2_1" x="7110" y="2500" />
-    <FB Name="Logic" Type="modlib::MOD_StateLogic" x="10080" y="2500" />
-    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1830" y="4900" />
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="4220" y="4900">
+    <FB Name="Ids" Type="modlib::MOD_StateIds" x="1750" y="1000" Comment="Builds the OPC UA addresses and channel names from the module's name." />
+    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="4380" y="1000" Comment="Knows who occupies the module: only the owner may change the state." />
+    <FB Name="Reset" Type="iec61499::net::SERVER_2_1" x="7110" y="1000" Comment="The OPC UA method Module/Reset(Session)." />
+    <FB Name="Start" Type="iec61499::net::SERVER_2_1" x="9760" y="1000" Comment="The OPC UA method Module/Start(Session)." />
+    <FB Name="Stop" Type="iec61499::net::SERVER_2_1" x="1830" y="2500" Comment="The OPC UA method Module/Stop(Session)." />
+    <FB Name="Abort" Type="iec61499::net::SERVER_2_1" x="4460" y="2500" Comment="The OPC UA method Module/Abort(Session)." />
+    <FB Name="Clear" Type="iec61499::net::SERVER_2_1" x="7110" y="2500" Comment="The OPC UA method Module/Clear(Session)." />
+    <FB Name="Logic" Type="modlib::MOD_StateLogic" x="10080" y="2500" Comment="The PackML state machine." />
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1830" y="4900" Comment="Writes Module/State to OPC UA." />
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="4220" y="4900" Comment="Tells every block the module state, on the state channel.">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="6990" y="4900">
+    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="6990" y="4900" Comment="Answers a block that asks for the state (at its start).">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="SubAct" Type="iec61499::net::SUBSCRIBE_1" x="9640" y="4900">
+    <FB Name="SubAct" Type="iec61499::net::SUBSCRIBE_1" x="9640" y="4900" Comment="Hears the skills say +1 when they start and -1 when they end.">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="Count" Type="modlib::MOD_ActivityCount" x="1590" y="5900" />
-    <FB Name="Wd" Type="iec61499::events::E_DELAY" x="4580" y="5900" />
+    <FB Name="Count" Type="modlib::MOD_ActivityCount" x="1590" y="5900" Comment="Counts the running skills: Stopping waits until none runs." />
+    <FB Name="Wd" Type="iec61499::events::E_DELAY" x="4580" y="5900" Comment="Gives up waiting for the skills to stop after StopTimeout: the module then aborts." />
     <EventConnections>
       <Connection Source="INIT" Destination="Ids.INIT">
         <Attribute Name="Visible" Value="false" />

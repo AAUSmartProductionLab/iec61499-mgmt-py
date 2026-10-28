@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SKILL_Core" Comment="Skill core: state machine, OPC UA Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID], State and ErrorID published, activity counted; the Start method (with the skill's parameters) is wired to START_REQ and START_RSP; RUN starts the execution, SUCCESS or FAILURE(ErrorID) ends it">
+<FBType Name="SKILL_Core" Comment="The part every skill shares: its state machine (Idle, Running, Stopping, Succeeded, Failed, Aborted), the OPC UA methods Stop, Abort and Reset, and the State and ErrorID it publishes. It checks a client's Start (the caller holds the occupation, the module is in Execute, the skill is not running, the values are in range, the equipment is free) and then starts the skill's own logic. Technical: Skill core: state machine, OPC UA Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID], State and ErrorID published, activity counted; the Start method (with the skill's parameters) is wired to START_REQ and START_RSP; RUN starts the execution, SUCCESS or FAILURE(ErrorID) ends it">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
@@ -76,36 +76,36 @@
     <Group Name="ModuleViews" Comment="The module's owner and state in, the activity count out" x="1000" y="5280" width="8330" height="1480" locked="false" />
     <Group Name="OpcUa" Comment="The methods Stop, Abort and Reset, and the published State and ErrorID" x="1000" y="7060" width="5980" height="2680" locked="false" />
     <Group Name="Release" Comment="At the end of a run of a module level skill: everything it holds given up" x="7280" y="7060" width="2250" height="1590" locked="false" />
-    <FB Name="Control" Type="modlib::SKILL_Control" x="1270" y="150">
+    <FB Name="Control" Type="modlib::SKILL_Control" x="1270" y="150" Comment="The skill's state machine (SKILL_Control).">
       <Attribute Name="GroupName" Type="STRING" Value="StateMachine" />
     </FB>
-    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="950" y="150">
+    <FB Name="Owner" Type="modlib::MOD_OwnerView" x="950" y="150" Comment="Knows who occupies the module: only the owner may command the skill over OPC UA.">
       <Attribute Name="GroupName" Type="STRING" Value="ModuleViews" />
     </FB>
-    <FB Name="Mode" Type="modlib::MOD_StateView" x="3660" y="150">
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="3660" y="150" Comment="Knows the module's state: a client may start the skill only in Execute; the skill stops when the module stops.">
       <Attribute Name="GroupName" Type="STRING" Value="ModuleViews" />
     </FB>
-    <FB Name="UaStop" Type="iec61499::net::SERVER_2_1" x="1190" y="150">
+    <FB Name="UaStop" Type="iec61499::net::SERVER_2_1" x="1190" y="150" Comment="The OPC UA method Stop(Session).">
       <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
     </FB>
-    <FB Name="UaAbort" Type="iec61499::net::SERVER_2_1" x="4080" y="150">
+    <FB Name="UaAbort" Type="iec61499::net::SERVER_2_1" x="4080" y="150" Comment="The OPC UA method Abort(Session).">
       <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
     </FB>
-    <FB Name="UaReset" Type="iec61499::net::SERVER_2_1" x="1190" y="1250">
+    <FB Name="UaReset" Type="iec61499::net::SERVER_2_1" x="1190" y="1250" Comment="The OPC UA method Reset(Session).">
       <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
     </FB>
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="3920" y="1250">
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="3920" y="1250" Comment="Writes State and ErrorID to OPC UA.">
       <Attribute Name="GroupName" Type="STRING" Value="OpcUa" />
     </FB>
-    <FB Name="Act" Type="iec61499::net::PUBLISH_1" x="6690" y="150">
+    <FB Name="Act" Type="iec61499::net::PUBLISH_1" x="6690" y="150" Comment="Says +1 when the skill starts and -1 when it ends, for the module's count of running skills.">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="ModuleViews" />
     </FB>
-    <FB Name="ToIdle" Type="iec61499::events::E_DELAY" x="4890" y="150">
+    <FB Name="ToIdle" Type="iec61499::events::E_DELAY" x="4890" y="150" Comment="Brings a succeeded skill back to Idle after 1.5 s.">
       <Parameter Name="DT" Value="T#1500ms" />
       <Attribute Name="GroupName" Type="STRING" Value="StateMachine" />
     </FB>
-    <FB Name="PubRelease" Type="iec61499::net::PUBLISH_1" x="1110" y="150">
+    <FB Name="PubRelease" Type="iec61499::net::PUBLISH_1" x="1110" y="150" Comment="When a run ends, says on the release channel that this skill gives up its equipment.">
       <Attribute Name="GroupName" Type="STRING" Value="Release" />
     </FB>
     <EventConnections>

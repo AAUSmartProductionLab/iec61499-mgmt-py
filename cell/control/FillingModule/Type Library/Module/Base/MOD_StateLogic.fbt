@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="MOD_StateLogic" Comment="PackML module state machine: commands only from the occupation owner and only where PackML allows them; runs the Resetting and Stopping procedures; Stopping waits until no skill is active">
+<FBType Name="MOD_StateLogic" Comment="The PackML state machine itself: accepts a command only from the owner and only where PackML allows it; while Stopping it waits until no skill runs any more. Technical: PackML module state machine: commands only from the occupation owner and only where PackML allows them; runs the Resetting and Stopping procedures; Stopping waits until no skill is active">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />

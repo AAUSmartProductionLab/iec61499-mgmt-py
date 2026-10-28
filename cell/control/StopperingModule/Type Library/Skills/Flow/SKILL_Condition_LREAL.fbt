@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SKILL_Condition_LREAL" Comment="Compares Operand with Expected by Operator (eq, ne, gt, gte, lt, lte): YES or NO">
+<FBType Name="SKILL_Condition_LREAL" Comment="One comparison in a decision of a skill (for example Weight greater than 1.9): answers YES or NO. Technical: Compares Operand with Expected by Operator (eq, ne, gt, gte, lt, lte): YES or NO">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />

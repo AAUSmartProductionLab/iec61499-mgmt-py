@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SKILL_Control" Comment="Skill state machine: Start/Stop/Abort/Reset over OPC UA (owner only, Start only in module Execute) and START/HALT/ABORT from a parent; Idle 0, Running 1, Stopping 2, Succeeded 3, Failed 4, Aborted 5; RUN starts the execution (CalledByClient: with the Start arguments, else with the parent's values)">
+<FBType Name="SKILL_Control" Comment="The skill's state machine inside SKILL_Core: what Start, Stop, Abort and Reset do in each state, and the answer a client gets. Technical: Skill state machine: Start/Stop/Abort/Reset over OPC UA (owner only, Start only in module Execute) and START/HALT/ABORT from a parent; Idle 0, Running 1, Stopping 2, Succeeded 3, Failed 4, Aborted 5; RUN starts the execution (CalledByClient: with the Start arguments, else with the parent's values)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EQ_Pump" Comment="Filling pump; none is wired yet, so it has no outputs and dispensing is a time at the station's flow rate; equipment IO: owns its IO points, writes the output values its holder sends, reads its inputs every cycle and reports changes">
+<FBType Name="EQ_Pump" Comment="An equipment block: the only block that touches this equipment's pins. Skills send it what to switch over a local channel; it switches the outputs (off first, then on), reads the inputs every cycle and reports them to the skills and to OPC UA. One skill holds it at a time; on release or when the module aborts it switches everything off. Technical: Filling pump; none is wired yet, so it has no outputs and dispensing is a time at the station's flow rate; equipment IO: owns its IO points, writes the output values its holder sends, reads its inputs every cycle and reports changes">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filling" />
@@ -28,24 +28,24 @@
   <FBNetwork>
     <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="4650" height="2280" locked="false" />
     <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="5950" y="1000" width="5260" height="2580" locked="false" />
-    <FB Name="Logic" Type="filling::EL_Pump" x="950" y="150">
+    <FB Name="Logic" Type="filling::EL_Pump" x="950" y="150" Comment="The equipment's logic (EL_): takes commands from one holder at a time, switches the outputs (off first, then on), switches all off on release or module abort, and reports input changes.">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="3690" y="150">
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="3690" y="150" Comment="Ticks every cycle so the inputs are read and the outputs refreshed.">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Mode" Type="modlib::MOD_StateView" x="950" y="150">
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="950" y="150" Comment="Watches the module's PackML state, to switch everything off when the module aborts.">
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_2" x="3500" y="150">
+    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_2" x="3500" y="150" Comment="Receives the commands skills send on this equipment's command channel.">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="950" y="1250">
+    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="950" y="1250" Comment="Hears the module's release channel: when its holder gives up, everything goes off.">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="3700" y="1250">
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="3700" y="1250" Comment="Publishes the inputs and the holder on this equipment's state channel, for the skills.">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>

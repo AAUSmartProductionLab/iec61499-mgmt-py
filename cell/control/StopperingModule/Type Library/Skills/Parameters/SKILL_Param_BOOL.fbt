@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SKILL_Param_BOOL" Comment="Skill parameter (BOOL): default, range check of a Start argument, latching for one run">
+<FBType Name="SKILL_Param_BOOL" Comment="One parameter of a skill: keeps its default, checks a value a client sends with Start against the limits, and holds the value for the run. Technical: Skill parameter (BOOL): default, range check of a Start argument, latching for one run">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="MOD_ActivityCount" Comment="Number of running skills from the +1/-1 activity channel">
+<FBType Name="MOD_ActivityCount" Comment="Counts the skills that are running: every skill says +1 when it starts and -1 when it ends. Technical: Number of running skills from the +1/-1 activity channel">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />

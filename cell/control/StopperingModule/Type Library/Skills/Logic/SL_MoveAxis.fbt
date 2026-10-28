@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SL_MoveAxis" Comment="MoveAxis: Precondition Homed; holds LinearAxis.MoveTo until NOT Moving AND ABS(ActualPosition - Position) &lt; 0.001; Invariant TRUE">
+<FBType Name="SL_MoveAxis" Comment="What a skill primitive does: wait until the equipment is free, check the precondition, send the command, then watch the equipment's signals (or a timer) until the skill is done, has failed or has timed out, and send the closing command. Technical: MoveAxis: Precondition Homed; holds LinearAxis.MoveTo until NOT Moving AND ABS(ActualPosition - Position) &lt; 0.001; Invariant TRUE">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="stoppering" />

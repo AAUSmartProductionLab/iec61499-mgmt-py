@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SKILL_FailMerge" Comment="Merges two failure events with their error codes into one">
+<FBType Name="SKILL_FailMerge" Comment="Joins two failure events (with their error codes) into one, because a data input can only be wired once. Technical: Merges two failure events with their error codes into one">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="IO_AI" Comment="Analog input; Address: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]' or 'pwm[chip:channel:period_ns]' a Raspberry Pi's line, set up here; 'modbus[...]' a Modbus CLIENT ID; 'sim' simulated; another name a local IO handle set up elsewhere (IW PARAMS); empty: not connected (QO = FALSE)">
+<FBType Name="IO_AI" Comment="One analog input (a weight, a pressure). Its Address says where it is read: an IO handle, a Modbus register, or simulated. Technical: Analog input; Address: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]' or 'pwm[chip:channel:period_ns]' a Raspberry Pi's line, set up here; 'modbus[...]' a Modbus CLIENT ID; 'sim' simulated; another name a local IO handle set up elsewhere (IW PARAMS); empty: not connected (QO = FALSE)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
@@ -33,9 +33,9 @@
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Route" Type="modlib::IO_RouteAI" x="1830" y="1000" />
-    <FB Name="Local" Type="eclipse4diac::io::IW" x="4230" y="1000" />
-    <FB Name="Bus" Type="iec61499::net::CLIENT_0_1" x="6370" y="1000" />
+    <FB Name="Route" Type="modlib::IO_RouteAI" x="1830" y="1000" Comment="Picks the way to the signal from the Address and passes values that way." />
+    <FB Name="Local" Type="eclipse4diac::io::IW" x="4230" y="1000" Comment="Reads or writes a FORTE IO handle (IX, QX, IW, QW)." />
+    <FB Name="Bus" Type="iec61499::net::CLIENT_0_1" x="6370" y="1000" Comment="Reads or writes a Modbus register when the Address names one." />
     <EventConnections>
       <Connection Source="INIT" Destination="Route.INIT">
         <Attribute Name="Visible" Value="false" />
