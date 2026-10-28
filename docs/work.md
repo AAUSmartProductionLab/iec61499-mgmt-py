@@ -369,6 +369,51 @@ The design is [skill-planning.md](skill-planning.md); the plan's G in [next-step
 - **The ontology checks** (`ontology/checks`) need `owlrl` and `pyshacl`, which the project's
   environment lacks: they run with this PC's own Python (42 passed).
 
+## Planning new skills: modplan (28 Oct)
+
+The design is [skill-planning.md](skill-planning.md); G0 to G5 of [next-steps.md](next-steps.md).
+
+- **The model.** Vocabulary 0.2 and PPRL 0.2: each capability's constraints (`pprl:pre`, `post`,
+  `invariant`, the expression a BasicConstraint holds), `lab:realizes` on the skill types, the
+  product's properties. modreg writes into the module's Capability Description a set per component
+  (`modreg/capabilities.py`) with the capabilities its primitives realize and their constraints, and
+  the offered capabilities' constraints; the spec says what holds on the module only (a skill's
+  `capability`).
+- **modplan** (`aas61499-tools/modplan`): `read` (the domain from the AAS), `plan` (GTPyhop), `lift`
+  (parallel blocks), `compose` (the skill described in the AAS, through `modreg.offer.described_skill`),
+  `check`, `discover`, `python -m modplan`. A planned Filling is created online on FORTE and runs
+  (`test_modplan_live.py`); cases T1 to T12 are tests. A derived offer now has the range its skill
+  reaches, run through the states (DoubleDose fills 1 to 20 mL, the rule said 0.5 to 10).
+- **The scenario runner** (`cell/eval/scenarios.py`, B1 and B2): plug in, a value, a written and a
+  planned skill, each online and by a restart, on FORTE with the simulator. Five runs each
+  (`cell/eval/results/2026-10-28T0121.md`, medians): online a value is 1 command in 0.02 s, written
+  while the module is Idle (down 2.2 s, the way to Execute); DoubleDose 164 commands in 0.04 s and the
+  planned Filling 123 in 0.04 s, both while Dispensing runs on, which kept running; verifying 0.01 s.
+  By a restart the module is down 3.3 s in each case (boot files of 246 to 394 lines). Planning took
+  0.39 s with the vocabulary read (0.16 to 0.43).
+
+Learned:
+
+- **aas_pydantic's 02020 classes** ask for all four forms of a property constraint (the template's
+  "exactly one of" became four required fields) and give SameProperty only external references:
+  `modreg.model.BasicConstraintContainer` and `SameAs` fix both.
+- **GTPyhop 2.0**: `pip install gtpyhop` is a meta package with no code; `gtpyhop-core` is the planner.
+  It prints on import and every `PlannerSession` prints its verbosity twice (`set_verbose_level`), so
+  modplan redirects standard output around both. The strategy `iterative_dfs_backtracking` backtracks
+  without Python's recursion limit. Actions are found by their function's name: a closure per
+  capability with `__name__` set.
+- **A capability as a subclass of another** (Referencing below Positioning) inherits its parent's
+  constraints wherever constraints are collected along the class tree: the vocabulary keeps them
+  siblings.
+- **The web UI** reads every CapabilitySet but matches only the role Offered, and reads a property
+  container's children with optional chaining: a SameProperty shows as a property without a meaning,
+  harmlessly. Its Python mirror in `test_modreg_profile.py` now does the same.
+- **`offer.capabilities`** built the description anew from the offered set only, and would have
+  dropped the components' sets; it keeps them now. A container's old name counted as taken even after
+  its skill was gone.
+- **Planning is cheap**: reading the filling module's domain about 1 ms, a plan 0.6 ms (median of 20);
+  composing a skill with the AAS read and written about 0.14 s.
+
 ## Registration: the AAS of a module (modreg)
 
 Decided on 2 Oct 2026: the resource ontology (ARSO, `ontology/ARSO`) says what a resource AAS
