@@ -74,6 +74,13 @@ skills:
     command: Extend
     stop: Back
     after: 3.0
+    # What holds on this module of the Pressing it realizes (the vocabulary says the rest): the
+    # piston presses with the head down on the vial, a placeholder until the station is measured,
+    # and the head stays put meanwhile.
+    capability:
+      values: {PressPosition: {value: 40.0, unit: mm}}
+      precondition: {LinearAxis.Position: "= PressPosition"}
+      invariant: {LinearAxis.Position: unchanged}
   RetractPiston:
     description: Piston back in for the stroke (open loop); for a piston left out by an abort
     equipment: Piston
