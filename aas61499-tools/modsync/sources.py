@@ -9,7 +9,7 @@ from pathlib import Path
 import urllib.error
 import urllib.request
 
-from .aasjson import BASE, at, children, submodel
+from .aasjson import BASE, at, children, parts, submodel
 from .described import NotDescribed
 
 MODULE_TYPE = f"{BASE}/Resource/Module"
@@ -60,8 +60,8 @@ def load(source: str, shell: str | None = None) -> tuple[dict, list[dict]]:
         raise NotDescribed(f"{source} holds {len(modules)} module AASs" + (f" named {shell}" if shell else "")
                            + (": name one of " + ", ".join(s["idShort"] for s in modules) if modules else ""))
     module = environment(modules[0])
-    parts = {node.get("globalAssetId") for node in children(at(submodel(module, "HierarchicalStructures"), "EntryNode"))}
-    return module, [environment(s) for s in shells if s["assetInformation"].get("globalAssetId") in parts]
+    held = {node.get("globalAssetId") for node in parts(submodel(module, "HierarchicalStructures"))}
+    return module, [environment(s) for s in shells if s["assetInformation"].get("globalAssetId") in held]
 
 
 def store(source: str, module: dict, loaded: dict | None = None) -> str:

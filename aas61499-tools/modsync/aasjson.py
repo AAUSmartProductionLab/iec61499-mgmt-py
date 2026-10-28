@@ -38,6 +38,13 @@ def also(element: dict) -> list[str]:
     return [k["value"] for ref in element.get("supplementalSemanticIds") or [] for k in ref.get("keys", [])[:1]]
 
 
+def parts(structure: dict | None) -> list[dict]:
+    """The Nodes of a Hierarchical Structures submodel's EntryNode that are parts, not points of
+    interest (ARSO 0.12: a point is a CoManagedEntity with a meaning, where a shuttle stands, say)."""
+    return [n for n in children(at(structure, "EntryNode"))
+            if not (n.get("entityType") == "CoManagedEntity" and also(n))]
+
+
 def skill_path(held: dict | None, name: str) -> list[str]:
     """Where a skill is in a Skills submodel: one of its own elements, or in an older AAS one of its
     collection Skills."""

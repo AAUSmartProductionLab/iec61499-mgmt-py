@@ -43,6 +43,7 @@ equipment:
     # pulses per turn, SW1 on, SW2 and SW3 off): 160 pulses per mm, so 12.5 mm/s at the 2 kHz above. The
     # travel is still a placeholder. What error remains is taken out by homing after every operation.
     position: {unit: mm, speed: 12.5, increase: Down, decrease: Up, home: AtHome, minimum: 0.0, maximum: 60.0}
+    location: {y: 60.0, z: 100.0, rx: 180.0}   # the needle's tip at home, over the transfer point; Z down the stroke
     sim: {stepper: {step: Step, direction: Down, enable: Enable, speed: 12.5, travel: 60.0, start: 15.0,
                     switches: {AtHome: 0.0}}}
   Pump:
@@ -118,6 +119,16 @@ composites:
 procedures:
   Resetting: [Home, Tare]          # find the reference, tare the scale
   Stopping: [Home]
+
+# Where things are (ARSO 0.12, docs/locations-and-layout.md): poses in the module's frame, its origin
+# at the middle of the module's front at the height of the planar table, Y out of the front towards
+# the table, Z up; mm and degrees. The module's front is at the table's edge in the line, so a shuttle
+# that serves it stands half its width (60 mm) in front of it. Placeholders until the module is
+# measured; the transfer point's RZ turns the shuttle as the simulated table's station of this module
+# does (planar-controller/tests/line_scenario.py).
+points:
+  Transfer: {meaning: TransferPoint, location: {y: 60.0, rz: 180.0}, description: Where a shuttle stands with the vial under the needle}
+  Fill: {meaning: ProcessingPoint, location: {y: 60.0, z: 60.0}, description: The needle's tip in the vial at the fill position (40 mm down)}
 
 # What the module offers to a product's processes: its AAS's Capability Description (IDTA 02020,
 # role Offered). Which capability a skill offers and the properties its parameters set are derived

@@ -233,11 +233,13 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     assert names(at(move, "Completion")) == ["Timeout"] and at(move, "Completion", "Timeout")["value"] == "8s"
     press = at(submodel(stoppering_all["StopperingPistonAAS"], "Skills"), "PressStopper")
     assert names(at(press, "Completion")) == ["After"] and at(press, "Completion", "After")["value"] == "3.0"
-    # The module lists its components as its parts, each found by its asset id.
+    # The module lists its components as its parts, each found by its asset id, then its points of
+    # interest, which have none (ARSO 0.12).
     nodes = children(at(submodel(stoppering_all["StopperingModuleAAS"], "HierarchicalStructures"), "EntryNode"))
-    assert [(n["idShort"], n["entityType"], n["globalAssetId"]) for n in nodes] == [
+    assert [(n["idShort"], n["entityType"], n.get("globalAssetId")) for n in nodes] == [
         ("LinearAxis", "SelfManagedEntity", f"{BASE}/assets/StopperingLinearAxis"),
-        ("Piston", "SelfManagedEntity", f"{BASE}/assets/StopperingPiston")]
+        ("Piston", "SelfManagedEntity", f"{BASE}/assets/StopperingPiston"),
+        ("Transfer", "CoManagedEntity", None), ("Press", "CoManagedEntity", None)]
 
 
 def test_a_step_is_connected_to_the_variables_of_its_command():
@@ -520,7 +522,7 @@ def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
     spec, _ = stoppering
     structure = submodel(stoppering_aas, "HierarchicalStructures")
     assert at(structure, "EntryNode")["globalAssetId"] == stoppering_aas["assetAdministrationShells"][0]["assetInformation"]["globalAssetId"]
-    assert names(at(structure, "EntryNode")) == list(spec.equipment)
+    assert names(at(structure, "EntryNode")) == [*spec.equipment, *spec.points]
     data = submodel(stoppering_aas, "OperationalData")
     assert data["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/OperationalData/1/0/Submodel"
     inputs = [f"{item}_{s}" for item, eq in spec.equipment.items() for s in eq.inputs]

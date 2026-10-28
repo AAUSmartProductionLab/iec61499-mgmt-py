@@ -28,8 +28,8 @@ sys.path.insert(0, str(HERE))
 
 from modgen import SPECS, load                          # noqa: E402
 from aas_model.constants import BASE_URL                                  # noqa: E402
-from aas_pydantic.submodel_templates.hierarchical_structures import (     # noqa: E402
-    ArcheType, EntryNode, HierarchicalStructures, Node)
+from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType      # noqa: E402
+from modgen.spec import Location                         # noqa: E402
 from modreg import model, profile as profiles           # noqa: E402
 from modreg.service import AasServer                    # noqa: E402
 
@@ -45,6 +45,21 @@ RESOURCES = [SPECS / "filling.yaml", SPECS / "stoppering.yaml", SPECS / "planned
 # Kuka robot and a gripper, and a Raspberry Pi of its own).
 LINE = "FillingLine"
 BEFORE, AFTER = ["LoadingModule"], ["UnloadingModule"]
+# Where each part of the line is in its frame (ARSO 0.12): the planar table at the line's origin (its
+# corner, the frame its shuttles move in: 4 x 3 flyways, 960 x 720 mm), the modules around it, each
+# with its front at the table's edge, facing in, so that its transfer point is a station of the
+# planar controller's simulated table (planar-controller/tests/line_scenario.py). Placeholders until
+# the line is measured.
+TABLE = "PlanarTable"
+LAYOUT = {
+    TABLE: Location(),
+    "LoadingModule": Location(x=0.0, y=180.0, rz=-90.0),
+    "FillingModule": Location(x=240.0, y=720.0, rz=180.0),
+    "StopperingModule": Location(x=600.0, y=720.0, rz=180.0),
+    "CappingModule": Location(x=960.0, y=360.0, rz=90.0),
+    "InspectionModule": Location(x=960.0, y=120.0, rz=90.0),
+    "UnloadingModule": Location(x=660.0, y=0.0),
+}
 
 
 @functools.lru_cache(maxsize=None)
@@ -69,20 +84,20 @@ def components() -> dict[str, dict]:
 def line_profile(resources: dict[str, dict]) -> dict:
     """The profile of the line: a system made of its modules, each found by its asset id."""
     asset = lambda name: f"{BASE_URL}/assets/{name}"                                       # noqa: E731
-    nodes = {name: Node(entity_type="SelfManagedEntity", global_asset_id=asset(name), description=f"{name}: not described yet")
-             for name in BEFORE}
+    node = lambda name, found, about: model.LocatedNode(                                    # noqa: E731
+        entity_type="SelfManagedEntity", global_asset_id=found, description=about, Frame=profiles.frame(LAYOUT.get(name)))
+    nodes = {name: node(name, asset(name), f"{name}: not described yet") for name in BEFORE}
     for env in resources.values():
         shell = plan_check.shell_of(env)
         name = shell["assetInformation"]["globalAssetId"].rsplit("/", 1)[-1]
-        nodes[name] = Node(entity_type="SelfManagedEntity", global_asset_id=shell["assetInformation"]["globalAssetId"],
-                           description=shell["idShort"])
-    nodes.update({name: Node(entity_type="SelfManagedEntity", global_asset_id=asset(name), description=f"{name}: not described yet")
-                  for name in AFTER})
+        nodes[name] = node(name, shell["assetInformation"]["globalAssetId"], shell["idShort"])
+    nodes.update({name: node(name, asset(name), f"{name}: not described yet") for name in AFTER})
+    nodes[TABLE] = node(TABLE, asset(TABLE), "The planar table the shuttles move on (planar-controller): not described yet")
     system = model.SystemTypeAAS(id_short=f"{LINE}AAS", id=f"{BASE_URL}/aas/{LINE}AAS", asset_type=f"{model.RESOURCE}/System",
                                  description="The line a vial passes: loading, filling, stoppering, capping, inspection, unloading")
-    system.hierarchical_structures = HierarchicalStructures(
+    system.hierarchical_structures = model.LocatedStructures(
         id_short="HierarchicalStructures", ArcheType=ArcheType(value="OneDown"),
-        EntryNode=EntryNode(global_asset_id=asset(LINE), description="The line", Node=nodes))
+        EntryNode=model.LocatedEntryNode(global_asset_id=asset(LINE), description="The line", Node=nodes))
     return model.profile(model.SystemTypeAAS.model_validate(system.model_dump()), global_asset_id=asset(LINE))
 
 

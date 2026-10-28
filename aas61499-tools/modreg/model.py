@@ -43,7 +43,8 @@ from aas_pydantic import (
     AAS, ModelReference, Property, Qualifier, ReferenceElement, SubmodelElementCollection, convert_model_to_aas,
 )
 from aas_pydantic.submodel_templates import capability_description as cd
-from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures
+from aas_pydantic.aas_model import AasIdString
+from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures, Node
 from aas_pydantic.submodel_templates.nameplate import Nameplate
 from basyx.aas import model as basyx
 from basyx.aas.adapter.json import AASToJsonEncoder
@@ -220,9 +221,77 @@ class ModuleInterfaces(DmpAssetInterfacesDescription):
     InterfaceTemplateForOPCUA: Dict[str, DmpOpcuaInterface] = {"interface_opcua": DmpOpcuaInterface()}
 
 
-def structure() -> HierarchicalStructures:
-    return HierarchicalStructures(id_short="HierarchicalStructures", EntryNode=EntryNode(),
-                                  ArcheType=ArcheType(value="OneDown"))
+# The values of a Frame, with IDTA 02075's ids for AutomationML's frame attributes.
+class FrameX(Property):
+    id_short: AasIdString = "X"
+    semantic_id: str = "https://admin-shell.io/idta/cds/xframe/1"
+    value_type: str = "xs:double"
+
+
+class FrameY(Property):
+    id_short: AasIdString = "Y"
+    semantic_id: str = "https://admin-shell.io/idta/cds/yframe/1"
+    value_type: str = "xs:double"
+
+
+class FrameZ(Property):
+    id_short: AasIdString = "Z"
+    semantic_id: str = "https://admin-shell.io/idta/cds/zframe/1"
+    value_type: str = "xs:double"
+
+
+class FrameRX(Property):
+    id_short: AasIdString = "RX"
+    semantic_id: str = "https://admin-shell.io/idta/cds/rxframe/1"
+    value_type: str = "xs:double"
+
+
+class FrameRY(Property):
+    id_short: AasIdString = "RY"
+    semantic_id: str = "https://admin-shell.io/idta/cds/ryframe/1"
+    value_type: str = "xs:double"
+
+
+class FrameRZ(Property):
+    id_short: AasIdString = "RZ"
+    semantic_id: str = "https://admin-shell.io/idta/cds/rzframe/1"
+    value_type: str = "xs:double"
+
+
+class NodeFrame(SubmodelElementCollection):
+    """Where a part is in its parent's frame (ARSO 0.12): AutomationML's Frame attribute, with IDTA
+    02075's ids, each value with its unit."""
+    id_short: AasIdString = "Frame"
+    semantic_id: str = "https://smartproductionlab.aau.dk/ARSO/Frame/1/0"
+    description: str = "Where the part is in its parent's frame"
+    X: Optional[FrameX] = None
+    Y: Optional[FrameY] = None
+    Z: Optional[FrameZ] = None
+    RX: Optional[FrameRX] = None
+    RY: Optional[FrameRY] = None
+    RZ: Optional[FrameRZ] = None
+
+
+class LocatedNode(Node):
+    """A part, or a point of interest, with where it is (ARSO 0.12)."""
+    Node: Dict[str, "LocatedNode"] = {}
+    Frame: Optional[NodeFrame] = None
+
+
+class LocatedEntryNode(EntryNode):
+    Node: Dict[str, LocatedNode] = {}
+
+
+class LocatedStructures(HierarchicalStructures):
+    EntryNode: LocatedEntryNode = LocatedEntryNode()
+
+
+LocatedNode.model_rebuild()
+
+
+def structure() -> LocatedStructures:
+    return LocatedStructures(id_short="HierarchicalStructures", EntryNode=LocatedEntryNode(),
+                             ArcheType=ArcheType(value="OneDown"))
 
 
 class ArsoResource(Resource):
@@ -240,7 +309,7 @@ class ArsoResource(Resource):
 class ModuleTypeAAS(ArsoResource):
     """Resource AAS of an IEC 61499 module, in ARSO's structure."""
     nameplate: Nameplate = nameplate()
-    hierarchical_structures: HierarchicalStructures = structure()
+    hierarchical_structures: LocatedStructures = structure()
     asset_interfaces_description: ModuleInterfaces = ModuleInterfaces(id_short="AssetInterfacesDescription")
     skills: ModuleSkills = ModuleSkills(id_short="Skills")
     operational_data: OperationalData = OperationalData(id_short="OperationalData")
@@ -262,7 +331,7 @@ class ComponentTypeAAS(ArsoResource):
 
 class SystemTypeAAS(ArsoResource):
     """AAS of a production system: the modules it is made of, each found by its asset id."""
-    hierarchical_structures: HierarchicalStructures = structure()
+    hierarchical_structures: LocatedStructures = structure()
 
 
 # A plain ``Resource`` is what the lab's stations export (aas-model authors them as its subtypes).
