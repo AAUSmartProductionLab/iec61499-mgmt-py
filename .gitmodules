@@ -12,3 +12,6 @@
 [submodule "planar-controller"]
 	path = planar-controller
 	url = https://github.com/AAUSmartProductionLab/planar-controller
+[submodule "aas-camel-dmp"]
+	path = aas-camel-dmp
+	url = https://github.com/MartinJensen37/aas-camel-dmp
