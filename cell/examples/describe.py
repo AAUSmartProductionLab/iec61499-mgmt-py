@@ -80,6 +80,13 @@ classDiagram
     <<Entity>>
     idShort
     globalAssetId of its AAS
+    Frame: X Y Z RX RY RZ
+  }
+  class Point {
+    <<Entity, co-managed>>
+    idShort
+    meaning: TransferPoint ...
+    Frame: X Y Z RX RY RZ
   }
   class AssetInterfacesDescription {
     <<IDTA 02017>>
@@ -175,6 +182,7 @@ classDiagram
   ModuleAAS *-- Skills
   ModuleAAS *-- OperationalData
   HierarchicalStructures *-- "0..*" Part
+  HierarchicalStructures *-- "0..*" Point
   AssetInterfacesDescription *-- "1" Interface
   Interface *-- "0..*" Action
   Interface *-- "0..*" InterfaceProperty
@@ -398,6 +406,17 @@ def skills_in(held: dict | None) -> list[dict]:
     return [s for s in children(held) if semantic_ids(s)[:1] == [SKILL]]
 
 
+def placed(node: dict) -> str:
+    """Where a part or a point is in its parent's frame (ARSO 0.12): mm, and the rotations in degrees
+    that are not zero."""
+    frame = at(node, "Frame")
+    if frame is None:
+        return ""
+    value = lambda name: float(at(frame, name)["value"])                                  # noqa: E731
+    turned = [f"{name} {value(name):g}" for name in ("RX", "RY", "RZ") if value(name)]
+    return f" at ({value('X'):g}, {value('Y'):g}, {value('Z'):g})" + "".join(f", {r}" for r in turned)
+
+
 def kind_of(skill: dict) -> str:
     """Primitive, Composite or ModuleControl: the supplemental id of a skill element."""
     return (semantic_ids(skill)[1:] or ["/"])[0].rsplit("/", 1)[-1]
@@ -406,7 +425,9 @@ def kind_of(skill: dict) -> str:
 def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
     shell, skills_sm = shell_of(env), submodel(env, "Skills")
     name = shell["idShort"]
-    parts = children(at(submodel(env, "HierarchicalStructures"), "EntryNode"))
+    structure = at(submodel(env, "HierarchicalStructures"), "EntryNode")
+    parts = children(structure)
+    points = [n for n in parts if n.get("entityType") == "CoManagedEntity" and n.get("supplementalSemanticIds")]
     by_asset = {shell_of(c)["assetInformation"]["globalAssetId"]: c for c in components.values()}
     own = {p["idShort"]: by_asset[p["globalAssetId"]] for p in parts if p.get("globalAssetId") in by_asset}
     envs = [env, *own.values()]
@@ -467,7 +488,10 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
                                  for item, c in parts) + ".")
     commands = [c["idShort"] + (f" ({' → '.join(ran(envs, at(c, 'Start')))})" if ran(envs, at(c, "Start")) else "") for c in control]
     lines += [f"- **The module's own commands** (skills of the kind ModuleControl): {', '.join(commands)}.",
-              "- **Components:** " + (", ".join(part + " → `" + shell_of(c)["idShort"] + "`" for part, c in own.items()) or "none") + ".",
+              "- **Components:** " + (", ".join(part + " → `" + shell_of(c)["idShort"] + "`" + placed(at(structure, part))
+                                                for part, c in own.items()) or "none") + ".",
+              *([f"- **Points** (in the module's frame, mm and degrees): "
+                 + "; ".join(f"{n['idShort']} ({semantic_ids(n)[-1].rsplit('/', 1)[-1]}){placed(n)}" for n in points) + "."] if points else []),
               f"- **Interface:** OPC UA at `{at(submodel(env, 'AssetInterfacesDescription'), 'interface_opcua', 'EndpointMetadata', 'base')['value']}`, "
               f"{len(children(at(interface, 'actions')))} actions and {len(children(at(interface, 'properties')))} properties; "
               f"{len(children(submodel(env, 'OperationalData')))} data points; "
@@ -564,7 +588,7 @@ def document() -> str:
     ]
     for part in children(at(system["submodels"][0], "EntryNode")):
         module = by_asset.get(part["globalAssetId"])
-        lines.append(f"  {shell_of(module)['idShort'] if module else part['idShort'] + ' (not described yet)'}")
+        lines.append(f"  {shell_of(module)['idShort'] if module else part['idShort'] + ' (not described yet)'}{placed(part)}")
         if module:
             composites = skills_in(submodel(module, "Skills"))
             lines += [f"    skill {signature(s)}" for s in composites]
