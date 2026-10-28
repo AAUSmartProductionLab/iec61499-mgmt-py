@@ -27,8 +27,8 @@ def envs_of(table: Table) -> dict[str, dict]:
 
 def test_the_table_lists_its_shuttles_and_its_flyways_with_where_they_are():
     envs = envs_of(SIM)
-    assert list(envs) == ["PlanarTableAAS", "PlanarShuttle1AAS", "PlanarShuttle1XbotAAS",
-                          "PlanarShuttle2AAS", "PlanarShuttle2XbotAAS"]
+    # A shuttle is its xbot: no AAS of the xbot apart from the shuttle's.
+    assert list(envs) == ["PlanarTableAAS", "PlanarShuttle1AAS", "PlanarShuttle2AAS"]
     nodes = {n["idShort"]: n for n in children(at(submodel(envs["PlanarTableAAS"], "HierarchicalStructures"), "EntryNode"))}
     assert nodes["PlanarShuttle1"]["globalAssetId"] == envs["PlanarShuttle1AAS"]["assetAdministrationShells"][0]["assetInformation"]["globalAssetId"]
     flyways = sorted(name for name in nodes if name.startswith("Flyway_"))
@@ -41,7 +41,7 @@ def test_the_table_lists_its_shuttles_and_its_flyways_with_where_they_are():
     assert {e["idShort"]: e["value"]["keys"][-1]["value"] for e in children(xbot) if e["idShort"].endswith("Source")} == {
         "XSource": "Xbot_X", "YSource": "Xbot_Y", "YawSource": "Xbot_Rz"}
     # Nothing of a FORTE program: no rule set; the controller's own errors beside the rules'.
-    skills = submodel(envs["PlanarShuttle1XbotAAS"], "Skills")
+    skills = submodel(envs["PlanarShuttle1AAS"], "Skills")
     assert at(submodel(envs["PlanarShuttle1AAS"], "Skills"), "RuleSet") is None
     assert {"NotOnTable", "XbotNotDetected", "NotPermitted"} <= {e["idShort"] for e in children(at(skills, "Errors"))}
     move = at(skills, "MoveToPosition")
@@ -169,7 +169,7 @@ async def _move(endpoint: str):
     assert set(resources) == {"PlanarTableAAS", "PlanarShuttle1AAS", "PlanarShuttle2AAS"}
     await _to_execute(resources["PlanarTableAAS"])
     shuttle = resources["PlanarShuttle1AAS"]
-    assert shuttle.skills["MoveToPosition"].held_by == "PlanarShuttle1XbotAAS"
+    assert shuttle.skills["MoveToPosition"].held_by == ""                  # the shuttle's own skill
     async with shuttle.connect() as link:
         assert await link.wait_connected(10)
         moved = Module(link, shuttle.root, "agent-1", shuttle)

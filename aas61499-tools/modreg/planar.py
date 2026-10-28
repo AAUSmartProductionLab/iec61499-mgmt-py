@@ -6,9 +6,9 @@ Equipment), in a namespace of its own. So each is described as a module, by the 
 describes a FORTE module, from a module spec made here:
 
 - ``PlanarShuttle<N>AAS`` per xbot, a module of its own as in the controller (it is occupied, reset
-  and started on its own): its one component, the xbot (``PlanarShuttle<N>XbotAAS``, kind
-  PlanarXbot), holds the skill MoveToPosition(X, Y, Rz) in mm and degrees; where the xbot is, is
-  data (Equipment/Xbot/X, Y, Rz).
+  and started on its own). The shuttle is the xbot: the skill MoveToPosition(X, Y, Rz) in mm and
+  degrees is its own, not a component's (no AAS of the xbot apart from the shuttle's); where the
+  xbot is, is data (Equipment/Xbot/X, Y, Rz).
 - ``PlanarTableAAS``, the table: its own commands (its Reset, Start, Stop, Abort and Clear reach the
   shuttles), whether the PMC is connected, and in its Hierarchical Structures the shuttles (each
   found by its asset id) and the flyways (co-managed, meaning Flyway). Its coordinates (ARSO 0.13)
@@ -118,6 +118,8 @@ class PlanarDescriber(Describer):
 
     def __init__(self, spec: ModuleSpec, table: Table, designation: str):
         super().__init__(spec, "controller", None, None, None, table.endpoint)
+        # The shuttle is its xbot, and the table its PMC: their skills are their own, not a component's.
+        self.components = []
         self.namespace = table.namespace
         self.derive = False                    # no capabilities derived from a program
         self.designation = designation

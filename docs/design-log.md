@@ -18,6 +18,10 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
+- **A shuttle is its xbot: no AAS of the xbot apart from the shuttle's.** *Journal.* The shuttle's
+  `MoveToPosition` is its own skill. Until now the xbot was a component (`PlanarShuttle<N>XbotAAS`)
+  because it is the shuttle spec's equipment that the skill moves; but there is no part to tell
+  apart from the shuttle. Decided by the user. The table's PMC was never a component (no skills).
 - **Three products and their process AASs, written out in Python.** *Journal.*
   - A 2 mL vial, a prefilled syringe of 1 mL and a cartridge of 3 mL (`cell/examples/products`),
     with the values of the planner's pharma example. One process AAS each on the filling line
