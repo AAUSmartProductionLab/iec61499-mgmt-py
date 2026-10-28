@@ -35,11 +35,15 @@
 # the meanings of a module's points of interest: where a shuttle stands
 # to hand a container over, where a process acts on it, where a robot
 # picks or places (docs/locations-and-layout.md).
+#
+# 0.4 (28 Oct): Transporting, what a shuttle of the planar table does,
+# and Flyway, a tile of the table, the meaning of a part of the table's
+# layout.
 #################################################################
 
 <https://smartproductionlab.aau.dk/semantics>
   rdf:type owl:Ontology ;
-  owl:versionInfo "0.3" ;
+  owl:versionInfo "0.4" ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://w3id.org/2025/pprl> ;
   rdfs:comment "Capabilities and capability properties of aseptic filling lines for vials, prefilled syringes and cartridges (AAU Smart Production Lab)." .
@@ -110,6 +114,9 @@ lab:Pressing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:Auxiliary
 lab:Crimping rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
   rdfs:label "Crimping" ; rdfs:comment "Crimp a cap onto the container." ;
   pprl:post [ pprl:onProperty lab:Capped ; pprl:expression "= true" ] .
+
+lab:Transporting rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Transporting" ; rdfs:comment "Carry a container on a shuttle of the planar table to a pose on the table (X, Y in mm, Rz in degrees, in the table's frame): from one module's transfer point to the next." .
 
 lab:Imaging rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
   rdfs:label "Imaging" ; rdfs:comment "Take an image of the container and judge it." ;
@@ -290,3 +297,12 @@ lab:PickPoint rdf:type owl:Class ; rdfs:subClassOf lab:PointOfInterest ;
 lab:PlacePoint rdf:type owl:Class ; rdfs:subClassOf lab:PointOfInterest ;
   rdfs:label "Place point" ;
   rdfs:comment "Where a robot or gripper puts a container or a part down." .
+
+
+#################################################################
+# Parts of the planar table (0.4)
+#################################################################
+
+lab:Flyway rdf:type owl:Class ;
+  rdfs:label "Flyway" ;
+  rdfs:comment "A tile of a planar motor table, 240 mm square, that the shuttles levitate over: a co-managed Node of the table's Hierarchical Structures, its Frame at the tile's centre in the table's frame. The flyways that are there are the table's layout; a place without one is a hole." .
