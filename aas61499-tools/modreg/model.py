@@ -19,6 +19,7 @@ import aas_pydantic.convert_aas_instance
 
 from aas_model.constants import BASE_URL, INVOCATION_ORIGIN
 from aas_model.id_injector import inject_ids
+from aas_model.invocation_authoring import OPERATION_PATH, operation_path
 from aas_model.process_template import Process
 from aas_model.product_template import Product
 from aas_model.resource_template import Resource
@@ -30,6 +31,7 @@ from aas_model.resource_template.modules import (                      # noqa: F
 )
 from aas_model.submodel_templates import SkillOperation
 from aas_pydantic import AAS, Qualifier, convert_model_to_aas
+from aas_pydantic.convert_util import strip_temp_id_short_attributes
 from basyx.aas import model as basyx
 from basyx.aas.adapter.json import AASToJsonEncoder
 from pydantic import BaseModel
@@ -98,8 +100,8 @@ def deep_merge(base: dict, override: dict) -> dict:
 
 
 def invocations(node, aas_id_short: str, origin: str) -> None:
-    """Fill in the operation delegation URLs (``{origin}/operations/{aas_id_short}/{action}``) of
-    every Operation below ``node``; aas-model fills in only those of its Control Component Instance."""
+    """Fill in the origin of the operation delegation URLs of every Operation below ``node``: the
+    DMP the AAS server delegates to (``origin``). Its path is the Operation's own (``operation_paths``)."""
     if isinstance(node, Qualifier):
         if node.type_ == "invocationDelegation" and node.value:
             node.value = (node.value.replace(INVOCATION_ORIGIN, origin.rstrip("/"))
@@ -275,12 +277,17 @@ def environment(model: AAS, global_asset_id: str | None = None) -> dict:
     names the asset like the shell and calls it an instance; ``global_asset_id`` gives it its own
     id, and a type that states its ``ASSET_KIND`` its own kind."""
     store = convert_model_to_aas(model)
+    # aas_pydantic keeps a list item's idShort in a Property of its own to read it back; nothing reads
+    # it back here, and the DMP refuses an AIMC with elements it does not know.
+    strip_temp_id_short_attributes(store)
     # json.dumps, not BaSyx's file writer: that one encodes in Python and takes seconds for a module.
     found = {"assetAdministrationShells": [o for o in store if isinstance(o, basyx.AssetAdministrationShell)],
              "submodels": [o for o in store if isinstance(o, basyx.Submodel)]}
     env = json.loads(json.dumps(found, cls=AASToJsonEncoder))
     with_units(env["submodels"])
     typed_qualifiers(env["submodels"])
+    for sm in env["submodels"]:
+        operation_paths(sm["id"], sm.get("submodelElements") or [])
     for shell in env["assetAdministrationShells"]:
         if global_asset_id:
             shell["assetInformation"]["globalAssetId"] = global_asset_id
@@ -331,6 +338,20 @@ def typed_qualifiers(element) -> None:
         for value in element.values():
             if isinstance(value, (list, dict)):
                 typed_qualifiers(value)
+
+
+def operation_paths(submodel_id: str, elements: list, trail: str = "") -> None:
+    """Fill in the path of the delegation URL of every Operation in ``elements``: where the AAS API
+    invokes it, ``/submodels/{base64url(submodel id)}/submodel-elements/{idShortPath}/invoke``. The
+    DMP serves exactly that path, so no two Operations share one."""
+    for i, element in enumerate(elements):
+        here = f"{trail}[{i}]" if "idShort" not in element else f"{trail}.{element['idShort']}" if trail else element["idShort"]
+        if element.get("modelType") == "Operation":
+            for qualifier in element.get("qualifiers") or []:
+                if qualifier.get("type") == "invocationDelegation" and OPERATION_PATH in (qualifier.get("value") or ""):
+                    qualifier["value"] = qualifier["value"].replace(OPERATION_PATH, operation_path(submodel_id, here))
+        elif isinstance(element.get("value"), list):
+            operation_paths(submodel_id, [e for e in element["value"] if isinstance(e, dict) and "modelType" in e], here)
 
 
 def build(profile: dict) -> dict:
