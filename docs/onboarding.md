@@ -140,7 +140,7 @@ unoccupied; a client occupies it and sends Reset.
 
 The state per area and the timeline are in [next-steps.md](next-steps.md); this is the short form.
 
-**Built:** the module library and rules (D1); the information model in ARSO 0.12 (D2); verify,
+**Built:** the module library and rules (D1); the information model in ARSO 0.13 (D2); verify,
 reconfigure (a value, a new skill), record, operate from the AAS alone, on FORTE on the PC and on
 the Pi 5 (D3); `modsync project` writes the 4diac project of what runs. The program structure was
 reworked 21 to 22 Oct (deployed inside the application's container so the IDE monitors it, the
@@ -160,8 +160,8 @@ the IEC 61499 module architecture that makes skills, and updating a running modu
 - **The evaluation, B1 and B2 on this PC**: `cell/eval/scenarios.py` (each change online and by a
   restart, five runs in `cell/eval/results`), `cell/eval/planners.py` (the planners timed),
   `cell/eval/figures.py` (the downtime figure).
-- **Locations, H1 to H5** ([locations-and-layout.md](locations-and-layout.md)): ARSO 0.12 frames
-  along Hierarchical Structures, points of interest, the planar table and its shuttles as modules
+- **Locations, H1 to H5** ([locations-and-layout.md](locations-and-layout.md)): coordinates in
+  Operational Data, a tree of transforms rooted at the table's base (ARSO 0.13, 28 Oct), points of interest, the planar table and its shuttles as modules
   with the flyway layout (`modreg profile planar`), the line scenario's stations from the AASs.
 - **The paper's outline and figure drafts**: [paper-outline.md](paper-outline.md) (narrowed on
   28 Oct to restructuring a module through its AAS; 17 references from

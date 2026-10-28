@@ -436,7 +436,8 @@ Learned:
 
 The design is [locations-and-layout.md](locations-and-layout.md); H1 to H4 of [next-steps.md](next-steps.md).
 
-- **Frames and points** (ARSO 0.12, Vocabulary 0.3): a Node's `Frame` (AutomationML's, with IDTA
+- **Frames and points** (ARSO 0.12, Vocabulary 0.3; replaced on 28 Oct by coordinates in Operational
+  Data, ARSO 0.13: [locations-and-layout.md](locations-and-layout.md)): a Node's `Frame` (AutomationML's, with IDTA
   02075's ids), a module spec's `location` per item and `points` (filling: Transfer, Fill;
   stoppering: Transfer, Press), the example line laid out around the planar table.
   `modreg.frames.relative` gives a module's transfer point in the table's frame: with the
