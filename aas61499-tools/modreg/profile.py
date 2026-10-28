@@ -197,10 +197,10 @@ def identity(spec: ModuleSpec) -> tuple[str, str, str]:
             spec.aas.global_asset_id or f"{BASE_URL}/assets/{spec.module}Module")
 
 
-def browse_path(spec: ModuleSpec, path: str) -> str:
+def browse_path(spec: ModuleSpec, path: str, namespace: int = 1) -> str:
     """OPC UA RelativePath text of a node below the module's root (FORTE's nodes are in namespace 1)."""
     parts = [p for p in spec.opcua_root.split("/") if p][1:] + [p for p in path.split("/") if p]
-    return "/0:Objects" + "".join(f"/1:{p}" for p in parts)
+    return "/0:Objects" + "".join(f"/{namespace}:{p}" for p in parts)
 
 
 def current(port: str, pr: Parameter, snap: Snapshot | None):
@@ -250,6 +250,7 @@ class Describer:
                  spec_path: str | None, opcua: str | None):
         self.spec, self.target, self.snap, self.drift, self.spec_path = spec, target, snap, drift, spec_path
         self.opcua = opcua or f"opc.tcp://{spec.targets[target].host}:4840"
+        self.namespace = 1                                      # of the module's nodes on its OPC UA server
         self.actions: dict[str, OpcuaAction] = {}
         self.properties: dict[str, DmpProperty] = {}
         self.datapoints: dict[str, tuple[str, str, str]] = {}    # data point -> (interface property, concept, title)
@@ -279,7 +280,7 @@ class Describer:
     # Interface -------------------------------------------------------------------------------
 
     def action(self, key: str, node: str, title: str, parameters: dict[str, Parameter] | None = None) -> str:
-        href = browse_path(self.spec, node)
+        href = browse_path(self.spec, node, self.namespace)
         # FORTE gives its nodes new numeric ids at every start, so the owning object is named by
         # its browse path, where OPC 10101 has its NodeId.
         action = OpcuaAction(uav_componentOf=UavComponentOf(value=href.rpartition("/")[0]))
@@ -294,7 +295,7 @@ class Describer:
         return key
 
     def property(self, key: str, node: str, iec: str, title: str, unit: str | None = None) -> str:
-        href = browse_path(self.spec, node)
+        href = browse_path(self.spec, node, self.namespace)
         p = DmpProperty()
         p.key = wot.Key(value=key)
         p.title = wot.Title(value=title)
