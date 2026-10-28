@@ -102,9 +102,12 @@ block type, compiled into FORTE. A module level skill has no type of its own: it
 subapplication of library blocks (`SKILL_Core`, the parameter latches, the publishers) and
 primitive instances, in a fixed pattern.
 
-**Why.** FORTE creates instances and connections online but cannot load a new block type. Keeping
+**Why.** Every IEC 61499 runtime creates instances and connections online through the standard
+management commands. Loading a new block type is optional: FORTE does it only when built with its
+Lua type loader, and never for a service interface block; our build does not have it. Keeping
 module level skills free of their own types makes a new one, and a changed one, a matter of
-instances and connections. Primitives change rarely (they follow the hardware) and justify a build.
+instances and connections, on any runtime, and keeps each step an instance that can be read back
+and watched. Primitives change rarely (they follow the hardware) and justify a build.
 
 **Instead of.** A type per module level skill (every new skill a FORTE build), or interpreting a
 sequence at runtime in one generic block (the program no longer shows the sequence, and the IDE
