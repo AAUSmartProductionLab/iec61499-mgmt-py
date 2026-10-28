@@ -1,54 +1,62 @@
 # Locations, points and the planar table's layout
 
-Design of 27 Oct 2026. Frames and points (sections 1 and 2) are built since 28 Oct (ARSO 0.12,
-Vocabulary 0.3, `modreg/frames.py`), and so is the planar table's AAS (section 3, `modreg/planar.py`,
-vocabulary 0.4). Every resource AAS says where its parts are relative to itself, so
-that any point of interest (where a shuttle stands for the vial to be filled, where a robot picks or
-places) is known in any frame, in particular in the planar table's, which is what a shuttle is moved
-in. And the planar table is described like any module, with its flyway layout in its AAS.
+Design of 27 Oct 2026, changed on 28 Oct from frames on Hierarchical Structures nodes to
+coordinates in Operational Data (ARSO 0.13, vocabulary 0.5, `modreg/frames.py`; the reasons in
+[design-log.md](design-log.md)). The planar table's AAS (section 3, `modreg/planar.py`) is built too.
+Every resource AAS says where it and its points are, relative to another coordinate, so that any
+point of interest (where a shuttle stands for the vial to be filled, where a robot picks or places)
+is known in the planar table's frame, which is what a shuttle is moved in.
 
-## 1. Frames along the hierarchy
+## 1. Coordinates, a tree of transforms
 
-Each AAS lists its parts in its Hierarchical Structures (IDTA 02011, in ARSO): a line its modules and
-the planar table, a module its components. On a part's entity goes its **Frame**: the pose of the
-part's frame in the parent's frame, as AutomationML's Frame attribute (IEC 62714), which IDTA 02075
-(Factory Automation Data for Plant Planning) publishes as `xframe`, `yframe`, `zframe`, `rxframe`,
-`ryframe`, `rzframe`. A pose in the line is then the composition along the tree:
+A **coordinate** is an element of a resource's Operational Data (`Measurements/Coordinates/<name>`):
+a pose relative to another coordinate, which `RelativeTo` names by reference, in the same AAS or
+another. The references make a tree, as ROS's tf does. Its root is the planar table's base: nothing
+above the table is modelled (no building, no hall, no IDTA 02045).
 
 ```
-line  ←  FillingModule  ←  FillPoint            the point in the line's frame
-line  ←  PlanarTable                            the table in the line's frame
-=> FillPoint in the table's frame = (line ← PlanarTable)⁻¹ ∘ (line ← FillingModule) ∘ (FillingModule ← FillPoint)
+PlanarTableAAS   TableBase                                   the root
+                 Flyway_<c>_<r>       relative to TableBase
+FillingModuleAAS ModuleBase           relative to TableBase (where the module stands)
+                 LinearAxisMount      relative to ModuleBase (fixed: Z along the stroke)
+                 LinearAxis           relative to LinearAxisMount; Z follows LinearAxis_ActualPosition
+                 Transfer, Fill       relative to ModuleBase
+PlanarShuttle1AAS Xbot                relative to TableBase; X, Y, Yaw follow Xbot_X, Xbot_Y, Xbot_Rz
+FillingLineAAS   Infeed, Outfeed      relative to TableBase
 ```
 
-The line is the root. No building or hall is modelled, and IDTA 02045 Asset Location is not used
-(decided 28 Oct, [design-log.md](design-log.md)).
-
-The frame is a statement that IDTA 02011 does not define, so it extends that template. The template
-allows it: it is "broad enough to be extended upon … the elements proposed here may be specified
-further" (02011-1-1, section 1.6). The frame is added beside the template's own elements and changes
-none of them, so a reader of the bill of material still reads it.
-
-**As built (28 Oct).** The Node gets a collection `Frame` (ARSO `FrameSMC`) with the Properties `X`,
-`Y`, `Z` (qualifier Unit mm) and `RX`, `RY`, `RZ` (deg), each with IDTA 02075's id. The rotation is
-taken as Rz Ry Rx about the parent's axes; that order is still to be checked against IEC 62714. In a
-module spec an item of equipment has a `location`, and the example line (`cell/examples/example_line.py`)
-lays its modules out around the planar table (`LAYOUT`). `modreg.frames` composes them:
+- **Values:** X, Y, Z in mm and Roll, Pitch, Yaw in degrees, about the parent's fixed X, then Y, then
+  Z axis: R = Rz(Yaw) Ry(Pitch) Rx(Roll), as ROS's RPY. The six values carry IDTA 02075's ids
+  (AutomationML's frame attributes); the coordinate's meaning is a supplemental semantic id of the
+  vocabulary: TableBase, ModuleBase, Mount, EndEffector, Mover, Flyway, and the points below.
+- **Moving coordinates:** a moving part is a fixed mount and, relative to it, a coordinate whose
+  moving values each follow a data point (`XSource` … `YawSource`). Its values in the AAS are the
+  latest known. A product riding a shuttle is relative to the xbot (or a fixture on it): only the
+  xbot's values change, and where the product was at any time is composed, never stored. When it is
+  handed over, its `RelativeTo` changes.
+- **Measured, not configured:** a module reports where it is put on the table (later by RFID), so even
+  a module's base is a measurement. Each coordinate is the latest value of a series, as every
+  measurement of Operational Data is to be ([state-and-parameters.md](state-and-parameters.md),
+  section 3); the series in the time-series database comes with that part.
+- **Where it lives:** in the AAS of the asset it belongs to; a module may hold several (ours hold a
+  base, a mount and an end effector per axis, and their points), components hold none.
+- **Hierarchical Structures** stays a bill of material: parts only, no frames, no point nodes.
 
 ```python
-from modreg.frames import relative, where
-where(envs, "FillingLineAAS", "FillingModule", "Transfer")                        # in the line's frame
-relative(envs, "FillingLineAAS", ["PlanarTable"], ["FillingModule", "Transfer"])  # in the table's
+from modreg.frames import place, relative, where
+where(envs, "FillingModuleAAS", "Transfer")                             # in the root's frame
+relative(envs, ("PlanarTableAAS", "TableBase"), ("FillingModuleAAS", "Transfer"))
+place(env, "ModuleBase", (table_aas_id, "TableBase"), Location(x=240.0, y=720.0, rz=180.0))
 ```
 
-`where` follows a path of Node idShorts from one AAS into the next by the Node's asset id. A module's
-frame has its origin at the middle of its front, at the table's height, Y out of the front, Z up.
+`chain` gives the coordinates up to the root and refuses a circle. A module described from its spec
+alone is not placed: its base is the root of its own small tree until `place` puts it on the table.
+A module's base has its origin at the middle of its front, at the table's height, Y out of the front,
+Z up.
 
 ## 2. Points
 
-A point of interest is a frame in a module that is no part of it: a **CoManagedEntity** (an entity
-without an AAS of its own) in the module's Hierarchical Structures, with its Frame and its meaning as a
-supplemental semantic id:
+A point of interest is a coordinate of a module with one of these meanings:
 
 | Meaning | Where | Used by |
 | --- | --- | --- |
@@ -56,21 +64,15 @@ supplemental semantic id:
 | `lab:ProcessingPoint` | Where the process acts (the needle tip at the fill position) | Checks, figures |
 | `lab:PickPoint`, `lab:PlacePoint` | Where a robot picks or places | The loading and unloading robots |
 
-The stations of `planar-controller/tests/line_scenario.py` (Infeed, Filling, Stoppering, Capping,
-Outfeed, hard-coded in table millimetres) then come from the AAS: the transfer point of each module in
-the table's frame.
+A module spec's `points` (filling: `Transfer`, `Fill`; stoppering: `Transfer`, `Press`) become such
+coordinates, and an item's `location` its mount. With the placeholder layout (`example_line.LAYOUT`),
+the transfer points are the simulated table's stations, Filling (240, 660, 0) and Stoppering (600,
+660, 90), and the needle at 40 mm is at the fill point (`test_modreg_frames.py`).
 
-**As built (28 Oct).** A module spec's `points` (filling: `Transfer`, `Fill`; stoppering: `Transfer`,
-`Press`) become such Nodes, without an asset id. Whatever reads a module's parts skips them: in
-`modsync` that is `aasjson.parts`, and the web UI follows only Nodes with an asset id. With the
-placeholder layout, the filling and stoppering transfer points are the simulated table's stations
-Filling (240, 660, 0) and Stoppering (600, 660, 90) (`test_modreg_frames.py`).
-
-**The stations from the AAS (H5, 28 Oct).** The line has points of its own where its loading and
-unloading robots place and pick (Infeed, a PlacePoint; Outfeed, a PickPoint: their modules are not
-described yet), and the planned capping module a transfer point. `example_line.stations` gives all
-five in the table's frame; they are the scenario's stations, and the scenario runs to them when it
-is handed them (`run_line(places=...)`, `--stations stations.json`).
+**The stations from the AAS (H5).** The line has points of its own where its loading and unloading
+robots place and pick (Infeed, a PlacePoint; Outfeed, a PickPoint), and the planned capping module a
+transfer point. `example_line.stations` gives all five in the table's frame; they are the scenario's
+stations, and the scenario runs to them when it is handed them (`run_line(places=...)`).
 
 ## 3. The planar table as a module
 
@@ -81,7 +83,7 @@ namespace. So:
 
 | AAS | Holds |
 | --- | --- |
-| `PlanarTable` (a module) | Nameplate; Hierarchical Structures: its shuttles (self-managed, each an AAS) and its **flyways** (co-managed, each with its Frame: the layout); the interface description and mapping of the controller's OPC UA; Skills: the module's own commands (occupy, release, reset, start, stop, abort, clear); Operational Data; Capability Description: transport |
+| `PlanarTable` (a module) | Nameplate; Hierarchical Structures: its shuttles (self-managed, each an AAS) and its **flyways** (co-managed); its coordinates: the table's base (the root) and each flyway's centre, the layout; the interface description and mapping of the controller's OPC UA; Skills: the module's own commands (occupy, release, reset, start, stop, abort, clear); Operational Data; Capability Description: transport |
 | `PlanarShuttle<N>` (a component) | Skills: `MoveToPosition` with its parameters and results, and its own occupation and commands (in the controller each shuttle is a module of its own) |
 
 The layout in the standard form is the flyways' frames: a configurator draws the table from them, and
@@ -98,8 +100,8 @@ module of its own (its root, occupation and state), and a client such as `modlin
 per AAS. So each shuttle's AAS is a module's, `PlanarShuttle<N>AAS`, whose one component, the xbot
 (`PlanarShuttle<N>XbotAAS`, kind PlanarXbot), holds `MoveToPosition`; the table's AAS,
 `PlanarTableAAS`, has the PMC as a part, the shuttles as parts found by their asset ids, and the
-flyways (`Flyway_<column>_<row>`, co-managed, meaning `lab:Flyway`, the Frame at the flyway's
-centre). What differs from a FORTE module: the browse paths are in the controller's namespace (index
+flyways (`Flyway_<column>_<row>`, co-managed, meaning `lab:Flyway`), each with a coordinate at its
+centre relative to the table's base. What differs from a FORTE module: the browse paths are in the controller's namespace (index
 2), there is no rule set, the errors include the controller's own (20 to 30), a skill has no
 Conditions or Completion (the controller decides when a move has ended), and the results are
 `ReachedX`, `ReachedY`, `ReachedRz` in the AAS, because an Operation's variables need idShorts of
@@ -116,9 +118,9 @@ simulated driver: the table brought to Execute and a shuttle moved with `modlink
 
 | Where | Change |
 | --- | --- |
-| ARSO (`hierarchical-structures.ttl`) | A `Frame` on an entity (the six values, their units); point entities with a meaning |
+| ARSO (`operational-data.ttl`, 0.13) | `Measurements/Coordinates`: a coordinate with `RelativeTo`, the six values with their units, and the sources of its moving values |
 | Vocabulary | The point meanings; a transport capability with the target as its properties |
-| `modreg` | Frames and points from the specs (`location` of a module in the line, of a component in the module; `points` of a module); the planar table's AAS from its spec and the controller |
+| `modreg` | Coordinates from the specs (a module's base; an item's `location` as its mount, with the end effector of an axis; `points` of a module); the planar table's AAS from its spec and the controller, with the table's and the shuttles' coordinates |
 | `planar-controller` | The layout over OPC UA |
 | A small library | Compose frames, a point in another frame (for agents, the configurator, the line scenario) |
 
@@ -128,6 +130,6 @@ simulated driver: the table brought to Execute and a shuttle moved with `modlink
 | --- | --- |
 | Units of a frame | AutomationML's, checked against IEC 62714 before building; the interfaces stay in mm and degrees |
 | A building AAS, or Asset Location on the line | Neither (28 Oct): the line is the root. IDTA 02045-1-0 was read; it is for tracking and tracing, without orientation or parent-relative frames ([design-log.md](design-log.md)) |
-| The frame as an extension of 02011 | As built: six properties with IDTA 02075's ids in a `Frame` collection on the node. Alternatives: the six properties straight on the node, without the collection; or the placement in the part's own AAS, if IDTA 02075 offers a submodel for it (to check) |
+| The frame as an extension of 02011 | Gone (28 Oct): coordinates in Operational Data instead, and Hierarchical Structures is a bill of material again |
 | Which configurator reads the layout | To be named |
 | Transport as a capability for the agents | With the agents, after the paper |

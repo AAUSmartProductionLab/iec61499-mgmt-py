@@ -187,7 +187,7 @@ changed only after asking the user.
 | ARSO's own submodels as templates and classes | `modreg/templates/*.json` and `modreg/generated/`, made by `modreg generate` |
 | The ontology check | `modreg/ontology.py` |
 | The registration service | `modreg/service.py` (`modreg serve`) |
-| Where parts and points are: frames along Hierarchical Structures | `modreg/frames.py` (`where`, `relative`) |
+| Where things are: coordinates in Operational Data, a tree of transforms (ARSO 0.13) | `modreg/frames.py` (`where`, `relative`, `chain`, `place`) |
 | The planar table and its shuttles, from the planar controller | `modreg/planar.py` (the source `planar`) |
 
 ```powershell

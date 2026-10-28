@@ -34,7 +34,7 @@ line.
 | **Runtime conditions** | A primitive's `Conditions` and `Completion` (ARSO 0.11), and their link to the capability constraints through shared data points | [skill-planning.md](skill-planning.md) section 5 |
 | **Product, process, resource** | ISA-88 recipe levels across product, process and resource AAS; matching by meaning (supplemental ids); three ids, three jobs | [ppr-model.md](ppr-model.md), DD 3.5, 3.6 |
 | **Orchestration by agents** | Product and resource agents bidding for process steps; a resource agent calls the planner and the reconciler when it accepts a request that needs a new skill; line-level FOND policies [schwoerer2026fond] as the complement for uncertain outcomes | [next-steps.md](next-steps.md), after the paper |
-| **Locations** | Frames on Hierarchical Structures nodes (AutomationML Frame, IDTA 02075 ids), points of interest, the planar table and its flyway layout in the AAS, stations derived from the AASs | [locations-and-layout.md](locations-and-layout.md) |
+| **Locations** | Coordinates in Operational Data as a tree of transforms rooted at the table's base (ARSO 0.13): mounts and end effectors following measured positions, shuttles following the controller, products re-parented at handover; the stations derived from the AASs; the first version as frames on BoM nodes, and why it was replaced | [locations-and-layout.md](locations-and-layout.md), [design-log.md](design-log.md) |
 
 ## Evaluation the CIRP paper leaves out
 
