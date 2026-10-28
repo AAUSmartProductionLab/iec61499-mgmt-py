@@ -201,14 +201,14 @@ def test_every_component_has_an_aas_of_its_own_and_the_line_names_its_modules(li
     assert [assets.get(n.get("globalAssetId")) for n in children(at(filling, "EntryNode"))] == [
         "FillingLinearAxisAAS", "FillingPumpAAS", "FillingScaleAAS", None, None]
     # ... and the line's parts are the modules, with the two that are not described yet at its ends,
-    # and the planar table they stand around.
+    # the planar table they stand around, and the line's own points (where the robots place and pick).
     system = example_line.line(resources)
     assert plan_check.shell_of(system)["assetInformation"]["assetType"] == f"{BASE}/Resource/System"
     assert ontology_check(system, blueprint).ok
     nodes = children(at(system["submodels"][0], "EntryNode"))
     assert [n["idShort"] for n in nodes] == ["LoadingModule", "FillingModule", "StopperingModule", "CappingModule",
-                                             "InspectionModule", "UnloadingModule", "PlanarTable"]
-    assert [assets.get(n["globalAssetId"]) for n in nodes][1:5] == list(resources)
+                                             "InspectionModule", "UnloadingModule", "PlanarTable", "Infeed", "Outfeed"]
+    assert [assets.get(n.get("globalAssetId")) for n in nodes][1:5] == list(resources)
     # The steps of a module's skill run skills of its components.
     envs = [*resources.values(), *components.values()]
     dispensing = at(next(s for s in resources["FillingModuleAAS"]["submodels"] if s["idShort"] == "Skills"), "Dispensing")

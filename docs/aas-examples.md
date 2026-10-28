@@ -65,6 +65,8 @@ FillingLineAAS
     InspectionSideCameraAAS: CaptureSide() → Passed
   UnloadingModule (not described yet) at (660, 0, 0)
   PlanarTable (not described yet) at (0, 0, 0)
+  point Infeed (PlacePoint) at (60, 180, 0)
+  point Outfeed (PickPoint) at (660, 60, 0)
 ```
 
 | AAS | Kind | Submodels |
@@ -549,6 +551,7 @@ flowchart BT
 - **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Crimper's Crimping (Crimp): Post Capped = true.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `CappingLinearAxisAAS`, Crimper → `CappingCrimperAAS`.
+- **Points** (in the module's frame, mm and degrees): Transfer (TransferPoint) at (0, 120, 0), RZ -90.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 data points; 24 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Capping built. Which block is which skill or step is the integrator's record, outside the AAS.
 

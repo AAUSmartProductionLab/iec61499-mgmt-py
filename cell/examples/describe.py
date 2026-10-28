@@ -587,6 +587,9 @@ def document() -> str:
         shell_of(system)["idShort"],
     ]
     for part in children(at(system["submodels"][0], "EntryNode")):
+        if part.get("entityType") == "CoManagedEntity" and part.get("supplementalSemanticIds"):
+            lines.append(f"  point {part['idShort']} ({semantic_ids(part)[-1].rsplit('/', 1)[-1]}){placed(part)}")
+            continue
         module = by_asset.get(part["globalAssetId"])
         lines.append(f"  {shell_of(module)['idShort'] if module else part['idShort'] + ' (not described yet)'}{placed(part)}")
         if module:

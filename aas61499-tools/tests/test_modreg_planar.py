@@ -55,24 +55,37 @@ def free_port() -> int:
 
 
 @pytest.fixture
-def controller():
-    """The planar controller on its simulated driver, in this process (as its own tests run it)."""
+def controllers():
+    """Makes the planar controller on its simulated driver, in this process (as its own tests run it):
+    ``controllers(xbots, **speeds)`` gives the controller, its OPC UA server (not started) and endpoint."""
     if not (CONTROLLER / "planar").is_dir() or not (HMI / "modlink").is_dir():
         pytest.skip("the planar-controller and iec61499-opcua-hmi submodules are needed")
-    sys.path[:0] = [str(CONTROLLER), str(HMI)]
+    sys.path[:0] = [str(CONTROLLER), str(CONTROLLER / "tests"), str(HMI)]
     from planar.layout import Layout
     from planar.modules import PlanarController
     from planar.opcua_server import OpcUaServer
     from planar.sim_driver import SimDriver
-    sim = SimDriver(Layout(cols=SIM.columns, rows=SIM.rows, holes=SIM.holes), {1: (0.06, 0.06, 0.0), 2: (0.90, 0.66, 0.0)})
-    ctl = PlanarController(sim, list(SIM.shuttles))
-    ctl.coordinator.on_tick.insert(0, lambda: sim.advance(time.monotonic()))
-    endpoint = f"opc.tcp://127.0.0.1:{free_port()}/"
+    made = []
+
+    def make(xbots: dict, **speeds):
+        sim = SimDriver(Layout(cols=SIM.columns, rows=SIM.rows, holes=SIM.holes), xbots, **speeds)
+        ctl = PlanarController(sim, sorted(xbots))
+        ctl.coordinator.on_tick.insert(0, lambda: sim.advance(time.monotonic()))
+        endpoint = f"opc.tcp://127.0.0.1:{free_port()}/"
+        made.append(ctl)
+        return ctl, OpcUaServer(ctl, endpoint), endpoint
+
     try:
-        yield ctl, OpcUaServer(ctl, endpoint), endpoint
+        yield make
     finally:
-        ctl.shutdown()
-        del sys.path[:2]
+        for ctl in made:
+            ctl.shutdown()
+        del sys.path[:3]
+
+
+@pytest.fixture
+def controller(controllers):
+    return controllers({1: (0.06, 0.06, 0.0), 2: (0.90, 0.66, 0.0)})
 
 
 def test_a_shuttle_is_moved_from_its_aas_alone(controller):
@@ -84,6 +97,37 @@ def test_the_table_is_read_from_the_controller(controller):
     """Its layout once the PMC is connected, and the shuttles it offers."""
     ctl, server, endpoint = controller
     asyncio.run(_serving(ctl, server, _layout(endpoint)))
+
+
+def test_the_line_runs_to_the_stations_its_aass_say(controllers):
+    """H5: the planar controller's line scenario (product agents taking shuttles through Infeed,
+    Filling, Stoppering, Capping, Outfeed) with each station where the AASs of the line and its
+    modules put it, in the table's frame, instead of the scenario's own STATIONS."""
+    import inspect
+    from line_scenario import run_line, summary
+    if "places" not in inspect.signature(run_line).parameters:
+        pytest.skip("the planar controller in the submodule takes no stations from outside yet")
+    sys.path.insert(0, str(ROOT / "cell" / "examples"))
+    try:
+        import example_line
+        resources, _ = example_line.build()
+        places = example_line.stations([example_line.line(resources), *resources.values()])
+    finally:
+        sys.path.remove(str(ROOT / "cell" / "examples"))
+    # Three xbots on the flyway centres of the left column, fast moves: as the scenario's own test.
+    ctl, server, endpoint = controllers({1: (0.12, 0.12, 0.0), 2: (0.12, 0.36, 0.0), 3: (0.12, 0.60, 0.0)},
+                                        speed=2.0, accel=10.0, turn_speed=20.0, turn_accel=200.0)
+    found = {}
+
+    async def line():
+        found["report"] = await run_line(endpoint, agents=2, products=2, process_s=(0.1, 0.2), fail_p=0.0,
+                                         sample=False, places=places)
+
+    asyncio.run(_serving(ctl, server, line()))
+    report = found["report"]
+    assert not report.problems, summary(report)
+    assert [p.outcome for p in report.products] == ["finished"] * 4
+    assert {station for p in report.products for station, _ in p.steps} == set(places)
 
 
 async def _serving(ctl, server, work):

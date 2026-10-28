@@ -29,8 +29,9 @@ sys.path.insert(0, str(HERE))
 from modgen import SPECS, load                          # noqa: E402
 from aas_model.constants import BASE_URL                                  # noqa: E402
 from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType      # noqa: E402
-from modgen.spec import Location                         # noqa: E402
+from modgen.spec import Location, Point                  # noqa: E402
 from modreg import model, profile as profiles           # noqa: E402
+from modreg.frames import relative                      # noqa: E402
 from modreg.service import AasServer                    # noqa: E402
 
 import plan_check                                        # noqa: E402
@@ -60,6 +61,16 @@ LAYOUT = {
     "InspectionModule": Location(x=960.0, y=120.0, rz=90.0),
     "UnloadingModule": Location(x=660.0, y=0.0),
 }
+# Points of the line itself: where the loading robot places a vial on a shuttle and where the
+# unloading robot picks it (the robots' modules are not described yet), on the table.
+POINTS = {"Infeed": Point(meaning="PlacePoint", location=Location(x=60.0, y=180.0),
+                          description="Where the loading robot places a vial on a shuttle"),
+          "Outfeed": Point(meaning="PickPoint", location=Location(x=660.0, y=60.0),
+                           description="Where the unloading robot picks a vial from a shuttle")}
+# The stations a shuttle stops at on its way through the line, in order, each a point of the line or
+# a module's transfer point (planar-controller/tests/line_scenario.py names them so).
+STATIONS = {"Infeed": ["Infeed"], "Filling": ["FillingModule", "Transfer"], "Stoppering": ["StopperingModule", "Transfer"],
+            "Capping": ["CappingModule", "Transfer"], "Outfeed": ["Outfeed"]}
 
 
 @functools.lru_cache(maxsize=None)
@@ -93,6 +104,10 @@ def line_profile(resources: dict[str, dict]) -> dict:
         nodes[name] = node(name, shell["assetInformation"]["globalAssetId"], shell["idShort"])
     nodes.update({name: node(name, asset(name), f"{name}: not described yet") for name in AFTER})
     nodes[TABLE] = node(TABLE, asset(TABLE), "The planar table the shuttles move on (planar-controller): not described yet")
+    for name, point in POINTS.items():
+        nodes[name] = model.LocatedNode(entity_type="CoManagedEntity", global_asset_id="", description=point.description,
+                                        supplemental_semantic_ids=[profiles.meaning(point.meaning)],
+                                        Frame=profiles.frame(point.location))
     system = model.SystemTypeAAS(id_short=f"{LINE}AAS", id=f"{BASE_URL}/aas/{LINE}AAS", asset_type=f"{model.RESOURCE}/System",
                                  description="The line a vial passes: loading, filling, stoppering, capping, inspection, unloading")
     system.hierarchical_structures = model.LocatedStructures(
@@ -104,6 +119,18 @@ def line_profile(resources: dict[str, dict]) -> dict:
 def line(resources: dict[str, dict]) -> dict:
     """The AAS of the line."""
     return model.build(line_profile(resources))
+
+
+def stations(envs: list[dict]) -> dict[str, tuple[float, float, float]]:
+    """Where a shuttle stops for each station, (x, y, rz) in the planar table's frame, from the AASs
+    of the line and its modules (``envs``): what the line scenario of the planar controller drives to."""
+    found = {}
+    for name, path in STATIONS.items():
+        pose = relative(envs, f"{LINE}AAS", [TABLE], path)
+        x, y, _ = pose.position
+        rz = (pose.heading + 180.0) % 360.0 - 180.0                       # in [-180, 180)
+        found[name] = tuple(round(v, 3) + 0.0 for v in (x, y, rz))         # + 0.0: no -0.0
+    return found
 
 
 def product_profiles() -> dict[str, dict]:

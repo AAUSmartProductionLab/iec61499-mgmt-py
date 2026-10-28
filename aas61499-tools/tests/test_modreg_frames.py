@@ -2,6 +2,7 @@
 a line's modules in the line's, and a point in any frame the tree reaches."""
 import math
 from pathlib import Path
+import re
 import sys
 
 import pytest
@@ -69,11 +70,17 @@ def test_a_point_of_a_module_in_the_planar_tables_frame(line_envs):
         where(line_envs, "FillingLineAAS", "FillingModule", "Nowhere")
 
 
-@pytest.mark.parametrize("module, station", [("FillingModule", (240.0, 660.0, 0.0)),
-                                             ("StopperingModule", (600.0, 660.0, 90.0))])
-def test_the_transfer_points_are_the_simulated_tables_stations(line_envs, module, station):
+def test_the_stations_are_the_simulated_tables(line_envs):
     """The stations of planar-controller/tests/line_scenario.py (X, Y, Rz on the table), from the
-    line's layout and the modules' points."""
-    pose = relative(line_envs, "FillingLineAAS", ["PlanarTable"], [module, "Transfer"])
-    assert close(pose.position, (station[0], station[1], 0.0))
-    assert math.isclose(math.remainder(pose.heading - station[2], 360.0), 0.0, abs_tol=1e-6)
+    line's layout, its own pick and place points and the modules' transfer points."""
+    scenario = SPECS.parents[1] / "planar-controller" / "tests" / "line_scenario.py"
+    if not scenario.is_file():
+        pytest.skip("the planar-controller submodule is needed")
+    stated = dict(re.findall(r'"(\w+)": \(([-0-9., ]+)\)', scenario.read_text(encoding="utf-8").split("STATIONS = {")[1].split("}")[0]))
+    sys.path.insert(0, str(EXAMPLES))
+    try:
+        import example_line
+        found = example_line.stations(line_envs)
+    finally:
+        sys.path.remove(str(EXAMPLES))
+    assert found == {name: tuple(float(v) for v in pose.split(",")) for name, pose in stated.items()}
