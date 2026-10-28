@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="MOD_Occupation" Comment="Module occupation: OPC UA methods Occupy(Session) and Release(Session) answer [Accepted, ErrorID]; publishes Occupied (never the session ID) and shares the owner on a local channel">
+<FBType Name="MOD_Occupation" Comment="Who may command the module. A client first calls the OPC UA method Occupy with a session id it chose; until it calls Release, only commands carrying that session id are accepted. Publishes Occupied (never the id) and tells every block of the module who the owner is. Technical: Module occupation: OPC UA methods Occupy(Session) and Release(Session) answer [Accepted, ErrorID]; publishes Occupied (never the session ID) and shares the owner on a local channel">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
@@ -22,17 +22,17 @@
     <OutputVars />
   </InterfaceList>
   <FBNetwork>
-    <FB Name="Ids" Type="modlib::MOD_OccupationIds" x="1750" y="1000" />
-    <FB Name="Occupy" Type="iec61499::net::SERVER_2_1" x="4620" y="1000" />
-    <FB Name="Release" Type="iec61499::net::SERVER_2_1" x="7310" y="1000" />
-    <FB Name="Logic" Type="modlib::MOD_OccupationLogic" x="1630" y="2100" />
-    <FB Name="PubOwner" Type="iec61499::net::PUBLISH_1" x="4460" y="2100">
+    <FB Name="Ids" Type="modlib::MOD_OccupationIds" x="1750" y="1000" Comment="Builds the OPC UA addresses and channel names from the module's name." />
+    <FB Name="Occupy" Type="iec61499::net::SERVER_2_1" x="4620" y="1000" Comment="The OPC UA method Occupation/Occupy(Session)." />
+    <FB Name="Release" Type="iec61499::net::SERVER_2_1" x="7310" y="1000" Comment="The OPC UA method Occupation/Release(Session)." />
+    <FB Name="Logic" Type="modlib::MOD_OccupationLogic" x="1630" y="2100" Comment="Decides who may occupy and release." />
+    <FB Name="PubOwner" Type="iec61499::net::PUBLISH_1" x="4460" y="2100" Comment="Tells every block of the module the owner, on the owner channel.">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="7190" y="2100">
+    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="7190" y="2100" Comment="Answers a block that asks who the owner is (at its start).">
       <Parameter Name="QI" Value="TRUE" />
     </FB>
-    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1830" y="3300" />
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1830" y="3300" Comment="Writes Occupation/Occupied to OPC UA." />
     <EventConnections>
       <Connection Source="INIT" Destination="Ids.INIT">
         <Attribute Name="Visible" Value="false" />

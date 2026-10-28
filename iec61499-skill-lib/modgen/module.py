@@ -27,6 +27,7 @@ from .fbxml import (STD, Basic, Composite, Project, Simple, SubNet, Wiring, arra
                     hide_connections, publish, save, server, subapp, subscribe, wstr)
 from .library import ERRORS, cat, lit, q, ua
 from .layout import Sizer, networks, place_new, relayout
+from .explain import comment_application
 from .pins import domain
 from .spec import (ACTUAL, HOMED, MOVE, MOVING, AllOf, Comparison, Equipment, ModuleSpec, Parallel, Parameter, Skill, Step,
                    ms, names, walk)
@@ -1073,6 +1074,8 @@ def make_system(p: Project, spec: ModuleSpec):
     root = ET.Element("System", Name=p.name, Comment=f"Module {spec.module}, generated from its module specification")
     elem(root, "Identification", Standard="61499-2")
     apps = {target: application(root, spec, target) for target in spec.targets}
+    for app in apps.values():                  # plain words on every block, for the IDE
+        comment_application(app.find("SubAppNetwork"), spec)
     for node in root.iter("FB"):
         p.use(node.get("Type"))               # the module level skills use generic comm FBs directly
     for app in apps.values():

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="MOD_OccupationLogic" Comment="Occupation by session ID: Occupy when free (or again by the owner), Release only by the owner">
+<FBType Name="MOD_OccupationLogic" Comment="Decides Occupy and Release: occupy when free (or again by the owner), release only by the owner, and answer Accepted or an error code. Technical: Occupation by session ID: Occupy when free (or again by the owner), Release only by the owner">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />

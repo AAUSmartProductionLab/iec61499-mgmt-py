@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EV_NeedleAxis" Comment="Typed view of NeedleAxis's state channel (inputs and holder)">
+<FBType Name="EV_NeedleAxis" Comment="Unpacks the equipment's state channel into named values (its inputs and who holds it) for a skill. Technical: Typed view of NeedleAxis's state channel (inputs and holder)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filler" />

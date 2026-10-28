@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SL_MoveNeedleDown" Comment="MoveNeedleDown: Precondition NOT (AtTop AND AtBottom); holds NeedleAxis.Down until (Position &gt;= Distance) OR AtBottom; Invariant NOT (AtTop AND AtBottom)">
+<FBType Name="SL_MoveNeedleDown" Comment="What a skill primitive does: wait until the equipment is free, check the precondition, send the command, then watch the equipment's signals (or a timer) until the skill is done, has failed or has timed out, and send the closing command. Technical: MoveNeedleDown: Precondition NOT (AtTop AND AtBottom); holds NeedleAxis.Down until (Position &gt;= Distance) OR AtBottom; Invariant NOT (AtTop AND AtBottom)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filler" />

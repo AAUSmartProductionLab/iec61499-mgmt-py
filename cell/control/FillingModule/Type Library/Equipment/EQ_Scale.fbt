@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EQ_Scale" Comment="Scale; the hardware has none, so the weight is simulated; equipment IO: owns its IO points, writes the output values its holder sends, reads its inputs every cycle and reports changes">
+<FBType Name="EQ_Scale" Comment="An equipment block: the only block that touches this equipment's pins. Skills send it what to switch over a local channel; it switches the outputs (off first, then on), reads the inputs every cycle and reports them to the skills and to OPC UA. One skill holds it at a time; on release or when the module aborts it switches everything off. Technical: Scale; the hardware has none, so the weight is simulated; equipment IO: owns its IO points, writes the output values its holder sends, reads its inputs every cycle and reports changes">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filling" />
@@ -35,31 +35,31 @@
     <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="4650" height="2480" locked="false" />
     <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="1000" y="3780" width="7810" height="2680" locked="false" />
     <Group Name="Inputs" Comment="The equipment's sensors: read every cycle, one block per IO point" x="9110" y="3780" width="2870" height="1480" locked="false" />
-    <FB Name="Logic" Type="filling::EL_Scale" x="950" y="150">
+    <FB Name="Logic" Type="filling::EL_Scale" x="950" y="150" Comment="The equipment's logic (EL_): takes commands from one holder at a time, switches the outputs (off first, then on), switches all off on release or module abort, and reports input changes.">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="3690" y="150">
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="3690" y="150" Comment="Ticks every cycle so the inputs are read and the outputs refreshed.">
       <Attribute Name="GroupName" Type="STRING" Value="Core" />
     </FB>
-    <FB Name="Mode" Type="modlib::MOD_StateView" x="950" y="150">
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="950" y="150" Comment="Watches the module's PackML state, to switch everything off when the module aborts.">
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_2" x="3500" y="150">
+    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_2" x="3500" y="150" Comment="Receives the commands skills send on this equipment's command channel.">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="6090" y="150">
+    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="6090" y="150" Comment="Hears the module's release channel: when its holder gives up, everything goes off.">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="990" y="1250">
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="990" y="1250" Comment="Publishes the inputs and the holder on this equipment's state channel, for the skills.">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="3740" y="1250">
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="3740" y="1250" Comment="Writes the inputs (and a position, if it keeps one) to OPC UA, below Equipment/&lt;item&gt;.">
       <Attribute Name="GroupName" Type="STRING" Value="Channels" />
     </FB>
-    <FB Name="In_Weight" Type="modlib::IO_AI" x="1270" y="150">
+    <FB Name="In_Weight" Type="modlib::IO_AI" x="1270" y="150" Comment="The pin Weight: reads the input at Weight_Address (a Pi pin, Modbus, or simulated).">
       <Attribute Name="GroupName" Type="STRING" Value="Inputs" />
     </FB>
     <EventConnections>

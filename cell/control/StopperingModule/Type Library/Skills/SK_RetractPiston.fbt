@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="SK_RetractPiston" Comment="Skill primitive RetractPiston: Piston back in for the stroke (open loop); for a piston left out by an abort (parameters: none). OPC UA Start(Session, parameters...)/Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID]; START/HALT/ABORT/RESET from a parent -&gt; SUCCESS or FAILURE(ErrorID)">
+<FBType Name="SK_RetractPiston" Comment="A skill primitive: one action of one piece of equipment (move the axis, run the pump, weigh). It can be called on its own over OPC UA, or be a step of a bigger skill. Inside: SKILL_Core (state machine and OPC UA methods), a parameter block per parameter, SL_ (what this skill does and when it is done) and EC_ (the equipment's command table), and the blocks that talk to the equipment over local channels. Technical: Skill primitive RetractPiston: Piston back in for the stroke (open loop); for a piston left out by an abort (parameters: none). OPC UA Start(Session, parameters...)/Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID]; START/HALT/ABORT/RESET from a parent -&gt; SUCCESS or FAILURE(ErrorID)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="stoppering" />
@@ -44,38 +44,38 @@
     <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="6470" height="2980" locked="false" />
     <Group Name="Execution" Comment="One run: the contract, the command to the equipment and the end condition" x="1000" y="4280" width="8145" height="2880" locked="false" />
     <Group Name="Equipment" Comment="The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)" x="1000" y="7460" width="7590" height="3180" locked="false" />
-    <FB Name="Control" Type="modlib::SKILL_Core" x="1150" y="150">
+    <FB Name="Control" Type="modlib::SKILL_Core" x="1150" y="150" Comment="The skill's state machine (SKILL_Core): checks a client's Start, publishes State and ErrorID, offers Stop, Abort and Reset over OPC UA, and starts Logic when the run may begin.">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="Logic" Type="stoppering::SL_RetractPiston" x="1190" y="150">
+    <FB Name="Logic" Type="stoppering::SL_RetractPiston" x="1190" y="150" Comment="What this skill does (its SL_ type): waits for the equipment, checks the precondition, sends the command and watches the signals until the skill is done.">
       <Parameter Name="Equipment" Value="&quot;Piston&quot;" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="4690" y="150">
+    <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="4690" y="150" Comment="The OPC UA method Start: a client's call arrives here with its session id and the parameters; Control's answer (Accepted, ErrorID) goes back to the client.">
       <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
     </FB>
-    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_1" x="950" y="150">
+    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_1" x="950" y="150" Comment="Listens to the equipment's state channel: its inputs and who holds it.">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqView" Type="stoppering::EV_Piston" x="3340" y="150">
+    <FB Name="EqView" Type="stoppering::EV_Piston" x="3340" y="150" Comment="Unpacks the equipment's state into named values for Logic.">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="4435" y="150">
+    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="4435" y="150" Comment="Waits up to half a second for the equipment to become free before giving up (Busy).">
       <Parameter Name="DT" Value="T#500ms" />
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="Driver" Type="stoppering::EC_Piston" x="5850" y="150">
+    <FB Name="Driver" Type="stoppering::EC_Piston" x="5850" y="150" Comment="The equipment's command table (EC_): turns Logic's command into output values, phase by phase.">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="1070" y="1550">
+    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="1070" y="1550" Comment="Times the phases of a command.">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_4" x="3500" y="1550">
+    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_4" x="3500" y="1550" Comment="Sends the output values and the holder's name to the equipment block on its command channel.">
       <Parameter Name="QI" Value="TRUE" />
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
-    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="6785" y="150">
+    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="6785" y="150" Comment="Ends a skill that runs for a time, or fails a skill that takes longer than its timeout.">
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
     <EventConnections>
