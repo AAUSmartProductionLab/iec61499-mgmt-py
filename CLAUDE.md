@@ -14,3 +14,10 @@ the rules, the state of the work and the next steps.
 - Many small commits, each one change that stands on its own (tests pass after each).
 - Commit messages of 1 to 3 lines: an imperative subject line, at most two short lines more.
   No long bodies or bullet lists.
+
+## Design log
+
+- While building, add every design consideration to [docs/design-log.md](docs/design-log.md),
+  newest first and dated: what was chosen, why, instead of what, and for which paper (CIRP, the
+  CIRP CMS paper; Journal, the journal paper). Commit it with the change it explains.
+- What belongs in the journal paper also goes into [docs/journal-paper.md](docs/journal-paper.md).
