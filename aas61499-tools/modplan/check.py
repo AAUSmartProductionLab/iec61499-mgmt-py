@@ -40,6 +40,13 @@ def check(domain: Domain, skill: Composite, given: dict | None = None, start: di
     return checker.found
 
 
+def simulate(domain: Domain, skill: Composite, given: dict | None = None, start: dict | None = None) -> dict:
+    """The state after ``skill``'s Execute flow, run with the values ``given`` for its parameters (else
+    their defaults) from ``start`` (the rest state)."""
+    values = {name: p.default for name, p in skill.parameters.items() if p.default is not None} | (given or {})
+    return _Checker(domain, values).run(skill.execute, dict(domain.rest if start is None else start))
+
+
 def _text(value) -> str:
     return str(value).lower() if isinstance(value, bool) else str(value)
 

@@ -229,12 +229,13 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
                                                          ("Dispense_2", "Dispense"), ("Home", "Home"), ("Weigh", "Weigh")]
     assert made.execute[2].bind == {"Volume": "Volume", "FlowRate": 1.0} and made.results == {"Weight": "Weigh.Weight"}
     assert (made.parameters["Volume"].default, made.parameters["Volume"].maximum) == (0.5, 5.0)
-    # Described, not built: it offers Filling after a reconfiguration, in the range of its Volume.
+    # Described, not built: it offers Filling after a reconfiguration, for what its two doses of its
+    # Volume (0.5 to 5.0 mL) fill (modplan runs it through the states).
     from modreg.offer import capabilities
     double = at(submodel(capabilities(module, components), "CapabilityDescription"), "OfferedCapabilities", "Filling_DoubleDose")
     assert {q["type"]: q["value"] for q in at(double, "Capability")["qualifiers"]}["Availability"] == "AfterReconfiguration"
     assert (at(double, "PropertySet", "FillVolume", "Value")["min"], at(double, "PropertySet", "FillVolume", "Value")["max"]) \
-        == ("0.5", "5.0")
+        == ("1.0", "10.0")
     forte = FakeForte(filling())
     done, after = reconfigure(forte, "pi", 61499, module, components)
     assert done[0].startswith("create DoubleDose: ") and after.differences.empty

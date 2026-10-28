@@ -11,8 +11,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from modgen.spec import Composite
 from rdflib import RDFS
 
+from .check import simulate
 from .domain import PRODUCT, Capability, Constraint, Domain, Var
 from .plan import NoPlan, Planned, plan
 from .vocabulary import LAB, Vocabulary, local
@@ -70,6 +72,25 @@ def ranges(domain: Domain, cap: Capability) -> dict[str, tuple[float, float]]:
                 bounds.append((value, value))
         if bounds:
             found[name] = (min(b[0] for b in bounds), max(b[1] for b in bounds))
+    return found
+
+
+def reached(domain: Domain, skill: Composite, capability: str, vocabulary: Vocabulary | None = None) -> dict[str, tuple[float, float]]:
+    """What an existing skill reaches of a process capability: for each property its Post compares
+    with (a FillVolume), the values at the end of the skill run with all its parameters at their
+    lower, then at their upper limits (two doses of 0.5 to 10 mL fill 1 to 20 mL)."""
+    cap = task(vocabulary or Vocabulary(), capability)
+    start = {**domain.rest, **arriving(cap)}
+    ends = []
+    for side in ("minimum", "maximum"):
+        given = {name: getattr(p, side) for name, p in skill.parameters.items() if getattr(p, side) is not None}
+        ends.append(simulate(domain, skill, given, start))
+    found = {}
+    for c in cap.post:
+        values = [end.get(c.var) for end in ends]
+        if c.expression.named and c.expression.op == "=" and all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                                                                 for v in values):
+            found[c.expression.named] = (min(values), max(values))
     return found
 
 

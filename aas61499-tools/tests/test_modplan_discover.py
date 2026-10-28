@@ -30,6 +30,22 @@ def test_without_a_pump_nothing_is_filled():
     assert discover(domain) == []
 
 
+def test_a_skill_offers_what_it_reaches():
+    """T9: DoubleDose doses its Dose (0.5 to 10 mL) twice, so it fills 1 to 20 mL; a rule over the
+    meanings of its parameters can only say 0.5 to 10."""
+    from test_modsync import composed
+    from test_modsync_desired import wanting
+    delivered = aas(load(SPECS / "filling.yaml"), "pi")[0]
+    module, components = wanting(composed().spec, delivered)
+    module["submodels"] = [submodel(delivered, "CapabilityDescription") if s["idShort"] == "CapabilityDescription" else s
+                           for s in module["submodels"]]
+    double = at(submodel(capabilities(module, components), "CapabilityDescription"), "OfferedCapabilities", "Filling_DoubleDose")
+    volume = at(double, "PropertySet", "FillVolume", "Value")
+    assert (volume["min"], volume["max"]) == ("1.0", "20.0")
+    single = at(submodel(capabilities(module, components), "CapabilityDescription"), "OfferedCapabilities", "Filling")
+    assert (at(single, "PropertySet", "FillVolume", "Value")["min"], at(single, "PropertySet", "FillVolume", "Value")["max"]) == ("0.5", "10.0")
+
+
 def test_a_module_without_skills_offers_what_it_can_plan_after_a_reconfiguration():
     """T10: the filling module with its module level skills taken out still offers Filling, once a
     skill for it is planned and built; no skill realizes it yet."""
