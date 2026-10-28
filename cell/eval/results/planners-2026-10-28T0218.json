@@ -1,0 +1,395 @@
+{
+ "when": "2026-10-28T0218",
+ "runs": [
+  {
+   "Filling (FillVolume 2) + FillWeight": {
+    "gtpyhop": {
+     "s": 0.0015427999896928668,
+     "steps": 4,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.3217696000356227,
+     "export_s": 0.03744920005556196,
+     "steps": 5,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.06329129997175187,
+     "export_s": 0.09381989995017648,
+     "steps": 4,
+     "valid": true
+    }
+   },
+   "Filling (FillVolume 15) + FillWeight": {
+    "gtpyhop": {
+     "s": 0.001556200091727078,
+     "steps": 5,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.36095479992218316,
+     "export_s": 0.4216755001107231,
+     "steps": 6,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.06347039993852377,
+     "export_s": 0.09694680001121014,
+     "steps": 5,
+     "valid": true
+    }
+   },
+   "Filling (FillVolume 0.5)": {
+    "gtpyhop": {
+     "s": 0.0019472999265417457,
+     "steps": 3,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.2870872999774292,
+     "export_s": 0.03915760002564639,
+     "steps": 3,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.04893270006868988,
+     "export_s": 0.3924717999761924,
+     "steps": 3,
+     "valid": true
+    }
+   },
+   "Stoppering": {
+    "gtpyhop": {
+     "s": 0.001169700059108436,
+     "steps": 3,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.2910478999838233,
+     "export_s": 0.03580109996255487,
+     "steps": 3,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.041953800013288856,
+     "export_s": 0.050138200051151216,
+     "steps": 3,
+     "valid": true
+    }
+   }
+  },
+  {
+   "Filling (FillVolume 2) + FillWeight": {
+    "gtpyhop": {
+     "s": 0.001256300020031631,
+     "steps": 4,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.29605870007071644,
+     "export_s": 0.036380699952133,
+     "steps": 5,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.05831679992843419,
+     "export_s": 0.07889450003858656,
+     "steps": 4,
+     "valid": true
+    }
+   },
+   "Filling (FillVolume 15) + FillWeight": {
+    "gtpyhop": {
+     "s": 0.0012891999213024974,
+     "steps": 5,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.32887580001261085,
+     "export_s": 0.04522620001807809,
+     "steps": 6,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.06990709993988276,
+     "export_s": 0.09988800005521625,
+     "steps": 5,
+     "valid": true
+    }
+   },
+   "Filling (FillVolume 0.5)": {
+    "gtpyhop": {
+     "s": 0.0023517999798059464,
+     "steps": 3,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.3014070999342948,
+     "export_s": 0.035347600001841784,
+     "steps": 3,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.052033100044354796,
+     "export_s": 0.37077949999365956,
+     "steps": 3,
+     "valid": true
+    }
+   },
+   "Stoppering": {
+    "gtpyhop": {
+     "s": 0.0009231000440195203,
+     "steps": 3,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.2828629999421537,
+     "export_s": 0.025792100001126528,
+     "steps": 3,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.041312400018796325,
+     "export_s": 0.0489421000238508,
+     "steps": 3,
+     "valid": true
+    }
+   }
+  },
+  {
+   "Filling (FillVolume 2) + FillWeight": {
+    "gtpyhop": {
+     "s": 0.0011888999724760652,
+     "steps": 4,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.28755939996335655,
+     "export_s": 0.034256799961440265,
+     "steps": 5,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.0554194999858737,
+     "export_s": 0.3728358999360353,
+     "steps": 4,
+     "valid": true
+    }
+   },
+   "Filling (FillVolume 15) + FillWeight": {
+    "gtpyhop": {
+     "s": 0.0010916999308392406,
+     "steps": 5,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.3485651999944821,
+     "export_s": 0.037759600090794265,
+     "steps": 6,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.0730496000032872,
+     "export_s": 0.09804960002657026,
+     "steps": 5,
+     "valid": true
+    }
+   },
+   "Filling (FillVolume 0.5)": {
+    "gtpyhop": {
+     "s": 0.001905699959024787,
+     "steps": 3,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.2842510000336915,
+     "export_s": 0.036110599990934134,
+     "steps": 3,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.052219899953342974,
+     "export_s": 0.36317939998116344,
+     "steps": 3,
+     "valid": true
+    }
+   },
+   "Stoppering": {
+    "gtpyhop": {
+     "s": 0.0010916999308392406,
+     "steps": 3,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.2822584999958053,
+     "export_s": 0.022842300008051097,
+     "steps": 3,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.03629209997598082,
+     "export_s": 0.04944900004193187,
+     "steps": 3,
+     "valid": true
+    }
+   }
+  },
+  {
+   "Filling (FillVolume 2) + FillWeight": {
+    "gtpyhop": {
+     "s": 0.0011159999994561076,
+     "steps": 4,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.2937849999871105,
+     "export_s": 0.03431999997701496,
+     "steps": 5,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.055910499999299645,
+     "export_s": 0.39986130001489073,
+     "steps": 4,
+     "valid": true
+    }
+   },
+   "Filling (FillVolume 15) + FillWeight": {
+    "gtpyhop": {
+     "s": 0.0019400999881327152,
+     "steps": 5,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.3475994999753311,
+     "export_s": 0.041361300041899085,
+     "steps": 6,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.06553869997151196,
+     "export_s": 0.09518669999670237,
+     "steps": 5,
+     "valid": true
+    }
+   },
+   "Filling (FillVolume 0.5)": {
+    "gtpyhop": {
+     "s": 0.0020140999695286155,
+     "steps": 3,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.2757178000174463,
+     "export_s": 0.032790300087071955,
+     "steps": 3,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.050845200079493225,
+     "export_s": 0.3994043000275269,
+     "steps": 3,
+     "valid": true
+    }
+   },
+   "Stoppering": {
+    "gtpyhop": {
+     "s": 0.0008778000483289361,
+     "steps": 3,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.27059600001666695,
+     "export_s": 0.025744599988684058,
+     "steps": 3,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.03637009998783469,
+     "export_s": 0.04801869997754693,
+     "steps": 3,
+     "valid": true
+    }
+   }
+  },
+  {
+   "Filling (FillVolume 2) + FillWeight": {
+    "gtpyhop": {
+     "s": 0.0009935999987646937,
+     "steps": 4,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.3003900999901816,
+     "export_s": 0.03459970001131296,
+     "steps": 5,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.052932700025849044,
+     "export_s": 0.36776799999643117,
+     "steps": 4,
+     "valid": true
+    }
+   },
+   "Filling (FillVolume 15) + FillWeight": {
+    "gtpyhop": {
+     "s": 0.0013867999659851193,
+     "steps": 5,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.3291445999639109,
+     "export_s": 0.03822099999524653,
+     "steps": 6,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.05968679999932647,
+     "export_s": 0.10154509998392314,
+     "steps": 5,
+     "valid": true
+    }
+   },
+   "Filling (FillVolume 0.5)": {
+    "gtpyhop": {
+     "s": 0.0022860999451950192,
+     "steps": 3,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.27656339993700385,
+     "export_s": 0.03390759998001158,
+     "steps": 3,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.045349800027906895,
+     "export_s": 0.3721716000000015,
+     "steps": 3,
+     "valid": true
+    }
+   },
+   "Stoppering": {
+    "gtpyhop": {
+     "s": 0.001485500019043684,
+     "steps": 3,
+     "valid": true
+    },
+    "enhsp": {
+     "s": 0.274336599977687,
+     "export_s": 0.026617900002747774,
+     "steps": 3,
+     "valid": true
+    },
+    "aries": {
+     "s": 0.04580179997719824,
+     "export_s": 0.05232429993338883,
+     "steps": 3,
+     "valid": true
+    }
+   }
+  }
+ ]
+}
