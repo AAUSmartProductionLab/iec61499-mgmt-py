@@ -194,6 +194,28 @@ module's OPC UA address space.
 - **The line** pulls the others in as submodules or pinned packages and is the only place that
   knows all of them.
 
+## Submodules or subtrees (asked 27 Oct; a proposal, waiting for the user's go)
+
+Four repositories are submodules today. A subtree copies another repository's files into this one
+(with `--squash`, as one commit per update): one clone, one commit across both, no submodule left on a
+local branch or with changes inside it; the other repository is updated with `git subtree pull` and
+fed back with `git subtree push` (or a branch made by `git subtree split` for a pull request).
+
+| Submodule | Tracked files | Changed with this repository | Proposal |
+| --- | --- | --- | --- |
+| `iec61499-opcua-hmi` (the lab's) | 1 MB | Often (`modlink` reads what modreg writes) | **Subtree**, squashed |
+| `planar-controller` (the lab's) | 0.3 MB | With H (its layout over OPC UA, its AAS) | **Subtree**, squashed |
+| `basyx-aas-web-ui` (the user's fork of BaSyx's) | 25 MB | Often (the planner, the skill editor) | Keep a submodule: a fork that follows its upstream is easier to merge where it lives; a squashed subtree is possible |
+| `aas-model` (the lab's) | 228 MB (the IDTA templates) | Rarely (pip installs it from a pinned archive; here only its generator and templates are used) | Keep a submodule: a subtree would put 228 MB into this repository |
+
+Before converting, what lives only inside the submodules has to be kept: `iec61499-opcua-hmi/hmi/aas.py`
+is changed and not committed (its commit waits for the user's go), `basyx-aas-web-ui` has a changed
+`.eslintrc-auto-import.json`, and `aas-model` is on the local branch `arso-submodels`, pushed nowhere
+(it stays a submodule). For each converted one: save its changed files, `git submodule deinit` and
+`git rm` it, `git subtree add --prefix=<path> <url> <branch> --squash`, put the saved files back
+(uncommitted, as before), and change the docs that say "submodule" (README, onboarding,
+repositories).
+
 ## What this settles and what it does not
 
 Settled by the split:
