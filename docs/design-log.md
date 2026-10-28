@@ -18,6 +18,22 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
+- **Coordinates: settled with the user.** *Journal.*
+  - **One measurement series per coordinate,** in Operational Data's `Measurements`. It is shaped
+    like every series of the plan of 26 Oct ([state-and-parameters.md](state-and-parameters.md),
+    section 3): records in a time-series database, a `Latest` in the AAS. Positions will be
+    reported by the modules themselves (RFID), so even fixed ones are measured.
+  - **The parent is part of the record.** A record holds the time, the coordinate it is relative
+    to, and x, y, z, roll, pitch, yaw.
+    - A product on a shuttle: the xbot's series gets a record per move (the controller); the
+      fixture is fixed relative to the xbot; the product's series gets a record only when it is put
+      somewhere else, with the new parent and offset.
+    - Where the product was at time t is composed from these. It is never stored.
+  - **Rotation:** R = Rz(yaw)·Ry(pitch)·Rx(roll), about the parent's fixed axes (ROS's RPY;
+    `modreg/frames.py` already composes so). Units mm and degrees.
+  - **Granularity:** a module may hold several coordinates. Ours hold two: the module base, and the
+    sled or end effector relative to it. No coordinate per component.
+  - **Root:** the table.
 - **Proposed (the user's whiteboard): coordinates as a transform tree in the operational data,
   instead of frames on Hierarchical Structures nodes.** *Journal.* Under evaluation, not built.
   - **Structure:**
