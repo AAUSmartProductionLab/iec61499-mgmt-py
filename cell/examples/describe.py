@@ -292,21 +292,7 @@ classDiagram
   }
   class Step {
     NodeId, Kind, Name, Order
-    SkillId
-    ExecutionMode
-  }
-  class Binding {
-    Name: skill parameter
-    Value: constant if no source
-  }
-  class ResourceAAS {
-    <<another AAS>>
-  }
-  class Skill {
-    <<in the resource AAS>>
-  }
-  class SkillParameter {
-    <<in the resource AAS>>
+    no equipment
   }
   class OfferedCapability {
     <<in the resource AAS>>
@@ -323,19 +309,78 @@ classDiagram
   Process *-- "0..*" MaterialUse : ProcessBoM
   CapabilityDescription *-- "0..*" RequiredCapability
   RequiredCapability *-- "0..*" RequiredProperty
-  ProductionSequence *-- "0..*" Step
-  Step *-- "0..*" Binding
+  ProductionSequence *-- "1..*" Step
 
   MaterialUse --> Part : MaterialReference
   MaterialUse --> ProductParameter : QuantityParameterReference
   Process --> RequiredCapability : RequiredCapability
   Step --> Process : ProcessReference
-  Step --> ModuleAAS : Resource
-  Step --> Skill : Skill
-  Binding --> ProductParameter : SourceElement
-  Binding ..> Variable : Name (an input of the skill's Start)
+  Step --> RequiredCapability : RequiredCapabilities
   RequiredCapability ..> OfferedCapability : matches (same meaning, values covered)
-  OfferedCapability --> Skill : RealizedBy
+```'''
+
+PROCESS_CLASSES = '''```mermaid
+classDiagram
+  direction LR
+  class ProcessAAS {
+    id, idShort
+    assetKind = Type
+    specificAssetIds: product, line
+  }
+  class ProcessInformation {
+    RecipeRevision
+    Status: Draft, Approved, Withdrawn
+  }
+  class Bindings
+  class StepBinding {
+    NodeId
+    ExecutionMode
+  }
+  class InputBinding {
+    Name: an input of the skill
+    Value: constant if no source
+  }
+  class Validation {
+    Result: Fits, DoesNotFit
+    CheckedBy
+    Findings
+  }
+  class ProductAAS {
+    <<another AAS>>
+  }
+  class LineAAS {
+    <<another AAS>>
+  }
+  class Step {
+    <<in the product's recipe>>
+  }
+  class ProductParameter {
+    <<in the product AAS>>
+  }
+  class ModuleAAS {
+    <<another AAS>>
+  }
+  class Skill {
+    <<in the module AAS>>
+  }
+  class Variable {
+    <<an input of the skill's Start>>
+  }
+
+  ProcessAAS *-- ProcessInformation
+  ProcessAAS *-- Bindings
+  ProcessAAS *-- Validation
+  Bindings *-- "1..*" StepBinding : one per step
+  StepBinding *-- "0..*" InputBinding : Bindings
+
+  ProcessInformation --> ProductAAS : Product
+  ProcessInformation --> LineAAS : Line
+  ProcessInformation --> ProductionSequence : Recipe
+  StepBinding --> Step : Step
+  StepBinding --> ModuleAAS : Resource
+  StepBinding --> Skill : Skill
+  InputBinding --> ProductParameter : SourceElement
+  InputBinding --> Variable : InputReference
 ```'''
 
 
@@ -522,8 +567,15 @@ def material(use: dict) -> str:
     return f"{use['idShort']} ({at(use, 'Role')['value']}, {amount})"
 
 
-def product_section(env: dict, resources: dict[str, dict]) -> list[str]:
-    shell, envs = shell_of(env), [env, *resources.values()]
+def bound(process: dict, step: dict) -> dict | None:
+    """The binding of a step of the recipe in the process AAS."""
+    return next((b for b in children(submodel(process, "Bindings"))
+                 if last(at(b, "Step")["value"]) == step["idShort"]), None)
+
+
+def product_section(env: dict, process: dict, resources: dict[str, dict]) -> list[str]:
+    process_aas = process
+    shell, envs = shell_of(env), [env, process_aas, *resources.values()]
     by_id = {shell_of(r)["id"]: shell_of(r)["idShort"] for r in resources.values()}
     name = shell["idShort"]
     parts = children(at(submodel(env, "HierarchicalStructures"), "EntryNode"))
@@ -531,13 +583,15 @@ def product_section(env: dict, resources: dict[str, dict]) -> list[str]:
     plan = submodel(env, "ProductionSequence")
     steps = children(at(plan, "Steps"))
 
-    lines = [f"### {name}", "", f"`{shell['id']}`, asset `{shell['assetInformation']['globalAssetId']}`.", "",
+    lines = [f"### {name}", "", f"`{shell['id']}`, asset `{shell['assetInformation']['globalAssetId']}`; on the line by "
+             f"`{shell_of(process_aas)['idShort']}`.", "",
              "```mermaid", "flowchart LR"]
     previous = None
     for step in steps:
         process = at(step, "Name")["value"]
-        skill = resolve(envs, at(step, "Skill")["value"])
-        resource = by_id[at(step, "Resource")["value"]["keys"][0]["value"]]
+        binding = bound(process_aas, step)
+        skill = resolve(envs, at(binding, "Skill")["value"])
+        resource = by_id[at(binding, "Resource")["value"]["keys"][0]["value"]]
         required = resolve(envs, at(resolve(envs, at(step, "ProcessReference")["value"]), "RequiredCapability")["value"])
         meaning = semantic_ids(required)[1].rsplit("/", 1)[-1]
         lines.append(f'  subgraph S_{node(process)}["Step {int(at(step, "Order")["value"]) + 1}"]')
@@ -560,13 +614,15 @@ def product_section(env: dict, resources: dict[str, dict]) -> list[str]:
         required = resolve(envs, at(process, "RequiredCapability")["value"])
         lines.append(f"| {process['idShort']} | {at(process, 'PlannedProcessTime')['value']} | {parameters} | {materials} | "
                      f"`{semantic_ids(required)[1]}` |")
-    lines += ["", f"The plan (Production Sequence, `{at(plan, 'PlanSchema')['value']}`):", "",
-              "| Order | Step | Resource | Skill | Bound |", "| --- | --- | --- | --- | --- |"]
+    lines += ["", f"The recipe (Production Sequence, `{at(plan, 'PlanSchema')['value']}`) and its binding to the line "
+              f"(the process AAS's Bindings; Validation: {at(submodel(process_aas, 'Validation'), 'Result')['value']}):", "",
+              "| Order | Step | Resource | Skill | Inputs handed |", "| --- | --- | --- | --- | --- |"]
     for step in steps:
-        bound = ", ".join(f"{at(b, 'Name')['value']} ← {last(at(b, 'SourceElement')['value']) if at(b, 'SourceElement') else at(b, 'Value').get('value')}"
-                          for b in children(at(step, "Bindings"))) or "–"
+        binding = bound(process_aas, step)
+        handed = ", ".join(f"{at(b, 'Name')['value']} ← {last(at(b, 'SourceElement')['value']) if at(b, 'SourceElement') else at(b, 'Value').get('value')}"
+                           for b in children(at(binding, "Bindings"))) or "–"
         lines.append(f"| {int(at(step, 'Order')['value']) + 1} | {at(step, 'Name')['value']} | "
-                     f"{by_id[at(step, 'Resource')['value']['keys'][0]['value']]} | {at(step, 'SkillId')['value']} | {bound} |")
+                     f"{by_id[at(binding, 'Resource')['value']['keys'][0]['value']]} | {last(at(binding, 'Skill')['value'])} | {handed} |")
     lines.append("")
     return lines
 
@@ -575,24 +631,29 @@ def document() -> str:
     resources, products = example_line.build()
     components = example_line.components()
     system = example_line.line(resources)
-    processes = example_line.processes(resources, products, system)
-    by_asset = {shell_of(e)["assetInformation"]["globalAssetId"]: e for e in [*resources.values(), *components.values()]}
+    processes = example_line.processes(resources, products)
+    planar = list(example_line.planar_table())
+    by_asset = {shell_of(e)["assetInformation"]["globalAssetId"]: e for e in [*resources.values(), *components.values(), *planar]}
     lines = [
         "# The example line: its AASs",
         "",
-        f"{1 + len(resources) + len(components) + len(products) + len(processes)} AASs built to the framework: "
-        "the line, its modules (filling, stoppering, capping, inspection; loading",
-        "and unloading are named but not described yet), the components of each module, one product",
-        "planned on them (a 2 mL vial) and its process on the line. Each product's plan is followed into",
-        "the resources when they are built; a plan that does not fit is refused. The process AAS (a",
-        "draft) holds the plan's bindings: per step the resource, the skill and what each of its inputs is",
-        "handed, each a reference. What the submodels are and how they link is in [aas-models.md](aas-models.md).",
+        f"{1 + len(planar) + len(resources) + len(components) + len(products) + len(processes)} AASs, the lab's "
+        "reference models: the line, the planar table and its shuttles, the modules",
+        "(filling, stoppering, capping, inspection; loading and unloading are named but not described yet),",
+        "the components of each module, three products (a 2 mL vial, a prefilled syringe of 1 mL, a",
+        "cartridge of 3 mL) and the process of each on the line. A process AAS binds a product's recipe to",
+        "the modules: per step the module, the skill and what each of its inputs is handed, each a",
+        "reference; the plan check follows every one into the product's and the modules' AASs, and a",
+        "process whose Validation says otherwise is refused. Every AAS is an instance of aas-model's types",
+        "(`Module`, `Component`, `ProductionSystem`, `Product`, `Process`; aas-model's `docs/lab-aas.md`).",
+        "What the submodels are and how they link is in [aas-models.md](aas-models.md).",
         "",
-        "This file is written by `python cell/examples/describe.py`. Every AAS is built by `modreg` from a",
-        "profile, the pydantic dump of its type: the profiles of a module and of its components are made",
-        "from the module spec (`cell/modules`, `cell/modules/planned`), a product's profile is a file",
-        "(`cell/examples/Vial2mLAAS.json`). `python cell/examples/example_line.py --out <folder> --publish",
-        "<server>` builds the AASs and puts them on an AAS server.",
+        "This file is written by `python cell/examples/describe.py`. The modules' and their components'",
+        "AASs are built by `modreg` from the module specs (`cell/modules`, `cell/modules/planned`), the",
+        "table's and the shuttles' from what the planar controller says; the products and the processes are",
+        "written out in Python (`cell/examples/products`, `cell/examples/processes`).",
+        "`python cell/examples/example_line.py --out <folder> --publish <server>` builds them all and puts",
+        "them on an AAS server.",
         "",
         "## The line: what it is made of",
         "",
@@ -601,7 +662,7 @@ def document() -> str:
     ]
     for name, c in coordinates_of(system).items():
         lines.append(f"  point {name} ({meant(c)}){placed(c)}")
-    for part in children(at(system["submodels"][0], "EntryNode")):
+    for part in children(at(submodel(system, "HierarchicalStructures"), "EntryNode")):
         module = by_asset.get(part["globalAssetId"])
         lines.append(f"  {shell_of(module)['idShort'] if module else part['idShort'] + ' (not described yet)'}"
                      f"{placed(coordinates_of(module).get('ModuleBase'))}")
@@ -616,10 +677,10 @@ def document() -> str:
     lines += ["```", "",
               "| AAS | Kind | Submodels |",
               "| --- | --- | --- |"]
-    for env in [system, *resources.values(), *components.values(), *products.values(), *processes.values()]:
+    for env in [system, *planar, *resources.values(), *components.values(), *products.values(), *processes.values()]:
         asset_type = shell_of(env)["assetInformation"].get("assetType", "")
         kind = (asset_type.split("/Resource/")[-1].lower() if "/Resource/" in asset_type
-                else "process (draft)" if asset_type.endswith("/Process") else "product")
+                else "process" if asset_type.endswith("/Process") else "product")
         lines.append(f"| `{shell_of(env)['idShort']}` | {kind} | {', '.join(s['idShort'] for s in env['submodels'])} |")
     lines += ["", "## Class diagram: the resources", "",
               "A line is made of modules and a module of components. What kind of resource an AAS is, is its",
@@ -632,15 +693,19 @@ def document() -> str:
               "named like the element that carries it; a dashed arrow is a link by a shared id.", "", RESOURCE_LINKS, "",
               "## Class diagram: a product AAS", "",
               "The classes marked as another AAS are in the resource AAS above; the dashed arrows are links that",
-              "are followed by meaning or by name, not by a stored reference.", "", PRODUCT_CLASSES, "",
+              "are followed by meaning or by name, not by a stored reference. The recipe names no equipment.", "",
+              PRODUCT_CLASSES, "",
+              "## Class diagram: a process AAS", "",
+              "A product's recipe bound to the line: per step of the recipe, the module and the skill that carry",
+              "it out, and what each input of the skill is handed.", "", PROCESS_CLASSES, "",
               "## The modules", "",
               "Read upwards: a module level skill runs skills of the module's components in order, and a",
               "capability is realized by a module level skill.", ""]
     for env in resources.values():
         lines += resource_section(env, components)
-    lines += ["## The product", ""]
-    for env in products.values():
-        lines += product_section(env, resources)
+    lines += ["## The products and their processes", ""]
+    for env, process in zip(products.values(), processes.values()):
+        lines += product_section(env, process, resources)
     return "\n".join(lines).rstrip() + "\n"
 
 
