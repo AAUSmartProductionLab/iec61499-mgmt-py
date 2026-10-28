@@ -31,12 +31,10 @@ reasons behind each choice, with what was chosen instead, are [design-decisions.
 | --- | --- | --- | --- |
 | 1 | Introduction | Reconfigurable lines, changeover by hand; the AAS is delivered but not used to change anything; the claim | [design-decisions.md](design-decisions.md) 1.1, 1.2 |
 | 2 | Related work | IEC 61499 reconfiguration (online changes, management protocol); skills and capabilities (CSS, IDTA 02020, PackML skills); AAS-driven engineering; planning from capability models (Köcher et al. 2023, SMT; Nabizada et al. 2026, PDDL from AAS; HTN, GTPyhop) | [skill-planning.md](skill-planning.md) section 7 |
-| 3 | The module architecture (C3) | Shell, primitive, module level skill, flows; what may change online | [module-rules.md](module-rules.md), [mapping.md](mapping.md), [design-decisions.md](design-decisions.md) 2 |
-| 4 | The models (C1) | The resource AAS: Skills (commands, flows), Capability Description (offered; per component, with constraints), Operational Data; the vocabulary; ids | [aas-models.md](aas-models.md), [skill-planning.md](skill-planning.md) sections 2 to 4, [design-decisions.md](design-decisions.md) 3 |
-| 5 | Planning (C2) | The domain read from the AAS; plan, lift, describe; check; discover | [skill-planning.md](skill-planning.md), [tools.md](tools.md) section 5 |
-| 6 | Updating online (C4) | Read back, compare, classify, apply, verify, record; created with the generator's own pattern | [tools.md](tools.md) section 3, [design-decisions.md](design-decisions.md) 4 |
-| 7 | Evaluation | The filling and stoppering modules on FORTE (PC with simulated IO; the Raspberry Pi 5 with the axis): the scenarios online against a restart; the planning cases | `cell/eval/scenarios.py` and its results; [skill-planning.md](skill-planning.md) section 10 |
-| 8 | Discussion and outlook | What cannot change online (types, order); a module's state only; agents (the line is theirs); locations and the planar table | [mapping.md](mapping.md) section 6, [locations-and-layout.md](locations-and-layout.md) |
+| 3 | Concept and method (C1 to C4) | 3.1 the concept: the AAS as the desired state; 3.2 the module architecture (C3); 3.3 the skill and capability models (C1); 3.4 updating a running module (C4); 3.5 planning new skills (C2). Outlined paragraph by paragraph in [paper-method.md](paper-method.md) | [module-rules.md](module-rules.md), [mapping.md](mapping.md), [aas-models.md](aas-models.md), [skill-planning.md](skill-planning.md), [tools.md](tools.md) sections 3 and 5, [design-decisions.md](design-decisions.md) |
+| 4 | Implementation | The tools, FORTE and its OPC UA server, BaSyx, ARSO 0.12 and the vocabulary, the skill editor; the filling and stoppering modules on a PC and a Raspberry Pi 5 | [tools.md](tools.md) section 1, [tooling.md](tooling.md), [modules.md](modules.md) |
+| 5 | Evaluation | The filling and stoppering modules on FORTE (PC with simulated IO; the Raspberry Pi 5 with the axis): the scenarios online against a restart; the planning cases | `cell/eval/scenarios.py` and its results; [skill-planning.md](skill-planning.md) section 10 |
+| 6 | Discussion and outlook | What cannot change online (types, order); a module's state only; agents (the line is theirs); locations and the planar table | [mapping.md](mapping.md) section 6, [locations-and-layout.md](locations-and-layout.md) |
 
 ## Figures
 
