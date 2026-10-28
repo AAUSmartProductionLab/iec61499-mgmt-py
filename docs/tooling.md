@@ -181,13 +181,13 @@ changed only after asking the user.
 
 | Part | Where |
 | --- | --- |
-| Types: `ModuleTypeAAS`, `ComponentTypeAAS`, `SystemTypeAAS` (aas-model's `Resource` with ARSO's submodels), the products | `modreg/model.py`, `modreg/product.py` |
-| A module's AAS from its spec (and what runs): Nameplate, Hierarchical Structures, Asset Interfaces Description and Mapping Configuration, Skills, Capability Description, Operational Data, Control Configuration | `modreg/profile.py` (`describe`, `describe_all`) |
+| Types: `Module`, `Component`, `ProductionSystem`, `Product`, `Process` (aas-model's, branch `lab-ppr-models`); the profile of an AAS (its dump without what its type says) | aas-model's `resource_template/modules`, `product_template`, `process_template`; `modreg/model.py` |
+| A module's AAS from its spec (and what runs): Nameplate, Hierarchical Structures, Asset Interfaces Description and Mapping Configuration, Skills, Capability Description, Variables, Control Configuration | `modreg/profile.py` (`describe`, `describe_all`) |
 | The interface of a skill built online | `modreg/offer.py` |
-| ARSO's own submodels as templates and classes | `modreg/templates/*.json` and `modreg/generated/`, made by `modreg generate` |
+| ARSO's own submodels as templates and classes | aas-model's `templates/arso/*.json` (written by `modreg generate` from the ontology) and `submodel_templates/arso` (its `scripts/lab_generate.py`) |
 | The ontology check | `modreg/ontology.py` |
 | The registration service | `modreg/service.py` (`modreg serve`) |
-| Where things are: coordinates in Operational Data, a tree of transforms (ARSO 0.13) | `modreg/frames.py` (`where`, `relative`, `chain`, `place`) |
+| Where things are: coordinates in Variables, a tree of transforms | `modreg/frames.py` (`where`, `relative`, `chain`, `place`) |
 | The planar table and its shuttles, from the planar controller | `modreg/planar.py` (the source `planar`) |
 
 ```powershell

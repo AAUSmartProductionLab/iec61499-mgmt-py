@@ -5,6 +5,14 @@ submodels connect inside one AAS and across AASs. Written on 7 Oct 2026 so that 
 modules, the HMI and the AAS generator are described in one place; the resource side was rewritten
 on 8 Oct 2026 (a skill as its commands; components and the line as AASs of their own).
 
+**28 Oct 2026:** the types, templates and classes are aas-model's now (branch `lab-ppr-models`:
+`Module`, `Component`, `ProductionSystem`, `Product`, `Process`; its `docs/lab-aas.md` and a
+description per submodel in `docs/lab-submodels`). aas-model's Variables replace Operational Data
+(ARSO 0.14): a data point is a `VariableProp` whose meaning is its supplemental semantic id, and the
+coordinates are in `Variables/Measurements`. The process AAS is built, and the reference products'
+recipes name no equipment: the bindings are the process AAS's. The example line's AASs, three
+products and their processes, are in [aas-examples.md](aas-examples.md).
+
 It describes what is **built**, and says where a model exists only on paper. The target model
 (product, process and resource AAS, their ontologies and applications, decided 26 Oct) is in
 [ppr-model.md](ppr-model.md). Sources:
@@ -37,7 +45,7 @@ flowchart LR
     RS["Skills<br/>what it offers, and its own commands"]
     RI["Asset Interfaces Description"]
     RM["Mapping Configuration"]
-    RO["Operational Data"]
+    RO["Variables"]
     RH["Hierarchical Structures<br/>its components"]
   end
   subgraph C["Component AAS (one per component)"]
@@ -106,7 +114,7 @@ submodels:
 | Asset Interfaces Mapping Configuration | IDTA 02027 (2/0) | Which interface property feeds which data point, and which action each command's Operation calls | Extended |
 | Capability Description | IDTA 02020 | The capabilities the module offers, with values or ranges and units, each realized by a skill; derived from the skills since 26 Oct (qualifiers `Derived`, and `Availability` for a skill not built yet; [ppr-model.md](ppr-model.md), section 5) | One change |
 | Skills | ours (ARSO 0.10, `Modules/skills.ttl`); began from IDTA 02015 Control Component Type and is no longer that template | The skills the module composes and the module's own commands (Occupy, Release, Reset, Start, Stop, Abort, Clear), each as its commands, directly in the submodel; the error codes (`Errors`, a property each); the rule set the program is built by (`RuleSet`) and, per module level skill, whether the program carries it out (`Deployment`: `Built` or `Described`) | Custom |
-| Operational Data | ours (ARSO) | One decimal data point per published variable: states, error ids, parameters and results of the last run, equipment inputs | Custom |
+| Variables (Operational Data until 28 Oct) | aas-model's (ARSO 0.14) | One decimal data point per published variable: states, error ids, parameters and results of the last run, equipment inputs; in `Measurements`, the coordinates | Custom |
 
 A component's AAS holds one submodel, Skills, with its primitives. Its interface is the module's:
 the module carries the skills out.
@@ -177,7 +185,7 @@ What is deliberately not in Skills:
 
 | Not there | Where it is instead |
 | --- | --- |
-| The skill's state, why it failed, its results as they are now | Operational Data: data points, fed from the interface by the mapping. A data point carries the semantic id of the Operation variable it shows |
+| The skill's state, why it failed, its results as they are now | Variables: data points, fed from the interface by the mapping. A data point carries the semantic id of the Operation variable it shows as its supplemental semantic id |
 | Which block of the program a skill or a step is | Since 27 Oct (ARSO 0.10) the integrator's record of what was built, outside the AAS ([control-configuration.md](control-configuration.md)): a Control Configuration submodel per module with `Instances` (instance path, block type, type hash, a reference to the skill or the step), the change log and the management endpoint. The AAS keeps only `RuleSet` and each skill's `Deployment` |
 | What a primitive occupies | The component whose AAS it is described in |
 | Which capability it realizes | The capability says which skill realizes it; a skill never refers back |

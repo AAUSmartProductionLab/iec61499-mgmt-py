@@ -2,14 +2,15 @@
 
 Design of 27 Oct 2026, changed on 28 Oct from frames on Hierarchical Structures nodes to
 coordinates in Operational Data (ARSO 0.13, vocabulary 0.5, `modreg/frames.py`; the reasons in
-[design-log.md](design-log.md)). The planar table's AAS (section 3, `modreg/planar.py`) is built too.
+[design-log.md](design-log.md)), and the same day into aas-model's Variables (ARSO 0.14; the classes
+in aas-model's `submodel_templates/coordinates.py`). The planar table's AAS (section 3, `modreg/planar.py`) is built too.
 Every resource AAS says where it and its points are, relative to another coordinate, so that any
 point of interest (where a shuttle stands for the vial to be filled, where a robot picks or places)
 is known in the planar table's frame, which is what a shuttle is moved in.
 
 ## 1. Coordinates, a tree of transforms
 
-A **coordinate** is an element of a resource's Operational Data (`Measurements/Coordinates/<name>`):
+A **coordinate** is an element of a resource's Variables (`Measurements/Coordinates/<name>`):
 a pose relative to another coordinate, which `RelativeTo` names by reference, in the same AAS or
 another. The references make a tree, as ROS's tf does. Its root is the planar table's base: nothing
 above the table is modelled (no building, no hall, no IDTA 02045).
@@ -36,7 +37,7 @@ FillingLineAAS   Infeed, Outfeed      relative to TableBase
   handed over, its `RelativeTo` changes.
 - **Measured, not configured:** a module reports where it is put on the table (later by RFID), so even
   a module's base is a measurement. Each coordinate is the latest value of a series, as every
-  measurement of Operational Data is to be ([state-and-parameters.md](state-and-parameters.md),
+  measurement in Variables is to be ([state-and-parameters.md](state-and-parameters.md),
   section 3); the series in the time-series database comes with that part.
 - **Where it lives:** in the AAS of the asset it belongs to; a module may hold several (ours hold a
   base, a mount and an end effector per axis, and their points), components hold none.
@@ -130,6 +131,6 @@ simulated driver: the table brought to Execute and a shuttle moved with `modlink
 | --- | --- |
 | Units of a frame | AutomationML's, checked against IEC 62714 before building; the interfaces stay in mm and degrees |
 | A building AAS, or Asset Location on the line | Neither (28 Oct): the line is the root. IDTA 02045-1-0 was read; it is for tracking and tracing, without orientation or parent-relative frames ([design-log.md](design-log.md)) |
-| The frame as an extension of 02011 | Gone (28 Oct): coordinates in Operational Data instead, and Hierarchical Structures is a bill of material again |
+| The frame as an extension of 02011 | Gone (28 Oct): coordinates in Variables instead, and Hierarchical Structures is a bill of material again |
 | Which configurator reads the layout | To be named |
 | Transport as a capability for the agents | With the agents, after the paper |
