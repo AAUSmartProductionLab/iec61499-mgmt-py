@@ -18,6 +18,22 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
+- **Locations: IDTA 02045 Asset Location for the site, frames for the line.** *Journal.*
+  - 02045 holds the site and hall level: the address, the hall's coordinate system (local, with
+    ground control points to WGS84), the hall as an area, and time-stamped records of where an asset
+    was.
+  - The line's geometry stays as frames on Hierarchical Structures nodes (AutomationML Frame, IDTA
+    02075 ids): a module in the line, a component and its transfer points in the module.
+  - The two meet at one place: the line's origin is a location record in the hall's coordinate
+    system.
+  - Why not 02045 alone: it has no orientation (it says so: no 6DoF "for now"), no frames relative
+    to a parent, and positions only as event records with a time, not as a static pose.
+  - Why not extend 02045: an extended template no longer conforms to the standard, and its readers
+    would not understand the additions; frames on 02011 nodes are already standard elements.
+  - A use for 02045 that fits it exactly: each station as a fence (an area in the line's coordinate
+    system), and the product AAS recording entry and exit events as it passes. That is a location
+    trace for the batch record.
+  - Needs the lab's address and a measured origin of the hall; not built.
 - **The CIRP paper's scope is narrowed to restructuring a module through its AAS.** *CIRP, Journal.*
   - Why: four contributions and three planners in six pages left each half-shown.
   - Instead of: models, planning, architecture and updating as equal contributions.
