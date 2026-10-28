@@ -45,8 +45,8 @@ reasons behind each choice, with what was chosen instead, are [design-decisions.
 | The pipeline: spec, program, AAS; verify, change, operate, plan | Drafted | `figures/reconfiguration-pipeline.drawio`, `figures/module-tools.drawio` |
 | A skill as blocks: a primitive a block type, a composite instances; the wiring the rules draw | Yes | `figures/skill-blocks.drawio` |
 | The product, process and resource models | Drafted | `figures/ppr-models.drawio` |
-| The Capability Description a planner reads: offered capabilities, a set per component, constraints, SameProperty | To make | – |
-| A planned skill: requirement, plan, flow, created online | To make | – |
+| The Capability Description a planner reads: offered capabilities, a set per component, constraints, SameProperty | Drafted 28 Oct | `figures/capability-description.drawio` |
+| A planned skill: requirement, plan, flow, created online | Drafted 28 Oct | `figures/planned-skill.drawio` |
 | Evaluation: the scenarios online and by restart | From the results | `cell/eval/results` |
 
 ## Evaluation, what the numbers are
