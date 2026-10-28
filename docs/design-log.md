@@ -18,6 +18,33 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
+- **A module's AAS is what the DMP (aas-camel-dmp) runs: a skill's Operation calls the module's
+  OPC UA method through it, and its values reach InfluxDB through it.** *Journal.* Asked for by
+  the user.
+  - What changed in the generated AAS:
+    - each Operation's delegation URL is filled in: the DMP's origin and the path where the AAS API
+      invokes that Operation (`/submodels/{base64url(id)}/submodel-elements/{idShortPath}/invoke`),
+      as aas-model now writes it. Before, the `{operation_path}` placeholder was left in it;
+    - an action's arguments are named as FORTE names them: `RD_1, RD_2, …` in, `SD_1, SD_2` out.
+      FORTE's OPC UA server names a method's arguments after the data ports of the SERVER block
+      that serves it, and the DMP calls a method with its arguments by name. What each argument is
+      (Session, Volume; Accepted, ErrorID) is its title;
+    - a mapping that invokes an action writes into the action's `input`, and has a response half:
+      the method's answer (`SD_1, SD_2`) becomes the Operation's Accepted and ErrorID. A skill's
+      results are marked Optional (aas-model's qualifier): the method answers at once, the results
+      come when the skill is done, and the DMP requires every output not marked so;
+    - a Boolean (the occupation) goes into its decimal field as 0 or 1: the DMP writes a field as
+      its type and refuses a Boolean for a float;
+    - aas_pydantic's `temp_id_short_attribute_*` Properties (it keeps a list item's idShort in them
+      to read the model back) are stripped before publishing, as aas-model does. The DMP refuses a
+      mapping with elements it does not know, and every mapping had them.
+  - Why the AID names FORTE's argument names: the AID describes the device as it is, and the DMP
+    checks it against the server. Instead of: renaming FORTE's arguments (its server takes them
+    from the block's port names) or a mapping by position (the DMP matches by name on purpose,
+    so that a reordered method cannot be called with the wrong values).
+  - Nothing else needed: the DMP already resolves browse paths (`uav_browsePath`, and
+    `uav_componentOf` as one), which FORTE's changing numeric node ids require.
+
 - **Every block of a generated program explains itself in plain words, in 4diac and in the docs.**
   *Journal.* Asked for by the user.
   - What: the generator (`modgen/explain.py`) writes a type comment on every type ("what it does,
