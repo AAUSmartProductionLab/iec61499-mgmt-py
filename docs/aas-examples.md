@@ -1,17 +1,21 @@
 # The example line: its AASs
 
-16 AASs built to the framework: the line, its modules (filling, stoppering, capping, inspection; loading
-and unloading are named but not described yet), the components of each module, one product
-planned on them (a 2 mL vial) and its process on the line. Each product's plan is followed into
-the resources when they are built; a plan that does not fit is refused. The process AAS (a
-draft) holds the plan's bindings: per step the resource, the skill and what each of its inputs is
-handed, each a reference. What the submodels are and how they link is in [aas-models.md](aas-models.md).
+27 AASs, the lab's reference models: the line, the planar table and its shuttles, the modules
+(filling, stoppering, capping, inspection; loading and unloading are named but not described yet),
+the components of each module, three products (a 2 mL vial, a prefilled syringe of 1 mL, a
+cartridge of 3 mL) and the process of each on the line. A process AAS binds a product's recipe to
+the modules: per step the module, the skill and what each of its inputs is handed, each a
+reference; the plan check follows every one into the product's and the modules' AASs, and a
+process whose Validation says otherwise is refused. Every AAS is an instance of aas-model's types
+(`Module`, `Component`, `ProductionSystem`, `Product`, `Process`; aas-model's `docs/lab-aas.md`).
+What the submodels are and how they link is in [aas-models.md](aas-models.md).
 
-This file is written by `python cell/examples/describe.py`. Every AAS is built by `modreg` from a
-profile, the pydantic dump of its type: the profiles of a module and of its components are made
-from the module spec (`cell/modules`, `cell/modules/planned`), a product's profile is a file
-(`cell/examples/Vial2mLAAS.json`). `python cell/examples/example_line.py --out <folder> --publish
-<server>` builds the AASs and puts them on an AAS server.
+This file is written by `python cell/examples/describe.py`. The modules' and their components'
+AASs are built by `modreg` from the module specs (`cell/modules`, `cell/modules/planned`), the
+table's and the shuttles' from what the planar controller says; the products and the processes are
+written out in Python (`cell/examples/products`, `cell/examples/processes`).
+`python cell/examples/example_line.py --out <folder> --publish <server>` builds them all and puts
+them on an AAS server.
 
 ## The line: what it is made of
 
@@ -66,16 +70,33 @@ FillingLineAAS
     InspectionTopCameraAAS: CaptureTop() → Passed
     InspectionSideCameraAAS: CaptureSide() → Passed
   UnloadingModule (not described yet)
-  PlanarTable (not described yet)
+  PlanarTableAAS
+    skill Occupy()
+    skill Release()
+    skill Reset()
+    skill Start()
+    skill Stop()
+    skill Abort()
+    skill Clear()
+    PlanarShuttle1AAS: Occupy(), Release(), Reset(), Start(), Stop(), Abort(), Clear()
+    PlanarShuttle2AAS: Occupy(), Release(), Reset(), Start(), Stop(), Abort(), Clear()
+    PlanarShuttle3AAS: Occupy(), Release(), Reset(), Start(), Stop(), Abort(), Clear()
 ```
 
 | AAS | Kind | Submodels |
 | --- | --- | --- |
-| `FillingLineAAS` | system | HierarchicalStructures, OperationalData |
-| `FillingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData |
-| `StopperingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData |
-| `CappingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData |
-| `InspectionModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData |
+| `FillingLineAAS` | system | Variables, HierarchicalStructures |
+| `PlanarTableAAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
+| `PlanarShuttle1AAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
+| `PlanarShuttle1XbotAAS` | component/planarxbot | Skills |
+| `PlanarShuttle2AAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
+| `PlanarShuttle2XbotAAS` | component/planarxbot | Skills |
+| `PlanarShuttle3AAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
+| `PlanarShuttle3XbotAAS` | component/planarxbot | Skills |
+| `FillingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
+| `StopperingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
+| `CappingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
+| `InspectionModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
 | `FillingLinearAxisAAS` | component/linearaxis | Skills |
 | `FillingPumpAAS` | component/fillingpump | Skills |
 | `FillingScaleAAS` | component/scale | Skills |
@@ -86,7 +107,11 @@ FillingLineAAS
 | `InspectionTopCameraAAS` | component/camera | Skills |
 | `InspectionSideCameraAAS` | component/camera | Skills |
 | `Vial2mLAAS` | product | Nameplate, HierarchicalStructures, ProcessParameters, CapabilityDescription, ProductionSequence |
-| `Vial2mLOnFillingLineAAS` | process (draft) | ProcessInformation, Bindings, Validation |
+| `PrefilledSyringe1mLAAS` | product | Nameplate, HierarchicalStructures, ProcessParameters, CapabilityDescription, ProductionSequence |
+| `Cartridge3mLAAS` | product | Nameplate, HierarchicalStructures, ProcessParameters, CapabilityDescription, ProductionSequence |
+| `Vial2mLOnFillingLineAAS` | process | ProcessInformation, Bindings, Validation |
+| `PrefilledSyringe1mLOnFillingLineAAS` | process | ProcessInformation, Bindings, Validation |
+| `Cartridge3mLOnFillingLineAAS` | process | ProcessInformation, Bindings, Validation |
 
 ## Class diagram: the resources
 
@@ -236,19 +261,19 @@ classDiagram
     After
     Timeout
   }
-  class OperationalData {
-    <<ARSO>>
+  class Variables {
+    <<aas-model>>
   }
   class DataPoint {
     value (decimal)
-    semanticId
+    supplementalSemanticId: what it shows
   }
   class Coordinate {
-    <<ARSO 0.13, Measurements/Coordinates>>
+    <<Variables: Measurements/Coordinates>>
     meaning: ModuleBase, Mount, EndEffector, TransferPoint ...
     RelativeTo: another coordinate
     X Y Z mm, Roll Pitch Yaw deg
-    XSource ... YawSource: a data point
+    XSource ... YawSource: a variable
   }
 
   ModuleAAS *-- Nameplate
@@ -257,7 +282,7 @@ classDiagram
   ModuleAAS *-- MappingConfiguration
   ModuleAAS *-- CapabilityDescription
   ModuleAAS *-- Skills
-  ModuleAAS *-- OperationalData
+  ModuleAAS *-- Variables
   HierarchicalStructures *-- "0..*" Part
   AssetInterfacesDescription *-- "1" Interface
   Interface *-- "0..*" Action
@@ -272,8 +297,8 @@ classDiagram
   Command *-- "1" Operation
   Operation *-- "2..*" Variable
   Command *-- "0..*" Step : Steps
-  OperationalData *-- "1..*" DataPoint
-  OperationalData *-- "1..*" Coordinate
+  Variables *-- "1..*" DataPoint
+  Variables *-- "1..*" Coordinate
   Coordinate --> Coordinate : RelativeTo
   Coordinate --> DataPoint : follows
 ```
@@ -316,7 +341,7 @@ classDiagram
 ## Class diagram: a product AAS
 
 The classes marked as another AAS are in the resource AAS above; the dashed arrows are links that
-are followed by meaning or by name, not by a stored reference.
+are followed by meaning or by name, not by a stored reference. The recipe names no equipment.
 
 ```mermaid
 classDiagram
@@ -377,21 +402,7 @@ classDiagram
   }
   class Step {
     NodeId, Kind, Name, Order
-    SkillId
-    ExecutionMode
-  }
-  class Binding {
-    Name: skill parameter
-    Value: constant if no source
-  }
-  class ResourceAAS {
-    <<another AAS>>
-  }
-  class Skill {
-    <<in the resource AAS>>
-  }
-  class SkillParameter {
-    <<in the resource AAS>>
+    no equipment
   }
   class OfferedCapability {
     <<in the resource AAS>>
@@ -408,19 +419,83 @@ classDiagram
   Process *-- "0..*" MaterialUse : ProcessBoM
   CapabilityDescription *-- "0..*" RequiredCapability
   RequiredCapability *-- "0..*" RequiredProperty
-  ProductionSequence *-- "0..*" Step
-  Step *-- "0..*" Binding
+  ProductionSequence *-- "1..*" Step
 
   MaterialUse --> Part : MaterialReference
   MaterialUse --> ProductParameter : QuantityParameterReference
   Process --> RequiredCapability : RequiredCapability
   Step --> Process : ProcessReference
-  Step --> ModuleAAS : Resource
-  Step --> Skill : Skill
-  Binding --> ProductParameter : SourceElement
-  Binding ..> Variable : Name (an input of the skill's Start)
+  Step --> RequiredCapability : RequiredCapabilities
   RequiredCapability ..> OfferedCapability : matches (same meaning, values covered)
-  OfferedCapability --> Skill : RealizedBy
+```
+
+## Class diagram: a process AAS
+
+A product's recipe bound to the line: per step of the recipe, the module and the skill that carry
+it out, and what each input of the skill is handed.
+
+```mermaid
+classDiagram
+  direction LR
+  class ProcessAAS {
+    id, idShort
+    assetKind = Type
+    specificAssetIds: product, line
+  }
+  class ProcessInformation {
+    RecipeRevision
+    Status: Draft, Approved, Withdrawn
+  }
+  class Bindings
+  class StepBinding {
+    NodeId
+    ExecutionMode
+  }
+  class InputBinding {
+    Name: an input of the skill
+    Value: constant if no source
+  }
+  class Validation {
+    Result: Fits, DoesNotFit
+    CheckedBy
+    Findings
+  }
+  class ProductAAS {
+    <<another AAS>>
+  }
+  class LineAAS {
+    <<another AAS>>
+  }
+  class Step {
+    <<in the product's recipe>>
+  }
+  class ProductParameter {
+    <<in the product AAS>>
+  }
+  class ModuleAAS {
+    <<another AAS>>
+  }
+  class Skill {
+    <<in the module AAS>>
+  }
+  class Variable {
+    <<an input of the skill's Start>>
+  }
+
+  ProcessAAS *-- ProcessInformation
+  ProcessAAS *-- Bindings
+  ProcessAAS *-- Validation
+  Bindings *-- "1..*" StepBinding : one per step
+  StepBinding *-- "0..*" InputBinding : Bindings
+
+  ProcessInformation --> ProductAAS : Product
+  ProcessInformation --> LineAAS : Line
+  ProcessInformation --> ProductionSequence : Recipe
+  StepBinding --> Step : Step
+  StepBinding --> ModuleAAS : Resource
+  StepBinding --> Skill : Skill
+  InputBinding --> ProductParameter : SourceElement
+  InputBinding --> Variable : InputReference
 ```
 
 ## The modules
@@ -467,11 +542,11 @@ flowchart BT
 | Tare() | FillingScaleAAS | Primitive | – (After 2.0) | – |
 | Weigh() → Weight [g] | FillingScaleAAS | Primitive | – (After 0.2) | – |
 
-- **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; AbsoluteFillError 0.05 mL; FillVolume 0.5 to 10.0 mL; Pre ContentVolume = 0.0, Post ContentVolume = FillVolume.
+- **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType [{'modelType': 'Property', 'value': 'vial', 'valueType': 'xs:string'}, {'modelType': 'Property', 'value': 'syringe', 'valueType': 'xs:string'}, {'modelType': 'Property', 'value': 'cartridge', 'valueType': 'xs:string'}]; GraspDiameter 6.0 to 30.0 mm; AbsoluteFillError 0.05 mL; FillVolume 0.5 to 10.0 mL; Pre ContentVolume = 0.0, Post ContentVolume = FillVolume.
 - **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Pump's Dosing (Dispense): Post ContentVolume += Volume, Post Weighed = false, Pre LinearAxisPosition = FillPosition, Invariant LinearAxisPosition unchanged; Scale's Taring (Tare): Post Tared = true; Scale's Weighing (Weigh): Pre Tared = true, Post Weight measured, Post Weighed = true, Pre LinearAxisPosition = 0.0, Invariant LinearAxisPosition unchanged.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `FillingLinearAxisAAS`, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
-- **Coordinates** (Operational Data, mm and degrees): ModuleBase (ModuleBase) at (240, 720, 0), Yaw 180 relative to TableBase; LinearAxisMount (Mount) at (0, 60, 100), Roll 180 relative to ModuleBase; LinearAxis (EndEffector) at (0, 0, 0) relative to LinearAxisMount, Z = LinearAxis_ActualPosition; Transfer (TransferPoint) at (0, 60, 0), Yaw 180 relative to ModuleBase; Fill (ProcessingPoint) at (0, 60, 60) relative to ModuleBase.
+- **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (240, 720, 0), Yaw 180 relative to TableBase; LinearAxisMount (Mount) at (0, 60, 100), Roll 180 relative to ModuleBase; LinearAxis (EndEffector) at (0, 0, 0) relative to LinearAxisMount, Z = LinearAxis_ActualPosition; Transfer (TransferPoint) at (0, 60, 0), Yaw 180 relative to ModuleBase; Fill (ProcessingPoint) at (0, 60, 60) relative to ModuleBase.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 45 data points; 32 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Dispensing built. Which block is which skill or step is the integrator's record, outside the AAS.
 
@@ -509,11 +584,11 @@ flowchart BT
 | PressStopper() | StopperingPistonAAS | Primitive | – (After 3.0) | – |
 | RetractPiston() | StopperingPistonAAS | Primitive | – (After 3.0) | – |
 
-- **Capability Stoppering** (`https://smartproductionlab.aau.dk/semantics/Stoppering`), realized by Stoppering: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; StopperDiameter 6.0 to 20.0 mm; Pre ContentVolume > 0.0, Post Stoppered = true.
+- **Capability Stoppering** (`https://smartproductionlab.aau.dk/semantics/Stoppering`), realized by Stoppering: ContainerType [{'modelType': 'Property', 'value': 'vial', 'valueType': 'xs:string'}, {'modelType': 'Property', 'value': 'syringe', 'valueType': 'xs:string'}, {'modelType': 'Property', 'value': 'cartridge', 'valueType': 'xs:string'}]; GraspDiameter 6.0 to 30.0 mm; StopperDiameter 6.0 to 20.0 mm; Pre ContentVolume > 0.0, Post Stoppered = true.
 - **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Piston's Pressing (PressStopper): Post Stoppered = true, Pre LinearAxisPosition = PressPosition, Invariant LinearAxisPosition unchanged.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (RetractPiston → Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `StopperingLinearAxisAAS`, Piston → `StopperingPistonAAS`.
-- **Coordinates** (Operational Data, mm and degrees): ModuleBase (ModuleBase) at (600, 720, 0), Yaw 180 relative to TableBase; LinearAxisMount (Mount) at (0, 60, 100), Roll 180 relative to ModuleBase; LinearAxis (EndEffector) at (0, 0, 0) relative to LinearAxisMount, Z = LinearAxis_ActualPosition; Transfer (TransferPoint) at (0, 60, 0), Yaw -90 relative to ModuleBase; Press (ProcessingPoint) at (0, 60, 60) relative to ModuleBase.
+- **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (600, 720, 0), Yaw 180 relative to TableBase; LinearAxisMount (Mount) at (0, 60, 100), Roll 180 relative to ModuleBase; LinearAxis (EndEffector) at (0, 0, 0) relative to LinearAxisMount, Z = LinearAxis_ActualPosition; Transfer (TransferPoint) at (0, 60, 0), Yaw -90 relative to ModuleBase; Press (ProcessingPoint) at (0, 60, 60) relative to ModuleBase.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 32 data points; 28 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Stoppering built. Which block is which skill or step is the integrator's record, outside the AAS.
 
@@ -553,7 +628,7 @@ flowchart BT
 - **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Crimper's Crimping (Crimp): Post Capped = true.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `CappingLinearAxisAAS`, Crimper → `CappingCrimperAAS`.
-- **Coordinates** (Operational Data, mm and degrees): ModuleBase (ModuleBase) at (960, 360, 0), Yaw 90 relative to TableBase; Transfer (TransferPoint) at (0, 120, 0), Yaw -90 relative to ModuleBase.
+- **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (960, 360, 0), Yaw 90 relative to TableBase; Transfer (TransferPoint) at (0, 120, 0), Yaw -90 relative to ModuleBase.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 data points; 24 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Capping built. Which block is which skill or step is the integrator's record, outside the AAS.
 
@@ -586,19 +661,19 @@ flowchart BT
 | CaptureTop() → Passed | InspectionTopCameraAAS | Primitive | – (Postcondition Done; Timeout 3s) | – |
 | CaptureSide() → Passed | InspectionSideCameraAAS | Primitive | – (Postcondition Done; Timeout 3s) | – |
 
-- **Capability Inspection** (`https://smartproductionlab.aau.dk/semantics/Inspection`), realized by Inspection: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; InspectionMethod vision; Post Inspected = true.
+- **Capability Inspection** (`https://smartproductionlab.aau.dk/semantics/Inspection`), realized by Inspection: ContainerType [{'modelType': 'Property', 'value': 'vial', 'valueType': 'xs:string'}, {'modelType': 'Property', 'value': 'syringe', 'valueType': 'xs:string'}, {'modelType': 'Property', 'value': 'cartridge', 'valueType': 'xs:string'}]; GraspDiameter 6.0 to 30.0 mm; InspectionMethod vision; Post Inspected = true.
 - **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: TopCamera's Imaging (CaptureTop): Post Inspected = true; SideCamera's Imaging (CaptureSide): Post Inspected = true.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset, Start, Stop, Abort, Clear.
 - **Components:** TopCamera → `InspectionTopCameraAAS`, SideCamera → `InspectionSideCameraAAS`.
-- **Coordinates** (Operational Data, mm and degrees): ModuleBase (ModuleBase) at (960, 120, 0), Yaw 90 relative to TableBase.
+- **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (960, 120, 0), Yaw 90 relative to TableBase.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 22 data points; 20 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Inspection built. Which block is which skill or step is the integrator's record, outside the AAS.
 
-## The product
+## The products and their processes
 
 ### Vial2mLAAS
 
-`https://smartproductionlab.aau.dk/aas/Vial2mLAAS`, asset `https://smartproductionlab.aau.dk/assets/Vial2mL`.
+`https://smartproductionlab.aau.dk/aas/Vial2mLAAS`, asset `https://smartproductionlab.aau.dk/assets/Vial2mL`; on the line by `Vial2mLOnFillingLineAAS`.
 
 ```mermaid
 flowchart LR
@@ -641,11 +716,103 @@ Processes (Process Parameters) and what they require (Capability Description):
 | Capping | PT5S | ContainerType = vial, GraspDiameter = 16.0 mm, CapDiameter = 13.0 mm | Cap (incorporated, 1.0 piece) | `https://smartproductionlab.aau.dk/semantics/Capping` |
 | Inspection | PT3S | ContainerType = vial, GraspDiameter = 16.0 mm, InspectionMethod = vision | – | `https://smartproductionlab.aau.dk/semantics/Inspection` |
 
-The plan (Production Sequence, `production-sequence/2.0`):
+The recipe (Production Sequence, `production-sequence/2.0`) and its binding to the line (the process AAS's Bindings; Validation: Fits):
 
-| Order | Step | Resource | Skill | Bound |
+| Order | Step | Resource | Skill | Inputs handed |
 | --- | --- | --- | --- | --- |
 | 1 | Filling | FillingModuleAAS | Dispensing | Volume ← FillVolume |
 | 2 | Stoppering | StopperingModuleAAS | Stoppering | – |
 | 3 | Capping | CappingModuleAAS | Capping | – |
 | 4 | Inspection | InspectionModuleAAS | Inspection | – |
+
+### PrefilledSyringe1mLAAS
+
+`https://smartproductionlab.aau.dk/aas/PrefilledSyringe1mLAAS`, asset `https://smartproductionlab.aau.dk/assets/PrefilledSyringe1mL`; on the line by `PrefilledSyringe1mLOnFillingLineAAS`.
+
+```mermaid
+flowchart LR
+  subgraph S_Filling["Step 1"]
+    pFilling["process Filling"] -- requires --> cFilling(["Filling"])
+    cFilling -. offered by .-> sFilling["FillingModuleAAS<br/>skill Dispensing"]
+  end
+  subgraph S_Stoppering["Step 2"]
+    pStoppering["process Stoppering"] -- requires --> cStoppering(["Stoppering"])
+    cStoppering -. offered by .-> sStoppering["StopperingModuleAAS<br/>skill Stoppering"]
+  end
+  S_Filling --> S_Stoppering
+  subgraph S_Inspection["Step 3"]
+    pInspection["process Inspection"] -- requires --> cInspection(["Inspection"])
+    cInspection -. offered by .-> sInspection["InspectionModuleAAS<br/>skill Inspection"]
+  end
+  S_Stoppering --> S_Inspection
+```
+
+Bill of material (Hierarchical Structures):
+
+| Part | Name | Quantity |
+| --- | --- | --- |
+| Barrel | Glass syringe barrel 1 mL long, staked needle | 1.0 piece |
+| Liquid | Demo liquid | 1.0 mL |
+| Stopper | Plunger stopper 6.35 mm | 1.0 piece |
+
+Processes (Process Parameters) and what they require (Capability Description):
+
+| Process | Planned time | Product parameters | Materials | Required capability |
+| --- | --- | --- | --- | --- |
+| Filling | PT10S | ContainerType = syringe, GraspDiameter = 8.15 mm, FillVolume = 1.0 mL | Barrel (workpiece, 1.0 piece), Liquid (incorporated, FillVolume) | `https://smartproductionlab.aau.dk/semantics/Filling` |
+| Stoppering | PT5S | ContainerType = syringe, GraspDiameter = 8.15 mm, StopperDiameter = 6.35 mm | Stopper (incorporated, 1.0 piece) | `https://smartproductionlab.aau.dk/semantics/Stoppering` |
+| Inspection | PT3S | ContainerType = syringe, GraspDiameter = 8.15 mm, InspectionMethod = vision | – | `https://smartproductionlab.aau.dk/semantics/Inspection` |
+
+The recipe (Production Sequence, `production-sequence/2.0`) and its binding to the line (the process AAS's Bindings; Validation: Fits):
+
+| Order | Step | Resource | Skill | Inputs handed |
+| --- | --- | --- | --- | --- |
+| 1 | Filling | FillingModuleAAS | Dispensing | Volume ← FillVolume |
+| 2 | Stoppering | StopperingModuleAAS | Stoppering | – |
+| 3 | Inspection | InspectionModuleAAS | Inspection | – |
+
+### Cartridge3mLAAS
+
+`https://smartproductionlab.aau.dk/aas/Cartridge3mLAAS`, asset `https://smartproductionlab.aau.dk/assets/Cartridge3mL`; on the line by `Cartridge3mLOnFillingLineAAS`.
+
+```mermaid
+flowchart LR
+  subgraph S_Filling["Step 1"]
+    pFilling["process Filling"] -- requires --> cFilling(["Filling"])
+    cFilling -. offered by .-> sFilling["FillingModuleAAS<br/>skill Dispensing"]
+  end
+  subgraph S_Stoppering["Step 2"]
+    pStoppering["process Stoppering"] -- requires --> cStoppering(["Stoppering"])
+    cStoppering -. offered by .-> sStoppering["StopperingModuleAAS<br/>skill Stoppering"]
+  end
+  S_Filling --> S_Stoppering
+  subgraph S_Inspection["Step 3"]
+    pInspection["process Inspection"] -- requires --> cInspection(["Inspection"])
+    cInspection -. offered by .-> sInspection["InspectionModuleAAS<br/>skill Inspection"]
+  end
+  S_Stoppering --> S_Inspection
+```
+
+Bill of material (Hierarchical Structures):
+
+| Part | Name | Quantity |
+| --- | --- | --- |
+| Cartridge | Glass cartridge 3 mL | 1.0 piece |
+| Liquid | Demo liquid | 3.0 mL |
+| Stopper | Plunger stopper 10.3 mm | 1.0 piece |
+
+Processes (Process Parameters) and what they require (Capability Description):
+
+| Process | Planned time | Product parameters | Materials | Required capability |
+| --- | --- | --- | --- | --- |
+| Filling | PT10S | ContainerType = cartridge, GraspDiameter = 11.6 mm, FillVolume = 3.0 mL | Cartridge (workpiece, 1.0 piece), Liquid (incorporated, FillVolume) | `https://smartproductionlab.aau.dk/semantics/Filling` |
+| Stoppering | PT5S | ContainerType = cartridge, GraspDiameter = 11.6 mm, StopperDiameter = 10.3 mm | Stopper (incorporated, 1.0 piece) | `https://smartproductionlab.aau.dk/semantics/Stoppering` |
+| Inspection | PT3S | ContainerType = cartridge, GraspDiameter = 11.6 mm, InspectionMethod = vision | – | `https://smartproductionlab.aau.dk/semantics/Inspection` |
+
+The recipe (Production Sequence, `production-sequence/2.0`) and its binding to the line (the process AAS's Bindings; Validation: Fits):
+
+| Order | Step | Resource | Skill | Inputs handed |
+| --- | --- | --- | --- | --- |
+| 1 | Filling | FillingModuleAAS | Dispensing | Volume ← FillVolume |
+| 2 | Stoppering | StopperingModuleAAS | Stoppering | – |
+| 3 | Inspection | InspectionModuleAAS | Inspection | – |
