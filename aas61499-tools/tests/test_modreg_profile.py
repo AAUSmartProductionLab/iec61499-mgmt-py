@@ -238,8 +238,7 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     nodes = children(at(submodel(stoppering_all["StopperingModuleAAS"], "HierarchicalStructures"), "EntryNode"))
     assert [(n["idShort"], n["entityType"], n.get("globalAssetId")) for n in nodes] == [
         ("LinearAxis", "SelfManagedEntity", f"{BASE}/assets/StopperingLinearAxis"),
-        ("Piston", "SelfManagedEntity", f"{BASE}/assets/StopperingPiston"),
-        ("Transfer", "CoManagedEntity", None), ("Press", "CoManagedEntity", None)]
+        ("Piston", "SelfManagedEntity", f"{BASE}/assets/StopperingPiston")]          # its points are coordinates
 
 
 def test_a_step_is_connected_to_the_variables_of_its_command():
@@ -522,17 +521,20 @@ def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
     spec, _ = stoppering
     structure = submodel(stoppering_aas, "HierarchicalStructures")
     assert at(structure, "EntryNode")["globalAssetId"] == stoppering_aas["assetAdministrationShells"][0]["assetInformation"]["globalAssetId"]
-    assert names(at(structure, "EntryNode")) == [*spec.equipment, *spec.points]
+    assert names(at(structure, "EntryNode")) == [*spec.equipment]
     data = submodel(stoppering_aas, "OperationalData")
     assert data["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/OperationalData/1/0/Submodel"
     inputs = [f"{item}_{s}" for item, eq in spec.equipment.items() for s in eq.inputs]
     assert {"PackMLState", "OccupationState", *inputs} <= set(names(data))
     # A data point is a decimal with a value and the concept it stands for.
-    assert all(d["valueType"] == "xs:decimal" and d["value"] == "0" and d["semanticId"] for d in children(data))
+    points = [d for d in children(data) if d["modelType"] == "Property"]
+    assert all(d["valueType"] == "xs:decimal" and d["value"] == "0" and d["semanticId"] for d in points)
+    # Beside them, where the module and its points are (ARSO 0.13).
+    assert [d["idShort"] for d in children(data) if d["modelType"] != "Property"] == ["Measurements"]
     mappings = at(submodel(stoppering_aas, "AssetInterfacesMappingConfiguration"), "MappingConfigurations")
     feed = children(mappings)[0]
     # Every data point has a source: the property of the interface that publishes it.
-    assert len(children(at(feed, "Sinks"))) == len(children(at(feed, "Sources"))) == len(names(data))
+    assert len(children(at(feed, "Sinks"))) == len(children(at(feed, "Sources"))) == len(points)
     # A skill parameter of the current or last run is a data point as well, not a Parameters entry.
     assert at(data, "MoveAxis_Parameter_Position")["semanticId"]["keys"][0]["value"] == \
         f"{BASE}/skills/MoveAxis/Parameters/Position"

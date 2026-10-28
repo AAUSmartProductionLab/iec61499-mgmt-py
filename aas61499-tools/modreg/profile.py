@@ -60,6 +60,7 @@ from . import model
 from .derive import Offer, local, offers as derived_offers
 from .projection import project
 from .generated import control_configuration as cc, skills as arso
+from .generated import operational_data as od
 from .generated.operational_data import Datapoint
 from .lab import nameplate
 from .model import ComponentTypeAAS, ModuleTypeAAS
@@ -127,17 +128,31 @@ def meaning(name: str, given: str | None = None) -> str:
     return given or f"{BASE_URL}/semantics/{name}"
 
 
-def frame(location) -> model.NodeFrame | None:
-    """Where a part or a point is in its parent's frame (ARSO 0.12): mm and degrees."""
-    if location is None:
-        return None
-    unit = lambda u: [Qualifier(type_="Unit", value=u, kind="ConceptQualifier")]  # noqa: E731
-    return model.NodeFrame(X=model.FrameX(value=text(location.x), qualifiers=unit("mm")),
-                           Y=model.FrameY(value=text(location.y), qualifiers=unit("mm")),
-                           Z=model.FrameZ(value=text(location.z), qualifiers=unit("mm")),
-                           RX=model.FrameRX(value=text(location.rx), qualifiers=unit("deg")),
-                           RY=model.FrameRY(value=text(location.ry), qualifiers=unit("deg")),
-                           RZ=model.FrameRZ(value=text(location.rz), qualifiers=unit("deg")))
+COORDINATES = ((SMC, "Measurements"), (SMC, "Coordinates"))
+
+
+def coordinate_ref(name: str, aas_id: str | None = None) -> ModelReference:
+    """The coordinate ``name`` of this AAS (``aas_id`` None) or of the AAS ``aas_id``."""
+    return path(DATA if aas_id is None else f"{aas_id}/submodels/OperationalData", *COORDINATES, (SMC, name))
+
+
+def coordinate(name: str, meant: str | None = None, location=None, relative_to: ModelReference | None = None,
+               sources: dict[str, str] | None = None, description: str = "") -> od.Coordinate:
+    """A coordinate (ARSO 0.13): ``location`` (x, y, z, rx, ry, rz; none: zero) relative to
+    ``relative_to`` (none: a root, or not placed yet), in mm and degrees; ``meant`` a meaning of the
+    vocabulary; ``sources`` the data point each moving value follows (``{"Z": "LinearAxis_ActualPosition"}``)."""
+    unit = lambda u: [Qualifier(type_="Unit", value=u, kind="ConceptQualifier")]          # noqa: E731
+    given = [getattr(location, a, 0.0) if location is not None else 0.0 for a in ("x", "y", "z", "rx", "ry", "rz")]
+    values = {v: getattr(od, v)(value=text(float(g)), qualifiers=unit("deg" if v in ("Roll", "Pitch", "Yaw") else "mm"))
+              for v, g in zip(("X", "Y", "Z", "Roll", "Pitch", "Yaw"), given)}
+    made = od.Coordinate(id_short=name, description=description,
+                         supplemental_semantic_ids=[meaning(meant)] if meant else [], **values)
+    if relative_to is not None:
+        made.RelativeTo = od.RelativeTo(value=relative_to)
+    for value, point in (sources or {}).items():
+        made.CoordinateSource[f"{value}Source"] = od.CoordinateSource(id_short=f"{value}Source",
+                                                                     value=path(DATA, ("Property", point)))
+    return made
 
 
 def capability_path(name: str) -> ModelReference:
@@ -625,6 +640,28 @@ class Describer:
 
     # Submodels -------------------------------------------------------------------------------
 
+    def coordinates(self) -> od.Measurements:
+        """Where the module and its points are (ARSO 0.13): its base, not placed until it is put on a
+        line; for an item with a location, its mount, and for an axis also its end effector, which
+        moves along the mount's Z axis as the axis' actual position; its points of interest."""
+        spec, base = self.spec, coordinate_ref("ModuleBase")
+        found = {"ModuleBase": coordinate("ModuleBase", "ModuleBase", description=f"The base of the {spec.module} module")}
+        for item, eq in spec.equipment.items():
+            if eq.location is None:
+                continue
+            actual = f"{item}_ActualPosition"
+            if eq.position is not None and actual in self.datapoints:
+                found[f"{item}Mount"] = coordinate(f"{item}Mount", "Mount", eq.location, base,
+                                                   description=f"Where {item} is mounted, at its zero; Z along its travel")
+                found[item] = coordinate(item, "EndEffector", None, coordinate_ref(f"{item}Mount"), {"Z": actual},
+                                         description=f"The tool point of {item}, its actual position along the mount's Z")
+            else:
+                found[item] = coordinate(item, None, eq.location, base, description=eq.description or f"Equipment {item}")
+        for name, point in spec.points.items():
+            found[name] = coordinate(name, point.meaning, point.location, base,
+                                     description=point.description or f"{point.meaning} of the {spec.module} module")
+        return od.Measurements(Coordinates=od.Coordinates(Coordinate=found))
+
     def interface_and_data(self, asset: ModuleTypeAAS):
         """Put the actions, properties and data points described so far into ``asset``."""
         interface = asset.asset_interfaces_description.InterfaceTemplateForOPCUA["interface_opcua"]
@@ -754,17 +791,11 @@ class Describer:
             # A component is found by its asset id; an item no skill moves is only a part.
             nodes[item] = model.LocatedNode(entity_type="SelfManagedEntity" if item in parts else "CoManagedEntity",
                                             global_asset_id=component_identity(spec, item)[2] if item in parts else "",
-                                            description=eq.description or f"Equipment {item}", Frame=frame(eq.location))
+                                            description=eq.description or f"Equipment {item}")
             for s, io in eq.inputs.items():
                 key = self.property(f"Equipment_{item}_{s}", f"/Equipment/{item}/{s}", io.type, f"{item} {s}", io.unit)
                 self.observe(f"{item}_{s}", key, f"{BASE_URL}/variables/{item}/{s}",
                              f"{item} {s}" + (f" ({io.unit})" if io.unit else ""))
-        for name, point in spec.points.items():
-            # A point of interest: no asset of its own, a meaning and where it is (ARSO 0.12).
-            nodes[name] = model.LocatedNode(entity_type="CoManagedEntity", global_asset_id="",
-                                            supplemental_semantic_ids=[meaning(point.meaning)],
-                                            description=point.description or f"{point.meaning} of the {spec.module} module",
-                                            Frame=frame(point.location))
         asset.hierarchical_structures = model.LocatedStructures(
             id_short="HierarchicalStructures", ArcheType=ArcheType(value="OneDown"),
             EntryNode=model.LocatedEntryNode(global_asset_id=asset_id, description=f"The {spec.module} module", Node=nodes))
@@ -775,6 +806,7 @@ class Describer:
         interface.EndpointMetadata.contentType.value = "application/octet-stream"
         interface.EndpointMetadata.securityDefinitions.nosec_sc = wot.nosec_sc(scheme=wot.Scheme(value="nosec"))
         self.interface_and_data(asset)
+        asset.operational_data.Measurements = self.coordinates()
         asset.capability_description = self.capabilities()
         asset.asset_interfaces_mapping_configuration = self.mappings()
         return [(ModuleTypeAAS.model_validate(asset.model_dump()), asset_id),

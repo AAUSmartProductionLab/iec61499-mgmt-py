@@ -196,18 +196,18 @@ def test_every_component_has_an_aas_of_its_own_and_the_line_names_its_modules(li
         held = next(s for s in components[name]["submodels"] if s["idShort"] == "Skills")
         assert [s["idShort"] for s in children(held)] == ["Home", "MoveAxis", "Errors"]
     assets = {plan_check.shell_of(env)["assetInformation"]["globalAssetId"]: name for name, env in {**resources, **components}.items()}
-    # A module's parts are its components (and then its points, which are no asset) ...
+    # A module's parts are its components (its points are coordinates, ARSO 0.13) ...
     filling = next(s for s in resources["FillingModuleAAS"]["submodels"] if s["idShort"] == "HierarchicalStructures")
     assert [assets.get(n.get("globalAssetId")) for n in children(at(filling, "EntryNode"))] == [
-        "FillingLinearAxisAAS", "FillingPumpAAS", "FillingScaleAAS", None, None]
+        "FillingLinearAxisAAS", "FillingPumpAAS", "FillingScaleAAS"]
     # ... and the line's parts are the modules, with the two that are not described yet at its ends,
-    # the planar table they stand around, and the line's own points (where the robots place and pick).
+    # and the planar table they stand around.
     system = example_line.line(resources)
     assert plan_check.shell_of(system)["assetInformation"]["assetType"] == f"{BASE}/Resource/System"
     assert ontology_check(system, blueprint).ok
     nodes = children(at(system["submodels"][0], "EntryNode"))
     assert [n["idShort"] for n in nodes] == ["LoadingModule", "FillingModule", "StopperingModule", "CappingModule",
-                                             "InspectionModule", "UnloadingModule", "PlanarTable", "Infeed", "Outfeed"]
+                                             "InspectionModule", "UnloadingModule", "PlanarTable"]
     assert [assets.get(n.get("globalAssetId")) for n in nodes][1:5] == list(resources)
     # The steps of a module's skill run skills of its components.
     envs = [*resources.values(), *components.values()]

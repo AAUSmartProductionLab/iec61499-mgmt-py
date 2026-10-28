@@ -12,7 +12,7 @@
 
 <https://w3id.org/2025/arso>
   rdf:type owl:Ontology ;
-  owl:versionIRI <https://w3id.org/2025/arso/0.12.0> ;
+  owl:versionIRI <https://w3id.org/2025/arso/0.13.0> ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://admin-shell.io/aas/3/1/> ;
   owl:imports <https://w3id.org/2025/arso/modules/nameplate> ;
@@ -25,7 +25,15 @@
   owl:imports <https://w3id.org/2025/arso/modules/technical-data> ;
   owl:imports <https://w3id.org/2025/arso/modules/aimc> ;
   owl:imports <https://w3id.org/2025/arso/modules/control-configuration> ;
-  rdfs:comment """ARSO v0.12 — Domain extension ontology for Resource AAS.
+  rdfs:comment """ARSO v0.13 — Domain extension ontology for Resource AAS.
+
+  v0.13 (28 Oct 2026): coordinates (docs/locations-and-layout.md, docs/design-log.md). Where a
+  module's base, an end effector, a shuttle or a point of interest is, is a coordinate in
+  Operational Data (Measurements/Coordinates): a pose relative to another coordinate by reference,
+  so the references build a tree of transforms rooted at the planar table's base; a coordinate that
+  moves names the data point each moving value follows. The Frame on a Node of Hierarchical
+  Structures (v0.12) and point Nodes are gone: Hierarchical Structures is a bill of material again.
+  Operational Data may hold coordinates only (a line's).
 
   v0.12 (28 Oct 2026): where a part is (docs/locations-and-layout.md). A Node of Hierarchical
   Structures may say where its part is in its parent's frame (Frame: X, Y, Z, RX, RY, RZ, as

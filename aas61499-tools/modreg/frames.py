@@ -1,22 +1,30 @@
-"""Where things are (ARSO 0.12; docs/locations-and-layout.md): the frames along the Hierarchical
-Structures of a line's, a module's and its parts' AASs, composed.
+"""Where things are (ARSO 0.13; docs/locations-and-layout.md): the coordinates in the Operational Data
+of a line's AASs, composed along their references.
 
-A Node's Frame is the pose of its part (or point of interest) in its parent's frame: a translation X,
-Y, Z in mm and rotations RX, RY, RZ in degrees about the parent's X, then Y, then Z axis, so the
-rotation is Rz Ry Rx (the order is to be checked against IEC 62714's statement of AutomationML's
-Frame). Poses compose along the tree: a point of a module in the line's frame is the module's pose in
-the line times the point's pose in the module; in the planar table's frame it is that, seen from the
-table's pose in the line.
+A coordinate (Measurements/Coordinates/<name>) is a pose relative to the coordinate its RelativeTo
+names, in this AAS or another: a translation X, Y, Z in mm and rotations Roll, Pitch, Yaw in degrees
+about the parent's fixed X, then Y, then Z axis, so the rotation is Rz(Yaw) Ry(Pitch) Rx(Roll), as
+ROS's RPY. The references make a tree rooted at the planar table's base (a coordinate without
+RelativeTo): a module's base is relative to it, the module's points and mounts to the module's base,
+an end effector to its mount. A coordinate that moves names the data point each moving value follows
+(XSource ... YawSource); its values here are the latest known.
 
-    where(envs, "FillingLineAAS", "FillingModule", "Transfer")                  # in the line's frame
-    relative(envs, "FillingLineAAS", ["PlanarTable"], ["FillingModule", "Transfer"])   # in the table's
+    where(envs, "FillingModuleAAS", "Transfer")                     # in the root's frame (the table's)
+    relative(envs, ("PlanarTableAAS", "TableBase"), ("FillingModuleAAS", "Transfer"))
+    place(env, "ModuleBase", ("PlanarTableAAS", "TableBase"), Location(x=240.0, y=720.0, rz=180.0))
 """
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass
 import math
 
 from modsync.aasjson import at, children, submodel
+
+VALUES = ("X", "Y", "Z", "Roll", "Pitch", "Yaw")
+UNITS = {"X": "mm", "Y": "mm", "Z": "mm", "Roll": "deg", "Pitch": "deg", "Yaw": "deg"}
+COORDINATE = "https://smartproductionlab.aau.dk/ARSO/OperationalData/Coordinate/1/0"
+RELATIVE_TO = "https://smartproductionlab.aau.dk/ARSO/OperationalData/Coordinate/RelativeTo/1/0"
 
 
 @dataclass(frozen=True)
@@ -25,8 +33,8 @@ class Pose:
     m: tuple[tuple[float, float, float, float], ...]
 
     @classmethod
-    def of(cls, x=0.0, y=0.0, z=0.0, rx=0.0, ry=0.0, rz=0.0) -> Pose:
-        a, b, c = (math.radians(v) for v in (rx, ry, rz))
+    def of(cls, x=0.0, y=0.0, z=0.0, roll=0.0, pitch=0.0, yaw=0.0) -> Pose:
+        a, b, c = (math.radians(v) for v in (roll, pitch, yaw))
         ca, sa, cb, sb, cc, sc = math.cos(a), math.sin(a), math.cos(b), math.sin(b), math.cos(c), math.sin(c)
         # Rz(c) Ry(b) Rx(a)
         r = ((cc * cb, cc * sb * sa - sc * ca, cc * sb * ca + sc * sa),
@@ -48,47 +56,94 @@ class Pose:
 
     @property
     def heading(self) -> float:
-        """The rotation about Z, in degrees (what a shuttle's Rz is)."""
+        """The rotation about Z, in degrees (what a shuttle's Yaw is)."""
         return round(math.degrees(math.atan2(self.m[1][0], self.m[0][0])), 6)
 
 
 IDENTITY = Pose.of()
 
 
-def frame_of(node: dict) -> Pose:
-    """The pose a Node states (none stated: where its parent is)."""
-    frame = at(node, "Frame")
-    if frame is None:
-        return IDENTITY
-    value = lambda name: float((at(frame, name) or {}).get("value") or 0.0)            # noqa: E731
-    return Pose.of(value("X"), value("Y"), value("Z"), value("RX"), value("RY"), value("RZ"))
-
-
 def _env(envs: list[dict], key: str) -> dict:
-    """The environment of the AAS named (idShort) or of the asset (globalAssetId) ``key``."""
+    """The environment of the AAS named (idShort), identified (id) or of the asset (globalAssetId)
+    ``key``, or of the AAS one of whose submodels has the id ``key``."""
     for env in envs:
         shell = env["assetAdministrationShells"][0]
-        if key in (shell["idShort"], shell["id"], shell["assetInformation"].get("globalAssetId")):
+        if key in (shell["idShort"], shell["id"], shell["assetInformation"].get("globalAssetId")) \
+                or any(s.get("id") == key for s in env.get("submodels", [])):
             return env
     raise KeyError(f"no AAS {key}")
 
 
-def where(envs: list[dict], root: str, *path: str) -> Pose:
-    """The pose of the part or point at ``path`` (idShorts of Nodes, one AAS after the other: a
-    module of the line, then a point of the module) in the frame of the AAS ``root``."""
-    env, pose = _env(envs, root), IDENTITY
-    for i, name in enumerate(path):
-        entry = at(submodel(env, "HierarchicalStructures"), "EntryNode")
-        node = next((n for n in children(entry) if n.get("idShort") == name), None)
-        if node is None:
-            raise KeyError(f"{env['assetAdministrationShells'][0]['idShort']} has no part or point {name}")
-        pose = pose @ frame_of(node)
-        if i + 1 < len(path):
-            env = _env(envs, node.get("globalAssetId") or "")                       # into the part's own AAS
+def coordinates(env: dict) -> dict[str, dict]:
+    """The coordinates of an AAS, by name."""
+    found = at(submodel(env, "OperationalData") or {}, "Measurements", "Coordinates")
+    return {c["idShort"]: c for c in children(found)} if found else {}
+
+
+def pose_of(coordinate: dict) -> Pose:
+    value = lambda name: float((at(coordinate, name) or {}).get("value") or 0.0)          # noqa: E731
+    return Pose.of(*(value(name) for name in VALUES))
+
+
+def parent_of(coordinate: dict) -> tuple[str, str] | None:
+    """What a coordinate is relative to: (the id of the submodel it is in, its name); None: a root."""
+    ref = at(coordinate, "RelativeTo")
+    keys = ((ref or {}).get("value") or {}).get("keys") or []
+    if not keys:
+        return None
+    return keys[0]["value"], keys[-1]["value"]
+
+
+def chain(envs: list[dict], aas: str, name: str) -> list[tuple[str, str]]:
+    """The coordinate (``aas``, ``name``) and those it is relative to, up to the root."""
+    env, found = _env(envs, aas), []
+    while True:
+        here = (env["assetAdministrationShells"][0]["idShort"], name)
+        if here in found:
+            raise ValueError(f"the coordinates are relative to each other in a circle: {found + [here]}")
+        coordinate = coordinates(env).get(name)
+        if coordinate is None:
+            raise KeyError(f"{here[0]} has no coordinate {name}")
+        found.append(here)
+        parent = parent_of(coordinate)
+        if parent is None:
+            return found
+        env, name = _env(envs, parent[0]), parent[1]
+
+
+def where(envs: list[dict], aas: str, name: str) -> Pose:
+    """The pose of the coordinate ``name`` of the AAS ``aas`` in the frame of its tree's root (the
+    planar table's base)."""
+    pose = IDENTITY
+    for at_aas, at_name in chain(envs, aas, name):
+        pose = pose_of(coordinates(_env(envs, at_aas))[at_name]) @ pose
     return pose
 
 
-def relative(envs: list[dict], root: str, frame: list[str], path: list[str]) -> Pose:
-    """The pose of ``path`` in the frame of ``frame`` (both from ``root``): a module's point in the
-    planar table's frame, say."""
-    return where(envs, root, *frame).inverse() @ where(envs, root, *path)
+def relative(envs: list[dict], frame: tuple[str, str], point: tuple[str, str]) -> Pose:
+    """The pose of ``point`` in the frame of ``frame``, both (AAS, coordinate): a module's point in
+    the planar table's frame, say. Both must be in the same tree."""
+    if chain(envs, *frame)[-1] != chain(envs, *point)[-1]:
+        raise ValueError(f"{frame} and {point} are not in one tree of coordinates")
+    return where(envs, *frame).inverse() @ where(envs, *point)
+
+
+def place(env: dict, name: str, parent: tuple[str, str] | None, location) -> dict:
+    """A copy of ``env`` with its coordinate ``name`` at ``location`` (with x, y, z, rx, ry, rz)
+    relative to ``parent`` (the id of the AAS it is in and its name): how a module reports where it
+    has been put."""
+    env = copy.deepcopy(env)
+    coordinate = coordinates(env)[name]
+    for value, given in zip(VALUES, (location.x, location.y, location.z, location.rx, location.ry, location.rz)):
+        at(coordinate, value)["value"] = repr(float(given))
+    coordinate["value"] = [e for e in coordinate["value"] if e.get("idShort") != "RelativeTo"]
+    if parent is not None:
+        coordinate["value"].insert(0, {
+            "idShort": "RelativeTo", "modelType": "ReferenceElement",
+            "semanticId": {"type": "ExternalReference", "keys": [{"type": "GlobalReference", "value": RELATIVE_TO}]},
+            "value": {"type": "ModelReference", "keys": [
+                {"type": "Submodel", "value": f"{parent[0]}/submodels/OperationalData"},
+                {"type": "SubmodelElementCollection", "value": "Measurements"},
+                {"type": "SubmodelElementCollection", "value": "Coordinates"},
+                {"type": "SubmodelElementCollection", "value": parent[1]}]}})
+    return env

@@ -15,8 +15,26 @@
 #   ├─ Datapoint [Property, 1..*]
 #   │    ├─ valueType constrained to xs:decimal
 #   │    └─ semanticId required
-#   └─ DatapointGroup [SMC, 0..*]
-#        └─ contains only Datapoint children
+#   ├─ DatapointGroup [SMC, 0..*]
+#   │    └─ contains only Datapoint children
+#   └─ Measurements [SMC, 0..1] (v0.13)
+#        └─ Coordinates [SMC, 0..1] — where things are, as a tree of transforms
+#             └─ {coordinate} [SMC Coordinate, 1..*] — its meaning a supplemental semanticId
+#                  ├─ RelativeTo [ReferenceElement, 0..1] — the coordinate it is relative to,
+#                  │    in this AAS or another; none: the root (the planar table's base) or
+#                  │    a coordinate not placed yet
+#                  ├─ X, Y, Z [Property, xs:double, mm, 1 each] — the translation in the parent
+#                  ├─ Roll, Pitch, Yaw [Property, xs:double, deg, 1 each] — the rotation about the
+#                  │    parent's fixed X, then Y, then Z axis: R = Rz(Yaw) Ry(Pitch) Rx(Roll)
+#                  └─ {value}Source [ReferenceElement, 0..6] — XSource ... YawSource: the data
+#                       point whose value that value is (a coordinate that moves)
+#
+# v0.13 (28 Oct): coordinates. Where a module's base, an end effector, a shuttle or a point of
+# interest is: one coordinate each, relative to another by reference, so the references build a
+# tree of transforms rooted at the planar table's base. Each is the latest value of a measurement
+# series (docs/state-and-parameters.md, section 3; docs/design-log.md, 28 Oct): positions will be
+# reported by the modules themselves. A coordinate that moves names the data point each moving
+# value follows; a moving part is a fixed mount and, relative to it, the moving coordinate.
 #
 # v0.9 (26 Oct): a data point is a Property of the submodel, fed from the interface by the
 # mapping (AIMC). The collection per variable that held only an InterfaceReference (the AAS
@@ -50,6 +68,7 @@ arso:OperationalDataSubmodel rdf:type owl:Class ;
 
 arso:Datapoint rdf:type owl:Class ;
   rdfs:subClassOf aas:Property ;
+  arso:parentClass arso:OperationalDataSubmodel ;
   rdfs:comment "A domain-specific measurement or value, represented as an AAS Property." .
 
 arso:DatapointGroup rdf:type owl:Class ;
@@ -87,10 +106,121 @@ arso:DatapointGroup rdfs:subClassOf [
 
 
 #################################################################
+# ELEMENT TYPES — Coordinates (v0.13)
+#################################################################
+
+arso:MeasurementsSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:parentClass arso:OperationalDataSubmodel ;
+  arso:idShort "Measurements" ;
+  arso:semanticId "https://smartproductionlab.aau.dk/ARSO/OperationalData/Measurements/1/0" ;
+  rdfs:comment "SMC Measurements — the measurement series of the resource (docs/state-and-parameters.md, section 3); for now its coordinates." .
+
+arso:CoordinatesSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:parentClass arso:MeasurementsSMC ;
+  arso:idShort "Coordinates" ;
+  arso:semanticId "https://smartproductionlab.aau.dk/ARSO/OperationalData/Coordinates/1/0" ;
+  rdfs:comment "SMC Coordinates — where the resource and its points are: one coordinate each, relative to another by reference (a tree of transforms rooted at the planar table's base)." .
+
+arso:CoordinateSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:parentClass arso:CoordinatesSMC ;
+  arso:semanticId "https://smartproductionlab.aau.dk/ARSO/OperationalData/Coordinate/1/0" ;
+  rdfs:comment "SMC {coordinate} — a pose relative to the coordinate RelativeTo names: X, Y, Z in mm and Roll, Pitch, Yaw in degrees about the parent's fixed X, then Y, then Z axis (R = Rz(Yaw) Ry(Pitch) Rx(Roll), as ROS's RPY). The latest value of its series. Its meaning (a module's base, an end effector, a transfer point) is a supplemental semanticId of the lab's vocabulary. No idShort: named by the user." .
+
+arso:CoordinateRelativeToRef rdf:type owl:Class ;
+  rdfs:subClassOf aas:ReferenceElement ;
+  arso:parentClass arso:CoordinateSMC ;
+  arso:idShort "RelativeTo" ;
+  arso:semanticId "https://smartproductionlab.aau.dk/ARSO/OperationalData/Coordinate/RelativeTo/1/0" ;
+  rdfs:comment "ReferenceElement RelativeTo — the coordinate this one is relative to (a ModelReference to its SMC, in this AAS or another). None: the root of the tree (the planar table's base), or a coordinate not placed yet." .
+
+arso:CoordinateXProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:CoordinateSMC ;
+  arso:idShort "X" ; arso:semanticId "https://admin-shell.io/idta/cds/xframe/1" ;
+  rdfs:comment "Property X (xs:double, mm) — the translation along the parent's X axis (IDTA 02075 xframe)." .
+
+arso:CoordinateYProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:CoordinateSMC ;
+  arso:idShort "Y" ; arso:semanticId "https://admin-shell.io/idta/cds/yframe/1" ;
+  rdfs:comment "Property Y (xs:double, mm) — the translation along the parent's Y axis (IDTA 02075 yframe)." .
+
+arso:CoordinateZProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:CoordinateSMC ;
+  arso:idShort "Z" ; arso:semanticId "https://admin-shell.io/idta/cds/zframe/1" ;
+  rdfs:comment "Property Z (xs:double, mm) — the translation along the parent's Z axis (IDTA 02075 zframe)." .
+
+arso:CoordinateRollProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:CoordinateSMC ;
+  arso:idShort "Roll" ; arso:semanticId "https://admin-shell.io/idta/cds/rxframe/1" ;
+  rdfs:comment "Property Roll (xs:double, deg) — the rotation about the parent's X axis, applied first (IDTA 02075 rxframe)." .
+
+arso:CoordinatePitchProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:CoordinateSMC ;
+  arso:idShort "Pitch" ; arso:semanticId "https://admin-shell.io/idta/cds/ryframe/1" ;
+  rdfs:comment "Property Pitch (xs:double, deg) — the rotation about the parent's Y axis, applied second (IDTA 02075 ryframe)." .
+
+arso:CoordinateYawProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:CoordinateSMC ;
+  arso:idShort "Yaw" ; arso:semanticId "https://admin-shell.io/idta/cds/rzframe/1" ;
+  rdfs:comment "Property Yaw (xs:double, deg) — the rotation about the parent's Z axis, applied last (IDTA 02075 rzframe)." .
+
+arso:CoordinateSourceRef rdf:type owl:Class ;
+  rdfs:subClassOf aas:ReferenceElement ;
+  arso:parentClass arso:CoordinateSMC ;
+  arso:semanticId "https://smartproductionlab.aau.dk/ARSO/OperationalData/Coordinate/Source/1/0" ;
+  rdfs:comment "ReferenceElement {value}Source (XSource, YSource, ZSource, RollSource, PitchSource, YawSource) — the data point whose value that value of the coordinate is: a coordinate that moves (an end effector along its axis, a shuttle on the table). The value in the coordinate is the latest known." .
+
+
+#################################################################
 # CONTAINMENT CONSTRAINTS
 #################################################################
 
+# Operational Data has at most one Measurements, which has at most one Coordinates (v0.13)
 arso:OperationalDataSubmodel rdfs:subClassOf [
   rdf:type owl:Restriction ;
   owl:onProperty <https://admin-shell.io/aas/3/1/Submodel/submodelElements> ;
-  owl:someValuesFrom arso:Datapoint ] .
+  owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+  owl:onClass arso:MeasurementsSMC ] .
+
+arso:MeasurementsSMC rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+  owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+  owl:onClass arso:CoordinatesSMC ] .
+
+arso:CoordinatesSMC rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+  owl:someValuesFrom arso:CoordinateSMC ] .
+
+# The six values of a coordinate are doubles
+arso:CoordinateXProperty rdfs:subClassOf [ rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Property/valueType> ; owl:hasValue <https://admin-shell.io/aas/3/1/DataTypeDefXsd/Double> ] .
+arso:CoordinateYProperty rdfs:subClassOf [ rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Property/valueType> ; owl:hasValue <https://admin-shell.io/aas/3/1/DataTypeDefXsd/Double> ] .
+arso:CoordinateZProperty rdfs:subClassOf [ rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Property/valueType> ; owl:hasValue <https://admin-shell.io/aas/3/1/DataTypeDefXsd/Double> ] .
+arso:CoordinateRollProperty rdfs:subClassOf [ rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Property/valueType> ; owl:hasValue <https://admin-shell.io/aas/3/1/DataTypeDefXsd/Double> ] .
+arso:CoordinatePitchProperty rdfs:subClassOf [ rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Property/valueType> ; owl:hasValue <https://admin-shell.io/aas/3/1/DataTypeDefXsd/Double> ] .
+arso:CoordinateYawProperty rdfs:subClassOf [ rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Property/valueType> ; owl:hasValue <https://admin-shell.io/aas/3/1/DataTypeDefXsd/Double> ] .
+
+# A coordinate has each of its six values once, at most one RelativeTo and at most six sources
+arso:CoordinateSMC rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:CoordinateXProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:CoordinateYProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:CoordinateZProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:CoordinateRollProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:CoordinatePitchProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:CoordinateYawProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:CoordinateRelativeToRef ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:maxQualifiedCardinality "6"^^xsd:nonNegativeInteger ; owl:onClass arso:CoordinateSourceRef ] .
+
+# (Until v0.12 Operational Data had at least one Datapoint. A line's has only the coordinates of
+# its own points, v0.13.)

@@ -30,8 +30,9 @@ from modgen import SPECS, load                          # noqa: E402
 from aas_model.constants import BASE_URL                                  # noqa: E402
 from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType      # noqa: E402
 from modgen.spec import Location, Point                  # noqa: E402
-from modreg import model, profile as profiles           # noqa: E402
-from modreg.frames import relative                      # noqa: E402
+from modreg import model, planar, profile as profiles   # noqa: E402
+from modreg.frames import place, relative               # noqa: E402
+from modreg.generated import operational_data as od     # noqa: E402
 from modreg.service import AasServer                    # noqa: E402
 
 import plan_check                                        # noqa: E402
@@ -46,14 +47,13 @@ RESOURCES = [SPECS / "filling.yaml", SPECS / "stoppering.yaml", SPECS / "planned
 # Kuka robot and a gripper, and a Raspberry Pi of its own).
 LINE = "FillingLine"
 BEFORE, AFTER = ["LoadingModule"], ["UnloadingModule"]
-# Where each part of the line is in its frame (ARSO 0.12): the planar table at the line's origin (its
-# corner, the frame its shuttles move in: 4 x 3 flyways, 960 x 720 mm), the modules around it, each
-# with its front at the table's edge, facing in, so that its transfer point is a station of the
-# planar controller's simulated table (planar-controller/tests/line_scenario.py). Placeholders until
-# the line is measured.
+# Where each module's base is relative to the planar table's base (ARSO 0.13), the root of the
+# line's coordinates: the table's corner, the frame its shuttles move in (4 x 3 flyways, 960 x 720
+# mm). Each module has its front at the table's edge, facing in, so that its transfer point is a
+# station of the planar controller's simulated table (planar-controller/tests/line_scenario.py).
+# Placeholders until the modules report where they are (RFID).
 TABLE = "PlanarTable"
 LAYOUT = {
-    TABLE: Location(),
     "LoadingModule": Location(x=0.0, y=180.0, rz=-90.0),
     "FillingModule": Location(x=240.0, y=720.0, rz=180.0),
     "StopperingModule": Location(x=600.0, y=720.0, rz=180.0),
@@ -68,9 +68,10 @@ POINTS = {"Infeed": Point(meaning="PlacePoint", location=Location(x=60.0, y=180.
           "Outfeed": Point(meaning="PickPoint", location=Location(x=660.0, y=60.0),
                            description="Where the unloading robot picks a vial from a shuttle")}
 # The stations a shuttle stops at on its way through the line, in order, each a point of the line or
-# a module's transfer point (planar-controller/tests/line_scenario.py names them so).
-STATIONS = {"Infeed": ["Infeed"], "Filling": ["FillingModule", "Transfer"], "Stoppering": ["StopperingModule", "Transfer"],
-            "Capping": ["CappingModule", "Transfer"], "Outfeed": ["Outfeed"]}
+# a module's transfer point (planar-controller/tests/line_scenario.py names them so): (AAS, coordinate).
+STATIONS = {"Infeed": (f"{LINE}AAS", "Infeed"), "Filling": ("FillingModuleAAS", "Transfer"),
+            "Stoppering": ("StopperingModuleAAS", "Transfer"), "Capping": ("CappingModuleAAS", "Transfer"),
+            "Outfeed": (f"{LINE}AAS", "Outfeed")}
 
 
 @functools.lru_cache(maxsize=None)
@@ -92,27 +93,42 @@ def components() -> dict[str, dict]:
     return {plan_check.shell_of(env)["idShort"]: env for path in RESOURCES for env in described(path)[1:]}
 
 
+@functools.lru_cache(maxsize=None)
+def table() -> dict:
+    """The AAS of the planar table (4 x 3 flyways), whose base is the root of the line's coordinates.
+    Its shuttles are not described here: they come from the controller (``modreg profile planar``)."""
+    return model.build(planar.describe_all(planar.Table(columns=4, rows=3, shuttles=()))[0])
+
+
+def table_base() -> tuple[str, str]:
+    """The root of the line's coordinates: (the table's AAS id, its coordinate)."""
+    return plan_check.shell_of(table())["id"], "TableBase"
+
+
 def line_profile(resources: dict[str, dict]) -> dict:
-    """The profile of the line: a system made of its modules, each found by its asset id."""
+    """The profile of the line: a system made of its modules, each found by its asset id, and the
+    coordinates of its own points, relative to the table's base."""
     asset = lambda name: f"{BASE_URL}/assets/{name}"                                       # noqa: E731
-    node = lambda name, found, about: model.LocatedNode(                                    # noqa: E731
-        entity_type="SelfManagedEntity", global_asset_id=found, description=about, Frame=profiles.frame(LAYOUT.get(name)))
-    nodes = {name: node(name, asset(name), f"{name}: not described yet") for name in BEFORE}
+    node = lambda found, about: model.LocatedNode(                                          # noqa: E731
+        entity_type="SelfManagedEntity", global_asset_id=found, description=about)
+    nodes = {name: node(asset(name), f"{name}: not described yet") for name in BEFORE}
     for env in resources.values():
         shell = plan_check.shell_of(env)
         name = shell["assetInformation"]["globalAssetId"].rsplit("/", 1)[-1]
-        nodes[name] = node(name, shell["assetInformation"]["globalAssetId"], shell["idShort"])
-    nodes.update({name: node(name, asset(name), f"{name}: not described yet") for name in AFTER})
-    nodes[TABLE] = node(TABLE, asset(TABLE), "The planar table the shuttles move on (planar-controller): not described yet")
-    for name, point in POINTS.items():
-        nodes[name] = model.LocatedNode(entity_type="CoManagedEntity", global_asset_id="", description=point.description,
-                                        supplemental_semantic_ids=[profiles.meaning(point.meaning)],
-                                        Frame=profiles.frame(point.location))
+        nodes[name] = node(shell["assetInformation"]["globalAssetId"], shell["idShort"])
+    nodes.update({name: node(asset(name), f"{name}: not described yet") for name in AFTER})
+    nodes[TABLE] = node(plan_check.shell_of(table())["assetInformation"]["globalAssetId"],
+                        "The planar table the shuttles move on (planar-controller)")
+    base = profiles.coordinate_ref(table_base()[1], table_base()[0])
+    points = {name: profiles.coordinate(name, point.meaning, point.location, base, description=point.description)
+              for name, point in POINTS.items()}
     system = model.SystemTypeAAS(id_short=f"{LINE}AAS", id=f"{BASE_URL}/aas/{LINE}AAS", asset_type=f"{model.RESOURCE}/System",
                                  description="The line a vial passes: loading, filling, stoppering, capping, inspection, unloading")
     system.hierarchical_structures = model.LocatedStructures(
         id_short="HierarchicalStructures", ArcheType=ArcheType(value="OneDown"),
         EntryNode=model.LocatedEntryNode(global_asset_id=asset(LINE), description="The line", Node=nodes))
+    system.operational_data = od.OperationalData(id_short="OperationalData", Measurements=od.Measurements(
+        Coordinates=od.Coordinates(Coordinate=points)))
     return model.profile(model.SystemTypeAAS.model_validate(system.model_dump()), global_asset_id=asset(LINE))
 
 
@@ -123,10 +139,11 @@ def line(resources: dict[str, dict]) -> dict:
 
 def stations(envs: list[dict]) -> dict[str, tuple[float, float, float]]:
     """Where a shuttle stops for each station, (x, y, rz) in the planar table's frame, from the AASs
-    of the line and its modules (``envs``): what the line scenario of the planar controller drives to."""
+    of the table, the line and its modules (``envs``): what the line scenario of the planar
+    controller drives to."""
     found = {}
-    for name, path in STATIONS.items():
-        pose = relative(envs, f"{LINE}AAS", [TABLE], path)
+    for name, point in STATIONS.items():
+        pose = relative(envs, (f"{TABLE}AAS", "TableBase"), point)
         x, y, _ = pose.position
         rz = (pose.heading + 180.0) % 360.0 - 180.0                       # in [-180, 180)
         found[name] = tuple(round(v, 3) + 0.0 for v in (x, y, rz))         # + 0.0: no -0.0
@@ -148,6 +165,9 @@ def build() -> tuple[dict[str, dict], dict[str, dict]]:
     resources = {}
     for path in RESOURCES:
         env = resource(path)
+        # Put on the line: the module reports where its base is on the table (later by RFID).
+        name = plan_check.shell_of(env)["assetInformation"]["globalAssetId"].rsplit("/", 1)[-1]
+        env = place(env, "ModuleBase", table_base(), LAYOUT[name])
         resources[plan_check.shell_of(env)["idShort"]] = env
     products = {name: model.build(profile) for name, profile in product_profiles().items()}
     return resources, products
@@ -169,7 +189,8 @@ def main(argv=None) -> int:
     resources, products = build()
     broken = {name: found for name, env in products.items() if (found := plan_check.check(env, resources))}
     system = line(resources)
-    everything = {plan_check.shell_of(system)["idShort"]: system, **resources, **components(), **products,
+    everything = {plan_check.shell_of(system)["idShort"]: system, plan_check.shell_of(table())["idShort"]: table(),
+                  **resources, **components(), **products,
                   **processes(resources, products, system)}
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -183,7 +204,7 @@ def main(argv=None) -> int:
         print("not published: a plan does not fit its resources" if args.publish else "a plan does not fit its resources")
         return 1
     print(f"every plan fits its resources ({len(products)} product(s), {len(resources)} modules, "
-          f"{len(components())} components, 1 line)")
+          f"{len(components())} components, 1 line, 1 table)")
     if args.publish:
         server = AasServer(args.publish)
         for name, env in everything.items():
