@@ -18,6 +18,26 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
+- **Every block of a generated program explains itself in plain words, in 4diac and in the docs.**
+  *Journal.* Asked for by the user.
+  - What: the generator (`modgen/explain.py`) writes a type comment on every type ("what it does,
+    for whom", then "Technical:" the detail) and an instance comment on every block of the
+    application and of every composite: where its calls come from and where its data goes (a
+    parameter "from Dispensing's Volume", a result "is Dispensing's result"). The same is written
+    out once by hand in [filling-program.md](filling-program.md), with each OPC UA call followed to
+    the pins, and [building-skills.md](building-skills.md) says how to add a skill, a primitive or
+    equipment.
+  - Why: an engineer opening the program in the 4diac IDE sees dozens of blocks and their wires; without
+    the comments it takes reading the generator to know what a channel carries or why a block is
+    there. Written by the generator, the comments follow every regeneration and never go stale.
+  - Comments are not part of a type's hash (checked with the 4diac IDE 3.3 export), so they need
+    no FORTE rebuild and a running module keeps matching its program.
+  - Instead of: a separate manual only (goes stale and is not where the engineer looks), or
+    comments written in the IDE by hand (lost on the next `modgen`).
+  - The guide states the rule the architecture gives: a module level skill is blocks of types FORTE
+    has and is added while the module runs; a primitive or equipment is new types and needs a new
+    FORTE. That is the split between reconfiguring a module and changing it.
+
 - **A module keeps no live value in its AAS: its values are time series in the database, and the
   AAS says where.** *Journal.* Decided by the user.
   - Why: the values change fast (a position while the axis moves, a weight while it fills). Pushing
