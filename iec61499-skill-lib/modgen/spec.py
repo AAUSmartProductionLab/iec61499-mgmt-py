@@ -169,6 +169,26 @@ class Position(Model):
     hold: str | None = None               # command when a move has ended (default: the safe command)
 
 
+class Location(Model):
+    """Where a part or a point is in its parent's frame (ARSO 0.12, AutomationML's Frame attribute):
+    a translation in mm and rotations in degrees about the parent's axes."""
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+    rx: float = 0.0
+    ry: float = 0.0
+    rz: float = 0.0
+
+
+class Point(Model):
+    """A point of interest of the module: where a shuttle stands to be served, where a robot picks;
+    its meaning in the lab's vocabulary (TransferPoint, ProcessingPoint, PickPoint, PlacePoint) and
+    where it is in the module's frame."""
+    meaning: str = Ident
+    location: Location = Location()
+    description: str = ""
+
+
 class Equipment(Model):
     """Physical equipment item: sole owner of its IO points and of the command table."""
     description: str = ""
@@ -179,6 +199,7 @@ class Equipment(Model):
     # Command name -> phases; the first command is the safe state (all off).
     commands: dict[str, list[Phase]]
     position: Position | None = None
+    location: Location | None = None           # where the item is in the module (its AAS; not the generator's)
     sim: dict = Field(default_factory=dict)   # kinematics for cell/sim/module_sim.py (not used by the generator)
 
     short_commands = field_validator("commands", mode="before")(
@@ -584,6 +605,7 @@ class ModuleSpec(Model):
     procedures: dict[PROCEDURES, list[Step]] = Field(default_factory=dict)
     stop_timeout: str = Field(default="10s", pattern=DURATION)   # Stopping waits this long for running skills
     capabilities: dict[str, Capability] = Field(default_factory=dict)
+    points: dict[str, Point] = Field(default_factory=dict)   # points of interest, in the module's frame
     aas: Aas = Aas()
 
     short_steps = field_validator("procedures", mode="before")(
@@ -619,13 +641,16 @@ class ModuleSpec(Model):
             self.check_steps(proc, seq, {})
         for name, cap in self.capabilities.items():
             self.check_capability(name, cap)
+        for name in self.points:
+            if not re.match(IDENT, name) or name in self.equipment:
+                raise ValueError(f"Point {name}: an identifier, and not the name of an item of equipment")
         if not self.targets:
             raise ValueError("At least one target is needed")
         for name, target in self.targets.items():
             if not re.match(IDENT, name):
                 raise ValueError(f"Not an identifier: target {name}")
             lines = {}
-            for point, io in self.points():
+            for point, io in self.io_points():
                 backend = self.backend(name, io)
                 if backend == "modbus" and io.modbus is None:
                     raise ValueError(f"Target {name}: {point} has no Modbus address")
@@ -775,7 +800,7 @@ class ModuleSpec(Model):
                     raise ValueError(f"{owner}.{step.name}.{param}: {value} goes beyond the limits of "
                                      f"{step.skill}.{param} ({takes.minimum} to {takes.maximum})")
 
-    def points(self):
+    def io_points(self):
         """(``<Equipment>.<Signal>``, Input or Output) for every IO point (a computed signal is none)."""
         for eq_name, eq in self.equipment.items():
             for s, io in [*eq.inputs.items(), *eq.outputs.items()]:
