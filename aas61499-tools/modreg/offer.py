@@ -206,6 +206,28 @@ def stated_facts(description: dict | None) -> tuple[dict, dict, list[dict]]:
     return stated, named, by_hand
 
 
+def reached_offers(module: dict, components: list[dict], found: list[Offer]) -> list[Offer]:
+    """The derived offers with the ranges their skills reach (``modplan.discover.reached``): a property
+    the capability's Post compares with is what the skill leaves at the ends of its parameters'
+    ranges, not the range of the one parameter that means it (two doses fill twice a dose)."""
+    from modplan.discover import reached
+    from modplan.read import read
+    from .capabilities import vocabulary
+    if submodel(module, "CapabilityDescription") is None or not found:
+        return found
+    domain = read(module, components, vocabulary())
+    if not domain.actions():
+        return found                                      # an AAS without its components' capabilities
+    composites = described(module, components).composites
+    for offer in found:
+        skill = composites.get(offer.skill_name)
+        ranges = reached(domain, skill, offer.name, vocabulary()) if skill is not None else {}
+        for prop in offer.properties:
+            if local(prop.meaning) in ranges and prop.minimum is not None:
+                prop.minimum, prop.maximum = (str(v) for v in ranges[local(prop.meaning)])
+    return found
+
+
 def planned_offers(module: dict, components: list[dict], derived: set[str]) -> list[Offer]:
     """The process capabilities no skill offers that a skill can be planned for (``modplan.discover``):
     offered after a reconfiguration, for the values a plan exists for, realized by no skill yet."""
@@ -233,7 +255,7 @@ def capabilities(module: dict, components: list[dict]) -> dict:
     module = copy.deepcopy(module)
     old = next((s for s in module["submodels"] if s["idShort"] == "CapabilityDescription"), None)
     stated, named, by_hand = stated_facts(old)
-    found = derived_offers(project([module, *components], structure=False))
+    found = reached_offers(module, components, derived_offers(project([module, *components], structure=False)))
     found += planned_offers(module, components, {o.capability for o in found})
     description = capability_description(found, stated, named)
     derived = {o.capability for o in found}
