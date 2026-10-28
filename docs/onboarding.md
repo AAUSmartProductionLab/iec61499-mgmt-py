@@ -154,11 +154,10 @@ the IEC 61499 module architecture that makes skills, and updating a running modu
 **Next, in this order** (the plan's priorities; planning first since 27 Oct, then the evaluation
 before anything that does not block it):
 
-1. **G, planning new skills** ([skill-planning.md](skill-planning.md)): ARSO 0.11 is done (G0);
-   next the vocabulary's capabilities, properties and constraints (G1), `modreg` writing the
-   components' capabilities into the module's Capability Description (G2), the domain model and the
-   checker (G3), the planner (G4) and discovery (G5), tried on the filling module's cases T1 to T12.
-   Running by Friday 30 Oct; it need not push planning research, and G6 and G7 are cut first.
+1. **G, planning new skills** ([skill-planning.md](skill-planning.md)): **G0 to G5 done 28 Oct**
+   (`modplan`: a skill planned from the filling module's AAS is created online on FORTE and runs;
+   `python -m modplan`, [tooling.md](tooling.md), section 7). Open: T9 (DoubleDose's offered range),
+   then G6 (HDDL, PDDL) and G7 (the editor) if time allows; they are cut first.
 2. **A4, one Python interface** for verify, create a skill and set a value (`modsync`; started:
    `desired.load`, `read`, `reconfigure`, `record`, `store`), so a script, the HMI and later an
    agent call the same functions.

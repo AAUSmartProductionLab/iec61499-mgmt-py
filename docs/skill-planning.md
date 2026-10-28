@@ -125,13 +125,18 @@ CapabilityContainer  Dosing                    lab:Dosing, NotAssigned          
 **Where it comes from.** modreg writes the description. What holds of a kind of capability wherever
 it is used (Positioning needs the axis referenced) is in the vocabulary, on the capability classes.
 What holds on this module (the needle in the vial, the vial on the scale) is in the module's spec,
-next to the skill; a sketch:
+next to the skill, in the words of ARSO (`cell/modules/filling.yaml`):
 
 ```yaml
   Dispense:
-    needs: {LinearAxis.Position: {FillPosition: 40.0}}     # the needle in the vial
-    keeps: [LinearAxis.Position]                            # still while dosing
-    product: {ContentVolume: += Volume, Weighed: false}
+    capability:                          # of the Dosing it realizes, on this module
+      values: {FillPosition: {value: 40.0, unit: mm}}
+      precondition: {LinearAxis.Position: "= FillPosition"}   # the needle in the vial
+      invariant: {LinearAxis.Position: unchanged}             # still while dosing
+  Weigh:
+    capability:
+      precondition: {LinearAxis.Position: "= 0.0"}            # the needle out of the vial
+      invariant: {LinearAxis.Position: unchanged}
 ```
 
 **The rest state** is what the steps of the Reset procedure (`[Home, Tare]`) give from nothing known:
@@ -186,7 +191,9 @@ one can be written from the other.
 **Discovery.** With the generated methods a process capability is planned without any composition.
 For each process capability of the vocabulary the module has no skill for, the planner tries its Post
 from the rest state; if a plan exists, the module offers it after a reconfiguration, with the range the
-limits of the plan's capabilities give. This replaces the derivation from `lab:contributes`.
+limits of the plan's capabilities give. modreg adds such offers when it derives a module's capabilities
+anew (after a skill is described or built): no skill realizes them yet. The derivation from the skills
+(`lab:contributes`) stays for the skills that exist; it gives their ranges exactly.
 
 ## 7. Compared with AAS2PDDL (Nabizada et al., CASE 2026, arXiv 2606.02167)
 
@@ -216,18 +223,26 @@ CSS, with inputs as preconditions and outputs as effects: the same view of state
 
 ## 8. Changes, in order
 
-1. Vocabulary 0.2: the capabilities Referencing ⊑ Positioning, Dosing, Taring ⊑ Weighing; the
-   properties Referenced, Tared, Volume (a dose), FillPosition ⊑ Position, ContentVolume and Weighed (of
-   the product), FillWeight (a result); the constraints that hold of a kind of capability; the ontology
-   checks. Dispense's parameter Volume then means Volume, not FillVolume.
-2. ARSO 0.11: `Contract` → `Conditions` and `Completion`; `CapabilityRealizedBy` to a component's skill;
-   the constraint elements and conventions. **Done 27 Oct**: modreg writes `Conditions` and
-   `Completion`, modsync also reads a 0.10 `Contract`. Since 28 Oct the module specs use the same words
-   (`precondition`, `postcondition`, `invariant`, `after`, `timeout`).
-3. modreg: the component sets with their constraints (from the vocabulary and the spec), `SameProperty`
-   to the data points; the Offered capabilities with their Pre and Post.
-4. The projection of the constraints; the domain model and the simulator (the checker).
-5. GTPyhop, the lifting, writing the flow; discovery in place of `lab:contributes`.
+All but 6 and 7 done on 27 and 28 Oct (the plan's G0 to G5, [next-steps.md](next-steps.md)):
+
+1. **Vocabulary 0.2 and PPRL 0.2**: the capabilities Referencing, Dosing, Taring, Pressing, Crimping,
+   Imaging (auxiliary, each a class of its own: as subclasses they would inherit their parent's
+   constraints), the properties Referenced, Tared, Volume (a dose), FillPosition ⊑ Position,
+   FillWeight (a result), ContentVolume, Weighed, Stoppered, Capped, Inspected (of the product);
+   `lab:realizes` on every skill type; each capability's constraints as `pprl:pre`, `pprl:post` and
+   `pprl:invariant` with the expression a BasicConstraint holds; the process capabilities defined by
+   what they do to the product. Checked by `tests/test_modplan_vocabulary.py`. Dispense's parameter
+   keeps its meaning FillVolume for the derivation; the capability's property of that name is a Volume.
+2. **ARSO 0.11**: `Conditions` and `Completion`; `CapabilityRealizedBy` to a component's skill; the
+   constraint elements and conventions. modreg writes them, modsync also reads a 0.10 `Contract`; the
+   module specs use the same words (`precondition`, `postcondition`, `invariant`, `after`, `timeout`).
+3. **modreg** (`modreg/capabilities.py`): a set per component with its capabilities and their
+   constraints, from the vocabulary and the spec (a skill's `capability`), `SameProperty` to the data
+   points; the offered capabilities with their Pre and Post.
+4. **modplan** (`read`, `check`): the domain from the AAS alone, the checker.
+5. **modplan** (`plan`, `lift`, `compose`, `discover`): GTPyhop, the lifting, the skill described in the
+   AAS and created online by `modsync reconfigure` (on FORTE: `tests/test_modplan_live.py`); discovery,
+   with the offers modreg adds. The command line: `python -m modplan`.
 6. HDDL and PDDL generation; a planner of each kind and VAL, for the evaluation.
 7. The recommendations in the editor.
 
