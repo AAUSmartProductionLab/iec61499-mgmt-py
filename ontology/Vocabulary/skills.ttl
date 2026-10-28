@@ -45,6 +45,13 @@ skl:Home rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   lab:realizes lab:Referencing .
 
 
+# A shuttle of the planar table (planar-controller) ----------------------------
+
+skl:MoveToPosition rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
+  rdfs:label "MoveToPosition" ; rdfs:comment "Move a shuttle to a pose on the planar table (X, Y in mm, Rz in degrees, in the table's frame); the controller finds the way past the other shuttles." ;
+  lab:contributes lab:Transporting ;
+  lab:realizes lab:Transporting .
+
 # Filling ----------------------------------------------------------------------
 
 skl:Dispense rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
