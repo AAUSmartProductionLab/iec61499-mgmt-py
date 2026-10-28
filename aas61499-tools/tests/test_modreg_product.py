@@ -65,7 +65,7 @@ def bottle() -> Product:
         ProcessId=pp.ProcessId(value="Filling"), ProcessName=pp.ProcessName(value="Filling"),
         ProcessDescription=pp.ProcessDescription(value={"en": "Fill the bottle"}), PlannedProcessTime=pp.PlannedProcessTime(value="PT8S"),
         ProductParameters=pp.ProductParameters(Parameter={"FillVolume": volume}),
-        ProcessParameters=pp.ProcessParameters_process_parameters(), ResourceParameters=pp.ResourceParameters(),
+        ProcessParameters=pp.ProcessParameterGroup(), ResourceParameters=pp.ResourceParameters(),
         ProcessBoM=pp.ProcessBoM(MaterialUse={"Bottle": pp.MaterialUse(
             MaterialReference=pp.MaterialReference(value=own("HierarchicalStructures", ("Entity", "EntryNode"), ("Entity", "Bottle"))),
             Role=pp.Role(value="workpiece"), Quantity=pp.Quantity(value="1.0"), Unit=pp.Unit(value="piece"))}),

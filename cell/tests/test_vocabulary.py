@@ -43,7 +43,7 @@ def test_every_offered_capability_and_property_is_in_the_vocabulary(vocabulary):
                 unit = vocabulary.value(term, LAB.unit)
                 assert (str(unit) if unit else None) == value.unit, f"{spec.module}.{name}.{prop}: unit {value.unit}"
                 kind = str(vocabulary.value(term, LAB.valueType))
-                given = value.value if value.value is not None else value.minimum
+                given = value.value if value.value is not None else value.values[0] if value.values else value.minimum
                 assert kind == ("string" if isinstance(given, str) else "number"), f"{spec.module}.{name}.{prop}"
     assert offered >= 4
 

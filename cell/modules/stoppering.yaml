@@ -113,8 +113,8 @@ points:
 # the process planner's pharma example, until the station is measured.
 capabilities:
   Stoppering:
-    description: Place a rubber stopper on a filled vial and press it in
+    description: Place a rubber stopper on a filled container (vial, syringe, cartridge) and press it in
     properties:
-      ContainerType: {value: vial}
+      ContainerType: {values: [vial, syringe, cartridge]}
       GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
       StopperDiameter: {minimum: 6.0, maximum: 20.0, unit: mm}

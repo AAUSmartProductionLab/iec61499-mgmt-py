@@ -439,13 +439,15 @@ def test_offered_capabilities_are_realized_by_skills_as_a_planner_reads_them():
     assert skill["keys"][0]["value"] == submodel(env, "Skills")["id"]
     volume = filling["properties"][f"{BASE}/semantics/FillVolume"]
     assert (volume["kind"], volume["min"], volume["max"], volume["unit"]) == ("Range", "0.5", "10.0", "mL")
-    assert filling["properties"][f"{BASE}/semantics/ContainerType"]["value"] == "vial"
+    takes = filling["properties"][f"{BASE}/semantics/ContainerType"]
+    assert takes["kind"] == "SubmodelElementList" and [v["value"] for v in takes["value"]] == ["vial", "syringe", "cartridge"]
     # A product's Vial 2 mL filling requirement (the planner's pharma example): the required value
-    # lies in the offered range, the required error range holds the offered error, strings agree.
+    # lies in the offered range, the required error range holds the offered error, the container is
+    # one the module takes.
     required = {"FillVolume": 2.0, "ContainerType": "vial"}
     assert float(volume["min"]) <= required["FillVolume"] <= float(volume["max"])
     assert 0.0 <= float(filling["properties"][f"{BASE}/semantics/AbsoluteFillError"]["value"]) <= 0.1
-    assert filling["properties"][f"{BASE}/semantics/ContainerType"]["value"] == required["ContainerType"]
+    assert required["ContainerType"] in [v["value"] for v in takes["value"]]
     # The shell lists the submodel, and the profile gives the capabilities back.
     assert submodel(env, "CapabilityDescription")["id"] in [r["keys"][0]["value"] for r in
                                                            env["assetAdministrationShells"][0]["submodels"]]

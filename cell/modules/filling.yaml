@@ -139,8 +139,8 @@ points:
 # station is measured.
 capabilities:
   Filling:
-    description: Fill a liquid into an open vial under the needle and weigh it
+    description: Fill a liquid into an open container (vial, syringe, cartridge) under the needle and weigh it
     properties:
-      ContainerType: {value: vial}
+      ContainerType: {values: [vial, syringe, cartridge]}
       GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
       AbsoluteFillError: {value: 0.05, unit: mL}

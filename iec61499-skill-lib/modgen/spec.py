@@ -544,9 +544,10 @@ class Aas(Model):
 
 
 class CapabilityProperty(Model):
-    """One property of an offered capability: a value (the container type it takes) or a range
-    (the grasp diameters it holds), in a unit."""
+    """One property of an offered capability: a value, the values it takes (the container types:
+    vial, syringe, cartridge) or a range (the grasp diameters it holds), in a unit."""
     value: float | bool | str | None = None
+    values: list[float | bool | str] | None = None
     minimum: float | None = None
     maximum: float | None = None
     unit: str | None = None
@@ -556,8 +557,8 @@ class CapabilityProperty(Model):
     @model_validator(mode="after")
     def value_or_range(self):
         ranged = self.minimum is not None or self.maximum is not None
-        if (self.value is None) == (not ranged):
-            raise ValueError("a capability property has a value or a range (minimum and maximum), not both")
+        if [self.value is not None, bool(self.values), ranged].count(True) != 1:
+            raise ValueError("a capability property has a value, values or a range (minimum and maximum), one of them")
         if ranged and (self.minimum is None or self.maximum is None or self.minimum > self.maximum):
             raise ValueError("a capability property range needs minimum <= maximum")
         return self

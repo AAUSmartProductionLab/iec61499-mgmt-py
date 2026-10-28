@@ -60,6 +60,8 @@ class Container:
     def value_of(self, name: str) -> tuple[str, str]:
         """The model type and idShort of the element a property container holds its value in."""
         container = self.properties[name]
+        if container.PropertySubmodelList:
+            return ("SubmodelElementList", "Value")
         return ("Range", "Value") if container.PropertyRange else ("Property", "Value")
 
     def add(self, name: str, container: model.StatedProperty, point: str | None = None) -> None:

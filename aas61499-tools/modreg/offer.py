@@ -194,6 +194,11 @@ def stated_facts(description: dict | None) -> tuple[dict, dict, list[dict]]:
             if value["modelType"] == "Range":
                 facts[container["idShort"]] = CapabilityProperty(minimum=float(value["min"]), maximum=float(value["max"]),
                                                                  unit=unit, semantic_id=meaning)
+            elif value["modelType"] == "SubmodelElementList":     # the values it takes
+                kind = value.get("valueTypeListElement")
+                facts[container["idShort"]] = CapabilityProperty(
+                    values=[float(item["value"]) if kind == "xs:double" else item["value"] for item in value["value"]],
+                    unit=unit, semantic_id=meaning)
             else:
                 kind, text = value.get("valueType"), value.get("value")
                 found = float(text) if kind == "xs:double" else text == "true" if kind == "xs:boolean" else text

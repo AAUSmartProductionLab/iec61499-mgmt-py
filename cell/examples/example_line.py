@@ -1,17 +1,22 @@
-"""Build the AASs of the example line: its four resources and the products planned on them.
+"""Build the AASs of the example line, the lab's reference models: the line, the planar table and
+its shuttles, the modules and their components, three products and the process of each on the line.
 
     python cell/examples/example_line.py --out <folder> [--publish http://<host>:8081]
 
-Every AAS is built by ``modreg`` from a profile: the pydantic dump of its type (aas-model).
+Every AAS is an instance of aas-model's types (``Module``, ``Component``, ``ProductionSystem``,
+``Product``, ``Process``):
 
-- The profiles of the resources are made from their module specs: the filling and stoppering
-  modules are built and run (``cell/modules``); the capping and inspection modules are planned
-  only (``cell/modules/planned``: no program behind them yet).
-- The profile of a product is a file in this folder (``<Product>AAS.json``, a ``Product``):
-  what it consists of, the processes it needs and the plan that assigns them to the resources.
+- The modules' AASs are made from their module specs by ``modreg``, the same spec their IEC 61499
+  program is generated from: the filling and stoppering modules are built and run (``cell/modules``);
+  the capping and inspection modules are planned only (``cell/modules/planned``: no program behind
+  them yet). The table's and the shuttles' come from what the planar controller says
+  (``modreg.planar``).
+- The products are written out in Python (``products/``): a 2 mL vial, a prefilled syringe of 1 mL
+  and a cartridge of 3 mL. Their recipes name no equipment.
+- The process of each product on the line, its recipe bound to the modules, is written out too
+  (``processes/``). The plan check (``plan_check.check_process``) follows every binding into the
+  products' and the modules' AASs; a process whose Validation says otherwise is refused.
 
-The plan of each product is then followed into the resources (``plan_check``), and each product
-gets a process AAS on the line (``process_aas``, a draft: its recipe bound to the resources).
 Every AAS is written to ``<folder>/<idShort>.json``, and with ``--publish`` sent to an AAS server
 (created, or replaced if it is there already).
 """
@@ -37,14 +42,26 @@ from aas_model.submodel_templates.variables import MeasurementsGroup, Variables 
 from modreg.service import AasServer                    # noqa: E402
 
 import plan_check                                        # noqa: E402
-import process_aas                                       # noqa: E402
+from aas_model.id_injector import inject_ids            # noqa: E402
+from processes.cartridge_3ml_on_filling_line import cartridge_3ml_on_filling_line            # noqa: E402
+from processes.prefilled_syringe_1ml_on_filling_line import prefilled_syringe_1ml_on_filling_line  # noqa: E402
+from processes.vial_2ml_on_filling_line import vial_2ml_on_filling_line                      # noqa: E402
+from products.cartridge_3ml import cartridge_3ml        # noqa: E402
+from products.prefilled_syringe_1ml import prefilled_syringe_1ml  # noqa: E402
+from products.vial_2ml import vial_2ml                  # noqa: E402
 
-# The resources of the example line, in the order a vial passes them.
+# The resources of the example line, in the order a product passes them.
 RESOURCES = [SPECS / "filling.yaml", SPECS / "stoppering.yaml", SPECS / "planned" / "capping.yaml",
              SPECS / "planned" / "inspection.yaml"]
 
 
-# The line: what it is called, and the modules a vial passes that are not described yet (each has a
+# The products made on the line, and the process of each on it (written out in Python).
+PRODUCTS = [vial_2ml, prefilled_syringe_1ml, cartridge_3ml]
+PROCESSES = [vial_2ml_on_filling_line, prefilled_syringe_1ml_on_filling_line, cartridge_3ml_on_filling_line]
+# The xbots on the planar table.
+SHUTTLES = (1, 2, 3)
+
+# The line: what it is called, and the modules a product passes that are not described yet (each has a
 # Kuka robot and a gripper, and a Raspberry Pi of its own).
 LINE = "FillingLine"
 BEFORE, AFTER = ["LoadingModule"], ["UnloadingModule"]
@@ -95,10 +112,21 @@ def components() -> dict[str, dict]:
 
 
 @functools.lru_cache(maxsize=None)
+def planar_table() -> tuple[dict, ...]:
+    """The AASs of the planar table (4 x 3 flyways), whose base is the root of the line's
+    coordinates, and of its shuttles, as the controller would describe them (``modreg profile
+    planar``). The table's is the first."""
+    return tuple(model.build(found) for found in planar.describe_all(planar.Table(columns=4, rows=3, shuttles=SHUTTLES)))
+
+
 def table() -> dict:
-    """The AAS of the planar table (4 x 3 flyways), whose base is the root of the line's coordinates.
-    Its shuttles are not described here: they come from the controller (``modreg profile planar``)."""
-    return model.build(planar.describe_all(planar.Table(columns=4, rows=3, shuttles=()))[0])
+    """The AAS of the planar table."""
+    return planar_table()[0]
+
+
+def shuttles() -> dict[str, dict]:
+    """The AASs of the shuttles on the table, by idShort."""
+    return {plan_check.shell_of(env)["idShort"]: env for env in planar_table()[1:]}
 
 
 def table_base() -> tuple[str, str]:
@@ -151,13 +179,18 @@ def stations(envs: list[dict]) -> dict[str, tuple[float, float, float]]:
     return found
 
 
-def product_profiles() -> dict[str, dict]:
-    """The profiles of the products in this folder, by the idShort of their AAS."""
+def asset_id(asset) -> str:
+    """The asset of a product or a process: ``<base>/assets/<idShort without AAS>``."""
+    return f"{BASE_URL}/assets/{asset.id_short.removesuffix('AAS')}"
+
+
+def products() -> dict[str, dict]:
+    """The AASs of the products, by idShort."""
     found = {}
-    for path in sorted(HERE.glob("*.json")):
-        profile = json.loads(path.read_text(encoding="utf-8"))
-        if profile.get("aas_type") in ("Product", "ProductTypeAAS"):
-            found[profile["id_short"]] = profile
+    for make in PRODUCTS:
+        asset = make()
+        inject_ids(asset)
+        found[asset.id_short] = model.environment(asset, asset_id(asset))
     return found
 
 
@@ -170,15 +203,29 @@ def build() -> tuple[dict[str, dict], dict[str, dict]]:
         name = plan_check.shell_of(env)["assetInformation"]["globalAssetId"].rsplit("/", 1)[-1]
         env = place(env, "ModuleBase", table_base(), LAYOUT[name])
         resources[plan_check.shell_of(env)["idShort"]] = env
-    products = {name: model.build(profile) for name, profile in product_profiles().items()}
-    return resources, products
+    return resources, products()
 
 
-def processes(resources: dict[str, dict], products: dict[str, dict], system: dict) -> dict[str, dict]:
-    """The process AAS of every product on the line, by idShort: its recipe bound to the resources,
-    with what the plan check found."""
-    made = [process_aas.process(env, system, plan_check.check(env, resources)) for env in products.values()]
-    return {plan_check.shell_of(env)["idShort"]: env for env in made}
+class ValidationError(ValueError):
+    """A process AAS says its recipe fits the line, and it does not (or the other way round)."""
+
+
+def processes(resources: dict[str, dict], products: dict[str, dict]) -> dict[str, dict]:
+    """The process AAS of every product on the line, by idShort; each checked: what its Validation
+    says has to be what the plan check finds."""
+    found = {}
+    for make in PROCESSES:
+        asset = make()
+        inject_ids(asset)
+        env = model.environment(asset, asset_id(asset))
+        product = next(p for p in products.values()
+                       if plan_check.shell_of(p)["id"] == asset.process_information.Product.value.key[0].value)
+        findings = plan_check.check_process(product, env, resources)
+        stated = (asset.validation.Result.value, [item.value for item in asset.validation.Findings.value])
+        if stated != ("DoesNotFit" if findings else "Fits", findings):
+            raise ValidationError(f"{asset.id_short} says {stated}, the plan check finds {findings or 'that it fits'}")
+        found[asset.id_short] = env
+    return found
 
 
 def main(argv=None) -> int:
@@ -187,25 +234,17 @@ def main(argv=None) -> int:
     parser.add_argument("--publish", metavar="URL", help="AAS server to send them to, e.g. http://localhost:8081")
     args = parser.parse_args(argv)
 
-    resources, products = build()
-    broken = {name: found for name, env in products.items() if (found := plan_check.check(env, resources))}
+    resources, made = build()
     system = line(resources)
-    everything = {plan_check.shell_of(system)["idShort"]: system, plan_check.shell_of(table())["idShort"]: table(),
-                  **resources, **components(), **products,
-                  **processes(resources, products, system)}
+    everything = {plan_check.shell_of(system)["idShort"]: system, **{plan_check.shell_of(env)["idShort"]: env for env in planar_table()},
+                  **resources, **components(), **made, **processes(resources, made)}
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     for name, env in everything.items():
         (out / f"{name}.json").write_text(json.dumps(env, indent=1), encoding="utf-8")
         print(f"{name}: {len(env['submodels'])} submodels -> {out / (name + '.json')}")
-    for name, found in broken.items():
-        for told in found:
-            print(f"  {name}: {told}")
-    if broken:
-        print("not published: a plan does not fit its resources" if args.publish else "a plan does not fit its resources")
-        return 1
-    print(f"every plan fits its resources ({len(products)} product(s), {len(resources)} modules, "
-          f"{len(components())} components, 1 line, 1 table)")
+    print(f"every process fits the line ({len(PROCESSES)} processes of {len(made)} products; {len(resources)} modules, "
+          f"{len(components())} components, 1 line, 1 table, {len(SHUTTLES)} shuttles)")
     if args.publish:
         server = AasServer(args.publish)
         for name, env in everything.items():
