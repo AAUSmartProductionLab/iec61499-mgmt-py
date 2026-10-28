@@ -227,6 +227,8 @@ class Registry:
         skill of its name."""
         from modplan.check import check                    # the planning extra
         from modplan.read import read
+        if edited is not None and not (isinstance(edited, dict) and edited.get("idShort")):
+            raise Refused(400, "check", ["the skill to check is an element of the Skills submodel, with its idShort"])
         module, components = self.module(shell, "check")
         if edited is not None:
             module = copy.deepcopy(module)
