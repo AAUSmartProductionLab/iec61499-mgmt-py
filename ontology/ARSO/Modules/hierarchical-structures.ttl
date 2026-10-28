@@ -11,6 +11,7 @@
 # HierarchicalStructures (Submodel)
 #   ├─ EntryNode [Entity, 1] — root of BoM tree
 #   │    ├─ Node [Entity, 1..*] (recursive)
+#   │    │    └─ Frame [SMC, 0..1] — where the part is in its parent (v0.12): X, Y, Z, RX, RY, RZ
 #   │    ├─ SameAs [RelationshipElement, 0..*]
 #   │    ├─ IsPartOf [RelationshipElement, 0..*] XOR
 #   │    └─ HasPart [RelationshipElement, 0..*]
@@ -130,6 +131,48 @@ arso:BulkCountProperty rdf:type owl:Class ;
 
 
 #################################################################
+# ELEMENT TYPES — Where a part is (v0.12; docs/locations-and-layout.md)
+#
+# A Node says where its part is in the frame of what it is a part of (the EntryNode's asset): a
+# module's components in the module, a line's modules in the line. A Node of the entity type
+# CoManagedEntity with a meaning (supplemental semanticId: a point of the vocabulary) and a Frame
+# is a point of interest: where a shuttle stands to have its container filled, where a robot picks.
+# Poses compose along the tree, so a point is known in any frame the tree reaches.
+#################################################################
+
+arso:FrameSMC rdf:type owl:Class ;
+  rdfs:subClassOf aas:SubmodelElementCollection ;
+  arso:parentClass arso:NodeEntity ;
+  arso:idShort "Frame" ;
+  arso:semanticId "https://smartproductionlab.aau.dk/ARSO/Frame/1/0" ;
+  rdfs:comment "SMC Frame — in a Node's statements: the pose of the part's frame in its parent's frame, as AutomationML's Frame attribute (IEC 62714): a translation X, Y, Z and rotations RX, RY, RZ about the parent's axes, each Property with its unit (qualifier Unit: mm, deg)." .
+
+arso:FrameXProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:FrameSMC ;
+  arso:idShort "X" ; arso:semanticId "https://admin-shell.io/idta/cds/xframe/1" ;
+  rdfs:comment "Property X (xs:double) — the translation along the parent's X axis (IDTA 02075 xframe)." .
+
+arso:FrameYProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:FrameSMC ;
+  arso:idShort "Y" ; arso:semanticId "https://admin-shell.io/idta/cds/yframe/1" ;
+  rdfs:comment "Property Y (xs:double) — the translation along the parent's Y axis (IDTA 02075 yframe)." .
+
+arso:FrameZProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:FrameSMC ;
+  arso:idShort "Z" ; arso:semanticId "https://admin-shell.io/idta/cds/zframe/1" ;
+  rdfs:comment "Property Z (xs:double) — the translation along the parent's Z axis (IDTA 02075 zframe)." .
+
+arso:FrameRXProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:FrameSMC ;
+  arso:idShort "RX" ; arso:semanticId "https://admin-shell.io/idta/cds/rxframe/1" ;
+  rdfs:comment "Property RX (xs:double) — the rotation about the parent's X axis (IDTA 02075 rxframe)." .
+
+arso:FrameRYProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:FrameSMC ;
+  arso:idShort "RY" ; arso:semanticId "https://admin-shell.io/idta/cds/ryframe/1" ;
+  rdfs:comment "Property RY (xs:double) — the rotation about the parent's Y axis (IDTA 02075 ryframe)." .
+
+arso:FrameRZProperty rdf:type owl:Class ; rdfs:subClassOf aas:Property ; arso:parentClass arso:FrameSMC ;
+  arso:idShort "RZ" ; arso:semanticId "https://admin-shell.io/idta/cds/rzframe/1" ;
+  rdfs:comment "Property RZ (xs:double) — the rotation about the parent's Z axis (IDTA 02075 rzframe)." .
+
+
+#################################################################
 # CONTAINMENT CONSTRAINTS
 #################################################################
 
@@ -158,3 +201,24 @@ arso:NodeEntity rdfs:subClassOf [
   owl:onProperty <https://admin-shell.io/aas/3/1/Entity/statements> ;
   owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
   owl:onClass arso:BulkCountProperty ] .
+
+# ... and one Frame at most (v0.12), which has each of its six values once
+arso:NodeEntity rdfs:subClassOf [
+  rdf:type owl:Restriction ;
+  owl:onProperty <https://admin-shell.io/aas/3/1/Entity/statements> ;
+  owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+  owl:onClass arso:FrameSMC ] .
+
+arso:FrameSMC rdfs:subClassOf
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:FrameXProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:FrameYProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:FrameZProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:FrameRXProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:FrameRYProperty ],
+  [ rdf:type owl:Restriction ; owl:onProperty <https://admin-shell.io/aas/3/1/SubmodelElementCollection/value> ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass arso:FrameRZProperty ] .
