@@ -18,6 +18,32 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
+- **Proposed (the user's whiteboard): coordinates as a transform tree in the operational data,
+  instead of frames on Hierarchical Structures nodes.** *Journal.* Under evaluation, not built.
+  - **Structure:**
+    - a `Measurements` collection holding `Coordinates`;
+    - each coordinate holds a reference to the coordinate it is relative to, and x, y, z, roll,
+      pitch, yaw;
+    - the semantic id says *Coordinate*; a supplemental id gives its meaning (end effector, top of
+      vial).
+  - **Why better than frames on nodes:**
+    - The parent is a reference, not the part-of tree, so a product can sit on a fixture on a
+      shuttle without being part of it, and be re-parented as it moves.
+    - Coordinates that move (the needle, a shuttle) live with the other live data.
+    - IDTA 02011 is no longer extended.
+  - **Pitfalls to settle:**
+    - Live values are not streamed into the AAS: a moving coordinate names the signal it follows,
+      as data points do through the mapping.
+    - A moving coordinate should change only in its joint: a fixed mount, then the moving part
+      relative to it.
+    - The rotation order and the units must be stated (roll, pitch, yaw about fixed axes,
+      Rz·Ry·Rx, as ROS and `modreg/frames.py` already take it).
+    - Each coordinate lives in the AAS of the asset it belongs to; references across AASs must
+      resolve.
+    - The tree must have one root (the table) and no cycles: a check.
+    - Fixed poses under "Measurements" mislabel configuration as measurement.
+    - "Variables" (aas-model) or Operational Data (ours) must be chosen.
+
 - **No building, no hall, no IDTA 02045: the line is the root of all locations.** *Journal.*
   Decided by the user, overriding the entry below: the site level is not needed.
 - **The frame on a Hierarchical Structures node extends IDTA 02011.** *Journal.*
