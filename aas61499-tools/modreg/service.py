@@ -21,6 +21,12 @@ HTTP (JSON):
     DELETE /profiles/<idShort>  forget a resource (and remove its AAS from the server)
     POST   /capabilities/<shell>  derive a module's offered capabilities anew from its skills, on the
                                   AAS server, and put them back (the skill editor, after saving)
+    POST   /check/<shell>       the checker's findings on the module's skills (modplan); the body may
+                                hold {"skill": <a skill element as the editor has it>}, checked in its
+                                place
+    POST   /plan/<shell>        plan a skill: {"capability": "Filling", "values": {"FillVolume": 2.0},
+                                "results": ["FillWeight"], "name": "FillTwo", "write": true}; the steps
+                                and the flow, and with write the skill described on the AAS server
     GET    /build/<idShort>     the record of what was built on a module (a Control Configuration
     PUT    /build/<idShort>     submodel, kept here and not in the AAS: ARSO 0.10); modsync writes it
     GET    /health
@@ -28,6 +34,7 @@ HTTP (JSON):
 from __future__ import annotations
 
 import base64
+import copy
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 import hashlib
@@ -204,6 +211,63 @@ class Registry:
                              if q["type"] in ("Derived", "Availability")}})
         return {"shell": derived["assetAdministrationShells"][0]["idShort"], "stored": stored, "capabilities": found}
 
+    def module(self, shell: str, step: str) -> tuple[dict, list[dict]]:
+        """A module's AAS and its components' from the AAS server."""
+        if self.server is None:
+            raise Refused(400, step, ["the service has no AAS server (--basyx) to read the module from"])
+        try:
+            return desired.load(self.server.url, shell)
+        except desired.NotDescribed as e:
+            raise Refused(404, step, [str(e)]) from e
+
+    def check_skills(self, shell: str, edited: dict | None = None) -> dict:
+        """What does not hold in the module level skills of a module on the AAS server, run through
+        the states (``modplan.check``): per skill, each finding with the skills that would fix it.
+        ``edited`` is a skill as the editor holds it, not saved yet: it is checked in place of the
+        skill of its name."""
+        from modplan.check import check                    # the planning extra
+        from modplan.read import read
+        module, components = self.module(shell, "check")
+        if edited is not None:
+            module = copy.deepcopy(module)
+            skills = desired.submodel(module, "Skills")
+            elements = skills.setdefault("submodelElements", [])
+            elements[:] = [e for e in elements if e.get("idShort") != edited.get("idShort")] + [edited]
+        try:
+            domain, composites = read(module, components), desired.described(module, components).composites
+        except (desired.NotDescribed, ValueError, KeyError) as e:
+            raise Refused(422, "check", [str(e)]) from e
+        names = [edited["idShort"]] if edited is not None else list(composites)
+        return {"shell": shell, "skills": {name: [asdict(f) for f in check(domain, composites[name])] for name in names}}
+
+    def plan(self, shell: str, request: dict) -> dict:
+        """A new module level skill planned for a capability of a module on the AAS server
+        (``modplan``): its steps and its flow; with ``write`` the skill described on the server, as
+        the skill editor saves one (``modsync reconfigure`` builds it)."""
+        from modplan.compose import compose                # the planning extra
+        from modplan.lift import flow
+        from modplan.plan import NoPlan, plan
+        from modplan.read import read
+        capability, values = request.get("capability"), request.get("values") or {}
+        results = tuple(request.get("results") or ())
+        if not capability:
+            raise Refused(400, "plan", ["name the capability to plan"])
+        module, components = self.module(shell, "plan")
+        try:
+            domain = read(module, components)
+            steps = plan(domain, capability, values, results)
+            found = {"shell": shell, "capability": capability, "flow": flow(domain, steps),
+                     "steps": [{"skill": domain.capabilities[s.capability].skill, "capability": s.capability,
+                                "component": domain.capabilities[s.capability].component, "args": s.args} for s in steps]}
+            if request.get("write"):
+                composed = compose(module, components, capability, values, results, request.get("name"))
+                found.update(name=composed.name, stored=desired.store(self.server.url, composed.module, module))
+        except NoPlan as e:
+            raise Refused(422, "plan", [str(e)]) from e
+        except (desired.NotDescribed, ValueError) as e:
+            raise Refused(422, "plan", [str(e)]) from e
+        return found
+
     def keep_build(self, id_short: str, record: dict) -> None:
         """Keep the record of what was built on a module (``modsync``'s record)."""
         if not isinstance(record, dict) or record.get("modelType") != "Submodel":
@@ -261,6 +325,11 @@ class Handler(BaseHTTPRequestHandler):
                                          "aas_server": r.server.url if r.server else None})
             if method == "POST" and parts[:1] == ["capabilities"] and len(parts) == 2:
                 return self.answer(200, self.registry.derive(urllib.parse.unquote(parts[1])))
+            if method == "POST" and parts[:1] == ["check"] and len(parts) == 2:
+                given = self.body() if int(self.headers.get("Content-Length") or 0) else {}
+                return self.answer(200, self.registry.check_skills(urllib.parse.unquote(parts[1]), given.get("skill")))
+            if method == "POST" and parts[:1] == ["plan"] and len(parts) == 2:
+                return self.answer(200, self.registry.plan(urllib.parse.unquote(parts[1]), self.body()))
             if parts[:1] == ["build"] and len(parts) == 2:
                 if method == "GET":
                     found = self.registry.read(parts[1], "build")

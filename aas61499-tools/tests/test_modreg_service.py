@@ -259,3 +259,47 @@ def test_modsync_registers_the_module_it_describes(service, aas_server, tmp_path
     assert sorted(r["id_short"] for r in registry.registrations()) == [
         "StopperingLinearAxisAAS", "StopperingModuleAAS", "StopperingPistonAAS"]
     assert aas_server.calls[-1] == "POST shells"
+
+
+def post(url: str, body: dict | None = None):
+    request = urllib.request.Request(url, json.dumps(body).encode() if body is not None else b"", method="POST",
+                                     headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            return response.status, json.loads(response.read())
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read() or b"{}")
+
+
+def test_the_skill_editor_has_a_flow_checked_and_a_skill_planned(service, aas_server):
+    """The editor's two questions (G7): what does not hold in a flow it holds, saved or not, and
+    which skill carries out a capability, described on the AAS server when asked to."""
+    pytest.importorskip("gtpyhop")
+    url, _ = service
+    for profile in profiles.describe_all(load(SPECS / "filling.yaml"), "pi"):
+        assert send(url, profile)[0] == 201
+    status, answer = post(f"{url}/check/FillingModuleAAS")
+    assert status == 200 and answer["skills"] == {"Dispensing": []}
+    # Dispensing as the editor holds it, without its first step (the needle down): dispensing then
+    # happens with the needle up, which the checker says, with what would fix it.
+    skills_id = f"{profiles.identity(load(SPECS / 'filling.yaml'))[1]}/submodels/Skills"
+    dispensing = next(e for e in aas_server.items[("submodels", b64(skills_id))]["submodelElements"]
+                      if e["idShort"] == "Dispensing")
+    edited = json.loads(json.dumps(dispensing))
+    steps = next(c for c in next(c for c in edited["value"] if c["idShort"] == "Start")["value"] if c["idShort"] == "Steps")
+    steps["value"] = [s for s in steps["value"]
+                      if not any(c["idShort"] == "Name" and c.get("value") == "NeedleDown" for c in s["value"])]
+    status, answer = post(f"{url}/check/FillingModuleAAS", {"skill": edited})
+    assert status == 200 and list(answer["skills"]) == ["Dispensing"]
+    [finding] = answer["skills"]["Dispensing"]
+    assert finding["step"] == "Dispense" and finding["what"] == "needs LinearAxis_ActualPosition.Position = 40.0, but it is 0.0"
+    assert finding["fix"] == ["MoveAxis(Position=40.0)"]
+    # A skill planned and described on the server, then checked there with the others.
+    status, answer = post(f"{url}/plan/FillingModuleAAS", {"capability": "Filling", "values": {"FillVolume": 2.0},
+                                                          "results": ["FillWeight"], "name": "FillTwo", "write": True})
+    assert status == 200 and [s["skill"] for s in answer["steps"]] == ["MoveAxis", "Dispense", "Home", "Weigh"]
+    assert answer["name"] == "FillTwo" and answer["stored"].endswith("Skills")
+    status, answer = post(f"{url}/check/FillingModuleAAS")
+    assert answer["skills"] == {"Dispensing": [], "FillTwo": []}
+    assert post(f"{url}/plan/FillingModuleAAS", {"capability": "Filling", "values": {"FillVolume": 2.0},
+                                                 "results": ["Nothing"]})[0] == 422
