@@ -39,11 +39,14 @@
 # 0.4 (28 Oct): Transporting, what a shuttle of the planar table does,
 # and Flyway, a tile of the table, the meaning of a part of the table's
 # layout.
+#
+# 0.5 (28 Oct): what a coordinate is of (ARSO 0.13): the table's base,
+# a module's base, a mount, an end effector, a mover.
 #################################################################
 
 <https://smartproductionlab.aau.dk/semantics>
   rdf:type owl:Ontology ;
-  owl:versionInfo "0.4" ;
+  owl:versionInfo "0.5" ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://w3id.org/2025/pprl> ;
   rdfs:comment "Capabilities and capability properties of aseptic filling lines for vials, prefilled syringes and cartridges (AAU Smart Production Lab)." .
@@ -272,10 +275,10 @@ lab:InspectionMethod rdf:type owl:Class ; rdfs:subClassOf css:Property ;
 # Points of interest of a module (0.3)
 #
 # A point is a place on a module where something happens to a product:
-# a Node of the module's Hierarchical Structures (a CoManagedEntity with
-# a Frame, ARSO 0.12) whose supplemental semanticId is one of these.
-# Its pose in the line, or in the planar table's frame, follows from the
-# frames along the tree (modreg/frames.py).
+# a coordinate of the module's Operational Data (ARSO 0.13), relative to
+# the module's base, whose supplemental semanticId is one of these. Its
+# pose in the planar table's frame follows from the coordinates it is
+# relative to (modreg/frames.py).
 #################################################################
 
 lab:PointOfInterest rdf:type owl:Class ;
@@ -305,4 +308,33 @@ lab:PlacePoint rdf:type owl:Class ; rdfs:subClassOf lab:PointOfInterest ;
 
 lab:Flyway rdf:type owl:Class ;
   rdfs:label "Flyway" ;
-  rdfs:comment "A tile of a planar motor table, 240 mm square, that the shuttles levitate over: a co-managed Node of the table's Hierarchical Structures, its Frame at the tile's centre in the table's frame. The flyways that are there are the table's layout; a place without one is a hole." .
+  rdfs:comment "A tile of a planar motor table, 240 mm square, that the shuttles levitate over: a co-managed Node of the table's Hierarchical Structures, and a coordinate at the tile's centre relative to the table's base. The flyways that are there are the table's layout; a place without one is a hole." .
+
+
+#################################################################
+# What a coordinate is of (0.5)
+#
+# A coordinate (ARSO 0.13) says where something is relative to another
+# coordinate; these are its meanings, besides the points of interest
+# and the flyways. The tree is rooted at the planar table's base.
+#################################################################
+
+lab:TableBase rdf:type owl:Class ;
+  rdfs:label "Table base" ;
+  rdfs:comment "The origin of the planar table, the corner its shuttles' positions are measured from: the root of the coordinates of a line." .
+
+lab:ModuleBase rdf:type owl:Class ;
+  rdfs:label "Module base" ;
+  rdfs:comment "The origin of a module: the middle of its front, at the table's height, Y out of the front, Z up. Its points and mounts are relative to it." .
+
+lab:Mount rdf:type owl:Class ;
+  rdfs:label "Mount" ;
+  rdfs:comment "Where a moving part is fixed to its module, as it stands at its zero: the coordinate the moving part's own coordinate is relative to." .
+
+lab:EndEffector rdf:type owl:Class ;
+  rdfs:label "End effector" ;
+  rdfs:comment "The tool point of a moving part (the needle's tip, the press head, a gripper): relative to its mount, the value that moves following the part's measured position." .
+
+lab:Mover rdf:type owl:Class ;
+  rdfs:label "Mover" ;
+  rdfs:comment "A shuttle of the planar table (an xbot): relative to the table's base, its X, Y and Yaw following the controller's measured pose." .

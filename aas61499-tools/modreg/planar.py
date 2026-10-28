@@ -11,8 +11,10 @@ describes a FORTE module, from a module spec made here:
   data (Equipment/Xbot/X, Y, Rz).
 - ``PlanarTableAAS``, the table: its own commands (its Reset, Start, Stop, Abort and Clear reach the
   shuttles), whether the PMC is connected, and in its Hierarchical Structures the shuttles (each
-  found by its asset id) and the flyways (co-managed, meaning Flyway, each with its Frame at its
-  centre: the layout a configurator draws).
+  found by its asset id) and the flyways (co-managed, meaning Flyway). Its coordinates (ARSO 0.13)
+  are the root of a line's: the table's base, and each flyway's centre relative to it (the layout a
+  configurator draws). A shuttle's coordinate, its xbot, is relative to the table's base and follows
+  the pose the controller measures (Equipment/Xbot/X, Y, Rz).
 
 Nothing of it is FORTE's: no rule set and no record of a program. The errors are the module
 rules' and the controller's own (planar/statemachines.py).
@@ -37,7 +39,8 @@ from modgen.spec import Location, ModuleSpec, Parameter, Skill
 
 from . import model
 from .generated import skills as arso
-from .profile import Describer, frame, meaning, prop
+from .generated import operational_data as od
+from .profile import Describer, coordinate, coordinate_ref, meaning, prop
 
 NAMESPACE = "urn:aau:smartproductionlab:planar"
 TABLE = "PlanarTable"
@@ -142,26 +145,50 @@ class PlanarDescriber(Describer):
         return built
 
 
-def flyway(column: int, row: int, size: float = FLYWAY) -> model.LocatedNode:
+def flyway(column: int, row: int) -> model.LocatedNode:
+    """A flyway, a part of the table (its coordinate is in the table's Operational Data)."""
     return model.LocatedNode(id_short=f"Flyway_{column}_{row}", entity_type="CoManagedEntity", global_asset_id="",
                              supplemental_semantic_ids=[meaning("Flyway")],
-                             description=f"Flyway in column {column}, row {row}",
-                             Frame=frame(Location(x=(column + 0.5) * size, y=(row + 0.5) * size)))
+                             description=f"Flyway in column {column}, row {row}")
+
+
+def table_coordinates(table: Table) -> od.Measurements:
+    """The table's base, the root of a line's coordinates (ARSO 0.13), and each flyway's centre
+    relative to it."""
+    base = coordinate_ref("TableBase")
+    found = {"TableBase": coordinate("TableBase", "TableBase",
+                                     description="The corner of the table the shuttles' positions are measured from")}
+    for column, row in table.flyways:
+        name = f"Flyway_{column}_{row}"
+        found[name] = coordinate(name, "Flyway", Location(x=(column + 0.5) * table.flyway, y=(row + 0.5) * table.flyway),
+                                 base, description=f"The centre of the flyway in column {column}, row {row}")
+    return od.Measurements(Coordinates=od.Coordinates(Coordinate=found))
+
+
+def shuttle_coordinates(table_aas: str) -> od.Measurements:
+    """The xbot, relative to the table's base (``table_aas``: the table's AAS id): its X, Y and
+    Yaw follow the pose the controller measures."""
+    return od.Measurements(Coordinates=od.Coordinates(Coordinate={"Xbot": coordinate(
+        "Xbot", "Mover", None, coordinate_ref("TableBase", table_aas),
+        {"X": "Xbot_X", "Y": "Xbot_Y", "Yaw": "Xbot_Rz"}, description="Where the xbot is on the table")}))
 
 
 def describe_all(table: Table) -> list[dict]:
     """The profiles of the table (the first), then of each shuttle and its xbot."""
     built = PlanarDescriber(table_spec(), table, "Planar table (Planar Motor), through the planar controller").build()
     module = built[0][0]
+    module.operational_data.Measurements = table_coordinates(table)
     nodes = module.hierarchical_structures.EntryNode.Node
     for n in table.shuttles:
         nodes[shuttle(n)] = model.LocatedNode(id_short=shuttle(n), entity_type="SelfManagedEntity",
                                               global_asset_id=asset(shuttle(n)),
                                               description=f"Shuttle {n}: an xbot, occupied and moved on its own")
     for column, row in table.flyways:
-        nodes[f"Flyway_{column}_{row}"] = flyway(column, row, table.flyway)
+        nodes[f"Flyway_{column}_{row}"] = flyway(column, row)
     for n in table.shuttles:
-        built += PlanarDescriber(shuttle_spec(n), table, f"Shuttle {n} of the planar table (an xbot)").build()
+        made = PlanarDescriber(shuttle_spec(n), table, f"Shuttle {n} of the planar table (an xbot)").build()
+        made[0][0].operational_data.Measurements = shuttle_coordinates(module.id)
+        built += made
     return [model.profile(found, global_asset_id=asset_id) for found, asset_id in built]
 
 

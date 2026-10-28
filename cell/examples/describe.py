@@ -80,13 +80,6 @@ classDiagram
     <<Entity>>
     idShort
     globalAssetId of its AAS
-    Frame: X Y Z RX RY RZ
-  }
-  class Point {
-    <<Entity, co-managed>>
-    idShort
-    meaning: TransferPoint ...
-    Frame: X Y Z RX RY RZ
   }
   class AssetInterfacesDescription {
     <<IDTA 02017>>
@@ -173,6 +166,13 @@ classDiagram
     value (decimal)
     semanticId
   }
+  class Coordinate {
+    <<ARSO 0.13, Measurements/Coordinates>>
+    meaning: ModuleBase, Mount, EndEffector, TransferPoint ...
+    RelativeTo: another coordinate
+    X Y Z mm, Roll Pitch Yaw deg
+    XSource ... YawSource: a data point
+  }
 
   ModuleAAS *-- Nameplate
   ModuleAAS *-- HierarchicalStructures
@@ -182,7 +182,6 @@ classDiagram
   ModuleAAS *-- Skills
   ModuleAAS *-- OperationalData
   HierarchicalStructures *-- "0..*" Part
-  HierarchicalStructures *-- "0..*" Point
   AssetInterfacesDescription *-- "1" Interface
   Interface *-- "0..*" Action
   Interface *-- "0..*" InterfaceProperty
@@ -197,6 +196,9 @@ classDiagram
   Operation *-- "2..*" Variable
   Command *-- "0..*" Step : Steps
   OperationalData *-- "1..*" DataPoint
+  OperationalData *-- "1..*" Coordinate
+  Coordinate --> Coordinate : RelativeTo
+  Coordinate --> DataPoint : follows
 ```'''
 
 RESOURCE_LINKS = '''```mermaid
@@ -406,15 +408,26 @@ def skills_in(held: dict | None) -> list[dict]:
     return [s for s in children(held) if semantic_ids(s)[:1] == [SKILL]]
 
 
-def placed(node: dict) -> str:
-    """Where a part or a point is in its parent's frame (ARSO 0.12): mm, and the rotations in degrees
-    that are not zero."""
-    frame = at(node, "Frame")
-    if frame is None:
+def placed(coordinate: dict | None) -> str:
+    """Where a coordinate is (ARSO 0.13): mm, the rotations in degrees that are not zero, what it is
+    relative to and the data points it follows."""
+    if coordinate is None:
         return ""
-    value = lambda name: float(at(frame, name)["value"])                                  # noqa: E731
-    turned = [f"{name} {value(name):g}" for name in ("RX", "RY", "RZ") if value(name)]
-    return f" at ({value('X'):g}, {value('Y'):g}, {value('Z'):g})" + "".join(f", {r}" for r in turned)
+    value = lambda name: float(at(coordinate, name)["value"])                             # noqa: E731
+    turned = [f"{name} {value(name):g}" for name in ("Roll", "Pitch", "Yaw") if value(name)]
+    parent = at(coordinate, "RelativeTo")
+    follows = [f"{e['idShort'][:-len('Source')]} = {last(e['value'])}" for e in children(coordinate) if e["idShort"].endswith("Source")]
+    return (f" at ({value('X'):g}, {value('Y'):g}, {value('Z'):g})" + "".join(f", {r}" for r in turned)
+            + (f" relative to {last(parent['value'])}" if parent else "") + (f", {', '.join(follows)}" if follows else ""))
+
+
+def coordinates_of(env: dict | None) -> dict[str, dict]:
+    found = at(submodel(env, "OperationalData") or {}, "Measurements", "Coordinates") if env else None
+    return {c["idShort"]: c for c in children(found)} if found else {}
+
+
+def meant(coordinate: dict) -> str:
+    return (semantic_ids(coordinate)[1:] or ["/"])[-1].rsplit("/", 1)[-1]
 
 
 def kind_of(skill: dict) -> str:
@@ -427,7 +440,7 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
     name = shell["idShort"]
     structure = at(submodel(env, "HierarchicalStructures"), "EntryNode")
     parts = children(structure)
-    points = [n for n in parts if n.get("entityType") == "CoManagedEntity" and n.get("supplementalSemanticIds")]
+    points = coordinates_of(env)
     by_asset = {shell_of(c)["assetInformation"]["globalAssetId"]: c for c in components.values()}
     own = {p["idShort"]: by_asset[p["globalAssetId"]] for p in parts if p.get("globalAssetId") in by_asset}
     envs = [env, *own.values()]
@@ -488,13 +501,13 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
                                  for item, c in parts) + ".")
     commands = [c["idShort"] + (f" ({' → '.join(ran(envs, at(c, 'Start')))})" if ran(envs, at(c, "Start")) else "") for c in control]
     lines += [f"- **The module's own commands** (skills of the kind ModuleControl): {', '.join(commands)}.",
-              "- **Components:** " + (", ".join(part + " → `" + shell_of(c)["idShort"] + "`" + placed(at(structure, part))
-                                                for part, c in own.items()) or "none") + ".",
-              *([f"- **Points** (in the module's frame, mm and degrees): "
-                 + "; ".join(f"{n['idShort']} ({semantic_ids(n)[-1].rsplit('/', 1)[-1]}){placed(n)}" for n in points) + "."] if points else []),
+              "- **Components:** " + (", ".join(part + " → `" + shell_of(c)["idShort"] + "`" for part, c in own.items()) or "none") + ".",
+              *([f"- **Coordinates** (Operational Data, mm and degrees): "
+                 + "; ".join(f"{name}" + (f" ({meant(c)})" if meant(c) else "") + placed(c) for name, c in points.items()) + "."]
+                if points else []),
               f"- **Interface:** OPC UA at `{at(submodel(env, 'AssetInterfacesDescription'), 'interface_opcua', 'EndpointMetadata', 'base')['value']}`, "
               f"{len(children(at(interface, 'actions')))} actions and {len(children(at(interface, 'properties')))} properties; "
-              f"{len(children(submodel(env, 'OperationalData')))} data points; "
+              f"{sum(e.get('modelType') == 'Property' for e in children(submodel(env, 'OperationalData')))} data points; "
               f"{len(children(at(submodel(env, 'AssetInterfacesMappingConfiguration'), 'MappingConfigurations')))} mappings.",
               f"- **Program:** built by the rule set `{at(skills_sm, 'RuleSet')['value']}`; module level skills "
               + ", ".join(f"{s['idShort']} {at(s, 'Deployment')['value'].lower()}" for s in composites if at(s, "Deployment"))
@@ -586,12 +599,12 @@ def document() -> str:
         "```",
         shell_of(system)["idShort"],
     ]
+    for name, c in coordinates_of(system).items():
+        lines.append(f"  point {name} ({meant(c)}){placed(c)}")
     for part in children(at(system["submodels"][0], "EntryNode")):
-        if part.get("entityType") == "CoManagedEntity" and part.get("supplementalSemanticIds"):
-            lines.append(f"  point {part['idShort']} ({semantic_ids(part)[-1].rsplit('/', 1)[-1]}){placed(part)}")
-            continue
         module = by_asset.get(part["globalAssetId"])
-        lines.append(f"  {shell_of(module)['idShort'] if module else part['idShort'] + ' (not described yet)'}{placed(part)}")
+        lines.append(f"  {shell_of(module)['idShort'] if module else part['idShort'] + ' (not described yet)'}"
+                     f"{placed(coordinates_of(module).get('ModuleBase'))}")
         if module:
             composites = skills_in(submodel(module, "Skills"))
             lines += [f"    skill {signature(s)}" for s in composites]

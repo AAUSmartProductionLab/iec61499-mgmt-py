@@ -18,6 +18,23 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
+- **Coordinates built (ARSO 0.13, vocabulary 0.5).** *Journal.*
+  - What exists: modules (base, a mount and an end effector per axis, points), the table (base and
+    flyways), the shuttles (the xbot, following the controller's X, Y, Rz) and the line's points.
+    The example line places each module's base on the table, as a module will report it.
+  - **A moving part is a fixed mount plus the moving coordinate.** Then every moving value is a plain
+    data point (the end effector's Z is the axis' actual position), not an offset plus a signal, and
+    a time-series record of it is just that value.
+  - **The source of a moving value is a reference to the existing data point,** not a second
+    mapping in AIMC. A client needs nothing new to follow it.
+  - **No `History` segment yet:** it would be an empty container until the database exists.
+  - **Operational Data may now hold no data points:** the line's has only its points. The rule
+    requiring one was dropped.
+  - **A module described from its spec alone is not placed:** its base is the root of its own small
+    tree until `place` puts it on the table.
+  - **Products are not done.** A product's coordinate (relative to the xbot, or a fixture on it) is
+    instance data that changes at each handover. The product AAS (APSO) has no Operational Data
+    yet; it comes with the product instances.
 - **Coordinates: settled with the user.** *Journal.*
   - **One measurement series per coordinate,** in Operational Data's `Measurements`. It is shaped
     like every series of the plan of 26 Oct ([state-and-parameters.md](state-and-parameters.md),

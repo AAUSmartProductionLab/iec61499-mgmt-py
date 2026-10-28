@@ -12,7 +12,7 @@ import pytest
 from modsync.aasjson import at, children, submodel
 
 from modreg import model
-from modreg.frames import where
+from modreg.frames import chain, coordinates, where
 from modreg.ontology import Blueprint, check
 from modreg.planar import NotShown, Table, _read, describe_all
 
@@ -35,6 +35,11 @@ def test_the_table_lists_its_shuttles_and_its_flyways_with_where_they_are():
     assert len(flyways) == 11 and "Flyway_2_1" not in flyways                  # 4 x 3, the hole left out
     assert where(list(envs.values()), "PlanarTableAAS", "Flyway_3_2").position == (840.0, 600.0, 0.0)
     assert nodes["Flyway_0_0"]["supplementalSemanticIds"][0]["keys"][0]["value"].endswith("/semantics/Flyway")
+    # The table's base is the root; a shuttle's xbot is relative to it and follows the controller's pose.
+    assert chain(list(envs.values()), "PlanarShuttle1AAS", "Xbot") == [("PlanarShuttle1AAS", "Xbot"), ("PlanarTableAAS", "TableBase")]
+    xbot = coordinates(envs["PlanarShuttle1AAS"])["Xbot"]
+    assert {e["idShort"]: e["value"]["keys"][-1]["value"] for e in children(xbot) if e["idShort"].endswith("Source")} == {
+        "XSource": "Xbot_X", "YSource": "Xbot_Y", "YawSource": "Xbot_Rz"}
     # Nothing of a FORTE program: no rule set; the controller's own errors beside the rules'.
     skills = submodel(envs["PlanarShuttle1XbotAAS"], "Skills")
     assert at(submodel(envs["PlanarShuttle1AAS"], "Skills"), "RuleSet") is None
@@ -111,7 +116,7 @@ def test_the_line_runs_to_the_stations_its_aass_say(controllers):
     try:
         import example_line
         resources, _ = example_line.build()
-        places = example_line.stations([example_line.line(resources), *resources.values()])
+        places = example_line.stations([example_line.table(), example_line.line(resources), *resources.values()])
     finally:
         sys.path.remove(str(ROOT / "cell" / "examples"))
     # Three xbots on the flyway centres of the left column, fast moves: as the scenario's own test.

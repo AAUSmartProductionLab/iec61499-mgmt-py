@@ -221,61 +221,10 @@ class ModuleInterfaces(DmpAssetInterfacesDescription):
     InterfaceTemplateForOPCUA: Dict[str, DmpOpcuaInterface] = {"interface_opcua": DmpOpcuaInterface()}
 
 
-# The values of a Frame, with IDTA 02075's ids for AutomationML's frame attributes.
-class FrameX(Property):
-    id_short: AasIdString = "X"
-    semantic_id: str = "https://admin-shell.io/idta/cds/xframe/1"
-    value_type: str = "xs:double"
-
-
-class FrameY(Property):
-    id_short: AasIdString = "Y"
-    semantic_id: str = "https://admin-shell.io/idta/cds/yframe/1"
-    value_type: str = "xs:double"
-
-
-class FrameZ(Property):
-    id_short: AasIdString = "Z"
-    semantic_id: str = "https://admin-shell.io/idta/cds/zframe/1"
-    value_type: str = "xs:double"
-
-
-class FrameRX(Property):
-    id_short: AasIdString = "RX"
-    semantic_id: str = "https://admin-shell.io/idta/cds/rxframe/1"
-    value_type: str = "xs:double"
-
-
-class FrameRY(Property):
-    id_short: AasIdString = "RY"
-    semantic_id: str = "https://admin-shell.io/idta/cds/ryframe/1"
-    value_type: str = "xs:double"
-
-
-class FrameRZ(Property):
-    id_short: AasIdString = "RZ"
-    semantic_id: str = "https://admin-shell.io/idta/cds/rzframe/1"
-    value_type: str = "xs:double"
-
-
-class NodeFrame(SubmodelElementCollection):
-    """Where a part is in its parent's frame (ARSO 0.12): AutomationML's Frame attribute, with IDTA
-    02075's ids, each value with its unit."""
-    id_short: AasIdString = "Frame"
-    semantic_id: str = "https://smartproductionlab.aau.dk/ARSO/Frame/1/0"
-    description: str = "Where the part is in its parent's frame"
-    X: Optional[FrameX] = None
-    Y: Optional[FrameY] = None
-    Z: Optional[FrameZ] = None
-    RX: Optional[FrameRX] = None
-    RY: Optional[FrameRY] = None
-    RZ: Optional[FrameRZ] = None
-
-
 class LocatedNode(Node):
-    """A part, or a point of interest, with where it is (ARSO 0.12)."""
+    """A part of an asset, with the parts it has in turn. Where it is, is a coordinate of the
+    Operational Data (ARSO 0.13), not a statement of the Node."""
     Node: Dict[str, "LocatedNode"] = {}
-    Frame: Optional[NodeFrame] = None
 
 
 class LocatedEntryNode(EntryNode):
@@ -330,8 +279,10 @@ class ComponentTypeAAS(ArsoResource):
 
 
 class SystemTypeAAS(ArsoResource):
-    """AAS of a production system: the modules it is made of, each found by its asset id."""
+    """AAS of a production system: the modules it is made of, each found by its asset id, and the
+    coordinates of its own points (where its robots place and pick)."""
     hierarchical_structures: LocatedStructures = structure()
+    operational_data: Optional[OperationalData] = None
 
 
 # A plain ``Resource`` is what the lab's stations export (aas-model authors them as its subtypes).

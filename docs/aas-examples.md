@@ -17,8 +17,10 @@ from the module spec (`cell/modules`, `cell/modules/planned`), a product's profi
 
 ```
 FillingLineAAS
-  LoadingModule (not described yet) at (0, 180, 0), RZ -90
-  FillingModuleAAS at (240, 720, 0), RZ 180
+  point Infeed (PlacePoint) at (60, 180, 0) relative to TableBase
+  point Outfeed (PickPoint) at (660, 60, 0) relative to TableBase
+  LoadingModule (not described yet)
+  FillingModuleAAS at (240, 720, 0), Yaw 180 relative to TableBase
     skill Dispensing(Volume = 1.0 mL) → Weight [g]
     skill Occupy()
     skill Release()
@@ -30,7 +32,7 @@ FillingLineAAS
     FillingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
     FillingPumpAAS: Dispense(Volume = 1.0 mL, FlowRate = 1.0 mL/s)
     FillingScaleAAS: Tare(), Weigh() → Weight [g]
-  StopperingModuleAAS at (600, 720, 0), RZ 180
+  StopperingModuleAAS at (600, 720, 0), Yaw 180 relative to TableBase
     skill Stoppering()
     skill Occupy()
     skill Release()
@@ -41,7 +43,7 @@ FillingLineAAS
     skill Clear()
     StopperingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
     StopperingPistonAAS: PressStopper(), RetractPiston()
-  CappingModuleAAS at (960, 360, 0), RZ 90
+  CappingModuleAAS at (960, 360, 0), Yaw 90 relative to TableBase
     skill Capping()
     skill Occupy()
     skill Release()
@@ -52,7 +54,7 @@ FillingLineAAS
     skill Clear()
     CappingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
     CappingCrimperAAS: Crimp(Duration = 1.5 s)
-  InspectionModuleAAS at (960, 120, 0), RZ 90
+  InspectionModuleAAS at (960, 120, 0), Yaw 90 relative to TableBase
     skill Inspection() → TopPassed, SidePassed
     skill Occupy()
     skill Release()
@@ -63,15 +65,13 @@ FillingLineAAS
     skill Clear()
     InspectionTopCameraAAS: CaptureTop() → Passed
     InspectionSideCameraAAS: CaptureSide() → Passed
-  UnloadingModule (not described yet) at (660, 0, 0)
-  PlanarTable (not described yet) at (0, 0, 0)
-  point Infeed (PlacePoint) at (60, 180, 0)
-  point Outfeed (PickPoint) at (660, 60, 0)
+  UnloadingModule (not described yet)
+  PlanarTable (not described yet)
 ```
 
 | AAS | Kind | Submodels |
 | --- | --- | --- |
-| `FillingLineAAS` | system | HierarchicalStructures |
+| `FillingLineAAS` | system | HierarchicalStructures, OperationalData |
 | `FillingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData |
 | `StopperingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData |
 | `CappingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills, OperationalData |
@@ -157,13 +157,6 @@ classDiagram
     <<Entity>>
     idShort
     globalAssetId of its AAS
-    Frame: X Y Z RX RY RZ
-  }
-  class Point {
-    <<Entity, co-managed>>
-    idShort
-    meaning: TransferPoint ...
-    Frame: X Y Z RX RY RZ
   }
   class AssetInterfacesDescription {
     <<IDTA 02017>>
@@ -250,6 +243,13 @@ classDiagram
     value (decimal)
     semanticId
   }
+  class Coordinate {
+    <<ARSO 0.13, Measurements/Coordinates>>
+    meaning: ModuleBase, Mount, EndEffector, TransferPoint ...
+    RelativeTo: another coordinate
+    X Y Z mm, Roll Pitch Yaw deg
+    XSource ... YawSource: a data point
+  }
 
   ModuleAAS *-- Nameplate
   ModuleAAS *-- HierarchicalStructures
@@ -259,7 +259,6 @@ classDiagram
   ModuleAAS *-- Skills
   ModuleAAS *-- OperationalData
   HierarchicalStructures *-- "0..*" Part
-  HierarchicalStructures *-- "0..*" Point
   AssetInterfacesDescription *-- "1" Interface
   Interface *-- "0..*" Action
   Interface *-- "0..*" InterfaceProperty
@@ -274,6 +273,9 @@ classDiagram
   Operation *-- "2..*" Variable
   Command *-- "0..*" Step : Steps
   OperationalData *-- "1..*" DataPoint
+  OperationalData *-- "1..*" Coordinate
+  Coordinate --> Coordinate : RelativeTo
+  Coordinate --> DataPoint : follows
 ```
 
 Then how those elements refer to each other. Every solid arrow is a reference stored in the AAS,
@@ -468,8 +470,8 @@ flowchart BT
 - **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; AbsoluteFillError 0.05 mL; FillVolume 0.5 to 10.0 mL; Pre ContentVolume = 0.0, Post ContentVolume = FillVolume.
 - **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Pump's Dosing (Dispense): Post ContentVolume += Volume, Post Weighed = false, Pre LinearAxisPosition = FillPosition, Invariant LinearAxisPosition unchanged; Scale's Taring (Tare): Post Tared = true; Scale's Weighing (Weigh): Pre Tared = true, Post Weight measured, Post Weighed = true, Pre LinearAxisPosition = 0.0, Invariant LinearAxisPosition unchanged.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
-- **Components:** LinearAxis → `FillingLinearAxisAAS` at (0, 60, 100), RX 180, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
-- **Points** (in the module's frame, mm and degrees): Transfer (TransferPoint) at (0, 60, 0), RZ 180; Fill (ProcessingPoint) at (0, 60, 60).
+- **Components:** LinearAxis → `FillingLinearAxisAAS`, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
+- **Coordinates** (Operational Data, mm and degrees): ModuleBase (ModuleBase) at (240, 720, 0), Yaw 180 relative to TableBase; LinearAxisMount (Mount) at (0, 60, 100), Roll 180 relative to ModuleBase; LinearAxis (EndEffector) at (0, 0, 0) relative to LinearAxisMount, Z = LinearAxis_ActualPosition; Transfer (TransferPoint) at (0, 60, 0), Yaw 180 relative to ModuleBase; Fill (ProcessingPoint) at (0, 60, 60) relative to ModuleBase.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 45 data points; 32 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Dispensing built. Which block is which skill or step is the integrator's record, outside the AAS.
 
@@ -510,8 +512,8 @@ flowchart BT
 - **Capability Stoppering** (`https://smartproductionlab.aau.dk/semantics/Stoppering`), realized by Stoppering: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; StopperDiameter 6.0 to 20.0 mm; Pre ContentVolume > 0.0, Post Stoppered = true.
 - **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Piston's Pressing (PressStopper): Post Stoppered = true, Pre LinearAxisPosition = PressPosition, Invariant LinearAxisPosition unchanged.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (RetractPiston → Home), Start, Stop (Home), Abort, Clear.
-- **Components:** LinearAxis → `StopperingLinearAxisAAS` at (0, 60, 100), RX 180, Piston → `StopperingPistonAAS`.
-- **Points** (in the module's frame, mm and degrees): Transfer (TransferPoint) at (0, 60, 0), RZ -90; Press (ProcessingPoint) at (0, 60, 60).
+- **Components:** LinearAxis → `StopperingLinearAxisAAS`, Piston → `StopperingPistonAAS`.
+- **Coordinates** (Operational Data, mm and degrees): ModuleBase (ModuleBase) at (600, 720, 0), Yaw 180 relative to TableBase; LinearAxisMount (Mount) at (0, 60, 100), Roll 180 relative to ModuleBase; LinearAxis (EndEffector) at (0, 0, 0) relative to LinearAxisMount, Z = LinearAxis_ActualPosition; Transfer (TransferPoint) at (0, 60, 0), Yaw -90 relative to ModuleBase; Press (ProcessingPoint) at (0, 60, 60) relative to ModuleBase.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 32 data points; 28 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Stoppering built. Which block is which skill or step is the integrator's record, outside the AAS.
 
@@ -551,7 +553,7 @@ flowchart BT
 - **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Crimper's Crimping (Crimp): Post Capped = true.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `CappingLinearAxisAAS`, Crimper → `CappingCrimperAAS`.
-- **Points** (in the module's frame, mm and degrees): Transfer (TransferPoint) at (0, 120, 0), RZ -90.
+- **Coordinates** (Operational Data, mm and degrees): ModuleBase (ModuleBase) at (960, 360, 0), Yaw 90 relative to TableBase; Transfer (TransferPoint) at (0, 120, 0), Yaw -90 relative to ModuleBase.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 data points; 24 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Capping built. Which block is which skill or step is the integrator's record, outside the AAS.
 
@@ -588,6 +590,7 @@ flowchart BT
 - **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: TopCamera's Imaging (CaptureTop): Post Inspected = true; SideCamera's Imaging (CaptureSide): Post Inspected = true.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset, Start, Stop, Abort, Clear.
 - **Components:** TopCamera → `InspectionTopCameraAAS`, SideCamera → `InspectionSideCameraAAS`.
+- **Coordinates** (Operational Data, mm and degrees): ModuleBase (ModuleBase) at (960, 120, 0), Yaw 90 relative to TableBase.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 22 data points; 20 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Inspection built. Which block is which skill or step is the integrator's record, outside the AAS.
 
