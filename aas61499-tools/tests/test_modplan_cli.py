@@ -27,3 +27,15 @@ def test_a_skill_is_planned_written_into_the_aas_and_checked(tmp_path, capsys):
     assert main(["check", str(tmp_path)]) == 0                                       # Dispensing and FillTwo hold
     assert "FillTwo: nothing that does not hold" in capsys.readouterr().out
     assert main(["plan", str(tmp_path), "--capability", "Filling", "--value", "FillVolume=2.0", "--result", "Nothing"]) == 1
+
+
+def test_the_problem_is_written_for_a_standard_planner(tmp_path, capsys):
+    module, components = aas(load(SPECS / "filling.yaml"), "pi")
+    for env in [module, *components]:
+        (tmp_path / f"{env['assetAdministrationShells'][0]['idShort']}.json").write_text(json.dumps(env), encoding="utf-8")
+    out = tmp_path / "planning"
+    for language in ("pddl", "hddl"):
+        assert main(["export", str(tmp_path), "--capability", "Filling", "--value", "FillVolume=2.0",
+                     "--result", "FillWeight", "--as", language, "--out", str(out)]) == 0
+    assert sorted(p.name for p in out.iterdir()) == ["domain.hddl", "domain.pddl", "problem.hddl", "problem.pddl"]
+    assert "(t0 (filling v_2p0))" in (out / "problem.hddl").read_text(encoding="utf-8")
