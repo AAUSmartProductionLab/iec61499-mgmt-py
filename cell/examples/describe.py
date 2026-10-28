@@ -162,8 +162,14 @@ classDiagram
   class Variables {
     <<aas-model>>
   }
-  class DataPoint {
-    value (decimal)
+  class TimeSeries {
+    <<State/... or Measurements/..., IDTA 02008>>
+    a group of values that change together
+    Segment: where its rows are (InfluxDB)
+  }
+  class Field {
+    <<the series' Record>>
+    decimal, no value in the AAS
     supplementalSemanticId: what it shows
   }
   class Coordinate {
@@ -171,7 +177,7 @@ classDiagram
     meaning: ModuleBase, Mount, EndEffector, TransferPoint ...
     RelativeTo: another coordinate
     X Y Z mm, Roll Pitch Yaw deg
-    XSource ... YawSource: a variable
+    XSource ... YawSource: a field
   }
 
   ModuleAAS *-- Nameplate
@@ -195,10 +201,11 @@ classDiagram
   Command *-- "1" Operation
   Operation *-- "2..*" Variable
   Command *-- "0..*" Step : Steps
-  Variables *-- "1..*" DataPoint
-  Variables *-- "1..*" Coordinate
+  Variables *-- "1..*" TimeSeries : State, Measurements
+  TimeSeries *-- "1..*" Field : Record
+  Variables *-- "1..*" Coordinate : Measurements/Coordinates
   Coordinate --> Coordinate : RelativeTo
-  Coordinate --> DataPoint : follows
+  Coordinate --> Field : follows
 ```'''
 
 RESOURCE_LINKS = '''```mermaid
@@ -215,7 +222,8 @@ classDiagram
   class Part
   class ComponentAAS
   class Mapping
-  class DataPoint
+  class TimeSeries
+  class Field
   class Instance
 
   Capability --> Skill : RealizedBy
@@ -223,13 +231,14 @@ classDiagram
   Step --> Skill : Skill (of this AAS or of a component's)
   Step --> Variable : a variable of the command's Operation
   Mapping --> InterfaceProperty : Source
-  Mapping --> DataPoint : Sink
+  Mapping --> TimeSeries : Sink (its segment: a row)
+  Mapping ..> Field : SourceId (a field per source)
   Mapping --> Operation : Source
   Mapping --> Action : Sink
   Instance --> Skill : Skill
   Instance --> Step : Skill
   Part ..> ComponentAAS : globalAssetId
-  Variable ..> DataPoint : same semanticId
+  Variable ..> Field : same meaning (supplemental id)
   Variable ..> Capability : same meaning as its property
 ```'''
 
@@ -455,7 +464,7 @@ def skills_in(held: dict | None) -> list[dict]:
 
 def placed(coordinate: dict | None) -> str:
     """Where a coordinate is (ARSO 0.13): mm, the rotations in degrees that are not zero, what it is
-    relative to and the data points it follows."""
+    relative to and the fields it follows."""
     if coordinate is None:
         return ""
     value = lambda name: float(at(coordinate, name)["value"])                             # noqa: E731
@@ -464,6 +473,13 @@ def placed(coordinate: dict | None) -> str:
     follows = [f"{e['idShort'][:-len('Source')]} = {last(e['value'])}" for e in children(coordinate) if e["idShort"].endswith("Source")]
     return (f" at ({value('X'):g}, {value('Y'):g}, {value('Z'):g})" + "".join(f", {r}" for r in turned)
             + (f" relative to {last(parent['value'])}" if parent else "") + (f", {', '.join(follows)}" if follows else ""))
+
+
+def series_of(env: dict) -> dict[str, int]:
+    """The time series of an AAS's Variables (group/series) and how many fields each has."""
+    return {f"{group['idShort']}/{series['idShort']}": len(children(at(series, "Metadata", "Record"))) - 1
+            for group in children(submodel(env, "Variables")) for series in children(group)
+            if series["idShort"] != "Coordinates"}
 
 
 def coordinates_of(env: dict | None) -> dict[str, dict]:
@@ -552,7 +568,7 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
                 if points else []),
               f"- **Interface:** OPC UA at `{at(submodel(env, 'AssetInterfacesDescription'), 'interface_opcua', 'EndpointMetadata', 'base')['value']}`, "
               f"{len(children(at(interface, 'actions')))} actions and {len(children(at(interface, 'properties')))} properties; "
-              f"{sum(e.get('modelType') == 'Property' for e in children(submodel(env, 'Variables')))} data points; "
+              f"{len(series_of(env))} time series with {sum(series_of(env).values())} fields ({', '.join(series_of(env))}); "
               f"{len(children(at(submodel(env, 'AssetInterfacesMappingConfiguration'), 'MappingConfigurations')))} mappings.",
               f"- **Program:** built by the rule set `{at(skills_sm, 'RuleSet')['value']}`; module level skills "
               + ", ".join(f"{s['idShort']} {at(s, 'Deployment')['value'].lower()}" for s in composites if at(s, "Deployment"))

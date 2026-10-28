@@ -268,16 +268,20 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
         there = ("AssetInterfacesDescription", "interface_opcua", "InteractionMetadata", kind)
         got = own(at(submodel(recorded, there[0]), *there[1:])["value"])
         assert got == own(at(submodel(whole, there[0]), *there[1:])["value"]) and len(got) > 3
-    assert own(submodel(recorded, "Variables")["submodelElements"]) == own(submodel(whole, "Variables")["submodelElements"])
+    # Its values are a series of their own, State/DoubleDose, as in a module built with it.
+    state = lambda env: at(submodel(env, "Variables"), "State")["value"]      # noqa: E731
+    assert own(state(recorded)) == own(state(whole)) and set(own(state(recorded))) == {"DoubleDose"}
     start = at(submodel(recorded, "Skills"), "DoubleDose", "Start")
     assert at(start, "InterfaceReference")["value"]["keys"][-1]["value"] == "DoubleDose_Start"
     assert {q["type"] for q in at(start, "Start")["qualifiers"]} == {"invocationDelegation", "Synchronous"}
     assert [c["idShort"] for c in at(submodel(recorded, "Skills"), "DoubleDose")["value"]
             if c["modelType"] == "SubmodelElementCollection"] == ["Start", "Stop", "Abort", "Reset"]
     mappings = lambda env: at(submodel(env, "AssetInterfacesMappingConfiguration"), "MappingConfigurations")["value"]   # noqa: E731
-    assert len(mappings(recorded)) == len(mappings(whole)) == len(mappings(module)) + 4
-    from modreg.offer import lua
-    assert sorted(lua(mappings(recorded)[0]).splitlines()) == sorted(lua(mappings(whole)[0]).splitlines())
+    # Four actions to invoke, and the rows of its series to write.
+    assert len(mappings(recorded)) == len(mappings(whole)) == len(mappings(module)) + 5
+    from modreg.offer import lua, series_of_mapping
+    rows = lambda env: next(c for c in mappings(env) if series_of_mapping(c) == ("State", "DoubleDose"))   # noqa: E731
+    assert lua(rows(recorded)) == lua(rows(whole))
     # It is what the ontology describes, and the module still is what the recorded AAS describes.
     from modreg.ontology import Blueprint, check
     arso = Blueprint(Path(__file__).resolve().parents[2] / "ontology" / "ARSO")

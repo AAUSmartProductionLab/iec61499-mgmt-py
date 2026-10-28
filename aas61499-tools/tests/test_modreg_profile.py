@@ -21,7 +21,7 @@ from modsync.device import Snapshot                                         # no
 
 ARSO = Path(__file__).resolve().parents[2] / "ontology" / "ARSO"
 BASE = "https://smartproductionlab.aau.dk"
-VARIABLE = "https://smartproductionlab.aau.dk/variables/VariableSemanticId/1/0"     # aas-model's data point
+RECORD_FIELD = "https://smartproductionlab.aau.dk/timeseries/RecordField/1/0"      # a field of a time series (aas-model)
 WOT_NAME = "https://www.w3.org/2019/wot/td#name"
 
 
@@ -102,6 +102,18 @@ def stoppering_all(stoppering):
 
 def variables(operation: dict, kind: str) -> list[str]:
     return [v["value"]["idShort"] for v in operation.get(kind) or []]
+
+
+def fields(env: dict) -> dict[str, dict]:
+    """The values a module publishes, by name: the fields of the records of the time series in its
+    Variables (no value is kept in the AAS itself), with the series each is in as ``series``."""
+    found = {}
+    for group in children(submodel(env, "Variables")):
+        for series in [c for c in children(group) if c["idShort"] != "Coordinates"]:
+            for field in children(at(series, "Metadata", "Record")):
+                if field["idShort"] != "Time":
+                    found[field["idShort"]] = {**field, "series": f"{group['idShort']}/{series['idShort']}"}
+    return found
 
 
 def ids(element: dict) -> list[str]:
@@ -194,8 +206,9 @@ def test_a_skill_is_its_commands(stoppering, stoppering_all):
     assert ids(at(stoppering_, "Start", "Steps")) == [f"{PS}/Steps/1/0"]
     assert ids(steps[0]) == [f"{PS}/Step/1/0", f"{BASE}/skills/Stoppering/Execute/HeadDown"]
     assert ids(at(steps[0], "Kind")) == [f"{PS}/Kind/1/0"]
-    data = submodel(stoppering_all["StopperingModuleAAS"], "Variables")
-    assert ids(at(data, "Stoppering_Execute_HeadDown_State")) == [VARIABLE, f"{BASE}/skills/Stoppering/Execute/HeadDown/State"]
+    data = fields(stoppering_all["StopperingModuleAAS"])
+    assert ids(data["Stoppering_Execute_HeadDown_State"]) == [RECORD_FIELD, f"{BASE}/skills/Stoppering/Execute/HeadDown/State"]
+    assert data["Stoppering_Execute_HeadDown_State"]["series"] == "State/Stoppering"           # the skill's run
     assert [resolve(envs, at(s, "Skill")["value"])["idShort"] for s in children(at(stoppering_, "Stop", "Steps"))] == ["Home"]
 
 
@@ -224,8 +237,8 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     assert float(position["value"]) == decl.parameters["Position"].default
     assert float(declared["Maximum"]) == decl.parameters["Position"].maximum and declared["Unit"] == "mm"
     assert position["embeddedDataSpecifications"][0]["dataSpecificationContent"]["unit"] == "mm"
-    data = submodel(stoppering_all["StopperingModuleAAS"], "Variables")
-    assert ids(position)[:1] == ids(at(data, "MoveAxis_Parameter_Position"))[1:] == [f"{BASE}/skills/MoveAxis/Parameters/Position"]
+    data = fields(stoppering_all["StopperingModuleAAS"])
+    assert ids(position)[:1] == ids(data["MoveAxis_Parameter_Position"])[1:] == [f"{BASE}/skills/MoveAxis/Parameters/Position"]
     assert ids(position)[1:] == [f"{BASE}/semantics/Position"]              # what it means, as the spec says
     # What starts, ends and bounds it: its conditions, and how it completes.
     assert at(move, "Conditions", "Precondition")["value"] == "Homed"      # an axis that knows where it is
@@ -339,7 +352,7 @@ def test_steps_publish_like_skills_where_the_program_puts_them():
     assert at(properties, "Dispensing_Stopping_Home_ErrorID", "forms", "href")["value"].endswith(
         "/1:Dispensing/1:Stopping/1:Home/1:ErrorID")
     # Their State and ErrorID are data points, fed like those of the skills.
-    data = names(submodel(env, "Variables"))
+    data = fields(env)
     assert {"Dispensing_Execute_Weigh_State", "Dispensing_Stopping_Home_ErrorID"} <= set(data)
 
 
@@ -375,8 +388,9 @@ def test_the_modules_own_commands_are_skills_of_a_kind_of_their_own(stoppering, 
     with pytest.raises(ValueError, match="Stop is a command of the module itself"):
         profiles.describe(ModuleSpec.model_validate(data), "pi")
     # Its state and its occupation are data points, as are the states of those steps.
-    data = submodel(env, "Variables")
-    assert {"PackMLState", "OccupationState", "Procedure_Resetting_RetractPiston_State", "Procedure_Stopping_Home_ErrorID"} <= set(names(data))
+    data = fields(env)
+    assert {"PackMLState", "OccupationState", "Procedure_Resetting_RetractPiston_State", "Procedure_Stopping_Home_ErrorID"} <= set(data)
+    assert {data["PackMLState"]["series"], data["Procedure_Stopping_Home_ErrorID"]["series"]} == {"State/Module", "State/Procedures"}
     values = expected_values(spec, expected(spec, "pi"))
     assert values["Resetting.RetractPiston.UaPath"].strip('"') == "/Procedures/Resetting/RetractPiston"
     instance = at(record(spec), "Instances", "Resetting_RetractPiston")
@@ -500,17 +514,25 @@ def test_the_aimc_maps_every_action_and_property_onto_an_element(stoppering_all)
         sources = [resolve(envs, at(s, "Source")["value"]) for s in children(at(config, "Sources"))]
         sinks = [resolve(envs, at(s, "Sink")["value"]) for s in children(at(config, "Sinks"))]
         assert None not in sources and None not in sinks
+        if "InfluxDb2Target" in names(sinks[0]):
+            # A row of a time series: each property is the field its source is named after.
+            keys = at(children(at(config, "Sinks"))[0], "Sink")["value"]["keys"]
+            record = at(resolve(envs, {**at(children(at(config, "Sinks"))[0], "Sink")["value"], "keys": keys[:-2]}),
+                        "Metadata", "Record")
+            for entry, found_source in zip(children(at(config, "Sources")), sources):
+                fed.setdefault(found_source["idShort"], []).append(at(record, at(entry, "SourceId")["value"]))
+            continue
         for found_source, found_sink in zip(sources, sinks):
             if found_source["modelType"] == "Operation":
                 invoked.setdefault(found_sink["idShort"], []).append(found_source)
             else:
                 fed.setdefault(found_source["idShort"], []).append(found_sink)
     assert sorted(fed) == sorted(names(interaction(env, "properties")))
-    assert all(len(sinks) == 1 for sinks in fed.values())
+    assert all(len(sinks) == 1 and sinks[0] is not None for sinks in fed.values())
     assert sorted(invoked) == sorted(names(interaction(env, "actions")))
     assert all(len(ops) == 1 for ops in invoked.values())
-    # A parameter, result or state feeds its data point; an action is invoked by the Operation of its
-    # command, in the module's AAS or in a component's.
+    # A parameter, result or state is a field of its series; an action is invoked by the Operation of
+    # its command, in the module's AAS or in a component's.
     assert fed["MoveAxis_Parameter_Position"][0]["idShort"] == "MoveAxis_Parameter_Position"
     assert fed["Stoppering_Execute_HeadDown_Parameter_Position"][0]["idShort"] == "Stoppering_Execute_HeadDown_Parameter_Position"
     axis = at(submodel(stoppering_all["StopperingLinearAxisAAS"], "Skills"), "MoveAxis")
@@ -527,20 +549,27 @@ def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
     assert names(at(structure, "EntryNode")) == [*spec.equipment]
     data = submodel(stoppering_aas, "Variables")
     assert data["semanticId"]["keys"][0]["value"] == f"{BASE}/submodels/Variables/1/0"
+    # No value is kept in the AAS: each is a field of a time series, its rows in the database.
+    assert names(data) == ["State", "Measurements"]
+    points = fields(stoppering_aas)
     inputs = [f"{item}_{s}" for item, eq in spec.equipment.items() for s in eq.inputs]
-    assert {"PackMLState", "OccupationState", *inputs} <= set(names(data))
-    # A data point is a decimal variable with a value and the concept it stands for (its supplemental id).
-    points = [d for d in children(data) if d["modelType"] == "Property"]
-    assert all(d["valueType"] == "xs:decimal" and d["value"] == "0" and ids(d)[0] == VARIABLE and len(ids(d)) == 2
-               for d in points)
-    # Beside them, where the module and its points are.
-    assert [d["idShort"] for d in children(data) if d["modelType"] != "Property"] == ["Measurements"]
+    assert {"PackMLState", "OccupationState", *inputs} <= set(points)
+    assert {points[name]["series"] for name in inputs} == {f"Measurements/{item}" for item, eq in spec.equipment.items() if eq.inputs}
+    # A field is a decimal and the concept it stands for (its supplemental id).
+    assert all(d["valueType"] == "xs:decimal" and ids(d)[0] == RECORD_FIELD and len(ids(d)) == 2 for d in points.values())
+    # A series says where its rows are: a measurement of the database, tagged with the module.
+    series = at(data, "Measurements", "LinearAxis")
+    target = at(series, "Segments", "Live", "InfluxDb2Target")
+    assert at(target, "Measurement")["value"] == "measurements_linearaxis"
+    assert at(target, "Tags", "asset")["value"] == "StopperingModuleAAS"
+    # Beside the series, where the module and its points are.
+    assert names(at(data, "Measurements"))[-1] == "Coordinates"
+    # Every field has a source: the property of the interface that publishes it.
     mappings = at(submodel(stoppering_aas, "AssetInterfacesMappingConfiguration"), "MappingConfigurations")
-    feed = children(mappings)[0]
-    # Every data point has a source: the property of the interface that publishes it.
-    assert len(children(at(feed, "Sinks"))) == len(children(at(feed, "Sources"))) == len(points)
-    # A skill parameter of the current or last run is a data point as well, not a Parameters entry.
-    assert ids(at(data, "MoveAxis_Parameter_Position"))[1] == f"{BASE}/skills/MoveAxis/Parameters/Position"
+    rows = [c for c in children(mappings) if at(children(at(c, "Sinks"))[0], "Sink")["value"]["keys"][-1]["value"] == "Live"]
+    assert sum(len(children(at(c, "Sources"))) for c in rows) == len(points)
+    # A skill parameter of the current or last run is a field as well, not a Parameters entry.
+    assert ids(points["MoveAxis_Parameter_Position"])[1] == f"{BASE}/skills/MoveAxis/Parameters/Position"
     assert "Parameters" not in [s["idShort"] for s in stoppering_aas["submodels"]]
 
 

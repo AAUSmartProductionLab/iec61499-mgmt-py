@@ -21,7 +21,7 @@ from modplan.expression import parse
 from modplan.vocabulary import Vocabulary
 
 from . import model
-from .profile import CAPABILITIES, CAPABILITY, DATA, SMC, capability_property, component_identity, meaning, path
+from .profile import CAPABILITIES, CAPABILITY, SMC, capability_property, component_identity, field_ref, meaning, path
 
 NOT_ASSIGNED = "https://admin-shell.io/idta/CapabilityDescription/CapabilityRoleQualifier/NotAssigned/1/0"
 # What an item with a position publishes of its state (the signals modgen gives it).
@@ -35,15 +35,21 @@ def vocabulary() -> Vocabulary:
 
 
 def state_point(spec: ModuleSpec, item: str, meant: str) -> str | None:
-    """The data point of the module's Operational Data that is ``item``'s state ``meant``, if the
-    module publishes one: of an item with a position its ActualPosition and Homed; of any item its
-    inputs."""
+    """The value the module publishes that is ``item``'s state ``meant``, if it publishes one: of an
+    item with a position its ActualPosition and Homed; of any item its inputs. It is a field of the
+    item's series in the module's Variables (``field_ref``)."""
     eq = spec.equipment.get(item)
     if eq is None:
         return None
     if eq.position is not None and meant in SIGNALS:
         return f"{item}_{SIGNALS[meant]}"
     return f"{item}_{meant}" if meant in eq.inputs else None
+
+
+def state_field(spec: ModuleSpec, item: str, meant: str) -> ModelReference | None:
+    """The record field of ``state_point``, if the module publishes one."""
+    point = state_point(spec, item, meant)
+    return field_ref(spec, point) if point else None
 
 
 class Container:
@@ -64,19 +70,20 @@ class Container:
             return ("SubmodelElementList", "Value")
         return ("Range", "Value") if container.PropertyRange else ("Property", "Value")
 
-    def add(self, name: str, container: model.StatedProperty, point: str | None = None) -> None:
+    def add(self, name: str, container: model.StatedProperty, field: ModelReference | None = None) -> None:
+        """A property; ``field``: the record field of the module's Variables it is the same as."""
         if name in self.properties:
             return
         self.properties[name] = container
-        if point:
+        if field is not None:
             container.SameProperty = {"SameProperty": model.SameAs(
-                first=self.at((SMC, "PropertySet"), (SMC, name), self.value_of(name)), second=path(DATA, ("Property", point)))}
+                first=self.at((SMC, "PropertySet"), (SMC, name), self.value_of(name)), second=field)}
 
-    def state(self, name: str, meant: str, point: str | None = None) -> None:
-        """A property that is a state: no value of its own; the data point ``point`` if it is one."""
+    def state(self, name: str, meant: str, field: ModelReference | None = None) -> None:
+        """A property that is a state: no value of its own; the record field ``field`` if it is one."""
         kind = XSD.get(vocabulary().value_type(meant) or "number", "xs:double")
         self.add(name, model.StatedProperty(PropertyProperty={"Value": cd.PropertyProperty(
-            id_short="Value", value_type=kind, supplemental_semantic_ids=[meaning(meant)], display_name={"en": name})}), point)
+            id_short="Value", value_type=kind, supplemental_semantic_ids=[meaning(meant)], display_name={"en": name})}), field)
 
     def constrain(self, kind: str, prop: str, expression: str) -> None:
         """A constraint of ``kind`` (Pre, Post, Invariant) about the property ``prop``."""
@@ -128,16 +135,16 @@ def component_capability(spec: ModuleSpec, item: str, skill: str, decl: Skill, c
     for name, p in decl.parameters.items():
         meant = name if cls in voc.characterizes(name) else (p.meaning or name).rsplit("/", 1)[-1]
         if p.minimum is None or p.maximum is None:
-            box.state(name, meant, state_point(spec, item, meant))
+            box.state(name, meant, state_field(spec, item, meant))
             continue
         box.add(name, capability_property(name, meaning(meant), CapabilityProperty(minimum=p.minimum, maximum=p.maximum, unit=p.unit),
-                                          derived=False), state_point(spec, item, meant))
+                                          derived=False), state_field(spec, item, meant))
     for name, value in (use.values.items() if use else ()):
         box.add(name, capability_property(name, meaning(name, value.semantic_id), value, derived=False))
     stated = voc.constraints(cls)
     for s in stated:
         for name in filter(None, (s.prop, s.expression.named)):
-            box.state(name, name, None if voc.product(name) else state_point(spec, item, name))
+            box.state(name, name, None if voc.product(name) else state_field(spec, item, name))
     conditions = []
     for kind, about, expression in (use.conditions() if use else ()):
         other, _, meant = about.rpartition(".")
@@ -146,7 +153,7 @@ def component_capability(spec: ModuleSpec, item: str, skill: str, decl: Skill, c
             if point is None:
                 raise ValueError(f"{spec.module}.{skill}: {other} publishes no {meant}, so {cls} cannot be about it")
             about = f"{other}{meant}"
-            box.state(about, meant, point)
+            box.state(about, meant, field_ref(spec, point))
         conditions.append((kind, about, expression))
     for s in stated:
         box.constrain(s.kind, s.prop, str(s.expression))

@@ -10,7 +10,10 @@ only says where history is and how to ask for it.
 Properties, and `State`, `Measurements` and `Log` holding IDTA 02008 time series as SMCs, each with an
 InfluxDB segment. It replaces ARSO's Operational Data (ARSO 0.14); read "Operational Data" below as
 Variables. The coordinates are in `Measurements` ([locations-and-layout.md](locations-and-layout.md)).
-The modules' series are not built yet.
+The modules' series are built (`modreg/profile.py`, `series_of`): a module keeps no live value in its
+AAS, only series that say where the values are in the database (`State/Module`, `State/<Skill>`,
+`State/Procedures`, `Measurements/<Item>`); the reasons are in [design-log.md](design-log.md). `Log`
+is not written yet.
 
 ## 1. Where we are
 

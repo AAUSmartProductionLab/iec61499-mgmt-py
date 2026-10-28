@@ -261,8 +261,14 @@ classDiagram
   class Variables {
     <<aas-model>>
   }
-  class DataPoint {
-    value (decimal)
+  class TimeSeries {
+    <<State/... or Measurements/..., IDTA 02008>>
+    a group of values that change together
+    Segment: where its rows are (InfluxDB)
+  }
+  class Field {
+    <<the series' Record>>
+    decimal, no value in the AAS
     supplementalSemanticId: what it shows
   }
   class Coordinate {
@@ -270,7 +276,7 @@ classDiagram
     meaning: ModuleBase, Mount, EndEffector, TransferPoint ...
     RelativeTo: another coordinate
     X Y Z mm, Roll Pitch Yaw deg
-    XSource ... YawSource: a variable
+    XSource ... YawSource: a field
   }
 
   ModuleAAS *-- Nameplate
@@ -294,10 +300,11 @@ classDiagram
   Command *-- "1" Operation
   Operation *-- "2..*" Variable
   Command *-- "0..*" Step : Steps
-  Variables *-- "1..*" DataPoint
-  Variables *-- "1..*" Coordinate
+  Variables *-- "1..*" TimeSeries : State, Measurements
+  TimeSeries *-- "1..*" Field : Record
+  Variables *-- "1..*" Coordinate : Measurements/Coordinates
   Coordinate --> Coordinate : RelativeTo
-  Coordinate --> DataPoint : follows
+  Coordinate --> Field : follows
 ```
 
 Then how those elements refer to each other. Every solid arrow is a reference stored in the AAS,
@@ -317,7 +324,8 @@ classDiagram
   class Part
   class ComponentAAS
   class Mapping
-  class DataPoint
+  class TimeSeries
+  class Field
   class Instance
 
   Capability --> Skill : RealizedBy
@@ -325,13 +333,14 @@ classDiagram
   Step --> Skill : Skill (of this AAS or of a component's)
   Step --> Variable : a variable of the command's Operation
   Mapping --> InterfaceProperty : Source
-  Mapping --> DataPoint : Sink
+  Mapping --> TimeSeries : Sink (its segment: a row)
+  Mapping ..> Field : SourceId (a field per source)
   Mapping --> Operation : Source
   Mapping --> Action : Sink
   Instance --> Skill : Skill
   Instance --> Step : Skill
   Part ..> ComponentAAS : globalAssetId
-  Variable ..> DataPoint : same semanticId
+  Variable ..> Field : same meaning (supplemental id)
   Variable ..> Capability : same meaning as its property
 ```
 
@@ -544,7 +553,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `FillingLinearAxisAAS`, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
 - **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (240, 720, 0), Yaw 180 relative to TableBase; LinearAxisMount (Mount) at (0, 60, 100), Roll 180 relative to ModuleBase; LinearAxis (EndEffector) at (0, 0, 0) relative to LinearAxisMount, Z = LinearAxis_ActualPosition; Transfer (TransferPoint) at (0, 60, 0), Yaw 180 relative to ModuleBase; Fill (ProcessingPoint) at (0, 60, 60) relative to ModuleBase.
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 45 data points; 32 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 10 time series with 45 fields (State/Module, State/Procedures, State/Dispensing, State/Home, State/MoveAxis, State/Dispense, State/Tare, State/Weigh, Measurements/LinearAxis, Measurements/Scale); 41 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Dispensing built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### StopperingModuleAAS
@@ -586,7 +595,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (RetractPiston → Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `StopperingLinearAxisAAS`, Piston → `StopperingPistonAAS`.
 - **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (600, 720, 0), Yaw 180 relative to TableBase; LinearAxisMount (Mount) at (0, 60, 100), Roll 180 relative to ModuleBase; LinearAxis (EndEffector) at (0, 0, 0) relative to LinearAxisMount, Z = LinearAxis_ActualPosition; Transfer (TransferPoint) at (0, 60, 0), Yaw -90 relative to ModuleBase; Press (ProcessingPoint) at (0, 60, 60) relative to ModuleBase.
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 32 data points; 28 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 8 time series with 32 fields (State/Module, State/Procedures, State/Stoppering, State/Home, State/MoveAxis, State/PressStopper, State/RetractPiston, Measurements/LinearAxis); 35 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Stoppering built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### CappingModuleAAS
@@ -626,7 +635,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `CappingLinearAxisAAS`, Crimper → `CappingCrimperAAS`.
 - **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (960, 360, 0), Yaw 90 relative to TableBase; Transfer (TransferPoint) at (0, 120, 0), Yaw -90 relative to ModuleBase.
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 data points; 24 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 7 time series with 30 fields (State/Module, State/Procedures, State/Capping, State/Home, State/MoveAxis, State/Crimp, Measurements/LinearAxis); 30 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Capping built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### InspectionModuleAAS
@@ -663,7 +672,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset, Start, Stop, Abort, Clear.
 - **Components:** TopCamera → `InspectionTopCameraAAS`, SideCamera → `InspectionSideCameraAAS`.
 - **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (960, 120, 0), Yaw 90 relative to TableBase.
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 22 data points; 20 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 6 time series with 22 fields (State/Module, State/Inspection, State/CaptureTop, State/CaptureSide, Measurements/TopCamera, Measurements/SideCamera); 25 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Inspection built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ## The products and their processes
