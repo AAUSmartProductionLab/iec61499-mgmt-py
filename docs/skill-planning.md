@@ -264,10 +264,10 @@ All but 6 and 7 done on 27 and 28 Oct (the plan's G0 to G5, [next-steps.md](next
 | Point | Proposal |
 | --- | --- |
 | Position 0.0 by Home or by MoveAxis(0) | Both are plans (DoubleDose uses MoveAxis(0)); Referencing is tried first, as the spec homes after every operation |
-| Which HDDL planner | PANDA (pandaPI), which plans partial-order HDDL; check what runs on Windows |
-| Numbers in PDDL | Values as objects with an amount; the candidate doses are the requested volume, the limits and what is left |
+| Which HDDL planner | ~~PANDA (pandaPI), which plans partial-order HDDL; check what runs on Windows~~ Aries, through unified-planning, runs on Windows (28 Oct) |
+| Numbers in PDDL | ~~Values as objects with an amount; the candidate doses are the requested volume, the limits and what is left~~ Built so (28 Oct) |
 | Decisions in a composed skill ("top up if light") | Not planned in the first version; offered as a pattern |
-| Tare with the container on the scale (a net weight) | Not modelled |
+| Tare with the container on the scale (a net weight) | Not modelled. Found 28 Oct: from a start where the scale is not tared, the plan is MoveAxis, Dispense, **Tare**, Home, Weigh, and lifting puts Tare beside the first three; on the machine that would zero the filled vial and lose the fill weight. Nothing says when taring is allowed. A Pre `ContentVolume = 0.0` on Taring orders it before Dispense (and makes Tare and MoveAxis a parallel block), but then the rest state cannot be reached from nothing (the content is not known after power-up). To decide: a property for what is on the scale, or Taring's Pre on the module (the spec's `capability`) |
 | The range of a discovered offer with `+=` | Bounded by the container's capacity, which the vocabulary does not have yet |
 
 ## 10. Test cases with the filling module
