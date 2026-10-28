@@ -98,8 +98,9 @@ module), registering it again when they change. The controller does not write AA
 `modreg/planar.py` describes each with the Describer that describes a FORTE module, from a module spec
 it makes in code. It departs from the table above in one point: in the controller every xbot is a
 module of its own (its root, occupation and state), and a client such as `modlink` reaches one root
-per AAS. So each shuttle's AAS is a module's, `PlanarShuttle<N>AAS`, whose one component, the xbot
-(`PlanarShuttle<N>XbotAAS`, kind PlanarXbot), holds `MoveToPosition`; the table's AAS,
+per AAS. So each shuttle's AAS is a module's, `PlanarShuttle<N>AAS`, which holds `MoveToPosition`
+itself: the shuttle is its xbot, so the xbot has no AAS of its own (until 28 Oct it was a component,
+`PlanarShuttle<N>XbotAAS`); the table's AAS,
 `PlanarTableAAS`, has the PMC as a part, the shuttles as parts found by their asset ids, and the
 flyways (`Flyway_<column>_<row>`, co-managed, meaning `lab:Flyway`), each with a coordinate at its
 centre relative to the table's base. What differs from a FORTE module: the browse paths are in the controller's namespace (index

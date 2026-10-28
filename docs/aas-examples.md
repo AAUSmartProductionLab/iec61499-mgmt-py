@@ -1,6 +1,6 @@
 # The example line: its AASs
 
-27 AASs, the lab's reference models: the line, the planar table and its shuttles, the modules
+24 AASs, the lab's reference models: the line, the planar table and its shuttles, the modules
 (filling, stoppering, capping, inspection; loading and unloading are named but not described yet),
 the components of each module, three products (a 2 mL vial, a prefilled syringe of 1 mL, a
 cartridge of 3 mL) and the process of each on the line. A process AAS binds a product's recipe to
@@ -78,9 +78,9 @@ FillingLineAAS
     skill Stop()
     skill Abort()
     skill Clear()
-    PlanarShuttle1AAS: Occupy(), Release(), Reset(), Start(), Stop(), Abort(), Clear()
-    PlanarShuttle2AAS: Occupy(), Release(), Reset(), Start(), Stop(), Abort(), Clear()
-    PlanarShuttle3AAS: Occupy(), Release(), Reset(), Start(), Stop(), Abort(), Clear()
+    PlanarShuttle1AAS: MoveToPosition(X = 0.0 mm, Y = 0.0 mm, Rz = 0.0 deg) → ReachedX [mm], ReachedY [mm], ReachedRz [deg], Occupy(), Release(), Reset(), Start(), Stop(), Abort(), Clear()
+    PlanarShuttle2AAS: MoveToPosition(X = 0.0 mm, Y = 0.0 mm, Rz = 0.0 deg) → ReachedX [mm], ReachedY [mm], ReachedRz [deg], Occupy(), Release(), Reset(), Start(), Stop(), Abort(), Clear()
+    PlanarShuttle3AAS: MoveToPosition(X = 0.0 mm, Y = 0.0 mm, Rz = 0.0 deg) → ReachedX [mm], ReachedY [mm], ReachedRz [deg], Occupy(), Release(), Reset(), Start(), Stop(), Abort(), Clear()
 ```
 
 | AAS | Kind | Submodels |
@@ -88,11 +88,8 @@ FillingLineAAS
 | `FillingLineAAS` | system | Variables, HierarchicalStructures |
 | `PlanarTableAAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
 | `PlanarShuttle1AAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
-| `PlanarShuttle1XbotAAS` | component/planarxbot | Skills |
 | `PlanarShuttle2AAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
-| `PlanarShuttle2XbotAAS` | component/planarxbot | Skills |
 | `PlanarShuttle3AAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
-| `PlanarShuttle3XbotAAS` | component/planarxbot | Skills |
 | `FillingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
 | `StopperingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
 | `CappingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
