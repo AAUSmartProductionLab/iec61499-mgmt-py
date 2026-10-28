@@ -12,7 +12,7 @@
 
 <https://w3id.org/2025/arso>
   rdf:type owl:Ontology ;
-  owl:versionIRI <https://w3id.org/2025/arso/0.11.0> ;
+  owl:versionIRI <https://w3id.org/2025/arso/0.12.0> ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://admin-shell.io/aas/3/1/> ;
   owl:imports <https://w3id.org/2025/arso/modules/nameplate> ;
@@ -25,7 +25,12 @@
   owl:imports <https://w3id.org/2025/arso/modules/technical-data> ;
   owl:imports <https://w3id.org/2025/arso/modules/aimc> ;
   owl:imports <https://w3id.org/2025/arso/modules/control-configuration> ;
-  rdfs:comment """ARSO v0.11 — Domain extension ontology for Resource AAS.
+  rdfs:comment """ARSO v0.12 — Domain extension ontology for Resource AAS.
+
+  v0.12 (28 Oct 2026): where a part is (docs/locations-and-layout.md). A Node of Hierarchical
+  Structures may say where its part is in its parent's frame (Frame: X, Y, Z, RX, RY, RZ, as
+  AutomationML's Frame attribute, with IDTA 02075's ids); a co-managed Node with a meaning and a
+  Frame is a point of interest (where a shuttle stands to be served, where a robot picks).
 
   v0.11 (27 Oct 2026): the capability model is what new skills are planned from
   (docs/skill-planning.md). A primitive's Contract becomes Conditions (Precondition, Postcondition,
