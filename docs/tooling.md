@@ -209,7 +209,8 @@ python -m modsync describe cell/modules/filling.yaml --target pi     # the AASs 
 ranges its parameters set follow from the skill types (`ontology/Vocabulary/skills.ttl`) and what
 each parameter means (the spec's `meaning`). `modsync record` derives them anew after a build;
 `modreg serve` does it on the AAS server for a module (`POST /capabilities/<shell>`), as the skill
-editor is to after saving. A new primitive type: add it to `skills.ttl` with the capability it
+editor is to after saving. The service also checks and plans for the editor (`POST /check/<shell>`,
+with a flow not saved yet in the body if wanted, and `POST /plan/<shell>`; `modplan` underneath). A new primitive type: add it to `skills.ttl` with the capability it
 contributes (a test fails otherwise).
 
 **A new submodel or element**: ARSO first (ask), then `modreg generate`, then the profile code
