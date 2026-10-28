@@ -226,3 +226,26 @@ python -m modsync pull --host 192.168.0.203 --register http://localhost:8090    
 `modsync reconfigure http://localhost:8081 ... --record` writes the changed submodels back to the
 server. **The lab's AAS server is never published to without the user's go**: the same ids would
 overwrite the shells the lab's stations use.
+
+## 7. Planning new skills (modplan)
+
+`modplan` (in `aas61499-tools/`, the `planning` extra: GTPyhop) reads a module's AAS and plans new
+module level skills from its Capability Description ([skill-planning.md](skill-planning.md),
+[tools.md](tools.md), section 5). Its argument is what modsync takes: a folder of AAS files or an AAS
+server.
+
+```powershell
+python -m modplan domain aas/                         # what the planner reads: capabilities, constraints, the rest state
+python -m modplan check aas/                          # every module level skill through the states (exit 1 on a finding)
+python -m modplan discover aas/                       # the process capabilities the module can carry out
+python -m modplan plan aas/ --capability Filling --value FillVolume=2.0 --result FillWeight --name FillTwo --write
+python -m modsync reconfigure aas/ --host <FORTE> --port 61499   # then build what was planned, online
+```
+
+**A new kind of primitive** gets its capability in the vocabulary: `lab:realizes` on its type in
+`ontology/Vocabulary/skills.ttl`, and the capability's `pprl:pre`, `pprl:post` and `pprl:invariant` in
+`capabilities.ttl` (`tests/test_modplan_vocabulary.py` fails otherwise). **What holds on one module
+only** (the needle in the vial while dosing) is the `capability` of the skill in the module's spec:
+`values`, `precondition`, `postcondition`, `invariant`, with `<Item>.<meaning>` for another item's
+state. Tests: `aas61499-tools/tests/test_modplan*.py`; on FORTE `test_modplan_live.py` (with
+`--module-forte-exe`).
