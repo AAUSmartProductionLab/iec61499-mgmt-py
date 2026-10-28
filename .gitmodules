@@ -1,6 +1,7 @@
 [submodule "aas-model"]
 	path = aas-model
-	url = https://github.com/tristan-schwoerer/aas-model
+	url = https://github.com/MartinJensen37/aas-model
+	branch = lab-ppr-models
 [submodule "iec61499-opcua-hmi"]
 	path = iec61499-opcua-hmi
 	url = https://github.com/AAUSmartProductionLab/iec61499-opcua-hmi
