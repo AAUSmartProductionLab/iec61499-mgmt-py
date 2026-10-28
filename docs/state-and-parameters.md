@@ -6,6 +6,12 @@ submodel of our own; how states, measurements and events are told apart; and wha
 Parameters submodel instead. The database behind the history is left out on purpose: the model
 only says where history is and how to ask for it.
 
+**28 Oct 2026:** the structure planned here is aas-model's Variables submodel: live values as
+Properties, and `State`, `Measurements` and `Log` holding IDTA 02008 time series as SMCs, each with an
+InfluxDB segment. It replaces ARSO's Operational Data (ARSO 0.14); read "Operational Data" below as
+Variables. The coordinates are in `Measurements` ([locations-and-layout.md](locations-and-layout.md)).
+The modules' series are not built yet.
+
 ## 1. Where we are
 
 | Today | Problem |

@@ -140,7 +140,7 @@ unoccupied; a client occupies it and sends Reset.
 
 The state per area and the timeline are in [next-steps.md](next-steps.md); this is the short form.
 
-**Built:** the module library and rules (D1); the information model in ARSO 0.13 (D2); verify,
+**Built:** the module library and rules (D1); the information model in ARSO 0.14 (D2); verify,
 reconfigure (a value, a new skill), record, operate from the AAS alone, on FORTE on the PC and on
 the Pi 5 (D3); `modsync project` writes the 4diac project of what runs. The program structure was
 reworked 21 to 22 Oct (deployed inside the application's container so the IDE monitors it, the
@@ -161,8 +161,16 @@ the IEC 61499 module architecture that makes skills, and updating a running modu
   restart, five runs in `cell/eval/results`), `cell/eval/planners.py` (the planners timed),
   `cell/eval/figures.py` (the downtime figure).
 - **Locations, H1 to H5** ([locations-and-layout.md](locations-and-layout.md)): coordinates in
-  Operational Data, a tree of transforms rooted at the table's base (ARSO 0.13, 28 Oct), points of interest, the planar table and its shuttles as modules
-  with the flyway layout (`modreg profile planar`), the line scenario's stations from the AASs.
+  Variables, a tree of transforms rooted at the table's base (28 Oct), points of interest, the planar
+  table and its shuttles as modules with the flyway layout (`modreg profile planar`), the line
+  scenario's stations from the AASs.
+- **The reference models** (28 Oct; [aas-examples.md](aas-examples.md)): the types, templates and
+  classes of the product, process and resource AASs in aas-model (branch `lab-ppr-models`, its
+  `docs/lab-aas.md` and a description per submodel in `docs/lab-submodels`); modreg builds the modules
+  with them, and Variables replace Operational Data (ARSO 0.14). Three products (a 2 mL vial, a
+  prefilled syringe of 1 mL, a cartridge of 3 mL) and the process of each on the line are written out
+  in `cell/examples/products` and `cell/examples/processes`; `cell/examples/example_line.py` builds
+  every AAS of the line and checks each process.
 - **The paper's outline and figure drafts**: [paper-outline.md](paper-outline.md) (narrowed on
   28 Oct to restructuring a module through its AAS; 17 references from
   [paper-references.bib](paper-references.bib)), `docs/figures`; the effort count

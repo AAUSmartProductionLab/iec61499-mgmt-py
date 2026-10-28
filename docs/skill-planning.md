@@ -73,7 +73,7 @@ holds until a Post sets it again (the frame rule).
 
 **A property is a state variable**, identified by:
 
-1. its `SameProperty`, if it has one: the data point of the module's Operational Data it names
+1. its `SameProperty`, if it has one: the data point of the module's Variables it names
    (`LinearAxis_ActualPosition`, `LinearAxis_Homed`, `Scale_Weight`). Every capability that points at
    the same data point talks about the same state; the start state can be read live; and the runtime
    conditions (section 5) talk about the same signals;
@@ -110,7 +110,7 @@ CapabilityContainer  Dosing                    lab:Dosing, NotAssigned          
     Volume           Range 0.5–10.0 mL         lab:Volume
     FlowRate         Range 0.1–5.0 mL/s        lab:FlowRate
     FillPosition     40.0 mm                   lab:FillPosition
-    NeedlePosition   –                         lab:Position, SameProperty → OperationalData/LinearAxis_ActualPosition
+    NeedlePosition   –                         lab:Position, SameProperty → Variables/LinearAxis_ActualPosition
     ContentVolume    –                         lab:ContentVolume
     Weighed          –                         lab:Weighed
   CapabilityRelations

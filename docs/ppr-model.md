@@ -57,22 +57,27 @@ Production Sequence; they move with the planner change (F6).
 
 ## 2. The submodels
 
-Template "ours" means a submodel template of our own, generated from the ontology (section 6).
+Template "ours" means a submodel template of our own (section 6). Since 28 Oct the types of the three
+AASs, the templates and their classes are in aas-model (branch `lab-ppr-models`: `Product`,
+`Process`, `Module`, `Component`, `ProductionSystem`; its `docs/lab-aas.md`), and the example line's
+are the lab's reference models: three products and their processes written out in Python
+(`cell/examples/products`, `cell/examples/processes`), the modules built from their specs
+([aas-examples.md](aas-examples.md)).
 
 **Product AAS**
 
 | Submodel | Template | Holds | Built |
 | --- | --- | --- | --- |
-| Nameplate | IDTA 02006 | What the product is | Yes (`modreg`) |
+| Nameplate | IDTA 02006 | What the product is | Yes |
 | Hierarchical Structures | IDTA 02011 | The bill of material: parts with quantities, each part's AAS by its asset id | Yes |
 | Process Parameters | IDTA 02031 + our extension | The processes with product, process and resource parameters, the materials each uses (`MaterialUse`), a reference to the capability each requires | Yes |
 | Capability Description | IDTA 02020, role Required | The capabilities the processes require, with values or acceptable ranges | Yes |
-| Production Sequence | ours (the planner's, 3.0) | The recipe: steps that run processes, calls of sub-recipes, parallel, decision and optional flows, conditions | Yes, with bindings that move to the process AAS |
+| Production Sequence | ours (the planner's, 2.0) | The recipe: steps that run processes, calls of sub-recipes, parallel, decision and optional flows, conditions | Yes; the reference products' name no equipment, the planner still writes bindings into it (F6) |
 
-**Process AAS** (a draft since 26 Oct: `cell/examples/process_aas.py` makes the vial's on the example
-line, `Vial2mLOnFillingLineAAS`, from the bindings the planner keeps in the product today; no
-template or ontology yet. Its asset is the process; it carries the product's and the line's asset ids
-as specific asset ids, so it is found from either)
+**Process AAS** (built since 28 Oct: aas-model's `Process` with templates of its own; one per
+reference product on the example line, `cell/examples/processes`, checked by `plan_check.check_process`.
+No ontology yet. Its asset is the process; it carries the product's and the line's asset ids as
+specific asset ids, so it is found from either)
 
 | Submodel | Template | Holds |
 | --- | --- | --- |
@@ -87,10 +92,10 @@ as specific asset ids, so it is found from either)
 | Nameplate | IDTA 02006 | What the resource is | Yes |
 | Hierarchical Structures | IDTA 02011 | Its parts: a line's modules, a module's components | Yes |
 | Capability Description | IDTA 02020, role Offered | What it offers, with ranges, each capability realized by a skill; derived from the skills (section 5) | Yes, derived since 26 Oct |
-| Skills | ours (ARSO 0.9) | Each skill as its commands, directly in the submodel; the Start's variables are the parameters with limits; a composite's steps; the error codes | Yes |
+| Skills | ours (ARSO) | Each skill as its commands, directly in the submodel; the Start's variables are the parameters with limits; a composite's steps; the error codes | Yes |
 | Asset Interfaces Description | IDTA 02017 (+ aas-model's actions) | The OPC UA endpoint and every action and property | Yes |
 | Asset Interfaces Mapping Configuration | IDTA 02027 | Which interface element feeds which data, which action an Operation calls | Yes |
-| Operational Data | ours | States, measurements and events as series SMCs shaped as IDTA's Time Series, each with a `Latest` property and a reference to its history in a time-series database | Data points today; series planned ([state-and-parameters.md](state-and-parameters.md)) |
+| Variables | aas-model's (ARSO 0.14; Operational Data until 0.13) | Live values as Properties (their meaning a supplemental id), and `State`, `Measurements` and `Log` holding IDTA 02008 time series as SMCs; the coordinates in `Measurements` | Data points and coordinates; series planned ([state-and-parameters.md](state-and-parameters.md)) |
 | (in Skills) `RuleSet`, `Deployment` | ours (ARSO 0.10) | The rule set the program is built by; per module level skill, `Built` or `Described`. What was built in detail (instances, block types, hashes, the change log) is the integrator's record outside the AAS ([control-configuration.md](control-configuration.md)) | Yes, since 27 Oct |
 | Parameters | ours | The resource's settings (microsteps, speed, timeouts) | Planned |
 | Technical Data | IDTA 02003 | Fixed facts (screw lead, motor current) | Planned |
@@ -175,16 +180,18 @@ their own and come later.
 
 ## 6. Submodel templates of our own
 
-Generated from the ontology by `modreg generate`: the template (JSON), the pydantic classes, and
-(to do) a description of every element in the form of IDTA's specifications, for our own use and
-the paper.
+In aas-model since 28 Oct: the templates (`templates/`), the pydantic classes made from them
+(`scripts/lab_generate.py`) and a description of every submodel, its purpose and reasons by hand and
+its elements in the form of IDTA's specifications written from the template (`docs/lab-submodels/`,
+`scripts/lab_docs.py`). `modreg generate` writes ARSO's templates from the ontology into aas-model.
 
 | Template | Ontology | Template and classes | Element description |
 | --- | --- | --- | --- |
-| Skills, Control Configuration, Operational Data, Parameters | ARSO | Yes | To do |
-| Production Sequence (the recipe) | APSO (remade) | Copied from the planner (2.0; the planner writes 3.0) | To do |
-| Process Parameters extension | APSO (remade) | Yes | To do |
-| Process Information, Bindings, Validation | AProSO (remade) | To do | To do |
+| Skills, Control Configuration, Parameters | ARSO | Yes, from the ontology | Yes |
+| Variables (with the coordinates) | ARSO 0.14 describes aas-model's | aas-model's own classes | Yes (`docs/lab-aas.md`) |
+| Production Sequence (the recipe) | APSO (remade) | Copied from the planner (2.0) | Yes |
+| Process Parameters extension | APSO (remade) | Yes | Yes |
+| Process Information, Bindings, Validation | AProSO (remade) | Yes, written by hand | Yes |
 
 ## 7. The applications
 

@@ -137,6 +137,6 @@ still differs:
    of Uses and Occupies.
 3. A skill that is not offered has no Operation and no interface action, which ARSO asks of every
    skill; such a skill is not listed, and steps name it by an external reference.
-4. Operational Data: ARSO's data point is a decimal Property, so Booleans are 0 or 1.
+4. Variables (Operational Data until 0.13): a module's data point is a decimal Property, so Booleans are 0 or 1.
 5. Capabilities, Technical Data and the active procedure and change log of Control
    Configuration are not written yet.
