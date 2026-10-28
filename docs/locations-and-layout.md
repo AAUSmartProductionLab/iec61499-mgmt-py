@@ -21,8 +21,13 @@ line  ←  PlanarTable                            the table in the line's frame
 => FillPoint in the table's frame = (line ← PlanarTable)⁻¹ ∘ (line ← FillingModule) ∘ (FillingModule ← FillPoint)
 ```
 
-The building is the root: its AAS (or the line's) gets IDTA 02045 Asset Location (address, a
-coordinate system with ground control points, the hall as an area), and everything inside is frames.
+The line is the root. No building or hall is modelled, and IDTA 02045 Asset Location is not used
+(decided 28 Oct, [design-log.md](design-log.md)).
+
+The frame is a statement that IDTA 02011 does not define, so it extends that template. The template
+allows it: it is "broad enough to be extended upon … the elements proposed here may be specified
+further" (02011-1-1, section 1.6). The frame is added beside the template's own elements and changes
+none of them, so a reader of the bill of material still reads it.
 
 **As built (28 Oct).** The Node gets a collection `Frame` (ARSO `FrameSMC`) with the Properties `X`,
 `Y`, `Z` (qualifier Unit mm) and `RX`, `RY`, `RZ` (deg), each with IDTA 02075's id. The rotation is
@@ -111,7 +116,7 @@ simulated driver: the table brought to Execute and a shuttle moved with `modlink
 
 | Where | Change |
 | --- | --- |
-| ARSO (`hierarchical-structures.ttl`) | A `Frame` on an entity (the six values, their units); point entities with a meaning; Asset Location (IDTA 02045) as an optional submodel of a line or a building |
+| ARSO (`hierarchical-structures.ttl`) | A `Frame` on an entity (the six values, their units); point entities with a meaning |
 | Vocabulary | The point meanings; a transport capability with the target as its properties |
 | `modreg` | Frames and points from the specs (`location` of a module in the line, of a component in the module; `points` of a module); the planar table's AAS from its spec and the controller |
 | `planar-controller` | The layout over OPC UA |
@@ -122,6 +127,7 @@ simulated driver: the table brought to Execute and a shuttle moved with `modlink
 | Point | Proposal |
 | --- | --- |
 | Units of a frame | AutomationML's, checked against IEC 62714 before building; the interfaces stay in mm and degrees |
-| A building AAS, or Asset Location on the line | The line, until there is more than one line. Read 28 Oct: IDTA 02045-1-0 (July 2024, submodel `https://admin-shell.io/idta/smt/assetlocation/1/0`) is made for tracking and tracing: `Addresses` (postal, ECLASS 0173-1#01-ADR442#007), `CoordinateSystems` (each a record with its `CoordinateSystemId`, ground control points to a geographic system, an elevation reference), `VisitedAreas` (site, building, fence), `AreaRelations`, and `AssetTraces` with `LocationRecords` (a `Position`, 0173-1#02-ABI783#001, with a `CoordinateSystemReference` and a `Time`). For the line: the building's address, the hall's coordinate system and one location record for the line's origin in it. Needs the lab's address and a measured origin of the hall; not built |
+| A building AAS, or Asset Location on the line | Neither (28 Oct): the line is the root. IDTA 02045-1-0 was read; it is for tracking and tracing, without orientation or parent-relative frames ([design-log.md](design-log.md)) |
+| The frame as an extension of 02011 | As built: six properties with IDTA 02075's ids in a `Frame` collection on the node. Alternatives: the six properties straight on the node, without the collection; or the placement in the part's own AAS, if IDTA 02075 offers a submodel for it (to check) |
 | Which configurator reads the layout | To be named |
 | Transport as a capability for the agents | With the agents, after the paper |
