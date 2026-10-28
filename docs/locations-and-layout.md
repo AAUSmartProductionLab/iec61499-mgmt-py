@@ -61,6 +61,12 @@ the table's frame.
 placeholder layout, the filling and stoppering transfer points are the simulated table's stations
 Filling (240, 660, 0) and Stoppering (600, 660, 90) (`test_modreg_frames.py`).
 
+**The stations from the AAS (H5, 28 Oct).** The line has points of its own where its loading and
+unloading robots place and pick (Infeed, a PlacePoint; Outfeed, a PickPoint: their modules are not
+described yet), and the planned capping module a transfer point. `example_line.stations` gives all
+five in the table's frame; they are the scenario's stations, and the scenario runs to them when it
+is handed them (`run_line(places=...)`, `--stations stations.json`).
+
 ## 3. The planar table as a module
 
 The planar controller (`planar-controller/`, Python) already offers the table like a generated module:

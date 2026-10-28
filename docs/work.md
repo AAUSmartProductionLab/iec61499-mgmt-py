@@ -445,6 +445,10 @@ The design is [locations-and-layout.md](locations-and-layout.md); H1 to H4 of [n
   modules by the Describer, from specs made in code; the controller shows its layout over OPC UA (a
   commit in the planar-controller submodule, not pushed yet), `modreg profile planar --host` reads
   it, `modreg register planar --every` keeps the AAS up to date. modlink moves a shuttle from the AAS.
+- **The stations** (H5): the line's Infeed and Outfeed points and the modules' transfer points give
+  the line scenario's five stations exactly; the scenario ran to them on the simulated driver (two
+  agents, four products, no problems). Two commits wait in the planar-controller submodule (the
+  layout over OPC UA, the stations from outside), not pushed.
 
 Learned:
 
