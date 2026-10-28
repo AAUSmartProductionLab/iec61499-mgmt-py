@@ -18,7 +18,20 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
-- **Locations: IDTA 02045 Asset Location for the site, frames for the line.** *Journal.*
+- **No building, no hall, no IDTA 02045: the line is the root of all locations.** *Journal.*
+  Decided by the user, overriding the entry below: the site level is not needed.
+- **The frame on a Hierarchical Structures node extends IDTA 02011.** *Journal.*
+  - What it adds: a statement the template does not define.
+  - Why it is acceptable: 02011 (1.1, section 1.6) is meant to be "extended upon … specified
+    further". The frame sits beside the template's elements and changes none, and its six properties
+    carry IDTA 02075's ids. A reader of the bill of material is not affected.
+  - The difference from extending 02045: there, a missing concept (orientation) would have been
+    pushed into elements that mean something else (time-stamped records). Here a new, separately
+    identified element is added. Both are extensions; this one is milder.
+  - Open: the six properties straight on the node, without the `Frame` collection (fewer wrappers);
+    or the placement in the part's own AAS, if IDTA 02075 has a submodel for it.
+- **Locations: IDTA 02045 Asset Location for the site, frames for the line.** *Journal.* (Superseded
+  above.)
   - 02045 holds the site and hall level: the address, the hall's coordinate system (local, with
     ground control points to WGS84), the hall as an area, and time-stamped records of where an asset
     was.
