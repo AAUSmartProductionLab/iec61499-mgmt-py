@@ -8,7 +8,7 @@ from __future__ import annotations
 from modgen.spec import (AllOf, AnyOf, Comparison, Composite, Decision, Equipment, Input, ModuleSpec, Parallel, Parameter,
                          Skill, Step)
 
-from .aasjson import BASE, also, at, children, qualifier, skills_in, submodel, target, variables
+from .aasjson import BASE, also, at, children, parts, qualifier, skills_in, submodel, target, variables
 
 PRIMITIVE, COMPOSITE, CONTROL = (f"{BASE}/skill/{kind}" for kind in ("Primitive", "Composite", "ModuleControl"))
 # The kinds of step a module built by the module rules can run (rule set 2: parallel blocks and decisions).
@@ -62,7 +62,7 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
     structure_, skills_ = (submodel(module, n) for n in ("HierarchicalStructures", "Skills"))
     if skills_ is None:
         raise NotDescribed("the module's AAS has no Skills submodel")
-    items = {node.get("globalAssetId"): node["idShort"] for node in children(at(structure_, "EntryNode"))}
+    items = {node.get("globalAssetId"): node["idShort"] for node in parts(structure_)}
     equipment = {item: Equipment.model_construct(inputs={}) for item in items.values()}
 
     skills: dict[str, Skill] = {}

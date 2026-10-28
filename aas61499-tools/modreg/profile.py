@@ -46,7 +46,7 @@ from aas_model.submodel_templates import (
 from aas_pydantic import Capability, Key, ModelReference, Property, Qualifier, ReferenceElement
 from aas_pydantic.submodel_templates import asset_interfaces_description as wot
 from aas_pydantic.submodel_templates import capability_description as cd
-from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures, Node
+from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType
 from aas_pydantic.submodel_templates.nameplate import ManufacturerProductDesignation, SerialNumber
 
 from modgen.library import q
@@ -125,6 +125,19 @@ def skill_id(name: str) -> str:
 def meaning(name: str, given: str | None = None) -> str:
     """What a capability or capability property means: the spec's IRI, else the lab's."""
     return given or f"{BASE_URL}/semantics/{name}"
+
+
+def frame(location) -> model.NodeFrame | None:
+    """Where a part or a point is in its parent's frame (ARSO 0.12): mm and degrees."""
+    if location is None:
+        return None
+    unit = lambda u: [Qualifier(type_="Unit", value=u, kind="ConceptQualifier")]  # noqa: E731
+    return model.NodeFrame(X=model.FrameX(value=text(location.x), qualifiers=unit("mm")),
+                           Y=model.FrameY(value=text(location.y), qualifiers=unit("mm")),
+                           Z=model.FrameZ(value=text(location.z), qualifiers=unit("mm")),
+                           RX=model.FrameRX(value=text(location.rx), qualifiers=unit("deg")),
+                           RY=model.FrameRY(value=text(location.ry), qualifiers=unit("deg")),
+                           RZ=model.FrameRZ(value=text(location.rz), qualifiers=unit("deg")))
 
 
 def capability_path(name: str) -> ModelReference:
@@ -738,16 +751,22 @@ class Describer:
         nodes = {}
         for item, eq in spec.equipment.items():
             # A component is found by its asset id; an item no skill moves is only a part.
-            nodes[item] = Node(entity_type="SelfManagedEntity" if item in parts else "CoManagedEntity",
-                               global_asset_id=component_identity(spec, item)[2] if item in parts else "",
-                               description=eq.description or f"Equipment {item}")
+            nodes[item] = model.LocatedNode(entity_type="SelfManagedEntity" if item in parts else "CoManagedEntity",
+                                            global_asset_id=component_identity(spec, item)[2] if item in parts else "",
+                                            description=eq.description or f"Equipment {item}", Frame=frame(eq.location))
             for s, io in eq.inputs.items():
                 key = self.property(f"Equipment_{item}_{s}", f"/Equipment/{item}/{s}", io.type, f"{item} {s}", io.unit)
                 self.observe(f"{item}_{s}", key, f"{BASE_URL}/variables/{item}/{s}",
                              f"{item} {s}" + (f" ({io.unit})" if io.unit else ""))
-        asset.hierarchical_structures = HierarchicalStructures(
+        for name, point in spec.points.items():
+            # A point of interest: no asset of its own, a meaning and where it is (ARSO 0.12).
+            nodes[name] = model.LocatedNode(entity_type="CoManagedEntity", global_asset_id="",
+                                            supplemental_semantic_ids=[meaning(point.meaning)],
+                                            description=point.description or f"{point.meaning} of the {spec.module} module",
+                                            Frame=frame(point.location))
+        asset.hierarchical_structures = model.LocatedStructures(
             id_short="HierarchicalStructures", ArcheType=ArcheType(value="OneDown"),
-            EntryNode=EntryNode(global_asset_id=asset_id, description=f"The {spec.module} module", Node=nodes))
+            EntryNode=model.LocatedEntryNode(global_asset_id=asset_id, description=f"The {spec.module} module", Node=nodes))
 
         interface = asset.asset_interfaces_description.InterfaceTemplateForOPCUA["interface_opcua"]
         interface.title.value = f"{spec.module} module"

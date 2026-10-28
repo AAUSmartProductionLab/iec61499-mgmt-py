@@ -37,6 +37,7 @@ equipment:
       Down: {Enable: true, Down: true, Step: 50}
     # As the filling module's axis: the speed and the travel are assumed until it is measured.
     position: {unit: mm, speed: 20.0, increase: Down, decrease: Up, home: AtHome, minimum: 0.0, maximum: 60.0}
+    location: {y: 60.0, z: 100.0, rx: 180.0}   # the head at home, over the transfer point; Z down the stroke
     sim: {stepper: {step: Step, direction: Down, enable: Enable, speed: 20.0, travel: 60.0, start: 15.0,
                     switches: {AtHome: 0.0}}}
   Piston:
@@ -97,6 +98,16 @@ composites:
 procedures:
   Resetting: [RetractPiston, Home]     # the piston in before the head moves
   Stopping: [Home]
+
+# Where things are (ARSO 0.12, docs/locations-and-layout.md): poses in the module's frame, its origin
+# at the middle of the module's front at the height of the planar table, Y out of the front towards
+# the table, Z up; mm and degrees. The module's front is at the table's edge in the line, so a shuttle
+# that serves it stands half its width (60 mm) in front of it. Placeholders until the module is
+# measured; the transfer point's RZ turns the shuttle as the simulated table's station of this module
+# does (planar-controller/tests/line_scenario.py).
+points:
+  Transfer: {meaning: TransferPoint, location: {y: 60.0, rz: -90.0}, description: Where a shuttle stands with the vial under the head}
+  Press: {meaning: ProcessingPoint, location: {y: 60.0, z: 60.0}, description: The head on the stopper at the press position (40 mm down)}
 
 # What the module offers (see filling.yaml): illustrative values, as the vial stoppering station of
 # the process planner's pharma example, until the station is measured.
