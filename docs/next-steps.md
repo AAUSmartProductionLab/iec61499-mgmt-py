@@ -6,15 +6,15 @@ Plan of 8 Oct 2026, reviewed and updated on 21, 26 and 27 Oct; it replaces the p
 [aas-models.md](aas-models.md); what was decided in [decisions.md](decisions.md); how the work
 divides into repositories in [repositories.md](repositories.md).
 
-## State on 26 Oct
+## State on 28 Oct
 
 | Area | Built | Missing |
 | --- | --- | --- |
-| Reconfigure from the AAS (A) | Verify, create a skill, change a value, record, operate the result: on FORTE on the PC and on the Pi 5. A skill written by the skill editor is built and run from its AAS alone. **New:** `modsync project` writes the 4diac project of what runs (a skill added online included) and checks that it deploys that program | One Python interface for all of it (A4, started). The editor's fixes from its look in a browser are not committed to the fork (waiting for your go-ahead) |
-| Evaluation (B) | – | **Not started:** the scenario runner, the baseline by restart, the runs on the Pi. This is now the paper's largest gap |
-| Models (D2) | ARSO 0.11 for the line, module and component (27 Oct: a primitive's Conditions and Completion; the components' capabilities in the module's Capability Description); product AAS with its plan; ontologies; [pipeline.md](pipeline.md) describes the whole chain | The generation project's ARSO copy and closed validation at 0.8 (working copy, not committed) |
-| Planning (D5, new 27 Oct) | The design ([skill-planning.md](skill-planning.md)), ARSO 0.11, G1 to G5 (28 Oct): a skill planned from the AAS is created online on FORTE and runs; T1 to T12 | G6 and G7 if time allows |
-| Locations and the planar table (H, new 27 Oct) | The design ([locations-and-layout.md](locations-and-layout.md)); the controller as a submodule | H1 to H5 |
+| Reconfigure from the AAS (A) | Verify, create a skill, change a value, record, operate the result: on FORTE on the PC and on the Pi 5. A skill written by the skill editor is built and run from its AAS alone. `modsync project` writes the 4diac project of what runs (a skill added online included) and checks that it deploys that program. The scenario runner uses the functions of `modsync.desired` only (A4 for B1) | The editor's fixes from its look in a browser are not committed to the fork (waiting for your go-ahead) |
+| Evaluation (B) | The scenario runner and the baseline by restart (B1, B2, 28 Oct; five runs on this PC with simulated IO: online 0.02 to 0.05 s with the running skill kept running, by a restart 3.3 s down); the planners timed; the downtime figure | The runs on the Pi with the axis (B3, needs you at the bench) |
+| Models (D2) | ARSO 0.12 for the line, module and component (27 Oct: a primitive's Conditions and Completion; the components' capabilities in the module's Capability Description; 28 Oct: frames and points); product AAS with its plan; ontologies; [pipeline.md](pipeline.md) describes the whole chain | The generation project's ARSO copy and closed validation at 0.8 (working copy, not committed) |
+| Planning (D5, new 27 Oct) | The design ([skill-planning.md](skill-planning.md)), ARSO 0.11, G1 to G6 (28 Oct): a skill planned from the AAS is created online on FORTE and runs; T1 to T12; PDDL and HDDL through ENHSP and Aries; the service checks and plans for the editor | G7's editor half (the web UI fork); how taring is modelled (section 9 of the design) |
+| Locations and the planar table (H, new 27 Oct) | The design ([locations-and-layout.md](locations-and-layout.md)); the controller as a submodule; H1 to H5 (28 Oct): frames, points, the planar table and its layout in the AAS, the line scenario's stations from the AASs | Asset Location (IDTA 02045) for the line; pushing the two commits in the planar-controller submodule (your go) |
 | aas-model (E) | `modreg` on aas-model `6a03f78` (E1, 19 Oct); ARSO knows AID 1.2 (E2); resources are aas-model's `Resource` with ARSO's submodels, `modreg serve` is the registration service (E3 built). ARSO's submodels, Module, Component, ProductionSystem and Product added to aas-model on a local branch (`arso-submodels`, 230 tests pass) | That branch reaching aas-model (fork and pull request, or push access: your decision); one module registered on a disposable server (E3); the findings for aas-model's author (E4) |
 | Clients (C) | `modlink` reads 0.8; the HMI operates the filling module on its Pi from its AAS; its reader rewritten for 0.8 (`hmi/aas.py`, not committed in the submodule) | The HMI's tests, its stand-in module's skills and its built-in descriptions (C1); the planner's skill list leaves out ModuleControl (the planner reads ARSO skills since the fork's `ac9eb64`) |
 | Program structure (new, 21 Oct) | Deployed inside the application's container, so the 4diac IDE monitors what the tools deployed; started by the resource's own START block; one address per IO point (`gpio[...]`, `pwm[...]`, `modbus[...]`, `sim`) and the IO blocks set up their own Pi lines (no line blocks; stand-ins for GPIOChip and PWMChip in the Windows FORTE); compact layout, a layout arranged in the IDE kept per application | Typed subapplications for module level skills (asked, not decided) |
@@ -24,7 +24,8 @@ The week of 19 to 25 Oct was planned for E, A4, B1 and B2. E was done. The rest 
 into the hardware and into the program's structure, which the paper's figures and the teaching
 both use, so A4, B1 and B2 move to the coming days (see the timeline). 22 to 26 Oct went into the skill blocks'
 pins and release, the layouts, the stoppering module's move to its Pi 5 and the guides for new
-sessions ([onboarding.md](onboarding.md), [tooling.md](tooling.md)); A4, B1 and B2 are next.
+sessions ([onboarding.md](onboarding.md), [tooling.md](tooling.md)). 27 and 28 Oct: planning (G0
+to G6), the evaluation on the PC (B1, B2), locations and the planar table (H1 to H5), the outline.
 
 ## What the paper delivers
 
@@ -42,9 +43,9 @@ D3); D4 evaluates them. That is five deliverables:
 | # | Deliverable | What it is | State |
 | --- | --- | --- | --- |
 | D1 | Module rules | How a module is built: the module library (module state machine, occupation, skill state machine), the fixed pattern of a module level skill, what may change online ([module-rules.md](module-rules.md)) | Built |
-| D2 | Information model | The resource AAS in ARSO 0.11: the line, each module and each component ([aas-models.md](aas-models.md)); the skill model (commands, steps, a primitive's Conditions and Completion) and the capability model the planner reads (the module's Capability Description with its components' capabilities and their constraints) | Built to 0.11; the components' capabilities and constraints are written by G2; the generation project's ARSO copy and closed validation are at 0.8 in a working copy, not committed |
-| D3 | Method and tools | Register, verify, operate, reconfigure, record | Built for a value and for a new skill: `modsync verify`, `reconfigure`, the record, the skill editor (9 Oct), on the PC and on the Pi 5 (9 Oct); `modsync project` (21 Oct). Missing: the one Python interface (A4) |
-| D4 | Evaluation | The same changes online and by full redeployment, timed, on a Raspberry Pi; the planning cases (T1 to T12 of [skill-planning.md](skill-planning.md)) | Not built: the most urgent part after D5 |
+| D2 | Information model | The resource AAS in ARSO 0.12: the line, each module and each component ([aas-models.md](aas-models.md)); the skill model (commands, steps, a primitive's Conditions and Completion) and the capability model the planner reads (the module's Capability Description with its components' capabilities and their constraints) | Built to 0.12; the components' capabilities and constraints are written by G2; the generation project's ARSO copy and closed validation are at 0.8 in a working copy, not committed |
+| D3 | Method and tools | Register, verify, operate, reconfigure, record | Built for a value and for a new skill: `modsync verify`, `reconfigure`, the record, the skill editor (9 Oct), on the PC and on the Pi 5 (9 Oct); `modsync project` (21 Oct). The one Python interface (A4) is used by the scenario runner |
+| D4 | Evaluation | The same changes online and by full redeployment, timed, on a Raspberry Pi; the planning cases (T1 to T12 of [skill-planning.md](skill-planning.md)) | Built on this PC 28 Oct (B1, B2; the planning cases through three planners); the Pi runs (B3) open |
 | D5 | Planning (new, 27 Oct) | A module plans a new skill from its Capability Description (HTN hybrid; HDDL and PDDL generated for standard planners), and `modsync` creates it online like any described skill ([skill-planning.md](skill-planning.md)) | Built 28 Oct (G0 to G6): planned from the AAS, created online on FORTE, run; the same problems as PDDL and HDDL through ENHSP and Aries; G7 open |
 
 Agents are not part of the paper; they are its future work ([after the paper](#after-the-paper)). The
@@ -221,7 +222,7 @@ Outline and figures by 1 Nov; experiment runs and text from 2 Nov; submission 18
 | 9 to 18 Oct | A2 (writing a description), A3 (both done) |
 | 19 to 21 Oct | E1 to E3 (done); the filling hardware moving (B3, started); program structure and A5 (done) |
 | 22 to 26 Oct | Skill block pins and release, layouts, the stoppering module to its Pi 5, guides for new sessions (done) |
-| 27 to 30 Oct | G0 (done 27 Oct); G1 to G5 by Friday 30 Oct, evenings too: the planner runs on the filling module |
+| 27 to 30 Oct | G0 (done 27 Oct); G1 to G5 by Friday 30 Oct, evenings too: the planner runs on the filling module. **Done 28 Oct**, with G6, A4 for B1, B1, B2 on the PC, H1 to H5, the outline and figure drafts |
 | 31 Oct to 8 Nov | Outline and figures by 1 Nov; A4; B1 (scenario runner, with simulated IO on the PC first, a planned skill among the scenarios); B2 (baseline by restart); the new runtime and program on both Pi 5s; G6 and G7 if time allows |
 | 9 to 18 Nov | B3 runs on the Pi with the axis; experiment runs, writing |
 

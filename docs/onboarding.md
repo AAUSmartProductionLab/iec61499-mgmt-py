@@ -151,28 +151,29 @@ its Pi under FORTE and from the HMI.
 The paper's contributions (27 Oct): the skill and capability models, planning new skills from them,
 the IEC 61499 module architecture that makes skills, and updating a running module online.
 
-**Next, in this order** (the plan's priorities; planning first since 27 Oct, then the evaluation
-before anything that does not block it):
+**Built since 27 Oct** (details in [work.md](work.md) and the plan's sections G, B and H):
 
-1. **G, planning new skills** ([skill-planning.md](skill-planning.md)): **G0 to G5 done 28 Oct**
-   (`modplan`: a skill planned from the filling module's AAS is created online on FORTE and runs;
-   `python -m modplan`, [tooling.md](tooling.md), section 7). Open: G6 (HDDL, PDDL) and G7 (the
-   editor), if time allows; they are cut first.
-2. **A4, one Python interface** for verify, create a skill and set a value (`modsync`; started:
-   `desired.load`, `read`, `reconfigure`, `record`, `store`), so a script, the HMI and later an
-   agent call the same functions.
-3. **B1, the scenario runner**: plug a module in (register, verify, operate), change a constant,
-   create a new skill (written, and planned); each timed (downtime, commands sent, time to verify,
-   time to plan); unattended, writing its numbers. With simulated IO on the PC first
-   (`cell/sim/run_module.py`).
-4. **B2, the baseline**: the same changes by a new boot file and a restart; numbers side by side.
-5. **B3, on the Pi**: the runtime and program on both Pi 5s (see the table; needs the user), then
-   the scenarios on the Pi with the axis moving.
-6. Outline and figures by 1 Nov, experiment runs and text from 2 Nov.
+- **Planning, G0 to G6** ([skill-planning.md](skill-planning.md)): `modplan` plans a skill from the
+  module's AAS, describes it, `modsync reconfigure` creates it online and it runs; the same problems
+  as PDDL and HDDL for ENHSP and Aries (`modplan export`); `modreg serve` checks and plans for the
+  skill editor (G7's service half).
+- **The evaluation, B1 and B2 on this PC**: `cell/eval/scenarios.py` (each change online and by a
+  restart, five runs in `cell/eval/results`), `cell/eval/planners.py` (the planners timed),
+  `cell/eval/figures.py` (the downtime figure).
+- **Locations, H1 to H5** ([locations-and-layout.md](locations-and-layout.md)): ARSO 0.12 frames
+  along Hierarchical Structures, points of interest, the planar table and its shuttles as modules
+  with the flyway layout (`modreg profile planar`), the line scenario's stations from the AASs.
+- **The paper's outline and figure drafts**: [paper-outline.md](paper-outline.md), `docs/figures`.
 
-Also asked for (27 Oct), after G: **H, locations, points and the planar table**
-([locations-and-layout.md](locations-and-layout.md)): frames along the Hierarchical Structures,
-transfer and pick points, the planar table (`planar-controller/`) as a module with its flyway layout.
+**Next, in this order:**
+
+1. **B3, on the Pi**: the runtime and program on both Pi 5s (see the table; needs the user), then
+   the scenarios on the Pi with the axis moving (`cell/eval/scenarios.py` against the Pi).
+2. **Writing** from 2 Nov, on the outline; the figures redrawn as needed.
+3. **G7's editor half** (the web UI fork calls `POST /check` and `/plan`), when the fork's open
+   changes are committed.
+4. Open modelling points the planner found: when the scale may be tared
+   ([skill-planning.md](skill-planning.md), section 9); Asset Location (IDTA 02045) for the line.
 
 If time runs short, cut C (clients), E4 and E5, then B3 on real hardware (keep the Pi with
 simulated IO), then A3. Not to be cut: A1, A2, B1, B2.
@@ -181,7 +182,9 @@ simulated IO), then A3. Not to be cut: A1, A2, B1, B2.
 decisions of [state-and-parameters.md](state-and-parameters.md); how the `arso-submodels` branch
 reaches aas-model; the go to commit the skill editor's fixes and the generation project's ARSO 0.8;
 whether module level skills become typed subapplications in the IDE; when to commit the HMI's 0.8
-reader.
+reader; the go to push the two commits in the planar-controller submodule (the layout over OPC UA,
+the stations from outside) and then move its pin; whether to change submodules to subtrees
+([repositories.md](repositories.md)); how taring is to be modelled.
 
 ## Outside this repository
 
