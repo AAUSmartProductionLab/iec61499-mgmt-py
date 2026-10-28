@@ -414,6 +414,35 @@ Learned:
 - **Planning is cheap**: reading the filling module's domain about 1 ms, a plan 0.6 ms (median of 20);
   composing a skill with the AAS read and written about 0.14 s.
 
+## Locations and the planar table (28 Oct)
+
+The design is [locations-and-layout.md](locations-and-layout.md); H1 to H4 of [next-steps.md](next-steps.md).
+
+- **Frames and points** (ARSO 0.12, Vocabulary 0.3): a Node's `Frame` (AutomationML's, with IDTA
+  02075's ids), a module spec's `location` per item and `points` (filling: Transfer, Fill;
+  stoppering: Transfer, Press), the example line laid out around the planar table.
+  `modreg.frames.relative` gives a module's transfer point in the table's frame: with the
+  placeholder layout these are the simulated table's stations.
+- **The planar table** (`modreg/planar.py`, Vocabulary 0.4): the table and each shuttle described as
+  modules by the Describer, from specs made in code; the controller shows its layout over OPC UA (a
+  commit in the planar-controller submodule, not pushed yet), `modreg profile planar --host` reads
+  it, `modreg register planar --every` keeps the AAS up to date. modlink moves a shuttle from the AAS.
+
+Learned:
+
+- **A field and its type of the same name** (`Frame: Optional[Frame]`) make pydantic read the type
+  as the field's default, `None`, with `from __future__ import annotations`: the class is
+  `NodeFrame`.
+- **A spec's method and field**: `ModuleSpec.points()` (the IO points) is `io_points()` now, since
+  `points` are the points of interest.
+- **Points have no asset id**, so a module's parts by asset id collapsed two points into one key:
+  modsync reads its parts through `aasjson.parts`, which leaves the points out.
+- **The planar controller mirrors a generated module** (Occupation, Module, Skills, Equipment
+  below `/Objects/<Module>`), so the FORTE module's Describer describes it with three changes: the
+  namespace index (2, not FORTE's 1), no rule set, and the controller's own errors. Its skill's
+  parameters and results share the names X, Y, Rz, which an Operation may not (AASd-022): the
+  results are `Reached<X>` in the AAS, read from the controller's `Results/<X>` by meaning.
+
 ## Registration: the AAS of a module (modreg)
 
 Decided on 2 Oct 2026: the resource ontology (ARSO, `ontology/ARSO`) says what a resource AAS

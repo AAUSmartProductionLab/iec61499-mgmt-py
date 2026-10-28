@@ -1,7 +1,8 @@
 # Locations, points and the planar table's layout
 
 Design of 27 Oct 2026. Frames and points (sections 1 and 2) are built since 28 Oct (ARSO 0.12,
-Vocabulary 0.3, `modreg/frames.py`); the planar table's AAS (section 3) is not yet. Every resource AAS says where its parts are relative to itself, so
+Vocabulary 0.3, `modreg/frames.py`), and so is the planar table's AAS (section 3, `modreg/planar.py`,
+vocabulary 0.4). Every resource AAS says where its parts are relative to itself, so
 that any point of interest (where a shuttle stands for the vial to be filled, where a robot picks or
 places) is known in any frame, in particular in the planar table's, which is what a shuttle is moved
 in. And the planar table is described like any module, with its flyway layout in its AAS.
@@ -78,6 +79,27 @@ layout from the PMC (`planar/layout.py`) and the xbots it finds. Proposal: the c
 over OPC UA (`PlanarTable/Layout`: columns, rows, the flyways present, the flyway size), and `modreg`
 describes the table from a small spec plus what runs (as `modreg profile --host` does for a FORTE
 module), registering it again when they change. The controller does not write AASs itself.
+
+**As built (28 Oct).** The controller lays out every module like a generated one, so
+`modreg/planar.py` describes each with the Describer that describes a FORTE module, from a module spec
+it makes in code. It departs from the table above in one point: in the controller every xbot is a
+module of its own (its root, occupation and state), and a client such as `modlink` reaches one root
+per AAS. So each shuttle's AAS is a module's, `PlanarShuttle<N>AAS`, whose one component, the xbot
+(`PlanarShuttle<N>XbotAAS`, kind PlanarXbot), holds `MoveToPosition`; the table's AAS,
+`PlanarTableAAS`, has the PMC as a part, the shuttles as parts found by their asset ids, and the
+flyways (`Flyway_<column>_<row>`, co-managed, meaning `lab:Flyway`, the Frame at the flyway's
+centre). What differs from a FORTE module: the browse paths are in the controller's namespace (index
+2), there is no rule set, the errors include the controller's own (20 to 30), a skill has no
+Conditions or Completion (the controller decides when a move has ended), and the results are
+`ReachedX`, `ReachedY`, `ReachedRz` in the AAS, because an Operation's variables need idShorts of
+their own (AASd-022) and the controller calls parameters and results both X, Y, Rz; they show the
+controller's `Results/X` all the same.
+
+The controller shows its layout since 28 Oct (`Equipment/PMC/Columns`, `Rows`, `FlywaySize`, `Holes`,
+known once the PMC is connected; a commit in the submodule, not pushed yet). `modreg profile planar
+--host <controller>` reads it with the shuttles, and `modreg register planar ... --every 10`
+registers the AASs again whenever they change. `test_modreg_planar.py` runs the controller on its
+simulated driver: the table brought to Execute and a shuttle moved with `modlink`, from the AASs alone.
 
 ## 4. What changes where
 

@@ -187,6 +187,8 @@ changed only after asking the user.
 | ARSO's own submodels as templates and classes | `modreg/templates/*.json` and `modreg/generated/`, made by `modreg generate` |
 | The ontology check | `modreg/ontology.py` |
 | The registration service | `modreg/service.py` (`modreg serve`) |
+| Where parts and points are: frames along Hierarchical Structures | `modreg/frames.py` (`where`, `relative`) |
+| The planar table and its shuttles, from the planar controller | `modreg/planar.py` (the source `planar`) |
 
 ```powershell
 python -m modreg profile filling --target pi                         # profiles/ (module and components)
@@ -195,6 +197,9 @@ python -m modreg build profiles/FillingModuleAAS.json                # the AAS -
 python -m modreg check profiles/FillingModuleAAS.json --ontology ontology/ARSO
 python -m modreg generate --ontology ontology/ARSO                   # after an ontology change: templates and classes (commit both)
 python -m modreg graph filling --target pi --out filling.ttl         # the AASs as RDF with what they describe (PPRL)
+python -m modreg profile planar --host <controller>                  # the planar table, its shuttles and layout, as the controller shows them
+python -m modreg profile planar --layout 4x3 --holes "2,1" --shuttles 1,2,3   # ... as given
+python -m modreg register planar --host <controller> --service http://<host>:8090 --every 10   # again whenever they change
 python -m modsync describe cell/modules/filling.yaml --target pi     # the AASs from the spec alone -> aas/
 ```
 
