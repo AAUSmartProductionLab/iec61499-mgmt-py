@@ -122,6 +122,6 @@ simulated driver: the table brought to Execute and a shuttle moved with `modlink
 | Point | Proposal |
 | --- | --- |
 | Units of a frame | AutomationML's, checked against IEC 62714 before building; the interfaces stay in mm and degrees |
-| A building AAS, or Asset Location on the line | The line, until there is more than one line |
+| A building AAS, or Asset Location on the line | The line, until there is more than one line. Read 28 Oct: IDTA 02045-1-0 (July 2024, submodel `https://admin-shell.io/idta/smt/assetlocation/1/0`) is made for tracking and tracing: `Addresses` (postal, ECLASS 0173-1#01-ADR442#007), `CoordinateSystems` (each a record with its `CoordinateSystemId`, ground control points to a geographic system, an elevation reference), `VisitedAreas` (site, building, fence), `AreaRelations`, and `AssetTraces` with `LocationRecords` (a `Position`, 0173-1#02-ABI783#001, with a `CoordinateSystemReference` and a `Time`). For the line: the building's address, the hall's coordinate system and one location record for the line's origin in it. Needs the lab's address and a measured origin of the hall; not built |
 | Which configurator reads the layout | To be named |
 | Transport as a capability for the agents | With the agents, after the paper |
