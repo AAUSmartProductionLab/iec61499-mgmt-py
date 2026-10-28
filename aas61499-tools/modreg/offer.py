@@ -36,8 +36,8 @@ from modsync.described import described
 
 from . import model
 from .derive import Offer, Property, local, offers as derived_offers
-from .model import ModuleTypeAAS
-from .generated import skills as arso
+from .model import Module
+from aas_model.submodel_templates.arso import skills as arso
 from .profile import OFFERED_SET, Describer, capability_description, prop, put
 from .projection import project, target
 
@@ -72,7 +72,7 @@ def offered(module: dict, spec: ModuleSpec, skills: list[str]) -> dict:
     interface = at(submodel(module, "AssetInterfacesDescription"), "interface_opcua")
     describer = Describer(spec, "", None, None, None, at(interface, "EndpointMetadata", "base")["value"])
     describer.module_id = shell["id"]
-    asset = ModuleTypeAAS(id_short=shell["idShort"], id=shell["id"],
+    asset = Module(id_short=shell["idShort"], id=shell["id"],
                           asset_type=shell["assetInformation"].get("assetType") or f"{model.RESOURCE}/Module",
                           derived_from=model.RESOURCE_TEMPLATE)
     for name in skills:
@@ -80,14 +80,14 @@ def offered(module: dict, spec: ModuleSpec, skills: list[str]) -> dict:
     describer.interface_and_data(asset)
     asset.asset_interfaces_mapping_configuration = describer.mappings()
     # The same way a module's AAS is built: profile, then the AAS it describes.
-    built = model.build(model.profile(ModuleTypeAAS.model_validate(asset.model_dump()),
+    built = model.build(model.profile(Module.model_validate(asset.model_dump()),
                                       global_asset_id=shell["assetInformation"].get("globalAssetId", "")))
 
     module = copy.deepcopy(module)
     for kind in ("actions", "properties"):
         add(at(submodel(module, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", kind),
             children(at(submodel(built, "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata", kind)))
-    add(submodel(module, "OperationalData"), children(submodel(built, "OperationalData")), "submodelElements")
+    add(submodel(module, "Variables"), children(submodel(built, "Variables")), "submodelElements")
 
     held = at(submodel(module, "AssetInterfacesMappingConfiguration"), "MappingConfigurations")
     data = next(c for c in children(held) if feeds_data(c))
@@ -135,13 +135,13 @@ def described_skill(module: dict, components: list[dict], name: str, skill: Comp
     interface = at(submodel(module, "AssetInterfacesDescription"), "interface_opcua")
     describer = Describer(spec, "", None, None, None, at(interface, "EndpointMetadata", "base")["value"])
     describer.module_id = shell["id"]
-    asset = ModuleTypeAAS(id_short=shell["idShort"], id=shell["id"],
+    asset = Module(id_short=shell["idShort"], id=shell["id"],
                           asset_type=shell["assetInformation"].get("assetType") or f"{model.RESOURCE}/Module",
                           derived_from=model.RESOURCE_TEMPLATE)
     made = describer.skill(name)
     made.Deployment = arso.Deployment(**prop("Described"))
     put(asset.skills.Skill, name, made)
-    built = model.build(model.profile(ModuleTypeAAS.model_validate(asset.model_dump()),
+    built = model.build(model.profile(Module.model_validate(asset.model_dump()),
                                       global_asset_id=shell["assetInformation"].get("globalAssetId", "")))
     module = copy.deepcopy(module)
     skills = submodel(module, "Skills")
@@ -266,7 +266,7 @@ def capabilities(module: dict, components: list[dict]) -> dict:
         module["submodels"] = [s for s in module["submodels"] if s is not old]
         return module
     shell = module["assetAdministrationShells"][0]
-    asset = ModuleTypeAAS(id_short=shell["idShort"], id=shell["id"],
+    asset = Module(id_short=shell["idShort"], id=shell["id"],
                           asset_type=shell["assetInformation"].get("assetType") or f"{model.RESOURCE}/Module",
                           derived_from=model.RESOURCE_TEMPLATE)
     if description is not None:

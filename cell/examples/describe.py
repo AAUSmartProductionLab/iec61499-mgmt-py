@@ -159,19 +159,19 @@ classDiagram
     After
     Timeout
   }
-  class OperationalData {
-    <<ARSO>>
+  class Variables {
+    <<aas-model>>
   }
   class DataPoint {
     value (decimal)
-    semanticId
+    supplementalSemanticId: what it shows
   }
   class Coordinate {
-    <<ARSO 0.13, Measurements/Coordinates>>
+    <<Variables: Measurements/Coordinates>>
     meaning: ModuleBase, Mount, EndEffector, TransferPoint ...
     RelativeTo: another coordinate
     X Y Z mm, Roll Pitch Yaw deg
-    XSource ... YawSource: a data point
+    XSource ... YawSource: a variable
   }
 
   ModuleAAS *-- Nameplate
@@ -180,7 +180,7 @@ classDiagram
   ModuleAAS *-- MappingConfiguration
   ModuleAAS *-- CapabilityDescription
   ModuleAAS *-- Skills
-  ModuleAAS *-- OperationalData
+  ModuleAAS *-- Variables
   HierarchicalStructures *-- "0..*" Part
   AssetInterfacesDescription *-- "1" Interface
   Interface *-- "0..*" Action
@@ -195,8 +195,8 @@ classDiagram
   Command *-- "1" Operation
   Operation *-- "2..*" Variable
   Command *-- "0..*" Step : Steps
-  OperationalData *-- "1..*" DataPoint
-  OperationalData *-- "1..*" Coordinate
+  Variables *-- "1..*" DataPoint
+  Variables *-- "1..*" Coordinate
   Coordinate --> Coordinate : RelativeTo
   Coordinate --> DataPoint : follows
 ```'''
@@ -422,7 +422,7 @@ def placed(coordinate: dict | None) -> str:
 
 
 def coordinates_of(env: dict | None) -> dict[str, dict]:
-    found = at(submodel(env, "OperationalData") or {}, "Measurements", "Coordinates") if env else None
+    found = at(submodel(env, "Variables") or {}, "Measurements", "Coordinates") if env else None
     return {c["idShort"]: c for c in children(found)} if found else {}
 
 
@@ -502,12 +502,12 @@ def resource_section(env: dict, components: dict[str, dict]) -> list[str]:
     commands = [c["idShort"] + (f" ({' → '.join(ran(envs, at(c, 'Start')))})" if ran(envs, at(c, "Start")) else "") for c in control]
     lines += [f"- **The module's own commands** (skills of the kind ModuleControl): {', '.join(commands)}.",
               "- **Components:** " + (", ".join(part + " → `" + shell_of(c)["idShort"] + "`" for part, c in own.items()) or "none") + ".",
-              *([f"- **Coordinates** (Operational Data, mm and degrees): "
+              *([f"- **Coordinates** (Variables, mm and degrees): "
                  + "; ".join(f"{name}" + (f" ({meant(c)})" if meant(c) else "") + placed(c) for name, c in points.items()) + "."]
                 if points else []),
               f"- **Interface:** OPC UA at `{at(submodel(env, 'AssetInterfacesDescription'), 'interface_opcua', 'EndpointMetadata', 'base')['value']}`, "
               f"{len(children(at(interface, 'actions')))} actions and {len(children(at(interface, 'properties')))} properties; "
-              f"{sum(e.get('modelType') == 'Property' for e in children(submodel(env, 'OperationalData')))} data points; "
+              f"{sum(e.get('modelType') == 'Property' for e in children(submodel(env, 'Variables')))} data points; "
               f"{len(children(at(submodel(env, 'AssetInterfacesMappingConfiguration'), 'MappingConfigurations')))} mappings.",
               f"- **Program:** built by the rule set `{at(skills_sm, 'RuleSet')['value']}`; module level skills "
               + ", ".join(f"{s['idShort']} {at(s, 'Deployment')['value'].lower()}" for s in composites if at(s, "Deployment"))

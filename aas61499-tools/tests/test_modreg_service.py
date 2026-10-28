@@ -238,7 +238,7 @@ def test_the_command_line(service, tmp_path, capsys):
     url, _ = service
     assert main(["profile", "stoppering", "--target", "pi", "--out", str(tmp_path / "profiles")]) == 0
     written = tmp_path / "profiles" / "StopperingModuleAAS.json"
-    assert json.loads(written.read_text(encoding="utf-8"))["aas_type"] == "ModuleTypeAAS"
+    assert json.loads(written.read_text(encoding="utf-8"))["aas_type"] == "Module"
     assert main(["build", str(written), "--out", str(tmp_path / "aas")]) == 0
     assert len(json.loads((tmp_path / "aas" / "StopperingModuleAAS.json").read_text(encoding="utf-8"))["submodels"]) == 7
     assert main(["register", str(written), "--service", url]) == 0

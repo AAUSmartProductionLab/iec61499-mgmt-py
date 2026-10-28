@@ -128,7 +128,7 @@ def main(argv=None) -> int:
     p.add_argument("--ontology", help="folder with the ontology's Turtle files; without it nothing is checked")
     p.add_argument("--strict", action="store_true", help="also refuse what the ontology does not describe")
     p.add_argument("--basyx", help="AAS server to publish to, e.g. http://<host>:8081")
-    p = sub.add_parser("generate", help="write the submodel templates of the ontology's own submodels and their classes")
+    p = sub.add_parser("generate", help="write the templates of the ontology's own submodels into aas-model, and have it make their classes")
     p.add_argument("--ontology", required=True, help="folder with the ontology's Turtle files")
     p.add_argument("--aas-model", default=str(templates.AAS_MODEL), help="aas-model checkout (its generator makes the classes)")
     p = sub.add_parser("register", help="send a profile to the registration service")
@@ -143,8 +143,9 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "generate":
-        written = templates.write_templates(args.ontology)
-        for path in [*written, *templates.generate([*written, *templates.given()], aas_model=Path(args.aas_model))]:
+        aas_model = Path(args.aas_model)
+        written = templates.write_templates(args.ontology, aas_model / "templates" / "arso")
+        for path in [*written, *templates.regenerate(aas_model)]:
             print(path.relative_to(Path.cwd()) if path.is_relative_to(Path.cwd()) else path)
         return 0
     if args.command == "serve":

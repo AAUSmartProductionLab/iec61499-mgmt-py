@@ -97,23 +97,24 @@ def test_aas_models_generator_makes_the_classes(plate, tmp_path):
 
 
 @pytest.mark.skipif(not (ARSO.exists() and GENERATOR.exists()), reason="needs ontology/ARSO (local) and the aas-model submodule")
-def test_the_committed_templates_and_classes_are_those_of_the_ontology(tmp_path):
+def test_aas_models_arso_templates_are_those_of_the_ontology(tmp_path):
+    """aas-model checks that its classes are a regeneration of its templates; here, that its ARSO
+    templates are what the ontology states."""
     def same(a: Path, b: Path) -> bool:
         return a.read_text(encoding="utf-8").replace("\r\n", "\n") == b.read_text(encoding="utf-8").replace("\r\n", "\n")
 
     written = templates.write_templates(ARSO, tmp_path / "templates")
-    made = templates.generate([*written, *templates.given()], tmp_path / "generated")
-    assert [p.name for p in written] == ["Skills.json", "OperationalData.json", "Parameters.json", "ControlConfiguration.json"]
-    assert {p.name for p in made} >= {"process_parameters.py", "production_sequence.py"}
+    assert [p.name for p in written] == ["Skills.json", "Parameters.json", "ControlConfiguration.json"]
     stale = [p.name for p in written if not same(p, templates.TEMPLATES / p.name)]
-    stale += [p.name for p in made if not same(p, templates.GENERATED / p.name)]
     assert stale == [], "run: modreg generate --ontology ontology/ARSO"
 
 
-def test_the_templates_kept_as_files_are_the_planners():
+@pytest.mark.skipif(not GENERATOR.exists(), reason="no aas-model checkout")
+def test_the_product_templates_are_the_planners():
     """Process Parameters is IDTA 02031-1 with the lab's extension; Production Sequence the planner's 2.0."""
     def template(name: str) -> dict:
-        return json.loads((templates.TEMPLATES / f"{name}.json").read_text(encoding="utf-8"))["submodels"][0]
+        path = templates.AAS_MODEL / "templates" / "product" / f"{name}.json"
+        return json.loads(path.read_text(encoding="utf-8"))["submodels"][0]
 
     def at(element: dict, *path: str) -> dict:
         for step in path:
@@ -121,7 +122,6 @@ def test_the_templates_kept_as_files_are_the_planners():
         return element
 
     parameters, sequence = template("ProcessParameters"), template("ProductionSequence")
-    assert [p.stem for p in templates.given()] == ["ProcessParameters", "ProductionSequence"]
     assert parameters["kind"] == sequence["kind"] == "Template"
     assert parameters["semanticId"]["keys"][0]["value"] == "https://admin-shell-io/idta/SubmodelTemplate/ProcessParameters/1/0"
     process = at(parameters, "Processes", "Process__00__")
@@ -134,7 +134,6 @@ def test_the_templates_kept_as_files_are_the_planners():
     assert cardinality(at(step, "Bindings", "Binding__00__")) == "ZeroToMany"
     # A node holds nodes: the template names the container, the classes make it the same Steps.
     assert at(step, "Steps")["value"] == [] and at(step, "Branches", "Branch__00__", "Steps")["value"] == []
-    assert "    Steps: Optional[Steps_t] = None" in (templates.GENERATED / "production_sequence.py").read_text(encoding="utf-8")
 
 
 @pytest.mark.skipif(not GENERATOR.exists(), reason="no aas-model checkout")

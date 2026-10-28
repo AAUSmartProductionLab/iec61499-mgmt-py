@@ -268,7 +268,7 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
         there = ("AssetInterfacesDescription", "interface_opcua", "InteractionMetadata", kind)
         got = own(at(submodel(recorded, there[0]), *there[1:])["value"])
         assert got == own(at(submodel(whole, there[0]), *there[1:])["value"]) and len(got) > 3
-    assert own(submodel(recorded, "OperationalData")["submodelElements"]) == own(submodel(whole, "OperationalData")["submodelElements"])
+    assert own(submodel(recorded, "Variables")["submodelElements"]) == own(submodel(whole, "Variables")["submodelElements"])
     start = at(submodel(recorded, "Skills"), "DoubleDose", "Start")
     assert at(start, "InterfaceReference")["value"]["keys"][-1]["value"] == "DoubleDose_Start"
     assert {q["type"] for q in at(start, "Start")["qualifiers"]} == {"invocationDelegation", "Synchronous"}
@@ -307,7 +307,7 @@ def test_a_skill_written_in_the_skill_editor_is_built(delivered):
         server.shutdown()
         server.server_close()
     assert sorted(put) == ["AssetInterfacesDescription", "AssetInterfacesMappingConfiguration",
-                           "OperationalData", "Skills"] and "Skills" in where
+                           "Skills", "Variables"] and "Skills" in where
     # A binding that hands nothing is refused.
     at(edited, "DoubleDose", "Start", "Steps", "Step_0000", "Bindings", "Binding_0000", "Value")["value"] = ""
     with pytest.raises(desired.NotDescribed, match="is handed nothing"):
