@@ -17,8 +17,8 @@ from the module spec (`cell/modules`, `cell/modules/planned`), a product's profi
 
 ```
 FillingLineAAS
-  LoadingModule (not described yet)
-  FillingModuleAAS
+  LoadingModule (not described yet) at (0, 180, 0), RZ -90
+  FillingModuleAAS at (240, 720, 0), RZ 180
     skill Dispensing(Volume = 1.0 mL) → Weight [g]
     skill Occupy()
     skill Release()
@@ -30,7 +30,7 @@ FillingLineAAS
     FillingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
     FillingPumpAAS: Dispense(Volume = 1.0 mL, FlowRate = 1.0 mL/s)
     FillingScaleAAS: Tare(), Weigh() → Weight [g]
-  StopperingModuleAAS
+  StopperingModuleAAS at (600, 720, 0), RZ 180
     skill Stoppering()
     skill Occupy()
     skill Release()
@@ -41,7 +41,7 @@ FillingLineAAS
     skill Clear()
     StopperingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
     StopperingPistonAAS: PressStopper(), RetractPiston()
-  CappingModuleAAS
+  CappingModuleAAS at (960, 360, 0), RZ 90
     skill Capping()
     skill Occupy()
     skill Release()
@@ -52,7 +52,7 @@ FillingLineAAS
     skill Clear()
     CappingLinearAxisAAS: Home(), MoveAxis(Position = 0.0 mm)
     CappingCrimperAAS: Crimp(Duration = 1.5 s)
-  InspectionModuleAAS
+  InspectionModuleAAS at (960, 120, 0), RZ 90
     skill Inspection() → TopPassed, SidePassed
     skill Occupy()
     skill Release()
@@ -63,7 +63,8 @@ FillingLineAAS
     skill Clear()
     InspectionTopCameraAAS: CaptureTop() → Passed
     InspectionSideCameraAAS: CaptureSide() → Passed
-  UnloadingModule (not described yet)
+  UnloadingModule (not described yet) at (660, 0, 0)
+  PlanarTable (not described yet) at (0, 0, 0)
 ```
 
 | AAS | Kind | Submodels |
@@ -154,6 +155,13 @@ classDiagram
     <<Entity>>
     idShort
     globalAssetId of its AAS
+    Frame: X Y Z RX RY RZ
+  }
+  class Point {
+    <<Entity, co-managed>>
+    idShort
+    meaning: TransferPoint ...
+    Frame: X Y Z RX RY RZ
   }
   class AssetInterfacesDescription {
     <<IDTA 02017>>
@@ -249,6 +257,7 @@ classDiagram
   ModuleAAS *-- Skills
   ModuleAAS *-- OperationalData
   HierarchicalStructures *-- "0..*" Part
+  HierarchicalStructures *-- "0..*" Point
   AssetInterfacesDescription *-- "1" Interface
   Interface *-- "0..*" Action
   Interface *-- "0..*" InterfaceProperty
@@ -457,7 +466,8 @@ flowchart BT
 - **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; AbsoluteFillError 0.05 mL; FillVolume 0.5 to 10.0 mL; Pre ContentVolume = 0.0, Post ContentVolume = FillVolume.
 - **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Pump's Dosing (Dispense): Post ContentVolume += Volume, Post Weighed = false, Pre LinearAxisPosition = FillPosition, Invariant LinearAxisPosition unchanged; Scale's Taring (Tare): Post Tared = true; Scale's Weighing (Weigh): Pre Tared = true, Post Weight measured, Post Weighed = true, Pre LinearAxisPosition = 0.0, Invariant LinearAxisPosition unchanged.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
-- **Components:** LinearAxis → `FillingLinearAxisAAS`, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
+- **Components:** LinearAxis → `FillingLinearAxisAAS` at (0, 60, 100), RX 180, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
+- **Points** (in the module's frame, mm and degrees): Transfer (TransferPoint) at (0, 60, 0), RZ 180; Fill (ProcessingPoint) at (0, 60, 60).
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 45 data points; 32 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Dispensing built. Which block is which skill or step is the integrator's record, outside the AAS.
 
@@ -496,9 +506,10 @@ flowchart BT
 | RetractPiston() | StopperingPistonAAS | Primitive | – (After 3.0) | – |
 
 - **Capability Stoppering** (`https://smartproductionlab.aau.dk/semantics/Stoppering`), realized by Stoppering: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; StopperDiameter 6.0 to 20.0 mm; Pre ContentVolume > 0.0, Post Stoppered = true.
-- **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Piston's Pressing (PressStopper): Post Stoppered = true.
+- **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Piston's Pressing (PressStopper): Post Stoppered = true, Pre LinearAxisPosition = PressPosition, Invariant LinearAxisPosition unchanged.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (RetractPiston → Home), Start, Stop (Home), Abort, Clear.
-- **Components:** LinearAxis → `StopperingLinearAxisAAS`, Piston → `StopperingPistonAAS`.
+- **Components:** LinearAxis → `StopperingLinearAxisAAS` at (0, 60, 100), RX 180, Piston → `StopperingPistonAAS`.
+- **Points** (in the module's frame, mm and degrees): Transfer (TransferPoint) at (0, 60, 0), RZ -90; Press (ProcessingPoint) at (0, 60, 60).
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 32 data points; 28 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Stoppering built. Which block is which skill or step is the integrator's record, outside the AAS.
 
