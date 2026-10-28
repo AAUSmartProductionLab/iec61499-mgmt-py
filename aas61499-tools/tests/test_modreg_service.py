@@ -289,6 +289,7 @@ def test_the_skill_editor_has_a_flow_checked_and_a_skill_planned(service, aas_se
     steps = next(c for c in next(c for c in edited["value"] if c["idShort"] == "Start")["value"] if c["idShort"] == "Steps")
     steps["value"] = [s for s in steps["value"]
                       if not any(c["idShort"] == "Name" and c.get("value") == "NeedleDown" for c in s["value"])]
+    assert post(f"{url}/check/FillingModuleAAS", {"skill": {"value": []}})[0] == 400
     status, answer = post(f"{url}/check/FillingModuleAAS", {"skill": edited})
     assert status == 200 and list(answer["skills"]) == ["Dispensing"]
     [finding] = answer["skills"]["Dispensing"]
