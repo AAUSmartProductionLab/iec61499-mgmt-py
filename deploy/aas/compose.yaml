@@ -1,0 +1,172 @@
+# The lab's AAS stack: BaSyx (AAS environment, registries, discovery, web UI), the DMP that connects
+# the AASs to the modules, and the time series database behind the Variables. Started by
+# deploy/aas.py up (which writes the secrets to .env first); there:
+#   docker compose up -d | ps | logs -f dmp | down
+#
+#   client --invoke--> aas-environment --delegates--> dmp --OPC UA method--> module (FORTE)
+#   module --OPC UA monitored items--> dmp --rows--> influxdb (the series the Variables name)
+#   aas-environment --submodel events (MQTT)--> dmp: it builds its routes from the AIMCs it reads
+name: lab-aas
+
+services:
+  aas-registry:
+    image: eclipsebasyx/aas-registry-log-mem:2.0.0-SNAPSHOT
+    container_name: lab-aas-registry
+    ports:
+      - "8082:8080"
+    environment:
+      SERVER_PORT: 8080
+      SERVER_SERVLET_CONTEXT_PATH: /
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/shell-descriptors"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  sm-registry:
+    image: eclipsebasyx/submodel-registry-log-mem:2.0.0-SNAPSHOT
+    container_name: lab-sm-registry
+    ports:
+      - "8083:8080"
+    environment:
+      SERVER_PORT: 8080
+      SERVER_SERVLET_CONTEXT_PATH: /
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/submodel-descriptors"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  aas-discovery:
+    image: eclipsebasyx/aas-discovery:2.0.0-SNAPSHOT
+    container_name: lab-aas-discovery
+    ports:
+      - "8084:8081"
+    environment:
+      SERVER_PORT: 8081
+      BASYX_BACKEND: InMemory
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8081/lookup/shells"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  # Submodel events go to the broker; the DMP follows them. Not for the modules' values: those go
+  # from the DMP to InfluxDB.
+  mosquitto:
+    image: eclipse-mosquitto:2.0.20
+    container_name: lab-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+  aas-environment:
+    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
+    container_name: lab-aas-environment
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+      BASYX_BACKEND: InMemory
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
+      BASYX_AASREPOSITORY_FEATURE_DISCOVERYINTEGRATION: http://aas-discovery:8081
+      BASYX_AASREPOSITORY_FEATURE_REGISTRYINTEGRATION: http://aas-registry:8080
+      BASYX_SUBMODELREPOSITORY_FEATURE_REGISTRYINTEGRATION: http://sm-registry:8080
+      BASYX_EXTERNALURL: http://localhost:8081
+      # An Operation with an invocationDelegation qualifier is invoked at that URL (the DMP's).
+      BASYX_SUBMODELREPOSITORY_FEATURE_OPERATION_DELEGATION_ENABLED: "true"
+      BASYX_FEATURE_MQTT_ENABLED: "true"
+      MQTT_CLIENTID: aas-environment
+      MQTT_HOSTNAME: mosquitto
+      MQTT_PORT: 1883
+    depends_on:
+      aas-registry:
+        condition: service_healthy
+      sm-registry:
+        condition: service_healthy
+      aas-discovery:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+
+  # The time series of the Variables: org and bucket as aas-model's segments name them (ap2030).
+  influxdb:
+    image: influxdb:2.7
+    container_name: lab-influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_PASSWORD:?run deploy/aas.py up, which writes it to .env}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN:?run deploy/aas.py up, which writes it to .env}
+      DOCKER_INFLUXDB_INIT_ORG: ap2030
+      DOCKER_INFLUXDB_INIT_BUCKET: ap2030
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  # The data-mapping processor (aas-camel-dmp): its routes are the AIMCs of the AASs. Named dmp,
+  # because the delegation URLs aas-model writes name http://dmp:8080.
+  dmp:
+    image: dmp:java
+    build: ../../aas-camel-dmp
+    container_name: lab-dmp
+    ports:
+      - "8085:8080"
+    environment:
+      DMP_MANAGED_AAS_REPOSITORY_URI: http://aas-environment:8081
+      DMP_MANAGED_EVENT_TRANSPORT: mqtt
+      DMP_MANAGED_MQTT_BROKER_URI: tcp://mosquitto:1883
+      DMP_INFLUX_URL: http://influxdb:8086
+      DMP_INFLUX_ORG: ap2030
+      DMP_INFLUX_TOKEN: ${INFLUX_TOKEN:?run deploy/aas.py up, which writes it to .env}
+    # A module simulated on this computer is reached as host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 30
+    depends_on:
+      aas-environment:
+        condition: service_started
+      influxdb:
+        condition: service_healthy
+
+  aas-web-ui:
+    # The fork's web UI with the ProcessSequence plugin, built from its working tree.
+    image: basyx-aas-web-ui:processsequence
+    build:
+      context: ../../basyx-aas-web-ui/aas-web-ui
+      dockerfile: ../examples/ProcessSequence/Dockerfile
+    container_name: lab-aas-web-ui
+    ports:
+      - "3000:3000"
+    environment:
+      AAS_REGISTRY_PATH: http://localhost:8082/shell-descriptors
+      SUBMODEL_REGISTRY_PATH: http://localhost:8083/submodel-descriptors
+      AAS_REPO_PATH: http://localhost:8081/shells
+      SUBMODEL_REPO_PATH: http://localhost:8081/submodels
+      CD_REPO_PATH: http://localhost:8081/concept-descriptions
+      AAS_DISCOVERY_PATH: http://localhost:8084/lookup/shells
+    depends_on:
+      - aas-environment
+
+volumes:
+  influxdb-data:
+  influxdb-config:

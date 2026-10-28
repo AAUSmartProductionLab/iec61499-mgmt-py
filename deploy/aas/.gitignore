@@ -1,0 +1,2 @@
+# The stack's secrets (InfluxDB token and password), written by deploy/aas.py up.
+.env
