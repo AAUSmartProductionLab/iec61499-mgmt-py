@@ -61,7 +61,7 @@ should stay; they are listed so the delta is visible.
 4. **At least one interface.** `AIDSubmodel` requires `some InterfaceSMC`; every
    `InterfaceTemplateFor*` in IDTA 02017-1-1 is `ZeroToMany`.
 5. **Cross-submodel reference targets.** The SPARQL rules in
-   `arso-rules.shacl.ttl` require Skill, Capability, OperationalData, Parameters
+   `arso-rules.shacl.ttl` require Skill, Capability, Variables, Parameters
    and AIMC references to resolve inside the same AAS. No IDTA template
    expresses cross-submodel constraints.
 6. **Flattened Skills.** `skills.ttl` (until 26 Oct `control-component.ttl`) began from IDTA 02015 CCType
@@ -113,10 +113,12 @@ should stay; they are listed so the delta is visible.
    `ProductArticleNumberOfManufacturer`, `ManufacturerProductRoot`,
    `ManufacturerProductType`, `FirmwareVersion`, `UniqueFacilityIdentifier`,
    `CompanyLogo`, `Markings` and `AssetSpecificProperties`.
-8. **OperationalData.** `OperationalDataSubmodel` requires `some arso:Datapoint`
-   (a Decimal Property), which `modreg` writes. The AAS generation project's builder
-   emits a collection per variable around an InterfaceReference, which ARSO 0.9 no
-   longer declares (the mapping says which interface property feeds a data point).
+8. **Variables (until 0.13 OperationalData).** Not an IDTA template: aas-model's
+   Variables, live values as Properties (their meaning a supplemental semanticId) and
+   State, Measurements and Log holding IDTA 02008 time series as SMCs instead of
+   submodels of their own. The Coordinates in Measurements carry IDTA 02075's frame ids
+   on their six values. The AAS generation project's builder emits a collection per
+   variable around an InterfaceReference, which ARSO no longer declares.
 9. **Generated shapes are stale.** `shapes.generated.shacl.ttl` predates the
    TechnicalData annotations and the AIMC module, so their OWL restrictions
    (for example exactly one `GeneralInformation` or `MappingConfigurations`)
