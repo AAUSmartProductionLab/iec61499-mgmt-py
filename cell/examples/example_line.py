@@ -7,7 +7,7 @@ Every AAS is built by ``modreg`` from a profile: the pydantic dump of its type (
 - The profiles of the resources are made from their module specs: the filling and stoppering
   modules are built and run (``cell/modules``); the capping and inspection modules are planned
   only (``cell/modules/planned``: no program behind them yet).
-- The profile of a product is a file in this folder (``<Product>AAS.json``, a ``ProductTypeAAS``):
+- The profile of a product is a file in this folder (``<Product>AAS.json``, a ``Product``):
   what it consists of, the processes it needs and the plan that assigns them to the resources.
 
 The plan of each product is then followed into the resources (``plan_check``), and each product
@@ -32,7 +32,8 @@ from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType   
 from modgen.spec import Location, Point                  # noqa: E402
 from modreg import model, planar, profile as profiles   # noqa: E402
 from modreg.frames import place, relative               # noqa: E402
-from modreg.generated import operational_data as od     # noqa: E402
+from aas_model.submodel_templates.coordinates import Coordinates                 # noqa: E402
+from aas_model.submodel_templates.variables import MeasurementsGroup, Variables   # noqa: E402
 from modreg.service import AasServer                    # noqa: E402
 
 import plan_check                                        # noqa: E402
@@ -122,14 +123,14 @@ def line_profile(resources: dict[str, dict]) -> dict:
     base = profiles.coordinate_ref(table_base()[1], table_base()[0])
     points = {name: profiles.coordinate(name, point.meaning, point.location, base, description=point.description)
               for name, point in POINTS.items()}
-    system = model.SystemTypeAAS(id_short=f"{LINE}AAS", id=f"{BASE_URL}/aas/{LINE}AAS", asset_type=f"{model.RESOURCE}/System",
+    system = model.ProductionSystem(id_short=f"{LINE}AAS", id=f"{BASE_URL}/aas/{LINE}AAS", asset_type=f"{model.RESOURCE}/System",
                                  description="The line a vial passes: loading, filling, stoppering, capping, inspection, unloading")
     system.hierarchical_structures = model.LocatedStructures(
         id_short="HierarchicalStructures", ArcheType=ArcheType(value="OneDown"),
         EntryNode=model.LocatedEntryNode(global_asset_id=asset(LINE), description="The line", Node=nodes))
-    system.operational_data = od.OperationalData(id_short="OperationalData", Measurements=od.Measurements(
-        Coordinates=od.Coordinates(Coordinate=points)))
-    return model.profile(model.SystemTypeAAS.model_validate(system.model_dump()), global_asset_id=asset(LINE))
+    system.variables = Variables(id_short="Variables", Measurements=MeasurementsGroup(
+        value={"Coordinates": Coordinates(coordinate=points)}))
+    return model.profile(model.ProductionSystem.model_validate(system.model_dump()), global_asset_id=asset(LINE))
 
 
 def line(resources: dict[str, dict]) -> dict:
@@ -155,7 +156,7 @@ def product_profiles() -> dict[str, dict]:
     found = {}
     for path in sorted(HERE.glob("*.json")):
         profile = json.loads(path.read_text(encoding="utf-8"))
-        if profile.get("aas_type") == "ProductTypeAAS":
+        if profile.get("aas_type") in ("Product", "ProductTypeAAS"):
             found[profile["id_short"]] = profile
     return found
 

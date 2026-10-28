@@ -1,12 +1,12 @@
-"""Where things are (ARSO 0.13; docs/locations-and-layout.md): the coordinates in the Operational Data
-of a line's AASs, composed along their references.
+"""Where things are (docs/locations-and-layout.md): the coordinates in the Variables of a line's AASs
+(aas-model's ``Measurements/Coordinates``), composed along their references.
 
 A coordinate (Measurements/Coordinates/<name>) is a pose relative to the coordinate its RelativeTo
 names, in this AAS or another: a translation X, Y, Z in mm and rotations Roll, Pitch, Yaw in degrees
 about the parent's fixed X, then Y, then Z axis, so the rotation is Rz(Yaw) Ry(Pitch) Rx(Roll), as
 ROS's RPY. The references make a tree rooted at the planar table's base (a coordinate without
 RelativeTo): a module's base is relative to it, the module's points and mounts to the module's base,
-an end effector to its mount. A coordinate that moves names the data point each moving value follows
+an end effector to its mount. A coordinate that moves names the variable each moving value is
 (XSource ... YawSource); its values here are the latest known.
 
     where(envs, "FillingModuleAAS", "Transfer")                     # in the root's frame (the table's)
@@ -19,12 +19,11 @@ import copy
 from dataclasses import dataclass
 import math
 
+from aas_model.submodel_templates.coordinates import VAR_RELATIVE_TO as RELATIVE_TO
 from modsync.aasjson import at, children, submodel
 
 VALUES = ("X", "Y", "Z", "Roll", "Pitch", "Yaw")
 UNITS = {"X": "mm", "Y": "mm", "Z": "mm", "Roll": "deg", "Pitch": "deg", "Yaw": "deg"}
-COORDINATE = "https://smartproductionlab.aau.dk/ARSO/OperationalData/Coordinate/1/0"
-RELATIVE_TO = "https://smartproductionlab.aau.dk/ARSO/OperationalData/Coordinate/RelativeTo/1/0"
 
 
 @dataclass(frozen=True)
@@ -76,7 +75,7 @@ def _env(envs: list[dict], key: str) -> dict:
 
 def coordinates(env: dict) -> dict[str, dict]:
     """The coordinates of an AAS, by name."""
-    found = at(submodel(env, "OperationalData") or {}, "Measurements", "Coordinates")
+    found = at(submodel(env, "Variables") or {}, "Measurements", "Coordinates")
     return {c["idShort"]: c for c in children(found)} if found else {}
 
 
@@ -142,7 +141,7 @@ def place(env: dict, name: str, parent: tuple[str, str] | None, location) -> dic
             "idShort": "RelativeTo", "modelType": "ReferenceElement",
             "semanticId": {"type": "ExternalReference", "keys": [{"type": "GlobalReference", "value": RELATIVE_TO}]},
             "value": {"type": "ModelReference", "keys": [
-                {"type": "Submodel", "value": f"{parent[0]}/submodels/OperationalData"},
+                {"type": "Submodel", "value": f"{parent[0]}/submodels/Variables"},
                 {"type": "SubmodelElementCollection", "value": "Measurements"},
                 {"type": "SubmodelElementCollection", "value": "Coordinates"},
                 {"type": "SubmodelElementCollection", "value": parent[1]}]}})

@@ -1,5 +1,5 @@
-"""Where things are (ARSO 0.13): a module's base, mounts, end effectors and points as coordinates in
-its Operational Data, each relative to another by reference, composed up to the planar table's base."""
+"""Where things are: a module's base, mounts, end effectors and points as coordinates in
+its Variables, each relative to another by reference, composed up to the planar table's base."""
 import math
 from pathlib import Path
 import re
@@ -40,7 +40,7 @@ def test_a_modules_coordinates_are_where_its_spec_says():
     found = coordinates(envs[0])
     assert list(found) == ["ModuleBase", "LinearAxisMount", "LinearAxis", "Transfer", "Fill"]
     transfer = found["Transfer"]
-    assert transfer["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/OperationalData/Coordinate/1/0"
+    assert transfer["semanticId"]["keys"][0]["value"] == f"{BASE}/variables/Coordinate/1/0"
     assert transfer["supplementalSemanticIds"][0]["keys"][0]["value"] == f"{BASE}/semantics/TransferPoint"
     assert at(transfer, "X")["semanticId"]["keys"][0]["value"] == "https://admin-shell.io/idta/cds/xframe/1"
     assert {q["type"]: q["value"] for q in at(transfer, "Yaw")["qualifiers"]} == {"Unit": "deg"}
@@ -63,7 +63,7 @@ def test_a_modules_coordinates_are_where_its_spec_says():
 def test_a_module_put_on_the_table_reports_where_its_base_is():
     envs = [model.build(p) for p in profiles.describe_all(load(SPECS / "filling.yaml"), "pi")]
     table = {"assetAdministrationShells": [{"idShort": "T", "id": "urn:t", "assetInformation": {}}],
-             "submodels": [{"idShort": "OperationalData", "id": "urn:t/submodels/OperationalData", "submodelElements": [
+             "submodels": [{"idShort": "Variables", "id": "urn:t/submodels/Variables", "submodelElements": [
                  {"idShort": "Measurements", "modelType": "SubmodelElementCollection", "value": [
                      {"idShort": "Coordinates", "modelType": "SubmodelElementCollection", "value": [
                          {"idShort": "TableBase", "modelType": "SubmodelElementCollection", "value": []}]}]}]}]}

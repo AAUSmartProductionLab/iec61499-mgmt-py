@@ -1,24 +1,10 @@
-"""The AAS types of the resources as the resource ontology (ARSO) describes them: a line, a module
-and a component, written with the lab's shared AAS model (``aas_model``, pydantic).
-
-Each is aas-model's ``Resource``, the type every resource of the lab is (its stations are subtypes
-of it too). ``ModuleTypeAAS`` is a resource for a module that speaks OPC UA only:
-
-- **Nameplate**, **Hierarchical Structures** (the equipment), **Asset Interfaces Description**
-  (one OPC UA interface) and **Asset Interfaces Mapping Configuration**: the shared model's classes;
-- **Skills** (ARSO's control component: the skills with their commands, the module's own commands,
-  the errors) instead of the Control Component Instance, **Operational Data** instead of Variables
-  (to be revisited: it may become a Time Series Data submodel), **Parameters** and **Control
-  Configuration**: ARSO's own submodels. Their classes are generated from the ontology by
-  aas-model's generator (``modreg.generated``, see ``templates``); only what the ontology leaves
-  open inside them is declared here.
-
-A submodel of ``Resource`` that ARSO replaces is left out (``None``); a component has its Skills
-only, a line its Hierarchical Structures only.
-
-A profile is the dump of such a model without what the type already says (``profile``); ``asset``
-builds the model back from it and ``environment`` the AAS. ``TYPES`` names the types a profile may
-be of, so the lab's MQTT stations and the products (``product``) go through the same code.
+"""The AAS types of the lab, as profiles: the resources as the resource ontology ARSO describes
+them (a line, a module, a component), the product and the process, all from the lab's shared AAS
+model (``aas_model``, pydantic). Their classes and templates are aas-model's (``Module``,
+``Component``, ``ProductionSystem``, ``Product``, ``Process``); this module adds the profile: the
+dump of such a model without what its type already says (``profile``), ``asset`` building the model
+back from it and ``environment`` the AAS. ``TYPES`` names the types a profile may be of, so the lab's
+MQTT stations, the modules and the products go through the same code.
 """
 from __future__ import annotations
 
@@ -27,36 +13,27 @@ import functools
 import json
 import threading
 import typing
-from typing import Dict, List, Optional
 
 import aas_pydantic.aas_model
 import aas_pydantic.convert_aas_instance
 
 from aas_model.constants import BASE_URL, INVOCATION_ORIGIN
 from aas_model.id_injector import inject_ids
-from aas_model.resource_template import Resource, ResourceControlComponentInstance, ResourceParameters
-from aas_model.submodel_templates import (
-    Aimc, AimcMappingConfigurations, DmpAssetInterfacesDescription, DmpOpcuaInterface, MqttInterface, SkillOperation,
+from aas_model.process_template import Process
+from aas_model.product_template import Product
+from aas_model.resource_template import Resource
+from aas_model.resource_template.modules import (                      # noqa: F401 (the types, here too)
+    RESOURCE, Component, LocatedEntryNode, LocatedNode, LocatedStructures, Module, ModuleCapabilityContainer,
+    ModuleCapabilityDescription, ModuleCapabilityRelations, ModuleCapabilitySet, ModuleConstraintSet,
+    ModuleControlConfiguration, ModuleInterfaces, ModuleSkill, ModuleSkills, ProductionSystem, RealizedBySkill,
+    SameAs, StatedProperty, StatedPropertySet, BasicConstraintContainer, structure,
 )
-from aas_model.submodel_templates.variables import Variables
-from aas_pydantic import (
-    AAS, ModelReference, Property, Qualifier, ReferenceElement, SubmodelElementCollection, convert_model_to_aas,
-)
-from aas_pydantic.submodel_templates import capability_description as cd
-from aas_pydantic.aas_model import AasIdString
-from aas_pydantic.submodel_templates.hierarchical_structures import ArcheType, EntryNode, HierarchicalStructures, Node
-from aas_pydantic.submodel_templates.nameplate import Nameplate
+from aas_model.submodel_templates import SkillOperation
+from aas_pydantic import AAS, Qualifier, convert_model_to_aas
 from basyx.aas import model as basyx
 from basyx.aas.adapter.json import AASToJsonEncoder
 from pydantic import BaseModel
 from pydantic_core import to_jsonable_python
-
-from .generated import skills
-from .generated.control_configuration import ControlConfiguration
-from .generated.operational_data import OperationalData
-from .generated.parameters import Parameters
-from .lab import nameplate
-from .product import ProductTypeAAS
 
 
 class _Typing:
@@ -138,159 +115,14 @@ def invocations(node, aas_id_short: str, origin: str) -> None:
             invocations(value, aas_id_short, origin)
 
 
-# ARSO's own submodels ------------------------------------------------------------------------------
-#
-# Their classes are generated (``modreg.generated``, see ``templates``): a skill with its commands
-# (Start, Stop, Abort, Reset), each with the action that calls it, its Operation and its steps; the
-# module's own commands (Module); the errors; the Control Configuration, which since ARSO 0.10 is the
-# integrator's record of what was built and no longer part of the AAS.
-
-class ModuleSkill(skills.Skill):
-    """The ontology's skill, under a name of its own: the shared model has a class called Skill too,
-    and an element is read back as the class its name says."""
-
-
-class ModuleSkills(skills.Skills):
-    Skill: Dict[str, ModuleSkill] = {}
-    Errors: skills.Errors = skills.Errors()
-
-
-class RealizedBySkill(cd.CapabilityRealizedBy):
-    """IDTA 02020 leaves the skill open (an external reference); ARSO wants a Skill of the same AAS
-    or of a component's (its primitive), so here it is a model reference to it."""
-    second: ModelReference = ModelReference()
-
-
-class SameAs(cd.SameProperty):
-    """IDTA 02020 leaves both ends open; here the property (first) names the data point of the
-    module's Operational Data it is (second), so that capabilities naming it talk of one state."""
-    first: ModelReference = ModelReference()
-    second: ModelReference = ModelReference()
-
-
-class StatedProperty(cd.PropertyContainer):
-    SameProperty: Dict[str, SameAs] = {}
-
-
-class StatedPropertySet(cd.PropertySet):
-    PropertyContainer: Dict[str, StatedProperty] = {}
-
-
-class BasicConstraintContainer(cd.PropertyConstraintContainer):
-    """A property constraint in the form a resource states it (ARSO 0.11): a BasicConstraint, an
-    expression over the capability's properties. IDTA 02020 has exactly one of four forms; the
-    generated class asks for all four."""
-    CustomConstraint: Optional[cd.CustomConstraint] = None
-    OCLConstraint: Optional[cd.OCLConstraint] = None
-    OperationConstraint: Optional[cd.OperationConstraint] = None
-
-
-class ModuleConstraintSet(cd.ConstraintSet):
-    PropertyConstraintContainer: Dict[str, BasicConstraintContainer] = {}
-
-
-class ModuleCapabilityRelations(cd.CapabilityRelations):
-    CapabilityRealizedBy: Dict[str, RealizedBySkill] = {}
-    ConstraintSet: Dict[str, ModuleConstraintSet] = {}
-
-
-class ModuleCapabilityContainer(cd.CapabilityContainer):
-    PropertySet: Dict[str, StatedPropertySet] = {}
-    CapabilityRelations: Optional[ModuleCapabilityRelations] = None
-
-
-class ModuleCapabilitySet(cd.CapabilitySet):
-    CapabilityContainer: Dict[str, ModuleCapabilityContainer] = {}
-
-
-class ModuleCapabilityDescription(cd.CapabilityDescription):
-    """The capabilities a module offers, each realized by one of its skills, and in a set per
-    component the capabilities of its components, each realized by a primitive (ARSO 0.11)."""
-    CapabilitySet: Dict[str, ModuleCapabilitySet] = {}
-
-
-class ModuleControlConfiguration(ControlConfiguration):
-    SyncState: Property = Property(value="NotRead")
-
-
-# The module type ----------------------------------------------------------------------------------
-
-class ModuleInterfaces(DmpAssetInterfacesDescription):
-    """The interfaces of a module: one OPC UA server, no MQTT."""
-    InterfaceTemplateForMQTT: Dict[str, MqttInterface] = {}
-    InterfaceTemplateForOPCUA: Dict[str, DmpOpcuaInterface] = {"interface_opcua": DmpOpcuaInterface()}
-
-
-class LocatedNode(Node):
-    """A part of an asset, with the parts it has in turn. Where it is, is a coordinate of the
-    Operational Data (ARSO 0.13), not a statement of the Node."""
-    Node: Dict[str, "LocatedNode"] = {}
-
-
-class LocatedEntryNode(EntryNode):
-    Node: Dict[str, LocatedNode] = {}
-
-
-class LocatedStructures(HierarchicalStructures):
-    EntryNode: LocatedEntryNode = LocatedEntryNode()
-
-
-LocatedNode.model_rebuild()
-
-
-def structure() -> LocatedStructures:
-    return LocatedStructures(id_short="HierarchicalStructures", EntryNode=LocatedEntryNode(),
-                             ArcheType=ArcheType(value="OneDown"))
-
-
-class ArsoResource(Resource):
-    """A resource as ARSO describes it: what ARSO's submodels replace is not there, and the rest only
-    where a kind of resource has it."""
-    nameplate: Optional[Nameplate] = None
-    asset_interfaces_description: Optional[DmpAssetInterfacesDescription] = None
-    control_component_instance: Optional[ResourceControlComponentInstance] = None     # Skills instead
-    capability_description: Optional[cd.CapabilityDescription] = None
-    variables: Optional[Variables] = None                                             # Operational Data instead
-    parameters: Optional[ResourceParameters] = None
-    asset_interfaces_mapping_configuration: Optional[Aimc] = None
-
-
-class ModuleTypeAAS(ArsoResource):
-    """Resource AAS of an IEC 61499 module, in ARSO's structure."""
-    nameplate: Nameplate = nameplate()
-    hierarchical_structures: LocatedStructures = structure()
-    asset_interfaces_description: ModuleInterfaces = ModuleInterfaces(id_short="AssetInterfacesDescription")
-    skills: ModuleSkills = ModuleSkills(id_short="Skills")
-    operational_data: OperationalData = OperationalData(id_short="OperationalData")
-    asset_interfaces_mapping_configuration: Aimc = Aimc(
-        id_short="AssetInterfacesMappingConfiguration", MappingConfigurations=AimcMappingConfigurations(value=[]))
-    # What was built is the integrator's record, kept outside the AAS (ARSO 0.10): ``profile.record``.
-    control_configuration: Optional[ModuleControlConfiguration] = None
-    # Optional and not written by ``describe``: a skill's parameters are with the skill.
-    parameters: Optional[Parameters] = None
-    capability_description: Optional[ModuleCapabilityDescription] = None
-
-
-class ComponentTypeAAS(ArsoResource):
-    """AAS of a component of a module: a part that acts (an axis, a pump) and so has skills of its
-    own. The module it is built into carries them out, so their commands refer to actions of the
-    module's interface description."""
-    skills: ModuleSkills = ModuleSkills(id_short="Skills")
-
-
-class SystemTypeAAS(ArsoResource):
-    """AAS of a production system: the modules it is made of, each found by its asset id, and the
-    coordinates of its own points (where its robots place and pick)."""
-    hierarchical_structures: LocatedStructures = structure()
-    operational_data: Optional[OperationalData] = None
-
-
-# A plain ``Resource`` is what the lab's stations export (aas-model authors them as its subtypes).
-TYPES: dict[str, type[AAS]] = {"ResourceTypeAAS": Resource, "ModuleTypeAAS": ModuleTypeAAS,
-                               "ComponentTypeAAS": ComponentTypeAAS, "SystemTypeAAS": SystemTypeAAS,
-                               "ProductTypeAAS": ProductTypeAAS}
-# What a resource is, is its asset type; a component's ends in its kind (.../Component/LinearAxis).
-RESOURCE = f"{BASE_URL}/Resource"
+# A plain ``Resource`` is what the lab's stations export (aas-model authors them as its subtypes). The
+# names before the types moved to aas-model (``ModuleTypeAAS``, ...) still read the profiles written then.
+TYPES: dict[str, type[AAS]] = {"ResourceTypeAAS": Resource, "Module": Module, "Component": Component,
+                               "ProductionSystem": ProductionSystem, "Product": Product, "Process": Process,
+                               "ModuleTypeAAS": Module, "ComponentTypeAAS": Component,
+                               "SystemTypeAAS": ProductionSystem, "ProductTypeAAS": Product}
+# What a resource is, is its asset type; a component's ends in its kind (.../Component/LinearAxis):
+# ``RESOURCE``, aas-model's.
 # Keys of a profile that are about building the AAS, not part of it.
 BUILD_KEYS = ("aas_type", "delegation_base", "global_asset_id")
 

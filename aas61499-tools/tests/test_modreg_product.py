@@ -20,8 +20,10 @@ from basyx.aas import model as basyx                                            
 from basyx.aas.adapter.json import AASToJsonEncoder, read_aas_json_file             # noqa: E402
 
 from modreg import model                                                            # noqa: E402
-from modreg.generated import process_parameters as pp, production_sequence as ps    # noqa: E402
-from modreg.product import BillOfMaterial, Part, Product, ProductTypeAAS, plan_id   # noqa: E402
+from aas_model.product_template import (                                            # noqa: E402
+    BillOfMaterial, Part, PartQuantity, PartQuantityUnit, Product, ProductEntry, plan_id,
+)
+from aas_model.submodel_templates.product import process_parameters as pp, production_sequence as ps  # noqa: E402
 
 BASE = "https://smartproductionlab.aau.dk"
 SMC = "SubmodelElementCollection"
@@ -55,7 +57,7 @@ def paths(element: dict, path: str = "") -> set[str]:
     return {q for c in children(element) for q in {f"{path}/{c['idShort']}", *paths(c, f"{path}/{c['idShort']}")}}
 
 
-def bottle() -> ProductTypeAAS:
+def bottle() -> Product:
     """A product with one part, one process and one step, as small as the type allows."""
     volume = Property(value="5.0", value_type="xs:double", semantic_id=f"{BASE}/semantics/FillVolume",
                       qualifiers=[Qualifier(type_="Unit", value="mL", kind="ConceptQualifier")])
@@ -85,12 +87,12 @@ def bottle() -> ProductTypeAAS:
             SourceAas=ps.SourceAas(value=ref(("AssetAdministrationShell", "{aas_id}"))),
             SourceElement=ps.SourceElement(value=own("ProcessParameters", (SMC, "Processes"), (SMC, "Filling"),
                                                      (SMC, "ProductParameters"), ("Property", "FillVolume"))))}))
-    return ProductTypeAAS(
+    return Product(
         id_short="BottleAAS", id=f"{BASE}/aas/BottleAAS", display_name={"en": "Bottle"},
         hierarchical_structures=BillOfMaterial(
-            id_short="HierarchicalStructures", ArcheType=ProductTypeAAS.model_fields["hierarchical_structures"].default.ArcheType,
-            EntryNode=Product(global_asset_id=f"{BASE}/assets/Bottle", Node={"Bottle": Part(
-                Quantity=Property(value="1.0", value_type="xs:double"), QuantityUnit=Property(value="piece"))})),
+            id_short="HierarchicalStructures", ArcheType=Product.model_fields["hierarchical_structures"].default.ArcheType,
+            EntryNode=ProductEntry(global_asset_id=f"{BASE}/assets/Bottle", Node={"Bottle": Part(
+                Quantity=PartQuantity(value="1.0"), QuantityUnit=PartQuantityUnit(value="piece"))})),
         process_parameters=pp.ProcessParameters(id_short="ProcessParameters", Processes=pp.Processes(Process={"Filling": process})),
         capability_description=cd.CapabilityDescription(id_short="CapabilityDescription", CapabilitySet={
             "RequiredCapabilities": cd.CapabilitySet(CapabilityContainer={"Filling": required})}),
@@ -106,7 +108,7 @@ def profile() -> dict:
 
 
 def test_a_products_profile_is_its_dump_without_what_the_type_says(profile):
-    assert profile["aas_type"] == "ProductTypeAAS"
+    assert profile["aas_type"] == "Product"
     # The nameplate is the type's; what the product says is its own.
     assert "nameplate" not in profile
     filling = profile["process_parameters"]["Processes"]["Process"]["Filling"]

@@ -16,7 +16,7 @@ from basyx.aas.adapter.json import read_aas_json_file           # noqa: E402
 
 from modreg import model                                        # noqa: E402
 from modreg.ontology import Blueprint, check as ontology_check  # noqa: E402
-from modreg.product import plan_id                              # noqa: E402
+from aas_model.product_template import plan_id                             # noqa: E402
 
 EXAMPLES = Path(__file__).resolve().parents[1] / "examples"
 ARSO = Path(__file__).resolve().parents[2] / "ontology" / "ARSO"
@@ -84,7 +84,7 @@ def test_the_line_has_four_resources_and_the_vial(line):
 def test_the_vial_is_described_by_its_profile():
     """The product's description is the pydantic dump of its type, as a module's profile is."""
     profile = example_line.product_profiles()["Vial2mLAAS"]
-    assert profile["aas_type"] == "ProductTypeAAS"
+    assert profile["aas_type"] == "Product"
     asset = model.validated(profile)
     # The file says nothing its type says anyway, and loses nothing.
     assert model.profile(asset, global_asset_id=profile["global_asset_id"]) == profile
@@ -196,7 +196,7 @@ def test_every_component_has_an_aas_of_its_own_and_the_line_names_its_modules(li
         held = next(s for s in components[name]["submodels"] if s["idShort"] == "Skills")
         assert [s["idShort"] for s in children(held)] == ["Home", "MoveAxis", "Errors"]
     assets = {plan_check.shell_of(env)["assetInformation"]["globalAssetId"]: name for name, env in {**resources, **components}.items()}
-    # A module's parts are its components (its points are coordinates, ARSO 0.13) ...
+    # A module's parts are its components (its points are coordinates) ...
     filling = next(s for s in resources["FillingModuleAAS"]["submodels"] if s["idShort"] == "HierarchicalStructures")
     assert [assets.get(n.get("globalAssetId")) for n in children(at(filling, "EntryNode"))] == [
         "FillingLinearAxisAAS", "FillingPumpAAS", "FillingScaleAAS"]
@@ -205,7 +205,7 @@ def test_every_component_has_an_aas_of_its_own_and_the_line_names_its_modules(li
     system = example_line.line(resources)
     assert plan_check.shell_of(system)["assetInformation"]["assetType"] == f"{BASE}/Resource/System"
     assert ontology_check(system, blueprint).ok
-    nodes = children(at(system["submodels"][0], "EntryNode"))
+    nodes = children(at(next(s for s in system["submodels"] if s["idShort"] == "HierarchicalStructures"), "EntryNode"))
     assert [n["idShort"] for n in nodes] == ["LoadingModule", "FillingModule", "StopperingModule", "CappingModule",
                                              "InspectionModule", "UnloadingModule", "PlanarTable"]
     assert [assets.get(n.get("globalAssetId")) for n in nodes][1:5] == list(resources)

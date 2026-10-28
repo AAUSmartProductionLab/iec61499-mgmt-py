@@ -18,6 +18,40 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
+- **The reference models: the library in aas-model, the instances here.** *Journal.*
+  - aas-model (branch `lab-ppr-models`) holds the lab's own submodel templates (ARSO's Skills,
+    Parameters, Control Configuration; the product's Process Parameters and Production Sequence; the
+    process AAS's Process Information, Bindings, Validation), the classes generated from them
+    (`scripts/lab_generate.py`), and the types `Module`, `Component`, `ProductionSystem`, `Product`,
+    `Process`.
+  - This repository builds the instances with them: the modules from their specs (`modreg`), the
+    products and the processes as Python.
+  - Why: the module spec stays the one source of a module's program and its AAS (a module's AAS is
+    4 to 7 MB, about 1,200 interface and 600 mapping elements, all derived). The types and
+    templates are shared with the lab's stations. Instead of: the instances in aas-model as well,
+    which would duplicate the specs.
+  - modreg's own generated classes and templates are gone; `modreg generate` writes the ARSO
+    templates into aas-model and has it make the classes.
+- **aas-model's Variables replace ARSO's Operational Data.** *Journal.*
+  - Variables has the shape decided for the operational data: live values as Properties, and
+    `State`, `Measurements` and `Log` holding time series (IDTA 02008 as SMCs, an InfluxDB segment
+    each). One model for the lab's stations and the modules.
+  - A data point is a `VariableProp`: the semantic id says it is a variable, its meaning (what it
+    shows) is its supplemental id. modlink reads the meaning there, and still the semantic id of
+    the older AASs.
+  - The coordinates are in `Variables/Measurements/Coordinates`, with their own semantic ids
+    (`.../variables/Coordinate/1/0`). Their classes have names of their own (`RelativeCoordinate`,
+    `CoordinateX`): aas_pydantic reads an element back as the class its dump names, among all
+    classes, and aas-model already has a `Coordinate`.
+  - ARSO follows (0.14).
+- **The skill protocol's variables keep their id.** *Journal.* Session, Accepted and ErrorID carry
+  `.../ControlComponent/Skill/OperationVariable/1/0`, stated where it holds. aas-model used to give
+  it to every Operation variable; its variables are plain Properties now. The planner, the skill
+  editor and the projection tell protocol from parameter by it.
+- **The process AAS's templates are written by hand, not from an ontology.** *Journal.* AProSO is
+  not remade yet. The templates follow the draft of 26 Oct (`process_aas.py`). Their classes are
+  named apart from the skills' and the recipe's (`ProcessStepBinding`, `InputBinding`), which have
+  the same idShorts but other fields.
 - **Coordinates built (ARSO 0.13, vocabulary 0.5).** *Journal.*
   - What exists: modules (base, a mount and an end effector per axis, points), the table (base and
     flyways), the shuttles (the xbot, following the controller's X, Y, Rz) and the line's points.

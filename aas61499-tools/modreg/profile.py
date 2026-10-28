@@ -1,7 +1,7 @@
 """A module's AAS in the structure of the resource ontology (ARSO), from its module spec and, when
 read, what runs on it.
 
-``describe`` fills a ``ModuleTypeAAS``, and ``describe_all`` also a ``ComponentTypeAAS`` for every
+``describe`` fills a ``Module``, and ``describe_all`` also a ``Component`` for every
 part of the module that has skills; ``model.profile`` turns each into the profile it is registered
 with (its manifest), ``model.environment`` into the AAS.
 
@@ -15,10 +15,11 @@ with (its manifest), ``model.environment`` into the AAS.
   move; one without a component is the module's own.
 - **Module**: the module's own commands in the same shape: Occupy, Release and its state machine.
   What it runs while resetting and stopping are the steps of Reset and Stop.
-- **Operational Data** with the mapping that feeds it (Asset Interfaces Mapping Configuration):
-  module state, occupation, skill and step states, parameters and results, equipment inputs, as
-  decimal data points. A data point means what the Operation variable it shows means (the same
-  semantic id); nothing in Skills refers to it.
+- **Variables** (aas-model's) with the mapping that feeds them (Asset Interfaces Mapping
+  Configuration): module state, occupation, skill and step states, parameters and results,
+  equipment inputs, as decimal data points. A data point means what the Operation variable it shows
+  means (that id is its supplemental semantic id); nothing in Skills refers to it. In
+  ``Measurements/Coordinates``: where the module, its mounts, end effectors and points are.
 - **Hierarchical Structures**: the components, each with an AAS of its own, found by its asset id.
 - **Skills** also say which rule set the program is built by (RuleSet) and, per module level
   skill, that the program carries it out (Deployment Built).
@@ -40,7 +41,7 @@ from aas_model.resource_template import skill_operation
 from aas_model.resource_template._helpers import put
 from aas_model.resource_template.asset_interfaces_mapping_configuration import mapping_configuration, sink, source
 from aas_model.submodel_templates import (
-    Aimc, AimcMappingConfigurations, DmpActionInput, DmpActionOutput, DmpProperty, OpcuaAction, OperationVariableProp,
+    Aimc, AimcMappingConfigurations, DmpActionInput, DmpActionOutput, DmpProperty, OpcuaAction,
     DmpProperties, OpcuaActions, ReadOnly, Synchronous, UavComponentOf,
 )
 from aas_pydantic import Capability, Key, ModelReference, Property, Qualifier, ReferenceElement
@@ -59,16 +60,19 @@ from modsync.device import Snapshot, literal
 from . import model
 from .derive import Offer, local, offers as derived_offers
 from .projection import project
-from .generated import control_configuration as cc, skills as arso
-from .generated import operational_data as od
-from .generated.operational_data import Datapoint
+from aas_model.submodel_templates.arso import control_configuration as cc, skills as arso
+from aas_model.submodel_templates.coordinates import (
+    CoordinateRelativeTo, CoordinateSource, Coordinates, CoordinatePitch, CoordinateRoll, CoordinateX, CoordinateY,
+    CoordinateYaw, CoordinateZ, RelativeCoordinate,
+)
+from aas_model.submodel_templates.variables import MeasurementsGroup, VariableProp
 from .lab import nameplate
-from .model import ComponentTypeAAS, ModuleTypeAAS
+from .model import Component, Module
 
 AID = "{aas_id}/submodels/AssetInterfacesDescription"
 SKILLS = "{aas_id}/submodels/Skills"
 STRUCTURE = "{aas_id}/submodels/HierarchicalStructures"
-DATA = "{aas_id}/submodels/OperationalData"
+DATA = "{aas_id}/submodels/Variables"
 CAPABILITIES = "{aas_id}/submodels/CapabilityDescription"
 # IDTA 02020: the Capability element and its role qualifier.
 CAPABILITY = "https://admin-shell.io/idta/CapabilityDescription/Capability/1/0"
@@ -92,6 +96,10 @@ RULES = f"{BASE_URL}/rules/module/2"
 OCCUPIED = "https://w3id.org/2026/apex/semantic/state/occupied"
 # What a skill can be told: a command means the same on every skill (ontology/Vocabulary/commands.ttl).
 COMMAND = f"{BASE_URL}/skill"
+# The variables of the skill protocol (the session, the answer), not parameters of the skill: the
+# planner, the skill editor and the projection tell them apart by this id. aas-model gave it to every
+# Operation variable until its variables became plain Properties; here it is stated where it holds.
+PROTOCOL_VARIABLE = f"{BASE_URL}/ControlComponent/Skill/OperationVariable/1/0"
 
 
 def text(value) -> str:
@@ -133,25 +141,24 @@ COORDINATES = ((SMC, "Measurements"), (SMC, "Coordinates"))
 
 def coordinate_ref(name: str, aas_id: str | None = None) -> ModelReference:
     """The coordinate ``name`` of this AAS (``aas_id`` None) or of the AAS ``aas_id``."""
-    return path(DATA if aas_id is None else f"{aas_id}/submodels/OperationalData", *COORDINATES, (SMC, name))
+    return path(DATA if aas_id is None else f"{aas_id}/submodels/Variables", *COORDINATES, (SMC, name))
 
 
 def coordinate(name: str, meant: str | None = None, location=None, relative_to: ModelReference | None = None,
-               sources: dict[str, str] | None = None, description: str = "") -> od.Coordinate:
-    """A coordinate (ARSO 0.13): ``location`` (x, y, z, rx, ry, rz; none: zero) relative to
-    ``relative_to`` (none: a root, or not placed yet), in mm and degrees; ``meant`` a meaning of the
-    vocabulary; ``sources`` the data point each moving value follows (``{"Z": "LinearAxis_ActualPosition"}``)."""
-    unit = lambda u: [Qualifier(type_="Unit", value=u, kind="ConceptQualifier")]          # noqa: E731
-    given = [getattr(location, a, 0.0) if location is not None else 0.0 for a in ("x", "y", "z", "rx", "ry", "rz")]
-    values = {v: getattr(od, v)(value=text(float(g)), qualifiers=unit("deg" if v in ("Roll", "Pitch", "Yaw") else "mm"))
-              for v, g in zip(("X", "Y", "Z", "Roll", "Pitch", "Yaw"), given)}
-    made = od.Coordinate(id_short=name, description=description,
-                         supplemental_semantic_ids=[meaning(meant)] if meant else [], **values)
+               sources: dict[str, str] | None = None, description: str = "") -> RelativeCoordinate:
+    """A coordinate: ``location`` (x, y, z, rx, ry, rz; none: zero) relative to ``relative_to`` (none:
+    a root, or not placed yet), in mm and degrees; ``meant`` a meaning of the vocabulary; ``sources``
+    the variable each moving value is (``{"Z": "LinearAxis_ActualPosition"}``)."""
+    given = [float(getattr(location, a, 0.0)) if location is not None else 0.0 for a in ("x", "y", "z", "rx", "ry", "rz")]
+    made = RelativeCoordinate(
+        id_short=name, description=description, supplemental_semantic_ids=[meaning(meant)] if meant else [],
+        X=CoordinateX(value=text(given[0])), Y=CoordinateY(value=text(given[1])), Z=CoordinateZ(value=text(given[2])),
+        Roll=CoordinateRoll(value=text(given[3])), Pitch=CoordinatePitch(value=text(given[4])),
+        Yaw=CoordinateYaw(value=text(given[5])))
     if relative_to is not None:
-        made.RelativeTo = od.RelativeTo(value=relative_to)
+        made.RelativeTo = CoordinateRelativeTo(value=relative_to)
     for value, point in (sources or {}).items():
-        made.CoordinateSource[f"{value}Source"] = od.CoordinateSource(id_short=f"{value}Source",
-                                                                     value=path(DATA, ("Property", point)))
+        made.source[f"{value}Source"] = CoordinateSource(id_short=f"{value}Source", value=path(DATA, ("Property", point)))
     return made
 
 
@@ -344,13 +351,13 @@ class Describer:
         return ReferenceElement(value=path(self.home(name), (SMC, name)))
 
     def variable(self, name: str, value_type: str, about: str, concept: str | None = None, pr: Parameter | None = None,
-                 value=None, unit: str | None = None, means: str | None = None) -> OperationVariableProp:
+                 value=None, unit: str | None = None, means: str | None = None) -> Property:
         """A variable of an Operation. A parameter carries its value (the default, or what the module
         runs with), its unit and its limits; ``concept`` is what the data point showing it means too,
         ``means`` what it is in a product's terms."""
         declared = [("Unit", pr.unit if pr else unit), ("Minimum", pr.minimum if pr else None),
                     ("Maximum", pr.maximum if pr else None), ("Default", pr.default if pr else None)]
-        made = OperationVariableProp(
+        made = Property(
             id_short=name, value_type=value_type, description=about,
             qualifiers=[Qualifier(type_=k, value=text(v), kind="ConceptQualifier") for k, v in declared if v is not None])
         if value is not None:
@@ -373,9 +380,9 @@ class Describer:
         op.semantic_id = meaning_id
         op.description = about
         op.in_output_variable = []
-        op.input_variable = [self.variable("Session", "xs:string", "Occupation session of the caller"), *inputs]
-        op.output_variable = [self.variable("Accepted", "xs:boolean", "The command was accepted"),
-                              self.variable("ErrorID", "xs:unsignedShort", f"Why it was refused or failed: {ERRORS}"),
+        op.input_variable = [self.variable("Session", "xs:string", "Occupation session of the caller", PROTOCOL_VARIABLE), *inputs]
+        op.output_variable = [self.variable("Accepted", "xs:boolean", "The command was accepted", PROTOCOL_VARIABLE),
+                              self.variable("ErrorID", "xs:unsignedShort", f"Why it was refused or failed: {ERRORS}", PROTOCOL_VARIABLE),
                               *outputs]
         if key:
             self.operations[key] = (at, [v.id_short for v in op.input_variable])
@@ -640,7 +647,7 @@ class Describer:
 
     # Submodels -------------------------------------------------------------------------------
 
-    def coordinates(self) -> od.Measurements:
+    def coordinates(self) -> MeasurementsGroup:
         """Where the module and its points are (ARSO 0.13): its base, not placed until it is put on a
         line; for an item with a location, its mount, and for an axis also its end effector, which
         moves along the mount's Z axis as the axis' actual position; its points of interest."""
@@ -660,9 +667,9 @@ class Describer:
         for name, point in spec.points.items():
             found[name] = coordinate(name, point.meaning, point.location, base,
                                      description=point.description or f"{point.meaning} of the {spec.module} module")
-        return od.Measurements(Coordinates=od.Coordinates(Coordinate=found))
+        return MeasurementsGroup(value={"Coordinates": Coordinates(coordinate=found)})
 
-    def interface_and_data(self, asset: ModuleTypeAAS):
+    def interface_and_data(self, asset: Module):
         """Put the actions, properties and data points described so far into ``asset``."""
         interface = asset.asset_interfaces_description.InterfaceTemplateForOPCUA["interface_opcua"]
         # aas-model leaves a container out until something is in it.
@@ -672,14 +679,15 @@ class Describer:
             put(interface.InteractionMetadata.actions.property_name, key, action)
         for key, p in self.properties.items():
             put(interface.InteractionMetadata.properties.property_name, key, p)
-        # A data point is a decimal: states and counts as their number, a Boolean as 0 or 1.
+        # A data point is a variable, a decimal: states and counts as their number, a Boolean as 0 or 1.
+        # What it shows is its supplemental semantic id (aas-model's Variables).
         for name, (_, concept, title) in self.datapoints.items():
-            asset.operational_data.Datapoint[name] = Datapoint(
-                id_short=name, value="0", value_type="xs:decimal", semantic_id=concept, description=title)
+            asset.variables.variable[name] = VariableProp(
+                id_short=name, value="0", value_type="xs:decimal", supplemental_semantic_ids=[concept], description=title)
 
     def mappings(self) -> Aimc:
         """How the interface reaches the other submodels (AIMC): every property of the interface
-        feeds its Operational Data point, and every action of the interface is invoked by one
+        feeds its data point in Variables, and every action of the interface is invoked by one
         Operation (a command of a skill, in this AAS or in a component's; a command of the module)."""
         def identity(id_short: str, feeds: dict[str, ModelReference]) -> object:
             lines = "\n".join(f"        {key} = sources.{key}," for key in feeds)
@@ -754,11 +762,11 @@ class Describer:
         for name, code in ERROR_CODES.items():
             put(held.SkillError, name, arso.SkillError(**prop(code, "xs:integer")))
 
-    def build(self) -> list[tuple[ModuleTypeAAS | ComponentTypeAAS, str]]:
+    def build(self) -> list[tuple[Module | Component, str]]:
         """The module and its components, each with the id of its asset."""
         spec = self.spec
         id_short, aas_id, asset_id = identity(spec)
-        asset = ModuleTypeAAS(id_short=id_short, id=aas_id, asset_type=spec.aas.asset_type or f"{model.RESOURCE}/Module",
+        asset = Module(id_short=id_short, id=aas_id, asset_type=spec.aas.asset_type or f"{model.RESOURCE}/Module",
                               derived_from=model.RESOURCE_TEMPLATE)
         asset.specific_asset_ids = {k: v for k, v in (("serialNumber", spec.aas.serial_number),
                                                       ("location", spec.aas.location)) if v}
@@ -771,7 +779,7 @@ class Describer:
 
         # Module level first, so the interface lists it first.
         control = self.module_control()
-        parts = {item: ComponentTypeAAS(
+        parts = {item: Component(
             id_short=found[0], id=found[1], asset_type=found[3],
             description=f"{spec.equipment[item].description or item}: a component of the {spec.module} module, which carries out its skills")
             for item in self.components for found in [component_identity(spec, item)]}
@@ -806,11 +814,11 @@ class Describer:
         interface.EndpointMetadata.contentType.value = "application/octet-stream"
         interface.EndpointMetadata.securityDefinitions.nosec_sc = wot.nosec_sc(scheme=wot.Scheme(value="nosec"))
         self.interface_and_data(asset)
-        asset.operational_data.Measurements = self.coordinates()
+        asset.variables.Measurements = self.coordinates()
         asset.capability_description = self.capabilities()
         asset.asset_interfaces_mapping_configuration = self.mappings()
-        return [(ModuleTypeAAS.model_validate(asset.model_dump()), asset_id),
-                *[(ComponentTypeAAS.model_validate(part.model_dump()), component_identity(spec, item)[2])
+        return [(Module.model_validate(asset.model_dump()), asset_id),
+                *[(Component.model_validate(part.model_dump()), component_identity(spec, item)[2])
                   for item, part in parts.items()]]
 
 
@@ -913,7 +921,7 @@ def describe_with_record(spec: ModuleSpec, target: str, snap: Snapshot | None = 
     return [model.profile(asset, global_asset_id=asset_id) for asset, asset_id in built], record(describer, built[0][0])
 
 
-def record(describer: Describer, module: ModuleTypeAAS) -> dict:
+def record(describer: Describer, module: Module) -> dict:
     """The record of what was built, as a Control Configuration submodel (ARSO's module), kept outside
     the module's AAS: the AAS of ``module`` with only that submodel, and that submodel taken out."""
     holder = module.model_copy(update={f: None for f in type(module).model_fields if hasattr(getattr(module, f), "id_short")})

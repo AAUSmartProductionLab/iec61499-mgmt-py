@@ -21,6 +21,7 @@ from modsync.device import Snapshot                                         # no
 
 ARSO = Path(__file__).resolve().parents[2] / "ontology" / "ARSO"
 BASE = "https://smartproductionlab.aau.dk"
+VARIABLE = "https://smartproductionlab.aau.dk/variables/VariableSemanticId/1/0"     # aas-model's data point
 WOT_NAME = "https://www.w3.org/2019/wot/td#name"
 
 
@@ -110,7 +111,7 @@ def ids(element: dict) -> list[str]:
 
 def test_a_profile_is_small_and_gives_the_module_back(stoppering):
     spec, profile = stoppering
-    assert profile["aas_type"] == "ModuleTypeAAS" and profile["id_short"] == "StopperingModuleAAS"
+    assert profile["aas_type"] == "Module" and profile["id_short"] == "StopperingModuleAAS"
     assert profile["global_asset_id"] == f"{BASE}/assets/StopperingModule"
     text = json.dumps(profile)                                  # plain JSON
     full = model.asset(profile).model_dump(mode="json")
@@ -193,8 +194,8 @@ def test_a_skill_is_its_commands(stoppering, stoppering_all):
     assert ids(at(stoppering_, "Start", "Steps")) == [f"{PS}/Steps/1/0"]
     assert ids(steps[0]) == [f"{PS}/Step/1/0", f"{BASE}/skills/Stoppering/Execute/HeadDown"]
     assert ids(at(steps[0], "Kind")) == [f"{PS}/Kind/1/0"]
-    data = submodel(stoppering_all["StopperingModuleAAS"], "OperationalData")
-    assert ids(at(data, "Stoppering_Execute_HeadDown_State")) == [f"{BASE}/skills/Stoppering/Execute/HeadDown/State"]
+    data = submodel(stoppering_all["StopperingModuleAAS"], "Variables")
+    assert ids(at(data, "Stoppering_Execute_HeadDown_State")) == [VARIABLE, f"{BASE}/skills/Stoppering/Execute/HeadDown/State"]
     assert [resolve(envs, at(s, "Skill")["value"])["idShort"] for s in children(at(stoppering_, "Stop", "Steps"))] == ["Home"]
 
 
@@ -223,8 +224,8 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     assert float(position["value"]) == decl.parameters["Position"].default
     assert float(declared["Maximum"]) == decl.parameters["Position"].maximum and declared["Unit"] == "mm"
     assert position["embeddedDataSpecifications"][0]["dataSpecificationContent"]["unit"] == "mm"
-    data = submodel(stoppering_all["StopperingModuleAAS"], "OperationalData")
-    assert ids(position)[:1] == ids(at(data, "MoveAxis_Parameter_Position")) == [f"{BASE}/skills/MoveAxis/Parameters/Position"]
+    data = submodel(stoppering_all["StopperingModuleAAS"], "Variables")
+    assert ids(position)[:1] == ids(at(data, "MoveAxis_Parameter_Position"))[1:] == [f"{BASE}/skills/MoveAxis/Parameters/Position"]
     assert ids(position)[1:] == [f"{BASE}/semantics/Position"]              # what it means, as the spec says
     # What starts, ends and bounds it: its conditions, and how it completes.
     assert at(move, "Conditions", "Precondition")["value"] == "Homed"      # an axis that knows where it is
@@ -338,7 +339,7 @@ def test_steps_publish_like_skills_where_the_program_puts_them():
     assert at(properties, "Dispensing_Stopping_Home_ErrorID", "forms", "href")["value"].endswith(
         "/1:Dispensing/1:Stopping/1:Home/1:ErrorID")
     # Their State and ErrorID are data points, fed like those of the skills.
-    data = names(submodel(env, "OperationalData"))
+    data = names(submodel(env, "Variables"))
     assert {"Dispensing_Execute_Weigh_State", "Dispensing_Stopping_Home_ErrorID"} <= set(data)
 
 
@@ -374,7 +375,7 @@ def test_the_modules_own_commands_are_skills_of_a_kind_of_their_own(stoppering, 
     with pytest.raises(ValueError, match="Stop is a command of the module itself"):
         profiles.describe(ModuleSpec.model_validate(data), "pi")
     # Its state and its occupation are data points, as are the states of those steps.
-    data = submodel(env, "OperationalData")
+    data = submodel(env, "Variables")
     assert {"PackMLState", "OccupationState", "Procedure_Resetting_RetractPiston_State", "Procedure_Stopping_Home_ErrorID"} <= set(names(data))
     values = expected_values(spec, expected(spec, "pi"))
     assert values["Resetting.RetractPiston.UaPath"].strip('"') == "/Procedures/Resetting/RetractPiston"
@@ -522,22 +523,22 @@ def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
     structure = submodel(stoppering_aas, "HierarchicalStructures")
     assert at(structure, "EntryNode")["globalAssetId"] == stoppering_aas["assetAdministrationShells"][0]["assetInformation"]["globalAssetId"]
     assert names(at(structure, "EntryNode")) == [*spec.equipment]
-    data = submodel(stoppering_aas, "OperationalData")
-    assert data["semanticId"]["keys"][0]["value"] == f"{BASE}/ARSO/OperationalData/1/0/Submodel"
+    data = submodel(stoppering_aas, "Variables")
+    assert data["semanticId"]["keys"][0]["value"] == f"{BASE}/submodels/Variables/1/0"
     inputs = [f"{item}_{s}" for item, eq in spec.equipment.items() for s in eq.inputs]
     assert {"PackMLState", "OccupationState", *inputs} <= set(names(data))
-    # A data point is a decimal with a value and the concept it stands for.
+    # A data point is a decimal variable with a value and the concept it stands for (its supplemental id).
     points = [d for d in children(data) if d["modelType"] == "Property"]
-    assert all(d["valueType"] == "xs:decimal" and d["value"] == "0" and d["semanticId"] for d in points)
-    # Beside them, where the module and its points are (ARSO 0.13).
+    assert all(d["valueType"] == "xs:decimal" and d["value"] == "0" and ids(d)[0] == VARIABLE and len(ids(d)) == 2
+               for d in points)
+    # Beside them, where the module and its points are.
     assert [d["idShort"] for d in children(data) if d["modelType"] != "Property"] == ["Measurements"]
     mappings = at(submodel(stoppering_aas, "AssetInterfacesMappingConfiguration"), "MappingConfigurations")
     feed = children(mappings)[0]
     # Every data point has a source: the property of the interface that publishes it.
     assert len(children(at(feed, "Sinks"))) == len(children(at(feed, "Sources"))) == len(points)
     # A skill parameter of the current or last run is a data point as well, not a Parameters entry.
-    assert at(data, "MoveAxis_Parameter_Position")["semanticId"]["keys"][0]["value"] == \
-        f"{BASE}/skills/MoveAxis/Parameters/Position"
+    assert ids(at(data, "MoveAxis_Parameter_Position"))[1] == f"{BASE}/skills/MoveAxis/Parameters/Position"
     assert "Parameters" not in [s["idShort"] for s in stoppering_aas["submodels"]]
 
 
@@ -577,12 +578,13 @@ def test_a_module_that_was_read_shows_what_runs_there():
 
 
 def test_every_resource_is_the_labs_resource(stoppering_all):
-    """A line, a module and a component are aas-model's Resource; what ARSO's submodels replace (the
-    Control Component Instance, the Variables) is not in their AAS."""
-    for cls in (model.ModuleTypeAAS, model.ComponentTypeAAS, model.SystemTypeAAS):
+    """A line, a module and a component are aas-model's Resource; what ARSO's Skills replace (the
+    Control Component Instance) is not in their AAS, and a component has no Variables."""
+    for cls in (model.Module, model.Component, model.ProductionSystem):
         assert issubclass(cls, Resource)
     for name, env in stoppering_all.items():
-        assert not {"ControlComponentInstance", "Variables"} & set(names({"submodelElements": env["submodels"]})), name
+        held = set(names({"submodelElements": env["submodels"]}))
+        assert "ControlComponentInstance" not in held and ("Variables" in held) == name.endswith("ModuleAAS"), name
 
 
 def test_the_labs_own_resources_go_the_same_way():
