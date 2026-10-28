@@ -1,4 +1,4 @@
-# How the tools work: modgen, modsync, modlink
+# How the tools work: modgen, modsync, modlink, modplan
 
 A description for the paper's method and implementation sections, kept with the code (state of
 27 Oct 2026). Each tool is given by what it takes and gives, the algorithm it runs, and what it
@@ -17,6 +17,7 @@ interface of the module:
 | **modgen** | Make the program | A module spec (YAML) | A 4diac project: block types, the system, one application per target | – (writes files) |
 | **modsync** | Keep the program and its description in step | The module's AAS (or its spec); the running program | Management commands; the boot file; `Deployment` and a built skill's interface in the AAS; the integrator's record of what was built; a 4diac project of what runs | IEC 61499 management protocol |
 | **modlink** | Operate the module | The module's AAS | Calls of skills and module commands; their states and results | OPC UA |
+| **modplan** | Compose new skills | The module's AAS (its Capability Description) | A planned skill described in the AAS (modsync builds it); findings on the skills it has; what the module can carry out | – (reads and writes the AAS) |
 
 A fourth tool, **modreg**, makes and checks the AAS (from a spec, or from what modsync read), derives
 the offered capabilities from the skills, and registers the AAS; it is the vendor's and the
@@ -35,7 +36,7 @@ only modsync uses it after the first deployment; operating goes over OPC UA and 
 HMI built on it) uses it. Operating a module never changes it; changing it never runs a skill.
 
 **Sizes** (Python, without tests and generated code): modgen 4,235 lines, modsync 2,171, modlink
-1,369, modreg 3,050, and the management protocol client they share (`iec61499_mgmt`) 926.
+1,369, modreg 3,050, modplan 1,145 (28 Oct), and the management protocol client they share (`iec61499_mgmt`) 926.
 
 ```mermaid
 flowchart LR
@@ -49,6 +50,8 @@ flowchart LR
     aas -->|where the nodes are| modlink
     modlink <-->|OPC UA| forte
     editor[Skill editor] -->|edits Skills| aas
+    aas -->|capabilities, constraints| modplan
+    modplan -->|a planned skill, described| aas
 ```
 
 ## 2. modgen: generation by patterns
@@ -258,10 +261,55 @@ It writes nothing into the AAS and never uses the management protocol. It does n
 runs which step is the planner's, later the agents'), and it does not check a value against the
 capability's range before calling: FORTE refuses an out-of-range value itself.
 
-## 5. Each tool and the paper's claim
+## 5. modplan: new skills by planning
+
+The design is [skill-planning.md](skill-planning.md); the model it reads, ARSO 0.11's Capability
+Description.
+
+**Takes** the module's AAS and its components' AASs (a folder or an AAS server) and a requirement: a
+capability the module offers, the values of its properties (FillVolume 2.0) and the results asked for
+(FillWeight). **Gives** the steps of a new module level skill, as a flow with parallel blocks, and
+describes it in the AAS as the skill editor saves a skill (`Deployment` Described); `modsync
+reconfigure` then creates it online. It also checks the module level skills the AAS has, and finds the
+process capabilities the module can carry out for which no skill exists yet (offered after a
+reconfiguration).
+
+**Algorithm.**
+1. *Read the domain* (`read`): the module's Capability Description holds, per component, the
+   capabilities its primitives realize, each with what it needs, does and keeps (IDTA 02020 property
+   constraints, `BasicConstraint` expressions); the offered capabilities say what they do to the
+   product. A property is a state variable: the data point its `SameProperty` names, the product's, or
+   the component's. The rest state is what the module's Reset procedure leaves.
+2. *Plan* (`plan`, on GTPyhop): the goals are the capability's Post with the requirement's values,
+   what the results need, then the rest state. A goal is reached by an action whose Post sets the
+   variable (to a value, to what it is given, or by adding to it, in equal doses within the
+   parameter's range), after the action's own preconditions, which become goals in turn; the module's
+   compositions of the capability, where it states them, are tried first. The first plan found is
+   taken.
+3. *Lift* (`lift`): two steps are ordered if they use the same component or one changes a state the
+   other needs, changes or keeps; the series-parallel form of that order is the flow.
+4. *Describe* (`compose`): the flow, the results from the steps that measured them, and the module's
+   Stop procedure as the stop flow, written into the Skills submodel through modreg.
+
+**Check** (`check`): a flow is run through the states; a precondition that does not hold is reported
+with the steps that would make it hold, an invariant a parallel branch breaks too, and a skill that
+does not end at rest. **Discover** (`discover`): for each process capability of the vocabulary, the
+values its compared properties can take (from the ranges of the actions setting them) and whether a
+plan exists at both ends.
+
+**Measured** (28 Oct, this PC): reading the filling module's domain from its AAS about 1 ms (the
+vocabulary loaded), planning Filling with its weight 0.6 ms (median of 20). The whole run (read,
+plan, describe, create online on FORTE with the simulator, run) is `tests/test_modplan_live.py`.
+
+**Assumes** a module's state is a handful of properties of its components and of one product, each a
+known value, and that a skill starts and ends at rest. No relations between many objects (a transport
+system's carriers), no numbers beyond adding and comparing, no time.
+
+## 6. Each tool and the paper's claim
 
 > A module that is delivered with an IEC 61499 program and an AAS can be verified, operated and
-> changed online from those two alone, without the files it was generated from.
+> changed online from those two alone, without the files it was generated from; new skills are
+> planned from its skill and capability models and created online the same way.
 
 | Part of the claim | Tool | What it uses |
 | --- | --- | --- |
@@ -270,3 +318,4 @@ capability's range before calling: FORTE refuses an out-of-range value itself.
 | Operated | modlink | The AAS and the program's OPC UA interface |
 | Changed online | `modsync reconfigure` | The AAS (as edited in the skill editor), the program, the rules, modgen's skill pattern |
 | Without the files it was generated from | modsync, modlink | No spec, no 4diac project, no type sources. (`modsync project`, which makes an IDE project of what runs, is the exception: it takes the equipment and primitives from the module's spec) |
+| New skills planned | modplan, then `modsync reconfigure` | The Capability Description (the components' capabilities and their constraints), the vocabulary |
