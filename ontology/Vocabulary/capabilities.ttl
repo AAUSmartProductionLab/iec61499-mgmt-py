@@ -30,11 +30,16 @@
 # and of the product (ContentVolume, Weighed, Stoppered, Capped,
 # Inspected). What holds only on one module (the needle in the vial) is
 # not here: the module's AAS states it.
+#
+# 0.3 (28 Oct): PressPosition (where the press meets the stopper), and
+# the meanings of a module's points of interest: where a shuttle stands
+# to hand a container over, where a process acts on it, where a robot
+# picks or places (docs/locations-and-layout.md).
 #################################################################
 
 <https://smartproductionlab.aau.dk/semantics>
   rdf:type owl:Ontology ;
-  owl:versionInfo "0.2" ;
+  owl:versionInfo "0.3" ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://w3id.org/2025/pprl> ;
   rdfs:comment "Capabilities and capability properties of aseptic filling lines for vials, prefilled syringes and cartridges (AAU Smart Production Lab)." .
@@ -191,6 +196,11 @@ lab:FillPosition rdf:type owl:Class ; rdfs:subClassOf css:Property , lab:Positio
   rdfs:comment "Where the needle is in the container: the position of the axis at which a pump doses into it." ;
   lab:characterizes lab:Dosing .
 
+lab:PressPosition rdf:type owl:Class ; rdfs:subClassOf css:Property , lab:Position ;
+  rdfs:label "Press position" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where the press meets the stopper in the container: the position of the axis at which a stopper is pressed in." ;
+  lab:characterizes lab:Pressing .
+
 lab:Volume rdf:type owl:Class ; rdfs:subClassOf css:Property ;
   rdfs:label "Volume" ; lab:valueType "number" ; lab:unit "mL" ;
   rdfs:comment "A volume a pump delivers in one dose." ;
@@ -249,3 +259,34 @@ lab:InspectionMethod rdf:type owl:Class ; rdfs:subClassOf css:Property ;
   rdfs:label "Inspection method" ; lab:valueType "string" ;
   rdfs:comment "How the container is inspected, e.g. vision." ;
   lab:characterizes lab:Inspection .
+
+
+#################################################################
+# Points of interest of a module (0.3)
+#
+# A point is a place on a module where something happens to a product:
+# a Node of the module's Hierarchical Structures (a CoManagedEntity with
+# a Frame, ARSO 0.12) whose supplemental semanticId is one of these.
+# Its pose in the line, or in the planar table's frame, follows from the
+# frames along the tree (modreg/frames.py).
+#################################################################
+
+lab:PointOfInterest rdf:type owl:Class ;
+  rdfs:label "Point of interest" ;
+  rdfs:comment "A place on a module, stated by its pose in the module's frame, where something happens to a product." .
+
+lab:TransferPoint rdf:type owl:Class ; rdfs:subClassOf lab:PointOfInterest ;
+  rdfs:label "Transfer point" ;
+  rdfs:comment "Where a shuttle stands to hand a container to the module and to take it back: the target of the shuttle's move, in the planar table's frame." .
+
+lab:ProcessingPoint rdf:type owl:Class ; rdfs:subClassOf lab:PointOfInterest ;
+  rdfs:label "Processing point" ;
+  rdfs:comment "Where the module's process acts on the container: where the needle enters, where the press comes down." .
+
+lab:PickPoint rdf:type owl:Class ; rdfs:subClassOf lab:PointOfInterest ;
+  rdfs:label "Pick point" ;
+  rdfs:comment "Where a robot or gripper takes a container or a part from." .
+
+lab:PlacePoint rdf:type owl:Class ; rdfs:subClassOf lab:PointOfInterest ;
+  rdfs:label "Place point" ;
+  rdfs:comment "Where a robot or gripper puts a container or a part down." .
