@@ -58,3 +58,6 @@ reasons behind each choice, with what was chosen instead, are [design-decisions.
   commands, the running skill kept running (a value is written while Idle); by a restart 3.3 s down.
 - **Planning**: the cases T1 to T12 of [skill-planning.md](skill-planning.md) as tests (the module's
   own skills as ground truth, a planned skill run on FORTE); times to read the domain and to plan.
+  The same problems exported as PDDL and HDDL and planned by ENHSP and Aries
+  (`cell/eval/results/planners-2026-10-28T0218.md`): GTPyhop 1 to 2 ms, Aries 41 to 66 ms, ENHSP 282
+  to 348 ms, every plan valid.

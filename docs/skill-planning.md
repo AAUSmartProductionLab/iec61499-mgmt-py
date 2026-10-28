@@ -188,6 +188,19 @@ one can be written from the other.
    - PDDL 2.1 with numbers (ENHSP) for `+=`, which HDDL 1.0 cannot express: a volume above one dose;
    - invariants stay outside both: plans are sequential, and invariants matter only when lifting.
 
+   **As built (28 Oct, `modplan/export.py`).** Both are generated per requirement: the domain is the
+   module's, the problem holds the values (as objects) the requirement needs. HDDL expresses adding
+   after all: the problem states the sums of its values as static facts (`(sum v_7p5 v_7p5 v_15p0)`),
+   and it offers the fewest equal doses, as GTPyhop takes, so a volume above one dose is planned in
+   HDDL too. A numeric property is a predicate of one value object (`unknown` when not known); an
+   action takes the value it replaces as a parameter and deletes it. Two lessons from Aries: its
+   server stops on conditional effects (a `forall`/`when` delete), so the replaced value is a
+   parameter; and a method must not bind that parameter in its precondition, since the method's first
+   subtasks may change it, so the action's own precondition binds it. The compositions are left out of
+   the HDDL (a method for one would need actions restricted to its parts). ENHSP plans from the PDDL
+   and Aries from the HDDL, both through unified-planning, whose validator checks every plan; T1 to T12
+   stay with GTPyhop, and the four cases of `cell/eval/planners.py` run through all three.
+
 **Discovery.** With the generated methods a process capability is planned without any composition.
 For each process capability of the vocabulary the module has no skill for, the planner tries its Post
 from the rest state; if a plan exists, the module offers it after a reconfiguration, with the range the

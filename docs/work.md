@@ -414,6 +414,24 @@ Learned:
 - **Planning is cheap**: reading the filling module's domain about 1 ms, a plan 0.6 ms (median of 20);
   composing a skill with the AAS read and written about 0.14 s.
 
+## PDDL and HDDL for standard planners (28 Oct)
+
+G6 of [next-steps.md](next-steps.md); `modplan/export.py`, `cell/eval/planners.py`.
+
+Learned:
+
+- **unified-planning 1.3** reads PDDL and HDDL, validates plans of both, and runs ENHSP (a jar, on
+  this PC's Java 21) and Aries (a binary in its wheel) on Windows: `pip install -e .[planners]`.
+- **Aries's server stops** (the gRPC stream is reset) on a hierarchical problem with conditional
+  effects; with the replaced value as an action parameter it plans in about 50 ms.
+- **A method's precondition binds early**: a method that binds the old value of a property in its
+  precondition fails when its first subtask changes that property; the action's own precondition
+  binds it instead.
+- **A numeric fluent that starts undefined** is refused by unified-planning's engines: the PDDL
+  declares only what the actions read or write.
+- **Offering every split of a volume** (up to ten doses) gave Aries many sums and odd doses (6.43 and
+  8.57 mL, 8 s); offering only the fewest equal doses, as GTPyhop takes, gave 2 x 7.5 mL in 70 ms.
+
 ## Locations and the planar table (28 Oct)
 
 The design is [locations-and-layout.md](locations-and-layout.md); H1 to H4 of [next-steps.md](next-steps.md).

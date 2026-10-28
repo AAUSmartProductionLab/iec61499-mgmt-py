@@ -297,9 +297,21 @@ does not end at rest. **Discover** (`discover`): for each process capability of 
 values its compared properties can take (from the ranges of the actions setting them) and whether a
 plan exists at both ends.
 
+**Standard planners** (`export`, `modplan export ... --as pddl|hddl`): the same domain as PDDL 2.1
+with numbers (an action per component capability; truth values as predicates, numbers as functions,
+a parameter's value an object with its `amount`) and as HDDL (values as objects, a numeric property a
+predicate of one value; the tasks and methods GTPyhop uses: an `achieve_<property>` task per property
+with a method "it holds" and one per action that sets it, its preconditions reached first, adding in
+one dose or several). GTPyhop's plans validate against both (unified-planning's validator); ENHSP plans
+the cases from the PDDL and Aries from the HDDL, and their plans, carried out by the domain's own
+semantics, reach what was asked for (`tests/test_modplan_export.py`).
+
 **Measured** (28 Oct, this PC): reading the filling module's domain from its AAS about 1 ms (the
 vocabulary loaded), planning Filling with its weight 0.6 ms (median of 20). The whole run (read,
 plan, describe, create online on FORTE with the simulator, run) is `tests/test_modplan_live.py`.
+The cases through the three planners (`cell/eval/planners.py`, five runs, medians): GTPyhop 1 to 2 ms,
+Aries on the HDDL 41 to 66 ms, ENHSP on the PDDL 282 to 348 ms (unified-planning starts each for every
+problem); all plans valid, Aries's the same steps and doses as GTPyhop's.
 
 **Assumes** a module's state is a handful of properties of its components and of one product, each a
 known value, and that a skill starts and ends at rest. No relations between many objects (a transport
