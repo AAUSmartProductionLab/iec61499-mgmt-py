@@ -163,7 +163,12 @@ the IEC 61499 module architecture that makes skills, and updating a running modu
 - **Locations, H1 to H5** ([locations-and-layout.md](locations-and-layout.md)): ARSO 0.12 frames
   along Hierarchical Structures, points of interest, the planar table and its shuttles as modules
   with the flyway layout (`modreg profile planar`), the line scenario's stations from the AASs.
-- **The paper's outline and figure drafts**: [paper-outline.md](paper-outline.md), `docs/figures`.
+- **The paper's outline and figure drafts**: [paper-outline.md](paper-outline.md) (narrowed on
+  28 Oct to restructuring a module through its AAS; 17 references from
+  [paper-references.bib](paper-references.bib)), `docs/figures`; the effort count
+  `cell/eval/effort.py`.
+- **The journal paper**: [journal-paper.md](journal-paper.md), what the CIRP paper leaves for it.
+  Design considerations go into [design-log.md](design-log.md) as they are made.
 
 **Next, in this order:**
 
