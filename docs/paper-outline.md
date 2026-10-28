@@ -12,7 +12,7 @@ reasons behind each choice, with what was chosen instead, are [design-decisions.
 
 ## Contributions
 
-1. **The models**: skills and capabilities of a resource in its AAS (ARSO 0.11). A skill is its
+1. **The models**: skills and capabilities of a resource in its AAS (ARSO 0.12). A skill is its
    commands and the flow of steps it runs, written in the process planner's elements; a module's
    Capability Description holds its offered capabilities and, per component, the capabilities its
    primitives realize, with what each needs, does and keeps as IDTA 02020 property constraints.

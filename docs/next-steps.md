@@ -132,8 +132,8 @@ or after the paper is open.
 | # | Step | Where | Done when |
 | --- | --- | --- | --- |
 | H0 | **The planar controller as a submodule.** **Done 27 Oct** (`planar-controller/`) | – | – |
-| H1 | **Frames**: the pose of a part in its parent on its entity in Hierarchical Structures (AutomationML's Frame); Asset Location (IDTA 02045) on the line | ARSO, `modreg`, specs | The example line's modules and components have frames; one point composes into the line's frame |
-| H2 | **Points**: transfer, processing, pick and place points as co-managed entities with a meaning | ARSO, Vocabulary, `modreg` | The filling module's transfer point is known in the table's frame |
+| H1 | **Frames**: the pose of a part in its parent on its entity in Hierarchical Structures (AutomationML's Frame); Asset Location (IDTA 02045) on the line. **Done 28 Oct** for the frames (ARSO 0.12, `modreg/frames.py`; the example line around the planar table, placeholders); Asset Location not yet | ARSO, `modreg`, specs | The example line's modules and components have frames; one point composes into the line's frame |
+| H2 | **Points**: transfer, processing, pick and place points as co-managed entities with a meaning. **Done 28 Oct** (Vocabulary 0.3; the filling and stoppering modules' transfer points are the simulated table's stations) | ARSO, Vocabulary, `modreg` | The filling module's transfer point is known in the table's frame |
 | H3 | **The planar table's AAS**: the table a module, each shuttle a component with `MoveToPosition` and its occupation, the controller's OPC UA as the interface | `modreg`, a spec of the table | `modreg check` passes; `modlink` runs `MoveToPosition` from the AAS on the controller's simulation |
 | H4 | **The layout**: the flyways as entities with their frames, from the controller (the layout over OPC UA), registered again when it changes | `planar-controller`, `modreg` | A changed layout in the simulation shows in the AAS |
 | H5 | **The stations from the AAS**: the line scenario takes the shuttles' targets from the modules' transfer points | `planar-controller/tests` | The scenario runs with no hard-coded stations |
