@@ -40,7 +40,7 @@ from aas_model.json_schema_aid import datapoint_from_schema
 from aas_model.resource_template import skill_operation
 from aas_model.resource_template._helpers import put
 from aas_model.resource_template.asset_interfaces_mapping_configuration import (
-    mapping_configuration, series_segment_ref, sink, source,
+    mapping_configuration, response_sink, response_source, series_segment_ref, sink, source,
 )
 from aas_model.submodel_templates import (
     Aimc, AimcMappingConfigurations, DmpActionInput, DmpActionOutput, DmpProperty, OpcuaAction,
@@ -63,6 +63,7 @@ from . import model
 from .derive import Offer, local, offers as derived_offers
 from .projection import project
 from aas_model.submodel_templates.arso import control_configuration as cc, skills as arso
+from aas_model.submodel_templates.control_component_instance import OptionalVariable
 from aas_model.submodel_templates.coordinates import (
     CoordinateRelativeTo, CoordinateSource, Coordinates, CoordinatePitch, CoordinateRoll, CoordinateX, CoordinateY,
     CoordinateYaw, CoordinateZ, RelativeCoordinate,
@@ -90,8 +91,9 @@ MODULE_STATES = "1 Clearing, 2 Stopped, 3 Starting, 4 Idle, 6 Execute, 7 Stoppin
 ERROR_CODES = {"PreconditionViolated": 1, "InvariantViolated": 2, "Timeout": 3, "NotReady": 4, "NotPermitted": 5,
                "Busy": 6, "Interrupted": 7, "OutOfRange": 8}
 ERRORS = "0 none, " + ", ".join(f"{code} {name}" for name, code in ERROR_CODES.items())
-ANSWER = {"type": "object", "properties": {"Accepted": {"type": "boolean"},
-                                            "ErrorID": {"type": "integer", "minimum": 0, "maximum": 65535}}}
+# What every method answers: whether the command was accepted, and why not (named by FORTE, see ``argument``).
+ANSWER = {"type": "object", "properties": {"SD_1": {"type": "boolean", "title": "Accepted"},
+                                            "SD_2": {"type": "integer", "title": "ErrorID", "minimum": 0, "maximum": 65535}}}
 # The concepts of the two values every resource of the lab has.
 MODULE_STATE = "https://w3id.org/2026/apex/semantic/state/operational"
 # The rules a generated module is built by (docs/module-rules.md); 2 adds parallel blocks and decisions to 1.
@@ -125,9 +127,10 @@ def path(submodel: str, *steps: tuple[str, str]) -> ModelReference:
     return ModelReference(key=(Key(type_="Submodel", value=submodel), *(Key(type_=t, value=v) for t, v in steps)))
 
 
-def affordance(kind: str, key: str) -> ModelReference:
-    """An action or a property of the OPC UA interface."""
-    return path(AID, (SMC, "interface_opcua"), (SMC, "InteractionMetadata"), (SMC, kind), (SMC, key))
+def affordance(kind: str, key: str, *inside: str) -> ModelReference:
+    """An action or a property of the OPC UA interface, or a part of it (an action's ``input``)."""
+    return path(AID, (SMC, "interface_opcua"), (SMC, "InteractionMetadata"), (SMC, kind), (SMC, key),
+                *((SMC, part) for part in inside))
 
 
 def skill_id(name: str) -> str:
@@ -206,13 +209,23 @@ def capability_path(name: str) -> ModelReference:
 
 
 def schema(parameters: dict[str, Parameter]) -> dict:
-    """The arguments of a method as a JSON Schema object, in call order (the session first)."""
-    fields = {"Session": {"type": "string", "title": "Occupation session of the caller"}}
-    for name, pr in parameters.items():
-        field = {"type": "number", "title": pr.description or name, "default": pr.default}
+    """The arguments of a method as a JSON Schema object, in call order (the session first). FORTE
+    names the arguments of a method after the ports of the block that serves it (``argument``); what
+    each one is, is its title."""
+    fields = {argument(1): {"type": "string", "title": "Session", "description": "Occupation session of the caller"}}
+    for i, (name, pr) in enumerate(parameters.items(), 2):
+        field = {"type": "number", "title": name, "description": pr.description or f"Parameter {name}", "default": pr.default}
         field.update({k: v for k, v in (("minimum", pr.minimum), ("maximum", pr.maximum)) if v is not None})
-        fields[name] = field
+        fields[argument(i)] = field
     return {"type": "object", "properties": fields}
+
+
+def argument(n: int, out: bool = False) -> str:
+    """The name of a method's ``n``th input (or output) argument. FORTE's OPC UA server names them
+    after the data ports of the SERVER block that serves the method: an input after the block's
+    output that receives it (RD_1, RD_2, ...), an output after the block's input that sends it (SD_1,
+    SD_2, ...). The DMP calls a method with its arguments by name."""
+    return f"{'SD' if out else 'RD'}_{n}"
 
 
 def block_type(spec: ModuleSpec, skill: str) -> str:
@@ -409,17 +422,19 @@ class Describer:
 
     def operation(self, key: str | None, at: ModelReference, about: str, meaning_id: str, inputs=(), outputs=()):
         """The Operation of a command: the session and ``inputs`` in; Accepted, ErrorID and
-        ``outputs`` out. With ``key`` it invokes that action of the interface (the AIMC maps it
-        there, and the lab's delegation service calls it)."""
+        ``outputs`` out. With ``key`` it invokes that action of the interface: the AAS server
+        delegates the call to the DMP, which calls the method as the AIMC maps it."""
         op = arso.SkillOperation(id_short="operation", qualifiers=skill_operation(key or "local", synchronous=True).qualifiers)
         if not key:
             op.qualifiers = []                      # nothing calls it: it only declares the variables
-        for qualifier in op.qualifiers:             # the delegation calls the action of the interface
-            qualifier.value = qualifier.value.replace("{skill}", key or "")
         op.semantic_id = meaning_id
         op.description = about
         op.in_output_variable = []
         op.input_variable = [self.variable("Session", "xs:string", "Occupation session of the caller", PROTOCOL_VARIABLE), *inputs]
+        # The method answers at once; the results come when the skill is done, so the answer leaves
+        # them out (the DMP requires every output not marked optional).
+        for result in outputs:
+            result.qualifiers = [*result.qualifiers, OptionalVariable()]
         op.output_variable = [self.variable("Accepted", "xs:boolean", "The command was accepted", PROTOCOL_VARIABLE),
                               self.variable("ErrorID", "xs:unsignedShort", f"Why it was refused or failed: {ERRORS}", PROTOCOL_VARIABLE),
                               *outputs]
@@ -751,20 +766,32 @@ class Describer:
         mappings = []
         for group, found in self.series().items():
             for series, points in found.items():
-                lines = "\n".join(f"            {name} = sources.{name}," for name in points)
+                # A field is a decimal: a Boolean is written as 0 or 1.
+                flags = {name for name, (key, _, _) in points.items() if self.properties[key].type.value == "boolean"}
+                lines = "\n".join(f"            {name} = {'number(' if name in flags else ''}sources.{name}{')' if name in flags else ''},"
+                                  for name in points)
+                number = "local function number(flag)\n    if flag == nil then return nil end\n    return flag and 1 or 0\nend\n\n"
                 mappings.append(mapping_configuration(
                     id_short=f"{group}_{series}",
                     sources=[source(name, affordance("properties", key)) for name, (key, _, _) in points.items()],
                     sinks=[sink("Live", series_segment_ref(group, series))],
                     transformation=(f"-- A row of {group}/{series}: each property of the interface is the field of its name\n"
+                                    f"{number if flags else ''}"
                                     f"function aimc_main(sources)\n    return {{\n        Live = {{\n{lines}\n        }},\n    }}\nend\n")))
         for action, (at, arguments) in self.operations.items():
-            fields = "\n".join(f"            {a} = op.{a}," for a in arguments)
+            fields = "\n".join(f"            {argument(i)} = op.{a}," for i, a in enumerate(arguments, 1))
             mappings.append(mapping_configuration(
-                id_short=action, sources=[source(action, at)], sinks=[sink(action, affordance("actions", action))],
-                transformation=(f"-- {action}: the invocation's inputs become the arguments of the OPC UA method, in this order\n"
+                id_short=action, sources=[source(action, at)], sinks=[sink(action, affordance("actions", action, "input"))],
+                transformation=(f"-- {action}: the invocation's inputs are the arguments of the OPC UA method, in this order\n"
                                 f"function aimc_main(sources)\n    local op = sources.{action}\n    return {{\n"
-                                f"        {action} = {{\n{fields}\n        }},\n    }}\nend\n")))
+                                f"        {action} = {{\n{fields}\n        }},\n    }}\nend\n"),
+                # The method's answer is the Operation's: whether the command was accepted, and why not.
+                response_sources=[response_source("Reply", affordance("actions", action, "output"))],
+                response_transformation=(f"-- {action}: the method's answer is the Operation's\n"
+                                         f"function aimc_main(sources)\n    local reply = sources.Reply\n    return {{\n"
+                                         f"        {action} = {{ Accepted = reply.{argument(1, True)}, "
+                                         f"ErrorID = reply.{argument(2, True)} }},\n    }}\nend\n"),
+                response_sinks=[response_sink(action, at)]))
         return Aimc(id_short="AssetInterfacesMappingConfiguration",
                     MappingConfigurations=AimcMappingConfigurations(value=mappings))
 

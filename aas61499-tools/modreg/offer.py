@@ -48,10 +48,11 @@ def add(holder: dict, elements: list[dict], key: str = "value") -> None:
     holder[key] += [e for e in elements if e.get("idShort") not in have]
 
 
-def targets(config: dict, which: str) -> list[str]:
-    """What the sources or sinks of a mapping refer to: the last key of each reference."""
+def targets(config: dict, which: str) -> list[tuple[str, ...]]:
+    """What the sources or sinks of a mapping refer to: the keys of each reference below its submodel
+    (an action's input is the action's own: every one is called ``input``)."""
     single = which[:-1]
-    return [at(entry, single)["value"]["keys"][-1]["value"] for entry in children(at(config, which))]
+    return [tuple(k["value"] for k in at(entry, single)["value"]["keys"][1:]) for entry in children(at(config, which))]
 
 
 def feeds_data(config: dict) -> bool:

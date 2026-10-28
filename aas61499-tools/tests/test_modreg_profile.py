@@ -2,6 +2,7 @@
 
 Needs the ``registration`` extra (aas-model, rdflib); skipped without it.
 """
+import base64
 import json
 from pathlib import Path
 
@@ -146,9 +147,13 @@ def test_a_module_speaks_opc_ua_only(stoppering, stoppering_aas):
     start = at(actions, "MoveAxis_Start")
     path = "/0:Objects/1:Stoppering/1:Skills/1:MoveAxis/1:Start"
     assert at(start, "forms", "href")["value"] == at(start, "forms", "uav_browsePath")["value"] == path
-    # The arguments in call order: the session, then the skill's parameters.
-    assert names(at(start, "input", "properties")) == ["Session", *spec.skills["MoveAxis"].parameters]
-    assert names(at(start, "output", "properties")) == ["Accepted", "ErrorID"]
+    # The arguments in call order, named as FORTE names them (the DMP calls by name): the session,
+    # then the skill's parameters; each one's title says what it is.
+    arguments = children(at(start, "input", "properties"))
+    assert [a["idShort"] for a in arguments] == ["RD_1", "RD_2"]
+    assert [at(a, "title")["value"] for a in arguments] == ["Session", *spec.skills["MoveAxis"].parameters]
+    answer = children(at(start, "output", "properties"))
+    assert [(a["idShort"], at(a, "title")["value"]) for a in answer] == [("SD_1", "Accepted"), ("SD_2", "ErrorID")]
     # An action of aas-model's AID extension (a WoT action named by its idShort); which command it
     # carries out, and of which skill.
     assert start["semanticId"]["keys"][0]["value"] == f"{BASE}/aid/ActionDefinition/1/0"
@@ -522,11 +527,20 @@ def test_the_aimc_maps_every_action_and_property_onto_an_element(stoppering_all)
             for entry, found_source in zip(children(at(config, "Sources")), sources):
                 fed.setdefault(found_source["idShort"], []).append(at(record, at(entry, "SourceId")["value"]))
             continue
-        for found_source, found_sink in zip(sources, sinks):
-            if found_source["modelType"] == "Operation":
-                invoked.setdefault(found_sink["idShort"], []).append(found_source)
-            else:
-                fed.setdefault(found_source["idShort"], []).append(found_sink)
+        for found_source, found_sink, entry in zip(sources, sinks, children(at(config, "Sinks"))):
+            assert found_source["modelType"] == "Operation"
+            # The call goes into the action's input; the method's answer comes back to the Operation.
+            action = at(entry, "Sink")["value"]["keys"]
+            assert action[-1]["value"] == "input" and found_sink is at(resolve(envs, {"type": "ModelReference", "keys": action[:-1]}), "input")
+            invoked.setdefault(action[-2]["value"], []).append(found_source)
+            [reply] = children(at(config, "ResponseSources"))
+            assert at(reply, "Source")["value"]["keys"][:-1] == action[:-1]
+            assert at(reply, "Source")["value"]["keys"][-1]["value"] == "output"
+            [answered] = children(at(config, "ResponseSinks"))
+            assert resolve(envs, at(answered, "Sink")["value"]) is found_source
+            # BaSyx delegates the Operation to the DMP, at the path the AAS API invokes it at.
+            [delegation] = [q["value"] for q in found_source["qualifiers"] if q["type"] == "invocationDelegation"]
+            assert delegation.startswith("http://dmp:8080/submodels/") and delegation.endswith("/invoke")
     assert sorted(fed) == sorted(names(interaction(env, "properties")))
     assert all(len(sinks) == 1 and sinks[0] is not None for sinks in fed.values())
     assert sorted(invoked) == sorted(names(interaction(env, "actions")))
@@ -571,6 +585,19 @@ def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
     # A skill parameter of the current or last run is a field as well, not a Parameters entry.
     assert ids(points["MoveAxis_Parameter_Position"])[1] == f"{BASE}/skills/MoveAxis/Parameters/Position"
     assert "Parameters" not in [s["idShort"] for s in stoppering_aas["submodels"]]
+
+
+def test_the_dmp_reads_the_mappings_as_written(stoppering_all):
+    """The DMP refuses elements of a mapping it does not know, and writes a field of a series as its
+    type: what aas_pydantic keeps of a list item's idShort is not published, and a Boolean (the
+    occupation) goes into its decimal field as 0 or 1."""
+    env = stoppering_all["StopperingModuleAAS"]
+    assert "temp_id_short_attribute" not in json.dumps(stoppering_all)
+    mappings = at(submodel(env, "AssetInterfacesMappingConfiguration"), "MappingConfigurations")
+    module = next(c for c in children(mappings)
+                  if [k["value"] for k in at(children(at(c, "Sinks"))[0], "Sink")["value"]["keys"]][1:3] == ["State", "Module"])
+    lua = base64.b64decode(at(module, "Transformation")["value"]).decode("utf-8")
+    assert "OccupationState = number(sources.OccupationState)," in lua and "PackMLState = sources.PackMLState," in lua
 
 
 def test_every_reference_resolves(stoppering_all):
