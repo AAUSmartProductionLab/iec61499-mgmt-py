@@ -155,7 +155,8 @@ def describe_all(table: Table) -> list[dict]:
     module = built[0][0]
     nodes = module.hierarchical_structures.EntryNode.Node
     for n in table.shuttles:
-        nodes[shuttle(n)] = model.LocatedNode(id_short=shuttle(n), entity_type="SelfManagedEntity", global_asset_id=asset(shuttle(n)),
+        nodes[shuttle(n)] = model.LocatedNode(id_short=shuttle(n), entity_type="SelfManagedEntity",
+                                              global_asset_id=asset(shuttle(n)),
                                               description=f"Shuttle {n}: an xbot, occupied and moved on its own")
     for column, row in table.flyways:
         nodes[f"Flyway_{column}_{row}"] = flyway(column, row, table.flyway)

@@ -140,6 +140,8 @@ class _Writer:
         e, f, kind = c.expression, fluent(c.var), self.kinds.get(c.var)
         if e.op in ("unchanged", "given", "measured"):
             return None
+        if kind == "measured":
+            raise NotExpressible(f"{cap.name}: {c} compares a value only known once measured")
         if kind == "bool":
             if e.op not in ("=", "!="):
                 raise NotExpressible(f"{cap.name}: {c} orders truth values")
@@ -237,7 +239,7 @@ class _Writer:
         goal = [lit for var, value in wanted if (lit := self.literal(var, value))]
         return "\n".join([
             f"(define (problem {ident(name)}) (:domain {ident(self.domain.module)})",
-            f"  (:objects {' '.join(objects.values())} - value)",
+            f"  (:objects {' '.join(objects.values())}{' - value' if objects else ''})",
             f"  (:init {' '.join(init)})",
             f"  (:goal (and {' '.join(dict.fromkeys(goal))})))", ""])
 
@@ -481,11 +483,17 @@ class _Hddl:
         declared = f"  (:task {ident(cap.name)} :parameters ({' '.join(head)}{' - value' if head else ''}))"
         return declared, self.method(f"m_{ident(cap.name)}", task, head, [], subtasks)
 
-    def domain_text(self) -> str:
+    def domain_text(self, capability: str) -> str:
         actions = [self.action(cap) for cap in self.domain.actions()]
         variables = sorted(self.kinds, key=fluent)
         methods = [m for var in variables for m in self.methods(var)]
-        processes = [self.capability(cap) for cap in self.domain.tasks()]
+        processes = []
+        for cap in self.domain.tasks():
+            try:
+                processes.append(self.capability(cap))
+            except NotExpressible:
+                if cap.name == capability:
+                    raise                            # another the module offers is left out instead
         tasks = []
         for var in variables:
             f = fluent(var)
@@ -566,7 +574,7 @@ def hddl(domain: Domain, capability: str, values: dict, results: tuple[str, ...]
     """The HDDL domain and problem of carrying out ``capability`` with ``values`` (and ``results``),
     from ``start`` (the rest state) back to rest."""
     writer, cap = _Hddl(domain), domain.capabilities[capability]
-    text = writer.domain_text()                      # first: it collects the constants and the tests
+    text = writer.domain_text(capability)            # first: it collects the constants and the tests
     state = start_state(domain, capability, values, start)
     needs = [(c.var, cap.operand(c.expression, values)) for result in results for c in cap.results.get(result, [])]
     amounts = _Writer(domain).amounts(state, [*goals(domain, capability, values, results), *domain.rest.items()])
