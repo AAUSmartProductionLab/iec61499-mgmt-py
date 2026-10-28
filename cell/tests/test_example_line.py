@@ -1,6 +1,7 @@
-"""The example line (cell/examples): four resources and a product planned on them. The product's
-plan is followed into the resources' AASs, from the process over the required and the offered
-capability to the skill and its parameters."""
+"""The example line (cell/examples), the lab's reference models: the modules, three products and the
+process of each on the line. A product's recipe is followed through its process AAS into the
+modules' AASs, from the process over the required and the offered capability to the skill and its
+parameters."""
 import copy
 import io
 import json
@@ -14,9 +15,9 @@ pytest.importorskip("rdflib")
 
 from basyx.aas.adapter.json import read_aas_json_file           # noqa: E402
 
-from modreg import model                                        # noqa: E402
+from aas_model.process_template import Process                   # noqa: E402
+from aas_model.product_template import Product, plan_id          # noqa: E402
 from modreg.ontology import Blueprint, check as ontology_check  # noqa: E402
-from aas_model.product_template import plan_id                             # noqa: E402
 
 EXAMPLES = Path(__file__).resolve().parents[1] / "examples"
 ARSO = Path(__file__).resolve().parents[2] / "ontology" / "ARSO"
@@ -27,69 +28,77 @@ import example_line                                             # noqa: E402
 import plan_check                                               # noqa: E402
 from plan_check import at, children, resolve                    # noqa: E402
 
+PRODUCTS = ["Vial2mLAAS", "PrefilledSyringe1mLAAS", "Cartridge3mLAAS"]
+
 
 @pytest.fixture(scope="module")
 def line():
     return example_line.build()
 
 
-# The vial's profile, and changes to it -----------------------------------------------------------
-
-def process(profile: dict, name: str) -> dict:
-    return profile["process_parameters"]["Processes"]["Process"][name]
-
-
-def required(profile: dict, capability: str, prop: str) -> dict:
-    """The value a required capability asks for."""
-    held = profile["capability_description"]["CapabilitySet"]["RequiredCapabilities"]["CapabilityContainer"][capability]
-    return held["PropertySet"]["PropertySet"]["PropertyContainer"][prop]["PropertyProperty"]["Value"]
+@pytest.fixture(scope="module")
+def processes(line):
+    resources, products = line
+    return example_line.processes(resources, products)
 
 
-def step(profile: dict, order: int) -> dict:
-    return profile["production_sequence"]["Steps"]["Step"][f"Step_{order:04d}"]
+def submodel(env: dict, id_short: str) -> dict:
+    return next(s for s in env["submodels"] if s["idShort"] == id_short)
 
 
-def assign(profile: dict, order: int, skill: str, resource: str | None = None, held_by: str | None = None) -> None:
-    """Give a step to another skill, of another resource if one is named; ``held_by``: the AAS
-    whose Skills describe it (a component of the resource)."""
-    planned = step(profile, order)
-    planned["SkillId"]["value"] = skill
-    planned["Skill"]["value"]["key"][-1]["value"] = skill
-    if held_by:
-        planned["Skill"]["value"]["key"][0]["value"] = f"{BASE}/aas/{held_by}/submodels/Skills"
-    if resource:
-        planned["Resource"]["value"]["key"][0]["value"] = f"{BASE}/aas/{resource}"
-        planned["Skill"]["value"]["key"][0]["value"] = f"{BASE}/aas/{resource}/submodels/Skills"
-
-
-def planned(change) -> dict:
-    """The vial's AAS with ``change`` made to its profile first."""
-    profile = copy.deepcopy(example_line.product_profiles()["Vial2mLAAS"])
-    change(profile)
-    return model.build(profile)
-
-
-def test_the_line_has_four_resources_and_the_vial(line):
+def test_the_line_has_four_modules_and_makes_three_products(line, processes):
     resources, products = line
     assert list(resources) == ["FillingModuleAAS", "StopperingModuleAAS", "CappingModuleAAS", "InspectionModuleAAS"]
-    assert list(products) == ["Vial2mLAAS"]
-    vial = products["Vial2mLAAS"]
-    assert [s["idShort"] for s in vial["submodels"]] == [
-        "Nameplate", "HierarchicalStructures", "ProcessParameters", "CapabilityDescription", "ProductionSequence"]
+    assert list(products) == PRODUCTS
+    assert list(processes) == [f"{name.removesuffix('AAS')}OnFillingLineAAS" for name in PRODUCTS]
+    for env in products.values():
+        assert [s["idShort"] for s in env["submodels"]] == [
+            "Nameplate", "HierarchicalStructures", "ProcessParameters", "CapabilityDescription", "ProductionSequence"]
+        assert plan_check.shell_of(env)["assetInformation"]["assetKind"] == "Type"
     # Every AAS is valid as BaSyx reads it.
-    for env in [*resources.values(), vial]:
+    for env in [*resources.values(), *products.values(), *processes.values(), *example_line.planar_table()]:
         read_aas_json_file(io.StringIO(json.dumps(env)), failsafe=False)
 
 
-def test_the_vial_is_described_by_its_profile():
-    """The product's description is the pydantic dump of its type, as a module's profile is."""
-    profile = example_line.product_profiles()["Vial2mLAAS"]
-    assert profile["aas_type"] == "Product"
-    asset = model.validated(profile)
-    # The file says nothing its type says anyway, and loses nothing.
-    assert model.profile(asset, global_asset_id=profile["global_asset_id"]) == profile
-    assert list(asset.hierarchical_structures.EntryNode.Node) == ["Vial", "Liquid", "Stopper", "Cap"]
-    assert list(asset.process_parameters.Processes.Process) == ["Filling", "Stoppering", "Capping", "Inspection"]
+@pytest.mark.parametrize("make", example_line.PRODUCTS + example_line.PROCESSES, ids=lambda m: m.__name__)
+def test_a_product_or_process_written_out_reads_back_from_its_json(make):
+    made = make()
+    again = type(made).model_validate_json(made.model_dump_json())
+    assert json.loads(again.model_dump_json()) == json.loads(made.model_dump_json())
+    assert isinstance(made, (Product, Process))
+
+
+def test_a_recipe_names_no_equipment(line):
+    """The product's recipe: the steps in order, each running a process and requiring its capability;
+    no resource, skill or binding (those are the process AAS's)."""
+    _, products = line
+    names = {"Vial2mLAAS": ["Filling", "Stoppering", "Capping", "Inspection"],
+             "PrefilledSyringe1mLAAS": ["Filling", "Stoppering", "Inspection"],
+             "Cartridge3mLAAS": ["Filling", "Stoppering", "Inspection"]}
+    for name, env in products.items():
+        recipe = submodel(env, "ProductionSequence")
+        # The planner finds the recipe of a product by this identifier.
+        assert recipe["id"] == plan_id(plan_check.shell_of(env)["id"])
+        steps = children(at(recipe, "Steps"))
+        assert [at(s, "Name")["value"] for s in steps] == names[name]
+        for step in steps:
+            assert {"Resource", "Skill", "SkillId", "Bindings"}.isdisjoint(c["idShort"] for c in children(step))
+            process = resolve([env], at(step, "ProcessReference")["value"])
+            required = resolve([env], at(process, "RequiredCapability")["value"])
+            assert resolve([env], at(at(step, "RequiredCapabilities"), at(step, "Name")["value"])["value"]) is required
+
+
+def test_the_modules_take_three_kinds_of_container(line):
+    """Filling, stoppering and inspection take vials, syringes and cartridges; capping vials only."""
+    resources, _ = line
+    for name, capability, takes in [("FillingModuleAAS", "Filling", ["vial", "syringe", "cartridge"]),
+                                    ("StopperingModuleAAS", "Stoppering", ["vial", "syringe", "cartridge"]),
+                                    ("InspectionModuleAAS", "Inspection", ["vial", "syringe", "cartridge"]),
+                                    ("CappingModuleAAS", "Capping", ["vial"])]:
+        offered = at(submodel(resources[name], "CapabilityDescription"), "OfferedCapabilities", capability,
+                     "PropertySet", "ContainerType", "Value")
+        listed = [item["value"] for item in offered["value"]] if offered["modelType"] == "SubmodelElementList" else [offered["value"]]
+        assert listed == takes, name
 
 
 def test_the_planned_modules_follow_the_resource_ontology(line):
@@ -100,65 +109,116 @@ def test_the_planned_modules_follow_the_resource_ontology(line):
         assert report.ok, report.errors
 
 
-def test_the_plan_can_be_followed_into_the_resources(line):
+def test_every_process_fits_the_line(line, processes):
     resources, products = line
-    vial = products["Vial2mLAAS"]
-    assert plan_check.check(vial, resources) == []
-    envs = [vial, *resources.values()]
-    plan = next(s for s in vial["submodels"] if s["idShort"] == "ProductionSequence")
-    # The planner finds the plan of a product by this identifier.
-    assert plan["id"] == plan_id(vial["assetAdministrationShells"][0]["id"])
-    steps = children(at(plan, "Steps"))
-    assert [at(s, "Name")["value"] for s in steps] == ["Filling", "Stoppering", "Capping", "Inspection"]
-    assert [resolve(envs, at(s, "Skill")["value"])["idShort"] for s in steps] == ["Dispensing", "Stoppering", "Capping", "Inspection"]
-    # The fill volume: from the product's parameter to the parameter of the skill.
-    binding = children(at(steps[0], "Bindings"))[0]
+    for product, process in zip(products.values(), processes.values()):
+        assert plan_check.check_process(product, process, resources) == []
+        assert at(submodel(process, "Validation"), "Result")["value"] == "Fits"
+
+
+def test_the_fill_volume_is_followed_from_the_product_to_the_skill(line, processes):
+    resources, products = line
+    vial, process = products["Vial2mLAAS"], processes["Vial2mLOnFillingLineAAS"]
+    envs = [vial, process, *resources.values()]
+    filling = at(submodel(process, "Bindings"), "Filling")
+    [binding] = children(at(filling, "Bindings"))
     assert at(binding, "Name")["value"] == "Volume"
     source = resolve(envs, at(binding, "SourceElement")["value"])
     assert (source["idShort"], float(source["value"])) == ("FillVolume", 2.0)
     # It is an input of the skill's Start, and means what the capability's property means.
-    skill = resolve(envs, at(steps[0], "Skill")["value"])
-    volume = at(skill, "Start", "Start", "Volume")
+    volume = resolve(envs, at(binding, "InputReference")["value"])
+    assert volume is at(resolve(envs, at(filling, "Skill")["value"]), "Start", "Start", "Volume")
     assert f"{BASE}/semantics/FillVolume" in plan_check.semantic_ids(volume) and plan_check.unit_of(volume) == "mL"
     # The liquid a filling uses is as much as that parameter says.
-    liquid = at(resolve(envs, at(steps[0], "ProcessReference")["value"]), "ProcessBoM", "Liquid")
+    step = resolve(envs, at(filling, "Step")["value"])
+    liquid = at(resolve(envs, at(step, "ProcessReference")["value"]), "ProcessBoM", "Liquid")
     assert resolve(envs, at(liquid, "QuantityParameterReference")["value"]) is source
     assert resolve(envs, at(liquid, "MaterialReference")["value"])["idShort"] == "Liquid"
 
 
+# Changes to the vial, its process or the line, and what the plan check tells of them ----------------
+
+def required(env: dict, capability: str, prop: str) -> dict:
+    """The value a required capability of the product asks for."""
+    return at(submodel(env, "CapabilityDescription"), "RequiredCapabilities", capability, "PropertySet", prop, "Value")
+
+
+def parameter(env: dict, process: str, name: str) -> dict:
+    return at(submodel(env, "ProcessParameters"), "Processes", process, "ProductParameters", name)
+
+
+def bound(env: dict, step: str) -> dict:
+    return at(submodel(env, "Bindings"), step)
+
+
+def rebind(env: dict, step: str, skill: str, resource: str | None = None) -> None:
+    """Give a step to another skill, of another AAS if one is named."""
+    keys = at(bound(env, step), "Skill")["value"]["keys"]
+    keys[-1]["value"] = skill
+    if resource:
+        keys[0]["value"] = f"{BASE}/aas/{resource}/submodels/Skills"
+        at(bound(env, step), "Resource")["value"]["keys"][0]["value"] = f"{BASE}/aas/{resource}"
+
+
+def unbind(env: dict, step: str) -> None:
+    held = submodel(env, "Bindings")
+    held["submodelElements"] = [b for b in held["submodelElements"] if b["idShort"] != step]
+
+
 @pytest.mark.parametrize("change, told", [
-    (lambda p: required(p, "Filling", "FillVolume").update(value="20.0"), "FillVolume = 20.0 is not covered"),
-    (lambda p: process(p, "Filling")["ProductParameters"]["Parameter"]["FillVolume"].update(value="20.0"), "is outside 0.5 to 10.0"),
-    (lambda p: required(p, "Filling", "FillVolume")["qualifiers"][0].update(value="L"), "asked in L and offered in mL"),
-    (lambda p: process(p, "Filling")["ProductParameters"]["Parameter"]["FillVolume"]["qualifiers"][0].update(value="L"), "is in mL, FillVolume in L"),
-    (lambda p: required(p, "Capping", "CapDiameter").update(value="28.0"), "CapDiameter = 28.0 is not covered"),
-    (lambda p: required(p, "Inspection", "InspectionMethod").update(value="xray"), "InspectionMethod = xray is not covered"),
-    (lambda p: assign(p, 0, "Weigh", held_by="FillingScaleAAS"), "is not realized by Weigh"),
-    (lambda p: step(p, 0)["Bindings"]["Binding"]["Binding_0000"]["Name"].update(value="Speed"), "Dispensing.Speed is not a parameter of the skill"),
-    (lambda p: step(p, 0)["Bindings"]["Binding"].update(Binding_0000={"Name": {"value": "Volume"}, "Value": {"value": "12.5"}}),
-     "the constant = 12.5 is outside 0.5 to 10.0"),
-    (lambda p: assign(p, 1, "Dispensing", "FillingModuleAAS"), "offers no capability with the meaning"),
-    (lambda p: assign(p, 2, "Crimping"), "no such skill"),
+    (lambda v, p: required(v, "Filling", "FillVolume").update(value="20.0"), "FillVolume = 20.0 is not covered"),
+    (lambda v, p: parameter(v, "Filling", "FillVolume").update(value="20.0"), "is outside 0.5 to 10.0"),
+    (lambda v, p: required(v, "Filling", "FillVolume")["qualifiers"][0].update(value="L"), "asked in L and offered in mL"),
+    (lambda v, p: parameter(v, "Filling", "FillVolume")["qualifiers"][0].update(value="L"), "is in mL, FillVolume in L"),
+    (lambda v, p: required(v, "Filling", "AbsoluteFillError").update(max="0.01"), "AbsoluteFillError = 0.0 to 0.01 is not covered"),
+    (lambda v, p: required(v, "Capping", "CapDiameter").update(value="28.0"), "CapDiameter = 28.0 is not covered"),
+    (lambda v, p: required(v, "Capping", "ContainerType").update(value="syringe"), "ContainerType = syringe is not covered"),
+    (lambda v, p: required(v, "Inspection", "InspectionMethod").update(value="xray"), "InspectionMethod = xray is not covered"),
+    (lambda v, p: rebind(p, "Filling", "Weigh", "FillingScaleAAS"), "FillingScaleAAS offers no capability"),
+    (lambda v, p: at(bound(p, "Filling"), "Bindings", "Binding_0000", "Name").update(value="Speed"),
+     "Dispensing.Speed is not a parameter of the skill"),
+    (lambda v, p: at(bound(p, "Filling"), "Bindings", "Binding_0000", "InputReference")["value"]["keys"][1].update(value="Home"),
+     "its InputReference is not that input"),
+    (lambda v, p: rebind(p, "Stoppering", "Dispensing", "FillingModuleAAS"), "offers no capability with the meaning"),
+    (lambda v, p: rebind(p, "Capping", "Crimping"), "no such skill"),
+    (lambda v, p: unbind(p, "Inspection"), "Inspection: not bound"),
 ])
-def test_a_plan_that_does_not_fit_is_told(line, change, told):
-    resources, _ = line
-    found = plan_check.check(planned(change), {**resources, **example_line.components()})
+def test_a_process_that_does_not_fit_is_told(line, processes, change, told):
+    resources, products = line
+    vial, process = copy.deepcopy(products["Vial2mLAAS"]), copy.deepcopy(processes["Vial2mLOnFillingLineAAS"])
+    change(vial, process)
+    found = plan_check.check_process(vial, process, {**resources, **example_line.components()})
     assert any(told in f for f in found), found
 
 
-def test_the_process_aas_binds_the_recipe_to_the_resources_by_reference(line):
+def test_a_process_whose_validation_is_wrong_is_refused(line, monkeypatch):
+    """A process AAS that says it fits, where the plan check finds otherwise, is not built."""
+    resources, products = line
+    broken = copy.deepcopy(resources)
+    offered = at(submodel(broken["FillingModuleAAS"], "CapabilityDescription"), "OfferedCapabilities", "Filling",
+                 "PropertySet", "ContainerType", "Value")
+    offered["value"] = [item for item in offered["value"] if item["value"] == "vial"]
+    with pytest.raises(example_line.ValidationError, match="PrefilledSyringe1mLOnFillingLineAAS"):
+        example_line.processes(broken, products)
+
+
+def test_the_process_aas_binds_the_recipe_to_the_resources_by_reference(line, processes):
     """Each step of the vial's recipe is bound in the process AAS: the step, the resource, the skill,
     and each input of the skill with what it is handed; every link resolves, and an input and the
     product parameter it is handed mean the same."""
     resources, products = line
+    process = processes["Vial2mLOnFillingLineAAS"]
     system = example_line.line(resources)
-    [process] = example_line.processes(resources, products, system).values()
     envs = [process, system, *resources.values(), *example_line.components().values(), *products.values()]
     shell = plan_check.shell_of(process)
-    assert shell["idShort"] == "Vial2mLOnFillingLineAAS" and shell["assetInformation"]["assetKind"] == "Type"
+    assert shell["assetInformation"]["assetKind"] == "Type"
+    assert {a["name"]: a["value"] for a in shell["assetInformation"]["specificAssetIds"]} == {
+        "product": f"{BASE}/assets/Vial2mL", "line": f"{BASE}/assets/FillingLine"}
     assert [s["idShort"] for s in process["submodels"]] == ["ProcessInformation", "Bindings", "Validation"]
     information, bindings, validation = process["submodels"]
+    assert resolve(envs, at(information, "Recipe")["value"]) is submodel(products["Vial2mLAAS"], "ProductionSequence")
     assert at(information, "Product")["value"]["keys"][0]["value"] == plan_check.shell_of(products["Vial2mLAAS"])["id"]
+    assert at(information, "Line")["value"]["keys"][0]["value"] == plan_check.shell_of(system)["id"]
     assert at(validation, "Result")["value"] == "Fits"
     assert [b["idShort"] for b in children(bindings)] == ["Filling", "Stoppering", "Capping", "Inspection"]
     filling = at(bindings, "Filling")

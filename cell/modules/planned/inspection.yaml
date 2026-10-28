@@ -64,8 +64,8 @@ composites:
 
 capabilities:
   Inspection:
-    description: Inspect a closed vial with the camera and decide whether it passes
+    description: Inspect a closed container (vial, syringe, cartridge) with the camera and decide whether it passes
     properties:
-      ContainerType: {value: vial}
+      ContainerType: {values: [vial, syringe, cartridge]}
       GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
       InspectionMethod: {value: vision}

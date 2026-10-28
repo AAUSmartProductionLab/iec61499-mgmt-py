@@ -18,6 +18,31 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
+- **Three products and their process AASs, written out in Python.** *Journal.*
+  - A 2 mL vial, a prefilled syringe of 1 mL and a cartridge of 3 mL (`cell/examples/products`),
+    with the values of the planner's pharma example. One process AAS each on the filling line
+    (`cell/examples/processes`).
+  - **Long files, every element constructed with its class,** instead of helpers that build
+    elements. They are the reference a reader looks up ("this is how this part looks"), so nothing
+    is hidden. Decided by the user.
+  - **The recipe names no equipment; the process AAS holds the bindings** (the model of 26 Oct,
+    `ppr-model.md`). The planner still writes bindings into the product's recipe (F6); `plan_check`
+    reads both (`check_process`, `check`).
+  - **The plan check guards the reference:** a process AAS whose Validation says something else than
+    the check finds is refused by `example_line.py`.
+  - **The syringe accepts a fill error of 0.05 mL,** where the planner's example asks 0.01 mL: the
+    line's filling module fills to 0.05 mL. A product asks for its fill error as a range (0 to the
+    most it accepts); the check now compares an offered value against a required range.
+- **A capability property may list the values a module takes** (IDTA 02020's `SubmodelElementList`
+  property). *Journal.*
+  - Filling, stoppering and inspection take vials, syringes and cartridges (`ContainerType`); capping
+    takes vials. The spec says `values: [vial, syringe, cartridge]`.
+  - Why: one capability with the set of containers it takes, instead of one capability per container
+    as the planner's example has it (Filling_vial, Filling_syringe, ...), which multiplies offers and
+    skills that are the same.
+  - Read by the plan check, modlink and `modreg offer`. The planner's matching is not checked yet.
+- **The table's three shuttles are part of the example line**, so the line's resources are complete.
+  Loading and unloading are still named only (each a Kuka robot and a Pi; no spec yet).
 - **The reference models: the library in aas-model, the instances here.** *Journal.*
   - aas-model (branch `lab-ppr-models`) holds the lab's own submodel templates (ARSO's Skills,
     Parameters, Control Configuration; the product's Process Parameters and Production Sequence; the

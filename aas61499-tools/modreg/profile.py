@@ -823,12 +823,18 @@ class Describer:
 
 
 def capability_property(name: str, iri: str, value: CapabilityProperty, derived: bool):
-    """A property of a capability: a value or a range, in a unit; ``derived``: a skill sets it."""
+    """A property of a capability: a value, the values it takes (IDTA 02020's list) or a range, in a
+    unit; ``derived``: a skill sets it."""
     marks = [Qualifier(type_="Unit", value=value.unit, kind="ConceptQualifier")] if value.unit else []
     if derived:
         marks.append(Qualifier(type_="Derived", value="true", kind="ConceptQualifier"))
     about = dict(id_short="Value", supplemental_semantic_ids=[iri], display_name={"en": name},
                  description=value.description, qualifiers=marks)
+    if value.values:
+        kind = "xs:string" if all(isinstance(v, str) for v in value.values) else "xs:double"
+        return model.StatedProperty(PropertySubmodelList={"Value": cd.PropertySubmodelList(
+            type_value_list_element="Property", value_type_list_element=kind,
+            value=[Property(value=text(v), value_type=kind) for v in value.values], **about)})
     if value.value is None:
         return model.StatedProperty(PropertyRange={"Value": cd.PropertyRange(
             min=text(value.minimum), max=text(value.maximum), value_type="xs:double", **about)})

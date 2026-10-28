@@ -54,7 +54,7 @@ def raw(path=FILLER):
     (lambda d: d["equipment"]["NeedleAxis"]["outputs"]["Up"].pop("modbus"), "Up has no Modbus address"),
     (lambda d: d.update(targets={}), "At least one target"),
     (lambda d: d.update(capabilities={"Filling": {"properties": {
-        "Volume": {"value": 1.0, "minimum": 0.5, "maximum": 2.0}}}}), "a value or a range"),
+        "Volume": {"value": 1.0, "minimum": 0.5, "maximum": 2.0}}}}), "a value, values or a range"),
     (lambda d: d.update(capabilities={"Filling": {"properties": {
         "Volume": {"minimum": 2.0, "maximum": 0.5}}}}), "minimum <= maximum"),
     (lambda d: d.update(capabilities={"Filling": {"realized_by": "Fill"}}), "Extra inputs are not permitted"),

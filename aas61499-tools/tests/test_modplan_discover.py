@@ -61,4 +61,5 @@ def test_a_module_without_skills_offers_what_it_can_plan_after_a_reconfiguration
     assert not [r for r in children(at(offered, "CapabilityRelations")) if r.get("modelType") == "RelationshipElement"]
     volume = at(offered, "PropertySet", "FillVolume", "Value")
     assert (volume["min"], volume["max"]) == ("0.5", "10.0")
-    assert at(offered, "PropertySet", "ContainerType", "Value")["value"] == "vial"      # the machine's facts stay
+    takes = at(offered, "PropertySet", "ContainerType", "Value")["value"]              # the machine's facts stay
+    assert [item["value"] for item in takes] == ["vial", "syringe", "cartridge"]
