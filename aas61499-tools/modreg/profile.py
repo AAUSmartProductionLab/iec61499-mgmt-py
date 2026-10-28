@@ -787,21 +787,23 @@ def capability_description(found: list[Offer], stated: dict[str, tuple[str, Capa
     skill element) -> idShort keeps the name it has."""
     from .capabilities import constrain_offer            # it builds on this module's helpers
     containers, count, named = {}, Counter(o.capability for o in found), named or {}
-    taken = set(named.values())
+    # A name stays taken while the skill it names still offers its capability.
+    taken = {n for (iri, skill), n in named.items() if any(o.capability == iri and o.skill == skill for o in found)}
     for offer in found:
         name, cap = stated.get(offer.capability, (offer.name, None))
         id_short = named.get((offer.capability, offer.skill))
         if id_short is None:
-            id_short = name if count[offer.capability] == 1 and name not in taken else f"{name}_{offer.skill_name}"
+            id_short = name if count[offer.capability] == 1 and name not in taken else f"{name}_{offer.skill_name or 'Planned'}"
             taken.add(id_short)
         # The booleans are xs:boolean in the AAS (model.typed_qualifiers): aas-model cannot convert them.
         marks = [Qualifier(type_="CapabilityRoleQualifier/Offered", value="true", semantic_id=OFFERED, kind="ConceptQualifier"),
                  Qualifier(type_="Derived", value="true", kind="ConceptQualifier")]
         if not offer.built:
             marks.append(Qualifier(type_="Availability", value="AfterReconfiguration", kind="ConceptQualifier"))
+        how = f"realized by {offer.skill_name}" if offer.keys else "a skill for it can be planned from its components' capabilities"
         capability = Capability(
             id_short="Capability", semantic_id=CAPABILITY, supplemental_semantic_ids=[offer.capability],
-            display_name={"en": name}, description=(cap.description if cap else "") or f"{name}, realized by {offer.skill_name}",
+            display_name={"en": name}, description=(cap.description if cap else "") or f"{name}, {how}",
             qualifiers=marks)
         properties = {}
         for prop, value in (cap.properties.items() if cap else ()):
@@ -811,13 +813,13 @@ def capability_description(found: list[Offer], stated: dict[str, tuple[str, Capa
             value = (CapabilityProperty(value=found_prop.value, unit=found_prop.unit) if found_prop.value is not None else
                      CapabilityProperty(minimum=float(found_prop.minimum), maximum=float(found_prop.maximum), unit=found_prop.unit))
             put(properties, prop, capability_property(prop, found_prop.meaning, value, derived=True))
-        realized = model.RealizedBySkill(id_short="RealizedBy", first=capability_path(id_short),
-                                         second=path(offer.keys[0][1], *offer.keys[1:]))
+        # A capability only a plan would realize has no skill yet (``offer.planned_offers``).
+        realized = {"RealizedBy": model.RealizedBySkill(id_short="RealizedBy", first=capability_path(id_short),
+                                                        second=path(offer.keys[0][1], *offer.keys[1:]))} if offer.keys else {}
         containers[id_short] = model.ModuleCapabilityContainer(
             id_short=id_short, Capability=capability,
             PropertySet={"PropertySet": model.StatedPropertySet(id_short="PropertySet", PropertyContainer=properties)} if properties else {},
-            CapabilityRelations=model.ModuleCapabilityRelations(id_short="CapabilityRelations",
-                                                                CapabilityRealizedBy={"RealizedBy": realized}))
+            CapabilityRelations=model.ModuleCapabilityRelations(id_short="CapabilityRelations", CapabilityRealizedBy=realized))
         constrain_offer(containers[id_short], OFFERED_SET, local(offer.capability))
     if not containers:
         return None

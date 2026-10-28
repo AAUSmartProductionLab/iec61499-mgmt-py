@@ -112,7 +112,9 @@ def _search(domain: Domain, state: dict, goal_lists: list[list[tuple[Var, object
             if known(value):
                 vars(multigoal).setdefault(_name(var.meaning), {})[var.subject] = value
         todo.append(multigoal)
-    with gtpyhop.PlannerSession(domain=planning, verbose=0, strategy="iterative_dfs_backtracking") as session:
+    # A session sets GTPyhop's verbosity and says so on standard output, then sets it back.
+    with contextlib.redirect_stdout(io.StringIO()), \
+            gtpyhop.PlannerSession(domain=planning, verbose=0, strategy="iterative_dfs_backtracking") as session:
         result = session.find_plan(_to_state(state, meanings), todo, timeout_ms=timeout_ms)
     if not result.success:
         return None

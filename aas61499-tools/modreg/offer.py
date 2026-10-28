@@ -29,12 +29,13 @@ from __future__ import annotations
 import base64
 import copy
 
+from aas_model.constants import BASE_URL
 from modgen.spec import Capability as CapabilitySpec, CapabilityProperty, Composite, ModuleSpec
 from modsync.aasjson import at, children, submodel
 from modsync.described import described
 
 from . import model
-from .derive import local, offers as derived_offers
+from .derive import Offer, Property, local, offers as derived_offers
 from .model import ModuleTypeAAS
 from .generated import skills as arso
 from .profile import OFFERED_SET, Describer, capability_description, prop, put
@@ -205,6 +206,24 @@ def stated_facts(description: dict | None) -> tuple[dict, dict, list[dict]]:
     return stated, named, by_hand
 
 
+def planned_offers(module: dict, components: list[dict], derived: set[str]) -> list[Offer]:
+    """The process capabilities no skill offers that a skill can be planned for (``modplan.discover``):
+    offered after a reconfiguration, for the values a plan exists for, realized by no skill yet."""
+    from modplan.discover import discover
+    from modplan.read import read
+    from .capabilities import vocabulary
+    if submodel(module, "CapabilityDescription") is None:
+        return []
+    found = []
+    for d in discover(read(module, components), vocabulary()):
+        iri = f"{BASE_URL}/semantics/{d.capability}"
+        if iri in derived:
+            continue
+        found.append(Offer(iri, "", False, [Property(f"{BASE_URL}/semantics/{name}", vocabulary().unit(name), str(lo), str(hi))
+                                             for name, (lo, hi) in d.ranges.items()]))
+    return found
+
+
 def capabilities(module: dict, components: list[dict]) -> dict:
     """The module's AAS with its offered capabilities derived anew from its skills and those of its
     components (``modreg.derive``): what a skill sets is replaced, the facts the description states
@@ -215,6 +234,7 @@ def capabilities(module: dict, components: list[dict]) -> dict:
     old = next((s for s in module["submodels"] if s["idShort"] == "CapabilityDescription"), None)
     stated, named, by_hand = stated_facts(old)
     found = derived_offers(project([module, *components], structure=False))
+    found += planned_offers(module, components, {o.capability for o in found})
     description = capability_description(found, stated, named)
     derived = {o.capability for o in found}
     kept = [box for box in by_hand if at(box, "Capability")["supplementalSemanticIds"][0]["keys"][0]["value"] not in derived]
