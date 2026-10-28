@@ -12,7 +12,7 @@
 
 <https://w3id.org/2025/arso>
   rdf:type owl:Ontology ;
-  owl:versionIRI <https://w3id.org/2025/arso/0.13.0> ;
+  owl:versionIRI <https://w3id.org/2025/arso/0.14.0> ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://admin-shell.io/aas/3/1/> ;
   owl:imports <https://w3id.org/2025/arso/modules/nameplate> ;
@@ -20,12 +20,18 @@
   owl:imports <https://w3id.org/2025/arso/modules/aid> ;
   owl:imports <https://w3id.org/2025/arso/modules/skills> ;
   owl:imports <https://w3id.org/2025/arso/modules/capabilities> ;
-  owl:imports <https://w3id.org/2025/arso/modules/operational-data> ;
+  owl:imports <https://w3id.org/2025/arso/modules/variables> ;
   owl:imports <https://w3id.org/2025/arso/modules/parameters> ;
   owl:imports <https://w3id.org/2025/arso/modules/technical-data> ;
   owl:imports <https://w3id.org/2025/arso/modules/aimc> ;
   owl:imports <https://w3id.org/2025/arso/modules/control-configuration> ;
-  rdfs:comment """ARSO v0.13 — Domain extension ontology for Resource AAS.
+  rdfs:comment """ARSO v0.14 — Domain extension ontology for Resource AAS.
+
+  v0.14 (28 Oct 2026): the lab's shared AAS model's (aas-model's) Variables replace Operational Data
+  (Modules/variables.ttl): live values as Properties whose meaning is their supplemental semanticId,
+  and State, Measurements and Log holding time series. The coordinates are in its Measurements, with
+  semanticIds below .../variables/. ARSO's own submodel templates and their classes are aas-model's
+  (templates/arso), written from this ontology by modreg generate.
 
   v0.13 (28 Oct 2026): coordinates (docs/locations-and-layout.md, docs/design-log.md). Where a
   module's base, an end effector, a shuttle or a point of interest is, is a coordinate in
@@ -221,9 +227,9 @@ arso:hasCapabilitiesSubmodel rdf:type owl:ObjectProperty , owl:FunctionalPropert
   rdfs:subPropertyOf arso:hasSubmodel ;
   rdfs:range arso:CapabilitiesSubmodel .
 
-arso:hasOperationalDataSubmodel rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
+arso:hasVariablesSubmodel rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
   rdfs:subPropertyOf arso:hasSubmodel ;
-  rdfs:range arso:OperationalDataSubmodel .
+  rdfs:range arso:VariablesSubmodel .
 
 arso:hasParametersSubmodel rdf:type owl:ObjectProperty , owl:FunctionalProperty ;
   rdfs:subPropertyOf arso:hasSubmodel ;
@@ -309,12 +315,12 @@ arso:ResourceAAS rdfs:subClassOf [
   owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
   owl:onClass arso:CapabilitiesSubmodel ] .
 
-# At most one OperationalData submodel
+# At most one Variables submodel
 arso:ResourceAAS rdfs:subClassOf [
   rdf:type owl:Restriction ;
-  owl:onProperty arso:hasOperationalDataSubmodel ;
+  owl:onProperty arso:hasVariablesSubmodel ;
   owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
-  owl:onClass arso:OperationalDataSubmodel ] .
+  owl:onClass arso:VariablesSubmodel ] .
 
 # At most one Parameters submodel
 arso:ResourceAAS rdfs:subClassOf [
