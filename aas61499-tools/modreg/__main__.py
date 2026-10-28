@@ -15,11 +15,19 @@ spec gives several: the module's own and one for every component of it that has 
 A product with its plan is a profile of its own type and goes the same way:
 
     modreg build cell/examples/Vial2mLAAS.json            # the AAS of a product
+
+The planar table (planar-controller) is the source ``planar``: the table and its shuttles as the
+controller at --host shows them (or as --layout, --holes and --shuttles say), registered again
+whenever that changes with --every:
+
+    modreg profile planar --host <controller>             # PlanarTableAAS, PlanarShuttle<N>AAS, ...
+    modreg register planar --host <controller> --service http://<host>:8090 --every 10
 """
 import argparse
 import json
 from pathlib import Path
 import sys
+import time
 
 from iec61499_mgmt.protocol import Client
 from modgen import load
@@ -28,7 +36,7 @@ from modsync.compare import Candidate
 from modsync.sync import inspect, relative
 
 try:
-    from . import model, profile as profiles, templates
+    from . import model, planar, profile as profiles, templates
     from .ontology import Blueprint, check
     from .projection import project
     from .service import AasServer, Registry, send, serve
@@ -52,10 +60,26 @@ def module_profiles(args) -> list[dict]:
     return profiles.describe_all(spec, target, status.snapshot, status.drift, relative(path), f"opc.tcp://{args.host}:4840")
 
 
+def planar_profiles(args) -> list[dict]:
+    """The profiles of the planar table and its shuttles: as the controller at --host shows them, or
+    as --layout, --holes and --shuttles say."""
+    if args.host:
+        table = planar.read(f"opc.tcp://{args.host}:{args.port or 4840}/")
+    elif args.layout:
+        columns, rows = (int(v) for v in args.layout.lower().split("x"))
+        table = planar.Table(columns, rows, tuple(int(s) for s in args.shuttles.split(",") if s),
+                             planar.holes(args.holes.replace(";", " ")))
+    else:
+        sys.exit("modreg: the planar table needs --host (its controller) or --layout")
+    return planar.describe_all(table)
+
+
 def given(args) -> list[dict]:
-    """The profile in a JSON file, or those of a module spec."""
+    """The profile in a JSON file, those of a module spec, or those of the planar table."""
     if args.source.endswith(".json"):
         return [json.loads(Path(args.source).read_text(encoding="utf-8"))]
+    if args.source == "planar":
+        return planar_profiles(args)
     return module_profiles(args)
 
 
@@ -79,10 +103,14 @@ def main(argv=None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     def source(p, what):
-        p.add_argument("source", help=what)
+        p.add_argument("source", help=what + "; planar: the planar table")
         p.add_argument("--target", help="target of the module spec (default: its first)")
-        p.add_argument("--host", help="read the module at this address: values, type hashes and sync state are the running ones")
-        p.add_argument("--port", type=int, help="FORTE management port (default: the target's)")
+        p.add_argument("--host", help="read the module at this address: values, type hashes and sync state are the running ones "
+                                      "(planar: the controller, its shuttles and layout)")
+        p.add_argument("--port", type=int, help="FORTE management port (default: the target's; planar: the OPC UA port, 4840)")
+        p.add_argument("--layout", help="planar without --host: columns x rows of flyways, e.g. 4x3")
+        p.add_argument("--holes", default="", help="planar without --host: flyways that are not there, e.g. \"2,1 0,2\"")
+        p.add_argument("--shuttles", default="1", help="planar without --host: the xbots offered, e.g. 1,2,3")
 
     p = sub.add_parser("profile", help="write a module's profile")
     source(p, "module spec (file or name)")
@@ -107,6 +135,8 @@ def main(argv=None) -> int:
     source(p, "profile (.json) or module spec")
     p.add_argument("--service", required=True, help="the registration service, e.g. http://<host>:8090")
     p.add_argument("--check", action="store_true", help="only validate and check, do not register")
+    p.add_argument("--every", type=float, metavar="SECONDS",
+                   help="keep reading the source and register again whenever it changed (the planar table's layout and shuttles)")
     p = sub.add_parser("graph", help="write the AASs of a module as RDF with the individuals and relations they describe")
     source(p, "profile (.json) or module spec")
     p.add_argument("--out", default="graph.ttl", help="Turtle file to write")
@@ -133,9 +163,29 @@ def main(argv=None) -> int:
         graph.serialize(args.out, format="turtle")
         print(f"{len(graph)} triples: {args.out}")
         return 0
+    if args.command == "register" and args.every:
+        registered = None
+        while True:
+            try:
+                found = given(args)
+            except (OSError, TimeoutError, planar.NotShown) as e:     # the controller is away, or not connected yet
+                print(f"not read: {e or type(e).__name__}", flush=True)
+            else:
+                if found != registered:
+                    registered = found if not act(args, found) else None
+            time.sleep(args.every)
+    try:
+        found = given(args)
+    except planar.NotShown as e:
+        sys.exit(f"modreg: {e}")
+    return act(args, found)
+
+
+def act(args, found: list[dict]) -> int:
+    """Write, build, check or register each profile; 1 if one failed."""
     try:
         failed = False
-        for profile in given(args):
+        for profile in found:
             if args.command == "profile":
                 print(f"profile: {write(args.out, profile['id_short'], profile)}")
             elif args.command == "build":
