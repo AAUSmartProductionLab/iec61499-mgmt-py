@@ -84,7 +84,7 @@ class _Checker:
                 state = self.step(node, state)
             elif isinstance(node, Parallel):
                 ends = [self.run(branch, dict(state)) for branch in node.branches]
-                self.invariants(node)
+                self.invariants(node, state)
                 state = _merged(state, ends, parallel=True)
             elif isinstance(node, Decision):
                 state = _merged(state, [self.run(node.then, dict(state)), self.run(node.otherwise, dict(state))])
@@ -100,23 +100,36 @@ class _Checker:
                 wanted = cap.operand(c.expression, args)
                 self.found.append(Finding(step.name, f"needs {c.var} {c.expression.op} {_text(wanted)}, "
                                                      f"but it is {_text(state.get(c.var))}",
-                                          _fixes(self.domain, c.var, wanted) if c.expression.op == "=" else ()))
+                                          _fixes(self.domain, c.var, wanted) if c.expression.op in ("=", "<=", ">=") else ()))
         return effect(cap, state, args)
 
-    def invariants(self, block: Parallel) -> None:
-        """A step keeps a variable (Invariant) that a step of another branch changes."""
+    def invariants(self, block: Parallel, state: dict) -> None:
+        """A step keeps a variable (Invariant) that a step of another branch changes: unchanged, or a
+        comparison that does not hold at each state the other branch passes through (a move goes
+        straight from one value to the next, so its ends are enough)."""
         def caps(branch):
             for node in branch:
                 if isinstance(node, Step) and (cap := self.domain.realizing(node.skill)) is not None:
                     yield node, cap
+
+        def passes(branch):
+            states = [dict(state)]
+            for step, cap in caps(branch):
+                states.append(effect(cap, states[-1], self.args(cap, step)))
+            return states
         for i, branch in enumerate(block.branches):
             for step, cap in caps(branch):
-                kept = {c.var for c in cap.invariant}
+                args = self.args(cap, step)
                 for j, other in enumerate(block.branches):
                     for step2, cap2 in (caps(other) if j != i else ()):
-                        for var in kept & {c.var for c in cap2.post}:
-                            self.found.append(Finding(step.name, f"keeps {var} while {step2.name} changes it: "
-                                                                 f"they cannot run at the same time"))
+                        for c in (c for c in cap.invariant if c.var in {c2.var for c2 in cap2.post}):
+                            if c.expression.op == "unchanged":
+                                self.found.append(Finding(step.name, f"keeps {c.var} while {step2.name} changes it: "
+                                                                     f"they cannot run at the same time"))
+                            elif any(holds(cap, c, s, args) is False for s in passes(other)):
+                                wanted = cap.operand(c.expression, args)
+                                self.found.append(Finding(step.name, f"keeps {c.var} {c.expression.op} {_text(wanted)} "
+                                                                     f"while {step2.name} changes it"))
 
 
 def _merged(before: dict, ends: list[dict], parallel: bool = False) -> dict:

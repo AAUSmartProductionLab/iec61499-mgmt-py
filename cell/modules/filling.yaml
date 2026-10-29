@@ -83,12 +83,13 @@ skills:
                  description: Flow rate of the station (calibration)}
     after: Volume / FlowRate
     # What holds on this module of the Dosing it realizes (the vocabulary says the rest): the pump
-    # doses through the needle on the axis, into the vial only with the needle in it, and the needle
-    # stays put meanwhile. The fill position is a placeholder until the station is measured.
+    # doses through the needle on the axis, into the container only with the needle in it, at the
+    # fill position or deeper, and the needle stays in it meanwhile (it may rise as the liquid does,
+    # filling from the bottom). The fill position is a placeholder until the station is measured.
     capability:
       values: {FillPosition: {value: 40.0, unit: mm}}
-      precondition: {LinearAxis.Position: "= FillPosition"}
-      invariant: {LinearAxis.Position: unchanged}
+      precondition: {LinearAxis.Position: ">= FillPosition"}
+      invariant: {LinearAxis.Position: ">= FillPosition"}
   Tare:
     description: Tare the scale
     equipment: Scale

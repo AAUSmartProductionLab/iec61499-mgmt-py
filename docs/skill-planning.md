@@ -66,6 +66,7 @@ is a value or another property of the same capability.
 | Post | `given` | Ends at the value the capability was given (an input, with a Range) |
 | Post | `measured` | Ends at what the capability measured (an output) |
 | Invariant | `unchanged` | Nothing changes it while the capability runs |
+| Invariant | `>= FillPosition`, `< …` | Holds all the time it runs: a step of a parallel branch may move it, inside the bound (since 29 Oct) |
 
 The planner splits an expression into operator and operand. `=` and `+=` are **achieved** (a goal
 method finds a capability whose Post makes them hold); the other comparisons are **checked**. A value
@@ -92,7 +93,7 @@ which would be a parallel block; not used yet.
 | --- | --- | --- | --- | --- | --- | --- |
 | LinearAxis | Referencing | Home | Position, Referenced | – | Referenced `= true`, Position `= 0.0` | – |
 | LinearAxis | Positioning | MoveAxis | Position (0–60 mm), Referenced | Referenced `= true` | Position `given` | – |
-| Pump | Dosing | Dispense | Volume (0.5–10 mL), FlowRate, FillPosition (40.0 mm), NeedlePosition, ContentVolume, Weighed | NeedlePosition `= FillPosition` | ContentVolume `+= Volume`, Weighed `= false` | NeedlePosition `unchanged` |
+| Pump | Dosing | Dispense | Volume (0.5–10 mL), FlowRate, FillPosition (40.0 mm), NeedlePosition, ContentVolume, Weighed | NeedlePosition `>= FillPosition` | ContentVolume `+= Volume`, Weighed `= false` | NeedlePosition `>= FillPosition` |
 | Scale | Taring | Tare | Tared | – | Tared `= true` | – |
 | Scale | Weighing | Weigh | Tared, Weight, NeedlePosition, Weighed | Tared `= true`, NeedlePosition `= 0.0` | Weight `measured`, Weighed `= true` | NeedlePosition `unchanged` |
 | Offered | Filling | Dispensing | FillVolume, FillWeight (a result), ContainerType, GraspDiameter, AbsoluteFillError, ContentVolume | ContentVolume `= 0.0` | ContentVolume `= FillVolume` | – |
@@ -116,10 +117,10 @@ CapabilityContainer  Dosing                    lab:Dosing, NotAssigned          
   CapabilityRelations
     CapabilityRealizedBy → the pump's Skills/Dispense
     ConstraintSet
-      Pre        NeedlePosition   "= FillPosition"
+      Pre        NeedlePosition   ">= FillPosition"
       Post       ContentVolume    "+= Volume"
       Post       Weighed          "= false"
-      Invariant  NeedlePosition   "unchanged"
+      Invariant  NeedlePosition   ">= FillPosition"
 ```
 
 **Where it comes from.** modreg writes the description. What holds of a kind of capability wherever
@@ -131,8 +132,8 @@ next to the skill, in the words of ARSO (`cell/modules/filling.yaml`):
   Dispense:
     capability:                          # of the Dosing it realizes, on this module
       values: {FillPosition: {value: 40.0, unit: mm}}
-      precondition: {LinearAxis.Position: "= FillPosition"}   # the needle in the vial
-      invariant: {LinearAxis.Position: unchanged}             # still while dosing
+      precondition: {LinearAxis.Position: ">= FillPosition"}  # the needle in the container
+      invariant: {LinearAxis.Position: ">= FillPosition"}     # and in it while dosing; it may rise
   Weigh:
     capability:
       precondition: {LinearAxis.Position: "= 0.0"}            # the needle out of the vial
@@ -289,6 +290,8 @@ The module's skills are the ground truth: Dispensing (the spec) and the test ski
 | T10 Discovery | Every composite deleted | Filling offered after a reconfiguration |
 | T11 No scale | The scale removed | Filling offered without FillWeight; with FillWeight refused |
 | T12 Missing constraint | "Needle at the fill position" removed | The plan fills with the needle up: the integration constraints carry the meaning |
+| T13 From the bottom | NeedleDeep(58.0) → (Dispense ∥ NeedleRise(40.0)) → Home → Weigh: the needle rises while the pump doses, for a syringe barrel or a foaming liquid | No finding: Dosing's invariant `>= FillPosition` holds over the move (29 Oct) |
+| T14 Out of the container | T13 with the needle rising to 30.0 | Dispense keeps Position `>= 40.0` while NeedleRise changes it |
 
 Each case also runs through HDDL and PDDL where it fits, every plan through VAL, and the times are
 recorded.

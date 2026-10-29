@@ -29,7 +29,7 @@ per action that sets it, the action's own preconditions reached first (goal regr
 task network: the capability, the needs of the results, the rest state.
 
 Not expressed: invariants (``unchanged`` matters only when a plan is lifted; a comparison is a
-precondition here), properties that are neither numbers nor truth values, and in HDDL the
+precondition here; in HDDL a comparison with a constant is reached at its bound), properties that are neither numbers nor truth values, and in HDDL the
 compositions (a method for them would need actions restricted to their parts). A property not known
 is false (a predicate) or undefined (a function) in PDDL, where GTPyhop does not apply an action.
 """
@@ -210,7 +210,8 @@ class _Writer:
         for cap in self.domain.actions():
             for c in cap.pre:
                 value = cap.operand(c.expression, {})
-                if c.expression.op == "=" and self.kinds.get(c.var) == "number" and isinstance(value, (int, float)):
+                if (c.expression.op in ("=", "<=", ">=") and self.kinds.get(c.var) == "number"     # a comparison: its bound
+                        and isinstance(value, (int, float))):
                     targets.setdefault(c.var, set()).add(round(float(value), DIGITS))
         for cap in self.domain.actions():
             for c in cap.post:
@@ -340,6 +341,7 @@ class _Hddl:
         assigned = {c.var for c in cap.post}
         for c in (*cap.pre, *cap.invariant):
             if (self.kinds.get(c.var) == "number" and c.expression.op in ("!=", *TESTS)
+                    and not (c.expression.op in ("<=", ">=") and c.expression.named not in parameters(cap))
                     and c.var not in assigned and f"?cur_{fluent(c.var)}" not in found):
                 found.append(f"?cur_{fluent(c.var)}")
         return found
@@ -382,15 +384,18 @@ class _Hddl:
                 if not isinstance(value, bool) or e.op not in ("=", "!="):
                     raise NotExpressible(f"{cap.name}: {c}")
                 pre.append(f"({f})" if value == (e.op == "=") else f"(not ({f}))")
-            elif e.op == "=":
-                pre.append(f"({f} {self.term(cap, c)})")
+            elif e.op == "=" or (e.op in ("<=", ">=") and e.named not in parameters(cap) and c.var not in current):
+                # A comparison with a constant is reached at its bound before the action (regress),
+                # so the action is grounded there, as for "=": no free value for the planner to pick.
+                if f"({f} {self.term(cap, c)})" not in pre:
+                    pre.append(f"({f} {self.term(cap, c)})")
             else:
                 held = current.get(c.var, f"?cur_{f}")
                 if c.var not in current:
                     pre.append(f"({f} {held})")
                 if e.op == "!=":
                     pre.append(f"(not (= {held} {self.term(cap, c)}))")
-                elif e.named is not None:
+                elif e.named in parameters(cap):
                     raise NotExpressible(f"{cap.name}: {c} compares with a parameter")
                 else:
                     pre.append(f"({self.test(e.op, cap.operand(e, {}))} {held})")
@@ -409,9 +414,13 @@ class _Hddl:
     # Methods ------------------------------------------------------------------------------------
 
     def regress(self, cap: Capability, binding: dict[str, str]) -> list[str]:
-        """The tasks that reach the action's own preconditions (``=``), then the action."""
+        """The tasks that reach the action's own preconditions (``=``; a comparison by its bound), then
+        the action."""
         found = []
         for c in cap.pre:
+            if c.expression.op in ("<=", ">=") and self.kinds.get(c.var) == "number" and c.expression.named not in parameters(cap):
+                found.append(self.task(c.var, self.term(cap, c)))
+                continue
             if c.expression.op != "=":
                 continue
             if self.kinds.get(c.var) == "bool":
