@@ -116,6 +116,19 @@ class Copied:
         self.cells[first:first] = [g] + cells
         return g
 
+    def scale(self, s, dx, dy):
+        """Scale every cell by s about the page's origin, then move it by (dx, dy)."""
+        for c in self.cells:
+            geo = c.find("mxGeometry")
+            if geo is None or c.get("parent") not in [l.get("id") for l in self.layers]:
+                continue
+            if c.get("edge"):
+                for p in geo.iter("mxPoint"):
+                    p.set("x", f"{float(p.get('x', 0)) * s + dx:g}"), p.set("y", f"{float(p.get('y', 0)) * s + dy:g}")
+            else:
+                geo.set("x", f"{float(geo.get('x', 0)) * s + dx:g}"), geo.set("y", f"{float(geo.get('y', 0)) * s + dy:g}")
+                geo.set("width", f"{float(geo.get('width')) * s:g}"), geo.set("height", f"{float(geo.get('height')) * s:g}")
+
     def icons_to_shells(self, size=20):
         n = 0
         for c in self.cells:
@@ -294,12 +307,139 @@ PLANES = [(4, 47, "The line: table, shuttles, stations, robots"),
           (94, 114, "Behaviour · IEC 61499: the modules' programs on FORTE"),
           (115, 157, "AAS models and orchestration"),
           (158, 190, "HMI, MES, planning and scheduling")]
+# A line belongs to the plane of its upper end: it appears with the thing it reaches up to.
+UP = {**{n: 1 for n in range(44, 48)}, **{n: 2 for n in range(90, 94)},
+      **{n: 3 for n in [95, 96, 97, 98, 99, 100, 113, 114]}, **{n: 4 for n in (155, 156, 157)}}
+plane_of = lambda c: UP.get(num(c), next(k for k, (a, b, _) in enumerate(PLANES) if a <= num(c) <= b))
 for k, (a, b, name) in enumerate(PLANES):
     lid = "1" if k == 0 else pl.layer(name.split(":")[0])
-    cells = [c for c in pl.cells if a <= num(c) <= b]
+    cells = [c for c in pl.cells if plane_of(c) == k]
     pl.move(cells, lid)
     pl.group(cells, name, lid)
 copied_page("03b The production system, layer by layer", pl)
+
+# ==== 03c The production system in layers, simplified: few, big things; each line in its upper layer ====
+ICON = {c.get("id"): c.get("style") for c in load("module-tools.drawio", 6).find("root")}
+PW, PH, X0 = 1300, 280, 430                      # a plane: width, height, left edge on the page
+
+
+def plane_pts(top):
+    L, T, B = (X0, top + 0.45 * PH), (X0 + 0.62 * PW, top), (X0 + 0.38 * PW, top + PH)
+    return [L, T, (T[0] + B[0] - L[0], T[1] + B[1] - L[1]), B]
+
+
+def on_plane(top, x, f=0.6):
+    """The point at page x, a fraction f from the plane's back edge to its front edge."""
+    L, T, R, B = plane_pts(top)
+    edge = lambda a, b: a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0])
+    back = edge(L, T) if x <= T[0] else edge(T, R)
+    front = edge(L, B) if x <= B[0] else edge(B, R)
+    return back + f * (front - back)
+
+
+def icon(node, ids, x, bottom, w, h):
+    """An isometric icon from the detailed figure, its bottom centre at (x, bottom)."""
+    for cid in ids:
+        box(node, x - w / 2, bottom - h, w, h, ICON[cid])
+
+
+def caption(node, x, y, value, size=30, color=INK, w=300):
+    text(node, x - w / 2, y, w, size + 10, value, size, color, True, "center")
+    node.items[-1]["xml"] = (lambda f: lambda p, ox, oy: f(p, ox, oy).replace(
+        "fillColor=none;", "fillColor=none;labelBackgroundColor=#FFFFFF;"))(node.items[-1]["xml"])
+
+
+def layer_name(node, top, name, sub, color):
+    g = node.group(f"Name: {name}")
+    y = top + 0.45 * PH
+    text(g, 0, y - 102, X0 - 12, 100, name, 38, color, True, "right", valign="bottom")
+    text(g, 0, y + 2, X0 - 12, 40, sub, 28, GREY, False, "right")
+
+
+TOPS = {"HMI": 30, "AAS": 250, "behaviour": 470, "assets": 690}
+ln3 = Copied("slides.drawio", 2, "the line")
+ln3.cells = [c for c in ln3.cells if 2 <= num(c) <= 41]
+LS, LDX, LDY = 1.1, 470 - 94 * 1.1, 950 - 200 * 1.1
+ln3.scale(LS, LDX, LDY)
+ln3.group([c for c in ln3.cells if c.get("parent") == "1"], "The line: table, shuttles, stations, robots")
+line_name = Node("name of the line")
+g = line_name.group("Name: The line")
+text(g, 20, 1310, X0 - 30, 50, "The line", 40, ORANGE_D, True, "right")
+text(g, 20, 1362, X0 - 30, 40, "modules around a maglev table", 28, GREY, False, "right")
+# the stations' tops, from the line page: where each module's things stand above
+COLS = [(x + 71) * LS + LDX for x in (544.1, 648.9, 753.7, 858.5)]
+TOPS_LINE = [(y + 10) * LS + LDY for y in (211.6, 272.1, 332.6, 393.1)]
+
+assets = Node("digital assets")
+polygon(assets.group("Plane"), plane_pts(TOPS["assets"]), "#DCE8F5", BLUE, 2, "opacity=85;")
+layer_name(assets, TOPS["assets"], "Digital assets", "each module's parts and its Pi", BLUE_D)
+pis = []
+for k, x in enumerate(COLS):
+    g = assets.group(f"Module {k + 1}: Pi and parts")
+    y = on_plane(TOPS["assets"], x, 0.7)
+    icon(g, ["c59", "c60"], x + 30, y, 130, 93)
+    icon(g, ["c53", "c54"], x - 58, y - 8, 70, 82)
+    line(g, [(x, TOPS_LINE[k]), (x, y - 40)], "endArrow=none;html=1;strokeColor=#B08A4A;strokeWidth=2.5;dashed=1;")
+    pis.append((x + 28, y - 80))
+
+beh = Node("behaviour · IEC 61499")
+polygon(beh.group("Plane"), plane_pts(TOPS["behaviour"]), "#E3F1DA", GREEN, 2, "opacity=85;")
+layer_name(beh, TOPS["behaviour"], "Behaviour · IEC 61499", "programs on FORTE", GREEN_D)
+fortes = []
+for k, (px, py) in enumerate(pis):
+    g = beh.group(f"Module {k + 1}: FORTE")
+    x = px
+    y = on_plane(TOPS["behaviour"], x, 0.7)
+    icon(g, ["c104", "c105"], x, y, 130, 126)
+    line(g, [(px, py), (x, y - 20)], f"endArrow=none;html=1;strokeColor={GREEN};strokeWidth=2.5;")
+    fortes.append((x, y - 126))
+
+aasl = Node("AAS models and orchestration")
+polygon(aasl.group("Plane"), plane_pts(TOPS["AAS"]), "#DDF0EE", AAS, 2, "opacity=85;")
+layer_name(aasl, TOPS["AAS"], "AAS models and orchestration", "describe, coordinate", "#0F726C")
+g = aasl.group("AAS server and the AASs")
+sx = 650
+sy = on_plane(TOPS["AAS"], sx, 0.62)
+icon(g, ["c141", "c142"], sx - 150, sy, 110, 150)
+for i, lab in enumerate(["Product", "Process", "Resource"]):
+    shell(g, sx - 84 + i * 128, sy - 118, 122, 105, lab, 19, name=f"{lab} AAS")
+caption(g, sx + 40, sy + 4, "AAS server", 34, "#0F726C", 260)
+server_top = (sx + 40, sy - 118)
+tools = {}
+for name, x, color in [("modsync", COLS[0] - 15, GOLD), ("modlink", COLS[3] + 150, BLUE)]:
+    g = aasl.group(f"Tool: {name}")
+    y = on_plane(TOPS["AAS"], x, 0.62)
+    icon(g, ["c172"], x, y, 110, 105)
+    caption(g, x, y + 2, name, 32, color, 180)
+    tools[name] = (x, y)
+g = aasl.group("Links: the tools to the programs")
+for k, (fx, fy) in enumerate(fortes):
+    mx, my = tools["modsync"]
+    line(g, [(mx + 20 + 8 * k, my + 40), (fx - 30, fy + 14)], f"endArrow=block;endSize=5;html=1;strokeColor={GOLD};strokeWidth=2.5;")
+    lx, ly = tools["modlink"]
+    line(g, [(lx - 20 - 8 * k, ly + 40), (fx + 30, fy + 14)], f"endArrow=block;endSize=5;html=1;strokeColor={BLUE};strokeWidth=2.5;")
+for name in ("modsync", "modlink"):
+    x, y = tools[name]
+    line(g, [(x - 56, y - 52), (server_top[0] + 150, sy - 50)],
+         f"endArrow=block;endSize=5;startArrow=block;startSize=5;html=1;strokeColor={INK};strokeWidth=2;")
+g = aasl.group("Agents (planned)")
+ax = COLS[2] + 40
+ay = on_plane(TOPS["AAS"], ax, 0.35)
+rect(g, ax - 80, ay - 60, 160, 56, "#FFFFFF", INK, 2, 12, "dashed=1;", "<b>Agents</b>", 30, INK)
+
+hmi = Node("HMI, planning and scheduling")
+polygon(hmi.group("Plane"), plane_pts(TOPS["HMI"]), "#ECE7F4", PURPLE, 2, "opacity=85;")
+layer_name(hmi, TOPS["HMI"], "HMI, planning, MES", "plan, change, operate", PURPLE_D)
+for name, x, ids, dashed in [("Planner", 760, ["c170", "c171"], False), ("Skill editor", 1000, ["c172", "c173"], False),
+                             ("HMI", 1240, ["c172"], False), ("MES · ERP", 1480, ["c170"], True)]:
+    g = hmi.group(f"Application: {name}")
+    y = on_plane(TOPS["HMI"], x, 0.6)
+    icon(g, ids, x, y, 120, 114)
+    caption(g, x, y + 2, name, 32, PURPLE_D if not dashed else GREY, 220)
+    if not dashed:
+        line(g, [(x - 20, y + 40), (server_top[0] + 40 * (x - 1000) / 240, server_top[1])],
+             f"endArrow=block;endSize=6;html=1;strokeColor={INK};strokeWidth=2;dashed=1;")
+page("03c The production system in layers", "\n".join(ln3.xml()), line_name, assets, beh, aasl, hmi, w=1740, h=1690)
 
 # ==== 04 The IEC 61499 program's structure (module rules) =========================================
 mr = Copied("slides.drawio", 8, "frame")
@@ -769,22 +909,139 @@ rect(g, 40, 640, 470, 220, GOOD_FILL, GREEN, 2.5, 16, "",
               26, 21), 26, INK, False, "left")
 page("12 Matching, a missing effect, replanning", base, match, missing, replan, check)
 
+# ==== 12b, 12c Inside an agent: the active part, the passive part (the AAS), what it talks to ===========
+# After the I4.0 language demonstrator: a messenger, an interaction manager with a role's state machine,
+# the agent's own functions, and below them the AAS it reads and writes. Every line is in the layer of
+# the later of its two ends.
+AGENT_FILL, PASSIVE_FILL = "#F3F6FA", "#EEF4F3"
+
+
+def step_box(node, x, y, w, h, title, sub, stroke=INK, fill="#FFFFFF"):
+    rect(node, x, y, w, h, fill, stroke, 2, 12, "", two_line(title, sub, 22, 18), 22, INK)
+
+
+def proto(node, pts, color, label, dashed=False, both=False):
+    arrow(node, pts, color, 2.5, dashed, label, 18, start="block" if both else None, label_color=INK)
+
+
+def agent_frame(node, title, who, badge_mark, badge_fill, role, messages):
+    """The frame, the messenger, the interaction manager with its role, the messages between them."""
+    g = node.group("Agent frame")
+    rect(g, 160, 20, 1420, 580, AGENT_FILL, BLUE, 2, 14, "dashed=1;")
+    text(g, 184, 28, 900, 40, f"<b>{title}</b> · the active part, planned", 26, INK)
+    g = node.group("Outside: who it talks to")
+    badge(g, 70, 300, badge_mark, badge_fill, 26, 26)
+    text(g, 10, 334, 140, 60, who, 18, INK, False, "center")
+    proto(g, [(100, 300), (180, 300)], INK, "", both=True)
+    g = node.group("Messenger")
+    rect(g, 180, 80, 120, 500, "#FFFFFF", INK, 2, 12)
+    text(g, 180, 96, 120, 30, "<b>Messenger</b>", 20, INK, False, "center")
+    rect(g, 200, 280, 80, 44, "#FCE6D6", ORANGE, 2, 8, "", "<b>MQTT</b>", 18, INK)
+    text(g, 186, 470, 108, 90, "I4.0 language<br>VDI/VDE 2193", 15, GREY, False, "center")
+    g = node.group("Interaction manager")
+    rect(g, 410, 80, 240, 500, "#FFFFFF", INK, 2, 12)
+    text(g, 410, 96, 240, 30, "<b>Interaction manager</b>", 20, INK, False, "center")
+    rect(g, 430, 140, 200, 220, GOOD_FILL, GREEN, 2, 12, "", two_line(role, "the bidding protocol, a state machine", 22, 17), 22, INK)
+    rect(g, 430, 390, 200, 100, GOOD_FILL, GREEN, 2, 12, "", two_line("Inform", "states, results", 22, 17), 22, INK)
+    for i, (label, to_im) in enumerate(messages):
+        y = 160 + i * 52
+        proto(g, [(300, y), (430, y)] if to_im else [(430, y), (300, y)], INK, label)
+
+
+# ---- 12b The agent of a module ----
+ra_base, ra_agent, ra_bid, ra_rec, ra_run = (Node("the passive part and the module"), Node("the agent", False),
+                                             Node("bidding", False), Node("reconfiguration", False),
+                                             Node("execution", False))
+g = ra_base.group("The module's AAS on the AAS server")
+rect(g, 160, 630, 560, 250, PASSIVE_FILL, AAS, 2, 14)
+shell(g, 180, 646, 70, 60, name="AAS shell")
+text(g, 262, 650, 450, 50, two_line("The module's AAS", "the passive part, on the AAS server", 22, 17), 22, INK)
+for i, s in enumerate(["Capability Description", "Skills", "Asset Interfaces Description", "Interfaces Mapping",
+                       "Variables"]):
+    sm_bar(g, 180 + (i % 2) * 265, 720 + (i // 2) * 52, 255, 40, s, 16)
+g = ra_base.group("The module")
+rect(g, 760, 630, 480, 250, STEP_FILL, ORANGE, 2, 14)
+text(g, 780, 640, 440, 50, two_line("Filling module", "FORTE on its Pi", 22, 17), 22, INK)
+for i, (s, c) in enumerate([("IEC 61499 program: skills, PackML", GREEN), ("OPC UA server", BLUE),
+                            ("management interface", GOLD)]):
+    rect(g, 780, 708 + i * 56, 440, 44, "#FFFFFF", c, 2, 10, "", s, 18, INK)
+g = ra_base.group("DMP")
+rect(g, 1280, 680, 300, 150, "#FFFFFF", BLUE, 2, 12, "",
+     two_line("DMP", "an Operation of the AAS<br>becomes an OPC UA call", 22, 17), 22, INK)
+proto(ra_base.group("Link: DMP to the module"), [(1280, 786), (1220, 786)], BLUE, "")
+agent_frame(ra_agent, "The agent of a module", "product agents,<br>the table", "P", PURPLE, "Service provider",
+            [("cfp", True), ("proposal", False), ("accept", True), ("inform", False)])
+g = ra_bid.group("Bidding")
+text(g, 690, 80, 600, 34, "<b>Bidding</b>: can it do the step, and when?", 22, INK)
+for i, (ti, sub) in enumerate([("Capability check", "required against offered: meaning, range"),
+                               ("Availability", "occupation, bookings"), ("Time", "from the skill's steps")]):
+    step_box(g, 690 + i * 300, 124, 260, 120, ti, sub)
+    if i:
+        arrow(g, [(690 + i * 300 - 40, 184), (690 + i * 300, 184)], INK, 2)
+proto(g, [(1430, 244), (1430, 268), (650, 268)], INK, "proposal: now, after a reconfiguration, or refuse")
+proto(g, [(720, 244), (720, 300), (670, 300), (670, 630)], INK, "")
+text(g, 540, 602, 124, 26, "HTTP: read", 18, INK, False, "right")
+g = ra_rec.group("Reconfiguration")
+text(g, 690, 330, 440, 34, "<b>Reconfiguration</b>: on accept, if needed", 22, INK)
+step_box(g, 690, 374, 200, 150, "Compose", "a skill from the primitives: the planner")
+arrow(g, [(890, 449), (930, 449)], INK, 2)
+step_box(g, 930, 374, 200, 150, "modsync", "create online, verify, record", GOLD)
+proto(g, [(705, 524), (705, 630)], INK, "")
+text(g, 712, 602, 110, 26, "HTTP: write", 18, INK, False, "left")
+proto(g, [(1030, 524), (1030, 630)], GOLD, "")
+text(g, 820, 600, 204, 26, "management protocol", 18, INK, False, "right")
+g = ra_run.group("Execution")
+text(g, 1180, 330, 380, 34, "<b>Execution</b>", 22, INK)
+step_box(g, 1180, 374, 380, 150, "modlink", "occupy, start the skill, follow its states", BLUE)
+proto(g, [(1200, 524), (1200, 630)], BLUE, "")
+text(g, 1206, 600, 90, 26, "OPC UA", 18, INK, False, "left")
+proto(g, [(1430, 524), (1430, 680)], BLUE, "", dashed=True)
+text(g, 1440, 606, 140, 50, "or HTTP,<br>through the DMP", 18, INK, False, "left")
+page("12b Inside the agent of a module", ra_base, ra_agent, ra_bid, ra_rec, ra_run)
+
+# ---- 12c The agent of a product ----
+pa_base, pa_agent, pa_req, pa_rec = (Node("the passive part and the vial"), Node("the agent", False),
+                                     Node("requesting", False), Node("recording", False))
+g = pa_base.group("The order's AASs on the AAS server")
+rect(g, 160, 630, 1000, 250, PASSIVE_FILL, AAS, 2, 14)
+for x, name, sms in [(180, "Product AAS", ["Production Sequence", "Required Capabilities", "Process Parameters"]),
+                     (680, "Process AAS", ["Step Bindings", "Process Information"])]:
+    shell(g, x, 646, 70, 60, name=name)
+    text(g, x + 82, 650, 380, 50, two_line(name, "the passive part", 22, 17), 22, INK)
+    for i, s in enumerate(sms):
+        sm_bar(g, x, 718 + i * 52, 440, 40, s, 17)
+g = pa_base.group("The vial")
+rect(g, 1200, 630, 380, 250, PROD_FILL, PURPLE, 2, 14, "", two_line("The vial", "no interface of its own: the table moves it", 22, 17), 22, INK)
+agent_frame(pa_agent, "The agent of a product", "module agents,<br>the table", "R", BLUE, "Service requester",
+            [("cfp", False), ("proposal", True), ("accept", False), ("inform", True)])
+g = pa_req.group("Requesting")
+text(g, 690, 80, 600, 34, "<b>Requesting</b>: one step after the other", 22, INK)
+for i, (ti, sub) in enumerate([("Next step", "from the Production Sequence"),
+                               ("Call", "the required capability and its values"),
+                               ("Choose", "the best proposal: the earliest")]):
+    step_box(g, 690 + i * 300, 124, 260, 120, ti, sub)
+    if i:
+        arrow(g, [(690 + i * 300 - 40, 184), (690 + i * 300, 184)], INK, 2)
+proto(g, [(1430, 244), (1430, 268), (650, 268)], INK, "accept one, reject the others")
+proto(g, [(720, 244), (720, 300), (670, 300), (670, 630)], INK, "")
+text(g, 540, 602, 124, 26, "HTTP: read", 18, INK, False, "right")
+g = pa_rec.group("Recording")
+text(g, 690, 330, 600, 34, "<b>Recording and moving</b>", 22, INK)
+step_box(g, 690, 374, 260, 150, "Bind", "the step to the module's skill")
+step_box(g, 990, 374, 260, 150, "Record", "what was done to the vial")
+step_box(g, 1290, 374, 270, 150, "Move", "ask the table's agent: to the next module", PURPLE)
+proto(g, [(820, 524), (820, 630)], INK, "HTTP: write")
+proto(g, [(1120, 524), (1120, 630)], INK, "HTTP: write")
+proto(g, [(1425, 524), (1425, 630)], PURPLE, "via the table", dashed=True)
+page("12c Inside the agent of a product", pa_base, pa_agent, pa_req, pa_rec)
+
 # ==== 13 Agents on the line: call for proposals, proposals, accept ===================================
 ln = Copied("slides.drawio", 2, "the line")
 keep = lambda c: 2 <= num(c) <= 41 and not 11 <= num(c) <= 20      # no station vials, no flow arrows
 ln.cells = [c for c in ln.cells if keep(c)]
 S13, DX, DY = 0.9, -50, -40
 T = lambda x, y: (x * S13 + DX, y * S13 + DY)
-for c in ln.cells:
-    geo = c.find("mxGeometry")
-    if c.get("edge"):
-        for p in geo.iter("mxPoint"):
-            x, y = T(float(p.get("x", 0)), float(p.get("y", 0)))
-            p.set("x", f"{x:g}"), p.set("y", f"{y:g}")
-    else:
-        x, y = T(float(geo.get("x", 0)), float(geo.get("y", 0)))
-        geo.set("x", f"{x:g}"), geo.set("y", f"{y:g}")
-        geo.set("width", f"{float(geo.get('width')) * S13:g}"), geo.set("height", f"{float(geo.get('height')) * S13:g}")
+ln.scale(S13, DX, DY)
 vial_layer = ln.layer("product: the vial on its shuttle")
 vial = ln.pick(ids={"c10"})
 ln.move(vial, vial_layer)
