@@ -5,6 +5,7 @@ constraints of each capability, and what holds on this module (the needle in the
 pump doses, out of it and still while the scale weighs). The module's own skills are the ground
 truth: Dispensing (the spec), DoubleDose, Checked and Ready (the tests of rule set 2).
 """
+import copy
 from pathlib import Path
 
 import pytest
@@ -40,9 +41,9 @@ def filling(dose: float = 10.0, needle_in_vial: bool = True, scale: bool = True)
         Capability("Dosing", "Dosing", "Dispense", "Pump",
                    parameters={"Volume": Parameter(0.5, dose, 1.0), "FlowRate": Parameter(0.1, 5.0, 1.0)},
                    values={"FillPosition": 40.0},
-                   pre=[said("Pre", "NeedlePosition", AXIS, "= FillPosition")] if needle_in_vial else [],
+                   pre=[said("Pre", "NeedlePosition", AXIS, ">= FillPosition")] if needle_in_vial else [],
                    post=[said("Post", "ContentVolume", CONTENT, "+= Volume"), said("Post", "Weighed", WEIGHED, "= false")],
-                   invariant=[said("Invariant", "NeedlePosition", AXIS, "unchanged")]),
+                   invariant=[said("Invariant", "NeedlePosition", AXIS, ">= FillPosition")]),
     ]
     if scale:
         caps += [
@@ -162,7 +163,7 @@ def test_a_missing_step_is_found_with_the_step_that_makes_it_hold():
     skill = load(SPECS / "filling.yaml").composites["Dispensing"]
     without = Composite(**{**skill.model_dump(), "execute": [n.model_dump() for n in skill.execute[1:]]})
     (finding,) = check(domain, without)
-    assert finding.step == "Dispense" and "Position = 40.0, but it is 0.0" in finding.what
+    assert finding.step == "Dispense" and "Position >= 40.0, but it is 0.0" in finding.what
     assert finding.fix == ("MoveAxis(Position=40.0)",)
 
 
@@ -170,6 +171,27 @@ def test_weighing_while_the_axis_moves_is_found():
     """T7: Home and Weigh at once: the scale is read while the needle moves."""
     found = check(filling(), Composite(execute=[{"parallel": [["Home"], ["Weigh"]], "as": "Both"}]))
     assert [(f.step, "cannot run at the same time" in f.what) for f in found] == [("Weigh", True)]
+
+
+BOTTOM_UP = {"parameters": {"Volume": {"unit": "mL", "minimum": 0.5, "maximum": 10.0, "default": 1.0}},
+             "execute": [{"MoveAxis": {"Position": 58.0}, "as": "NeedleDeep"},
+                         {"parallel": [[{"Dispense": {"Volume": "Volume", "FlowRate": 0.7}}],
+                                       [{"MoveAxis": {"Position": 40.0}, "as": "NeedleRise"}]], "as": "Rising"},
+                         "Home", "Weigh"]}
+
+
+def test_filling_from_the_bottom_keeps_the_needle_in_the_container():
+    """T13: the needle starts deep and rises while the pump doses; it stays at the fill position or
+    deeper, so Dosing's invariant holds while the axis moves."""
+    assert check(filling(), Composite(**BOTTOM_UP)) == []
+
+
+def test_a_needle_that_rises_out_of_the_container_while_dosing_is_found():
+    """T14: rising to 30 mm takes the needle out of the container before the dose is in."""
+    above = copy.deepcopy(BOTTOM_UP)
+    above["execute"][1]["parallel"][1][0]["MoveAxis"]["Position"] = 30.0
+    (finding,) = check(filling(), Composite(**above))
+    assert finding.step == "Dispense" and finding.what.endswith(">= 40.0 while NeedleRise changes it")
 
 
 def test_a_skill_that_does_not_end_at_rest_is_found():

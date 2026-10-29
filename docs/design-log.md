@@ -18,6 +18,34 @@ A running log of design considerations made while building, for writing the pape
 
 ## 29 Oct 2026
 
+- **The evaluation's scenario is a changeover to the prefilled syringe, with filling from the bottom.**
+  *CIRP*.
+  - What: one product changeover, timed as one: the filling module gets a new composite skill that
+    fills from the bottom (NeedleDeep → Dispense ∥ NeedleRise → Home → Weigh: the needle starts low in
+    the barrel and rises while the pump doses), with the syringe's values, and the stoppering module a
+    new stopper depth. Online against a restart of both modules; the new skill written in the skill
+    editor, and planned if a model of the liquid level fits.
+  - Why: the change has to be one no parameter can make, and one a product asks for. Filling from the
+    bottom is what a tall barrel or a foaming liquid needs; it runs two components at once, which is
+    what the parallel block of the module rules is for (one join block, where a generated type has 2ⁿ
+    states). The filling module is the one whose primitives span three components and whose Pi moves
+    an axis, so the run is visible at the bench.
+  - Instead of: DoubleDose or a planned 15 mL (two equal doses next to each other: what a larger
+    range would give); the net fill weight (Tare moved into the skill; not chosen by the authors);
+    stoppering, capping or inspection (one sensible sequence, or no program and hardware yet).
+- **Dosing's integration constraint: the needle in the container, not the needle still.** *CIRP*,
+  *Journal*.
+  - What: on the filling module Dispense needs `Position >= FillPosition` and keeps it while it runs
+    (an invariant that is a comparison). The checker accepts a parallel branch that moves the
+    variable as long as the comparison holds at each state the branch passes through (a move goes
+    straight, so its ends are enough); the planner and the PDDL and HDDL exports reach a comparison's
+    bound when it does not hold. Cases T13 and T14.
+  - Why: "unchanged" said more than the machine needs: it ruled out filling from the bottom, which
+    is sound as long as the needle stays in the container. The constraint states what is physically
+    required, so the checker tells a skill that may move the needle while dosing from one that takes
+    it out of the vial.
+  - Instead of: keeping "unchanged" and a second Dosing capability for filling from the bottom; or
+    leaving the check to the engineer.
 - **The replanning example needs a new step, not a new value: TaredDispensing.** *Journal*, *CIRP*.
   - What: a step that needs the dose's own weight checked is not covered by Dispensing (it weighs the
     vial and the liquid together); the composite made of the filling module's primitives puts Tare in

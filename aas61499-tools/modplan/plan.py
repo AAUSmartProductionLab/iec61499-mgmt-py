@@ -204,8 +204,11 @@ def _method(cap: Capability, constraint: Constraint, meanings: list[str]):
             again = [(_name(constraint.var.meaning), subject, value)] if doses > 1 else []
         else:
             return False
+        # A precondition "=" is a goal before it; a comparison that does not hold yet, its bound.
+        now = _from_state(planning, meanings)
         before = [(_name(c.var.meaning), c.var.subject, cap.operand(c.expression, args))
-                  for c in cap.pre if c.expression.op == "=" and known(cap.operand(c.expression, args))]
+                  for c in cap.pre if known(cap.operand(c.expression, args))
+                  and (c.expression.op == "=" or (c.expression.op in ("<=", ">=") and holds(cap, c, now, args) is not True))]
         return [*before, (cap.name, *[args.get(n) for n in names]), *again]
 
     method.__name__ = f"m_{cap.name}_{constraint.prop}"

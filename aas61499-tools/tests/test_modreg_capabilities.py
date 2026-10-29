@@ -65,8 +65,8 @@ def test_a_capability_says_what_it_needs_does_and_keeps(filling):
     (the needle in the vial, and still)."""
     dosing = at(submodel(filling[0], "CapabilityDescription"), "Pump", "Dosing")
     assert sorted(constraints(dosing).values()) == [
-        ("Invariant", "LinearAxisPosition", "unchanged"), ("Post", "ContentVolume", "+= Volume"),
-        ("Post", "Weighed", "= false"), ("Pre", "LinearAxisPosition", "= FillPosition")]
+        ("Invariant", "LinearAxisPosition", ">= FillPosition"), ("Post", "ContentVolume", "+= Volume"),
+        ("Post", "Weighed", "= false"), ("Pre", "LinearAxisPosition", ">= FillPosition")]
     assert at(dosing, "PropertySet", "FillPosition", "Value")["value"] == "40.0"
     volume = at(dosing, "PropertySet", "Volume", "Value")
     assert (volume["modelType"], volume["min"], volume["max"]) == ("Range", "0.5", "10.0")

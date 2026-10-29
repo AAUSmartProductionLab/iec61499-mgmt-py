@@ -294,7 +294,7 @@ def test_the_skill_editor_has_a_flow_checked_and_a_skill_planned(service, aas_se
     status, answer = post(f"{url}/check/FillingModuleAAS", {"skill": edited})
     assert status == 200 and list(answer["skills"]) == ["Dispensing"]
     [finding] = answer["skills"]["Dispensing"]
-    assert finding["step"] == "Dispense" and finding["what"] == "needs LinearAxis_ActualPosition.Position = 40.0, but it is 0.0"
+    assert finding["step"] == "Dispense" and finding["what"] == "needs LinearAxis_ActualPosition.Position >= 40.0, but it is 0.0"
     assert finding["fix"] == ["MoveAxis(Position=40.0)"]
     # A skill planned and described on the server, then checked there with the others.
     status, answer = post(f"{url}/plan/FillingModuleAAS", {"capability": "Filling", "values": {"FillVolume": 2.0},
