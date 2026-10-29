@@ -67,6 +67,17 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
 
+  xmpp:
+    # The XMPP server the line's agents talk through (line-agents, docs/agents.md); agents register
+    # their accounts on first start. Lab network only: see prosody.cfg.lua.
+    image: prosodyim/prosody:0.12
+    container_name: lab-xmpp
+    ports:
+      - "5222:5222"
+    volumes:
+      - ./prosody.cfg.lua:/etc/prosody/prosody.cfg.lua:ro
+      - prosody-data:/var/lib/prosody
+
   aas-environment:
     image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
     container_name: lab-aas-environment
@@ -169,4 +180,5 @@ services:
 
 volumes:
   influxdb-data:
+  prosody-data:
   influxdb-config:

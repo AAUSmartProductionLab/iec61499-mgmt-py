@@ -17,7 +17,10 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import hmac
 import json
+import os
+from pathlib import Path
 import secrets
 
 from .aas import AasServer, is_module
@@ -33,6 +36,24 @@ def executor_kind(kind: str):
     if kind == "simulated":
         return lambda env: SimulatedExecutor()
     raise ValueError(f"no executor {kind!r}: opcua or simulated")
+
+
+def agents_secret() -> str:
+    """The secret the agents' passwords are made from: LINEAGENTS_SECRET, else one made at random on
+    first use and kept in ~/.lineagents-secret (outside the repository, which is public)."""
+    if os.environ.get("LINEAGENTS_SECRET"):
+        return os.environ["LINEAGENTS_SECRET"]
+    kept = Path.home() / ".lineagents-secret"
+    if not kept.exists():
+        kept.write_text(secrets.token_urlsafe(32), encoding="utf-8")
+    return kept.read_text(encoding="utf-8").strip()
+
+
+def password(jid: str, secret: str | None = None) -> str:
+    """An agent's XMPP password: the same for the same JID at every start (its account outlives the
+    agent on a server such as Prosody)."""
+    secret = secret if secret is not None else agents_secret()
+    return hmac.new(secret.encode(), jid.encode(), hashlib.sha256).hexdigest()[:24]
 
 
 def digest(env: dict) -> str:
@@ -94,7 +115,8 @@ class Manager:
             self.seen[shell["id"]] = found
             agent = self.agents.get(shell["id"])
             if agent is None:
-                agent = ResourceAgent(self.jid(shell["idShort"]), secrets.token_urlsafe(12), env, self.executor_for,
+                jid = self.jid(shell["idShort"])
+                agent = ResourceAgent(jid, password(jid), env, self.executor_for,
                                       server=self.server.url if self.reconfigure else None,
                                       management_host=self._host(env), port=self.port)
                 await agent.start(auto_register=True)
@@ -118,8 +140,8 @@ class Manager:
         if shell is None:
             raise KeyError(f"the AAS server holds no product {product}")
         env = await asyncio.to_thread(self.server.environment, shell)
-        agent = ProductAgent(self.jid(name or f"order-{len(self.orders) + 1}-{shell['idShort']}"), secrets.token_urlsafe(12),
-                             env, self.resources, port=self.port)
+        jid = self.jid(name or f"order-{len(self.orders) + 1}-{shell['idShort']}")
+        agent = ProductAgent(jid, password(jid), env, self.resources, port=self.port)
         await agent.start(auto_register=True)
         self.orders.append(agent)
         return agent
