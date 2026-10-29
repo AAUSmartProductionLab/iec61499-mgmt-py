@@ -200,6 +200,23 @@ heads; `rule 1` to `rule 8` one row each (AAS on the left, IEC 61499 on the righ
   subapplication it is, element by element, and the OPC UA nodes. The detailed version of pages 10
   and 11.
 
+## The animated deck
+
+`modular-production-animated.pptx` is the user's `modular-production.pptx` with these figures added as
+animated slides in its own style (title, section label, the click timeline with a caption per step,
+speaker notes): after slide 3 "Inside one module", after slide 7 "The filling module at work", slide 8's
+figure as the three shells, after slide 9 the hierarchies, primitive and composite skills, "From the AAS
+to function blocks" and the mapping rules, after slide 15 the agents at the filling module. Each figure is
+its layer PNGs, cropped and stacked; the animations are PowerPoint's own (fade, wipe, fly in, motion
+paths), so they can be changed in the Animation Pane.
+
+`python docs/presentation/source/build_pptx.py . <out.pptx>` builds it from `modular-production.pptx` and
+the exports in `figures/deck` (`slides_spec.py` says what each new slide shows and how it animates; the
+skill's `add_slide.py`, `clean.py` and `validate.py` do the package work). `export_slides.vbs` renders
+every slide with PowerPoint and `video_slide.vbs` one slide as a video, to check an animation frame by
+frame. A motion path in PowerPoint starts from where the shape is laid out, not where the last path
+ended: a way back is the path from the moved place to 0.
+
 ## Facts to keep
 
 - Agents do not exist yet: page 06 is planned (dashed), the paper's future work.
