@@ -22,3 +22,6 @@ FORTE_MODULE_PWMSYSFS:BOOL=ON
 // skill and equipment item at once (20+), more than FORTE's default queue of 16 holds.
 FORTE_EventChainExternalEventListSize:STRING=256
 FORTE_CommunicationInterruptQueueSize:STRING=64
+// The OPC UA server announces itself on the network (LDS-ME, mDNS), so the registration service
+// finds the module; open62541 is built with mdnsd for it (dependencies/recipes/open62541@1.5).
+FORTE_COM_OPC_UA_MULTICAST:BOOL=ON
