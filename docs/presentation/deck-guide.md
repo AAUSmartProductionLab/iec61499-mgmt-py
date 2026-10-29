@@ -159,22 +159,32 @@ outside the AAS (hide the row or leave it).
 
 ### 10 From the AAS to function blocks: modsync
 
-*"modsync turns a skill in the AAS into function blocks, while the module runs."* Left the skill's
-entries in the AAS, in the middle modsync's six stages, right the subapplication in FORTE.
+*"modsync turns a skill in the AAS into function blocks, while the module runs."* Left the
+FillingModuleAAS panel of page 08, in the middle modsync's six stages, right the subapplication
+Dispensing as FORTE has it, drawn like "What the rules draw" (`docs/figures/skill-blocks.drawio`):
+blocks with their event pins (green) and data pins (grey), the type in the block's neck.
 
 | Layer | What |
 | --- | --- |
-| `AAS: the skill's entries` | The shell and eleven entries, a group each |
-| `FORTE: the program` | The frame of the subapplication |
-| `map 1 · created` to `map 7 · created` | What each rule creates: Control and UaStart; the Volume latch; the four step instances; the value 40.0; the data connection; the event chain; the publisher |
-| `OPC UA nodes` | What the program publishes |
-| `map 1 · arrow` to `map 7 · arrow` | A gold arrow from the entry, under modsync, to what it creates, and a ring on the entry |
+| `AAS: FillingModuleAAS (from the hierarchy page)` | The panel as one group |
+| `legend` | The four kinds of line |
+| `FORTE: the subapplication Dispensing` | The outer frame |
+| `created 1 · the skill: Control, Execute` | Control (`SKILL_Core`), the frame of Execute with its interface, the rules' wiring between them |
+| `created 2 · the Start Operation: UaStart, the latch Volume` | UaStart (`SERVER_2_2`), the latch with the limits 0.5 and 10.0 as values, their wiring to Control |
+| `created 3.1` to `3.4` | One step each: its instance (`SK_MoveAxis`, `SK_Dispense`, `SK_Home`, `SK_Weigh`), the green order chain into it, its binding (40.0; Volume from the latch; 1.0), the rules' INIT, HALT, ABORT, RESET |
+| `created 4 · drawn by the rules` | The three `SKILL_FailMerge` blocks, failures and error codes merged pairwise (faded) |
+| `created 5 · the result` | `PubResults` and Weigh's Weight published |
+| `arrow 1` to `arrow 6` | A gold arrow from a row of the AAS panel (Dispensing, Start, Step_0000 to Step_0003), under modsync, to what it creates, and a ring on the row |
 | `modsync` | The six stages, on top: the arrows run under it, so the entries go *through* modsync |
 
-Beats: start with the entries, modsync and the empty frame (hide the `created` layers at first). Then per
-rule n: `map n · arrow` wipes in from the left, `map n · created` fades in, the arrow disappears. Last,
-`OPC UA nodes`. Rule 1 is the skill (a composite becomes a subapplication), 2 its Start variable, 3 its
-steps, 4 a binding to a value, 5 a binding to a source, 6 the order, 7 its result.
+The lines: thick green an event connection the AAS gives (the order of the steps), thick grey a data
+connection the AAS gives (a binding), light green and light grey what the rules draw.
+
+Beats: start with the AAS panel, modsync, the legend and the empty outer frame (hide the `created`
+layers at first). Then `arrow 1` wipes in, `created 1` fades in, the arrow disappears; the same for
+`arrow 2` with `created 2`, and `arrow 3` to `6` with `created 3.1` to `3.4`. Last `created 4` (the rules
+fill in the failures) and `created 5`. The point to make: the AAS gives the steps, their order and their
+bindings; everything faint is drawn by the module rules, so it needs nothing in the AAS.
 
 ### 11 The mapping rules
 

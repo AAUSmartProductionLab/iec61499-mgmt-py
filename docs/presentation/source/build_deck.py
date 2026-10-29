@@ -1,10 +1,5 @@
-"""Built the first version of docs/presentation/deck.drawio: every figure of the talk, one page per slide,
-in story order. New pages are drawn here; earlier figures are copied from docs/figures and regrouped.
-The pictures inside the PPR shells (ppr-*.png) are cut from the user's PPR figure.
-
-    python docs/presentation/source/build_deck.py . docs/presentation/deck.drawio
-
-Running it again OVERWRITES deck.drawio: edits made in draw.io since are lost. Edit the .drawio directly."""
+"""Builds docs/presentation/deck.drawio: every figure of the talk, one page per slide, in story order.
+New pages are drawn here; earlier figures are copied from docs/figures and regrouped."""
 import copy
 import sys
 import xml.etree.ElementTree as ET
@@ -619,120 +614,44 @@ for i, ((n, *_), y, target, xv) in enumerate(zip(STEP_CARDS, SC_Y, ["MoveAxis", 
 page("09 Primitive and composite skills in the AAS", mod_l, comp_l, *runs_layers)
 
 # ==== 10 From the AAS to function blocks: modsync ==================================================
-ent = Node("AAS: the skill's entries")
-g = shell(ent, 40, 22, 96, 83, "AAS", 16, name="Filling module AAS")
-text(ent, 150, 30, 330, 70, "<b>FillingModuleAAS</b><br><font color='#6E777B'>Skills · Dispensing</font>", 19, INK)
-ENTRIES = [("e1", 0, "Dispensing · Composite"), ("e2", 0, "Start variable · Volume 0.5–10 mL"),
-           ("e3", 0, "Step NeedleDown → MoveAxis"), ("e4", 1, "Binding · Position = 40.0"),
-           ("e5", 0, "Step Dispense → Dispense"), ("e6", 1, "Binding · Volume ← Start/Volume"),
-           ("e7", 0, "Step Home → Home"), ("e8", 0, "Step Weigh → Weigh"),
-           ("e9", 0, "Order · 0, 1, 2, 3"), ("e10", 0, "Result · Weight ← Weigh"),
-           ("e11", 0, "Deployment · Described")]
-EY = {}
-for i, (k, ind, label) in enumerate(ENTRIES):
-    y = 124 + i * 64
-    EY[k] = y + 24
-    rect(ent.group(f"Entry {label}"), 40 + ind * 30, y, 430 - ind * 30, 48, "#E6F3F2", AAS, 2, 16, "", label, 16,
-         INK, False, "left")
-
-fr = Node("FORTE: the program")
-g = fr.group("FORTE frame")
-rect(g, 910, 22, 650, 856, "#FFFFFF", GREEN, 2, 2)
-text(g, 930, 30, 600, 36, "FORTE on the Pi · subapplication Dispensing", 21, INK, True)
-text(g, 930, 64, 600, 24, "modsync creates these blocks while the module runs", 14)
+import page10  # noqa: E402
 
 
-def fbk(node, x, y, w, h, name, typ, fill=FB_FILL):
-    k = node.group(f"Block {name}")
-    rect(k, x, y, w, h, fill, FB_STROKE, 1.5, 6)
-    text(k, x, y + 6, w, 24, name, 16, INK, True, "center")
-    text(k, x, y + 32, w, 20, typ, 12, GREY, False, "center")
+def filling_panel(layer_id, at=(20, 100)):
+    """The FillingModuleAAS panel of the hierarchy page, as one group on the given layer."""
+    cp = Copied("skill-hierarchies.drawio", 0)
+    cp.icons_to_shells(20)
+    for c in cp.cells:
+        if c.get("value") == "OperationalData":
+            c.set("value", "Variables")
+    area = (450, 150, 450, 693)
+    cells = cp.pick(area=area)
+    dx, dy = at[0] - area[0], at[1] - area[1]
+    rows = {}
+    for c in cells:
+        v, b = label_of(c), geo_box(c)
+        if not b or c.get("edge"):
+            continue
+        key = ("Dispensing" if v.startswith("Dispensing") and "Composite" in v else
+               "Start" if v == "Start" and b[0] > 410 else v.split(" ")[0] if v.startswith("Step_000") else None)
+        if key and key not in rows:
+            rows[key] = (at[0] + area[2], b[1] + b[3] / 2 + dy)
+    g = cp.group(cells, "FillingModuleAAS (from the hierarchy page)")
+    geo = g.find("mxGeometry")
+    geo.set("x", f"{float(geo.get('x')) + dx:g}"), geo.set("y", f"{float(geo.get('y')) + dy:g}")
+    members = [g] + cells
+    for c in members:
+        c.set("id", "h" + c.get("id"))
+        for attr in ("source", "target"):
+            if c.get(attr):
+                c.set(attr, "h" + c.get(attr))
+        if c is not g:
+            c.set("parent", "h" + c.get("parent"))
+    g.set("parent", layer_id)
+    return "\n".join(ET.tostring(c, encoding="unicode") for c in members), rows
 
 
-maps = []
-
-
-def mapping(n, title, entries, build, targets):
-    """Two layers: the blocks it creates (shown in the still), and the arrow from the entry (animation)."""
-    blocks = Node(f"map {n} · created: {title}")
-    build(blocks.group(title))
-    arrows = Node(f"map {n} · arrow: {title}", False)
-    g = arrows.group(f"{title}: from the AAS through modsync")
-    for i, (k, t) in enumerate(zip(entries, targets)):
-        xv = 880 + 4 * n
-        if len(t) == 3:                      # come down onto the block from above
-            tx, ty, above = t
-            arrow(g, [(470, EY[k]), (xv, EY[k]), (xv, above), (tx, above), (tx, ty)], GOLD, 2.5)
-        else:
-            tx, ty = t
-            arrow(g, [(470, EY[k]), (xv, EY[k]), (xv, ty), (tx, ty)], GOLD, 2.5)
-    for k in entries:
-        ind = dict((e[0], e[1]) for e in ENTRIES)[k]
-        ring(g, 36 + ind * 30, EY[k] - 28, 438 - ind * 30, 56, GOLD, 30)
-    maps.append((blocks, arrows))
-
-
-mapping(1, "skill → subapplication with Control, UaStart", ["e1"],
-        lambda g: (fbk(g, 940, 110, 180, 60, "Control", "SKILL_Core"),
-                   fbk(g, 1140, 110, 180, 60, "UaStart", "SERVER · OPC UA Start")), [(938, 140)])
-mapping(2, "Start variable → parameter latch", ["e2"],
-        lambda g: fbk(g, 1340, 110, 196, 60, "Volume", "SKILL_Param_LREAL"), [(1438, 108, 98)])
-
-
-def steps_blocks(g):
-    rect(g, 930, 220, 610, 300, "#F7FAF5", GREEN, 1.5, 3, "dashed=1;")
-    text(g, 946, 226, 300, 26, "Execute", 15, INK, True)
-    for i, (n, t) in enumerate([("NeedleDown", "SK_MoveAxis"), ("Dispense", "SK_Dispense"), ("Home", "SK_Home"),
-                                ("Weigh", "SK_Weigh")]):
-        fbk(g, 946 + i * 148, 300, 134, 62, n, t)
-
-
-mapping(3, "steps → instances of the primitives", ["e3", "e5", "e7", "e8"], steps_blocks,
-        [(1013, 298, 282), (1161, 298, 282), (1309, 298, 282), (1457, 298, 282)])
-mapping(4, "binding value → input value", ["e4"],
-        lambda g: text(g, 946, 366, 134, 26, "Position 40.0", 14, INK, True, "center"), [(944, 379)])
-
-
-def source_conn(g):
-    arrow(g, [(1438, 170), (1438, 270), (1161, 270), (1161, 298)], BLUE, 2, True)
-    text(g, 1186, 248, 240, 22, "Volume.Value → Dispense.Volume", 12, BLUE)
-
-
-mapping(5, "binding source → data connection", ["e6"], source_conn, [(1150, 270)])
-
-
-def chain(g):
-    for i in range(3):
-        x = 946 + i * 148 + 134
-        arrow(g, [(x, 331), (x + 14, 331)], GREEN, 3)
-    text(g, 946, 410, 580, 26, "SUCCESS → START, step by step", 14, GREEN, True, "center")
-
-
-mapping(6, "order → event chain", ["e9"], chain, [(944, 423)])
-mapping(7, "result → publisher",
-        ["e10"], lambda g: (fbk(g, 1340, 560, 196, 60, "PubResults", "PUBLISH · OPC UA"),
-                            arrow(g, [(1513, 362), (1513, 558)], BLUE, 2, True)), [(1338, 590)])
-g_ua = Node("OPC UA nodes")
-g = g_ua.group("What the program publishes")
-text(g, 940, 660, 600, 200, "<b>OPC UA, below /Objects/Filling</b><br>Skills/Dispensing/Start(Session, Volume)<br>"
-     "Skills/Dispensing/State, ErrorID<br>Skills/Dispensing/Parameters/Volume<br>Skills/Dispensing/Results/Weight",
-     14, INK, False, "left", "Arial", "top")
-
-ms = Node("modsync")
-g = ms.group("modsync reconfigure")
-rect(g, 510, 22, 370, 856, "#FBF5E6", GOLD, 2.5, 3)
-text(g, 530, 30, 330, 36, "modsync reconfigure", 22, INK, True)
-text(g, 530, 64, 330, 24, "the AAS is the target; the program follows", 14)
-for i, s in enumerate(["Read the AAS", "Compare with the running program", "Compile by the module rules",
-                       "Create online:<br>CREATE · CONNECT · WRITE", "Read back and verify",
-                       "Record: Deployment = Built"]):
-    y = 110 + i * 126
-    st = g.group(f"Stage {i + 1}")
-    rect(st, 530, y, 330, 86, "#FFFFFF", GOLD, 2, 10, "", f"<b>{i + 1}</b>&nbsp;&nbsp;{s}", 17, INK, False, "left")
-    if i:
-        arrow(st, [(695, y - 40), (695, y)], GOLD, 2.5)
-layers10 = [ent, fr] + [m[0] for m in maps] + [g_ua] + [m[1] for m in maps] + [ms]
-page("10 From the AAS to function blocks: modsync", *layers10)
+page("10 From the AAS to function blocks: modsync", *page10.build(filling_panel))
 
 # ==== 11 The mapping rules ==========================================================================
 rules = Node("rules")
