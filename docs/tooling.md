@@ -233,9 +233,10 @@ python -m pytest cell/tests/test_dmp_live.py --module-forte-exe <forte.exe>   # 
 
 Two things the DMP needs (design log, 28 Oct): a module's components are published before the
 module (its AIMC refers to their Operations; `modreg` and `example_line.py` do so), and a module
-keeps its OPC UA address, so the DMP reconnects when it restarts. If the DMP still has routes to a
-server that is gone, it reports `degraded` or `stale`: `docker restart lab-dmp` reads everything anew.
-The DMP is built from the submodule's branch `lab-modules` (four changes it needed for our modules).
+keeps its OPC UA address, so the DMP reconnects when it restarts (a call made while it reconnects
+waits for it). After a republish the DMP takes up to about a minute to converge; if it still
+reports `degraded` or `stale` after that, `docker restart lab-dmp` reads everything anew.
+The DMP is built from the submodule's branch `lab-modules` (six changes it needed for our modules).
 The example line (`example_line.py --publish`) describes every module for its `pc` target
 (`localhost`, which in the DMP's container is the container itself), so its mappings run but reach
 no module: an Operation invoked on it fails rather than moving an axis. A module on its Pi is
