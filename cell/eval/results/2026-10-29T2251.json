@@ -1,0 +1,392 @@
+{
+ "when": "2026-10-29T2251",
+ "forte": "runtime/fbe/build/modules-win/forte/build/forte/forte.exe",
+ "runs": 5,
+ "scenarios": {
+  "plug": [
+   {
+    "verify_s": 0.021004300098866224,
+    "first_run_s": 7.729037499986589
+   },
+   {
+    "verify_s": 0.009717699838802218,
+    "first_run_s": 7.672988799866289
+   },
+   {
+    "verify_s": 0.0234377000015229,
+    "first_run_s": 7.716066700173542
+   },
+   {
+    "verify_s": 0.005804600194096565,
+    "first_run_s": 7.711295399814844
+   },
+   {
+    "verify_s": 0.020190700190141797,
+    "first_run_s": 7.697364999912679
+   }
+  ],
+  "value": [
+   {
+    "online": {
+     "commands": 1,
+     "change_s": 0.03390170005150139,
+     "verify_s": 0.009964299853891134,
+     "down_s": 2.238528900081292,
+     "kept_running": false,
+     "ran_s": 7.244386799866334
+    },
+    "restart": {
+     "boot_lines": 246,
+     "generate_s": 0.013637299882248044,
+     "down_s": 3.326169600011781,
+     "ran_s": 7.240528600057587
+    }
+   },
+   {
+    "online": {
+     "commands": 1,
+     "change_s": 0.011353599838912487,
+     "verify_s": 0.005441300105303526,
+     "down_s": 2.275193499866873,
+     "kept_running": false,
+     "ran_s": 7.227096899878234
+    },
+    "restart": {
+     "boot_lines": 246,
+     "generate_s": 0.013234599959105253,
+     "down_s": 3.3086356001440436,
+     "ran_s": 7.151650800136849
+    }
+   },
+   {
+    "online": {
+     "commands": 1,
+     "change_s": 0.025077899917960167,
+     "verify_s": 0.004177100025117397,
+     "down_s": 2.231843899935484,
+     "kept_running": false,
+     "ran_s": 7.248723899945617
+    },
+    "restart": {
+     "boot_lines": 246,
+     "generate_s": 0.01295260014012456,
+     "down_s": 3.251127500087023,
+     "ran_s": 7.1987276000436395
+    }
+   },
+   {
+    "online": {
+     "commands": 1,
+     "change_s": 0.026383999967947602,
+     "verify_s": 0.0045972999650985,
+     "down_s": 2.2427573001477867,
+     "kept_running": false,
+     "ran_s": 7.1885700998827815
+    },
+    "restart": {
+     "boot_lines": 246,
+     "generate_s": 0.014490399975329638,
+     "down_s": 3.3005342001561075,
+     "ran_s": 7.233187899924815
+    }
+   },
+   {
+    "online": {
+     "commands": 1,
+     "change_s": 0.028281800216063857,
+     "verify_s": 0.004735300084576011,
+     "down_s": 2.238900499884039,
+     "kept_running": false,
+     "ran_s": 7.233663200167939
+    },
+    "restart": {
+     "boot_lines": 246,
+     "generate_s": 0.14572650007903576,
+     "down_s": 3.2404891999904066,
+     "ran_s": 7.2228512999136
+    }
+   }
+  ],
+  "written": [
+   {
+    "online": {
+     "commands": 168,
+     "change_s": 0.05565100000239909,
+     "verify_s": 0.007898899959400296,
+     "down_s": 0.0,
+     "kept_running": true,
+     "ran_s": 9.566883200081065
+    },
+    "restart": {
+     "boot_lines": 398,
+     "generate_s": 0.022181600099429488,
+     "down_s": 3.2456399998627603,
+     "ran_s": 9.599055300001055
+    }
+   },
+   {
+    "online": {
+     "commands": 168,
+     "change_s": 0.045946900034323335,
+     "verify_s": 0.006929999915882945,
+     "down_s": 0.0,
+     "kept_running": true,
+     "ran_s": 9.554050900042057
+    },
+    "restart": {
+     "boot_lines": 398,
+     "generate_s": 0.015465900069102645,
+     "down_s": 3.3260239001829177,
+     "ran_s": 9.572110899956897
+    }
+   },
+   {
+    "online": {
+     "commands": 168,
+     "change_s": 0.04581300006248057,
+     "verify_s": 0.006962599931284785,
+     "down_s": 0.0,
+     "kept_running": true,
+     "ran_s": 9.632760199951008
+    },
+    "restart": {
+     "boot_lines": 398,
+     "generate_s": 0.015555900055915117,
+     "down_s": 3.331210100091994,
+     "ran_s": 9.584474100032821
+    }
+   },
+   {
+    "online": {
+     "commands": 168,
+     "change_s": 0.030882199993357062,
+     "verify_s": 0.0066605000756680965,
+     "down_s": 0.0,
+     "kept_running": true,
+     "ran_s": 9.646772899897769
+    },
+    "restart": {
+     "boot_lines": 398,
+     "generate_s": 0.020937700057402253,
+     "down_s": 3.3147921999916434,
+     "ran_s": 9.648063099943101
+    }
+   },
+   {
+    "online": {
+     "commands": 168,
+     "change_s": 0.04683159990236163,
+     "verify_s": 0.006877300096675754,
+     "down_s": 0.0,
+     "kept_running": true,
+     "ran_s": 9.60046219988726
+    },
+    "restart": {
+     "boot_lines": 398,
+     "generate_s": 0.01646240008994937,
+     "down_s": 3.304109200136736,
+     "ran_s": 9.552555399946868
+    }
+   }
+  ],
+  "planned": [
+   {
+    "online": {
+     "commands": 123,
+     "change_s": 0.05878989980556071,
+     "verify_s": 0.010943700093775988,
+     "down_s": 0.0,
+     "kept_running": true,
+     "ran_s": 8.707396500045434,
+     "plan_s": 0.2885771000292152
+    },
+    "restart": {
+     "boot_lines": 357,
+     "generate_s": 0.015113200061023235,
+     "down_s": 3.3067310999613255,
+     "ran_s": 8.71243489999324
+    }
+   },
+   {
+    "online": {
+     "commands": 123,
+     "change_s": 0.04784430004656315,
+     "verify_s": 0.013559999875724316,
+     "down_s": 0.0,
+     "kept_running": true,
+     "ran_s": 8.739217099966481,
+     "plan_s": 0.28992100013419986
+    },
+    "restart": {
+     "boot_lines": 357,
+     "generate_s": 0.01632989989593625,
+     "down_s": 3.2695729001425207,
+     "ran_s": 8.683613600209355
+    }
+   },
+   {
+    "online": {
+     "commands": 123,
+     "change_s": 0.042649999959394336,
+     "verify_s": 0.007267599925398827,
+     "down_s": 0.0,
+     "kept_running": true,
+     "ran_s": 8.636559200007468,
+     "plan_s": 0.16409999993629754
+    },
+    "restart": {
+     "boot_lines": 357,
+     "generate_s": 0.015157600166276097,
+     "down_s": 3.3305886001326144,
+     "ran_s": 8.727665799902752
+    }
+   },
+   {
+    "online": {
+     "commands": 123,
+     "change_s": 0.040525399846956134,
+     "verify_s": 0.006986699998378754,
+     "down_s": 0.0,
+     "kept_running": true,
+     "ran_s": 8.713775800075382,
+     "plan_s": 0.27566489996388555
+    },
+    "restart": {
+     "boot_lines": 357,
+     "generate_s": 0.014529299922287464,
+     "down_s": 3.275539199821651,
+     "ran_s": 8.789061000104994
+    }
+   },
+   {
+    "online": {
+     "commands": 123,
+     "change_s": 0.04622459993697703,
+     "verify_s": 0.0070217999164015055,
+     "down_s": 0.0,
+     "kept_running": true,
+     "ran_s": 8.736065000062808,
+     "plan_s": 0.31053600017912686
+    },
+    "restart": {
+     "boot_lines": 357,
+     "generate_s": 0.014094799989834428,
+     "down_s": 3.2613707000855356,
+     "ran_s": 8.745751299895346
+    }
+   }
+  ],
+  "changeover": [
+   {
+    "online": {
+     "commands": 169,
+     "change_s": 3.4119404999073595,
+     "verify_s": 0.010281299939379096,
+     "down_s": 3.2409446998499334,
+     "kept_running": true,
+     "ran_s": {
+      "filling_s": 9.570324300089851,
+      "stoppering_s": 11.32783369999379
+     }
+    },
+    "restart": {
+     "boot_lines": 588,
+     "generate_s": 0.027599400142207742,
+     "down_s": 7.111876599956304,
+     "ran_s": {
+      "filling_s": 9.599410499911755,
+      "stoppering_s": 11.2875963000115
+     }
+    }
+   },
+   {
+    "online": {
+     "commands": 169,
+     "change_s": 3.390140200033784,
+     "verify_s": 0.012475600000470877,
+     "down_s": 3.234620900126174,
+     "kept_running": true,
+     "ran_s": {
+      "filling_s": 9.620565500110388,
+      "stoppering_s": 11.355021299794316
+     }
+    },
+    "restart": {
+     "boot_lines": 588,
+     "generate_s": 0.03653199994005263,
+     "down_s": 7.106498300097883,
+     "ran_s": {
+      "filling_s": 9.597874300088733,
+      "stoppering_s": 11.377404699800536
+     }
+    }
+   },
+   {
+    "online": {
+     "commands": 169,
+     "change_s": 3.389568499987945,
+     "verify_s": 0.010479799937456846,
+     "down_s": 3.234480099985376,
+     "kept_running": true,
+     "ran_s": {
+      "filling_s": 9.583427699981257,
+      "stoppering_s": 11.27235409989953
+     }
+    },
+    "restart": {
+     "boot_lines": 588,
+     "generate_s": 0.026546400040388107,
+     "down_s": 7.109813599847257,
+     "ran_s": {
+      "filling_s": 9.631514700129628,
+      "stoppering_s": 11.29918419988826
+     }
+    }
+   },
+   {
+    "online": {
+     "commands": 169,
+     "change_s": 3.3856381999794394,
+     "verify_s": 0.011549000162631273,
+     "down_s": 3.2177124000154436,
+     "kept_running": true,
+     "ran_s": {
+      "filling_s": 9.534257299965248,
+      "stoppering_s": 11.354732900159433
+     }
+    },
+    "restart": {
+     "boot_lines": 588,
+     "generate_s": 0.025757999857887626,
+     "down_s": 7.123108400031924,
+     "ran_s": {
+      "filling_s": 9.557288999902084,
+      "stoppering_s": 11.289860100019723
+     }
+    }
+   },
+   {
+    "online": {
+     "commands": 169,
+     "change_s": 3.404624199960381,
+     "verify_s": 0.010117700090631843,
+     "down_s": 3.233892299933359,
+     "kept_running": true,
+     "ran_s": {
+      "filling_s": 9.590376599924639,
+      "stoppering_s": 11.298362900037318
+     }
+    },
+    "restart": {
+     "boot_lines": 588,
+     "generate_s": 0.029156100004911423,
+     "down_s": 7.045827799942344,
+     "ran_s": {
+      "filling_s": 9.64397729979828,
+      "stoppering_s": 11.353684299858287
+     }
+    }
+   }
+  ]
+ }
+}

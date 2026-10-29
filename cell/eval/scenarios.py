@@ -3,6 +3,7 @@ docs/next-steps.md).
 
     python cell/eval/scenarios.py --forte runtime/fbe/build/modules-win/forte/build/forte/forte.exe --runs 5
     python cell/eval/scenarios.py --forte ... --only written planned --runs 1
+    python cell/eval/scenarios.py --pi --only plug value written --runs 5   # on the filling Pi, at the bench
 
 On the filling module (pc target), from its AAS:
 
@@ -79,10 +80,10 @@ BOTTOM_UP = Composite(**{
 STOPPER_DEPTH = 52.0
 
 
-def delivered(spec: Path = FILLING) -> tuple[dict, list[dict]]:
-    """A module's AAS as it is delivered (modreg, from the spec)."""
+def delivered(spec: Path = FILLING, target: str = "pc") -> tuple[dict, list[dict]]:
+    """A module's AAS as it is delivered (modreg, from the spec) for ``target``."""
     from test_modsync_desired import aas
-    return aas(load(spec), "pc")
+    return aas(load(spec), target)
 
 
 # The changes, in the AAS ----------------------------------------------------------------------------
@@ -117,6 +118,7 @@ def with_planned(module: dict, components: list[dict]) -> tuple[dict, float]:
 class Bench:
     """FORTE with a module (by default the filling module) and its simulator; a module started from a
     boot file."""
+    host, target, reset_s = "127.0.0.1", "pc", 30.0
 
     def __init__(self, forte: Path, folder: Path, spec: Path = FILLING):
         self.forte, self.folder, self.spec, self.stack = forte, folder, spec, ExitStack()
@@ -129,7 +131,7 @@ class Bench:
         self.running: ExitStack | None = None
 
     def boot(self, spec=None) -> str:
-        cand = self.cand if spec is None else Candidate(self.spec, spec, "pc")
+        cand = self.cand if spec is None else Candidate(self.spec, spec, self.target)
         return boot_file(deployment(cand.app, overrides=self.overrides, container=cand.container))
 
     def start(self, boot: str) -> None:
@@ -155,7 +157,7 @@ class Bench:
         """Occupy, Reset and Start the module: it is in Execute."""
         self.ua.call("Occupation/Occupy", SESSION)
         self.ua.call("Module/Reset", SESSION)
-        self.ua.expect("Module/State", STATES["Idle"], timeout=30)
+        self.ua.expect("Module/State", STATES["Idle"], timeout=self.reset_s)
         self.ua.call("Module/Start", SESSION)
         self.ua.expect("Module/State", STATES["Execute"], timeout=10)
 
@@ -176,6 +178,33 @@ class Bench:
         self.stack.close()
 
 
+class PiBench(Bench):
+    """The module on its Raspberry Pi (the spec's target ``pi``): FORTE in its container
+    (deploy/pi.py install), started with a boot file written over SSH; the IO is the Pi's own, so
+    Reset homes the axis (only with someone at the bench)."""
+    target, reset_s = "pi", 90.0                     # homing runs until the switch, 60 s at most
+
+    def __init__(self, spec: Path = FILLING):
+        from modsync.sync import PiDeployer
+        self.spec, self.stack, self.running, self.overrides = spec, ExitStack(), None, {}
+        self.cand = Candidate(spec, load(spec), self.target)
+        where = self.cand.spec.targets[self.target]
+        self.host, self.port, self.deployer = where.host, 61499, PiDeployer(where.host, where.user)
+
+    def start(self, boot: str) -> None:
+        """The container restarted with ``boot``; waits until the module is Stopped."""
+        self.running = ExitStack()
+        self.deployer.restart(boot)
+        self.client = self.running.enter_context(Client(self.host, self.port))
+        self.ua = ModuleUa(4840, self.cand.spec.module, host=self.host)
+        self.running.callback(self.ua.close)
+        self.ua.expect("Module/State", STATES["Stopped"], timeout=30)
+
+    def stop(self) -> None:
+        super().stop()
+        self.deployer.pi.compose(self.deployer.args, "stop")
+
+
 def commands(done: list[str]) -> int:
     return next(int(line.split()[0]) for line in done if line.endswith("management commands"))
 
@@ -185,7 +214,7 @@ def commands(done: list[str]) -> int:
 def plug(bench: Bench, module: dict, components: list[dict]) -> dict:
     bench.start(bench.boot())
     started = time.perf_counter()
-    found = read(bench.client, "127.0.0.1", bench.port, module, components)
+    found = read(bench.client, bench.host, bench.port, module, components)
     verify = time.perf_counter() - started
     assert found.differences.empty, found.differences.lines()
     bench.execute()
@@ -214,11 +243,11 @@ def change(bench: Bench, scenario: str, module: dict, components: list[dict]) ->
     else:
         assert bench.ua.call("Skills/Dispensing/Start", SESSION, 1.0) == [True, 0]   # a run goes on meanwhile
     started = time.perf_counter()
-    done, after = reconfigure(bench.client, "127.0.0.1", bench.port, wanted, components)
+    done, after = reconfigure(bench.client, bench.host, bench.port, wanted, components)
     change_s = time.perf_counter() - started
     assert after.differences.empty, done
     started = time.perf_counter()
-    assert read(bench.client, "127.0.0.1", bench.port, wanted, components).differences.empty
+    assert read(bench.client, bench.host, bench.port, wanted, components).differences.empty
     verify_s = time.perf_counter() - started
     if scenario == "value":
         bench.execute()
@@ -282,17 +311,17 @@ def changeover(filling: Bench, stoppering: Bench, delivered_aas: dict) -> dict:
         bench.execute()
     assert filling.ua.call("Skills/Dispensing/Start", SESSION, 1.0) == [True, 0]
     started = time.perf_counter()
-    f_done, f_after = reconfigure(filling.client, "127.0.0.1", filling.port, f_wanted, fc)
+    f_done, f_after = reconfigure(filling.client, filling.host, filling.port, f_wanted, fc)
     stoppering.idle()
     down_started = time.perf_counter()
-    s_done, s_after = reconfigure(stoppering.client, "127.0.0.1", stoppering.port, s_wanted, scs)
+    s_done, s_after = reconfigure(stoppering.client, stoppering.host, stoppering.port, s_wanted, scs)
     stoppering.execute()
     down_s = time.perf_counter() - down_started
     change_s = time.perf_counter() - started
     assert f_after.differences.empty and s_after.differences.empty, (f_done, s_done)
     started = time.perf_counter()
-    assert read(filling.client, "127.0.0.1", filling.port, f_wanted, fc).differences.empty
-    assert read(stoppering.client, "127.0.0.1", stoppering.port, s_wanted, scs).differences.empty
+    assert read(filling.client, filling.host, filling.port, f_wanted, fc).differences.empty
+    assert read(stoppering.client, stoppering.host, stoppering.port, s_wanted, scs).differences.empty
     verify_s = time.perf_counter() - started
     filling.ua.expect("Skills/Dispensing/State", SKILL_STATES["Succeeded"], timeout=60)
     ran = {"filling_s": filling.run(WRITTEN, 1.0), "stoppering_s": stoppering.run("Stoppering")}
@@ -352,21 +381,30 @@ def table(results: dict) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--forte", required=True, help="A FORTE built with every module (runtime/build-modules.ps1)")
+    parser.add_argument("--forte", help="A FORTE built with every module (runtime/build-modules.ps1)")
+    parser.add_argument("--pi", action="store_true",
+                        help="The filling module on its Raspberry Pi instead (moves the axis: someone at the bench)")
     parser.add_argument("--runs", type=int, default=3, help="Runs of each scenario")
     parser.add_argument("--only", nargs="*", choices=SCENARIOS, help="Only these scenarios")
     parser.add_argument("--out", default=str(RESULTS), help="Folder for the results")
     args = parser.parse_args(argv)
-    module, components = delivered()
+    if not args.pi and args.forte is None:
+        parser.error("--forte is needed, or --pi")
+    module, components = delivered(FILLING, "pi" if args.pi else "pc")
     scenarios = args.only or SCENARIOS
+    if args.pi and "changeover" in scenarios:
+        parser.error("the changeover needs the stoppering module, which is not wired on its Pi: leave it out with --pi")
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     when = datetime.now().strftime("%Y-%m-%dT%H%M")
-    results = {"when": when, "forte": str(args.forte), "runs": args.runs, "scenarios": {}}
-    work = Path(tempfile.mkdtemp(prefix="scenarios-"))          # FORTE's folders and logs
-    forte = Path(args.forte).resolve(strict=True)
-    bench = Bench(forte, work)
-    second = Bench(forte, work, STOPPERING) if "changeover" in scenarios else None
+    results = {"when": when, "forte": "the filling Pi" if args.pi else str(args.forte), "runs": args.runs, "scenarios": {}}
+    if args.pi:
+        bench, second = PiBench(), None
+    else:
+        work = Path(tempfile.mkdtemp(prefix="scenarios-"))      # FORTE's folders and logs
+        forte = Path(args.forte).resolve(strict=True)
+        bench = Bench(forte, work)
+        second = Bench(forte, work, STOPPERING) if "changeover" in scenarios else None
     both = {FILLING: (module, components), STOPPERING: delivered(STOPPERING)} if second else {}
     try:
         for scenario in scenarios:
