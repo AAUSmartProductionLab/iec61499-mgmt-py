@@ -2,7 +2,7 @@
 
     python -m lineagents --aas http://localhost:8081 --embedded                 # a resource agent per module
     python -m lineagents --aas http://localhost:8081 --embedded --order Vial2mLAAS   # ... and one order
-    python -m lineagents --aas http://localhost:8081 --xmpp-domain lab --xmpp-port 5222   # another XMPP server
+    python -m lineagents --aas http://localhost:8081 --mqtt localhost:1883     # the lab stack: Prosody, the AAS events
 
 The manager starts a resource agent for every module the AAS server holds and keeps them in step with
 it (lineagents.manager). ``--embedded`` runs SPADE's own XMPP server in this process. Skills run on
@@ -20,7 +20,7 @@ from .xmpp import embedded_server, run
 
 async def main_async(args) -> int:
     async def go(port: int) -> int:
-        manager = Manager(args.aas, args.xmpp_domain, port, args.executor, args.every, not args.no_reconfigure)
+        manager = Manager(args.aas, args.xmpp_domain, port, args.executor, args.every, not args.no_reconfigure, args.mqtt)
         await manager.start()
         print(f"agents: {', '.join(manager.resources()) or 'no module yet'}; watching {args.aas}", flush=True)
         try:
@@ -54,6 +54,8 @@ def main(argv=None) -> int:
     parser.add_argument("--embedded", action="store_true", help="run SPADE's own XMPP server in this process")
     parser.add_argument("--executor", choices=("opcua", "simulated"), default="opcua")
     parser.add_argument("--every", type=float, default=5.0, help="seconds between reading the AAS server")
+    parser.add_argument("--mqtt", help="the broker the AAS server publishes its events to (host:port): an agent starts "
+                                       "as soon as its module's AAS is published")
     parser.add_argument("--no-reconfigure", action="store_true", help="never create a described skill on a module")
     parser.add_argument("--order", nargs="*", default=[], help="products to order once the agents run (AAS idShort)")
     parser.add_argument("--stay", action="store_true", help="keep running after the orders")

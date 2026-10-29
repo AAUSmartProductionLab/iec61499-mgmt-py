@@ -21,7 +21,7 @@ registration = [
     "zeroconf>=0.132",
 ]
 # The line's agents (lineagents): SPADE, its XMPP server (pyjabber) and what that needs on Windows.
-agents = ["spade>=4.1,<5", "greenlet>=3"]
+agents = ["spade>=4.1,<5", "greenlet>=3", "paho-mqtt>=2"]
 # Planning new skills (modplan): GTPyhop and the vocabulary.
 planning = ["gtpyhop-core==2.0.2", "rdflib>=7,<8"]
 # Standard planners on the exported PDDL and HDDL (modplan.export, tests and cell/eval/planners.py):
