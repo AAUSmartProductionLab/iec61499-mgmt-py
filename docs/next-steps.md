@@ -253,14 +253,16 @@ after step A4, the reconfiguration as functions. What is missing:
 A first slice: one product agent, two resource agents (filling, stoppering) and the simulators;
 one call for proposals per step; then a bid that needs a reconfiguration.
 
-**Also after the paper** (or earlier where B1 needs it): states, measurements and events as time
-series in Operational Data, and the Parameters submodel ([state-and-parameters.md](state-and-parameters.md),
-planned 21 Oct, decisions open); drivers where FORTE has no block: a stepper whose position is counted
+**Also after the paper** (or earlier where B1 needs it): the Parameters submodel
+([state-and-parameters.md](state-and-parameters.md), planned 21 Oct, decisions open). States and
+measurements as time series are done (28 Oct: aas-model's Variables, the rows in InfluxDB written
+by the DMP, every command call logged; history and latest values are read from the database, not
+kept in the AAS); drivers where FORTE has no block: a stepper whose position is counted
 from its pulses (today it is estimated from the time it ran), a real scale (e.g. HX711), as
 service interface blocks; typed subapplications for module level skills, if skills are to be
 dragged in from a library; a module shell for the 4diac IDE
-so a hand-written module goes the same way; the AAS generator writing profiles; live values and
-history in the AAS; registration on the lab's AAS server; the repository split and CI.
+so a hand-written module goes the same way; the AAS generator writing profiles; registration on
+the lab's AAS server; the repository split and CI.
 
 ## Open questions
 
