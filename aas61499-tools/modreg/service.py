@@ -127,8 +127,10 @@ class AasServer:
         return f"POST {kind} {item['id']}"
 
     def publish(self, env: dict) -> list[str]:
-        # Submodels first: a shell that is visible has its submodels.
-        return [*[self.put("submodels", sm) for sm in env.get("submodels", [])],
+        # Submodels first: a shell that is visible has its submodels. The mapping configuration last:
+        # the DMP resolves its references when it reads it (see ``mapped_last``).
+        submodels = sorted(env.get("submodels", []), key=lambda sm: sm.get("idShort") == "AssetInterfacesMappingConfiguration")
+        return [*[self.put("submodels", sm) for sm in submodels],
                 *[self.put("shells", shell) for shell in env.get("assetAdministrationShells", [])]]
 
     def remove(self, env: dict) -> list[str]:
