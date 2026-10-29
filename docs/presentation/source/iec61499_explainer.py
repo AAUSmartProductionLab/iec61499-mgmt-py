@@ -262,7 +262,7 @@ def wipe(s, node="withEffect", dur=700):
             f'<p:set><p:cBhvr><p:cTn id="{nid()}" dur="1" fill="hold"><p:stCondLst><p:cond delay="0"/>'
             f'</p:stCondLst></p:cTn>{tgt(s)}<p:attrNameLst><p:attrName>style.visibility</p:attrName>'
             f'</p:attrNameLst></p:cBhvr><p:to><p:strVal val="visible"/></p:to></p:set>'
-            f'<p:animEffect transition="in" filter="wipe(right)"><p:cBhvr><p:cTn id="{nid()}" dur="{dur}"/>{tgt(s)}'
+            f'<p:animEffect transition="in" filter="wipe(left)"><p:cBhvr><p:cTn id="{nid()}" dur="{dur}"/>{tgt(s)}'
             f'</p:cBhvr></p:animEffect></p:childTnLst></p:cTn></p:par>')
 
 
