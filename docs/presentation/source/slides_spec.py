@@ -50,10 +50,21 @@ At the start, what it is physically: a station of the line with a linear axis (a
 
     # ---- after slide 5: the layers, illustrated, one plane at a time ----------------------------------------
     s = Slide("The production system, layer by layer", MOD)
-    planes = ["digital-assets", "behaviour-iec-61499", "aas-models-and-orchestration", "hmi-planning-and-scheduling"]
-    L = s.figure(P03C, ["the-line", "name-of-the-line"] + planes)
-    for k in planes:          # each plane with the lines that reach up to it
-        s.plain_click([("wipe", L[k], {"dir": "bottom", "dur": 700})])
+    planes = ["the-line", "digital-assets", "behaviour-iec-61499", "aas-models-and-orchestration",
+              "hmi-mes-planning-and-scheduling"]
+    L = s.figure(P03C, planes, area=(647700, 1206500, 5000000, 5393500))
+    TEXT = [(2790, "The line", "The maglev table and its shuttles, four stations, two robots"),
+            (2283, "Digital assets", "Each module's parts with their kind and asset id, wired to its Pi"),
+            (1771, "Behaviour · IEC 61499", "FORTE on each Pi runs the module's program"),
+            (1259, "AAS models and orchestration", "The AASs on the AAS server; modreg, modsync and modlink work on them"),
+            (747, "HMI, planning, MES", "The planner, the skill editor and the HMI work from the AASs; MES and ERP later")]
+    tx = []
+    for py, name, sub in TEXT:
+        y = s.at(0, py)[1]
+        tx.append(s.textbox(6000000, y - 380000, 5540000, 760000,
+                            [para([run(name, 18, True, m.TEAL_D)]), para([run(sub, 13, False, m.INK_T)])]))
+    for k in range(1, 5):         # each plane with the lines that reach up to it
+        s.plain_click([("wipe", L[planes[k]], {"dir": "bottom", "dur": 700}), ("in", tx[k])])
     write(after("slide6.xml", "slide5.xml"), s, """About 1 min, four clicks. The same five layers as the slide before, drawn as the lab is built, from the line up; each line appears with the layer it reaches up to.
 
 At the start the line: the maglev table with its shuttles, the four stations, the two robots.

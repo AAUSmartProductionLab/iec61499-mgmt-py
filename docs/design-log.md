@@ -18,6 +18,13 @@ A running log of design considerations made while building, for writing the pape
 
 ## 29 Oct 2026
 
+- **In an isometric figure the AAS shell is an isometric solid.** *Journal* (figures).
+  - What: the shell's outline, with the logo's rounded corners, extruded and drawn on the figure's own
+    30° axes, shaded like the stations, its name on the band; it stands on the AAS plane, and the lines
+    from the tools end on its top.
+  - Why: a flat logo in an isometric drawing reads as pasted on; the solid belongs to the scene.
+  - Instead of: the flat shell, kept for flat diagrams.
+
 - **An agent is drawn as the active part of an AAS, in our parts.** *Journal* (agents, future work).
   - What: a module's agent is a SPADE agent; its messenger is XMPP, carrying VDI/VDE 2193 messages; an interaction manager with the
     service provider's state machine, bidding (capability, availability, time), reconfiguration (the

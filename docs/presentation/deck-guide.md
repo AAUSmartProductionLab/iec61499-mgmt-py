@@ -199,15 +199,15 @@ side boxes and legend: one layer per plane (the line, digital assets, behaviour,
 orchestration, HMI and planning), each plane one group. Beats: the line, then one plane per click, from
 the bottom up.
 
-### 03c The production system in layers (the isometric one, on the slide)
+### 03c The production system in layers (on the slide)
 
-The five layers in true isometric projection, on the line drawing's own axes (30°): each plane is a strip
-over the row of stations, raised `RISE` (240) above the one below and shallower than that, so no plane
-hides what stands on the plane below. Things stand at plane coordinates (`iso(a, b, k)`: along the line,
-across it, which plane): a station's Pi, parts and FORTE program straight above it, so the lines between
-layers are vertical. On top the AAS server with the three AAS shells, modsync, modlink and the agents
-(planned), and the applications. One draw.io layer per plane; each line is in the layer of its upper end,
-so it never reaches a plane that is not shown yet. The detailed 03b follows the same rule (`UP`).
+The page "Layers (illustrated)" of `docs/figures/module-tools.drawio` with less in it: its planes, its
+isometric things and its lines, without the detailed panels (the function block network, PackML, the
+skill's state machine, the AAS tree, product and process AAS, agents), the schedule and HMI panels, the
+stacks of documents and the people. On the AAS plane three AAS shells as isometric solids (`iso_shell`
+in `drawlib.py`: the logo's outline extruded, on the figure's 30° axes, the name on the band), standing
+where the stacks stood; the AAS server's, the skill editor's and the planner's lines end on their tops
+(to Product, Resource, Process). One draw.io layer per plane; each line is in the layer of its upper end.
 
 ### 12b, 12c Inside the agent of a module, of a product (planned)
 

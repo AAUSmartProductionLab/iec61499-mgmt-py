@@ -184,6 +184,58 @@ def polygon(node, pts, fill, stroke, sw=2, extra=""):
         + extra)
 
 
+def iso_shell(label="", W=130, H=110, D=30, fill=AAS):
+    """The AAS shell as an isometric solid: its outline (with the logo's rounded corners) extruded by D,
+    drawn on the isometric axes (x down to the right, y down to the left, z up) and shaded like the
+    figures' boxes; the name on the front of the band. Returns (style, width, height, top), where top is the
+    point of the image where the middle of the shell's top face is, to stand it under a line's end."""
+    import math
+    s = H / SHELL_H                                      # the logo's proportions, scaled to height H
+    w0, band, leg, R, r, f = SHELL_W, BAND, LEG, 10, 8, 5
+    def arc(cx, cy, rad, a0, a1, n=6):
+        return [(cx + rad * math.cos(math.radians(a0 + (a1 - a0) * i / n)),
+                 cy + rad * math.sin(math.radians(a0 + (a1 - a0) * i / n))) for i in range(n + 1)]
+    # The outline in the logo's own units (y down), clockwise from the top left
+    pts = (arc(R, R, R, 180, 270) + arc(w0 - R, R, R, 270, 360) + arc(w0 - f, SHELL_H - f, f, 0, 90)
+           + arc(w0 - leg + f, SHELL_H - f, f, 90, 180) + arc(w0 - leg - r, band + r, r, 0, -90)
+           + arc(leg + r, band + r, r, 270, 180) + arc(leg - f, SHELL_H - f, f, 0, 90)
+           + arc(f, SHELL_H - f, f, 90, 180))
+    prof = [(px * W / w0, (SHELL_H - py) * s) for px, py in pts]        # (x along the front, z up)
+    proj = lambda x, y, z: (0.866 * (x - y), 0.5 * (x + y) - z)
+    front = [proj(x, D, z) for x, z in prof]
+    back = [proj(x, 0, z) for x, z in prof]
+    faces = []
+    n = len(prof)
+    for i in range(n):
+        (x1, z1), (x2, z2) = prof[i], prof[(i + 1) % n]
+        nx, nz = -(z2 - z1), x2 - x1                     # the outward normal
+        if nx + nz <= 1e-9:
+            continue                                     # faces away from the viewer
+        shade = "#45B8B0" if nz > abs(nx) else "#1F6F6A"  # tops lighter, the sides darker
+        quad = [back[i], back[(i + 1) % n], front[(i + 1) % n], front[i]]
+        depth = (x1 + x2) / 2 + D / 2 + (z1 + z2) / 2
+        faces.append((depth, quad, shade))
+    xs = [p[0] for p in front + back]
+    ys = [p[1] for p in front + back]
+    x0, y0 = min(xs) - 2, min(ys) - 2
+    w, h = max(xs) - x0 + 2, max(ys) - y0 + 2
+    poly = lambda q, c: (f'<polygon points="{" ".join(f"{x - x0:.1f},{y - y0:.1f}" for x, y in q)}" fill="{c}" '
+                         f'stroke="{c}" stroke-width="0.6" stroke-linejoin="round"/>')
+    body = [poly(back, "#1F6F6A")] + [poly(q, c) for _, q, c in sorted(faces)] + [poly(front, fill)]
+    if label:
+        bx, by = proj(W / 2, D, H - band * s / 2)
+        size = band * s * 0.46
+        body.append(f'<text transform="matrix(0.866,0.5,0,1,{bx - x0:.1f},{by - y0:.1f})" text-anchor="middle" '
+                    f'dominant-baseline="central" font-family="Arial" font-weight="bold" font-size="{size:.1f}" '
+                    f'fill="#FFFFFF">{label}</text>')
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w:.1f}" height="{h:.1f}" '
+           f'viewBox="0 0 {w:.1f} {h:.1f}">' + "".join(body) + '</svg>')
+    tx, ty = proj(W / 2, D / 2, H)
+    style = ("shape=image;aspect=fixed;imageAspect=0;image=data:image/svg+xml,"
+             + base64.b64encode(svg.encode()).decode() + ";")
+    return style, w, h, (tx - x0, ty - y0)
+
+
 def sm_bar(node, x, y, w, h, label, size=18, fill=SM_BAR, dashed=False):
     rect(node, x, y, w, h, fill, "none" if not dashed else GREY, 1.5, 14, "dashed=1;" if dashed else "",
          label, size, "#FFFFFF", True)
