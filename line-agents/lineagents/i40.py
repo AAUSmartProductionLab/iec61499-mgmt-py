@@ -6,18 +6,20 @@ message it answers; the interaction elements are AAS submodel elements, here the
 holds (a required capability container in a call for proposals, an offer in a proposal):
 
     {"frame": {"semanticProtocol": {...}, "type": "callForProposal", "messageId": "...",
-               "conversationId": "...", "replyTo": "...", "replyBy": 1730000000000,
-               "sender": {"identification": {"id": "<jid>"}, "role": {"name": "ProductAgent"}},
-               "receiver": {"identification": {"id": "<jid>"}, "role": {"name": "ResourceAgent"}}},
+               "conversationId": "...", "inReplyTo": "...", "replyBy": 1730000000000,
+               "sender": {"identification": {"id": "<jid>"}, "role": {"name": "serviceRequester"}},
+               "receiver": {"identification": {"id": "<jid>"}, "role": {"name": "serviceProvider"}}},
      "interactionElements": [...]}
 
 SPADE carries it as an XMPP message: the JSON in the body, and the protocol, the message's type and
 its conversation in the message's metadata, so a behaviour's template can select by them.
 
 The bidding protocol, one step at a time: the product agent sends a call for proposals to every
-resource agent; each answers with a proposal or refuses; the product agent accepts one proposal and
-rejects the others; the accepted resource agent carries the step out and informs of the result
-(``informConfirm``) or of its failure (``informFailure``).
+resource agent; each answers with a proposal, refuses, or says it did not understand; the product
+agent accepts one proposal and rejects the others; the accepted resource agent carries the step out
+and informs of the result (``informConfirm``) or of its failure (``failure``). The names of the frame's
+fields, the message types and the roles are those of VDI/VDE 2193-1 and -2 as the OvGU testbed (2019)
+implements them (docs/agents-literature.md, section 5.1).
 """
 from __future__ import annotations
 
@@ -28,10 +30,11 @@ import uuid
 
 # The bidding protocol's id. Placeholder until checked against VDI/VDE 2193-2.
 BIDDING = "https://admin-shell.io/vdi/2193/2/0/biddingprotocol"
-CALL, PROPOSAL, REFUSE = "callForProposal", "proposal", "refuseProposal"
+CALL, PROPOSAL, REFUSE, NOT_UNDERSTOOD = "callForProposal", "proposal", "refuseProposal", "notUnderstood"
 ACCEPT, REJECT = "acceptProposal", "rejectProposal"
-DONE, FAILED = "informConfirm", "informFailure"
-TYPES = (CALL, PROPOSAL, REFUSE, ACCEPT, REJECT, DONE, FAILED)
+DONE, FAILED = "informConfirm", "failure"
+TYPES = (CALL, PROPOSAL, REFUSE, NOT_UNDERSTOOD, ACCEPT, REJECT, DONE, FAILED)
+REQUESTER, PROVIDER = "serviceRequester", "serviceProvider"           # the roles in a bidding
 
 
 def new_id() -> str:
@@ -61,7 +64,7 @@ class I40Message:
             "receiver": {"identification": {"id": self.receiver}, "role": {"name": self.receiver_role}},
         }
         if self.reply_to:
-            found["replyTo"] = self.reply_to
+            found["inReplyTo"] = self.reply_to
         if self.reply_by is not None:
             found["replyBy"] = self.reply_by
         return found
@@ -78,7 +81,7 @@ class I40Message:
                    elements=data.get("interactionElements") or [],
                    sender_role=f["sender"].get("role", {}).get("name", ""),
                    receiver_role=f["receiver"].get("role", {}).get("name", ""),
-                   message_id=f["messageId"], reply_to=f.get("replyTo"), reply_by=f.get("replyBy"),
+                   message_id=f["messageId"], reply_to=f.get("inReplyTo", f.get("replyTo")), reply_by=f.get("replyBy"),
                    protocol=f["semanticProtocol"]["keys"][0]["value"])
 
     def answer(self, type_: str, elements: list[dict] | None = None, role: str = "") -> "I40Message":

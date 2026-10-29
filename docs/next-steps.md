@@ -232,6 +232,9 @@ then B3 on real hardware (keep the Pi with simulated IO), then A3. Not to be cut
 
 ## After the paper
 
+**The agents' design and plan to the demo in January: [agents.md](agents.md)** (started 30 Oct; the
+literature in [agents-literature.md](agents-literature.md)). What follows was the first list.
+
 **Decentralized, order-driven production.** A product agent per order asks for each process step,
 resource agents answer with bids, the product agent chooses. What exists: `modlink` (occupy, run a
 skill or a capability), capabilities with ranges, the range check of
