@@ -180,6 +180,7 @@ class Slide:
         ox = ax + (aw - (ux1 - ux0) * s) / 2
         oy = ay + (ah - (uy1 - uy0) * s) / 2
         self.emu_per_page_px = s * EMU_PX
+        self.at = lambda px, py: (round(ox + (px * EMU_PX - ux0) * s), round(oy + (py * EMU_PX - uy0) * s))
         out = {}
         for f in files:
             im, b = boxes[f]
@@ -349,6 +350,88 @@ def write_slide(slide_file, sl: Slide, notes: str):
         c = c.replace("</Types>", f'<Override PartName="{part}" ContentType="application/vnd.openxmlformats-'
                                   'officedocument.presentationml.notesSlide+xml"/></Types>')
         ct.write_text(c, encoding="utf-8")
+
+
+# ---- the user's slides: timelines out, content centred, slides removed, pictures replaced ----------------
+from lxml import etree  # noqa: E402
+
+NS = {"p": "http://schemas.openxmlformats.org/presentationml/2006/main",
+      "a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
+TIMELINE_Y = 5400000                # the timeline, its labels and captions are all below this
+
+
+def strip_timeline(slide_file):
+    """Remove the click timeline and captions, their effects and the clicks left empty; then scale and
+    centre what is left in the area the timeline freed."""
+    path = WORK / "ppt/slides" / slide_file
+    root = etree.fromstring(path.read_bytes())
+    tree = root.find(".//p:cSld/p:spTree", NS)
+    gone, content = set(), []
+    for el in list(tree):
+        off = el.find("./*/a:xfrm/a:off", NS)
+        if off is None:
+            continue
+        cid = el.find("./*/p:cNvPr", NS).get("id")
+        if int(off.get("y")) >= TIMELINE_Y:
+            gone.add(cid)
+            tree.remove(el)
+        elif el.find(".//p:ph", NS) is None and int(off.get("y")) > 1000000:
+            content.append(el)
+    for eff in root.findall(".//p:par/p:cTn[@presetClass]/..", NS):
+        if {t.get("spid") for t in eff.iter(f"{{{NS['p']}}}spTgt")} <= gone:
+            eff.getparent().remove(eff)
+    seq = root.find(".//p:cTn[@nodeType='mainSeq']/p:childTnLst", NS)
+    for click in list(seq):
+        groups = click.find("./p:cTn/p:childTnLst", NS)
+        first_gone = False
+        for i, grp in enumerate(list(groups)):
+            if not len(grp.find("./p:cTn/p:childTnLst", NS)):
+                groups.remove(grp)
+                first_gone |= i == 0
+        if not len(groups):
+            seq.remove(click)
+        elif first_gone:
+            groups[0].find("./p:cTn/p:stCondLst/p:cond", NS).set("delay", "0")
+            groups[0].find("./p:cTn/p:childTnLst/p:par/p:cTn", NS).set("nodeType", "clickEffect")
+    for b in root.findall(".//p:bldP", NS):
+        if b.get("spid") in gone:
+            b.getparent().remove(b)
+    # scale and centre the rest in the area under the title
+    box = [(int(e.find("./*/a:xfrm/a:off", NS).get("x")), int(e.find("./*/a:xfrm/a:off", NS).get("y")),
+            int(e.find("./*/a:xfrm/a:ext", NS).get("cx")), int(e.find("./*/a:xfrm/a:ext", NS).get("cy")))
+           for e in content]
+    x0, y0 = min(b[0] for b in box), min(b[1] for b in box)
+    x1, y1 = max(b[0] + b[2] for b in box), max(b[1] + b[3] for b in box)
+    ax, ay, aw, ah = 647700, 1206500, 10896600, 6550000 - 1206500
+    f = min(aw / (x1 - x0), ah / (y1 - y0), 1.3)
+    nx, ny = ax + (aw - (x1 - x0) * f) / 2, ay + (ah - (y1 - y0) * f) / 2
+    for e in content:
+        off, ext = e.find("./*/a:xfrm/a:off", NS), e.find("./*/a:xfrm/a:ext", NS)
+        off.set("x", str(round(nx + (int(off.get("x")) - x0) * f)))
+        off.set("y", str(round(ny + (int(off.get("y")) - y0) * f)))
+        ext.set("cx", str(round(int(ext.get("cx")) * f))), ext.set("cy", str(round(int(ext.get("cy")) * f)))
+        for el in e.iter():
+            if el.get("sz") is not None and el.tag.endswith(("rPr", "defRPr", "endParaRPr")):
+                el.set("sz", str(int(round(int(el.get("sz")) * f / 50) * 50)))
+            if el.tag == f"{{{NS['a']}}}ln" and el.get("w"):
+                el.set("w", str(round(int(el.get("w")) * f)))
+    path.write_bytes(etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True))
+    return f
+
+
+def remove_slides(*slide_files):
+    pres = WORK / "ppt/presentation.xml"
+    rels = (WORK / "ppt/_rels/presentation.xml.rels").read_text(encoding="utf-8")
+    p = pres.read_text(encoding="utf-8")
+    for sf in slide_files:
+        rid = re.search(rf'<Relationship [^>]*Id="(rId\d+)"[^>]*Target="slides/{sf}"', rels) or \
+            re.search(rf'<Relationship [^>]*Target="slides/{sf}"[^>]*Id="(rId\d+)"', rels)
+        p = re.sub(rf'<p:sldId [^>]*r:id="{rid.group(1)}"/>', "", p)
+    pres.write_text(p, encoding="utf-8")
+
+
+def replace_picture(media, png):
+    shutil.copy(png, WORK / "ppt/media" / media)
 
 
 import slides_spec  # noqa: E402  (the slides: what each shows and how it animates)

@@ -265,7 +265,63 @@ def build(make_panel):
     for i, (name, *_), bx in zip(range(4), STEPS, BX):
         through(3 + i, f"step {name} → its instance", f"Step_000{i}", [(bx + 70, BY - 22, 330 + 4 * i)])
 
+    # ---- The console: what modsync sends, one step at a time (the ops of iec61499_mgmt's Command) ------
+    CX, CW = 1610, 790
+    con = Node("console")
+    g = con.group("Console")
+    rect(g, CX, 18, CW, 862, "#252B2D", "none", 1, 3)
+    text(g, CX + 30, 34, CW - 60, 40, "modsync → FORTE", 30, "#FFFFFF", True)
+    text(g, CX + 30, 78, CW - 60, 30, "its management API, while the module runs", 20, "#AEB6BA")
+    OPS = {"GET": "#8DB4D6", "create_fb": "#9CCB7E", "connect": "#7FC8C2", "write": "#E0B95A", "start": "#F0A36B",
+           "query_fbs": "#8DB4D6", "query_connections": "#8DB4D6", "query_type": "#8DB4D6", "read": "#8DB4D6",
+           "PUT": "#8DB4D6"}
+    STEPS_CMD = [
+        ("the skill", "Skills/Dispensing: a composite skill",
+         [("GET", "/submodels/Skills  (the AAS)"), ("create_fb", "Control : SKILL_Core")]),
+        ("Start", "Dispensing/Start: Volume, 0.5 to 10.0",
+         [("create_fb", "UaStart : SERVER_2_2"), ("create_fb", "Volume : SKILL_Param_LREAL"),
+          ("write", "Volume.Lower := 0.5"), ("write", "Volume.Upper := 10.0"),
+          ("connect", "UaStart.IND → Volume.CHECK"), ("connect", "Volume.CHECKED → Control.START_REQ")]),
+        ("NeedleDown", "Steps/Step_0000: MoveAxis, Position 40.0",
+         [("create_fb", "NeedleDown : SK_MoveAxis"), ("write", "NeedleDown.Position := 40.0"),
+          ("connect", "Volume.LATCHED → NeedleDown.START")]),
+        ("Dispense", "Steps/Step_0001: Dispense, Volume from Start",
+         [("create_fb", "Dispense : SK_Dispense"), ("write", "Dispense.FlowRate := 1.0"),
+          ("connect", "Volume.Value → Dispense.Volume"), ("connect", "NeedleDown.SUCCESS → Dispense.START")]),
+        ("Home", "Steps/Step_0002: Home",
+         [("create_fb", "Home : SK_Home"), ("connect", "Dispense.SUCCESS → Home.START")]),
+        ("Weigh", "Steps/Step_0003: Weigh",
+         [("create_fb", "Weigh : SK_Weigh"), ("connect", "Home.SUCCESS → Weigh.START"),
+          ("connect", "Weigh.SUCCESS → Control.EXECUTE_DONE")]),
+        ("the rules", "not in the AAS: the module rules",
+         [("connect", "NeedleDown.INITO → Dispense.INIT"), ("connect", "Control.HALT_SEQ → NeedleDown.HALT"),
+          ("create_fb", "Fail1 : SKILL_FailMerge"), ("connect", "NeedleDown.FAILURE → Fail1.FAIL_1"),
+          ("#", "… the same for every step")]),
+        ("the result", "Weigh's Weight: the skill's result",
+         [("create_fb", "PubResults : PUBLISH_1"), ("connect", "Weigh.Weight → PubResults.SD_1"),
+          ("start", "Dispensing")]),
+        ("verify", "read back, compare with the AAS",
+         [("query_fbs", "Dispensing → 11 blocks: match"), ("query_connections", "→ match"),
+          ("query_type", "SK_MoveAxis … → hashes match"), ("read", "NeedleDown.Position → 40.0"),
+          ("PUT", "Skills/Dispensing  Deployment = Built")])]
+    cmds = []
+    for k, (title, comment, lines) in enumerate(STEPS_CMD, 1):
+        C = Node(f"commands {k} · {title}", False)
+        g = C.group(f"Commands: {title}")
+        text(g, CX + 30, 140, CW - 60, 36, f"# {comment}", 24, "#9AA3A8", font="Consolas")
+        for i, (op, args) in enumerate(lines):
+            y = 196 + i * 50
+            if op == "#":
+                text(g, CX + 30, y, CW - 60, 36, f"# {args}", 24, "#9AA3A8", font="Consolas")
+                continue
+            w = 13.4 * len(op) + 22
+            text(g, CX + 30, y, w, 36, op, 24, OPS[op], True, font="Consolas")
+            text(g, CX + 30 + w, y, CW - 60 - w, 36, args, 24, "#E8ECEE", font="Consolas")
+        ok = "all match: recorded" if title == "verify" else f"← {len([l for l in lines if l[0] != '#'])} × OK"
+        text(g, CX + 30, 196 + len(lines) * 50 + 10, CW - 60, 36, ok, 24, "#9CCB7E", True, font="Consolas")
+        cmds.append(C)
+
     order = ["aas", "legend", "frame", "c1", "c2", "s0", "s1", "s2", "s3", "rules", "result"]
-    out = [L[k] for k in order] + arrows + [ms]
+    out = [L[k] for k in order] + arrows + [ms, con] + cmds
     out.insert(1, aas_panel_xml)               # the copied cells, right after their layer cell
     return out

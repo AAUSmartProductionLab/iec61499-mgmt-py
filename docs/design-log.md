@@ -18,6 +18,20 @@ A running log of design considerations made while building, for writing the pape
 
 ## 29 Oct 2026
 
+- **The talk shows modsync as the commands it sends, and agents in the I4.0 language.** *Journal*
+  (how the method is shown to people who did not build it).
+  - What: the slide from the AAS to function blocks has a console beside the network: per step the
+    operations of the management API that build it (create_fb, connect, write, start) and, last, those
+    that verify it (query_fbs, query_connections, query_type, read) before the skill is recorded as
+    Built. The agents are shown on the line, the vial's product agent calling for proposals and the
+    modules' agents proposing or refusing, as VDI/VDE 2193 messages; replanning is one slide: match,
+    the missing effect (12 mL), a composite from the module's primitives, matched again.
+  - Why: the network alone shows the result, not that it is built step by step online and read back;
+    the commands are the method's evidence. Interaction protocols make the agents' part concrete
+    without claiming more than is planned.
+  - Instead of: a pipeline of six boxes for modsync; agents as boxes beside a picture; two slides
+    for the change from recipe to running program.
+
 - **The DMP rides out a module that restarts: two more changes on its `lab-modules` branch.**
   *Journal* (what an AAS-driven connection needs from its runtime when modules come and go).
   - What: a route's OPC UA subscription is deleted without waiting for the server's answer, and a
