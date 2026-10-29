@@ -68,11 +68,15 @@ A running log of design considerations made while building, for writing the pape
     a shutdown timeout per route, and leaves the mapping stale and the DMP degraded until it is
     restarted; and a mapping whose referenced submodel is published after the AIMC stays blocked
     (not resolved when the submodel arrives). So the components' AASs are published before the
-    module's (`modreg.service.mapped_last`), and a module keeps its OPC UA address across restarts.
+    module's (`modreg.service.mapped_last`), and within an AAS its AIMC after its other submodels
+    (`AasServer.publish`); a module keeps its OPC UA address across restarts.
   - Checked end to end (`cell/tests/test_dmp_live.py`): the filling module simulated on FORTE;
     Occupy, Reset, Start and Dispensing invoked at the AAS environment, answered by the module
     through the DMP (and a refusal for another session), and the rows of the module's state and of
-    the Dispensing run, with its volume and weight, in InfluxDB.
+    the Dispensing run, with its volume and weight, in InfluxDB. And a shuttle of the planar table
+    (the planar controller, a Python OPC UA server, which names a method's arguments by meaning:
+    the describer says how a server names them): the table to Execute, the shuttle occupied and
+    moved, its run, its pose and the call log in InfluxDB.
 
 - **A module's AAS is what the DMP (aas-camel-dmp) runs: a skill's Operation calls the module's
   OPC UA method through it, and its values reach InfluxDB through it.** *Journal.* Asked for by
