@@ -6,10 +6,16 @@ docs/next-steps.md).
 
 On the filling module (pc target), from its AAS:
 
-  plug     the module as delivered: verify the program against its AAS, operate it (Dispensing)
-  value    a step's constant changed in the AAS (Dispensing's FlowRate 1.0 -> 2.0)
-  written  a new skill written in the AAS (DoubleDose, as the skill editor saved it)
-  planned  a new skill planned from the AAS (modplan: Filling 2.0 mL with its weight)
+  plug        the module as delivered: verify the program against its AAS, operate it (Dispensing)
+  value       a step's constant changed in the AAS (Dispensing's FlowRate 1.0 -> 2.0)
+  written     a new skill written in the AAS, as the skill editor saves it: BottomUpFilling, which the
+              prefilled syringe needs (the needle starts deep in the barrel and rises while the pump
+              doses: a parallel block of the axis and the pump)
+  planned     a new skill planned from the AAS (modplan: Filling 2.0 mL with its weight)
+  changeover  the line changed over to the prefilled syringe, the filling and the stoppering module
+              at once: BottomUpFilling created on the filling module while its last Dispensing runs,
+              the stoppering module's HeadDown at 52.0 mm for the syringe's plunger stopper (a value:
+              that module Idle meanwhile)
 
 Each change is made both ways. **online**: ``modsync reconfigure`` (management commands, the time,
 the time to verify it again, and whether the module kept running: a skill started before a new skill
@@ -24,7 +30,6 @@ import argparse
 import copy
 from contextlib import ExitStack, contextmanager
 from datetime import datetime
-import gzip
 import json
 from pathlib import Path
 import statistics
@@ -40,6 +45,7 @@ from iec61499_mgmt.bootfile import boot_file, deployment                    # no
 from iec61499_mgmt.protocol import Client                                   # noqa: E402
 from modgen import SPECS, load                                               # noqa: E402
 from modgen.library import SKILL_STATES, STATES                              # noqa: E402
+from modgen.spec import Composite                                            # noqa: E402
 from modsync.aasjson import at, children, submodel                          # noqa: E402
 from modsync.compare import Candidate                                       # noqa: E402
 from modsync.described import described                                     # noqa: E402
@@ -48,36 +54,54 @@ from module_sim import separate                                              # n
 from module_ua import ModuleUa                                               # noqa: E402
 
 FILLING = SPECS / "filling.yaml"
+STOPPERING = SPECS / "stoppering.yaml"
 RESULTS = Path(__file__).resolve().parent / "results"
-EDITED = ROOT / "aas61499-tools" / "tests" / "data" / "FillingSkills-edited.json.gz"
 SESSION = "evaluation"
-SCENARIOS = ("plug", "value", "written", "planned")
+SCENARIOS = ("plug", "value", "written", "planned", "changeover")
+
+# The prefilled syringe's filling (cell/examples/products/prefilled_syringe_1ml.py): the needle goes
+# deep into the barrel and rises to the fill position while the pump doses, so it stays under the
+# liquid (a tall barrel, a liquid that foams). The rise (18 mm at 12.5 mm/s) takes as long as 1 mL at
+# 0.7 mL/s. Dosing keeps the needle at the fill position or deeper (cell/modules/filling.yaml), so
+# the checker accepts the axis moving beside it (case T13 of docs/skill-planning.md).
+WRITTEN = "BottomUpFilling"
+BOTTOM_UP = Composite(**{
+    "description": "Fill from the bottom: the needle starts deep and rises while the pump doses, then weigh",
+    "parameters": {"Volume": {"unit": "mL", "minimum": 0.5, "maximum": 10.0, "default": 1.0,
+                              "description": "Fill volume"}},
+    "execute": [{"MoveAxis": {"Position": 58.0}, "as": "NeedleDeep"},
+                {"parallel": [[{"Dispense": {"Volume": "Volume", "FlowRate": 0.7}}],
+                              [{"MoveAxis": {"Position": 40.0}, "as": "NeedleRise"}]], "as": "Rising"},
+                "Home", "Weigh"],
+    "stop": ["Home"],
+    "results": {"Weight": "Weigh.Weight"}})
+# The syringe's plunger stopper goes in deeper than a vial's stopper (a placeholder, as the station's 40.0).
+STOPPER_DEPTH = 52.0
 
 
-def delivered() -> tuple[dict, list[dict]]:
-    """The filling module's AAS as it is delivered (modreg, from the spec)."""
+def delivered(spec: Path = FILLING) -> tuple[dict, list[dict]]:
+    """A module's AAS as it is delivered (modreg, from the spec)."""
     from test_modsync_desired import aas
-    return aas(load(FILLING), "pc")
+    return aas(load(spec), "pc")
 
 
 # The changes, in the AAS ----------------------------------------------------------------------------
 
-def with_value(module: dict) -> dict:
-    """Dispensing's step Dispense runs at FlowRate 2.0 instead of 1.0."""
+def with_value(module: dict, skill: str = "Dispensing", step: str = "Dispense", name: str = "FlowRate",
+               value: float = 2.0) -> dict:
+    """A step's constant changed: by default Dispensing's step Dispense at FlowRate 2.0 instead of 1.0."""
     module = copy.deepcopy(module)
-    steps = at(submodel(module, "Skills"), "Dispensing", "Start", "Steps")
-    dispense = next(s for s in children(steps) if at(s, "NodeId")["value"] == "Dispense")
-    binding = next(b for b in children(at(dispense, "Bindings")) if at(b, "Name")["value"] == "FlowRate")
-    at(binding, "Value")["value"] = "2.0"
+    steps = at(submodel(module, "Skills"), skill, "Start", "Steps")
+    found = next(s for s in children(steps) if at(s, "NodeId")["value"] == step)
+    binding = next(b for b in children(at(found, "Bindings")) if at(b, "Name")["value"] == name)
+    at(binding, "Value")["value"] = str(value)
     return module
 
 
-def with_written(module: dict) -> dict:
-    """DoubleDose, as the skill editor saved it (its own test, tests/data)."""
-    module = copy.deepcopy(module)
-    edited = json.loads(gzip.decompress(EDITED.read_bytes()))
-    module["submodels"] = [edited if s["idShort"] == "Skills" else s for s in module["submodels"]]
-    return module
+def with_written(module: dict, components: list[dict]) -> dict:
+    """BottomUpFilling described in the filling module's AAS, as the skill editor saves a skill."""
+    from modreg.offer import described_skill
+    return described_skill(module, components, WRITTEN, BOTTOM_UP)
 
 
 def with_planned(module: dict, components: list[dict]) -> tuple[dict, float]:
@@ -91,20 +115,21 @@ def with_planned(module: dict, components: list[dict]) -> tuple[dict, float]:
 # Running the module --------------------------------------------------------------------------------
 
 class Bench:
-    """FORTE with the filling module and its simulator; a module started from a boot file."""
+    """FORTE with a module (by default the filling module) and its simulator; a module started from a
+    boot file."""
 
-    def __init__(self, forte: Path, folder: Path):
-        self.forte, self.folder, self.stack = forte, folder, ExitStack()
-        self.cand = Candidate(FILLING, load(FILLING), "pc")
+    def __init__(self, forte: Path, folder: Path, spec: Path = FILLING):
+        self.forte, self.folder, self.spec, self.stack = forte, folder, spec, ExitStack()
+        self.cand = Candidate(spec, load(spec), "pc")
         self.modbus = free_port()
         endpoint = f"{self.cand.spec.modbus.host}:{self.cand.spec.modbus.port}:"
         self.overrides = {k: v.replace(endpoint, f"127.0.0.1:{self.modbus}:") for k, v in self.cand.app.parameters.items()
                           if v.startswith("'modbus[")}
-        self.stack.enter_context(separate(FILLING, host="127.0.0.1", port=self.modbus))
+        self.stack.enter_context(separate(spec, host="127.0.0.1", port=self.modbus))
         self.running: ExitStack | None = None
 
     def boot(self, spec=None) -> str:
-        cand = self.cand if spec is None else Candidate(FILLING, spec, "pc")
+        cand = self.cand if spec is None else Candidate(self.spec, spec, "pc")
         return boot_file(deployment(cand.app, overrides=self.overrides, container=cand.container))
 
     def start(self, boot: str) -> None:
@@ -175,10 +200,10 @@ def change(bench: Bench, scenario: str, module: dict, components: list[dict]) ->
     if scenario == "value":
         wanted = with_value(module)
     elif scenario == "written":
-        wanted = with_written(module)
+        wanted = with_written(module, components)
     else:
         wanted, plan_s = with_planned(module, components)
-    name = {"value": "Dispensing", "written": "DoubleDose", "planned": "PlannedFilling"}[scenario]
+    name = {"value": "Dispensing", "written": WRITTEN, "planned": "PlannedFilling"}[scenario]
 
     # Online.
     bench.start(bench.boot())
@@ -202,8 +227,6 @@ def change(bench: Bench, scenario: str, module: dict, components: list[dict]) ->
         bench.ua.expect("Skills/Dispensing/State", SKILL_STATES["Succeeded"], timeout=60)
         down_s, kept = 0.0, True
     args = (1.0,) if scenario != "planned" else ()
-    if scenario == "written":
-        args = (0.5,)
     ran = bench.run(name, *args)
     bench.stop()
     online = {"commands": commands(done), "change_s": change_s, "verify_s": verify_s, "down_s": down_s,
@@ -216,7 +239,7 @@ def change(bench: Bench, scenario: str, module: dict, components: list[dict]) ->
         changed = load(FILLING)
         composites = dict(changed.composites)
         dispensing = composites["Dispensing"].model_copy(deep=True)
-        changed = changed.model_copy(update={"composites": {**composites, "Dispensing": _with_flow_rate(dispensing, 2.0)}})
+        changed = changed.model_copy(update={"composites": {**composites, "Dispensing": _with_bound(dispensing, "Dispense", "FlowRate", 2.0)}})
     else:
         changed = load(FILLING)
         changed = changed.model_copy(update={"composites": {**changed.composites, name: spec.composites[name]}})
@@ -235,14 +258,74 @@ def change(bench: Bench, scenario: str, module: dict, components: list[dict]) ->
     return {"online": online, "restart": restart}
 
 
-def _with_flow_rate(dispensing, value: float):
-    """Dispensing with its step Dispense at FlowRate ``value``."""
-    from modgen.spec import Composite
-    data = dispensing.model_dump()
-    for step in data["execute"]:
-        if step.get("skill") == "Dispense":
-            step["bind"]["FlowRate"] = value
+def _with_bound(composite: Composite, step: str, name: str, value: float) -> Composite:
+    """``composite`` with its step ``step`` (by name or skill) given ``name`` = ``value``."""
+    data = composite.model_dump()
+    for found in data["execute"]:
+        if step in (found.get("name"), found.get("skill")):
+            found["bind"][name] = value
     return Composite.model_validate(data)
+
+
+def changeover(filling: Bench, stoppering: Bench, delivered_aas: dict) -> dict:
+    """The line changed over to the prefilled syringe: BottomUpFilling on the filling module, the
+    stopper depth on the stoppering module. Online, then by restarting both modules; the line is down
+    while either module is out of Execute."""
+    (fm, fc), (sm, scs) = delivered_aas[FILLING], delivered_aas[STOPPERING]
+    f_wanted = with_written(fm, fc)
+    s_wanted = with_value(sm, "Stoppering", "HeadDown", "Position", STOPPER_DEPTH)
+
+    # Online: the filling module's last Dispensing of the batch runs on; the stoppering module is
+    # stopped for its value (the guard) and started again.
+    for bench in (filling, stoppering):
+        bench.start(bench.boot())
+        bench.execute()
+    assert filling.ua.call("Skills/Dispensing/Start", SESSION, 1.0) == [True, 0]
+    started = time.perf_counter()
+    f_done, f_after = reconfigure(filling.client, "127.0.0.1", filling.port, f_wanted, fc)
+    stoppering.idle()
+    down_started = time.perf_counter()
+    s_done, s_after = reconfigure(stoppering.client, "127.0.0.1", stoppering.port, s_wanted, scs)
+    stoppering.execute()
+    down_s = time.perf_counter() - down_started
+    change_s = time.perf_counter() - started
+    assert f_after.differences.empty and s_after.differences.empty, (f_done, s_done)
+    started = time.perf_counter()
+    assert read(filling.client, "127.0.0.1", filling.port, f_wanted, fc).differences.empty
+    assert read(stoppering.client, "127.0.0.1", stoppering.port, s_wanted, scs).differences.empty
+    verify_s = time.perf_counter() - started
+    filling.ua.expect("Skills/Dispensing/State", SKILL_STATES["Succeeded"], timeout=60)
+    ran = {"filling_s": filling.run(WRITTEN, 1.0), "stoppering_s": stoppering.run("Stoppering")}
+    for bench in (filling, stoppering):
+        bench.stop()
+    online = {"commands": commands(f_done) + commands(s_done), "change_s": change_s, "verify_s": verify_s,
+              "down_s": down_s, "kept_running": True, "ran_s": ran}
+
+    # By a restart: both programs with the change generated, both FORTEs started with them.
+    started = time.perf_counter()
+    f_spec = load(FILLING)
+    f_spec = f_spec.model_copy(update={"composites": {**f_spec.composites,
+                                                      WRITTEN: described(f_wanted, fc).composites[WRITTEN]}})
+    s_spec = load(STOPPERING)
+    s_spec = s_spec.model_copy(update={"composites": {**s_spec.composites, "Stoppering": _with_bound(
+        s_spec.composites["Stoppering"], "HeadDown", "Position", STOPPER_DEPTH)}})
+    boots = {filling: filling.boot(f_spec), stoppering: stoppering.boot(s_spec)}
+    generate_s = time.perf_counter() - started
+    for bench in (filling, stoppering):
+        bench.start(bench.boot())
+        bench.execute()
+    down_started = time.perf_counter()
+    for bench in (filling, stoppering):
+        bench.stop()
+        bench.start(boots[bench])
+        bench.execute()
+    restart_down_s = time.perf_counter() - down_started
+    ran = {"filling_s": filling.run(WRITTEN, 1.0), "stoppering_s": stoppering.run("Stoppering")}
+    for bench in (filling, stoppering):
+        bench.stop()
+    restart = {"boot_lines": sum(len(b.splitlines()) for b in boots.values()), "generate_s": generate_s,
+               "down_s": restart_down_s, "ran_s": ran}
+    return {"online": online, "restart": restart}
 
 
 # Running and reporting -----------------------------------------------------------------------------
@@ -275,21 +358,32 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", default=str(RESULTS), help="Folder for the results")
     args = parser.parse_args(argv)
     module, components = delivered()
+    scenarios = args.only or SCENARIOS
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     when = datetime.now().strftime("%Y-%m-%dT%H%M")
     results = {"when": when, "forte": str(args.forte), "runs": args.runs, "scenarios": {}}
     work = Path(tempfile.mkdtemp(prefix="scenarios-"))          # FORTE's folders and logs
-    bench = Bench(Path(args.forte).resolve(strict=True), work)
+    forte = Path(args.forte).resolve(strict=True)
+    bench = Bench(forte, work)
+    second = Bench(forte, work, STOPPERING) if "changeover" in scenarios else None
+    both = {FILLING: (module, components), STOPPERING: delivered(STOPPERING)} if second else {}
     try:
-        for scenario in args.only or SCENARIOS:
+        for scenario in scenarios:
             runs = []
             for i in range(args.runs):
-                runs.append(plug(bench, module, components) if scenario == "plug" else change(bench, scenario, module, components))
+                if scenario == "plug":
+                    runs.append(plug(bench, module, components))
+                elif scenario == "changeover":
+                    runs.append(changeover(bench, second, both))
+                else:
+                    runs.append(change(bench, scenario, module, components))
                 print(f"{scenario} {i + 1}/{args.runs}: {runs[-1]}", flush=True)
             results["scenarios"][scenario] = runs
     finally:
         bench.close()
+        if second is not None:
+            second.close()
     (out / f"{when}.json").write_text(json.dumps(results, indent=1), encoding="utf-8")
     summary = table(results)
     (out / f"{when}.md").write_text(f"# Scenarios of {when}, {args.runs} runs each, medians\n\n{summary}\n", encoding="utf-8")

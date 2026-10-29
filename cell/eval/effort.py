@@ -72,11 +72,11 @@ def in_editor(spec, name: str) -> dict:
 
 def main() -> int:
     module, components = scenarios.delivered()
-    written = scenarios.with_written(module)
+    written = scenarios.with_written(module, components)
     volume, results_asked = 15.0, ("FillWeight",)
     planned = compose(module, components, "Filling", {"FillVolume": volume}, results_asked, name="PlannedFilling").module
     cases = [("Dispensing (the module's own)", described(module, components), "Dispensing", None),
-             ("DoubleDose (written in the editor)", described(written, components), "DoubleDose", None),
+             (f"{scenarios.WRITTEN} (written in the editor)", described(written, components), scenarios.WRITTEN, None),
              (f"PlannedFilling, {volume:g} mL (planned)", described(planned, components), "PlannedFilling",
               1 + 1 + len(results_asked))]
     lines = ["# Engineering effort of a module level skill, user actions",
