@@ -27,6 +27,9 @@ HTTP (JSON):
     POST   /plan/<shell>        plan a skill: {"capability": "Filling", "values": {"FillVolume": 2.0},
                                 "results": ["FillWeight"], "name": "FillTwo", "write": true}; the steps
                                 and the flow, and with write the skill described on the AAS server
+    POST   /process/<product>   the product's process AAS on its line, from the bindings the planner
+                                saved in its recipe, written to the AAS server with the plan check's
+                                result as its Validation; the body may hold {"line": ..., "status": ...}
     GET    /build/<idShort>     the record of what was built on a module (a Control Configuration
     PUT    /build/<idShort>     submodel, kept here and not in the AAS: ARSO 0.10); modsync writes it
     GET    /health
@@ -282,6 +285,41 @@ class Registry:
             raise Refused(422, "plan", [str(e)]) from e
         return found
 
+    def process(self, shell: str, request: dict) -> dict:
+        """The process AAS of a product on its line (``modreg.process``), from the bindings the planner
+        saved in the product's recipe, written to the AAS server; its Validation is the plan check's.
+        The line is the one that holds every module the recipe is bound to, or ``request["line"]``."""
+        from modsync.sources import environments
+        from .process import SYSTEM, NotBound, line_for, process_of
+        if self.server is None:
+            raise Refused(400, "process", ["the service has no AAS server (--basyx) to read the product from"])
+        try:
+            envs = environments(self.server.url)
+        except (OSError, ValueError) as e:
+            raise Refused(502, "process", [f"the AAS server was not read: {e}"]) from e
+        named = lambda env, name: name in (env["assetAdministrationShells"][0]["id"], env["assetAdministrationShells"][0]["idShort"])  # noqa: E731
+        product = next((env for env in envs if named(env, shell)), None)
+        if product is None:
+            raise Refused(404, "process", [f"the AAS server holds no {shell}"])
+        resources = {env["assetAdministrationShells"][0]["idShort"]: env for env in envs if env is not product}
+        lines = [env for env in envs if env["assetAdministrationShells"][0]["assetInformation"].get("assetType") == SYSTEM]
+        if request.get("line"):
+            lines = [env for env in lines if named(env, request["line"])]
+        try:
+            env = process_of(product, line_for(product, lines, resources), resources, request.get("status") or "Draft")
+        except NotBound as e:
+            raise Refused(422, "process", [str(e)]) from e
+        try:
+            published = self.server.publish(env)
+        except RuntimeError as e:
+            raise Refused(502, "publish", [str(e)]) from e
+        held = env["assetAdministrationShells"][0]
+        validation = next(sm for sm in env["submodels"] if sm["idShort"] == "Validation")
+        result = next(e["value"] for e in validation["submodelElements"] if e["idShort"] == "Result")
+        findings = [f["value"] for e in validation["submodelElements"] if e["idShort"] == "Findings" for f in e.get("value") or []]
+        return {"product": shell, "process": held["id"], "idShort": held["idShort"], "result": result, "findings": findings,
+                "published": published}
+
     def keep_build(self, id_short: str, record: dict) -> None:
         """Keep the record of what was built on a module (``modsync``'s record)."""
         if not isinstance(record, dict) or record.get("modelType") != "Submodel":
@@ -344,6 +382,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self.answer(200, self.registry.check_skills(urllib.parse.unquote(parts[1]), given.get("skill")))
             if method == "POST" and parts[:1] == ["plan"] and len(parts) == 2:
                 return self.answer(200, self.registry.plan(urllib.parse.unquote(parts[1]), self.body()))
+            if method == "POST" and parts[:1] == ["process"] and len(parts) == 2:
+                given = self.body() if int(self.headers.get("Content-Length") or 0) else {}
+                return self.answer(200, self.registry.process(urllib.parse.unquote(parts[1]), given))
             if parts[:1] == ["build"] and len(parts) == 2:
                 if method == "GET":
                     found = self.registry.read(parts[1], "build")

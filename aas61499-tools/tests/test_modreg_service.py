@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import gzip
 from pathlib import Path
+import sys
 import threading
 import urllib.error
 import urllib.parse
@@ -304,3 +305,28 @@ def test_the_skill_editor_has_a_flow_checked_and_a_skill_planned(service, aas_se
     assert answer["skills"] == {"Dispensing": [], "FillTwo": []}
     assert post(f"{url}/plan/FillingModuleAAS", {"capability": "Filling", "values": {"FillVolume": 2.0},
                                                  "results": ["Nothing"]})[0] == 422
+
+
+def test_the_planner_has_the_process_aas_of_a_product_written(service, aas_server):
+    """F6: after the planner saves a product's recipe with its bindings, the service writes the
+    product's process AAS on the line that holds the bound modules, its Validation the plan check's."""
+    from test_modreg_process import BOUND, ROOT as HERE, planned
+    sys.path.insert(0, str(HERE / "cell" / "examples"))
+    try:
+        import example_line
+        resources, products = example_line.build()
+        system = example_line.line(resources)
+    finally:
+        sys.path.remove(str(HERE / "cell" / "examples"))
+    url, registry = service
+    for env in [system, *resources.values(), planned(products["Vial2mLAAS"], BOUND)]:
+        registry.server.publish(env)
+    status, answer = post(f"{url}/process/Vial2mLAAS")
+    assert status == 200, answer
+    assert answer["idShort"] == "Vial2mLOnFillingLineAAS" and answer["result"] == "Fits" and answer["findings"] == []
+    held = aas_server.items[("shells", b64(answer["process"]))]
+    assert held["idShort"] == "Vial2mLOnFillingLineAAS"
+    # A product whose recipe is bound to nothing yet has no process AAS.
+    registry.server.publish(products["Cartridge3mLAAS"])
+    status, answer = post(f"{url}/process/Cartridge3mLAAS")
+    assert status == 422 and "no step" in answer["reasons"][0]
