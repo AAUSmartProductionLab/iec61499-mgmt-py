@@ -17,6 +17,8 @@ registration = [
     "aas-model @ https://github.com/MartinJensen37/aas-model/archive/ff7122aa549150187863e1cb194c7669a5d485cf.zip",
     "basyx-python-sdk>=2.1,<3",
     "rdflib>=7,<8",
+    # Discovery (modreg serve --discover): the modules' OPC UA servers announce themselves by mDNS.
+    "zeroconf>=0.132",
 ]
 # Planning new skills (modplan): GTPyhop and the vocabulary.
 planning = ["gtpyhop-core==2.0.2", "rdflib>=7,<8"]

@@ -21,3 +21,14 @@ services:
       - /sys/class/pwm:/hostsys/class/pwm
       - /sys/devices/platform:/hostsys/devices/platform
     stop_grace_period: 5s
+  manifest:
+    # What the module is delivered with: its profiles (modreg manifest), at
+    # http://<Pi>:8088/manifest.json, where the registration service fetches them once it has found
+    # FORTE's OPC UA server on the network (modreg serve --discover). deploy/pi.py module writes it.
+    image: busybox:1.36
+    container_name: manifest
+    restart: unless-stopped
+    network_mode: host
+    command: ["httpd", "-f", "-p", "8088", "-h", "/www"]
+    volumes:
+      - ./manifest:/www:ro

@@ -432,6 +432,35 @@ Learned:
 - **Offering every split of a volume** (up to ten doses) gave Aries many sums and odd doses (6.43 and
   8.57 mL, 8 s); offering only the fewest equal doses, as GTPyhop takes, gave 2 x 7.5 mL in 70 ms.
 
+## Discovery: FORTE announces itself, the service registers the module (29 and 30 Oct)
+
+- **FORTE with LDS-ME**: `FORTE_COM_OPC_UA_MULTICAST` in both configurations, open62541 from our own
+  recipe `runtime/fbe/dependencies/recipes/open62541@1.5` (the FBE's with mdnsd at the commit
+  open62541 v1.5.4 pins). The server announces `forte_<OPC UA port>-<host>` as `_opcua-tcp._tcp`.
+- **`modreg serve --discover`** (`modreg/discovery.py`): browses mDNS, connects to each server, takes
+  the objects laid out as a module (Occupation and Module) as its modules, fetches
+  `http://<host>:8088/manifest.json` (`modreg manifest`; on a Pi the container `manifest`, written by
+  `deploy/pi.py module`) and registers its profiles. The planar controller (its namespace) is
+  described from what it shows. `GET /discovered` lists what was found.
+
+Learned:
+
+- **The FBE's mDNS FIXME** has two causes: GitHub's release archive of open62541 has no `deps/mdnsd`
+  (a git submodule), and the FBE's `add_source` renames the unpacked folder onto an empty one, which
+  Windows refuses ("Access is denied"). mdnsd also calls `inet_pton`, which the Windows target
+  (`_WIN32_WINNT=0x0501`) does not declare: the recipe's shim maps it to its `InetPton`.
+- **A recipe of our own wins over the FBE's** only when the build's copy of the recipes is fresh: the
+  FBE copies them into `build/<config>/etc/cget/recipes` once and keeps an unversioned `open62541`
+  there; delete both (and `cget/pkg/open62541`) after changing the recipe.
+- **A PC announces an address on every network** (WSL, VPN, link-local): discovery tries each, the
+  link-local ones last. An announcement also comes several times; a server being registered is not
+  registered again.
+- **A script that starts the simulator** (`module_sim.separate`, a spawned process) needs
+  `if __name__ == "__main__":`, or the child runs the script again and the simulator never starts.
+- **Flaky live tests** (30 Oct, with the new FORTE; each passed when run again): the DMP's skill test
+  (the local DMP container reports itself unhealthy), and the stoppering abort, where the simulator
+  once counted the piston's Extend and Retract on at the same time (`shoot_through`).
+
 ## Locations and the planar table (28 Oct)
 
 The design is [locations-and-layout.md](locations-and-layout.md); H1 to H4 of [next-steps.md](next-steps.md).

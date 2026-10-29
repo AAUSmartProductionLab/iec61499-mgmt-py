@@ -30,6 +30,8 @@ HTTP (JSON):
     POST   /process/<product>   the product's process AAS on its line, from the bindings the planner
                                 saved in its recipe, written to the AAS server with the plan check's
                                 result as its Validation; the body may hold {"line": ..., "status": ...}
+    GET    /discovered          the OPC UA servers found on the network and what was registered from
+                                them (modreg serve --discover; modreg.discovery)
     GET    /build/<idShort>     the record of what was built on a module (a Control Configuration
     PUT    /build/<idShort>     submodel, kept here and not in the AAS: ARSO 0.10); modsync writes it
     GET    /health
@@ -375,6 +377,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self.answer(200, {"status": "ok", "types": list(model.TYPES), "strict": r.strict,
                                          "ontology": str(r.blueprint.folder) if r.blueprint else None,
                                          "aas_server": r.server.url if r.server else None})
+            if method == "GET" and parts == ["discovered"]:
+                found = getattr(self, "discovery", None)
+                return self.answer(200, found.listing()) if found else self.answer(404, {"error": "not discovering (serve --discover)"})
             if method == "POST" and parts[:1] == ["capabilities"] and len(parts) == 2:
                 return self.answer(200, self.registry.derive(urllib.parse.unquote(parts[1])))
             if method == "POST" and parts[:1] == ["check"] and len(parts) == 2:
@@ -435,9 +440,10 @@ class Handler(BaseHTTPRequestHandler):
         print(f"{self.address_string()} {format % args}", flush=True)
 
 
-def serve(registry: Registry, host: str = "0.0.0.0", port: int = 8090) -> ThreadingHTTPServer:
-    """The HTTP server of a registry; ``serve_forever`` runs it."""
-    handler = type("RegistryHandler", (Handler,), {"registry": registry})
+def serve(registry: Registry, host: str = "0.0.0.0", port: int = 8090, discovery=None) -> ThreadingHTTPServer:
+    """The HTTP server of a registry (and of a ``modreg.discovery.Discovery`` that registers with it);
+    ``serve_forever`` runs it."""
+    handler = type("RegistryHandler", (Handler,), {"registry": registry, "discovery": discovery})
     return ThreadingHTTPServer((host, port), handler)
 
 

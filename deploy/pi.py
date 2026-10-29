@@ -32,6 +32,7 @@ resistor: GPIO17 (pin 11) -> 330 ohm -> LED anode, LED cathode -> GND (pin 9).
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 import socket
@@ -180,6 +181,22 @@ def module(args):
         return
     run(args, commands)
     print(f"{spec.module} ({args.target}) runs on {args.host}: OPC UA opc.tcp://{args.host}:4840{spec.opcua_root}")
+    manifest(args, spec)
+
+
+def manifest(args, spec):
+    """The module's manifest (its profiles, modreg manifest) to ~/forte/manifest, served on port 8088
+    for the registration service's discovery (modreg serve --discover)."""
+    try:
+        from modreg import profile as profiles
+    except ImportError as e:
+        print(f"no manifest written (modreg needs the registration extra: {e})")
+        return
+    found = {"module": spec.opcua_root.rstrip("/").rsplit("/", 1)[-1],
+             "profiles": profiles.describe_all(spec, args.target)}
+    ssh(args, "mkdir -p ~/forte/manifest && cat > ~/forte/manifest/manifest.json", stdin=json.dumps(found))
+    compose(args, "up -d manifest")
+    print(f"manifest: http://{args.host}:8088/manifest.json")
 
 
 def log(args):
