@@ -188,10 +188,11 @@ def test_a_skill_of_the_aas_runs_on_the_module_and_its_values_reach_the_database
         until(lambda: _check(latest("FillingModuleAAS", "state_module", started), PackMLState=STATES["Execute"], OccupationState=1))
         def done():
             found = _check(latest("FillingModuleAAS", "state_dispensing", started), Dispensing_Parameter_Volume=1.5)
+            # Each value is a monitored item of its own, each change a row: the result may come a row later.
             assert found["Dispensing_State"] in (SKILL_STATES["Succeeded"], SKILL_STATES["Idle"]), found
+            assert found["Dispensing_Result_Weight"] > 0 and found["Dispensing_ErrorID"] == 0, found
             return found
-        run = until(done)
-        assert run["Dispensing_Result_Weight"] > 0 and run["Dispensing_ErrorID"] == 0
+        until(done)
 
         # Every call is logged, the refused one as well: the last is the accepted one, with its volume.
         call = until(lambda: _check(latest("FillingModuleAAS", "log_dispensing_start", started), **{
