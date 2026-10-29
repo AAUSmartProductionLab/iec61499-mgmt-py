@@ -39,10 +39,16 @@ in IEC 61499, wrapped in skills (Leitão et al. 2023; [agents-literature.md](age
    (`<idShort>@<domain>`, registering its XMPP account on first start). When the AAS changes (a skill
    built), the agent gets the new AAS; when the module's AAS goes, the agent stops.
 
-Today the manager reads the AAS server every few seconds. **Planned:** the AAS repository's events
-instead (BaSyx publishes `aas-repository/<repoId>/shells/created`, `.../updated`, `.../deleted` over
-MQTT; Mosquitto is in the stack and the DMP already listens to the submodel events), so an agent
-starts the moment the AAS is published.
+**Built 30 Oct:** with `--mqtt` the manager listens to the AAS server's events (BaSyx publishes
+`aas-repository/<repo>/shells/created`, `.../updated`, `.../deleted` and the submodels' events over
+MQTT, to the stack's Mosquitto) and reads the server as soon as one comes (after a second, so that the
+shell's submodels are there too); it still reads the server every `--every` seconds in case an event
+was missed. `test_events.py`: an agent starts within seconds of its module's AAS being published and
+stops when it is deleted. In the lab stack:
+
+```powershell
+python -m lineagents --aas http://localhost:8081 --mqtt localhost:1883     # XMPP: Prosody (lab-xmpp)
+```
 
 ## 3. How an agent talks to its module
 

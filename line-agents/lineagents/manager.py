@@ -5,8 +5,10 @@ The AAS server is where a module becomes known: the registration service publish
 when the module is registered (by hand, or found by discovery: ``modreg serve --discover``). The
 manager reads the server's shells every ``every`` seconds; for a module's AAS that is new it starts a
 resource agent (``<idShort in lower case>@<domain>``), for one that is gone it stops it, and for one
-whose AAS changed (a skill built, a value changed) it gives the agent the new AAS. It also answers who
-the resource agents are, so a product agent knows whom to call.
+whose AAS changed (a skill built, a value changed) it gives the agent the new AAS. With ``mqtt`` (the
+broker the AAS server publishes its events to) it reads the server as soon as a shell or submodel is
+created, changed or deleted, and every ``every`` seconds anyway. It also answers who the resource
+agents are, so a product agent knows whom to call.
 
     manager = Manager("http://localhost:8081", domain="localhost", executor="opcua")
     await manager.start()                    # watches until stopped
@@ -62,10 +64,12 @@ def digest(env: dict) -> str:
 
 class Manager:
     def __init__(self, server: str, domain: str = "localhost", port: int = 5222, executor: str = "opcua",
-                 every: float = 5.0, reconfigure: bool = True):
+                 every: float = 5.0, reconfigure: bool = True, mqtt: str | None = None):
         self.server, self.domain, self.port = AasServer(server), domain, port
         self.executor_for = executor_kind(executor)
-        self.every, self.reconfigure = every, reconfigure
+        self.every, self.reconfigure, self.mqtt = every, reconfigure, mqtt
+        self._poke: asyncio.Event | None = None
+        self._events = None
         self.agents: dict[str, ResourceAgent] = {}       # by the module's AAS id
         self.seen: dict[str, str] = {}                    # by AAS id: the digest of the AAS last read
         self.orders: list[ProductAgent] = []
@@ -79,19 +83,45 @@ class Manager:
         return [str(a.jid) for a in self.agents.values()]
 
     async def start(self) -> None:
+        self._poke = asyncio.Event()
         await self.sync()
+        if self.mqtt:
+            self._events = self._listen(self.mqtt, asyncio.get_running_loop())
         self._task = asyncio.get_running_loop().create_task(self._watch())
+
+    def _listen(self, broker: str, loop):
+        """The AAS server's events over MQTT (BaSyx: aas-repository/<repo>/shells/created, updated,
+        deleted; the submodels' likewise): each pokes the manager to read the server again."""
+        import paho.mqtt.client as mqtt
+        host, _, port = broker.partition(":")
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=f"lineagents-{os.getpid()}")
+        client.on_connect = lambda c, *a: c.subscribe([("aas-repository/+/shells/+", 0), ("sm-repository/+/submodels/+", 0),
+                                                       ("aas-repository/+/shells/+/submodels/+", 0)])
+        client.on_message = lambda c, u, message: loop.call_soon_threadsafe(self._poke.set)
+        client.connect(host, int(port or 1883))
+        client.loop_start()
+        return client
 
     async def stop(self) -> None:
         if self._task is not None:
             self._task.cancel()
+        if self._events is not None:
+            self._events.loop_stop()
+            self._events.disconnect()
         for agent in [*self.orders, *self.agents.values()]:
             await agent.stop()
         self.agents.clear()
 
     async def _watch(self) -> None:
+        """Read the server again when it says something changed (a short pause, so that the shell's
+        submodels are there too), and every ``every`` seconds anyway."""
         while True:
-            await asyncio.sleep(self.every)
+            try:
+                await asyncio.wait_for(self._poke.wait(), self.every)
+                await asyncio.sleep(1.0)
+            except asyncio.TimeoutError:
+                pass
+            self._poke.clear()
             try:
                 await self.sync()
             except OSError as e:                        # the AAS server is away for a moment
