@@ -1,0 +1,10 @@
+{
+  "hediet.vscode-drawio.customLibraries": [
+    { "entryId": "iso-line", "libName": "Isometric · the line", "file": "${workspaceFolder}/docs/figures/library/iso-line.xml" },
+    { "entryId": "iso-parts", "libName": "Isometric · parts", "file": "${workspaceFolder}/docs/figures/library/iso-parts.xml" },
+    { "entryId": "iso-computers", "libName": "Isometric · computers and software", "file": "${workspaceFolder}/docs/figures/library/iso-computers.xml" },
+    { "entryId": "iso-aas", "libName": "Isometric · AAS", "file": "${workspaceFolder}/docs/figures/library/iso-aas.xml" },
+    { "entryId": "iso-planes", "libName": "Isometric · planes and sketches", "file": "${workspaceFolder}/docs/figures/library/iso-planes.xml" },
+    { "entryId": "flat", "libName": "Flat · AAS, agents, icons", "file": "${workspaceFolder}/docs/figures/library/flat.xml" }
+  ]
+}
