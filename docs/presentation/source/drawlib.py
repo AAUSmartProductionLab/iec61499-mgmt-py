@@ -236,6 +236,53 @@ def iso_shell(label="", W=130, H=110, D=30, fill=AAS):
     return style, w, h, (tx - x0, ty - y0)
 
 
+def iso_shell_flat(label="", W=130, H=110, T=10, fill=AAS):
+    """The AAS shell lying flat on an isometric plane, T thick, its band at the back, its legs towards the
+    viewer, the name on the band's top. Returns (style, width, height, centre): centre is where the middle
+    of the shell's top face is in the image."""
+    import math
+    s = H / SHELL_H
+    w0, band, leg, R, r, f = SHELL_W, BAND, LEG, 10, 8, 5
+    def arc(cx, cy, rad, a0, a1, n=6):
+        return [(cx + rad * math.cos(math.radians(a0 + (a1 - a0) * i / n)),
+                 cy + rad * math.sin(math.radians(a0 + (a1 - a0) * i / n))) for i in range(n + 1)]
+    pts = (arc(R, R, R, 180, 270) + arc(w0 - R, R, R, 270, 360) + arc(w0 - f, SHELL_H - f, f, 0, 90)
+           + arc(w0 - leg + f, SHELL_H - f, f, 90, 180) + arc(w0 - leg - r, band + r, r, 0, -90)
+           + arc(leg + r, band + r, r, 270, 180) + arc(leg - f, SHELL_H - f, f, 0, 90)
+           + arc(f, SHELL_H - f, f, 90, 180))
+    prof = [(px * W / w0, py * s) for px, py in pts]     # (x along the plane, y across it, towards the viewer)
+    proj = lambda x, y, z: (0.866 * (x - y), 0.5 * (x + y) - z)
+    top = [proj(x, y, T) for x, y in prof]
+    bottom = [proj(x, y, 0) for x, y in prof]
+    sides = []
+    n = len(prof)
+    for i in range(n):
+        (x1, y1), (x2, y2) = prof[i], prof[(i + 1) % n]
+        if (y2 - y1) - (x2 - x1) <= 1e-9:                # the outward normal (dy, -dx) faces away
+            continue
+        quad = [bottom[i], bottom[(i + 1) % n], top[(i + 1) % n], top[i]]
+        sides.append(((x1 + x2 + y1 + y2) / 2, quad))
+    xs = [p[0] for p in top + bottom]
+    ys = [p[1] for p in top + bottom]
+    x0, y0 = min(xs) - 2, min(ys) - 2
+    w, h = max(xs) - x0 + 2, max(ys) - y0 + 2
+    poly = lambda q, c: (f'<polygon points="{" ".join(f"{x - x0:.1f},{y - y0:.1f}" for x, y in q)}" fill="{c}" '
+                         f'stroke="{c}" stroke-width="0.6" stroke-linejoin="round"/>')
+    body = [poly(q, "#1F6F6A") for _, q in sorted(sides)] + [poly(top, fill)]
+    if label:
+        bx, by = proj(W / 2, band * s / 2, T)
+        size = band * s * 0.5
+        body.append(f'<text transform="matrix(0.866,0.5,-0.866,0.5,{bx - x0:.1f},{by - y0:.1f})" '
+                    f'text-anchor="middle" dominant-baseline="central" font-family="Arial" font-weight="bold" '
+                    f'font-size="{size:.1f}" fill="#FFFFFF">{label}</text>')
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w:.1f}" height="{h:.1f}" '
+           f'viewBox="0 0 {w:.1f} {h:.1f}">' + "".join(body) + '</svg>')
+    cx, cy = proj(W / 2, H / 2, T)
+    style = ("shape=image;aspect=fixed;imageAspect=0;image=data:image/svg+xml,"
+             + base64.b64encode(svg.encode()).decode() + ";")
+    return style, w, h, (cx - x0, cy - y0)
+
+
 def sm_bar(node, x, y, w, h, label, size=18, fill=SM_BAR, dashed=False):
     rect(node, x, y, w, h, fill, "none" if not dashed else GREY, 1.5, 14, "dashed=1;" if dashed else "",
          label, size, "#FFFFFF", True)

@@ -18,6 +18,15 @@ A running log of design considerations made while building, for writing the pape
 
 ## 29 Oct 2026
 
+- **The figures' shapes as a draw.io shape pack.** *Journal* (figures, and anyone drawing the lab).
+  - What: six draw.io libraries in `docs/figures/library` (the line, parts, computers and software, AAS,
+    planes and sketches, flat), 125 shapes taken by cell id from the pages they were drawn on, each a
+    group with its shadow; the AAS shell as an isometric solid, standing or lying flat; a catalogue page
+    per library; registered for the VS Code draw.io extension in `.vscode/settings.json`.
+  - Why: new figures then reuse the same drawn things, at the same angles, instead of copying cells
+    out of old pages.
+  - Instead of: copying from the figure files by hand.
+
 - **In an isometric figure the AAS shell is an isometric solid.** *Journal* (figures).
   - What: the shell's outline, with the logo's rounded corners, extruded and drawn on the figure's own
     30° axes, shaded like the stations, its name on the band; it stands on the AAS plane, and the lines
