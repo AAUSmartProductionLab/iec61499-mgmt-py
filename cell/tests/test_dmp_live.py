@@ -1,20 +1,23 @@
-"""The filling module through the lab's AAS stack (deploy/aas): an Operation of its AAS, invoked at
+"""The modules through the lab's AAS stack (deploy/aas): an Operation of a module's AAS, invoked at
 the AAS environment, calls the module's OPC UA method through the DMP, and the module's values
-arrive in InfluxDB as the rows of the time series its Variables name.
+arrive in InfluxDB as the rows of the time series its Variables name. The filling module, built by
+the generator and run on FORTE, and a shuttle of the planar table (the planar controller, Python).
 
     python deploy/aas.py up
     python -m pytest cell/tests/test_dmp_live.py --module-forte-exe runtime/fbe/build/modules-win/output/bin/forte.exe
 
 The module runs simulated on this computer (FORTE and cell/sim/module_sim.py, as in
-test_module_live.py); the DMP, in its container, reaches it as host.docker.internal. Skipped
-without the stack. The AASs it publishes stay in the AAS environment afterwards.
+test_module_live.py), and so does the planar controller (its simulated driver); the DMP, in its
+container, reaches them as host.docker.internal. Skipped without the stack. The AASs it publishes stay in the AAS environment afterwards.
 """
+import asyncio
 from contextlib import contextmanager
 import base64
 import csv
 import json
 from pathlib import Path
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -33,6 +36,7 @@ from modgen import load, spec_file, system_file  # noqa: E402
 from modgen.library import SKILL_STATES, STATES  # noqa: E402
 from modgen.module import app_name  # noqa: E402
 from modreg import model, profile as profiles  # noqa: E402
+from modreg.planar import Table, describe_all as planar_profiles  # noqa: E402
 from modreg.service import AasServer, mapped_last  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -47,6 +51,7 @@ SECRETS = ROOT / "deploy" / "aas" / ".env"
 # The module's OPC UA port, the same in every run: a module that restarts keeps its address, the
 # DMP reconnects to it, and the same AASs published again leave its routes as they are.
 UA_PORT = 4841
+PLANAR_PORT = 4842
 
 
 def get(url: str, body: dict | None = None, headers: dict | None = None, timeout: float = 70):
@@ -96,7 +101,11 @@ def filling(request, tmp_path, ua_port):
 def published(spec, ua_port: int) -> dict[str, dict]:
     """The AASs of the module and its components, its interface at this computer as the DMP's
     container sees it, put into the AAS environment (created, or replaced)."""
-    envs = [model.build(p) for p in profiles.describe_all(spec, "pc", opcua=f"opc.tcp://host.docker.internal:{ua_port}")]
+    return publish([model.build(p) for p in profiles.describe_all(spec, "pc", opcua=f"opc.tcp://host.docker.internal:{ua_port}")])
+
+
+def publish(envs: list[dict]) -> dict[str, dict]:
+    """AASs put into the AAS environment, those with mappings last; by idShort."""
     server = AasServer(REPOSITORY)
     for env in mapped_last(envs):
         server.publish(env)
@@ -204,3 +213,75 @@ def test_a_skill_of_the_aas_runs_on_the_module_and_its_values_reach_the_database
 def _check(found: dict, **wanted) -> dict:
     assert {k: found.get(k) for k in wanted} == wanted, found
     return found
+
+
+@contextmanager
+def planar_controller():
+    """The planar controller on its simulated driver (a 4 x 3 table, shuttles 1 and 2), its OPC UA
+    server on PLANAR_PORT of every interface, served by a thread of its own."""
+    controller = ROOT / "planar-controller"
+    if not (controller / "planar").is_dir():
+        pytest.skip("the planar-controller submodule is needed")
+    sys.path.insert(0, str(controller))
+    from planar.layout import Layout
+    from planar.modules import PlanarController
+    from planar.opcua_server import OpcUaServer
+    from planar.sim_driver import SimDriver
+    sim = SimDriver(Layout(cols=4, rows=3, holes=frozenset({(2, 1)})), {1: (0.06, 0.06, 0.0), 2: (0.90, 0.66, 0.0)})
+    ctl = PlanarController(sim, [1, 2])
+    ctl.coordinator.on_tick.insert(0, lambda: sim.advance(time.monotonic()))
+    server, stop = OpcUaServer(ctl, f"opc.tcp://0.0.0.0:{PLANAR_PORT}/"), threading.Event()
+
+    async def serve():
+        await server.init()
+        ctl.start()
+        serving = asyncio.create_task(server.run())
+        while not stop.is_set():
+            await asyncio.sleep(0.2)
+        serving.cancel()
+        await asyncio.gather(serving, return_exceptions=True)
+
+    thread = threading.Thread(target=lambda: asyncio.run(serve()), daemon=True)
+    thread.start()
+    time.sleep(2.0)
+    try:
+        yield ctl
+    finally:
+        stop.set()
+        thread.join(10)
+        ctl.shutdown()
+        sys.path.remove(str(controller))
+
+
+def test_a_shuttle_of_the_planar_table_moves_through_its_aas(stack):
+    session, started = f"dmp-{uuid.uuid4()}", time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    with planar_controller():
+        envs = publish([model.build(p) for p in planar_profiles(
+            Table(4, 3, (1, 2), frozenset({(2, 1)}), f"opc.tcp://host.docker.internal:{PLANAR_PORT}/"))])
+        for env in envs.values():
+            installed(env)
+        table, shuttle = envs["PlanarTableAAS"], envs["PlanarShuttle1AAS"]
+        until(lambda: _check(latest("PlanarTableAAS", "state_module", started), PackMLState=STATES["Stopped"]), timeout=60)
+
+        # The table to Execute, the shuttles with it; then a move, all through the AAS.
+        assert invoke(table, "Occupy.Start.Start", Session=session) == {"Accepted": "true", "ErrorID": "0"}
+        assert invoke(table, "Reset.Start.Start", Session=session)["Accepted"] == "true"
+        until(lambda: _check(latest("PlanarTableAAS", "state_module", started), PackMLState=STATES["Idle"]), timeout=30)
+        assert invoke(table, "Start.Start.Start", Session=session)["Accepted"] == "true"
+        until(lambda: _check(latest("PlanarShuttle1AAS", "state_module", started), PackMLState=STATES["Execute"]), timeout=30)
+        assert invoke(shuttle, "Occupy.Start.Start", Session=session) == {"Accepted": "true", "ErrorID": "0"}
+        assert invoke(shuttle, "MoveToPosition.Start.Start", Session=session, X=780.0, Y=660.0, Rz=90.0) == {
+            "Accepted": "true", "ErrorID": "0"}
+
+        # The move's run and the xbot's pose are rows; the call is logged.
+        def moved():
+            found = _check(latest("PlanarShuttle1AAS", "state_movetoposition", started), MoveToPosition_Result_X=780.0,
+                           MoveToPosition_Result_Y=660.0)
+            assert found["MoveToPosition_State"] in (SKILL_STATES["Succeeded"], SKILL_STATES["Idle"]), found
+            return found
+        until(moved, timeout=60)
+        until(lambda: _check(latest("PlanarShuttle1AAS", "measurements_xbot", started), Xbot_X=780.0, Xbot_Y=660.0))
+        until(lambda: _check(latest("PlanarShuttle1AAS", "log_movetoposition_start", started), **{
+            "Outcome": "Succeeded", "Operation.X": 780.0, "Operation.Accepted": "true"}))
+        invoke(shuttle, "Release.Start.Start", Session=session)
+        invoke(table, "Release.Start.Start", Session=session)
