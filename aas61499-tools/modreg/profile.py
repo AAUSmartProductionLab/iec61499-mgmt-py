@@ -68,8 +68,8 @@ from aas_model.submodel_templates.coordinates import (
     CoordinateRelativeTo, CoordinateSource, Coordinates, CoordinatePitch, CoordinateRoll, CoordinateX, CoordinateY,
     CoordinateYaw, CoordinateZ, RelativeCoordinate,
 )
-from aas_model.submodel_templates.time_series import record_field, time_series
-from aas_model.submodel_templates.variables import MeasurementsGroup, StateGroup
+from aas_model.submodel_templates.time_series import operation_log, record_field, time_series
+from aas_model.submodel_templates.variables import LogGroup, MeasurementsGroup, StateGroup
 from .lab import nameplate
 from .model import Component, Module
 
@@ -748,6 +748,12 @@ class Describer:
             asset.variables.State = StateGroup(value=made["State"])
         if made.get("Measurements"):
             asset.variables.Measurements = MeasurementsGroup(value=made["Measurements"])
+        # Every call of a command is logged: how it ended, how long it took, and the variables of its
+        # Operation (referenced, so they follow its definition: the session, the parameters, the answer).
+        if self.operations:
+            asset.variables.Log = LogGroup(value={
+                action: operation_log(at, name=f"{action} calls", measurement=f"log_{action}".lower())
+                for action, (at, _) in self.operations.items()})
 
     def series(self) -> dict[str, dict[str, dict[str, tuple[str, str, str]]]]:
         """The values described so far by group and series (``series_of``): name -> (interface
@@ -786,12 +792,19 @@ class Describer:
                                 f"function aimc_main(sources)\n    local op = sources.{action}\n    return {{\n"
                                 f"        {action} = {{\n{fields}\n        }},\n    }}\nend\n"),
                 # The method's answer is the Operation's: whether the command was accepted, and why not.
+                # The call is logged as well, also one that failed (then only its log row is written).
                 response_sources=[response_source("Reply", affordance("actions", action, "output"))],
-                response_transformation=(f"-- {action}: the method's answer is the Operation's\n"
-                                         f"function aimc_main(sources)\n    local reply = sources.Reply\n    return {{\n"
-                                         f"        {action} = {{ Accepted = reply.{argument(1, True)}, "
-                                         f"ErrorID = reply.{argument(2, True)} }},\n    }}\nend\n"),
-                response_sinks=[response_sink(action, at)]))
+                response_transformation=(
+                    f"-- {action}: the method's answer is the Operation's; the call is logged\n"
+                    f"function aimc_main(sources, requestSources)\n"
+                    f"    local reply, call = sources.Reply or {{}}, requestSources.{action} or {{}}\n"
+                    f"    local answer = {{ Accepted = reply.{argument(1, True)}, ErrorID = reply.{argument(2, True)} }}\n"
+                    f"    local log = {{ Outcome = meta.invocation.outcome, DurationMs = meta.invocation.durationMs, Operation = {{\n"
+                    + "".join(f"        {a} = call.{a},\n" for a in arguments)
+                    + "        Accepted = answer.Accepted, ErrorID = answer.ErrorID } }\n"
+                    "    if meta.invocation.outcome ~= \"Succeeded\" then return { Log = log } end\n"
+                    f"    return {{ {action} = answer, Log = log }}\nend\n"),
+                response_sinks=[response_sink(action, at), response_sink("Log", series_segment_ref("Log", action))]))
         return Aimc(id_short="AssetInterfacesMappingConfiguration",
                     MappingConfigurations=AimcMappingConfigurations(value=mappings))
 

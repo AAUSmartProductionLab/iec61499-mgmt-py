@@ -107,9 +107,10 @@ def variables(operation: dict, kind: str) -> list[str]:
 
 def fields(env: dict) -> dict[str, dict]:
     """The values a module publishes, by name: the fields of the records of the time series in its
-    Variables (no value is kept in the AAS itself), with the series each is in as ``series``."""
+    Variables (no value is kept in the AAS itself), with the series each is in as ``series``. Not the
+    Log: it holds the calls of the commands."""
     found = {}
-    for group in children(submodel(env, "Variables")):
+    for group in [g for g in children(submodel(env, "Variables")) if g["idShort"] != "Log"]:
         for series in [c for c in children(group) if c["idShort"] != "Coordinates"]:
             for field in children(at(series, "Metadata", "Record")):
                 if field["idShort"] != "Time":
@@ -536,8 +537,13 @@ def test_the_aimc_maps_every_action_and_property_onto_an_element(stoppering_all)
             [reply] = children(at(config, "ResponseSources"))
             assert at(reply, "Source")["value"]["keys"][:-1] == action[:-1]
             assert at(reply, "Source")["value"]["keys"][-1]["value"] == "output"
-            [answered] = children(at(config, "ResponseSinks"))
+            answered, logged = children(at(config, "ResponseSinks"))
             assert resolve(envs, at(answered, "Sink")["value"]) is found_source
+            # Every call is logged: a series in Variables/Log whose record refers to the Operation.
+            keys = at(logged, "Sink")["value"]["keys"]
+            assert [k["value"] for k in keys[1:]] == ["Log", action[-2]["value"], "Segments", "Live"]
+            log = resolve(envs, {"type": "ModelReference", "keys": keys[:-2]})
+            assert resolve(envs, at(log, "Metadata", "Record", "Operation")["value"]) is found_source
             # BaSyx delegates the Operation to the DMP, at the path the AAS API invokes it at.
             [delegation] = [q["value"] for q in found_source["qualifiers"] if q["type"] == "invocationDelegation"]
             assert delegation.startswith("http://dmp:8080/submodels/") and delegation.endswith("/invoke")
@@ -564,7 +570,7 @@ def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
     data = submodel(stoppering_aas, "Variables")
     assert data["semanticId"]["keys"][0]["value"] == f"{BASE}/submodels/Variables/1/0"
     # No value is kept in the AAS: each is a field of a time series, its rows in the database.
-    assert names(data) == ["State", "Measurements"]
+    assert names(data) == ["State", "Measurements", "Log"]
     points = fields(stoppering_aas)
     inputs = [f"{item}_{s}" for item, eq in spec.equipment.items() for s in eq.inputs]
     assert {"PackMLState", "OccupationState", *inputs} <= set(points)

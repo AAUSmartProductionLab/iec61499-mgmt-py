@@ -16,6 +16,21 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 29 Oct 2026
+
+- **Every call of a module's command is logged, as a time series in `Variables/Log`.** *Journal.*
+  - What: per command an Operation invokes (`Dispensing_Start`, `Occupy`, ...), a series
+    `Log/<action>` (aas-model's `operation_log`): how the call ended (`Outcome`), how long it took
+    (`DurationMs`), and the Operation itself, referenced, so its variables are fields (the session,
+    the parameters, Accepted and ErrorID). The DMP writes the row from the bridge mapping's response
+    half, also for a call that failed (then the log row only).
+  - Why: who called which skill with what, and what the module answered, was in no record; the
+    module's own state series show what it did, not who asked. With the session in the row, a
+    module's history can be read per client (an agent, the HMI, the planner).
+  - A reference, not copies of the variables: the record follows the Operation when its parameters
+    change, as aas-model's stations do. Instead of: one log per skill with a command field (a
+    record refers to one Operation), or a log in FORTE (it has no clock or storage to keep it in).
+
 ## 28 Oct 2026
 
 - **A module's AAS is what the DMP (aas-camel-dmp) runs: a skill's Operation calls the module's
