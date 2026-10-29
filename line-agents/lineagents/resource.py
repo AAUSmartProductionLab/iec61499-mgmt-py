@@ -24,7 +24,7 @@ from . import i40
 from .aas import AasServer, Offer, offer
 from .execute import Executor, Failed, reconfigure
 
-ROLE = "ResourceAgent"
+ROLE = i40.PROVIDER
 
 
 class ResourceAgent(Agent):
@@ -60,7 +60,10 @@ class Bidding(CyclicBehaviour):
         agent: ResourceAgent = self.agent
         if i40.expired(call):
             return
-        found = offer(agent.module, call.elements[0]) if call.elements else ["no required capability given"]
+        if not call.elements:
+            await self.send(call.answer(i40.NOT_UNDERSTOOD, [], ROLE).to_spade())
+            return
+        found = offer(agent.module, call.elements[0])
         if agent.busy and isinstance(found, Offer):
             found = [f"{agent.name} is carrying out another step"]
         if isinstance(found, Offer):

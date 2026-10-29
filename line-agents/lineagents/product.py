@@ -23,7 +23,7 @@ from spade.behaviour import OneShotBehaviour
 from . import i40
 from .aas import Offer, Step, steps
 
-ROLE = "ProductAgent"
+ROLE = i40.REQUESTER
 
 
 @dataclass
@@ -75,7 +75,7 @@ class Order(OneShotBehaviour):
         deadline = i40.reply_by(agent.answer_seconds)
         for resource in resources:
             call = i40.I40Message(i40.CALL, str(agent.jid), resource, conversation, [step.required],
-                                  ROLE, "ResourceAgent", reply_by=deadline)
+                                  ROLE, i40.PROVIDER, reply_by=deadline)
             await self.send(call.to_spade())
         proposals: list[tuple[i40.I40Message, Offer]] = []
         refusals = 0
@@ -85,7 +85,7 @@ class Order(OneShotBehaviour):
                 break
             if answer.type == i40.PROPOSAL and answer.elements:
                 proposals.append((answer, Offer.from_element(answer.elements[0])))
-            elif answer.type == i40.REFUSE:
+            elif answer.type in (i40.REFUSE, i40.NOT_UNDERSTOOD):
                 refusals += 1
         done = Done(step.name, proposals=len(proposals), refusals=refusals)
         if not proposals:

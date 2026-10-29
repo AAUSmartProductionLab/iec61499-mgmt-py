@@ -16,6 +16,28 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 30 Oct 2026
+
+- **The line's agents: SPADE on the server, VDI/VDE 2193 over XMPP, an agent per module started by a
+  manager that watches the AAS server.** *Journal*.
+  - What: `line-agents` (`lineagents`): a resource agent per module bids for one step at a time with
+    the module's offer (the offered capability of the required meaning whose properties cover the
+    product's values, the realizing skill, built or only described, the skill's arguments mapped by
+    meaning); on acceptance it creates a described skill first (modsync, recorded back on the AAS
+    server) and runs the skill over the module's OPC UA with modlink; a product agent per order walks
+    the Production Sequence; the manager starts, updates and stops resource agents to match the
+    module AASs on the AAS server. Messages are VDI/VDE 2193-1 frames as JSON in XMPP bodies;
+    Prosody in the lab stack.
+  - Why: the agent is the module's active part and the module stays an IEC 61499 program and an AAS;
+    the server location with a direct OPC UA client is IEEE 2660.1's recommended practice when the
+    device should not host agents, and it keeps the skills' state as it changes; the AAS registration
+    is the one place a module becomes known, so the agents follow it rather than a list of their own.
+    VDI/VDE 2193 is the I4.0 standard the AAS community implements (over MQTT and Kafka so far).
+  - Instead of: SMIA (closest system, but its own FIPA-ACL dialect, an OWL capability model instead of
+    IDTA 02020, OPC UA without method calls, copyleft and pinned to an older SPADE); agents on the Pis;
+    executing through the AAS and the DMP (kept as a second executor: slower, the state polled);
+    SPADE's own XMPP server for deployment (it lost registrations from other processes).
+
 ## 29 Oct 2026
 
 - **Modules are discovered: FORTE announces itself (LDS-ME), the service fetches the module's

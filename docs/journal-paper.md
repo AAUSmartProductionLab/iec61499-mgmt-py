@@ -72,6 +72,15 @@ All in [paper-references.bib](paper-references.bib):
   - Spitzer et al., ETFA 2020: an OPC UA skill interface for PLCs, atomic and composite skills.
   - Stolze et al., ETFA 2024: a proactive AAS through BPMN and the I4.0 language bidding.
 
+- **Agents** (survey of 30 Oct, [agents-literature.md](agents-literature.md), BibTeX in its section 8.2,
+  not yet in the bib file): SMIA (Hurtado et al., JII 2025, doi:10.1016/j.jii.2025.100915) as the
+  closest system; Lepuschitz et al. (TSMC-C 2011), Zoitl et al. (ETFA 2010), Vallée et al. (TII 2011) for
+  agents reconfiguring IEC 61499; Lyu and Brennan (2020, 2025) for SPADE with 4diac; Bernhard et al.
+  (2023) and Jungbluth et al. (2022, 2023) for AAS agents with VDI/VDE 2193 bidding and transport; IEEE
+  2660.1-2020 and Leitão et al. (OJIES 2023) for the agent-device interface; Smith (1980) for the
+  contract net. The contribution against them is in [agents.md](agents.md), section 9: an agent that
+  plans and creates a skill online to win a bid.
+
 ## Open questions for the journal paper
 
 - **Taring:** the plan tares after dispensing from an untared start
