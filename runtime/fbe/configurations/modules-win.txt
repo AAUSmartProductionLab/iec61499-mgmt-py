@@ -12,3 +12,6 @@ FORTE_CommunicationInterruptQueueSize:STRING=64
 // Stand-ins for GPIOChip and PWMChip (forte-patches/0003-io-stand-ins.patch): the IO blocks that set
 // up a Raspberry Pi's lines themselves are then the same types here, answering QO = FALSE.
 FORTE_MODULE_IOSTUBS:BOOL=ON
+// The OPC UA server announces itself on the network (LDS-ME, mDNS), so the registration service
+// finds the module; open62541 is built with mdnsd for it (dependencies/recipes/open62541@1.5).
+FORTE_COM_OPC_UA_MULTICAST:BOOL=ON
