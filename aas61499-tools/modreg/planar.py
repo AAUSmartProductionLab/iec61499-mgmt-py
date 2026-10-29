@@ -123,6 +123,10 @@ class PlanarDescriber(Describer):
         self.derive = False                    # no capabilities derived from a program
         self.designation = designation
 
+    def argument(self, n: int, name: str, out: bool = False) -> str:
+        """The controller names a method's arguments by what they are (Session, X, Accepted, ...)."""
+        return name
+
     def skill(self, name: str) -> model.ModuleSkill:
         made = super().skill(name)
         made.Conditions = made.Completion = None          # the controller decides when a move has ended

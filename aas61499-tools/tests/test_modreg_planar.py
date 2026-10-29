@@ -48,6 +48,13 @@ def test_the_table_lists_its_shuttles_and_its_flyways_with_where_they_are():
     assert at(move, "Conditions") is None and at(move, "Completion") is None
     start = at(move, "Start", "Start")
     assert [v["value"]["idShort"] for v in start["outputVariables"]] == ["Accepted", "ErrorID", "ReachedX", "ReachedY", "ReachedRz"]
+    # The controller names a method's arguments by what they are (FORTE by its block's ports); the DMP
+    # calls a method with its arguments by name.
+    action = at(submodel(envs["PlanarShuttle1AAS"], "AssetInterfacesDescription"), "interface_opcua", "InteractionMetadata",
+                "actions", "MoveToPosition_Start")
+    inputs = [v["value"]["idShort"] for v in start["inputVariables"]]
+    assert [p["idShort"] for p in children(at(action, "input", "properties"))] == inputs
+    assert [p["idShort"] for p in children(at(action, "output", "properties"))] == ["Accepted", "ErrorID"]
     blueprint = Blueprint(ROOT / "ontology" / "ARSO")
     for name, env in envs.items():
         assert check(env, blueprint).ok, name
