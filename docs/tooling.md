@@ -218,9 +218,27 @@ contributes (a test fails otherwise).
 it uses it), then `docs/aas-models.md`. Tests: `aas61499-tools/tests/test_modreg_*.py` (a test fails
 when the templates no longer match the ontology) and `cell/tests/test_example_line.py`.
 
-**Publishing.** The local AAS server is the planner's Docker stack on this PC (`ps-*` containers:
-AAS environment `http://localhost:8081`, web UI `http://localhost:3000`); it also holds the
-planner's demo data, which is not ours to change.
+**Publishing.** The local AAS server is the lab's AAS stack on this PC (`deploy/aas/compose.yaml`,
+`lab-*` containers): the AAS environment `http://localhost:8081`, the web UI `http://localhost:3000`,
+the DMP (aas-camel-dmp, the submodule) `http://localhost:8085` and InfluxDB `http://localhost:8086`.
+The DMP runs what the published AASs say: an Operation invoked at the AAS environment calls the
+module's OPC UA method, and the module's values are written to the time series its Variables name.
+
+```powershell
+python deploy/aas.py up                  # start it (the first time: secrets to deploy/aas/.env, the DMP image built)
+python deploy/aas.py status              # the containers, and every DMP mapping that does not run, with why
+python deploy/aas.py rows FillingModuleAAS   # the latest value of each field of the module's series
+python -m pytest cell/tests/test_dmp_live.py --module-forte-exe <forte.exe>   # a skill through the AAS, the rows in InfluxDB
+```
+
+Two things the DMP needs (design log, 28 Oct): a module's components are published before the
+module (its AIMC refers to their Operations; `modreg` and `example_line.py` do so), and a module
+keeps its OPC UA address, so the DMP reconnects when it restarts. If the DMP still has routes to a
+server that is gone, it reports `degraded` or `stale`: `docker restart lab-dmp` reads everything anew.
+The DMP is built from the submodule's branch `lab-modules` (four changes it needed for our modules).
+
+The planner's demo stack (`ps-*`, in the web UI fork) uses the same ports: it is stopped
+(`docker compose -p ps-demo start` brings it back, after `deploy/aas.py down`).
 
 ```powershell
 python cell/examples/example_line.py --out aas --publish http://localhost:8081   # the example line's AASs (created or replaced)

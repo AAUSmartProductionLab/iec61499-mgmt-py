@@ -37,9 +37,9 @@ repository. In short:
 | `iec61499-skill-lib/` | `modgen` (module spec to 4diac project), `ModLib` (the generated module library), the generator's test module |
 | `aas61499-tools/` | `modsync` (module, spec and AAS: read, verify, reconfigure, push, `project`), `modreg` (profiles on aas-model, ontology check, registration service) |
 | `runtime/` | FORTE builds for the PC and the Pi (patches, FBE configurations, `build-modules.ps1`), the packaged Pi binary `runtime/bin/forte-aarch64` |
-| `deploy/` | The Pi: FORTE in Docker, `pi.py` (install, module, log) |
+| `deploy/` | The Pi: FORTE in Docker, `pi.py` (install, module, log); the lab's AAS stack on this PC: BaSyx, the DMP, InfluxDB (`aas/compose.yaml`, `aas.py`) |
 | `cell/` | Module specs, the generated projects (`cell/control/`), simulator, the example line's AASs |
-| `aas-model/`, `iec61499-opcua-hmi/`, `basyx-aas-web-ui/`, `planar-controller/` | Submodules: the lab's pydantic AAS model; the HMI with `modlink`; the BaSyx web UI fork with the process planner and the skill editor; the planar table's controller (Python, OPC UA like a module) |
+| `aas-model/`, `aas-camel-dmp/`, `iec61499-opcua-hmi/`, `basyx-aas-web-ui/`, `planar-controller/` | Submodules: the lab's pydantic AAS model; the DMP that runs an AAS's mappings (Operations to OPC UA methods, values to InfluxDB); the HMI with `modlink`; the BaSyx web UI fork with the process planner and the skill editor; the planar table's controller (Python, OPC UA like a module) |
 | `ontology/`, `docs/` | Ontologies (ARSO and others); working documents |
 
 The documents in `docs/`: [tooling.md](tooling.md) (every tool, command and check),
@@ -116,9 +116,11 @@ runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate # FORTE for the Pi
   installed while the teaching demo's FORTEs run from the old file. Run the live tests with the
   newer one: the IO blocks of 21 Oct contain GPIOChip and PWMChip, which only the newer build has
   (as stand-ins on Windows). Install it (rerun `runtime/build-modules.ps1`) once the demo is stopped.
-- A local BaSyx stack (`ps-*` containers: AAS environment :8081, web UI :3000) holds the planner's
-  demo data and the example line's AASs (`cell/examples/example_line.py --publish`). Do not change or
-  delete the planner's demo data.
+- The local AAS stack (`deploy/aas.py up`, `lab-*` containers: AAS environment :8081, web UI :3000,
+  DMP :8085, InfluxDB :8086) holds the example line's AASs (`cell/examples/example_line.py --publish`).
+  Its AAS environment is in memory: publish again after a restart. Its secrets are in
+  `deploy/aas/.env` (not committed). The planner's demo stack (`ps-*`) uses the same ports and is
+  stopped.
 
 ## The Raspberry Pis
 

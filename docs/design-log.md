@@ -33,6 +33,47 @@ A running log of design considerations made while building, for writing the pape
 
 ## 28 Oct 2026
 
+- **The lab's AAS stack runs the DMP beside BaSyx, with InfluxDB behind the Variables and MQTT
+  for BaSyx's submodel events.** *Journal* (the architecture: an AAS that is the configuration of
+  its own connection). Asked for by the user.
+  - What: `deploy/aas/compose.yaml` (`python deploy/aas.py up`): the BaSyx AAS environment with
+    operation delegation and its MQTT feature, registries, discovery, the web UI, Mosquitto,
+    InfluxDB 2 (org and bucket `ap2030`, as aas-model's segments name them) and the DMP built from
+    the `aas-camel-dmp` submodule, named `dmp` because the delegation URLs name `http://dmp:8080`.
+  - Why MQTT for the events, not Kafka: the DMP takes either; Mosquitto is one small container and
+    the lab's stations speak MQTT already. Kafka needs a broker and its coordination for one
+    consumer. The modules' values do not go through the broker: the DMP observes them over OPC UA
+    and writes them to InfluxDB.
+  - The secrets (InfluxDB's password and token) are made up on the first `up` and kept in
+    `deploy/aas/.env`, which is not committed: the repository is public.
+  - The DMP did not run our modules out of the box. Four changes, on a branch of the DMP fork
+    (`lab-modules`), each with a test:
+    - it refused aas-model's AIDs: since 24 Oct aas-model has every interface select its `nosec_sc`
+      (AID 1.1 requires a selection), and the DMP (23 Oct) refused any selection, since it holds no
+      credentials. A `nosec` scheme needs none: a selection of `nosec` schemes only is accepted now.
+      Instead of: leaving the selection out of our AID (no longer AID, and aas-model adds it back);
+    - it bound an Operation to the action named like the Operation's parent (aas-model's
+      `Skills/<skill>/operation` and action `<skill>`). ARSO has `Skills/<skill>/<command>/<command>`
+      and an action per command of every skill (`Dispensing_Start`), which cannot all be named
+      `Start`. Now, where the names differ, the one action all the mapping's Sinks address: the
+      AIMC states the binding. Instead of: changing ARSO's skill structure for a naming rule;
+    - it could not call a method whose owning object is named by a browse path (it read the
+      signature only with a NodeId owner, and resolved a missing one at the call). FORTE numbers its
+      nodes anew at every start, so we name them by browse path; aas-model's stations have fixed
+      NodeIds, so this had not come up;
+    - it connected to the host a server names in its endpoints (FORTE: the computer's hostname,
+      `MartinPC`, the Pi's name), which does not resolve in the DMP's container. It now reaches a
+      server at the AID's base (Camel Milo's `overrideHost`), as the AID says.
+  - Found, not changed: removing or replacing a route whose OPC UA server has gone away waits out
+    a shutdown timeout per route, and leaves the mapping stale and the DMP degraded until it is
+    restarted; and a mapping whose referenced submodel is published after the AIMC stays blocked
+    (not resolved when the submodel arrives). So the components' AASs are published before the
+    module's (`modreg.service.mapped_last`), and a module keeps its OPC UA address across restarts.
+  - Checked end to end (`cell/tests/test_dmp_live.py`): the filling module simulated on FORTE;
+    Occupy, Reset, Start and Dispensing invoked at the AAS environment, answered by the module
+    through the DMP (and a refusal for another session), and the rows of the module's state and of
+    the Dispensing run, with its volume and weight, in InfluxDB.
+
 - **A module's AAS is what the DMP (aas-camel-dmp) runs: a skill's Operation calls the module's
   OPC UA method through it, and its values reach InfluxDB through it.** *Journal.* Asked for by
   the user.
