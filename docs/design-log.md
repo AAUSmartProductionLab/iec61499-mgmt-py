@@ -18,6 +18,18 @@ A running log of design considerations made while building, for writing the pape
 
 ## 29 Oct 2026
 
+- **The skill editor asks the checker and the planner.** *Journal* (the engineer's side of planning).
+  - What: in the skill editor, Check sends the skill as it is on screen (not saved) to `modreg
+    serve`'s `/check` and shows each finding at its step, with the skills that would fix it; a
+    changed flow clears the result. In the skills overview, Plan a skill takes a capability the
+    module offers, its range properties as the values and what it should report as results, shows
+    the planner's steps, and on "Plan and describe" has the skill described on the AAS server and
+    opens it in the editor; `modsync reconfigure` builds it.
+  - Why the check before saving: a finding is cheapest while the flow is being drawn; saving
+    first would put a skill on the server the module cannot run. Instead of: checking on save only.
+  - The values come from the Capability Description the editor already reads (its ranges), so the
+    dialog asks for no names: what a module can be planned for is what it offers.
+
 - **Every call of a module's command is logged, as a time series in `Variables/Log`.** *Journal.*
   - What: per command an Operation invokes (`Dispensing_Start`, `Occupy`, ...), a series
     `Log/<action>` (aas-model's `operation_log`): how the call ended (`Outcome`), how long it took
