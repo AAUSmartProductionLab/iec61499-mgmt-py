@@ -73,8 +73,8 @@ def publish(status: Status | None, args, spec=None, target=None, path=None):
 def register(found: list[dict], args):
     """Send the profiles of the module and of its components to the registration service; a refusal
     is reported, not raised."""
-    from modreg.service import send
-    for profile in found:
+    from modreg.service import mapped_last, send
+    for profile in mapped_last(found):
         try:
             code, answer = send(args.register, profile)
         except OSError as e:

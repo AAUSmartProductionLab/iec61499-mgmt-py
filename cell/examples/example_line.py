@@ -39,7 +39,7 @@ from modreg import model, planar, profile as profiles   # noqa: E402
 from modreg.frames import place, relative               # noqa: E402
 from aas_model.submodel_templates.coordinates import Coordinates                 # noqa: E402
 from aas_model.submodel_templates.variables import MeasurementsGroup, Variables   # noqa: E402
-from modreg.service import AasServer                    # noqa: E402
+from modreg.service import AasServer, mapped_last       # noqa: E402
 
 import plan_check                                        # noqa: E402
 from aas_model.id_injector import inject_ids            # noqa: E402
@@ -247,8 +247,9 @@ def main(argv=None) -> int:
           f"{len(components())} components, 1 line, 1 table, {len(SHUTTLES)} shuttles)")
     if args.publish:
         server = AasServer(args.publish)
-        for name, env in everything.items():
-            done = server.publish(env)
+        names = {id(env): name for name, env in everything.items()}
+        for env in mapped_last(list(everything.values())):
+            name, done = names[id(env)], server.publish(env)
             print(f"{name}: {sum(d.startswith('POST') for d in done)} created, {sum(d.startswith('PUT') for d in done)} replaced")
     return 0
 
