@@ -91,9 +91,6 @@ MODULE_STATES = "1 Clearing, 2 Stopped, 3 Starting, 4 Idle, 6 Execute, 7 Stoppin
 ERROR_CODES = {"PreconditionViolated": 1, "InvariantViolated": 2, "Timeout": 3, "NotReady": 4, "NotPermitted": 5,
                "Busy": 6, "Interrupted": 7, "OutOfRange": 8}
 ERRORS = "0 none, " + ", ".join(f"{code} {name}" for name, code in ERROR_CODES.items())
-# What every method answers: whether the command was accepted, and why not (named by FORTE, see ``argument``).
-ANSWER = {"type": "object", "properties": {"SD_1": {"type": "boolean", "title": "Accepted"},
-                                            "SD_2": {"type": "integer", "title": "ErrorID", "minimum": 0, "maximum": 65535}}}
 # The concepts of the two values every resource of the lab has.
 MODULE_STATE = "https://w3id.org/2026/apex/semantic/state/operational"
 # The rules a generated module is built by (docs/module-rules.md); 2 adds parallel blocks and decisions to 1.
@@ -208,23 +205,31 @@ def capability_path(name: str) -> ModelReference:
     return path(CAPABILITIES, (SMC, OFFERED_SET), (SMC, name), ("Capability", "Capability"))
 
 
-def schema(parameters: dict[str, Parameter]) -> dict:
-    """The arguments of a method as a JSON Schema object, in call order (the session first). FORTE
-    names the arguments of a method after the ports of the block that serves it (``argument``); what
-    each one is, is its title."""
-    fields = {argument(1): {"type": "string", "title": "Session", "description": "Occupation session of the caller"}}
+def schema(parameters: dict[str, Parameter], argument=None) -> dict:
+    """The arguments of a method as a JSON Schema object, in call order (the session first), named
+    as the server names them (``argument``, by default as FORTE does); what each one is, is its title."""
+    argument = argument or forte_argument
+    fields = {argument(1, "Session"): {"type": "string", "title": "Session", "description": "Occupation session of the caller"}}
     for i, (name, pr) in enumerate(parameters.items(), 2):
         field = {"type": "number", "title": name, "description": pr.description or f"Parameter {name}", "default": pr.default}
         field.update({k: v for k, v in (("minimum", pr.minimum), ("maximum", pr.maximum)) if v is not None})
-        fields[argument(i)] = field
+        fields[argument(i, name)] = field
     return {"type": "object", "properties": fields}
 
 
-def argument(n: int, out: bool = False) -> str:
-    """The name of a method's ``n``th input (or output) argument. FORTE's OPC UA server names them
-    after the data ports of the SERVER block that serves the method: an input after the block's
-    output that receives it (RD_1, RD_2, ...), an output after the block's input that sends it (SD_1,
-    SD_2, ...). The DMP calls a method with its arguments by name."""
+def answer(argument=None) -> dict:
+    """What every method answers: whether the command was accepted, and why not."""
+    argument = argument or forte_argument
+    return {"type": "object", "properties": {
+        argument(1, "Accepted", True): {"type": "boolean", "title": "Accepted"},
+        argument(2, "ErrorID", True): {"type": "integer", "title": "ErrorID", "minimum": 0, "maximum": 65535}}}
+
+
+def forte_argument(n: int, name: str, out: bool = False) -> str:
+    """The name of a method's ``n``th input (or output) argument, ``name``. FORTE's OPC UA server
+    names them after the data ports of the SERVER block that serves the method: an input after the
+    block's output that receives it (RD_1, RD_2, ...), an output after the block's input that sends it
+    (SD_1, SD_2, ...). The DMP calls a method with its arguments by name."""
     return f"{'SD' if out else 'RD'}_{n}"
 
 
@@ -353,6 +358,10 @@ class Describer:
 
     # Interface -------------------------------------------------------------------------------
 
+    def argument(self, n: int, name: str, out: bool = False) -> str:
+        """The name the module's OPC UA server gives a method's ``n``th argument, ``name``: FORTE's."""
+        return forte_argument(n, name, out)
+
     def action(self, key: str, node: str, title: str, parameters: dict[str, Parameter] | None = None) -> str:
         href = browse_path(self.spec, node, self.namespace)
         # FORTE gives its nodes new numeric ids at every start, so the owning object is named by
@@ -361,8 +370,8 @@ class Describer:
         action.title = wot.Title(value=title)
         # The call answers at once with Accepted and ErrorID; the skill's progress is its State.
         action.synchronous = Synchronous(value="true")
-        action.input = datapoint_from_schema(schema(parameters or {}), cls=DmpActionInput)
-        action.output = datapoint_from_schema(ANSWER, cls=DmpActionOutput)
+        action.input = datapoint_from_schema(schema(parameters or {}, self.argument), cls=DmpActionInput)
+        action.output = datapoint_from_schema(answer(self.argument), cls=DmpActionOutput)
         action.forms.href.value = href
         action.forms.uav_browsePath = wot.UavBrowsePath(value=href)
         self.actions[key] = action
@@ -785,7 +794,7 @@ class Describer:
                                     f"{number if flags else ''}"
                                     f"function aimc_main(sources)\n    return {{\n        Live = {{\n{lines}\n        }},\n    }}\nend\n")))
         for action, (at, arguments) in self.operations.items():
-            fields = "\n".join(f"            {argument(i)} = op.{a}," for i, a in enumerate(arguments, 1))
+            fields = "\n".join(f"            {self.argument(i, a)} = op.{a}," for i, a in enumerate(arguments, 1))
             mappings.append(mapping_configuration(
                 id_short=action, sources=[source(action, at)], sinks=[sink(action, affordance("actions", action, "input"))],
                 transformation=(f"-- {action}: the invocation's inputs are the arguments of the OPC UA method, in this order\n"
@@ -798,7 +807,8 @@ class Describer:
                     f"-- {action}: the method's answer is the Operation's; the call is logged\n"
                     f"function aimc_main(sources, requestSources)\n"
                     f"    local reply, call = sources.Reply or {{}}, requestSources.{action} or {{}}\n"
-                    f"    local answer = {{ Accepted = reply.{argument(1, True)}, ErrorID = reply.{argument(2, True)} }}\n"
+                    f"    local answer = {{ Accepted = reply.{self.argument(1, 'Accepted', True)}, "
+                    f"ErrorID = reply.{self.argument(2, 'ErrorID', True)} }}\n"
                     f"    local log = {{ Outcome = meta.invocation.outcome, DurationMs = meta.invocation.durationMs, Operation = {{\n"
                     + "".join(f"        {a} = call.{a},\n" for a in arguments)
                     + "        Accepted = answer.Accepted, ErrorID = answer.ErrorID } }\n"
