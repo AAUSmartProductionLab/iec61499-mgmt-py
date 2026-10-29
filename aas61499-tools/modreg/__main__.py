@@ -6,6 +6,8 @@
     modreg check profiles/FillingModuleAAS.json --ontology ontology/ARSO   # does the AAS follow the ontology?
     modreg serve --ontology ontology/ARSO --basyx http://<host>:8081       # the registration service
     modreg register filling --target pi --service http://<host>:8090       # send the module's profile to it
+    modreg manifest filling --target pi --out manifest.json                # what the module is delivered with
+    modreg serve ... --discover                           # find the modules on the network and register each
     modreg generate --ontology ontology/ARSO              # templates of the ontology's own submodels, and all classes
     modreg graph filling --target pi --out filling.ttl    # the module's AASs as RDF, with what they describe (PPRL)
 
@@ -83,6 +85,12 @@ def given(args) -> list[dict]:
     return module_profiles(args)
 
 
+def manifest_of(args) -> dict:
+    """A module's manifest: its name as its OPC UA server shows it, and its profiles."""
+    spec = load(spec_path(args.source))
+    return {"module": spec.opcua_root.rstrip("/").rsplit("/", 1)[-1], "profiles": module_profiles(args)}
+
+
 def write(folder: str, name: str, content: dict) -> Path:
     out = Path(folder) / f"{name}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -128,6 +136,13 @@ def main(argv=None) -> int:
     p.add_argument("--ontology", help="folder with the ontology's Turtle files; without it nothing is checked")
     p.add_argument("--strict", action="store_true", help="also refuse what the ontology does not describe")
     p.add_argument("--basyx", help="AAS server to publish to, e.g. http://<host>:8081")
+    p.add_argument("--discover", action="store_true",
+                   help="find the OPC UA servers that announce themselves (mDNS, LDS-ME) and register the modules "
+                        "they offer with the manifest each serves")
+    p.add_argument("--manifest-port", type=int, default=8088, help="where a module serves its manifest (with --discover)")
+    p = sub.add_parser("manifest", help="write a module's manifest: the profiles it is delivered with, as discovery fetches them")
+    source(p, "module spec (file or name)")
+    p.add_argument("--out", default="manifest.json")
     p = sub.add_parser("generate", help="write the templates of the ontology's own submodels into aas-model, and have it make their classes")
     p.add_argument("--ontology", required=True, help="folder with the ontology's Turtle files")
     p.add_argument("--aas-model", default=str(templates.AAS_MODEL), help="aas-model checkout (its generator makes the classes)")
@@ -151,13 +166,28 @@ def main(argv=None) -> int:
     if args.command == "serve":
         registry = Registry(args.store, Blueprint(args.ontology) if args.ontology else None,
                             AasServer(args.basyx) if args.basyx else None, args.strict)
-        server = serve(registry, args.bind, args.listen)
+        discovery = None
+        if args.discover:
+            from .discovery import Discovery
+            discovery = Discovery(registry, args.manifest_port)
+            discovery.start()
+        server = serve(registry, args.bind, args.listen, discovery)
         print(f"registration service on {args.bind}:{args.listen}; store {args.store}; "
-              f"ontology {args.ontology or 'none (no check)'}; AAS server {args.basyx or 'none'}", flush=True)
+              f"ontology {args.ontology or 'none (no check)'}; AAS server {args.basyx or 'none'}"
+              f"{'; discovering' if discovery else ''}", flush=True)
         try:
             server.serve_forever()
         except KeyboardInterrupt:
             pass
+        finally:
+            if discovery is not None:
+                discovery.stop()
+        return 0
+    if args.command == "manifest":
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(manifest_of(args), indent=1), encoding="utf-8")
+        print(f"manifest: {out}")
         return 0
     if args.command == "graph":
         graph = project([model.build(profile) for profile in given(args)])

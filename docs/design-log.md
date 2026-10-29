@@ -18,6 +18,27 @@ A running log of design considerations made while building, for writing the pape
 
 ## 29 Oct 2026
 
+- **Modules are discovered: FORTE announces itself (LDS-ME), the service fetches the module's
+  manifest and registers it.** *CIRP* (the plug step), *Journal*.
+  - What: FORTE is built with `FORTE_COM_OPC_UA_MULTICAST` (open62541 with mdnsd, our own recipe), so
+    its OPC UA server announces itself by mDNS as OPC UA Part 12's multicast discovery has it.
+    `modreg serve --discover` browses for `_opcua-tcp._tcp`, connects to each server, finds the modules
+    by the module rules' layout (Occupation and Module), fetches the module's manifest (the pydantic
+    dumps of its AAS and its components', `{"module", "profiles"}`) from
+    `http://<host>:8088/manifest.json`, and registers it as a profile sent to it is. The planar
+    controller is recognised by its namespace and described from what it shows.
+  - Why: plug and produce means the integrator does not have to tell the service a module is there;
+    the module brings what describes it. The standard OPC UA discovery is what any client of the line
+    already understands, and it comes from the runtime itself, not from a helper on the device.
+  - Instead of: an Avahi service file on each Pi (no rebuild, but a second thing to keep in step with
+    FORTE's port); a scan of address ranges; the manifest inside the OPC UA address space (FORTE would
+    need blocks to serve it); an AASX package (the service takes the profiles already). The manifest
+    sits beside FORTE over HTTP because FORTE's mDNS record carries only the server's name, path and
+    capabilities.
+  - Found on the way: the FBE leaves mDNS out because GitHub's release archive of open62541 lacks the
+    mdnsd submodule, and its unpack helper fails on Windows (a rename onto an empty folder); mdnsd also
+    needs `inet_pton`, which the XP-compatible Windows target does not declare.
+
 - **The evaluation's scenario is a changeover to the prefilled syringe, with filling from the bottom.**
   *CIRP*.
   - What: one product changeover, timed as one: the filling module gets a new composite skill that

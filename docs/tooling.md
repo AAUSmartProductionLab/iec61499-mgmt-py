@@ -75,6 +75,11 @@ runtime/package-runtime.ps1                                   # the Pi binary in
   cache; `build-runtime.ps1` deletes a stale one. While a running FORTE uses
   `output/bin/forte.exe` (the user's teaching demo), the build cannot replace it: the fresh binary is
   then only in `runtime/fbe/build/modules-win/forte/build/forte/forte.exe`.
+  open62541 comes from our own recipe, `runtime/fbe/dependencies/recipes/open62541@1.5` (the FBE's,
+  with mDNS discovery switched on: mdnsd added, `inet_pton` mapped on Windows). It takes precedence
+  over the FBE's only on a fresh recipe folder: after changing it, delete
+  `runtime/fbe/build/<config>/etc/cget/recipes/open62541*` and `cget/pkg/open62541`. FORTE is built
+  with `FORTE_COM_OPC_UA_MULTICAST`, so its OPC UA server announces itself (`forte_<port>-<host>`).
 
 ## 3. Talking to a FORTE
 
@@ -170,6 +175,11 @@ python -m modsync pull --host 192.168.0.134                      # check what ru
 - After a deployment the module is Stopped and free. **Occupy and Reset, Home and every skill move
   the axis: only with the user at the bench and their go.**
 - sudo on a Pi needs a password the user gives when needed; it is never written to a file.
+- **Discovery.** FORTE announces its OPC UA server by mDNS (the container uses the host's network).
+  `pi.py module` also writes the module's manifest (its profiles) to `~/forte/manifest` and starts the
+  container `manifest` (busybox httpd), so `modreg serve --discover` finds the module and registers it
+  from `http://<Pi>:8088/manifest.json`. A Pi installed before 30 Oct needs `pi.py install` once for
+  that container.
 
 ## 6. The AASs: building, checking, publishing
 
@@ -250,6 +260,9 @@ python cell/examples/example_line.py --out aas --publish http://localhost:8081  
 python cell/examples/describe.py                                                 # docs/aas-examples.md from them
 python -m modreg serve --ontology ontology/ARSO --basyx http://localhost:8081   # the registration service on :8090
 python -m modsync pull --host 192.168.0.203 --register http://localhost:8090    # a running module's AAS through it
+python -m modreg serve ... --discover                                            # also find the modules on the network and register them
+curl http://localhost:8090/discovered                                            # what it found
+python -m modreg manifest filling --target pi --out manifest.json                # what a module serves for that
 ```
 
 `modsync reconfigure http://localhost:8081 ... --record` writes the changed submodels back to the
