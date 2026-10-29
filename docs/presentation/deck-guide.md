@@ -1,0 +1,200 @@
+# The deck's figures: how they are built and how to animate them
+
+For whoever designs the slides (a person or an LLM) from **[deck.drawio](deck.drawio)**: every figure of
+the talk in one draw.io file, one page per slide, in the order of the story. This guide says what each
+page is for, how its layers and groups are made, and how to turn the layers into PowerPoint
+animations. The facts behind the figures are in [presentation.md](presentation.md) (terms, facts to get
+right) and [animations.md](animations.md) (the filling module's animation, beat by beat).
+
+## Files
+
+| What | Where |
+| --- | --- |
+| The figures, editable | `docs/presentation/deck.drawio` (open in draw.io or the VS Code draw.io extension) |
+| Every page as one picture, and every layer as its own picture | `docs/presentation/figures/deck/<page>/00-still.png` and `<nn>-<layer>.png` |
+| The exporter | `python docs/figures/export_layers.py docs/presentation/deck.drawio <out-dir> --page <n>` (n from 0) |
+
+A page of 1600 × 900 exports at 2400 × 1350 (a slide at 16:9; a pixel is the page's coordinate × 1.5).
+Every layer's PNG is the size of the whole page and transparent outside what it draws, so the layers of
+a page stacked at the same place and size line up exactly. `00-still.png` is the page as it looks with
+the layers that are visible in the file: use it where a slide has no animation.
+
+## Conventions
+
+- **An AAS is always the shell**: an arch with rounded corners in green `#2A918B`, its name on the band,
+  nothing inside (the PPR page puts a picture of the product, process or resource inside). It is a
+  draw.io stencil, so it scales to any size and takes its colour from the fill (Format panel). To reuse
+  it, copy a group whose name ends in "AAS" (e.g. "Filling module AAS"), or the 20 px shells in the
+  tree pages. A submodel is a grey bar (`#A7ACB6`, white bold text) under or beside its shell.
+- **Colours carry meaning** (as in [presentation.md](presentation.md)): orange `#F07D2E` the modules,
+  purple `#9080B7` the product, green `#5B963B` IEC 61499 events and a Pi running its program, blue
+  `#6C91B2` resources and OPC UA, gold `#B88A1C` modsync and the management protocol, teal `#2A918B` an
+  AAS. A dashed outline is planned, not built (agents, the pump and the scale's hardware).
+- **Arial** everywhere; dark text `#252B2D`, secondary `#6E777B`.
+- **A layer is a unit of animation; a group is a unit of moving and editing.** Each thing that appears,
+  disappears or moves on its own is a layer; the parts of one thing are a group, nested where a part has
+  parts (the vial inside "Shuttle with vial", the pump and the needle inside "Carriage"). A group's name
+  is its tooltip (hover in draw.io; Edit › Edit Tooltip). Select a group to move it whole; double-click
+  into it to change one part.
+- **Layers stack in the order listed**: the first at the back. Layers hidden in the file are the ones an
+  animation brings in; text that overlaps in a page with all layers on (calls, messages, highlights) is
+  meant to be shown one at a time.
+- **No titles in the new pages**: the slide has its own title. The copied pages keep their old title in a
+  layer of its own, "page title (the slide has its own)": hide it or crop it away.
+
+## How to animate a page in PowerPoint
+
+1. Insert all `<nn>-<layer>.png` of the page at once, each at position 0, 0 and the slide's full size
+   (13.33 × 7.5 in). Keep the file order as the stacking order (`01` at the back).
+2. Layers visible in the file are shown from the start; every other layer gets its first effect
+   (Appear, Fade, Wipe, Fly In) and later a Disappear.
+3. A move is a Motion Path (a straight line). Lengths are given below in page pixels; as a share of the
+   slide, divide by 900 for up and down, by 1600 for left and right (40 mm on the filling module is
+   260 px: 28.9 % of the slide's height).
+4. After an edit in draw.io, export again and use *Change Picture* on each picture: its animations stay.
+
+Morph works too for a move: duplicate the slide, move the layer's picture, set the transition to Morph.
+
+## The story, page by page
+
+The pages follow the talk: the line; one module pulled out, physical and digital; how its program is
+structured; the filling module running; the AAS models; skills in the AAS; from the AAS to function
+blocks; the rules. A suggested slide title (the message) is given per page.
+
+### 01 The line
+
+*"Six modules around a maglev table; the filling module is one of them."*
+
+| Layer | What | Animation |
+| --- | --- | --- |
+| `line` | The table, the robots, the stations (the slide figure of the line) | Shown |
+| `filling module (to pull out)` | Group "Filling module: station, arm, name tag" | The pull-out: a Motion Path up and to the left (about 200 px up) with Grow/Shrink 150 %, then the next slide |
+| `labels` | Six groups, "Label …": a label with its leader line and dot | Fade out before the pull-out |
+
+The pulled-out station leads into page 03, whose physical tree starts with the same station picture.
+
+### 02 Digital assets: line, modules, components (kept as it was)
+
+*"Every asset has its own AAS: the line, each module, each component."* One layer; a group per module
+column ("Filling module and its components", …) and "The line". For a reveal, animate the pictures of
+the still, or copy the groups to layers in draw.io.
+
+### 03 The filling module: physical and digital
+
+*"A module ships with its parts, an AAS for each, and its IEC 61499 program."* Three parallel trees,
+one row per part: the module, the linear axis, the pump, the scale, the Pi.
+
+| Layer | What | Animation |
+| --- | --- | --- |
+| `physical` | The station and its parts as a tree (pictures from page 02), the Pi | Shown |
+| `AAS` | The module's shell with its seven submodels; a shell per component with its Skills | Wipe from the left |
+| `IEC 61499 program` | The boot file's application (Occupation, Module, Dispensing, procedures, OPC UA server, START); per component its equipment block and primitive types; FORTE with the types compiled in | Wipe from the left |
+| `same part (links)` | Dashed lines joining one part across the three trees | Fade |
+
+Facts: the pump is not wired (dispensing is a time) and the scale is simulated; the Pi has no AAS of its
+own; a component's AAS holds its Skills.
+
+### 04 The IEC 61499 program: the module rules
+
+*"Every module's program is built by the same rules."* One layer per band, so the bands can come in one
+by one (`OPC UA server` to `Equipment IO`), then the two brackets ("the same in every module",
+"the module's own"). `frame` holds the program's frame and title.
+
+### 05 The filling module in motion: an orchestrator
+
+*"Inside the filling module: commands in, states change, the needle moves."* The same figure as
+`docs/figures/module-motion.drawio`; its 29 layers and the 12 beats are in
+[animations.md](animations.md#filling-motion) (the layer numbers there are this page's).
+
+### 06 The filling module in motion: agents bid (planned)
+
+*"Later: the product's agent asks, the module's agent bids and then runs its skill."* Page 05 with the
+orchestrator replaced by agents, all dashed (planned, the paper's future work).
+
+| Layer | What |
+| --- | --- |
+| `agents` | Product agent (the vial, purple), Resource agent (the filling module, blue), Transport agent (the shuttle, blue); each with a dashed arrow to the asset it stands for |
+| `message 01` to `07` | Call for proposals (product → resource), Proposal, Accept, Move me to Filling (product → transport), Arrived, Done (resource → product), Move me on |
+| `command 01` to `05` | The resource agent's OPC UA commands: Occupy, Reset, Start, the skill's Start, Release |
+| The rest | As on page 05 (module, shuttle, carriage, highlights, liquid, weight) |
+
+Beats: messages 01, 02, 03 (each replaces the one before); message 04 and the shuttle flies in; message
+05; then the commands and the module's run as in beats 3 to 11 of
+[animations.md](animations.md#filling-motion) (here without the refused Start: the agent occupies
+first); message 06; command 05 (Release); message 07 and the shuttle with the liquid flies out.
+
+### 07 Product, process and resource AAS
+
+*"Three AASs refer to each other: the product's recipe, the process's bindings, the resource's skills."*
+
+| Layer | What | Animation |
+| --- | --- | --- |
+| `Product AAS`, `Process AAS`, `Resource AAS` | Each a group: the shell with its picture, and a group of its submodels | One per click |
+| `link: recipe steps` | Production Sequence → Step Bindings | Wipe from the left |
+| `link: each step bound to a skill` | Step Bindings → Skills | Wipe from the left |
+| `link: required matches offered` | Required Capabilities ⇢ Offered Capabilities (dashed) | Wipe from the left |
+| `link: offered realized by a skill` | Offered Capabilities → Skills | Wipe from the bottom |
+
+The submodels are the real ones, named plainly: Bill of Material is Hierarchical Structures, Required and
+Offered Capabilities are each AAS's Capability Description, Asset Interfaces are the interface
+description and its mapping.
+
+### 08 Equipment and skill hierarchies in the AAS (copied)
+
+*"The AASs nest: the line names its modules, a module its components; a module's skill runs theirs."*
+The figure of `docs/figures/skill-hierarchies.drawio`, AAS icons changed to shells. One group per AAS
+panel ("Panel FillingModuleAAS module", …). It dates from ARSO 0.9: Operational Data is renamed
+Variables here; the module's tree still shows a Control Configuration, which since 27 Oct is kept
+outside the AAS (hide the row or leave it).
+
+### 09 Primitive and composite skills in the AAS
+
+*"A primitive is one command on one component; a composite is steps that run primitives."*
+
+| Layer | What | Animation |
+| --- | --- | --- |
+| `module AAS: a composite skill` | The module's shell; Skills · Dispensing with its Start, its result and its four steps (a group per step) | Shown |
+| `component AASs: primitive skills` | Three component shells with their primitives (Home, MoveAxis; Dispense; Tare, Weigh) | Fade |
+| `runs 1` to `runs 4` | A green arrow from each step to the primitive it runs | One per click, Wipe from the left |
+
+### 10 From the AAS to function blocks: modsync
+
+*"modsync turns a skill in the AAS into function blocks, while the module runs."* Left the skill's
+entries in the AAS, in the middle modsync's six stages, right the subapplication in FORTE.
+
+| Layer | What |
+| --- | --- |
+| `AAS: the skill's entries` | The shell and eleven entries, a group each |
+| `FORTE: the program` | The frame of the subapplication |
+| `map 1 · created` to `map 7 · created` | What each rule creates: Control and UaStart; the Volume latch; the four step instances; the value 40.0; the data connection; the event chain; the publisher |
+| `OPC UA nodes` | What the program publishes |
+| `map 1 · arrow` to `map 7 · arrow` | A gold arrow from the entry, under modsync, to what it creates, and a ring on the entry |
+| `modsync` | The six stages, on top: the arrows run under it, so the entries go *through* modsync |
+
+Beats: start with the entries, modsync and the empty frame (hide the `created` layers at first). Then per
+rule n: `map n · arrow` wipes in from the left, `map n · created` fades in, the arrow disappears. Last,
+`OPC UA nodes`. Rule 1 is the skill (a composite becomes a subapplication), 2 its Start variable, 3 its
+steps, 4 a binding to a value, 5 a binding to a source, 6 the order, 7 its result.
+
+### 11 The mapping rules
+
+*"Fixed rules map every element of the AAS to the program, and back."* `rules` holds the two column
+heads; `rule 1` to `rule 8` one row each (AAS on the left, IEC 61499 on the right), for one per click;
+`keys and limits` the two notes: names are the keys, and what changes online versus by a restart.
+
+### Backup pages (copied)
+
+- **From recipe to process** (`skill-hierarchies.drawio`): the planner joins the product's recipe, the
+  line and the modules' skills into the process AAS. A group per panel.
+- **A skill in the AAS and the blocks it is** (`mapping.drawio`): the Skills submodel next to the
+  subapplication it is, element by element, and the OPC UA nodes. The detailed version of pages 10
+  and 11.
+
+## Facts to keep
+
+- Agents do not exist yet: page 06 is planned (dashed), the paper's future work.
+- The filling and stoppering modules are built; capping and inspection are planned. The filling
+  module's pump is not wired (dispensing is a time at a flow rate) and its scale is simulated.
+- No durations, counts or measured values in an animation: they illustrate the order of things.
+- Online: a value, a new composite skill. Not online: a new primitive or IO (a FORTE build), removing or
+  reordering what runs (a restart).
