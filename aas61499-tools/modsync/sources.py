@@ -30,10 +30,8 @@ def fetch(url: str):
         return json.loads(response.read())
 
 
-def load(source: str, shell: str | None = None) -> tuple[dict, list[dict]]:
-    """The AAS of a module and those of its components, each as an environment (shell and
-    submodels), from ``source``: a folder of AAS files (one environment per ``.json``) or the
-    address of an AAS server. ``shell``: the module's idShort, when the source holds several."""
+def shells_of(source: str):
+    """The shells ``source`` holds, and how to read the environment (shell and submodels) of one."""
     if is_server(source):
         base, shells, cursor = source.rstrip("/"), [], None
         while True:
@@ -46,14 +44,23 @@ def load(source: str, shell: str | None = None) -> tuple[dict, list[dict]]:
         def environment(found: dict) -> dict:
             return {"assetAdministrationShells": [found],
                     "submodels": [fetch(f"{base}/submodels/{b64(r['keys'][0]['value'])}") for r in found.get("submodels", [])]}
-    else:
-        files = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(Path(source).glob("*.json"))]
-        whole = {env["assetAdministrationShells"][0]["id"]: env for env in files if env.get("assetAdministrationShells")}
-        shells = [env["assetAdministrationShells"][0] for env in whole.values()]
+        return shells, environment
+    files = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(Path(source).glob("*.json"))]
+    whole = {env["assetAdministrationShells"][0]["id"]: env for env in files if env.get("assetAdministrationShells")}
+    return [env["assetAdministrationShells"][0] for env in whole.values()], lambda found: whole[found["id"]]
 
-        def environment(found: dict) -> dict:
-            return whole[found["id"]]
 
+def environments(source: str) -> list[dict]:
+    """Every AAS ``source`` holds, each as an environment."""
+    shells, environment = shells_of(source)
+    return [environment(found) for found in shells]
+
+
+def load(source: str, shell: str | None = None) -> tuple[dict, list[dict]]:
+    """The AAS of a module and those of its components, each as an environment (shell and
+    submodels), from ``source``: a folder of AAS files (one environment per ``.json``) or the
+    address of an AAS server. ``shell``: the module's idShort, when the source holds several."""
+    shells, environment = shells_of(source)
     modules = [s for s in shells if s["assetInformation"].get("assetType") == MODULE_TYPE
                and shell in (None, s["idShort"], s["id"])]
     if len(modules) != 1:
