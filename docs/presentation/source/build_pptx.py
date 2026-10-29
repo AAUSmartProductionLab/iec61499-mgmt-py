@@ -250,7 +250,8 @@ class Slide:
                     f'</p:cBhvr></p:animEffect>') + vis(s, "hidden", d - 1) + tail, d
             if kind == "wipe":                                  # direction: "left" (from the left) or "bottom"
                 d = args.get("dur", 600)
-                sub, filt = {"left": (8, "wipe(right)"), "bottom": (4, "wipe(up)")}[args.get("dir", "left")]
+                # the filter names the side it starts from, as the subtype: another pair plays the other way
+                sub, filt = {"left": (8, "wipe(left)"), "bottom": (4, "wipe(down)")}[args.get("dir", "left")]
                 return head(22, "entr", sub) + vis(s, "visible") + (
                     f'<p:animEffect transition="in" filter="{filt}"><p:cBhvr><p:cTn id="{n()}" dur="{d}"/>{tgt(s)}'
                     f'</p:cBhvr></p:animEffect>') + tail, d

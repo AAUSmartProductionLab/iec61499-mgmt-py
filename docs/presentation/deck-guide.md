@@ -264,7 +264,9 @@ the exports in `figures/deck` (`slides_spec.py` says what each new slide shows a
 what changes on the user's slides; the skill's `add_slide.py`, `clean.py` and `validate.py` do the package
 work). `export_slides.vbs` renders every slide with PowerPoint and `video_slide.vbs` one slide as a video,
 to check an animation frame by frame. A motion path in PowerPoint starts from where the shape is laid out,
-not where the last path ended: a way back is the path from the moved place to 0.
+not where the last path ended: a way back is the path from the moved place to 0. A wipe's filter names
+the side it starts from, as its subtype does (From Left: 8 and `wipe(left)`; From Bottom: 4 and
+`wipe(down)`); another pair shows one direction in the Animation Pane and plays the other.
 
 ## Facts to keep
 
