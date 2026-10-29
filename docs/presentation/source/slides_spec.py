@@ -253,19 +253,19 @@ A composite skill is a subapplication of instances, no new type, so it is create
 Names are the keys: the program can be read back into the AAS's terms. What can change online: a value, a new composite skill. What needs a restart: a new primitive or new IO (a FORTE build), removing or reordering what runs.""")
 
     # ---- slides 13 and 14 become one: matching, a missing effect, replanning, checking ----------------------
-    s = Slide("A step the line cannot do yet: match, replan, check", RECONF)
+    s = Slide("Capability matching and replanning", RECONF)
     L = s.figure(P12, ["recipe-and-capabilities", "match", "missing", "replan", "check"])
     s.plain_click([("wipe", L["match"], {"dir": "left"})])
     s.plain_click([("in", L["missing"])])
     s.plain_click([("wipe", L["replan"], {"dir": "bottom", "dur": 700})])
     s.plain_click([("wipe", L["check"], {"dir": "left"})])
     s_match = after("slide6.xml", "slide12.xml")
-    write(s_match, s, """About 1 min, four clicks. One order, three steps, matched against what the modules offer.
+    write(s_match, s, """About 1 min, four clicks. The line changes over to a new product, a prefilled syringe of 1 mL: three steps, matched against what the modules offer.
 
-1. Match: each required capability against the offered ones, by meaning and range. Stopper and Cap are offered as they are.
-2. Fill 2.0 mL with the dose checked is not: Filling is offered, but Dispensing weighs the vial and the liquid together, so the dose's own weight, the effect the step needs, is missing. No parameter gives it.
-3. Replan: a new composite skill from the filling module's own primitives, TaredDispensing: Tare first, with the empty vial on the scale, then needle down, dispense, home, weigh; Weigh now gives the dose alone. A new step in the sequence, not a new value. Its capability is derived like any other, offered after a reconfiguration.
-4. Check against the recipe again: every step is offered; once modsync has built TaredDispensing online, the order can run.
+1. Match: each required capability against the offered ones, by meaning and range. Stopper and Inspect are offered as they are.
+2. Fill 1.0 mL from the bottom is not: Filling is offered, but Dispensing doses with the needle standing still at the fill position. A syringe barrel is tall and narrow, so the needle has to start deep and rise as the liquid rises, or the liquid splashes and foams. No parameter of Dispensing gives that.
+3. Replan: a new composite skill from the filling module's own primitives, BottomUpFilling: NeedleDeep, then Dispense and NeedleRise at the same time, then Home and Weigh. The pump and the axis run in parallel: one parallel block, one join block in the program, no new block type. Its capability is derived like any other, offered after a reconfiguration.
+4. Check against the recipe again: the module's constraint is that the needle stays in the container while dosing, at the fill position or deeper; it rises from 58 to 40 mm, so that holds, and every step is offered. Once modsync has built BottomUpFilling online, the order can run.
 
 Today the planner does this with the skill editor; later the module's agent (part 3).""")
 
