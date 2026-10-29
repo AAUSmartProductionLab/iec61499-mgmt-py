@@ -285,6 +285,22 @@ for key, (xa, xb), (xc, xd) in [("module", (470, 556), (1042, 1106)), ("axis", (
         line(g, [(1046, cy), (1106, cy)], LINK)
 page("03 The filling module: physical and digital", phys, aas_l, prog, links)
 
+# ==== 03b The production system, layer by layer (the illustrated layers, one draw.io layer per plane) ====
+pl = Copied("module-tools.drawio", 6, "the line")
+num = lambda c: int(c.get("id")[1:])
+pl.cells = [c for c in pl.cells if 4 <= num(c) <= 190]          # without the page title, side boxes, legend
+PLANES = [(4, 47, "The line: table, shuttles, stations, robots"),
+          (48, 93, "Digital assets: each module's parts and its Pi"),
+          (94, 114, "Behaviour · IEC 61499: the modules' programs on FORTE"),
+          (115, 157, "AAS models and orchestration"),
+          (158, 190, "HMI, MES, planning and scheduling")]
+for k, (a, b, name) in enumerate(PLANES):
+    lid = "1" if k == 0 else pl.layer(name.split(":")[0])
+    cells = [c for c in pl.cells if a <= num(c) <= b]
+    pl.move(cells, lid)
+    pl.group(cells, name, lid)
+copied_page("03b The production system, layer by layer", pl)
+
 # ==== 04 The IEC 61499 program's structure (module rules) =========================================
 mr = Copied("slides.drawio", 8, "frame")
 for ids, name in [(("c5", "c6"), "OPC UA server"), (("c7", "c8"), "Occupation"),
@@ -651,7 +667,7 @@ def filling_panel(layer_id, at=(20, 100)):
     return "\n".join(ET.tostring(c, encoding="unicode") for c in members), rows
 
 
-page("10 From the AAS to function blocks: modsync", *page10.build(filling_panel))
+page("10 From the AAS to function blocks: modsync", *page10.build(filling_panel), w=2420)
 
 # ==== 11 The mapping rules ==========================================================================
 rules = Node("rules")
@@ -686,6 +702,168 @@ rect(g, 60, 762, 1480, 100, "#FBF5E6", GOLD, 1.5, 8, "",
      False, "left")
 rule_layers.append(L)
 page("11 The mapping rules", *rule_layers)
+
+# ==== 12 Matching, a missing effect, replanning, checking again ======================================
+RED, RED_FILL, GOOD_FILL = "#C0392B", "#FBE3E1", "#E3F1DA"
+
+
+def badge(node, cx, cy, mark, fill, r=28, size=34):
+    box(node, cx - r, cy - r, 2 * r, 2 * r, f"ellipse;whiteSpace=wrap;html=1;fillColor={fill};strokeColor=#FFFFFF;"
+        f"strokeWidth=3;fontFamily=Arial;fontSize={size};fontColor=#FFFFFF;fontStyle=1;", mark)
+
+
+def two_line(title, sub, size=28, sub_size=21):
+    return f"<b>{title}</b><br><font style=\"font-size:{sub_size}px\" color=\"{GREY}\">{sub}</font>"
+
+
+ROW = {"fill": 110, "new": 232, "stopper": 372, "cap": 492}
+base = Node("recipe and capabilities")
+g = base.group("Header: the product's recipe")
+shell(g, 40, 22, 64, 55, name="Product AAS")
+text(g, 118, 26, 420, 48, "The product's recipe", 28, INK, True)
+g = base.group("Header: what the modules offer")
+shell(g, 1040, 22, 64, 55, name="Resource AASs")
+text(g, 1118, 26, 460, 48, "What the modules offer", 28, INK, True)
+for key, title, sub in [("fill", "1 · Fill 12 mL", "requires Filling, 12 mL"),
+                        ("stopper", "2 · Stopper", "requires Stoppering"), ("cap", "3 · Cap", "requires Capping")]:
+    pill(base.group(f"Step {title}"), 40, ROW[key], 460, 100, two_line(title, sub), PROD_FILL, PURPLE, 2.5, 28)
+for key, title, sub in [("fill", "Filling · 0.5 to 10 mL", "Filling module, by Dispensing"),
+                        ("stopper", "Stoppering", "Stoppering module"), ("cap", "Capping", "Capping module")]:
+    pill(base.group(f"Offered: {title}"), 1040, ROW[key], 520, 100, two_line(title, sub), OPC_FILL, BLUE, 2.5, 28)
+
+match = Node("match", False)
+for key in ("fill", "stopper", "cap"):
+    g = match.group(f"Match {key}")
+    cy = ROW[key] + 50
+    arrow(g, [(500, cy), (1040, cy)], GREY, 2.5, True)
+    if key != "fill":
+        badge(g, 770, cy, "✓", GREEN)
+
+missing = Node("missing", False)
+g = missing.group("Fill 12 mL: the effect is missing")
+badge(g, 770, ROW["fill"] + 50, "✗", RED)
+rect(g, 40, 222, 460, 96, RED_FILL, RED, 2, 16, "",
+     two_line("Missing: 12 mL into the vial", "Dispensing doses 0.5 to 10 mL", 24, 20), 24, INK, False, "left")
+
+replan = Node("replan", False)
+g = replan.group("Replanned: DoubleDose from the primitives")
+rect(g, 560, 640, 1000, 220, "#FBF5E6", GOLD, 2.5, 16)
+text(g, 590, 652, 940, 40, "<b>Replanned:</b> a new skill from the filling module's primitives", 24, INK)
+chips = ["NeedleDown", "Dispense", "Dispense", "Home", "Weigh"]
+for i, s in enumerate(chips):
+    x = 590 + i * 192
+    rect(g, x, 712, 160, 60, STEP_FILL, ORANGE, 2, 14, "", f"<b>{s}</b>", 21, INK)
+    if i:
+        arrow(g, [(x - 32, 742), (x, 742)], INK, 2)
+text(g, 590, 790, 940, 54, "DoubleDose: two doses of up to 10 mL each, so 1 to 20 mL", 21, GREY)
+arrow(g, [(1560, 700), (1586, 700), (1586, 282), (1562, 282)], GOLD, 3)
+pill(g, 1040, ROW["new"], 520, 100, two_line("Filling · 1 to 20 mL", "by DoubleDose, after a reconfiguration"),
+     "#FFFFFF", GOLD, 2.5, 28, dashed=True)
+
+check = Node("check", False)
+g = check.group("Checked against the recipe")
+arrow(g, [(500, ROW["fill"] + 50), (1040, ROW["new"] + 50)], GREEN, 3.5)
+badge(g, 800, ROW["fill"] + 115, "✓", GREEN)
+rect(g, 40, 640, 470, 220, GOOD_FILL, GREEN, 2.5, 16, "",
+     two_line("Checked against the recipe", "every step is offered: the order can run once DoubleDose is built",
+              26, 21), 26, INK, False, "left")
+page("12 Matching, a missing effect, replanning", base, match, missing, replan, check)
+
+# ==== 13 Agents on the line: call for proposals, proposals, accept ===================================
+ln = Copied("slides.drawio", 2, "the line")
+keep = lambda c: 2 <= num(c) <= 41 and not 11 <= num(c) <= 20      # no station vials, no flow arrows
+ln.cells = [c for c in ln.cells if keep(c)]
+S13, DX, DY = 0.9, -50, -40
+T = lambda x, y: (x * S13 + DX, y * S13 + DY)
+for c in ln.cells:
+    geo = c.find("mxGeometry")
+    if c.get("edge"):
+        for p in geo.iter("mxPoint"):
+            x, y = T(float(p.get("x", 0)), float(p.get("y", 0)))
+            p.set("x", f"{x:g}"), p.set("y", f"{y:g}")
+    else:
+        x, y = T(float(geo.get("x", 0)), float(geo.get("y", 0)))
+        geo.set("x", f"{x:g}"), geo.set("y", f"{y:g}")
+        geo.set("width", f"{float(geo.get('width')) * S13:g}"), geo.set("height", f"{float(geo.get('height')) * S13:g}")
+vial_layer = ln.layer("product: the vial on its shuttle")
+vial = ln.pick(ids={"c10"})
+ln.move(vial, vial_layer)
+ln.group([c for c in ln.cells if c.get("parent") == "1"], "The line: table, stations, robots, empty shuttles")
+ln_xml = "\n".join(ln.xml())
+
+PA, MOD = T(400, 360), {"Filling": T(700, 186), "Stoppering": T(805, 246), "Capping": T(910, 307),
+                        "Inspection": T(1015, 368)}
+TA = T(330, 470)
+ag = Node("agents")
+for name, (x, y) in MOD.items():
+    badge(ag.group(f"Resource agent: {name}"), x, y, "R", BLUE, 22, 22)
+badge(ag.group("Transport agent: the table"), *TA, "T", BLUE_D, 22, 22)
+g = ag.group("Legend")
+for i, (mark, fill, txt) in enumerate([("P", PURPLE, "product agent: one per order"),
+                                       ("R", BLUE, "resource agent: one per module"),
+                                       ("T", BLUE_D, "transport agent: the table")]):
+    badge(g, 62, 724 + i * 54, mark, fill, 20, 20)
+    text(g, 94, 704 + i * 54, 420, 40, txt, 22, INK)
+g = ag.group("The order")
+rect(g, 520, 700, 480, 150, PROD_FILL, PURPLE, 2, 16, "",
+     two_line("Order 17: a vial", "1 Fill 2.0 mL · 2 Stopper · 3 Inspect", 24, 21), 24, INK, False, "left")
+pa = Node("product agent on the vial")
+badge(pa.group("Product agent: the vial"), *PA, "P", PURPLE, 22, 22)
+
+CARD_X, CARD_W = 1040, 530
+
+
+def card(node, y, h, head, color, body):
+    g = node.group(f"Message: {head}")
+    rect(g, CARD_X, y, CARD_W, h, "#FFFFFF", color, 2.5, 14)
+    text(g, CARD_X + 20, y + 10, CARD_W - 40, 34, head, 23, color, True)
+    text(g, CARD_X + 20, y + 46, CARD_W - 40, h - 54, body, 20, INK, valign="top")
+    return g
+
+
+g = base13 = Node("messages header")
+text(g, CARD_X, 20, CARD_W, 40, "The messages, in the I4.0 language", 24, INK, True)
+
+msg = []
+
+
+def message(n, title):
+    """A message's card (it stays) and its arrows on the line (they go with the next message)."""
+    C, A = Node(f"{n} {title}: card", False), Node(f"{n} {title}: arrows", False)
+    msg.extend([C, A])
+    return C, A
+
+
+C, A = message(1, "call for proposals")
+card(C, 70, 108, "callForProposal", PURPLE, "order 17 → every module:<br>Fill 2.0 mL · Stopper · Inspect")
+for name, (x, y) in MOD.items():
+    arrow(A.group(f"call to {name}"), [(PA[0] + 22, PA[1] - 6), (x - 26, y)], PURPLE, 2.5, True)
+C, A = message(2, "proposals")
+card(C, 192, 170, "proposal ×3 · refuse ×1", BLUE,
+     "Filling: Fill 2.0 mL, 40 s<br>Stoppering: Stopper, 25 s · Inspection: Inspect, 10 s<br>"
+     f"<font color=\"{GREY}\">Capping: refuse, it offers none of them</font>")
+for name, (x, y) in MOD.items():
+    if name == "Capping":
+        badge(C.group("Capping refuses"), x + 30, y - 26, "✗", GREY, 14, 16)
+    else:
+        arrow(A.group(f"proposal from {name}"), [(x - 24, y + 12), (PA[0] + 24, PA[1] + 8)], BLUE, 2.5)
+C, A = message(3, "accept")
+card(C, 376, 108, "acceptProposal ×3", GREEN, "order 17 books its steps:<br>Filling, Stoppering, Inspection")
+for i, name in enumerate(["Filling", "Stoppering", "Inspection"]):
+    x, y = MOD[name]
+    pill(C.group(f"Booked: {name}"), x + 18, y - 52, 40, 30, f"{i + 1}", GOOD_FILL, GREEN, 2, 18, INK, True)
+    arrow(A.group(f"accept to {name}"), [(PA[0] + 22, PA[1] - 6), (x - 26, y)], GREEN, 2.5)
+C, A = message(4, "transport")
+card(C, 498, 140, "callForProposal · proposal · accept", BLUE_D,
+     "order 17 → the table: from loading to Filling<br>the table: 6 s, now · accepted")
+g = A.group("Transport: call and proposal")
+arrow(g, [(PA[0] - 4, PA[1] + 26), (TA[0] - 4, TA[1] - 26)], PURPLE, 2.5, True)
+arrow(g, [(TA[0] + 10, TA[1] - 24), (PA[0] + 18, PA[1] + 22)], BLUE, 2.5)
+C, A = message(5, "move")
+card(C, 652, 150, "The table moves the vial", INK,
+     "to the filling module; there the module's<br>agent runs Dispensing: the next slide")
+msg.remove(A)
+page("13 Agents on the line: call for proposals, proposal, accept", ln_xml, base13, ag, pa, *msg)
 
 # ==== Backup pages ==================================================================================
 tree_page("skill-hierarchies.drawio", 1, "Backup: from recipe to process")

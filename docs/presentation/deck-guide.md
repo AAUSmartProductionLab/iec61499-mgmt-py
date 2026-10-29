@@ -192,6 +192,35 @@ bindings; everything faint is drawn by the module rules, so it needs nothing in 
 heads; `rule 1` to `rule 8` one row each (AAS on the left, IEC 61499 on the right), for one per click;
 `keys and limits` the two notes: names are the keys, and what changes online versus by a restart.
 
+### 03b The production system, layer by layer
+
+The illustrated layers of `docs/figures/module-tools.drawio` ("Layers (illustrated)"), without its title,
+side boxes and legend: one layer per plane (the line, digital assets, behaviour, AAS models and
+orchestration, HMI and planning), each plane one group. Beats: the line, then one plane per click, from
+the bottom up.
+
+### 10 From the AAS to function blocks: the console
+
+Right of the subapplication, a console: what modsync sends, one layer per step (`commands 1` to
+`commands 9`): the operations of `iec61499_mgmt`'s `Command` (create_fb, connect, write, start; and to
+verify query_fbs, query_connections, query_type, read), the AAS read (GET) and the record (PUT). Show one
+step's layer at a time, with that step's arrow and blocks.
+
+### 12 Matching, a missing effect, replanning
+
+The recipe (Fill 12 mL, Stopper, Cap) against what the modules offer. Layers: `match` (the dashed lines,
+Stopper and Cap offered), `missing` (Fill 12 mL: Dispensing doses 0.5 to 10 mL), `replan` (DoubleDose from
+the filling module's primitives, its capability 1 to 20 mL after a reconfiguration), `check` (matched
+again: the order can run). One click each.
+
+### 13 Agents on the line: call for proposals, proposal, accept (planned)
+
+The line with a product agent (P) on the vial at loading, a resource agent (R) per module, the transport
+agent (T) of the table, and the messages as cards in the I4.0 language (VDI/VDE 2193). Each message has a
+`card` layer (it stays) and an `arrows` layer (it goes with the next message): call for proposals,
+proposals and a refusal, accept, transport. Then the vial and its P move to the filling station (a motion
+path of 77 × 45 page px on both layers): the way into page 06.
+
 ### Backup pages (copied)
 
 - **From recipe to process** (`skill-hierarchies.drawio`): the planner joins the product's recipe, the
@@ -202,20 +231,22 @@ heads; `rule 1` to `rule 8` one row each (AAS on the left, IEC 61499 on the righ
 
 ## The animated deck
 
-`modular-production-animated.pptx` is the user's `modular-production.pptx` with these figures added as
-animated slides in its own style (title, section label, the click timeline with a caption per step,
-speaker notes): after slide 3 "Inside one module", after slide 7 "The filling module at work", slide 8's
-figure as the three shells, after slide 9 the hierarchies, primitive and composite skills, "From the AAS
-to function blocks" and the mapping rules, after slide 15 the agents at the filling module. Each figure is
-its layer PNGs, cropped and stacked; the animations are PowerPoint's own (fade, wipe, fly in, motion
-paths), so they can be changed in the Animation Pane.
+`modular-production-animated-v2.pptx` is the user's `modular-production.pptx` with these figures added as
+animated slides in its own style (title, section label, speaker notes). Only the two walks through the
+filling module (with an orchestrator, with its agent) and "From the AAS to function blocks" keep the click
+timeline with a caption per step; the user's own slides lose theirs (`strip_timeline`: the shapes below
+the figure, their effects and the clicks left empty go; the rest is scaled and centred). Slides 13 and 14
+of the original become page 12, slides 15 and 16 page 13 followed by the agents at the filling module.
+The line and the tools pictures (slides 1, 3 and 11) are new exports of `docs/figures/slides.drawio`, in
+`figures/pictures`. Each figure is its layer PNGs, cropped and stacked; the animations are PowerPoint's
+own (fade, wipe, fly in, motion paths), so they can be changed in the Animation Pane.
 
 `python docs/presentation/source/build_pptx.py . <out.pptx>` builds it from `modular-production.pptx` and
-the exports in `figures/deck` (`slides_spec.py` says what each new slide shows and how it animates; the
-skill's `add_slide.py`, `clean.py` and `validate.py` do the package work). `export_slides.vbs` renders
-every slide with PowerPoint and `video_slide.vbs` one slide as a video, to check an animation frame by
-frame. A motion path in PowerPoint starts from where the shape is laid out, not where the last path
-ended: a way back is the path from the moved place to 0.
+the exports in `figures/deck` (`slides_spec.py` says what each new slide shows and how it animates, and
+what changes on the user's slides; the skill's `add_slide.py`, `clean.py` and `validate.py` do the package
+work). `export_slides.vbs` renders every slide with PowerPoint and `video_slide.vbs` one slide as a video,
+to check an animation frame by frame. A motion path in PowerPoint starts from where the shape is laid out,
+not where the last path ended: a way back is the path from the moved place to 0.
 
 ## Facts to keep
 
