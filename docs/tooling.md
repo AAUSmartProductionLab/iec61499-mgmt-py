@@ -236,6 +236,10 @@ module (its AIMC refers to their Operations; `modreg` and `example_line.py` do s
 keeps its OPC UA address, so the DMP reconnects when it restarts. If the DMP still has routes to a
 server that is gone, it reports `degraded` or `stale`: `docker restart lab-dmp` reads everything anew.
 The DMP is built from the submodule's branch `lab-modules` (four changes it needed for our modules).
+The example line (`example_line.py --publish`) describes every module for its `pc` target
+(`localhost`, which in the DMP's container is the container itself), so its mappings run but reach
+no module: an Operation invoked on it fails rather than moving an axis. A module on its Pi is
+published from its `pi` target (`modreg profile <module> --target pi`), with the user at the bench.
 
 The planner's demo stack (`ps-*`, in the web UI fork) uses the same ports: it is stopped
 (`docker compose -p ps-demo start` brings it back, after `deploy/aas.py down`).
