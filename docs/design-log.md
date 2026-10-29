@@ -18,6 +18,17 @@ A running log of design considerations made while building, for writing the pape
 
 ## 29 Oct 2026
 
+- **The replanning example needs a new step, not a new value: TaredDispensing.** *Journal*, *CIRP*.
+  - What: a step that needs the dose's own weight checked is not covered by Dispensing (it weighs the
+    vial and the liquid together); the composite made of the filling module's primitives puts Tare in
+    front of Dispensing's steps, and its derived capability covers the step after a reconfiguration.
+    The agents call for proposals one step at a time (Filling, then the transport), and the table's
+    agent is a resource agent like the modules'.
+  - Why: DoubleDose is, on our module, a parameter change (one dose within range twice is a volume);
+    an example of replanning should change the structure of a skill. The table is a resource in the
+    model, so its agent is one too.
+  - Instead of: DoubleDose for 12 mL; a call for the whole recipe at once; a separate transport agent.
+
 - **The figures' shapes as a draw.io shape pack.** *Journal* (figures, and anyone drawing the lab).
   - What: six draw.io libraries in `docs/figures/library` (the line, parts, computers and software, AAS,
     planes and sketches, flat), 125 shapes taken by cell id from the pages they were drawn on, each a
