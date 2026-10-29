@@ -779,10 +779,10 @@ text(g, 118, 26, 420, 48, "The product's recipe", 28, INK, True)
 g = base.group("Header: what the modules offer")
 shell(g, 1040, 22, 64, 55, name="Resource AASs")
 text(g, 1118, 26, 460, 48, "What the modules offer", 28, INK, True)
-for key, title, sub in [("fill", "1 · Fill 12 mL", "requires Filling, 12 mL"),
+for key, title, sub in [("fill", "1 · Fill 2.0 mL, dose checked", "requires Filling and the dose's weight"),
                         ("stopper", "2 · Stopper", "requires Stoppering"), ("cap", "3 · Cap", "requires Capping")]:
     pill(base.group(f"Step {title}"), 40, ROW[key], 460, 100, two_line(title, sub), PROD_FILL, PURPLE, 2.5, 28)
-for key, title, sub in [("fill", "Filling · 0.5 to 10 mL", "Filling module, by Dispensing"),
+for key, title, sub in [("fill", "Filling · 0.5 to 10 mL", "by Dispensing: weighs vial and liquid"),
                         ("stopper", "Stoppering", "Stoppering module"), ("cap", "Capping", "Capping module")]:
     pill(base.group(f"Offered: {title}"), 1040, ROW[key], 520, 100, two_line(title, sub), OPC_FILL, BLUE, 2.5, 28)
 
@@ -795,32 +795,36 @@ for key in ("fill", "stopper", "cap"):
         badge(g, 770, cy, "✓", GREEN)
 
 missing = Node("missing", False)
-g = missing.group("Fill 12 mL: the effect is missing")
+g = missing.group("The dose's weight: the effect is missing")
 badge(g, 770, ROW["fill"] + 50, "✗", RED)
 rect(g, 40, 222, 460, 96, RED_FILL, RED, 2, 16, "",
-     two_line("Missing: 12 mL into the vial", "Dispensing doses 0.5 to 10 mL", 24, 20), 24, INK, False, "left")
+     two_line("Missing: the dose's own weight", "Dispensing weighs the vial and the liquid together", 24, 19),
+     24, INK, False, "left")
 
 replan = Node("replan", False)
-g = replan.group("Replanned: DoubleDose from the primitives")
+g = replan.group("Replanned: TaredDispensing from the primitives")
 rect(g, 560, 640, 1000, 220, "#FBF5E6", GOLD, 2.5, 16)
-text(g, 590, 652, 940, 40, "<b>Replanned:</b> a new skill from the filling module's primitives", 24, INK)
-chips = ["NeedleDown", "Dispense", "Dispense", "Home", "Weigh"]
+text(g, 590, 652, 940, 40, "<b>Replanned:</b> a new order of the filling module's primitives", 24, INK)
+chips = ["Tare", "NeedleDown", "Dispense", "Home", "Weigh"]
 for i, s in enumerate(chips):
     x = 590 + i * 192
-    rect(g, x, 712, 160, 60, STEP_FILL, ORANGE, 2, 14, "", f"<b>{s}</b>", 21, INK)
+    rect(g, x, 712, 160, 60, "#FFFFFF" if i == 0 else STEP_FILL, GOLD if i == 0 else ORANGE, 3 if i == 0 else 2,
+         14, "dashed=1;" if i == 0 else "", f"<b>{s}</b>", 21, INK)
     if i:
         arrow(g, [(x - 32, 742), (x, 742)], INK, 2)
-text(g, 590, 790, 940, 54, "DoubleDose: two doses of up to 10 mL each, so 1 to 20 mL", 21, GREY)
+text(g, 590, 776, 160, 24, "the new step", 17, GOLD, True, "center")
+text(g, 590, 802, 940, 50, "TaredDispensing: the scale is tared with the empty vial on it, so Weigh gives the dose "
+     "alone", 20, GREY)
 arrow(g, [(1560, 700), (1586, 700), (1586, 282), (1562, 282)], GOLD, 3)
-pill(g, 1040, ROW["new"], 520, 100, two_line("Filling · 1 to 20 mL", "by DoubleDose, after a reconfiguration"),
-     "#FFFFFF", GOLD, 2.5, 28, dashed=True)
+pill(g, 1040, ROW["new"], 520, 100, two_line("Filling · with the dose's weight", "by TaredDispensing, after a "
+     "reconfiguration"), "#FFFFFF", GOLD, 2.5, 28, dashed=True)
 
 check = Node("check", False)
 g = check.group("Checked against the recipe")
 arrow(g, [(500, ROW["fill"] + 50), (1040, ROW["new"] + 50)], GREEN, 3.5)
 badge(g, 800, ROW["fill"] + 115, "✓", GREEN)
 rect(g, 40, 640, 470, 220, GOOD_FILL, GREEN, 2.5, 16, "",
-     two_line("Checked against the recipe", "every step is offered: the order can run once DoubleDose is built",
+     two_line("Checked against the recipe", "every step is offered: the order can run once TaredDispensing is built",
               26, 21), 26, INK, False, "left")
 page("12 Matching, a missing effect, replanning", base, match, missing, replan, check)
 
@@ -969,16 +973,15 @@ TA = T(330, 470)
 ag = Node("agents")
 for name, (x, y) in MOD.items():
     badge(ag.group(f"Resource agent: {name}"), x, y, "R", BLUE, 22, 22)
-badge(ag.group("Transport agent: the table"), *TA, "T", BLUE_D, 22, 22)
+badge(ag.group("Resource agent: the table"), *TA, "R", BLUE, 22, 22)
 g = ag.group("Legend")
 for i, (mark, fill, txt) in enumerate([("P", PURPLE, "product agent: one per order"),
-                                       ("R", BLUE, "resource agent: one per module"),
-                                       ("T", BLUE_D, "transport agent: the table")]):
-    badge(g, 62, 724 + i * 54, mark, fill, 20, 20)
-    text(g, 94, 704 + i * 54, 420, 40, txt, 22, INK)
+                                       ("R", BLUE, "resource agent: a module, or the table")]):
+    badge(g, 62, 750 + i * 54, mark, fill, 20, 20)
+    text(g, 94, 730 + i * 54, 420, 40, txt, 22, INK)
 g = ag.group("The order")
 rect(g, 520, 700, 480, 150, PROD_FILL, PURPLE, 2, 16, "",
-     two_line("Order 17: a vial", "1 Fill 2.0 mL · 2 Stopper · 3 Inspect", 24, 21), 24, INK, False, "left")
+     two_line("Order 17: a vial", "its next step: 1 · Fill 2.0 mL", 24, 21), 24, INK, False, "left")
 pa = Node("product agent on the vial")
 badge(pa.group("Product agent: the vial"), *PA, "P", PURPLE, 22, 22)
 
@@ -988,8 +991,8 @@ CARD_X, CARD_W = 1040, 530
 def card(node, y, h, head, color, body):
     g = node.group(f"Message: {head}")
     rect(g, CARD_X, y, CARD_W, h, "#FFFFFF", color, 2.5, 14)
-    text(g, CARD_X + 20, y + 10, CARD_W - 40, 34, head, 23, color, True)
-    text(g, CARD_X + 20, y + 46, CARD_W - 40, h - 54, body, 20, INK, valign="top")
+    text(g, CARD_X + 20, y + 8, CARD_W - 40, 32, head, 22, color, True)
+    text(g, CARD_X + 20, y + 42, CARD_W - 40, h - 48, body, 19, INK, valign="top")
     return g
 
 
@@ -997,6 +1000,7 @@ g = base13 = Node("messages header")
 text(g, CARD_X, 20, CARD_W, 40, "The messages, in the I4.0 language", 24, INK, True)
 
 msg = []
+CY = lambda n: 70 + (n - 1) * 110
 
 
 def message(n, title):
@@ -1006,34 +1010,33 @@ def message(n, title):
     return C, A
 
 
-C, A = message(1, "call for proposals")
-card(C, 70, 108, "callForProposal", PURPLE, "order 17 → every module:<br>Fill 2.0 mL · Stopper · Inspect")
+FI = MOD["Filling"]
+C, A = message(1, "call for proposals filling")
+card(C, CY(1), 100, "callForProposal", PURPLE, "order 17 → every module: Fill 2.0 mL")
 for name, (x, y) in MOD.items():
     arrow(A.group(f"call to {name}"), [(PA[0] + 22, PA[1] - 6), (x - 26, y)], PURPLE, 2.5, True)
-C, A = message(2, "proposals")
-card(C, 192, 170, "proposal ×3 · refuse ×1", BLUE,
-     "Filling: Fill 2.0 mL, 40 s<br>Stoppering: Stopper, 25 s · Inspection: Inspect, 10 s<br>"
-     f"<font color=\"{GREY}\">Capping: refuse, it offers none of them</font>")
+C, A = message(2, "proposal filling")
+card(C, CY(2), 100, "proposal ×1 · refuse ×3", BLUE,
+     f"Filling: Dispensing, 40 s<br><font color=\"{GREY}\">Stoppering, Capping, Inspection: refuse</font>")
 for name, (x, y) in MOD.items():
-    if name == "Capping":
-        badge(C.group("Capping refuses"), x + 30, y - 26, "✗", GREY, 14, 16)
-    else:
-        arrow(A.group(f"proposal from {name}"), [(x - 24, y + 12), (PA[0] + 24, PA[1] + 8)], BLUE, 2.5)
-C, A = message(3, "accept")
-card(C, 376, 108, "acceptProposal ×3", GREEN, "order 17 books its steps:<br>Filling, Stoppering, Inspection")
-for i, name in enumerate(["Filling", "Stoppering", "Inspection"]):
-    x, y = MOD[name]
-    pill(C.group(f"Booked: {name}"), x + 18, y - 52, 40, 30, f"{i + 1}", GOOD_FILL, GREEN, 2, 18, INK, True)
-    arrow(A.group(f"accept to {name}"), [(PA[0] + 22, PA[1] - 6), (x - 26, y)], GREEN, 2.5)
-C, A = message(4, "transport")
-card(C, 498, 140, "callForProposal · proposal · accept", BLUE_D,
-     "order 17 → the table: from loading to Filling<br>the table: 6 s, now · accepted")
-g = A.group("Transport: call and proposal")
-arrow(g, [(PA[0] - 4, PA[1] + 26), (TA[0] - 4, TA[1] - 26)], PURPLE, 2.5, True)
-arrow(g, [(TA[0] + 10, TA[1] - 24), (PA[0] + 18, PA[1] + 22)], BLUE, 2.5)
-C, A = message(5, "move")
-card(C, 652, 150, "The table moves the vial", INK,
-     "to the filling module; there the module's<br>agent runs Dispensing: the next slide")
+    if name != "Filling":
+        badge(C.group(f"{name} refuses"), x + 30, y - 26, "✗", GREY, 14, 16)
+arrow(A.group("proposal from Filling"), [(FI[0] - 24, FI[1] + 12), (PA[0] + 24, PA[1] + 8)], BLUE, 2.5)
+C, A = message(3, "accept filling")
+card(C, CY(3), 100, "acceptProposal", GREEN, "order 17 → Filling: step 1 booked")
+pill(C.group("Booked: Filling"), FI[0] + 18, FI[1] - 52, 40, 30, "1", GOOD_FILL, GREEN, 2, 18, INK, True)
+arrow(A.group("accept to Filling"), [(PA[0] + 22, PA[1] - 6), (FI[0] - 26, FI[1])], GREEN, 2.5)
+C, A = message(4, "call for proposals transport")
+card(C, CY(4), 100, "callForProposal", PURPLE, "order 17 → the table: from loading to Filling")
+arrow(A.group("call to the table"), [(PA[0] - 4, PA[1] + 26), (TA[0] - 4, TA[1] - 26)], PURPLE, 2.5, True)
+C, A = message(5, "proposal transport")
+card(C, CY(5), 100, "proposal", BLUE, "the table: shuttle 3, 6 s, now")
+arrow(A.group("proposal from the table"), [(TA[0] + 10, TA[1] - 24), (PA[0] + 18, PA[1] + 22)], BLUE, 2.5)
+C, A = message(6, "accept transport")
+card(C, CY(6), 100, "acceptProposal", GREEN, "order 17 → the table: booked")
+arrow(A.group("accept to the table"), [(PA[0] - 4, PA[1] + 26), (TA[0] - 4, TA[1] - 26)], GREEN, 2.5)
+C, A = message(7, "move")
+card(C, CY(7), 100, "The table moves the vial", INK, "to Filling, whose agent runs Dispensing: next slide")
 msg.remove(A)
 page("13 Agents on the line: call for proposals, proposal, accept", ln_xml, base13, ag, pa, *msg)
 

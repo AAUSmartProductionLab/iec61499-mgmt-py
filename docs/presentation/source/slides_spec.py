@@ -263,9 +263,9 @@ Names are the keys: the program can be read back into the AAS's terms. What can 
     write(s_match, s, """About 1 min, four clicks. One order, three steps, matched against what the modules offer.
 
 1. Match: each required capability against the offered ones, by meaning and range. Stopper and Cap are offered as they are.
-2. Fill 12 mL is not: Filling is offered, but Dispensing doses 0.5 to 10 mL. The effect the step needs, 12 mL in the vial, is missing.
-3. Replan: a new composite skill from the filling module's own primitives, DoubleDose: needle down, dispense, dispense, home, weigh. Each dose stays within 0.5 to 10 mL, so together 1 to 20 mL. Its capability is derived like any other, offered after a reconfiguration.
-4. Check against the recipe again: every step is offered; once modsync has built DoubleDose online, the order can run.
+2. Fill 2.0 mL with the dose checked is not: Filling is offered, but Dispensing weighs the vial and the liquid together, so the dose's own weight, the effect the step needs, is missing. No parameter gives it.
+3. Replan: a new composite skill from the filling module's own primitives, TaredDispensing: Tare first, with the empty vial on the scale, then needle down, dispense, home, weigh; Weigh now gives the dose alone. A new step in the sequence, not a new value. Its capability is derived like any other, offered after a reconfiguration.
+4. Check against the recipe again: every step is offered; once modsync has built TaredDispensing online, the order can run.
 
 Today the planner does this with the skill editor; later the module's agent (part 3).""")
 
@@ -299,8 +299,9 @@ At the start its passive part: the product AAS (Production Sequence, Required Ca
 
     # ---- slides 15 and 16 become one: agents on the line ------------------------------------------------------
     s = Slide("Agents on the line: call for proposals, propose, accept", AGENTS)
-    steps = [(1, "call-for-proposals"), (2, "proposals"), (3, "accept"), (4, "transport")]
-    msgs = [f"{k}-{n}-{w}" for k, n in steps for w in ("card", "arrows")] + ["5-move-card"]
+    steps = [(1, "call-for-proposals-filling"), (2, "proposal-filling"), (3, "accept-filling"),
+             (4, "call-for-proposals-transport"), (5, "proposal-transport"), (6, "accept-transport")]
+    msgs = [f"{k}-{n}-{w}" for k, n in steps for w in ("card", "arrows")] + ["7-move-card"]
     L = s.figure(P13, ["the-line", "product-the-vial", "messages-header", "agents", "product-agent-on-the-vial"] + msgs)
     dx = 77.2 * s.emu_per_page_px / m.SW         # loading to the filling station, on the page
     dy = 44.6 * s.emu_per_page_px / m.SH
@@ -309,17 +310,19 @@ At the start its passive part: the product AAS (Production Sequence, Required Ca
         if k > 1:
             first.insert(0, ("out", L[f"{k - 1}-{steps[k - 2][1]}-arrows"]))
         s.plain_click(first)
-    s.plain_click([("out", L["4-transport-arrows"]), ("in", L["5-move-card"]),
+    s.plain_click([("out", L["6-accept-transport-arrows"]), ("in", L["7-move-card"]),
                    ("path", L["product-the-vial"], {"x1": dx, "y1": dy, "dur": 1500}),
                    ("path", L["product-agent-on-the-vial"], {"x1": dx, "y1": dy, "dur": 1500})])
     s_agents = after("slide6.xml", s_inside2)
-    write(s_agents, s, """About 1.5 min, five clicks. Planned, the paper's future work. Every order gets a product agent (P) that travels with its vial; every module has a resource agent (R), the table a transport agent (T). They talk in the I4.0 language (VDI/VDE 2193): call for proposals, proposal or refuse, accept.
+    write(s_agents, s, """About 1.5 min, seven clicks. Planned, the paper's future work. Every order gets a product agent (P) that travels with its vial; every resource has a resource agent (R): each module, and the table, which is a resource too. They talk in the I4.0 language (VDI/VDE 2193): call for proposals, proposal or refuse, accept. One step at a time: here the vial's next step, Fill 2.0 mL, and the transport to it.
 
-1. The vial's product agent calls for proposals for its recipe: Fill 2.0 mL, Stopper, Inspect, to every module.
-2. Each module's agent checks the requirements against its capabilities: Filling, Stoppering and Inspection propose, with a time; Capping refuses, it offers none of them.
-3. The product agent accepts the three proposals: its steps are booked, in order.
-4. Transport: it calls the table's agent, which proposes 6 s from loading to Filling; accepted.
-5. The table moves the vial to the filling module. There the module's agent takes over: the next slide.""")
+1. The vial's product agent calls for proposals for its next step, Fill 2.0 mL, to every module.
+2. Each module's agent checks it against its capabilities: only Filling can, and proposes Dispensing, 40 s; Stoppering, Capping and Inspection refuse.
+3. The product agent accepts Filling's proposal: the step is booked.
+4. Now the transport: it calls for proposals to the table's agent, from loading to Filling.
+5. The table proposes shuttle 3, 6 s, now.
+6. Accepted.
+7. The table moves the vial to the filling module. There the module's agent takes over: the next slide.""")
 
     # ---- after it: at the filling module -------------------------------------------------------------------
     s = motion_slide("At the filling module: its agent runs the skill", AGENTS, True)

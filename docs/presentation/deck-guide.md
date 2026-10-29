@@ -227,18 +227,17 @@ step's layer at a time, with that step's arrow and blocks.
 
 ### 12 Matching, a missing effect, replanning
 
-The recipe (Fill 12 mL, Stopper, Cap) against what the modules offer. Layers: `match` (the dashed lines,
-Stopper and Cap offered), `missing` (Fill 12 mL: Dispensing doses 0.5 to 10 mL), `replan` (DoubleDose from
-the filling module's primitives, its capability 1 to 20 mL after a reconfiguration), `check` (matched
-again: the order can run). One click each.
+The recipe (Fill 2.0 mL with the dose checked, Stopper, Cap) against what the modules offer. Layers:
+`match` (the dashed lines, Stopper and Cap offered), `missing` (Dispensing weighs the vial and the liquid
+together: the dose's own weight is missing, and no parameter gives it), `replan` (TaredDispensing: Tare
+first, then the steps of Dispensing; a new step, not a new value), `check` (matched again). One click each.
 
 ### 13 Agents on the line: call for proposals, proposal, accept (planned)
 
-The line with a product agent (P) on the vial at loading, a resource agent (R) per module, the transport
-agent (T) of the table, and the messages as cards in the I4.0 language (VDI/VDE 2193). Each message has a
-`card` layer (it stays) and an `arrows` layer (it goes with the next message): call for proposals,
-proposals and a refusal, accept, transport. Then the vial and its P move to the filling station (a motion
-path of 77 × 45 page px on both layers): the way into page 06.
+One step at a time: the vial's product agent (P) calls for proposals for its next step, Fill 2.0 mL; only
+Filling proposes, the other modules refuse; it accepts. Then the transport: the table's agent, a resource
+agent (R) like the modules', proposes and is accepted, and the vial moves to Filling, the way into page 06.
+Each message has a `card` layer (it stays) and an `arrows` layer (it goes with the next message).
 
 ### Backup pages (copied)
 
@@ -275,3 +274,6 @@ not where the last path ended: a way back is the path from the moved place to 0.
 - No durations, counts or measured values in an animation: they illustrate the order of things.
 - Online: a value, a new composite skill. Not online: a new primitive or IO (a FORTE build), removing or
   reordering what runs (a restart).
+
+`replanning-and-agents.pptx` holds just the replanning and the agents-on-the-line slides:
+`keep_slides.py <deck> <out> "<title text>" ...` keeps the slides whose titles contain the texts.
