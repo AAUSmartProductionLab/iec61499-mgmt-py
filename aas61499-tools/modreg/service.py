@@ -89,6 +89,16 @@ def b64(identifier: str) -> str:
     return base64.urlsafe_b64encode(identifier.encode()).decode().rstrip("=")
 
 
+def mapped_last(items: list[dict]) -> list[dict]:
+    """AASs, or their profiles, in the order to publish them: those with a mapping configuration (a
+    module's AIMC, which refers to its components' Operations) after the others. The DMP resolves a
+    mapping when it reads the AIMC and does not come back to one whose references were missing."""
+    def holds(item: dict) -> bool:
+        return (any(sm.get("idShort") == "AssetInterfacesMappingConfiguration" for sm in item.get("submodels", []))
+                or bool(item.get("asset_interfaces_mapping_configuration")))
+    return sorted(items, key=holds)
+
+
 class AasServer:
     """An AAS repository with the HTTP API of the AAS specification part 2 (BaSyx AAS environment)."""
 

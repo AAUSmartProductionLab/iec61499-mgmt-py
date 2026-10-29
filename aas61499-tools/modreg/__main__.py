@@ -39,7 +39,7 @@ try:
     from . import model, planar, profile as profiles, templates
     from .ontology import Blueprint, check
     from .projection import project
-    from .service import AasServer, Registry, send, serve
+    from .service import AasServer, Registry, mapped_last, send, serve
 except ImportError as e:
     sys.exit(f"modreg needs the registration extra ({e}): python -m pip install -e \".[registration]\"")
 
@@ -186,7 +186,7 @@ def act(args, found: list[dict]) -> int:
     """Write, build, check or register each profile; 1 if one failed."""
     try:
         failed = False
-        for profile in found:
+        for profile in mapped_last(found) if args.command == "register" else found:
             if args.command == "profile":
                 print(f"profile: {write(args.out, profile['id_short'], profile)}")
             elif args.command == "build":
