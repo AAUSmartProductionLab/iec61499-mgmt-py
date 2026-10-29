@@ -37,7 +37,8 @@ def render(model: ET.Element, width: int, height: int, scale: float, png: Path, 
     elif "background" in model.attrib:
         del model.attrib["background"]
     xml = ET.tostring(model, encoding="unicode")
-    cfg = {"xml": xml, "toolbar": "", "nav": False, "border": 0, "resize": False, "fit": False,
+    # No "toolbar" key at all: an empty one still reserves a strip above the diagram and shifts it down.
+    cfg = {"xml": xml, "nav": False, "border": 0, "resize": False, "fit": False,
            "lightbox": False, "highlight": "none"}
     page = (f'<!doctype html><html><head><meta charset="utf-8"><style>html,body{{margin:0;padding:0;'
             f'background:{background or "transparent"};overflow:hidden}}</style></head><body>'
