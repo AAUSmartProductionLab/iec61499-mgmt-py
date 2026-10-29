@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+import os
 import socket
+import tempfile
 
 
 def free_port() -> int:
@@ -20,15 +22,19 @@ def free_port() -> int:
 
 @asynccontextmanager
 async def embedded_server(domain: str = "localhost", port: int = 5222, server_port: int | None = None):
-    """SPADE's XMPP server in this event loop, its accounts in memory; yields its client port
+    """SPADE's XMPP server in this event loop, its accounts in a temporary file; yields its client port
     (``port=0``: a free one)."""
     import loguru
     from pyjabber.server import Server
     from pyjabber.server_parameters import Parameters
     loguru.logger.remove()                     # pyjabber logs every stanza
     port = port or free_port()
+    # The accounts in a file of a folder of its own: with the database in memory, an account registered
+    # by an agent in another process once the server runs was never answered.
+    folder = tempfile.mkdtemp(prefix="xmpp-")
     server = Server(Parameters(host=domain, client_port=port, server_port=server_port or free_port(),
-                               database_in_memory=True, message_persistence=False))
+                               database_path=os.path.join(folder, "accounts.db"), database_purge=True,
+                               message_persistence=False))
     task = asyncio.get_running_loop().create_task(server.start())
     await asyncio.wait_for(server.ready.wait(), 20)
     try:
