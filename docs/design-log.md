@@ -19,7 +19,7 @@ A running log of design considerations made while building, for writing the pape
 ## 29 Oct 2026
 
 - **An agent is drawn as the active part of an AAS, in our parts.** *Journal* (agents, future work).
-  - What: a module's agent has a messenger (MQTT, VDI/VDE 2193), an interaction manager with the
+  - What: a module's agent is a SPADE agent; its messenger is XMPP, carrying VDI/VDE 2193 messages; an interaction manager with the
     service provider's state machine, bidding (capability, availability, time), reconfiguration (the
     planner composes, modsync builds online) and execution (modlink over OPC UA, or an Operation of the
     AAS over HTTP that the DMP turns into the OPC UA call); its passive part is the module's AAS. A

@@ -318,29 +318,33 @@ for k, (a, b, name) in enumerate(PLANES):
     pl.group(cells, name, lid)
 copied_page("03b The production system, layer by layer", pl)
 
-# ==== 03c The production system in layers, simplified: few, big things; each line in its upper layer ====
+# ==== 03c The production system in layers, isometric ==================================================
+# The line's floor is an isometric slab (edges at 30°). Each layer is a plane over the row of stations,
+# raised RISE above the one below; a plane is shallower (DEPTH) than RISE, so no plane hides what stands
+# on the plane below. A thing stands at plane coordinates (a along the line, b across it, in px along the
+# axes): what belongs to a station stands straight above it, and the lines between layers are vertical.
+# Each line is in the layer of its upper end.
 ICON = {c.get("id"): c.get("style") for c in load("module-tools.drawio", 6).find("root")}
-PW, PH, X0 = 1300, 280, 430                      # a plane: width, height, left edge on the page
+LDX, LDY, RISE = 341.5, 894, 240                 # the line drawing's place; the height between two planes
+FT = (422.4 + LDX, 205.7 + LDY)                  # the floor's top corner
+EA, EB = (0.866, 0.5), (-0.866, 0.5)             # the isometric axes: along the line, across it
+A0, A1, B0, B1 = 30, 850, -40, 150               # a plane: from A0 to A1 along, B0 to B1 across
+STATIONS = [273, 394, 515, 636]                  # each station's foot, along the line (across: 50)
 
 
-def plane_pts(top):
-    L, T, B = (X0, top + 0.45 * PH), (X0 + 0.62 * PW, top), (X0 + 0.38 * PW, top + PH)
-    return [L, T, (T[0] + B[0] - L[0], T[1] + B[1] - L[1]), B]
+def iso(a, b, k=0):
+    return FT[0] + a * EA[0] + b * EB[0], FT[1] + a * EA[1] + b * EB[1] - k * RISE
 
 
-def on_plane(top, x, f=0.6):
-    """The point at page x, a fraction f from the plane's back edge to its front edge."""
-    L, T, R, B = plane_pts(top)
-    edge = lambda a, b: a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0])
-    back = edge(L, T) if x <= T[0] else edge(T, R)
-    front = edge(L, B) if x <= B[0] else edge(B, R)
-    return back + f * (front - back)
+def plane(node, k, fill, stroke):
+    polygon(node.group("Plane"), [iso(A0, B0, k), iso(A1, B0, k), iso(A1, B1, k), iso(A0, B1, k)], fill, stroke,
+            2.5, "fillOpacity=55;")
 
 
-def icon(node, ids, x, bottom, w, h):
-    """An isometric icon from the detailed figure, its bottom centre at (x, bottom)."""
+def icon(node, ids, x, base, w, h):
+    """An isometric icon from the detailed figure, standing with its foot at (x, base)."""
     for cid in ids:
-        box(node, x - w / 2, bottom - h, w, h, ICON[cid])
+        box(node, x - w / 2, base - h, w, h, ICON[cid])
 
 
 def caption(node, x, y, value, size=30, color=INK, w=300):
@@ -349,97 +353,95 @@ def caption(node, x, y, value, size=30, color=INK, w=300):
         "fillColor=none;", "fillColor=none;labelBackgroundColor=#FFFFFF;"))(node.items[-1]["xml"])
 
 
-def layer_name(node, top, name, sub, color):
+def layer_name(node, k, name, sub, color, at=None):
     g = node.group(f"Name: {name}")
-    y = top + 0.45 * PH
-    text(g, 0, y - 102, X0 - 12, 100, name, 38, color, True, "right", valign="bottom")
-    text(g, 0, y + 2, X0 - 12, 40, sub, 28, GREY, False, "right")
+    x, y = at or iso(A0, B1, k)
+    text(g, 0, y - 56, x - 24, 52, name, 42, color, True, "right", valign="bottom")
+    text(g, 0, y, x - 24, 40, sub, 28, GREY, False, "right")
 
 
-TOPS = {"HMI": 30, "AAS": 250, "behaviour": 470, "assets": 690}
 ln3 = Copied("slides.drawio", 2, "the line")
 ln3.cells = [c for c in ln3.cells if 2 <= num(c) <= 41]
-LS, LDX, LDY = 1.1, 470 - 94 * 1.1, 950 - 200 * 1.1
-ln3.scale(LS, LDX, LDY)
+ln3.scale(1, LDX, LDY)
 ln3.group([c for c in ln3.cells if c.get("parent") == "1"], "The line: table, shuttles, stations, robots")
 line_name = Node("name of the line")
-g = line_name.group("Name: The line")
-text(g, 20, 1310, X0 - 30, 50, "The line", 40, ORANGE_D, True, "right")
-text(g, 20, 1362, X0 - 30, 40, "modules around a maglev table", 28, GREY, False, "right")
-# the stations' tops, from the line page: where each module's things stand above
-COLS = [(x + 71) * LS + LDX for x in (544.1, 648.9, 753.7, 858.5)]
-TOPS_LINE = [(y + 10) * LS + LDY for y in (211.6, 272.1, 332.6, 393.1)]
+layer_name(line_name, 0, "The line", "modules around a maglev table", ORANGE_D, (98.5 + LDX, 392.7 + LDY + 40))
+ROOF = 156                                       # a station's height above its foot
 
 assets = Node("digital assets")
-polygon(assets.group("Plane"), plane_pts(TOPS["assets"]), "#DCE8F5", BLUE, 2, "opacity=85;")
-layer_name(assets, TOPS["assets"], "Digital assets", "each module's parts and its Pi", BLUE_D)
-pis = []
-for k, x in enumerate(COLS):
+plane(assets, 1, "#DCE8F5", BLUE)
+layer_name(assets, 1, "Digital assets", "each module's parts and its Pi", BLUE_D)
+for k, a in enumerate(STATIONS):
     g = assets.group(f"Module {k + 1}: Pi and parts")
-    y = on_plane(TOPS["assets"], x, 0.7)
-    icon(g, ["c59", "c60"], x + 30, y, 130, 93)
-    icon(g, ["c53", "c54"], x - 58, y - 8, 70, 82)
-    line(g, [(x, TOPS_LINE[k]), (x, y - 40)], "endArrow=none;html=1;strokeColor=#B08A4A;strokeWidth=2.5;dashed=1;")
-    pis.append((x + 28, y - 80))
+    x, y = iso(a, 50)
+    line(g, [(x, y - ROOF), (x, y - RISE)], "endArrow=none;html=1;strokeColor=#B08A4A;strokeWidth=2.5;dashed=1;")
+    mx, my = iso(a - 40, 20, 1)
+    icon(g, ["c53", "c54"], mx, my + 14, 60, 70)
+    px, py = iso(a, 50, 1)
+    icon(g, ["c59", "c60"], px, py + 30, 116, 83)
 
 beh = Node("behaviour · IEC 61499")
-polygon(beh.group("Plane"), plane_pts(TOPS["behaviour"]), "#E3F1DA", GREEN, 2, "opacity=85;")
-layer_name(beh, TOPS["behaviour"], "Behaviour · IEC 61499", "programs on FORTE", GREEN_D)
-fortes = []
-for k, (px, py) in enumerate(pis):
+plane(beh, 2, "#E3F1DA", GREEN)
+layer_name(beh, 2, "Behaviour · IEC 61499", "programs on FORTE", GREEN_D)
+FORTE_TOP = []
+for k, a in enumerate(STATIONS):
     g = beh.group(f"Module {k + 1}: FORTE")
-    x = px
-    y = on_plane(TOPS["behaviour"], x, 0.7)
-    icon(g, ["c104", "c105"], x, y, 130, 126)
-    line(g, [(px, py), (x, y - 20)], f"endArrow=none;html=1;strokeColor={GREEN};strokeWidth=2.5;")
-    fortes.append((x, y - 126))
+    x, y1 = iso(a, 50, 1)
+    _, y2 = iso(a, 50, 2)
+    line(g, [(x, y1 - 30), (x, y2)], f"endArrow=none;html=1;strokeColor={GREEN};strokeWidth=2.5;")
+    icon(g, ["c104", "c105"], x, y2 + 30, 120, 116)
+    FORTE_TOP.append((x, y2 + 30 - 116))
 
 aasl = Node("AAS models and orchestration")
-polygon(aasl.group("Plane"), plane_pts(TOPS["AAS"]), "#DDF0EE", AAS, 2, "opacity=85;")
-layer_name(aasl, TOPS["AAS"], "AAS models and orchestration", "describe, coordinate", "#0F726C")
+plane(aasl, 3, "#DDF0EE", AAS)
+layer_name(aasl, 3, "AAS models and orchestration", "describe, coordinate", "#0F726C")
 g = aasl.group("AAS server and the AASs")
-sx = 650
-sy = on_plane(TOPS["AAS"], sx, 0.62)
-icon(g, ["c141", "c142"], sx - 150, sy, 110, 150)
+x, y = iso(70, 110, 3)
+icon(g, ["c141", "c142"], x, y + 30, 96, 130)
+SHELL_TOP = {}
 for i, lab in enumerate(["Product", "Process", "Resource"]):
-    shell(g, sx - 84 + i * 128, sy - 118, 122, 105, lab, 19, name=f"{lab} AAS")
-caption(g, sx + 40, sy + 4, "AAS server", 34, "#0F726C", 260)
-server_top = (sx + 40, sy - 118)
+    sx, sy = iso(160 + i * 125, 110, 3)
+    shell(g, sx - 52, sy - 70, 104, 89, lab, 17, name=f"{lab} AAS")
+    SHELL_TOP[lab] = (sx, sy - 70)
+cx, cy = iso(70, 110, 3)
+caption(g, cx, cy - 150, "AAS server", 32, "#0F726C", 240)
+SERVER = iso(410, 110, 3)
 tools = {}
-for name, x, color in [("modsync", COLS[0] - 15, GOLD), ("modlink", COLS[3] + 150, BLUE)]:
+for name, a, color in [("modsync", 600, GOLD), ("modlink", 780, BLUE)]:
     g = aasl.group(f"Tool: {name}")
-    y = on_plane(TOPS["AAS"], x, 0.62)
-    icon(g, ["c172"], x, y, 110, 105)
-    caption(g, x, y + 2, name, 32, color, 180)
+    x, y = iso(a, 110, 3)
+    icon(g, ["c172"], x, y + 30, 104, 100)
+    caption(g, x, y - 112, name, 30, color, 170)
     tools[name] = (x, y)
-g = aasl.group("Links: the tools to the programs")
-for k, (fx, fy) in enumerate(fortes):
+g = aasl.group("Links: the tools to the programs, to the AASs")
+for k, (fx, fy) in enumerate(FORTE_TOP):
     mx, my = tools["modsync"]
-    line(g, [(mx + 20 + 8 * k, my + 40), (fx - 30, fy + 14)], f"endArrow=block;endSize=5;html=1;strokeColor={GOLD};strokeWidth=2.5;")
+    line(g, [(mx - 20, my + 30), (fx - 20, fy + 20)], f"endArrow=block;endSize=6;html=1;strokeColor={GOLD};strokeWidth=2.5;")
     lx, ly = tools["modlink"]
-    line(g, [(lx - 20 - 8 * k, ly + 40), (fx + 30, fy + 14)], f"endArrow=block;endSize=5;html=1;strokeColor={BLUE};strokeWidth=2.5;")
+    line(g, [(lx - 20, ly + 30), (fx + 24, fy + 34)], f"endArrow=block;endSize=6;html=1;strokeColor={BLUE};strokeWidth=2.5;")
 for name in ("modsync", "modlink"):
     x, y = tools[name]
-    line(g, [(x - 56, y - 52), (server_top[0] + 150, sy - 50)],
-         f"endArrow=block;endSize=5;startArrow=block;startSize=5;html=1;strokeColor={INK};strokeWidth=2;")
+    line(g, [(x - 54, y - 30), (SERVER[0] + 54, SERVER[1] - 40)],
+         f"endArrow=block;endSize=6;startArrow=block;startSize=6;html=1;strokeColor={INK};strokeWidth=2;")
 g = aasl.group("Agents (planned)")
-ax = COLS[2] + 40
-ay = on_plane(TOPS["AAS"], ax, 0.35)
-rect(g, ax - 80, ay - 60, 160, 56, "#FFFFFF", INK, 2, 12, "dashed=1;", "<b>Agents</b>", 30, INK)
+ax, ay = iso(830, -10, 3)
+rect(g, ax - 78, ay - 50, 156, 52, "#FFFFFF", INK, 2, 12, "dashed=1;", "<b>Agents</b>", 28, INK)
 
 hmi = Node("HMI, planning and scheduling")
-polygon(hmi.group("Plane"), plane_pts(TOPS["HMI"]), "#ECE7F4", PURPLE, 2, "opacity=85;")
-layer_name(hmi, TOPS["HMI"], "HMI, planning, MES", "plan, change, operate", PURPLE_D)
-for name, x, ids, dashed in [("Planner", 760, ["c170", "c171"], False), ("Skill editor", 1000, ["c172", "c173"], False),
-                             ("HMI", 1240, ["c172"], False), ("MES · ERP", 1480, ["c170"], True)]:
+plane(hmi, 4, "#ECE7F4", PURPLE)
+layer_name(hmi, 4, "HMI, planning, MES", "plan, change, operate", PURPLE_D)
+for name, a, ids, to in [("Planner", 110, ["c170", "c171"], "Process"), ("Skill editor", 320, ["c172", "c173"], "Resource"),
+                         ("HMI", 530, ["c172"], "Resource"), ("MES · ERP", 740, ["c170"], None)]:
+    live = to is not None
     g = hmi.group(f"Application: {name}")
-    y = on_plane(TOPS["HMI"], x, 0.6)
-    icon(g, ids, x, y, 120, 114)
-    caption(g, x, y + 2, name, 32, PURPLE_D if not dashed else GREY, 220)
-    if not dashed:
-        line(g, [(x - 20, y + 40), (server_top[0] + 40 * (x - 1000) / 240, server_top[1])],
-             f"endArrow=block;endSize=6;html=1;strokeColor={INK};strokeWidth=2;dashed=1;")
-page("03c The production system in layers", "\n".join(ln3.xml()), line_name, assets, beh, aasl, hmi, w=1740, h=1690)
+    x, y = iso(a, 110, 4)
+    icon(g, ids, x, y + 30, 112, 106)
+    caption(g, x, y - 118, name, 30, PURPLE_D if live else GREY, 210)
+    if live:
+        tx, ty = SHELL_TOP[to]
+        line(g, [(x, y + 34), (tx + (a - 320) * 0.06, ty)],
+             f"endArrow=block;endSize=7;html=1;strokeColor={INK};strokeWidth=2.2;dashed=1;")
+page("03c The production system in layers", "\n".join(ln3.xml()), line_name, assets, beh, aasl, hmi, w=1620, h=1760)
 
 # ==== 04 The IEC 61499 program's structure (module rules) =========================================
 mr = Copied("slides.drawio", 8, "frame")
@@ -928,7 +930,7 @@ def agent_frame(node, title, who, badge_mark, badge_fill, role, messages):
     """The frame, the messenger, the interaction manager with its role, the messages between them."""
     g = node.group("Agent frame")
     rect(g, 160, 20, 1420, 580, AGENT_FILL, BLUE, 2, 14, "dashed=1;")
-    text(g, 184, 28, 900, 40, f"<b>{title}</b> · the active part, planned", 26, INK)
+    text(g, 184, 28, 1000, 40, f"<b>{title}</b> · the active part: a SPADE agent, planned", 26, INK)
     g = node.group("Outside: who it talks to")
     badge(g, 70, 300, badge_mark, badge_fill, 26, 26)
     text(g, 10, 334, 140, 60, who, 18, INK, False, "center")
@@ -936,7 +938,7 @@ def agent_frame(node, title, who, badge_mark, badge_fill, role, messages):
     g = node.group("Messenger")
     rect(g, 180, 80, 120, 500, "#FFFFFF", INK, 2, 12)
     text(g, 180, 96, 120, 30, "<b>Messenger</b>", 20, INK, False, "center")
-    rect(g, 200, 280, 80, 44, "#FCE6D6", ORANGE, 2, 8, "", "<b>MQTT</b>", 18, INK)
+    rect(g, 200, 280, 80, 44, "#FCE6D6", ORANGE, 2, 8, "", "<b>XMPP</b>", 18, INK)
     text(g, 186, 470, 108, 90, "I4.0 language<br>VDI/VDE 2193", 15, GREY, False, "center")
     g = node.group("Interaction manager")
     rect(g, 410, 80, 240, 500, "#FFFFFF", INK, 2, 12)
