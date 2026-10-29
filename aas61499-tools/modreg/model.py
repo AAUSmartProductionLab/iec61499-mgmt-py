@@ -189,8 +189,14 @@ def slim(node, dumped, known, declared=None, name=None):
         own = class_defaults(type(node))
         apart = {f for f in own if len({repr(class_defaults(c).get(f)) for c in typing.get_args(declared)
                                         if c is not type(None)}) > 1}
-        return {f: v for f, v in dumped.items()
-                if (f in apart or v != own.get(f, SAME)) and not (f == "id_short" and v == name)}
+        out = {}
+        for f in type(node).model_fields:
+            # Below that, what differs from the class's defaults, as for any element.
+            part = dumped[f] if f in apart else slim(getattr(node, f), dumped[f], own.get(f, SAME),
+                                                     item_type(type(node), f) if isinstance(node, ELEMENT) else None, f)
+            if part is not SAME and not (f == "id_short" and part == name):
+                out[f] = part
+        return out
     if isinstance(node, BaseModel):
         new = not isinstance(known, dict)
         start = class_defaults(type(node)) if new else known
