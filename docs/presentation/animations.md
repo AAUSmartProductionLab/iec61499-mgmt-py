@@ -430,12 +430,14 @@ animation:
 
 The physical module moving with its state machines, for PowerPoint. Unlike the briefs above, it is
 built from a draw.io figure cut into layers: `docs/figures/module-motion.drawio`, page "Filling
-module in motion", a front view of the filling module beside its PackML and Dispensing state
-machines. Each part that moves or switches is a layer of its own, and
-`python docs/figures/export_layers.py docs/figures/module-motion.drawio docs/presentation/figures/filling-motion`
-exports every layer as a PNG of the whole page (2400 × 1350, transparent). Stacked on a slide at the
-same place and size, the layers line up; each gets its own animation. `00-still.png` is the figure
-as one picture, for a slide without animation.
+module in motion", a front view of the filling module beside an orchestrator and the module's
+PackML and Dispensing state machines. Each part that moves or switches is a layer of its own; within
+a layer, the parts that belong together are draw.io groups (the vial inside "Shuttle with vial", the
+pump and the needle inside "Carriage", the motor and the switch inside "Linear axis"), so a part is
+moved or edited as one. `python docs/figures/export_layers.py docs/figures/module-motion.drawio
+docs/presentation/figures/filling-motion` exports every layer as a PNG of the whole page (2400 ×
+1350, transparent). Stacked on a slide at the same place and size, the layers line up; each gets its
+own animation. `00-still.png` is the figure as one picture, for a slide without animation.
 
 **How to set it up.** Insert all PNGs of `filling-motion/` except `00-still.png` at once, each at
 position 0, 0 and the slide's full size (13.33 × 7.5 in). Keep the file order as the stacking order
@@ -445,7 +447,7 @@ with its first animation (Appear, or the effect below). After an edit in draw.io
 
 | Layers | What | PowerPoint |
 | --- | --- | --- |
-| `01-module` | Frame, lid, stepper motor, column, home switch, Pi, table, scale | Always shown |
+| `01-module` | Table, frame and lid, the linear axis (column, motor at its foot, home switch at its top), Pi with its wires, scale | Always shown |
 | `02-shuttle-and-vial` | The vial on its shuttle | Fly In from the left; Fly Out to the right at the end |
 | `03-carriage` | Carriage, arm, pump, needle, drawn at home | Motion path, a line straight down by **28.9 % of the slide's height** (40 mm, 260 of the page's 900 px), and the same line back up |
 | `04-home-switch-pressed` | Green ring, `AtHome` | Appear while the carriage is at the switch |
@@ -454,33 +456,37 @@ with its first animation (Appear, or the effect below). After an edit in draw.io
 | `07-pump-running` | Ring on the pump, the stream, drawn where the pump is when down | Appear during Dispense |
 | `08-liquid` | 2 mL in the vial | Wipe from the bottom during Dispense; Fly Out to the right *with* the shuttle |
 | `09-weight-2-0-g` | The scale reads 2.0 g | Appear at Weigh |
-| `10-state-machines` | The OPC UA call box, PackML, Dispensing's states and steps, plain | Always shown |
+| `10-state-machines` | The orchestrator, PackML with the occupation, Dispensing's states and steps, plain | Always shown |
 | `11` to `15` | PackML Stopped, Resetting, Idle, Starting, Execute highlighted | Appear on entry, Disappear on exit |
 | `16-occupied` | Occupation: `occupied · s1` over `free` | Appear at Occupy, Disappear at Release |
 | `17` to `19` | Skill Idle, Running, Succeeded highlighted | Appear on entry, Disappear on exit |
 | `20` to `23` | Step NeedleDown, Dispense, Home, Weigh highlighted | Appear when the step starts, Disappear when it ends |
-| `24-call-01` to `34-call-11` | The line in the OPC UA call box | Each Appears and the one before Disappears (*With Previous*) |
+| `24` to `29` | A command: the arrow from the orchestrator to what it addresses (the occupation, PackML, the skill), with the command and its answer | Appear (or Wipe in the arrow's direction), Disappear with the next command |
+
+The commands: `24` the skill's Start refused (orange, `False, 5`, not occupied), `25` Occupy, `26`
+Reset (homes), `27` the module's Start, `28` the skill's Start with 2.0 mL, `29` Release.
 
 **The beats** (one click each, or *After Previous* for autoplay; within a beat everything is *With
 Previous* unless it says *after*). At the start: 01, 03, 10, `11-packml-stopped`, `17-skill-idle`.
 
-| # | Call line | What moves or switches |
+| # | Command | What moves or switches |
 | --- | --- | --- |
 | 1 | – | `02` flies in: the vial arrives under the needle |
-| 2 | `24` Start refused, not occupied | – |
-| 3 | `25` Occupy | `16` appears |
-| 4 | `26` Reset, the axis homes | `11` off, `12` on; `05` on; *after* `04` on, `05` off; *after* `12` off, `13` on |
-| 5 | `27` Module Start | `13` off, `14` on; *after* `14` off, `15` on |
-| 6 | `28` Dispensing Start | `17` off, `18` on |
-| 7 | `29` NeedleDown | `20` on, `04` off, `05` on, `06` on; `03` moves down; *after* `05` off |
-| 8 | `30` Dispense | `20` off, `21` on, `07` on; `08` wipes up; *after* `07` off |
-| 9 | `31` Home | `21` off, `22` on, `06` off, `05` on; `03` moves up; *after* `04` on, `05` off |
-| 10 | `32` Weigh | `22` off, `23` on, `09` on |
-| 11 | `33` Succeeded, then Idle | `23` off, `18` off, `19` on; *after* `19` off, `17` on |
-| 12 | `34` Release | `16` off; `02` and `08` fly out to the right together; `09` off |
+| 2 | `24` on | – (refused: nobody occupies the module) |
+| 3 | `24` off, `25` on | `16` appears |
+| 4 | `25` off, `26` on | `11` off, `12` on; `05` on; *after* `04` on, `05` off; *after* `12` off, `13` on |
+| 5 | `26` off, `27` on | `13` off, `14` on; *after* `14` off, `15` on |
+| 6 | `27` off, `28` on | `17` off, `18` on |
+| 7 | `28` off | NeedleDown: `20` on, `04` off, `05` on, `06` on; `03` moves down; *after* `05` off |
+| 8 | – | Dispense: `20` off, `21` on, `07` on; `08` wipes up; *after* `07` off |
+| 9 | – | Home: `21` off, `22` on, `06` off, `05` on; `03` moves up; *after* `04` on, `05` off |
+| 10 | – | Weigh: `22` off, `23` on, `09` on |
+| 11 | – | `23` off, `18` off, `19` on; *after* `19` off, `17` on (Succeeded, then Idle by itself) |
+| 12 | `29` on | `16` off; `02` and `08` fly out to the right together; `09` off; *after* `29` off |
 
-Facts, as for `skill-call`: every method answers `[Accepted, ErrorID]` at once (`True, 0` accepted,
-`False, 5` NotPermitted); a skill starts only for the session that occupies the module, in Execute;
-Reset homes the axis to its limit switch; the steps follow each other by events; Succeeded returns to
-Idle by itself. The pump and the scale are not real hardware yet: the pump is a time at a flow rate,
-the scale is simulated (dashed). No durations or measured values; an illustration, not a recording.
+Facts, as for `skill-call`: every command is answered at once with `[Accepted, ErrorID]` (`True, 0`
+accepted, `False, 5` NotPermitted); a skill starts only for the session that occupies the module, in
+Execute; Reset homes the axis to its limit switch; the steps follow each other by events; Succeeded
+returns to Idle by itself. The pump and the scale are not real hardware yet: the pump is a time at a
+flow rate, the scale is simulated (dashed). No durations or measured values; an illustration, not a
+recording.
