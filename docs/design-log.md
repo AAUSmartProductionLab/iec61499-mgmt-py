@@ -18,6 +18,23 @@ A running log of design considerations made while building, for writing the pape
 
 ## 29 Oct 2026
 
+- **The DMP rides out a module that restarts: two more changes on its `lab-modules` branch.**
+  *Journal* (what an AAS-driven connection needs from its runtime when modules come and go).
+  - What: a route's OPC UA subscription is deleted without waiting for the server's answer, and a
+    method call or a signature read that finds the shared connection reconnecting waits for it (a
+    call a third of its timeout, a read 10 s) instead of failing; a read that meets a stale session
+    is made once more.
+  - Why: a module that restarts (FORTE, a Pi rebooting) is normal on a reconfigurable line. Before,
+    the first call after a restart failed for about 13 s (`Device transport failed`, HTTP 424 at the
+    AAS server), and removing the routes of a module that had gone away waited out a request timeout
+    per consumer: the DMP took 71 to 213 s to converge after a republish, 47 s with the delete sent
+    and not waited for. A server that is gone drops the subscription with its session anyway.
+  - Instead of: retrying the call itself (a method is not idempotent: Dispensing must not start
+    twice), so only what has not been sent waits, and only the read is made again.
+  - Checked: the DMP's OPC UA tests (37), and `test_dmp_live.py` three runs in a row against the
+    same DMP, where the second run had failed before. Left as found: a mapping blocked on a submodel
+    published after its AIMC is not resolved when the submodel arrives (publishing order avoids it).
+
 - **The planner's bindings make the process AAS: the registration service writes it after a save.**
   *Journal, CIRP* (ISA-88's master recipe, apart from the general recipe).
   - What: `POST /process/<product>` (`modreg/process.py`) reads the product's recipe as the planner
@@ -93,9 +110,9 @@ A running log of design considerations made while building, for writing the pape
     - it connected to the host a server names in its endpoints (FORTE: the computer's hostname,
       `MartinPC`, the Pi's name), which does not resolve in the DMP's container. It now reaches a
       server at the AID's base (Camel Milo's `overrideHost`), as the AID says.
-  - Found, not changed: removing or replacing a route whose OPC UA server has gone away waits out
-    a shutdown timeout per route, and leaves the mapping stale and the DMP degraded until it is
-    restarted; and a mapping whose referenced submodel is published after the AIMC stays blocked
+  - Found, not changed (the first is fixed on 29 Oct, see there): removing or replacing a route
+    whose OPC UA server has gone away waits out a shutdown timeout per route, and leaves the mapping
+    stale and the DMP degraded until it is restarted; and a mapping whose referenced submodel is published after the AIMC stays blocked
     (not resolved when the submodel arrives). So the components' AASs are published before the
     module's (`modreg.service.mapped_last`), and within an AAS its AIMC after its other submodels
     (`AasServer.publish`); a module keeps its OPC UA address across restarts.
