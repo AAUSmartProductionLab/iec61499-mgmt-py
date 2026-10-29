@@ -18,6 +18,23 @@ A running log of design considerations made while building, for writing the pape
 
 ## 29 Oct 2026
 
+- **The planner's bindings make the process AAS: the registration service writes it after a save.**
+  *Journal, CIRP* (ISA-88's master recipe, apart from the general recipe).
+  - What: `POST /process/<product>` (`modreg/process.py`) reads the product's recipe as the planner
+    saved it, with a module, a skill and input bindings per step, finds the line that holds every
+    bound module (its Hierarchical Structures), and writes the process AAS: Process Information,
+    a step binding per bound step (the recipe's step, the module, the skill, each input's source or
+    constant and the Operation variable it is handed to), and the plan check's result as its
+    Validation. The planner asks for it after saving a recipe with a bound step. The plan check
+    moved into `modreg` (`modreg.plancheck`) for it.
+  - Why the service and not the planner: the process AAS is built with aas-model's classes and
+    checked by the same plan check as the reference processes, so the hand-written ones and the
+    planner's are one structure; the planner has no notion of a line, and the service finds it.
+    Instead of: the planner writing the process AAS's JSON itself (a second copy of the structure in
+    TypeScript), or asking the engineer for the line.
+  - First step: the bindings stay in the product's recipe as well, since the planner and the HMI
+    read them there. Taking them out is the next step, once every reader reads the process AAS.
+
 - **The skill editor asks the checker and the planner.** *Journal* (the engineer's side of planning).
   - What: in the skill editor, Check sends the skill as it is on screen (not saved) to `modreg
     serve`'s `/check` and shows each finding at its step, with the skills that would fix it; a
