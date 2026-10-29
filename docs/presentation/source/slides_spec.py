@@ -2,7 +2,7 @@
 own slides (pictures, no timelines, slides merged)."""
 
 P03 = "03-the-filling-module-physical-and-digital"
-P03B = "03b-the-production-system-layer-by-layer"
+P03C = "03c-the-production-system-in-layers"
 P05 = "05-the-filling-module-in-motion-an-orchestrator"
 P06 = "06-the-filling-module-in-motion-agents-bid-planned"
 P07 = "07-product-process-and-resource-aas"
@@ -11,6 +11,8 @@ P09 = "09-primitive-and-composite-skills-in-the-aas"
 P10 = "10-from-the-aas-to-function-blocks-modsync"
 P11 = "11-the-mapping-rules"
 P12 = "12-matching-a-missing-effect-replanning"
+P12B = "12b-inside-the-agent-of-a-module"
+P12C = "12c-inside-the-agent-of-a-product"
 P13 = "13-agents-on-the-line-call-for-proposals-proposal-accept"
 MOD = "1 · MODELLING"
 RECONF = "2 · RECONFIGURATION"
@@ -48,22 +50,11 @@ At the start, what it is physically: a station of the line with a linear axis (a
 
     # ---- after slide 5: the layers, illustrated, one plane at a time ----------------------------------------
     s = Slide("The production system, layer by layer", MOD)
-    planes = ["the-line", "digital-assets", "behaviour-iec-61499", "aas-models-and-orchestration",
-              "hmi-mes-planning-and-scheduling"]
-    L = s.figure(P03B, planes, area=(647700, 1206500, 4700000, 5393500))
-    TEXT = [(2790, "The line", "The maglev table and its shuttles, four stations, two robots"),
-            (2283, "Digital assets", "Each module's parts with their kind and asset id, wired to its Pi"),
-            (1771, "Behaviour · IEC 61499", "FORTE on each Pi runs the module's program: skills as function blocks, PackML"),
-            (1259, "AAS models and orchestration", "The AASs on the AAS server: what each module offers and how it is called"),
-            (747, "HMI, planning, MES", "The planner, the skill editor and the HMI work from the AASs; MES and ERP later")]
-    tx = []
-    for py, name, sub in TEXT:
-        y = s.at(0, py)[1]
-        tx.append(s.textbox(5700000, y - 380000, 5840000, 760000,
-                            [para([run(name, 18, True, m.TEAL_D)]), para([run(sub, 13, False, m.INK_T)])]))
-    for k in range(1, 5):
-        s.plain_click([("wipe", L[planes[k]], {"dir": "bottom", "dur": 700}), ("in", tx[k])])
-    write(after("slide6.xml", "slide5.xml"), s, """About 1 min, four clicks. The same five layers as the slide before, drawn as the lab is built, from the line up.
+    planes = ["digital-assets", "behaviour-iec-61499", "aas-models-and-orchestration", "hmi-planning-and-scheduling"]
+    L = s.figure(P03C, ["the-line", "name-of-the-line"] + planes)
+    for k in planes:          # each plane with the lines that reach up to it
+        s.plain_click([("wipe", L[k], {"dir": "bottom", "dur": 700})])
+    write(after("slide6.xml", "slide5.xml"), s, """About 1 min, four clicks. The same five layers as the slide before, drawn as the lab is built, from the line up; each line appears with the layer it reaches up to.
 
 At the start the line: the maglev table with its shuttles, the four stations, the two robots.
 1. Digital assets: each module's parts, the linear axis, the process component and the Raspberry Pi 5, with kind and asset id; the robots and the transport with their own controllers.
@@ -267,6 +258,34 @@ Names are the keys: the program can be read back into the AAS's terms. What can 
 
 Today the planner does this with the skill editor; later the module's agent (part 3).""")
 
+    # ---- inside the agents: the active part, the AAS as the passive part, what each talks to ----------------
+    s = Slide("Inside the agent of a module", AGENTS)
+    L = s.figure(P12B, ["the-passive-part-and-the-module", "the-agent", "bidding", "reconfiguration", "execution"])
+    s.plain_click([("in", L["the-agent"])])
+    for k in ("bidding", "reconfiguration", "execution"):
+        s.plain_click([("wipe", L[k], {"dir": "left", "dur": 600})])
+    s_inside = after("slide6.xml", s_match)
+    write(s_inside, s, """About 1.5 min, four clicks. Planned. After the I4.0 language demonstrator: an agent is the active part of an AAS, the AAS on the server its passive part.
+
+At the start what exists: the filling module's AAS on the AAS server (Capability Description, Skills, the interface description and its mapping, Variables), the module itself (FORTE on its Pi: the IEC 61499 program, the OPC UA server, the management interface) and the DMP, which turns an Operation of the AAS into an OPC UA call.
+1. The agent: a messenger on MQTT, speaking the I4.0 language (VDI/VDE 2193), and an interaction manager whose state machine plays the service provider's role: call for proposals in, proposal out, accept in, inform out.
+2. Bidding: it checks the required capability against what its AAS offers (meaning and range), its availability (occupation, bookings) and the time, and proposes: now, after a reconfiguration, or refuse.
+3. Reconfiguration, on accept and only if needed: the planner composes a skill from the primitives and writes it into the AAS; modsync creates it online over the management protocol, verifies and records it.
+4. Execution: modlink occupies the module and starts the skill over OPC UA, directly; or over HTTP, as an Operation of the AAS that the DMP turns into the OPC UA call.""")
+
+    s = Slide("Inside the agent of a product", AGENTS)
+    L = s.figure(P12C, ["the-passive-part-and-the-vial", "the-agent", "requesting", "recording"])
+    s.plain_click([("in", L["the-agent"])])
+    for k in ("requesting", "recording"):
+        s.plain_click([("wipe", L[k], {"dir": "left", "dur": 600})])
+    s_inside2 = after("slide6.xml", s_inside)
+    write(s_inside2, s, """About 1 min, three clicks. Planned. One product agent per order, the same build as a module's agent with the other role.
+
+At the start its passive part: the product AAS (Production Sequence, Required Capabilities, Process Parameters) and the process AAS it fills in (Step Bindings, Process Information); and the vial, which has no interface of its own.
+1. The agent: messenger and interaction manager, here as the service requester.
+2. Requesting: the next step from the Production Sequence, a call for proposals with the required capability and its values, the best proposal chosen (the earliest), the others rejected.
+3. Recording and moving: the step bound to the module's skill in the process AAS, what was done to the vial recorded, and the table's agent asked to move the vial to the next module.""")
+
     # ---- slides 15 and 16 become one: agents on the line ------------------------------------------------------
     s = Slide("Agents on the line: call for proposals, propose, accept", AGENTS)
     steps = [(1, "call-for-proposals"), (2, "proposals"), (3, "accept"), (4, "transport")]
@@ -282,7 +301,7 @@ Today the planner does this with the skill editor; later the module's agent (par
     s.plain_click([("out", L["4-transport-arrows"]), ("in", L["5-move-card"]),
                    ("path", L["product-the-vial"], {"x1": dx, "y1": dy, "dur": 1500}),
                    ("path", L["product-agent-on-the-vial"], {"x1": dx, "y1": dy, "dur": 1500})])
-    s_agents = after("slide6.xml", s_match)
+    s_agents = after("slide6.xml", s_inside2)
     write(s_agents, s, """About 1.5 min, five clicks. Planned, the paper's future work. Every order gets a product agent (P) that travels with its vial; every module has a resource agent (R), the table a transport agent (T). They talk in the I4.0 language (VDI/VDE 2193): call for proposals, proposal or refuse, accept.
 
 1. The vial's product agent calls for proposals for its recipe: Fill 2.0 mL, Stopper, Inspect, to every module.

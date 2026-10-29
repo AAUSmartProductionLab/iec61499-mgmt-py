@@ -172,6 +172,18 @@ def shell(node, x, y, w, h, label="", size=None, fill=AAS, picture=None, pic_siz
     return g
 
 
+def polygon(node, pts, fill, stroke, sw=2, extra=""):
+    """A closed polygon in page coordinates, as a stencil in its bounding box (so it stays one shape)."""
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    x0, y0, w, h = min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)
+    path = (f'<move x="{pts[0][0] - x0:g}" y="{pts[0][1] - y0:g}"/>'
+            + "".join(f'<line x="{x - x0:g}" y="{y - y0:g}"/>' for x, y in pts[1:]) + '<close/>')
+    st = _stencil(f'<shape name="polygon" w="{w:g}" h="{h:g}" aspect="variable" strokewidth="inherit">'
+                  f'<foreground><path>{path}</path><fillstroke/></foreground></shape>')
+    box(node, x0, y0, w, h, f"shape=stencil({st});html=1;fillColor={fill};strokeColor={stroke};strokeWidth={sw};"
+        + extra)
+
+
 def sm_bar(node, x, y, w, h, label, size=18, fill=SM_BAR, dashed=False):
     rect(node, x, y, w, h, fill, "none" if not dashed else GREY, 1.5, 14, "dashed=1;" if dashed else "",
          label, size, "#FFFFFF", True)

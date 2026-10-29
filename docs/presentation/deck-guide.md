@@ -199,6 +199,23 @@ side boxes and legend: one layer per plane (the line, digital assets, behaviour,
 orchestration, HMI and planning), each plane one group. Beats: the line, then one plane per click, from
 the bottom up.
 
+### 03c The production system in layers (the simplified one, on the slide)
+
+The same five layers with few, big things, after the layered picture of a lab: the line drawing at the
+bottom, then translucent planes (`polygon` in `drawlib.py`) with the Pis and parts, the FORTE programs,
+the AAS server with the three AAS shells and modsync and modlink, and the applications. One layer per
+plane; each line is in the layer of its upper end, so a line never reaches a plane that is not shown yet.
+The detailed 03b follows the same rule (`UP` in `build_deck.py`).
+
+### 12b, 12c Inside the agent of a module, of a product (planned)
+
+After the I4.0 language demonstrator: the agent as the active part of an AAS, the AAS on the server as
+its passive part. A messenger (MQTT, VDI/VDE 2193), an interaction manager with the role's state machine
+(service provider; service requester), then the agent's functions: for a module bidding, reconfiguration
+(the planner composes, modsync builds) and execution (modlink over OPC UA, or over HTTP as an Operation of
+the AAS that the DMP turns into the OPC UA call); for a product requesting, recording and moving. Layers:
+the passive part first, then the agent, then each function with its links.
+
 ### 10 From the AAS to function blocks: the console
 
 Right of the subapplication, a console: what modsync sends, one layer per step (`commands 1` to
@@ -231,12 +248,12 @@ path of 77 × 45 page px on both layers): the way into page 06.
 
 ## The animated deck
 
-`modular-production-animated-v2.pptx` is the user's `modular-production.pptx` with these figures added as
+`modular-production-animated-v3.pptx` is the user's `modular-production.pptx` with these figures added as
 animated slides in its own style (title, section label, speaker notes). Only the two walks through the
 filling module (with an orchestrator, with its agent) and "From the AAS to function blocks" keep the click
 timeline with a caption per step; the user's own slides lose theirs (`strip_timeline`: the shapes below
 the figure, their effects and the clicks left empty go; the rest is scaled and centred). Slides 13 and 14
-of the original become page 12, slides 15 and 16 page 13 followed by the agents at the filling module.
+of the original become page 12, slides 15 and 16 pages 12b, 12c and 13, followed by the agents at the filling module. Slide 6's illustration is page 03c.
 The line and the tools pictures (slides 1, 3 and 11) are new exports of `docs/figures/slides.drawio`, in
 `figures/pictures`. Each figure is its layer PNGs, cropped and stacked; the animations are PowerPoint's
 own (fade, wipe, fly in, motion paths), so they can be changed in the Animation Pane.

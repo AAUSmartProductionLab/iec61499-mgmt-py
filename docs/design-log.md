@@ -18,6 +18,16 @@ A running log of design considerations made while building, for writing the pape
 
 ## 29 Oct 2026
 
+- **An agent is drawn as the active part of an AAS, in our parts.** *Journal* (agents, future work).
+  - What: a module's agent has a messenger (MQTT, VDI/VDE 2193), an interaction manager with the
+    service provider's state machine, bidding (capability, availability, time), reconfiguration (the
+    planner composes, modsync builds online) and execution (modlink over OPC UA, or an Operation of the
+    AAS over HTTP that the DMP turns into the OPC UA call); its passive part is the module's AAS. A
+    product agent is the same build as the service requester, writing the process AAS.
+  - Why: it places the tools that exist (planner, modsync, modlink, DMP) inside the agent, so the
+    agents are a role around them, not a new system.
+  - Instead of: agents as one box beside the tools.
+
 - **The talk shows modsync as the commands it sends, and agents in the I4.0 language.** *Journal*
   (how the method is shown to people who did not build it).
   - What: the slide from the AAS to function blocks has a console beside the network: per step the
