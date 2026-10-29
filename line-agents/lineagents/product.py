@@ -4,8 +4,9 @@ product's AAS) and asks for one at a time.
 For a step: a call for proposals with the step's required capability to every resource agent it
 knows; answers are taken until each has answered or the call's replyBy has passed; of the proposals
 it accepts the one whose skill is built (no reconfiguration first), else the first, and rejects the
-others; then it waits for the result. A step nobody proposes for, or one that fails, ends the order
-(what was done is in ``history``).
+others; then it waits for the result. A step that fails is asked for again of the other resource
+agents (``retries`` times); a step nobody proposes for, or that fails each time, ends the order (what
+was done, each attempt, is in ``history``).
 
 Transport between the steps (the planar table's shuttles as resource agents) and booking ahead are
 planned (docs/agents.md).
@@ -37,14 +38,15 @@ class Done:
     refusals: int = 0
     seconds: float = 0.0
     results: dict = field(default_factory=dict)
+    agent: str | None = None                   # the resource agent that carried it out (its JID)
 
 
 class ProductAgent(Agent):
     def __init__(self, jid: str, password: str, product: dict, resources: Callable[[], list[str]],
-                 answer_seconds: float = 3.0, step_seconds: float = 600.0, **options):
+                 answer_seconds: float = 3.0, step_seconds: float = 600.0, retries: int = 1, **options):
         super().__init__(jid, password, **options)
         self.product, self.resources = product, resources
-        self.answer_seconds, self.step_seconds = answer_seconds, step_seconds
+        self.answer_seconds, self.step_seconds, self.retries = answer_seconds, step_seconds, retries
         self.history: list[Done] = []
         self.finished = asyncio.Event()
 
@@ -61,17 +63,23 @@ class Order(OneShotBehaviour):
         agent: ProductAgent = self.agent
         try:
             for step in steps(agent.product):
-                done = await self.ask(step)
-                agent.history.append(done)
+                # A step that fails is asked for again, of the others (``retries`` times).
+                left_out: set[str] = set()
+                for _ in range(1 + agent.retries):
+                    done = await self.ask(step, left_out)
+                    agent.history.append(done)
+                    if done.outcome != "failed" or done.agent is None:
+                        break
+                    left_out.add(done.agent)
                 if done.outcome != "done":
                     break
         finally:
             agent.finished.set()
 
-    async def ask(self, step: Step) -> Done:
+    async def ask(self, step: Step, left_out: set[str] = frozenset()) -> Done:
         agent: ProductAgent = self.agent
         started, conversation = time.monotonic(), i40.new_id()
-        resources = agent.resources()
+        resources = [r for r in agent.resources() if r not in left_out]
         deadline = i40.reply_by(agent.answer_seconds)
         for resource in resources:
             call = i40.I40Message(i40.CALL, str(agent.jid), resource, conversation, [step.required],
@@ -96,7 +104,7 @@ class Order(OneShotBehaviour):
         for answer, _ in proposals:
             await self.send(answer.answer(i40.ACCEPT if answer is chosen[0] else i40.REJECT,
                                           [chosen[1].element()] if answer is chosen[0] else [], ROLE).to_spade())
-        done.resource, done.skill = chosen[1].resource, chosen[1].skill
+        done.resource, done.skill, done.agent = chosen[1].resource, chosen[1].skill, chosen[0].sender
         result = await self.next_in(conversation, agent.step_seconds, types=(i40.DONE, i40.FAILED))
         if result is None:
             done.outcome, done.detail = "failed", "no result in time"
