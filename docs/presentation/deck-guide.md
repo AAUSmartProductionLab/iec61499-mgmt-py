@@ -227,10 +227,12 @@ step's layer at a time, with that step's arrow and blocks.
 
 ### 12 Matching, a missing effect, replanning
 
-The recipe (Fill 2.0 mL with the dose checked, Stopper, Cap) against what the modules offer. Layers:
-`match` (the dashed lines, Stopper and Cap offered), `missing` (Dispensing weighs the vial and the liquid
-together: the dose's own weight is missing, and no parameter gives it), `replan` (TaredDispensing: Tare
-first, then the steps of Dispensing; a new step, not a new value), `check` (matched again). One click each.
+The prefilled syringe's recipe (Fill 1.0 mL from the bottom, Stopper, Inspect) against what the modules
+offer, the paper's changeover. Layers: `match` (the dashed lines, Stopper and Inspect offered), `missing`
+(Dispensing doses with the needle still; a tall barrel needs the needle to rise as the liquid does, and no
+parameter gives that), `replan` (BottomUpFilling: NeedleDeep, then Dispense and NeedleRise at the same
+time, a parallel block, then Home and Weigh), `check` (matched again: the needle stays in the container
+while it rises). One click each.
 
 ### 13 Agents on the line: call for proposals, proposal, accept (planned)
 
@@ -277,5 +279,6 @@ the side it starts from, as its subtype does (From Left: 8 and `wipe(left)`; Fro
 - Online: a value, a new composite skill. Not online: a new primitive or IO (a FORTE build), removing or
   reordering what runs (a restart).
 
-`replanning-and-agents.pptx` holds just the replanning and the agents-on-the-line slides:
+`replanning-and-agents.pptx` holds the replanning slide of 29 Oct (TaredDispensing) and the
+agents-on-the-line slide; `reconfiguration-syringe.pptx` the replanning slide as it is now (the syringe):
 `keep_slides.py <deck> <out> "<title text>" ...` keeps the slides whose titles contain the texts.

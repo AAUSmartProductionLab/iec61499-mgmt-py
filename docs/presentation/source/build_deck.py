@@ -771,23 +771,23 @@ def two_line(title, sub, size=28, sub_size=21):
     return f"<b>{title}</b><br><font style=\"font-size:{sub_size}px\" color=\"{GREY}\">{sub}</font>"
 
 
-ROW = {"fill": 110, "new": 232, "stopper": 372, "cap": 492}
+ROW = {"fill": 110, "new": 232, "stopper": 372, "inspect": 492}
 base = Node("recipe and capabilities")
 g = base.group("Header: the product's recipe")
 shell(g, 40, 22, 64, 55, name="Product AAS")
-text(g, 118, 26, 420, 48, "The product's recipe", 28, INK, True)
+text(g, 118, 26, 440, 48, "The syringe's recipe", 28, INK, True)
 g = base.group("Header: what the modules offer")
 shell(g, 1040, 22, 64, 55, name="Resource AASs")
 text(g, 1118, 26, 460, 48, "What the modules offer", 28, INK, True)
-for key, title, sub in [("fill", "1 · Fill 2.0 mL, dose checked", "requires Filling and the dose's weight"),
-                        ("stopper", "2 · Stopper", "requires Stoppering"), ("cap", "3 · Cap", "requires Capping")]:
+for key, title, sub in [("fill", "1 · Fill 1.0 mL from the bottom", "requires Filling, the needle under the liquid"),
+                        ("stopper", "2 · Stopper", "requires Stoppering"), ("inspect", "3 · Inspect", "requires Inspection")]:
     pill(base.group(f"Step {title}"), 40, ROW[key], 460, 100, two_line(title, sub), PROD_FILL, PURPLE, 2.5, 28)
-for key, title, sub in [("fill", "Filling · 0.5 to 10 mL", "by Dispensing: weighs vial and liquid"),
-                        ("stopper", "Stoppering", "Stoppering module"), ("cap", "Capping", "Capping module")]:
+for key, title, sub in [("fill", "Filling · 0.5 to 10 mL", "by Dispensing: the needle stands still"),
+                        ("stopper", "Stoppering", "Stoppering module"), ("inspect", "Inspection", "Inspection module")]:
     pill(base.group(f"Offered: {title}"), 1040, ROW[key], 520, 100, two_line(title, sub), OPC_FILL, BLUE, 2.5, 28)
 
 match = Node("match", False)
-for key in ("fill", "stopper", "cap"):
+for key in ("fill", "stopper", "inspect"):
     g = match.group(f"Match {key}")
     cy = ROW[key] + 50
     arrow(g, [(500, cy), (1040, cy)], GREY, 2.5, True)
@@ -795,37 +795,39 @@ for key in ("fill", "stopper", "cap"):
         badge(g, 770, cy, "✓", GREEN)
 
 missing = Node("missing", False)
-g = missing.group("The dose's weight: the effect is missing")
+g = missing.group("Filling from the bottom: the effect is missing")
 badge(g, 770, ROW["fill"] + 50, "✗", RED)
 rect(g, 40, 222, 460, 96, RED_FILL, RED, 2, 16, "",
-     two_line("Missing: the dose's own weight", "Dispensing weighs the vial and the liquid together", 24, 19),
+     two_line("Missing: filling from the bottom", "a tall barrel: the needle has to rise as the liquid does", 24, 19),
      24, INK, False, "left")
 
 replan = Node("replan", False)
-g = replan.group("Replanned: TaredDispensing from the primitives")
-rect(g, 560, 640, 1000, 220, "#FBF5E6", GOLD, 2.5, 16)
-text(g, 590, 652, 940, 40, "<b>Replanned:</b> a new order of the filling module's primitives", 24, INK)
-chips = ["Tare", "NeedleDown", "Dispense", "Home", "Weigh"]
-for i, s in enumerate(chips):
-    x = 590 + i * 192
-    rect(g, x, 712, 160, 60, "#FFFFFF" if i == 0 else STEP_FILL, GOLD if i == 0 else ORANGE, 3 if i == 0 else 2,
-         14, "dashed=1;" if i == 0 else "", f"<b>{s}</b>", 21, INK)
-    if i:
-        arrow(g, [(x - 32, 742), (x, 742)], INK, 2)
-text(g, 590, 776, 160, 24, "the new step", 17, GOLD, True, "center")
-text(g, 590, 802, 940, 50, "TaredDispensing: the scale is tared with the empty vial on it, so Weigh gives the dose "
-     "alone", 20, GREY)
+g = replan.group("Replanned: BottomUpFilling from the primitives")
+rect(g, 560, 640, 1000, 230, "#FBF5E6", GOLD, 2.5, 16)
+text(g, 590, 650, 940, 40, "<b>Replanned:</b> the filling module's primitives, two of them at once", 24, INK)
+chip = lambda x, y, w, label: rect(g, x, y, w, 52, STEP_FILL, ORANGE, 2, 14, "", f"<b>{label}</b>", 20, INK)  # noqa: E731
+chip(590, 732, 170, "NeedleDeep")
+rect(g, 796, 694, 226, 128, "#FFFFFF", GOLD, 3, 16, "dashed=1;")              # the parallel block, the new part
+chip(814, 704, 190, "Dispense")
+chip(814, 762, 190, "NeedleRise")
+text(g, 796, 822, 226, 22, "at the same time", 17, GOLD, True, "center")
+chip(1058, 732, 150, "Home")
+chip(1244, 732, 150, "Weigh")
+for x1, x2 in ((760, 796), (1022, 1058), (1208, 1244)):
+    arrow(g, [(x1, 758), (x2, 758)], INK, 2)
+text(g, 590, 842, 960, 26, "BottomUpFilling: the needle starts deep and rises while the pump doses, so it stays under "
+     "the liquid", 18, GREY)
 arrow(g, [(1560, 700), (1586, 700), (1586, 282), (1562, 282)], GOLD, 3)
-pill(g, 1040, ROW["new"], 520, 100, two_line("Filling · with the dose's weight", "by TaredDispensing, after a "
+pill(g, 1040, ROW["new"], 520, 100, two_line("Filling · from the bottom", "by BottomUpFilling, after a "
      "reconfiguration"), "#FFFFFF", GOLD, 2.5, 28, dashed=True)
 
 check = Node("check", False)
 g = check.group("Checked against the recipe")
 arrow(g, [(500, ROW["fill"] + 50), (1040, ROW["new"] + 50)], GREEN, 3.5)
 badge(g, 800, ROW["fill"] + 115, "✓", GREEN)
-rect(g, 40, 640, 470, 220, GOOD_FILL, GREEN, 2.5, 16, "",
-     two_line("Checked against the recipe", "every step is offered: the order can run once TaredDispensing is built",
-              26, 21), 26, INK, False, "left")
+rect(g, 40, 640, 470, 230, GOOD_FILL, GREEN, 2.5, 16, "",
+     two_line("Checked against the recipe", "the needle stays in the barrel while it rises, and every step is "
+              "offered: the order runs once BottomUpFilling is built", 26, 20), 26, INK, False, "left")
 page("12 Matching, a missing effect, replanning", base, match, missing, replan, check)
 
 # ==== 12b, 12c Inside an agent: the active part, the passive part (the AAS), what it talks to ===========
