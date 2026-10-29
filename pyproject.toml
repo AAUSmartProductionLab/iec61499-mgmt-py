@@ -20,6 +20,8 @@ registration = [
     # Discovery (modreg serve --discover): the modules' OPC UA servers announce themselves by mDNS.
     "zeroconf>=0.132",
 ]
+# The line's agents (lineagents): SPADE, its XMPP server (pyjabber) and what that needs on Windows.
+agents = ["spade>=4.1,<5", "greenlet>=3"]
 # Planning new skills (modplan): GTPyhop and the vocabulary.
 planning = ["gtpyhop-core==2.0.2", "rdflib>=7,<8"]
 # Standard planners on the exported PDDL and HDDL (modplan.export, tests and cell/eval/planners.py):
@@ -33,10 +35,11 @@ modgen = "modgen.__main__:main"
 modsync = "modsync.__main__:main"
 modreg = "modreg.__main__:main"
 modplan = "modplan.__main__:main"
+lineagents = "lineagents.__main__:main"
 
 # One folder per future repository; the Python packages live inside them.
 [tool.setuptools]
-packages = ["iec61499_mgmt", "modgen", "modsync", "modreg", "modreg.generated", "modplan"]
+packages = ["iec61499_mgmt", "modgen", "modsync", "modreg", "modplan", "lineagents"]
 
 [tool.setuptools.package-dir]
 iec61499_mgmt = "iec61499-mgmt-py/iec61499_mgmt"
@@ -44,9 +47,10 @@ modgen = "iec61499-skill-lib/modgen"
 modsync = "aas61499-tools/modsync"
 modreg = "aas61499-tools/modreg"
 modplan = "aas61499-tools/modplan"
+lineagents = "line-agents/lineagents"
 
 [tool.setuptools.package-data]
 modreg = ["templates/*.json"]
 
 [tool.pytest.ini_options]
-testpaths = ["iec61499-mgmt-py/tests", "iec61499-skill-lib/tests", "aas61499-tools/tests", "deploy/tests", "cell/tests"]
+testpaths = ["iec61499-mgmt-py/tests", "iec61499-skill-lib/tests", "aas61499-tools/tests", "deploy/tests", "cell/tests", "line-agents/tests"]
