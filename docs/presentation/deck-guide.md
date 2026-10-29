@@ -199,18 +199,20 @@ side boxes and legend: one layer per plane (the line, digital assets, behaviour,
 orchestration, HMI and planning), each plane one group. Beats: the line, then one plane per click, from
 the bottom up.
 
-### 03c The production system in layers (the simplified one, on the slide)
+### 03c The production system in layers (the isometric one, on the slide)
 
-The same five layers with few, big things, after the layered picture of a lab: the line drawing at the
-bottom, then translucent planes (`polygon` in `drawlib.py`) with the Pis and parts, the FORTE programs,
-the AAS server with the three AAS shells and modsync and modlink, and the applications. One layer per
-plane; each line is in the layer of its upper end, so a line never reaches a plane that is not shown yet.
-The detailed 03b follows the same rule (`UP` in `build_deck.py`).
+The five layers in true isometric projection, on the line drawing's own axes (30°): each plane is a strip
+over the row of stations, raised `RISE` (240) above the one below and shallower than that, so no plane
+hides what stands on the plane below. Things stand at plane coordinates (`iso(a, b, k)`: along the line,
+across it, which plane): a station's Pi, parts and FORTE program straight above it, so the lines between
+layers are vertical. On top the AAS server with the three AAS shells, modsync, modlink and the agents
+(planned), and the applications. One draw.io layer per plane; each line is in the layer of its upper end,
+so it never reaches a plane that is not shown yet. The detailed 03b follows the same rule (`UP`).
 
 ### 12b, 12c Inside the agent of a module, of a product (planned)
 
 After the I4.0 language demonstrator: the agent as the active part of an AAS, the AAS on the server as
-its passive part. A messenger (MQTT, VDI/VDE 2193), an interaction manager with the role's state machine
+its passive part. A SPADE agent: a messenger (XMPP, VDI/VDE 2193), an interaction manager with the role's state machine
 (service provider; service requester), then the agent's functions: for a module bidding, reconfiguration
 (the planner composes, modsync builds) and execution (modlink over OPC UA, or over HTTP as an Operation of
 the AAS that the DMP turns into the OPC UA call); for a product requesting, recording and moving. Layers:
@@ -248,7 +250,7 @@ path of 77 × 45 page px on both layers): the way into page 06.
 
 ## The animated deck
 
-`modular-production-animated-v3.pptx` is the user's `modular-production.pptx` with these figures added as
+`modular-production-animated-v4.pptx` is the user's `modular-production.pptx` with these figures added as
 animated slides in its own style (title, section label, speaker notes). Only the two walks through the
 filling module (with an orchestrator, with its agent) and "From the AAS to function blocks" keep the click
 timeline with a caption per step; the user's own slides lose theirs (`strip_timeline`: the shapes below

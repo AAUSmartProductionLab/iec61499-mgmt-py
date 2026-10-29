@@ -242,7 +242,7 @@ after step A4, the reconfiguration as functions. What is missing:
 | --- | --- | --- |
 | 1 | An unbound process | The plan names a resource and a skill per step. With bidding the product type holds required capabilities and their order; the binding is the result of a negotiation, per order. AProSO already describes it this way (candidates, then the chosen one) |
 | 2 | An order | Nothing says "20 vials of 2.5 mL" and starts a product agent |
-| 3 | Messages and protocol | Call for proposals, proposal, accept or reject, result (VDI/VDE 2193), and what carries them (the lab runs MQTT; SPADE needs an XMPP server) |
+| 3 | Messages and protocol | Call for proposals, proposal, accept or reject, result (VDI/VDE 2193), and what carries them: XMPP, with SPADE as the agents' framework (29 Oct) |
 | 4 | A resource agent per module | Matches a request against its own AAS; answers yes, yes after a reconfiguration, or no, with a time; on acceptance plans the skill if none realizes it (D5), reconfigures and runs it |
 | 5 | A product agent | Walks the process, compares bids, records what was done to the product |
 | 6 | Transport agents | A vial moves between the modules on the shuttles of the planar table (Planar Motor; `planar-controller/`, Python over OPC UA, built like a module). The table needs a resource AAS (H3, H4: a Transport capability, the interface the agent calls, the layout) and an agent like a module's. It also shows the model on a resource that is not IEC 61499 |
@@ -292,7 +292,7 @@ the lab's AAS server; the repository split and CI.
 | What belongs in the Parameters submodel (it does not hold a skill's parameters)? | later |
 | Does the plan become an AAS of its own, per product and line? (With bidding it becomes per order) | agents |
 | ~~The planar table: where is its Python code, and which interface does it offer?~~ `planar-controller` (submodule since 27 Oct), OPC UA like a module | transport agents |
-| The agents' framework and inner structure (SPADE or plain asyncio over MQTT; fixed plans or BDI) | agents |
+| The agents' inner structure (fixed plans or BDI); the framework is SPADE over XMPP (29 Oct) | agents |
 | The module specs (YAML) still hold the wiring of each IO point per target; describing it in the AAS is an idea for later | later |
 
 Facts only you or the lab have: the measured values of each station (fill range and accuracy,

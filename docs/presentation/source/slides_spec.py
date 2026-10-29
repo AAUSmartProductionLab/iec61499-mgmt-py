@@ -268,7 +268,7 @@ Today the planner does this with the skill editor; later the module's agent (par
     write(s_inside, s, """About 1.5 min, four clicks. Planned. After the I4.0 language demonstrator: an agent is the active part of an AAS, the AAS on the server its passive part.
 
 At the start what exists: the filling module's AAS on the AAS server (Capability Description, Skills, the interface description and its mapping, Variables), the module itself (FORTE on its Pi: the IEC 61499 program, the OPC UA server, the management interface) and the DMP, which turns an Operation of the AAS into an OPC UA call.
-1. The agent: a messenger on MQTT, speaking the I4.0 language (VDI/VDE 2193), and an interaction manager whose state machine plays the service provider's role: call for proposals in, proposal out, accept in, inform out.
+1. The agent: a SPADE agent. Its messenger is XMPP, speaking the I4.0 language (VDI/VDE 2193), and an interaction manager whose state machine plays the service provider's role: call for proposals in, proposal out, accept in, inform out.
 2. Bidding: it checks the required capability against what its AAS offers (meaning and range), its availability (occupation, bookings) and the time, and proposes: now, after a reconfiguration, or refuse.
 3. Reconfiguration, on accept and only if needed: the planner composes a skill from the primitives and writes it into the AAS; modsync creates it online over the management protocol, verifies and records it.
 4. Execution: modlink occupies the module and starts the skill over OPC UA, directly; or over HTTP, as an Operation of the AAS that the DMP turns into the OPC UA call.""")
