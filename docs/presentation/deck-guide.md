@@ -209,6 +209,20 @@ in `drawlib.py`: the logo's outline extruded, on the figure's 30° axes, the nam
 where the stacks stood; the AAS server's, the skill editor's and the planner's lines end on their tops
 (to Product, Resource, Process). One draw.io layer per plane; each line is in the layer of its upper end.
 
+### 03d The production system: a layered architecture (flat; on the slide in place of 03c)
+
+The systems we have as a flat diagram in four bands, as the automation pyramid has them: applications
+(MES / MOM: the AAS web UI with the process planner and the skill editor, the HMI, the orders; MES and
+ERP later), the line level (CPPS: registration service, AAS server, MQTT broker, DMP, modsync, the line
+agents, the XMPP server, InfluxDB), the module level (CPPM: the filling and stoppering modules on their
+Pis, capping and inspection planned, the planar controller, the Kuka robots without an AAS yet) and the
+device level (CPS: each module's parts, the planar table, the robots). A colour per protocol (the
+legend): HTTP for the AAS API, OPC UA, FORTE's management protocol, XMPP, MQTT, discovery, IO, time
+series. Between the line and the modules OPC UA, management and discovery run as buses that each module
+drops onto. Dashed is planned. One draw.io layer per band (`device level`, `module level`, `protocols`,
+`line level`, `applications`) and the legend; each connection is in the layer of its upper end, so on
+the slide every band appears with its lines, bottom up. `architecture.pptx` holds the slide alone.
+
 ### 12b, 12c Inside the agent of a module, of a product (planned)
 
 After the I4.0 language demonstrator: the agent as the active part of an AAS, the AAS on the server as

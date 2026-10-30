@@ -356,6 +356,152 @@ sh.emit(shells_xml, LAYER_IDS[3])
 copied_page("03c The production system in layers", ly)
 pages[-1][3].append("\n".join(shells_xml))
 
+# ==== 03d The production system: a layered architecture (flat) =====================================
+# The systems we have, in four bands as the automation pyramid has them (CPS, CPPM, CPPS, MES), and how
+# they talk: a colour per protocol. Between the line and the modules the protocols run as buses that each
+# module drops onto. A connection is drawn in the layer of its upper end, so it appears with its client.
+BAND = {"app": (10, 165, "Applications (MES / MOM)", "#EAF4F3"), "line": (175, 475, "Line level (CPPS)", "#DDEEEC"),
+        "module": (545, 710, "Module level (CPPM)", "#CFE6E3"), "device": (725, 890, "Device level (CPS)", "#C1DFDB")}
+HTTP, MQTT_C, IO = INK, ORANGE, GREEN
+BUS = {"opc": 490, "mgmt": 506, "disc": 522}
+COLX = [210, 550, 890, 1230]                     # the line level's columns, 300 wide, 40 apart
+ROW1, ROW2 = 228, 368                            # its two rows, 100 high
+
+
+def band(node, key):
+    y0, y1, name, fill = BAND[key]
+    g = node.group(f"Band: {name}")
+    rect(g, 20, y0, 1560, y1 - y0, fill, AAS, 1.5, 3)
+    rect(g, 32, y0 + 4, 230, 30, AAS, "none", 1, 30, "", name, 16, "#FFFFFF", True)
+
+
+def sysbox(node, x, y, w, h, title, items, planned=False, icon=None):
+    """A system: a white box, its name on a tab across its top edge, what it does as pills."""
+    g = node.group(f"System: {title}")
+    rect(g, x, y, w, h, "#FFFFFF", AAS, 1.5, 6, "dashed=1;" if planned else "")
+    tw = min(w - 24, 14 + 9 * len(title))
+    rect(g, x + 12, y - 14, tw, 28, AAS if not planned else "#FFFFFF", AAS, 1.5, 30,
+         "dashed=1;" if planned else "", title, 14, "#FFFFFF" if not planned else AAS, True)
+    iw = w - 24 - (52 if icon else 0)
+    for i, item in enumerate(items):
+        pill(g, x + 12, y + 22 + i * 28, iw, 23, item, "#FFFFFF", AAS, 1.2, 12, INK)
+    if icon:
+        icon(g, x + w - 58, y + 24)
+
+
+def aas_icon(g, x, y):
+    shell(g, x, y, 44, 38)
+
+
+def link(node, pts, color, label="", dashed=False, both=False, end="block", above=False):
+    arrow(node, pts, color, 2, dashed, label, 12, end, "block" if both else None, above=above)
+
+
+def tick(node, x, y0, y1, color, dashed=False):
+    """A module's drop onto a bus: a dot on the bus, a line down to the module."""
+    g = node.group("drop")
+    line(g, [(x, y0), (x, y1)], f"endArrow=none;html=1;strokeColor={color};strokeWidth=2;" + ("dashed=1;" if dashed else ""))
+    box(g, x - 4, y0 - 4, 8, 8, f"ellipse;html=1;fillColor={color};strokeColor=none;")
+
+
+dev, mod, buses, lin, app, leg = (Node("device level"), Node("module level", False), Node("protocols", False),
+                                  Node("line level", False), Node("applications", False), Node("legend"))
+for node, key in ((dev, "device"), (mod, "module"), (lin, "line"), (app, "app")):
+    band(node, key)
+
+# ---- devices and modules, column by column --------------------------------------------------------
+MODS = [("Filling module", ["Pi 5 · FORTE", "skills · PackML · occupation", "OPC UA · management"],
+         ["linear axis: stepper, home switch", "filling pump", "scale (simulated)"], "GPIO · PWM", False),
+        ("Stoppering module", ["Pi 5 · FORTE", "skills · PackML · occupation", "OPC UA · management"],
+         ["linear axis", "stoppering piston"], "GPIO · PWM", False),
+        ("Capping module", ["spec and AAS", "program planned"], ["linear axis", "cap crimper"], "", True),
+        ("Inspection module", ["spec and AAS", "program planned"], ["top camera", "side camera"], "", True),
+        ("Planar controller", ["Python in Docker", "table and xbots as modules", "OPC UA · MoveToPosition"],
+         ["PMC: Planar Motor controller", "table: 4 × 3 flyways", "xbots: the shuttles"], "PMC API", False),
+        ("Loading, unloading", ["Kuka robots", "a Pi each", "no AAS yet"], ["robots", "grippers"], "", True)]
+for i, (name, does, devices, wire, planned) in enumerate(MODS):
+    x = 210 + i * 228
+    sysbox(mod, x, 595, 208, 105, name, does, planned)
+    sysbox(dev, x, 775, 208, 105 if len(devices) > 2 else 80, name.replace(" module", "").replace("controller", "table"),
+           devices, planned)
+    link(mod.group(f"{name} to its devices"), [(x + 104, 700), (x + 104, 761)], IO if wire else GREY, wire, dashed=not wire)
+
+# ---- the buses between the line and the modules ---------------------------------------------------
+for key, color, label, dashed in (("opc", BLUE, "OPC UA", False), ("mgmt", GOLD, "management (FORTE)", False),
+                                  ("disc", GREY, "discovery: mDNS, manifest", True)):
+    g = buses.group(f"Bus: {label}")
+    line(g, [(196, BUS[key]), (1570, BUS[key])], f"endArrow=none;html=1;strokeColor={color};strokeWidth=3;"
+         + ("dashed=1;" if dashed else ""))
+    text(g, 24, BUS[key] - 9, 168, 18, label, 12, color, True, "right")
+for i, (name, does, devices, wire, planned) in enumerate(MODS):
+    x = 210 + i * 228
+    if name.startswith(("Filling", "Stoppering")):
+        g = buses.group(f"{name} on the buses")
+        tick(g, x + 150, BUS["opc"], 581, BLUE)
+        tick(g, x + 166, BUS["mgmt"], 581, GOLD)
+        tick(g, x + 182, BUS["disc"], 581, GREY, True)
+    elif name.startswith("Planar"):
+        g = buses.group(f"{name} on the buses")
+        tick(g, x + 150, BUS["opc"], 581, BLUE)
+        tick(g, x + 182, BUS["disc"], 581, GREY, True)
+
+# ---- the line level --------------------------------------------------------------------------------
+sysbox(lin, COLX[0], ROW1, 300, 100, "Registration service · modreg",
+       ["register a module: check against ARSO", "discover modules, read their manifests", "plan and check skills (modplan)"])
+sysbox(lin, COLX[1], ROW1, 300, 100, "AAS server · BaSyx",
+       ["product, process, resource AASs", "registries · discovery", "events to MQTT"], icon=aas_icon)
+sysbox(lin, COLX[2], ROW1, 300, 100, "MQTT broker · Mosquitto", ["the AAS server's events", "to the DMP and the agents"])
+sysbox(lin, COLX[3], ROW1, 300, 100, "DMP · aas-camel-dmp",
+       ["an Operation becomes an OPC UA call", "values become time series", "routes from the AIMC"])
+sysbox(lin, COLX[0], ROW2, 300, 100, "modsync",
+       ["verify the program against the AAS", "create a skill online", "record what was built"])
+sysbox(lin, COLX[1], ROW2, 300, 100, "Line agents · SPADE",
+       ["order agent", "product agents: one per unit", "resource agents: modules, shuttles"])
+sysbox(lin, COLX[2], ROW2, 300, 100, "XMPP server · Prosody", ["the I4.0 language (VDI/VDE 2193)", "bidding: cfp, proposal, accept"])
+sysbox(lin, COLX[3], ROW2, 300, 100, "InfluxDB", ["the modules' values", "as time series"])
+g = lin.group("Connections on the line level")
+link(g, [(510, 268), (550, 268)], HTTP, "publish", above=True)
+link(g, [(850, 290), (890, 290)], MQTT_C)
+link(g, [(1190, 290), (1230, 290)], MQTT_C)
+link(g, [(1380, ROW1), (1380, 208), (760, 208), (760, ROW1)], HTTP, "Operation delegated", both=True, above=True)
+link(g, [(1380, ROW1 + 100), (1380, ROW2)], GREY, "time series")
+link(g, [(1000, ROW1 + 100), (1000, 348), (800, 348), (800, ROW2)], MQTT_C)
+link(g, [(690, ROW2), (690, ROW1 + 100)], HTTP, both=True)
+link(g, [(450, ROW2), (450, 348), (610, 348), (610, ROW1 + 100)], HTTP, both=True)
+link(g, [(550, 440), (510, 440)], HTTP, "reconfigure", above=True)
+link(g, [(850, 420), (890, 420)], PURPLE, both=True)
+g = lin.group("The line level on the buses")
+link(g, [(700, ROW2 + 100), (700, BUS["opc"])], BLUE, end="oval")
+link(g, [(300, ROW2 + 100), (300, BUS["mgmt"])], GOLD, end="oval")
+link(g, [(1530, 300), (1562, 300), (1562, BUS["opc"])], BLUE, end="oval")
+link(g, [(210, 300), (196, 300), (196, BUS["disc"])], GREY, dashed=True, end="oval")
+
+# ---- the applications ------------------------------------------------------------------------------
+sysbox(app, 210, 55, 300, 103, "AAS web UI · BaSyx fork", ["AAS explorer", "process planner", "skill editor"])
+sysbox(app, 550, 55, 250, 103, "HMI · modlink", ["a module's live view", "control panel"])
+sysbox(app, 840, 55, 220, 103, "Orders", ["POST /orders", "order screen (planned)"])
+sysbox(app, 1100, 55, 160, 103, "MES · ERP", ["later"], planned=True)
+g = app.group("Connections from the applications")
+link(g, [(300, 158), (300, ROW1)], HTTP, "plan, check")
+link(g, [(480, 158), (480, 196), (580, 196), (580, ROW1)], HTTP, both=True)
+link(g, [(650, 158), (650, ROW1)], HTTP)
+link(g, [(780, 158), (780, 168), (878, 168), (878, BUS["opc"])], BLUE, end="oval")
+link(g, [(950, 158), (950, 172), (862, 172), (862, 390), (850, 390)], PURPLE, "order", above=True)
+link(g, [(1100, 106), (1060, 106)], GREY, dashed=True)
+
+# ---- the legend --------------------------------------------------------------------------------------
+g = leg.group("Legend")
+rect(g, 1290, 26, 278, 134, "#FFFFFF", "#C9D3D2", 1, 6)
+text(g, 1302, 30, 250, 20, "How they talk", 13, INK, True)
+for i, (color, label, dashed) in enumerate([(HTTP, "HTTP: the AAS API", False), (BLUE, "OPC UA", False),
+                                            (GOLD, "management", False), (PURPLE, "XMPP", False),
+                                            (MQTT_C, "MQTT: AAS events", False), (GREY, "discovery", True),
+                                            (IO, "IO: GPIO, PWM", False), (GREY, "time series", False)]):
+    cx, cy = 1302 + (i % 2) * 134, 62 + (i // 2) * 22
+    line(g, [(cx, cy), (cx + 26, cy)], f"endArrow=none;html=1;strokeColor={color};strokeWidth=3;" + ("dashed=1;" if dashed else ""))
+    text(g, cx + 32, cy - 9, 100, 18, label, 11, INK)
+page("03d The production system: a layered architecture", dev, mod, buses, lin, app, leg)
+
 # ==== 04 The IEC 61499 program's structure (module rules) =========================================
 mr = Copied("slides.drawio", 8, "frame")
 for ids, name in [(("c5", "c6"), "OPC UA server"), (("c7", "c8"), "Occupation"),
