@@ -184,7 +184,8 @@ def described(module: dict, components: list[dict], name: str = "Module", packag
             results={r: results[r] for r in declared_ if r in results},
             # A skill that is described and not built yet has no action that calls it; it gets one
             # when it is built. One that is built is offered if a command of it names its action.
-            offered=at(skill, "Start", "InterfaceReference") is not None or deployment(skill) != "Built")
+            offered=at(skill, "Start", "InterfaceReference") is not None or deployment(skill) != "Built",
+            capability=next((k.rsplit("/", 1)[-1] for k in kinds if k.startswith(f"{BASE}/semantics/")), None))
     spec = ModuleSpec.model_construct(module=name, package=package, opcua_root=opcua_root, equipment=equipment,
                                       skills=skills, composites=composites, procedures=procedures)
     # A flow is checked by the rules a module spec is: names, equipment of parallel branches, what a

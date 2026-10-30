@@ -64,10 +64,12 @@ SCENARIOS = ("plug", "value", "written", "planned", "changeover")
 # deep into the barrel and rises to the fill position while the pump doses, so it stays under the
 # liquid (a tall barrel, a liquid that foams). The rise (18 mm at 12.5 mm/s) takes as long as 1 mL at
 # 0.7 mL/s. Dosing keeps the needle at the fill position or deeper (cell/modules/filling.yaml), so
-# the checker accepts the axis moving beside it (case T13 of docs/skill-planning.md).
+# the checker accepts the axis moving beside it (case T13 of docs/skill-planning.md). It is written
+# for the capability of the same name (a Filling, the vocabulary's 0.6), which a syringe asks for.
 WRITTEN = "BottomUpFilling"
 BOTTOM_UP = Composite(**{
     "description": "Fill from the bottom: the needle starts deep and rises while the pump doses, then weigh",
+    "capability": "BottomUpFilling",
     "parameters": {"Volume": {"unit": "mL", "minimum": 0.5, "maximum": 10.0, "default": 1.0,
                               "description": "Fill volume"}},
     "execute": [{"MoveAxis": {"Position": 58.0}, "as": "NeedleDeep"},

@@ -211,6 +211,41 @@ def test_from_the_command_line_with_the_aas_in_a_folder(with_double_dose, delive
     assert run("verify", str(folder))[0] == 0
 
 
+def test_a_skill_written_for_a_narrower_capability_offers_that_one(delivered):
+    """BottomUpFilling (the syringe's filling: the needle rises while the pump doses, cell/eval) is
+    written for the capability of the same name, a Filling (the vocabulary's 0.6). Described, it is
+    offered as BottomUpFilling after a reconfiguration, beside Filling by Dispensing, with what the
+    module states of Filling (the containers it takes); built and recorded, it offers now."""
+    from modgen.spec import Composite
+    from modreg.offer import capabilities, described_skill
+    from modsync.aasjson import children
+    skill = Composite(**{
+        "capability": "BottomUpFilling",
+        "parameters": {"Volume": {"unit": "mL", "minimum": 0.5, "maximum": 10.0, "default": 1.0}},
+        "execute": [{"MoveAxis": {"Position": 58.0}, "as": "NeedleDeep"},
+                    {"parallel": [[{"Dispense": {"Volume": "Volume", "FlowRate": 0.7}}],
+                                  [{"MoveAxis": {"Position": 40.0}, "as": "NeedleRise"}]], "as": "Rising"},
+                    "Home", "Weigh"],
+        "stop": ["Home"], "results": {"Weight": "Weigh.Weight"}})
+    module, components = copy.deepcopy(delivered)
+    module = described_skill(module, components, "BottomUpFilling", skill)
+    assert described(module, components).composites["BottomUpFilling"].capability == "BottomUpFilling"
+    offered = at(submodel(capabilities(module, components), "CapabilityDescription"), "OfferedCapabilities")
+    assert [box["idShort"] for box in children(offered)] == ["BottomUpFilling", "Filling"]
+    bottom = at(offered, "BottomUpFilling")
+    capability = at(bottom, "Capability")
+    assert capability["supplementalSemanticIds"][0]["keys"][0]["value"].endswith("/semantics/BottomUpFilling")
+    assert {q["type"]: q["value"] for q in capability["qualifiers"]}["Availability"] == "AfterReconfiguration"
+    assert at(bottom, "CapabilityRelations", "RealizedBy")["second"]["keys"][-1]["value"] == "BottomUpFilling"
+    assert [v["value"] for v in at(bottom, "PropertySet", "ContainerType", "Value")["value"]] == ["vial", "syringe", "cartridge"]
+    forte = FakeForte(filling())
+    done, after = reconfigure(forte, "pi", 61499, module, components)
+    assert done[0].startswith("create BottomUpFilling: ") and after.differences.empty
+    recorded = record(module, after, done, "syringes", components)[0]
+    bottom = at(submodel(recorded, "CapabilityDescription"), "OfferedCapabilities", "BottomUpFilling")
+    assert "Availability" not in {q["type"] for q in at(bottom, "Capability")["qualifiers"]}
+
+
 def test_a_skill_written_in_the_skill_editor_is_built(delivered):
     """The web UI's skill editor (basyx-aas-web-ui fork, ProcessSequence/skills) saves the Skills
     submodel. tests/data/FillingSkills-edited.json.gz is what it wrote in its own test: a new skill

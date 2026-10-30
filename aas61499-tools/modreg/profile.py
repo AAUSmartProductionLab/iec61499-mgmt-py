@@ -621,6 +621,8 @@ class Describer:
         # type) are said beside it, as supplemental semantic ids.
         skill = model.ModuleSkill(description=decl.description or f"Skill {name}")
         skill.supplemental_semantic_ids = [f"{COMMAND}/{'Composite' if composite else 'Primitive'}", skill_id(name)]
+        if composite and decl.capability:
+            skill.supplemental_semantic_ids.append(meaning(decl.capability))      # what it was written for
         if composite:
             # Generated from the spec, so the program carries it out.
             skill.Deployment = arso.Deployment(**prop("Built"))
@@ -963,12 +965,15 @@ def capability_description(found: list[Offer], stated: dict[str, tuple[str, Capa
     it only after a reconfiguration (Availability). Two skills offering one capability: each gets a
     container of its own, named after the capability and the skill, unless ``named`` (capability,
     skill element) -> idShort keeps the name it has."""
-    from .capabilities import constrain_offer            # it builds on this module's helpers
+    from .capabilities import constrain_offer, vocabulary            # it builds on this module's helpers
     containers, count, named = {}, Counter(o.capability for o in found), named or {}
     # A name stays taken while the skill it names still offers its capability.
     taken = {n for (iri, skill), n in named.items() if any(o.capability == iri and o.skill == skill for o in found)}
     for offer in found:
         name, cap = stated.get(offer.capability, (offer.name, None))
+        if cap is None:            # a narrower capability (BottomUpFilling): the machine's facts of the broader one
+            broader = (f"{offer.capability.rsplit('/', 1)[0]}/{c}" for c in vocabulary().lineage(offer.name)[1:])
+            cap = next((stated[iri][1].model_copy(update={"description": ""}) for iri in broader if iri in stated), None)
         id_short = named.get((offer.capability, offer.skill))
         if id_short is None:
             id_short = name if count[offer.capability] == 1 and name not in taken else f"{name}_{offer.skill_name or 'Planned'}"

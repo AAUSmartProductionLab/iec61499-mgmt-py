@@ -42,11 +42,17 @@
 #
 # 0.5 (28 Oct): what a coordinate is of (ARSO 0.13): the table's base,
 # a module's base, a mount, an end effector, a mover.
+#
+# 0.6 (30 Oct): BottomUpFilling, a Filling done from the bottom of the
+# container up. A capability that narrows another is offered only by a
+# skill written for it (pprl:writtenFor): what makes it narrower (the
+# needle rising with the liquid) is how the skill moves, which no
+# constraint on the state before and after says.
 #################################################################
 
 <https://smartproductionlab.aau.dk/semantics>
   rdf:type owl:Ontology ;
-  owl:versionInfo "0.5" ;
+  owl:versionInfo "0.6" ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://w3id.org/2025/pprl> ;
   rdfs:comment "Capabilities and capability properties of aseptic filling lines for vials, prefilled syringes and cartridges (AAU Smart Production Lab)." .
@@ -135,6 +141,10 @@ lab:Filling rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCap
   rdfs:label "Filling" ; rdfs:comment "Fill a volume of liquid into an open container." ;
   pprl:pre  [ pprl:onProperty lab:ContentVolume ; pprl:expression "= 0.0" ] ;
   pprl:post [ pprl:onProperty lab:ContentVolume ; pprl:expression "= FillVolume" ] .
+
+lab:BottomUpFilling rdf:type owl:Class ; rdfs:subClassOf lab:Filling ;
+  rdfs:label "Bottom-up filling" ;
+  rdfs:comment "Fill from the bottom of the container up: the needle starts deep in it and rises while the liquid flows, so that the liquid does not foam and no air is trapped (prefilled syringes, cartridges). What holds of Filling holds of it." .
 
 lab:Stoppering rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
   rdfs:label "Stoppering" ; rdfs:comment "Place a stopper on a filled container and press it in." ;

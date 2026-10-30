@@ -1,8 +1,10 @@
 # Capabilities derived from skills (docs/ppr-model.md, section 5), on the projection of a module's AASs.
 #
 # A module level skill offers each process capability the types of its steps contribute
-# (lab:contributes). The offer is specified by every property the vocabulary says characterizes that
-# capability (lab:characterizes) and that the skill sets: through a parameter that means it, or
+# (lab:contributes), or the narrower capability it was written for (pprl:writtenFor: a skill written
+# for BottomUpFilling offers that, not the Filling its Dispense step contributes). The offer is
+# specified by every property the vocabulary says characterizes that capability or one it narrows
+# (lab:characterizes) and that the skill sets: through a parameter that means it, or
 # that hands its value to a step's parameter meaning it (a range: the parameter's limits), or
 # through a constant a step hands to such a parameter (a value). Facts of the machine (the
 # container it takes) are not set by a skill; the module states them.
@@ -24,8 +26,10 @@ CONSTRUCT {
 WHERE {
   ?skill a pprl:CompositeSkill ; pprl:usesSkill ?used .
   ?used a ?type .
-  ?type lab:contributes ?capability .
-  ?capability rdfs:subClassOf+ lab:ProcessCapability .
+  ?type lab:contributes ?contributed .
+  ?contributed rdfs:subClassOf+ lab:ProcessCapability .
+  OPTIONAL { ?skill pprl:writtenFor ?narrower . ?narrower rdfs:subClassOf+ ?contributed . }
+  BIND(COALESCE(?narrower, ?contributed) AS ?capability)
   BIND(IRI(CONCAT(STR(?skill), "/offers/", REPLACE(STR(?capability), "^.*[/#]", ""))) AS ?offer)
   OPTIONAL {
     {
@@ -52,7 +56,8 @@ WHERE {
       ?toVariable pprl:describes ?toParameter .
       ?toParameter pprl:means ?propertyClass .
     }
-    ?propertyClass lab:characterizes ?capability .
+    ?propertyClass lab:characterizes ?characterized .
+    ?capability rdfs:subClassOf* ?characterized .
   }
   # Outside the OPTIONAL: its group is evaluated on its own, where ?offer is not bound yet.
   BIND(IRI(CONCAT(STR(?offer), "/", REPLACE(STR(?propertyClass), "^.*[/#]", ""))) AS ?property)

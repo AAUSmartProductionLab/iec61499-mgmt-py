@@ -101,6 +101,8 @@ def discover(domain: Domain, vocabulary: Vocabulary | None = None) -> list[Disco
     classes = sorted(local(c) for c in voc.graph.transitive_subjects(RDFS.subClassOf, LAB.ProcessCapability)
                      if c != LAB.ProcessCapability)
     for capability in classes:
+        if voc.specializes(capability):
+            continue            # what makes it narrower no constraint states: only a skill written for it
         cap = task(voc, capability)
         if not cap.post:
             continue

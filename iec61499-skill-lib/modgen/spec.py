@@ -489,6 +489,9 @@ class Composite(Model):
     stop: list[Node] = Field(default_factory=list)
     results: dict[str, str] = Field(default_factory=dict)   # result name -> <step>.<result>
     offered: bool = True
+    # The capability class (the lab's vocabulary) it is written for, when narrower than what its
+    # steps contribute: BottomUpFilling, where its Dispense step alone contributes Filling.
+    capability: str | None = Field(default=None, pattern=IDENT)
 
     @field_validator("execute", "stop", mode="before")
     @classmethod
