@@ -1,5 +1,5 @@
-"""The agent manager: a resource agent for every module the AAS server holds, and a product agent for
-every order.
+"""The agent manager: a resource agent for every module the AAS server holds, the order agent, and a
+product agent for every product ordered.
 
 The AAS server is where a module becomes known: the registration service publishes its AAS there
 when the module is registered (by hand, or found by discovery: ``modreg serve --discover``). The
@@ -10,10 +10,14 @@ broker the AAS server publishes its events to) it reads the server as soon as a 
 created, changed or deleted, and every ``every`` seconds anyway. It also answers who the resource
 agents are, so a product agent knows whom to call.
 
+Orders come to the order agent (``orders@<domain>``, lineagents.orders) over XMPP, or over HTTP with
+``http`` (a port: ``POST /orders``, ``GET /orders``); the manager starts a product agent for each unit
+(``<product idShort>-<n>@<domain>``, ``n`` counting up from 1 while the manager runs).
+
     manager = Manager("http://localhost:8081", domain="localhost", executor="opcua")
     await manager.start()                    # watches until stopped
-    order = await manager.order("Vial2mLAAS")
-    await order.finished.wait(); order.history
+    vials = await manager.place("Vial2mLAAS", 3)
+    await vials[0].finished.wait(); vials[0].history
 """
 from __future__ import annotations
 
@@ -27,8 +31,11 @@ import secrets
 
 from .aas import AasServer, is_module
 from .execute import DmpExecutor, OpcUaExecutor, SimulatedExecutor
+from .orders import OrderAgent
 from .product import ProductAgent
 from .resource import ResourceAgent
+
+ORDERS = "orders"                     # the order agent's name
 
 
 def executor_kind(kind: str, server: str | None = None):
@@ -67,15 +74,17 @@ def digest(env: dict) -> str:
 
 class Manager:
     def __init__(self, server: str, domain: str = "localhost", port: int = 5222, executor: str = "opcua",
-                 every: float = 5.0, reconfigure: bool = True, mqtt: str | None = None):
+                 every: float = 5.0, reconfigure: bool = True, mqtt: str | None = None, http: int | None = None):
         self.server, self.domain, self.port = AasServer(server), domain, port
         self.executor_for = executor_kind(executor, server)
-        self.every, self.reconfigure, self.mqtt = every, reconfigure, mqtt
+        self.every, self.reconfigure, self.mqtt, self.http = every, reconfigure, mqtt, http
         self._poke: asyncio.Event | None = None
         self._events = None
+        self._web = None
         self.agents: dict[str, ResourceAgent] = {}       # by the module's AAS id
         self.seen: dict[str, str] = {}                    # by AAS id: the digest of the AAS last read
-        self.orders: list[ProductAgent] = []
+        self.orders: list[ProductAgent] = []              # every product agent, in the order started
+        self.taker: OrderAgent | None = None
         self._task: asyncio.Task | None = None
 
     def jid(self, name: str) -> str:
@@ -88,9 +97,43 @@ class Manager:
     async def start(self) -> None:
         self._poke = asyncio.Event()
         await self.sync()
+        jid = self.jid(ORDERS)
+        self.taker = OrderAgent(jid, password(jid), self.place, port=self.port)
+        await self.taker.start(auto_register=True)
         if self.mqtt:
             self._events = self._listen(self.mqtt, asyncio.get_running_loop())
+        if self.http:
+            self._web = await self._serve(self.http)
         self._task = asyncio.get_running_loop().create_task(self._watch())
+
+    async def _serve(self, port: int):
+        """Orders over HTTP: POST /orders {"product", "quantity"} starts the product agents; GET /orders
+        is every product agent's steps so far."""
+        from aiohttp import web
+
+        async def post(request):
+            try:
+                body = await request.json()
+                agents = await self.place(str(body["product"]), int(body.get("quantity", 1)))
+            except KeyError as e:
+                return web.json_response({"error": str(e).strip("'\"")}, status=404 if "holds no" in str(e) else 400)
+            except (ValueError, TypeError) as e:
+                return web.json_response({"error": str(e)}, status=400)
+            return web.json_response({"agents": [str(a.jid) for a in agents]}, status=201)
+
+        async def get(request):
+            return web.json_response([{"agent": str(a.jid), "product": a.name, "finished": a.finished.is_set(),
+                                       "done": a.done, "steps": [{"step": d.step, "outcome": d.outcome, "resource": d.resource,
+                                                                  "skill": d.skill, "seconds": round(d.seconds, 2),
+                                                                  "detail": d.detail, "results": d.results}
+                                                                 for d in a.history]} for a in self.orders])
+
+        app = web.Application()
+        app.add_routes([web.post("/orders", post), web.get("/orders", get)])
+        runner = web.AppRunner(app)
+        await runner.setup()
+        await web.TCPSite(runner, "0.0.0.0", port).start()
+        return runner
 
     def _listen(self, broker: str, loop):
         """The AAS server's events over MQTT (BaSyx: aas-repository/<repo>/shells/created, updated,
@@ -111,7 +154,9 @@ class Manager:
         if self._events is not None:
             self._events.loop_stop()
             self._events.disconnect()
-        for agent in [*self.orders, *self.agents.values()]:
+        if self._web is not None:
+            await self._web.cleanup()
+        for agent in [*self.orders, *self.agents.values(), *([self.taker] if self.taker else [])]:
             await agent.stop()
         self.agents.clear()
 
@@ -167,17 +212,27 @@ class Manager:
             print(f"agent manager: {line}", flush=True)
         return changed
 
-    async def order(self, product: str, name: str | None = None) -> ProductAgent:
-        """A product agent for one order of ``product`` (its AAS's idShort or id)."""
+    async def place(self, product: str, quantity: int = 1, report_to: tuple[str, str] | None = None) -> list[ProductAgent]:
+        """A product agent for each of ``quantity`` units of ``product`` (its AAS's idShort or id),
+        reporting to ``report_to`` (whoever ordered, the order's conversation)."""
+        if quantity < 1:
+            raise ValueError("an order is of at least one product")
         shell = next((s for s in await asyncio.to_thread(self.server.shells) if product in (s["idShort"], s["id"])), None)
-        if shell is None:
+        if shell is None or is_module({"assetAdministrationShells": [shell]}):
             raise KeyError(f"the AAS server holds no product {product}")
         env = await asyncio.to_thread(self.server.environment, shell)
-        jid = self.jid(name or f"order-{len(self.orders) + 1}-{shell['idShort']}")
-        agent = ProductAgent(jid, password(jid), env, self.resources, port=self.port)
-        await agent.start(auto_register=True)
-        self.orders.append(agent)
-        return agent
+        started = []
+        for _ in range(quantity):
+            jid = self.jid(f"{shell['idShort']}-{len(self.orders) + 1}")
+            agent = ProductAgent(jid, password(jid), env, self.resources, report_to=report_to, port=self.port)
+            await agent.start(auto_register=True)
+            self.orders.append(agent)
+            started.append(agent)
+        return started
+
+    async def order(self, product: str) -> ProductAgent:
+        """A product agent for one unit of ``product``."""
+        return (await self.place(product))[0]
 
     @staticmethod
     def _host(env: dict) -> str | None:

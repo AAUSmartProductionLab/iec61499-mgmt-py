@@ -1,12 +1,16 @@
-"""A product agent: one per order. It walks its product's steps (the Production Sequence of the
-product's AAS) and asks for one at a time.
+"""A product agent: one per product to make (an order of three vials has three). It walks its
+product's steps (the Production Sequence of the product's AAS) and asks for one at a time.
 
 For a step: a call for proposals with the step's required capability to every resource agent it
 knows; answers are taken until each has answered or the call's replyBy has passed; of the proposals
 it accepts the one whose skill is built (no reconfiguration first), else the first, and rejects the
-others; then it waits for the result. A step that fails is asked for again of the other resource
-agents (``retries`` times); a step nobody proposes for, or that fails each time, ends the order (what
-was done, each attempt, is in ``history``).
+others; then it waits for the result. When nobody proposes but a module that offers the step is
+busy (another product's step, or a proposal of its own waiting for a decision), it asks again after
+``again_seconds``, until ``step_seconds`` have passed. A step that fails is asked for again of the
+other resource agents (``retries`` times); a step nobody proposes for, or that fails each time, ends
+the product (what was done, each attempt, is in ``history``). ``report_to`` (whoever ordered, the
+order's conversation) is informed at the end: ``informConfirm`` with the steps when every step was
+done, else ``failure`` (lineagents.orders).
 
 Transport between the steps (the planar table's shuttles as resource agents) and booking ahead are
 planned (docs/agents.md).
@@ -23,6 +27,7 @@ from spade.behaviour import OneShotBehaviour
 
 from . import i40
 from .aas import Offer, Step, steps
+from .orders import ORDERING
 
 ROLE = i40.REQUESTER
 
@@ -43,16 +48,38 @@ class Done:
 
 class ProductAgent(Agent):
     def __init__(self, jid: str, password: str, product: dict, resources: Callable[[], list[str]],
-                 answer_seconds: float = 3.0, step_seconds: float = 600.0, retries: int = 1, **options):
+                 answer_seconds: float = 3.0, step_seconds: float = 600.0, retries: int = 1,
+                 again_seconds: float = 1.0, report_to: tuple[str, str] | None = None, **options):
         super().__init__(jid, password, **options)
         self.product, self.resources = product, resources
         self.answer_seconds, self.step_seconds, self.retries = answer_seconds, step_seconds, retries
+        self.again_seconds, self.report_to = again_seconds, report_to
         self.history: list[Done] = []
         self.finished = asyncio.Event()
 
     @property
     def name(self) -> str:
         return self.product["assetAdministrationShells"][0]["idShort"]
+
+    @property
+    def done(self) -> bool:
+        """Every step of the product was carried out."""
+        return self.finished.is_set() and len({d.step for d in self.history if d.outcome == "done"}) == len(steps(self.product))
+
+    def record(self) -> list[dict]:
+        """What was done, as interaction elements: the product, its agent, each attempt at a step."""
+        def prop(name, value, kind="xs:string"):
+            return {"modelType": "Property", "idShort": name, "valueType": kind, "value": str(value)}
+        attempts = []
+        for i, d in enumerate(self.history, 1):
+            results = [prop(k, v) for k, v in d.results.items()]
+            attempts.append({"modelType": "SubmodelElementCollection", "idShort": f"Step{i:02d}", "value": [
+                prop("Name", d.step), prop("Outcome", d.outcome), prop("Resource", d.resource or ""),
+                prop("Skill", d.skill or ""), prop("Seconds", round(d.seconds, 2), "xs:double"), prop("Detail", d.detail),
+                {"modelType": "SubmodelElementCollection", "idShort": "Results", "value": results}]})
+        return [{"modelType": "SubmodelElementCollection", "idShort": "Product", "value": [
+            prop("Product", self.name), prop("Agent", str(self.jid)),
+            {"modelType": "SubmodelElementCollection", "idShort": "Steps", "value": attempts}]}]
 
     async def setup(self) -> None:
         self.add_behaviour(Order())
@@ -75,18 +102,22 @@ class Order(OneShotBehaviour):
                     break
         finally:
             agent.finished.set()
+            if agent.report_to:
+                orderer, conversation = agent.report_to
+                await self.send(i40.I40Message(i40.DONE if agent.done else i40.FAILED, str(agent.jid), orderer,
+                                               conversation, agent.record(), ROLE, protocol=ORDERING).to_spade())
 
-    async def ask(self, step: Step, left_out: set[str] = frozenset()) -> Done:
+    async def call(self, step: Step, resources: list[str]) -> tuple[str, list, int, int]:
+        """One call for proposals: its conversation, the proposals, the refusals, and how many of
+        those only because the module was busy."""
         agent: ProductAgent = self.agent
-        started, conversation = time.monotonic(), i40.new_id()
-        resources = [r for r in agent.resources() if r not in left_out]
-        deadline = i40.reply_by(agent.answer_seconds)
+        conversation, deadline = i40.new_id(), i40.reply_by(agent.answer_seconds)
         for resource in resources:
             call = i40.I40Message(i40.CALL, str(agent.jid), resource, conversation, [step.required],
                                   ROLE, i40.PROVIDER, reply_by=deadline)
             await self.send(call.to_spade())
         proposals: list[tuple[i40.I40Message, Offer]] = []
-        refusals = 0
+        refusals = busy = 0
         while len(proposals) + refusals < len(resources) and time.time() * 1000 < deadline:
             answer = await self.next_in(conversation, (deadline - time.time() * 1000) / 1000)
             if answer is None:
@@ -95,9 +126,23 @@ class Order(OneShotBehaviour):
                 proposals.append((answer, Offer.from_element(answer.elements[0])))
             elif answer.type in (i40.REFUSE, i40.NOT_UNDERSTOOD):
                 refusals += 1
+                busy += any(e.get("idShort") == "Busy" and e.get("value") == "true" for e in answer.elements)
+        return conversation, proposals, refusals, busy
+
+    async def ask(self, step: Step, left_out: set[str] = frozenset()) -> Done:
+        agent: ProductAgent = self.agent
+        started = time.monotonic()
+        resources = [r for r in agent.resources() if r not in left_out]
+        while True:
+            conversation, proposals, refusals, busy = await self.call(step, resources)
+            if proposals or not busy or time.monotonic() - started > agent.step_seconds:
+                break
+            await asyncio.sleep(agent.again_seconds)             # a module that offers it is busy
         done = Done(step.name, proposals=len(proposals), refusals=refusals)
         if not proposals:
-            done.outcome, done.detail = "nobody", f"no proposal from {len(resources)} resource agents"
+            done.outcome = "nobody"
+            done.detail = (f"{busy} resource agents that offer it stayed busy" if busy else
+                           f"no proposal from {len(resources)} resource agents")
             done.seconds = time.monotonic() - started
             return done
         chosen = sorted(proposals, key=lambda p: not p[1].built)[0]

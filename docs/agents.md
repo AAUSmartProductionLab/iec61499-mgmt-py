@@ -18,9 +18,10 @@ What exists and what the literature does: [agents-literature.md](agents-literatu
 | The registration service | the lab's server (`modreg serve --discover`) | Finds the modules (mDNS), fetches each one's manifest, checks and publishes its AAS |
 | The DMP | the lab's server | Carries an AAS Operation to the module's OPC UA method; writes the module's values to InfluxDB |
 | The XMPP server | the lab's server | Carries the agents' messages (SPADE's own for now) |
-| **The agent manager** | the lab's server (`python -m lineagents`) | A resource agent for each module on the AAS server, a product agent per order |
+| **The agent manager** | the lab's server (`python -m lineagents`) | A resource agent for each module on the AAS server, the order agent, a product agent per product ordered |
+| **The order agent** | in the manager's process (`orders@<domain>`; `POST /orders` with `--http`) | Takes an order (product, quantity) and starts a product agent for each unit |
 | **A resource agent** | in the manager's process | Bids for steps its module can do; reconfigures its module when a bid needs a new skill; runs the skill |
-| **A product agent** | in the manager's process | Walks its product's steps: calls for proposals, chooses, has the product carried and the step done |
+| **A product agent** | in the manager's process | One per unit: walks its product's steps (calls for proposals, chooses, has the product carried and the step done) and reports to whoever ordered |
 
 Agents run on the server, not on the Pis. The Pi runs the module's control program and nothing that
 decides; the agent is the module's active part (the AAS its passive part, the I4.0 component of
@@ -76,6 +77,22 @@ and the conversation in the message's metadata). One conversation per step:
 | `acceptProposal` / `rejectProposal` | product agent → resource agents | The chosen offer |
 | `informConfirm` / `failure` | resource agent → product agent | The skill's results, or why it failed |
 
+**Orders** (built 30 Oct, `lineagents.orders`), a small protocol of the lab's own in the same frame
+(VDI/VDE 2193-2 has no ordering):
+
+| Message | From → to | Carries |
+| --- | --- | --- |
+| `order` | whoever orders → the order agent | Product (AAS idShort or id), Quantity |
+| `orderConfirm` / `refuseProposal` | order agent → orderer | The product agents' JIDs / why not (no such product) |
+| `informConfirm` / `failure` | each product agent → orderer | Its steps: who did each, the results / where it stopped |
+
+The same over HTTP: `POST /orders {"product": "Vial2mLAAS", "quantity": 3}`, `GET /orders` (each
+product agent's steps so far: what an order screen shows). Three vials ordered at once share the line:
+a module refuses a call with `Busy` while it carries out a step or while one of its proposals waits for
+the decision (a proposal is binding, so it reserves the module), and a product agent that hears only
+busy refusals asks again a second later (`test_orders.py`; over Prosody from another process and over
+HTTP, `test_processes.py`).
+
 The frame's fields (`inReplyTo`, `replyBy`, ...), the message types and the roles (`serviceRequester`,
 `serviceProvider`) are those of VDI/VDE 2193 as the OvGU testbed implements them; no implementation over
 XMPP was found, so this one is the first (literature, 5.1).
@@ -83,8 +100,8 @@ XMPP was found, so this one is the first (literature, 5.1).
 **Planned:** transport between the steps (section 6), booking a module ahead (the accept books it, a
 second message starts the step once the product is there), proposals that carry a time (when the
 module is free, how long the skill takes, and the setup: the time to plan and create a skill online),
-a product agent that asks another module when a step fails, and every decision written into the
-product's AAS (the batch record a pharmaceutical line needs). A proposal is binding (VDI/VDE 2193-2).
+and every decision written into the product's AAS (the batch record a pharmaceutical line needs). A
+proposal is binding (VDI/VDE 2193-2).
 
 ## 5. What is built (30 Oct)
 
@@ -111,8 +128,8 @@ product's AAS (the batch record a pharmaceutical line needs). A proposal is bind
 | **Where a product is**: nothing says which shuttle carries the product and where it stands | The product agent has to know whom to ask to move it, and where to | The product agent keeps it (an order's state); later the product instance's AAS |
 | **The station of a module**: the transfer point is in the module's AAS, the table's frame in the table's | The target of a transport | `example_line.stations` computes it from the AASs; move it into `lineagents.aas` |
 | **Accept starts at once** | The module would start before the product is there | Accept books; a start message (or the transport's informConfirm) starts |
-| **One step at a time per module, no queue** | A busy module refuses | Proposals with a time: when it is free |
-| **The XMPP path is not tested across processes**: agents in one SPADE container hand messages over directly | A distributed deployment | A test with the manager and a product agent in two processes |
+| **One step at a time per module, no queue** | A busy module refuses (with `Busy`, and the product agent asks again: built 30 Oct) | Proposals with a time: when it is free |
+| ~~**The XMPP path is not tested across processes**~~ | A distributed deployment | Done 30 Oct (`test_processes.py`, over Prosody) |
 
 ## 7. Plan to January
 
@@ -127,16 +144,16 @@ product's AAS (the batch record a pharmaceutical line needs). A proposal is bind
 | A7 | Dec–Jan | The demo: an order screen (place orders, see each order's conversation and where the product is), the agents' messages logged (InfluxDB), the scenario script | The demo runs three orders (vial, syringe, cartridge) end to end on the line |
 | A8 | Jan | Rehearsal on the hardware; what cannot be ready falls back to the simulators | – |
 
-## 8. Decisions for you
+## 8. Decisions
 
-| # | Question | Proposal |
+| # | Question | Decided |
 | --- | --- | --- |
-| 8.1 | The shuttles' offer: Transporting in each shuttle's AAS (Capability Description written by `modreg/planar.py`), or transport left out of the bidding (the product agent commands the table directly)? | In the AAS, as for the modules: the shuttle is a resource and bids like one |
-| 8.2 | One offered capability container per realizing skill (`modreg` derivation)? | Yes; the name of the container is the capability's and the skill's |
+| 8.1 | The shuttles' offer: Transporting in each shuttle's AAS (Capability Description written by `modreg/planar.py`), or transport left out of the bidding (the product agent commands the table directly)? | **In the AAS (30 Oct, yours)**: the shuttles bid like modules; the slides show it too |
+| 8.2 | One offered capability container per realizing skill (`modreg` derivation)? | **Yes (30 Oct, yours)**, and a new or changed skill gets a capability of its own (BottomUpFilling: filling while the needle rises), so that a product can ask for it |
 | 8.3 | XMPP server for the lab: SPADE's own (pyjabber), Prosody or ejabberd? | **Prosody, done 30 Oct** (`lab-xmpp` in the lab stack): pyjabber left an agent of another process unanswered now and then (a registration never answered, a stream without a version); SPADE's own stays for tests in one process |
 | 8.4 | Running skills: modlink over OPC UA (built), or through the AAS and the DMP? | modlink for the demo, the DMP executor next to it (section 3) |
-| 8.5 | Agents as a few processes on the server, or one container per agent (as SMIA deploys them)? | One process (the manager) for the demo; per-agent containers only if a module brings its own agent |
-| 8.6 | The orders: from where? An order screen in the web UI, a REST call to the manager, or an order AAS? | A REST call to the manager first, the screen on top of it |
+| 8.5 | Agents as a few processes on the server, or one container per agent (as SMIA deploys them)? | **One process, the manager (30 Oct, yours)**; per-agent containers only if a module brings its own agent |
+| 8.6 | The orders: from where? An order screen in the web UI, a REST call to the manager, or an order AAS? | **The order agent (30 Oct, yours: the product agents receive the order and carry it out, one per product)**: an `order` message over XMPP or `POST /orders`; the screen on top (A7) |
 
 ## 9. Where this stands in the literature
 
