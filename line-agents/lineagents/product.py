@@ -3,17 +3,24 @@ product's steps (the Production Sequence of the product's AAS) and asks for one 
 
 For a step: a call for proposals with the step's required capability to every resource agent it
 knows; answers are taken until each has answered or the call's replyBy has passed; of the proposals
-it accepts the one whose skill is built (no reconfiguration first), else the first, and rejects the
-others; then it waits for the result. When nobody proposes but a module that offers the step is
-busy (another product's step, or a proposal of its own waiting for a decision), it asks again after
-``again_seconds``, until ``step_seconds`` have passed. A step that fails is asked for again of the
-other resource agents (``retries`` times); a step nobody proposes for, or that fails each time, ends
-the product (what was done, each attempt, is in ``history``). ``report_to`` (whoever ordered, the
-order's conversation) is informed at the end: ``informConfirm`` with the steps when every step was
-done, else ``failure`` (lineagents.orders).
+it chooses the one whose skill is built (no reconfiguration first), else the first, and rejects the
+others. When nobody proposes but a module that offers the step is busy (another product's step, or a
+proposal of its own waiting for a decision), it asks again after ``again_seconds``, until
+``step_seconds`` have passed.
 
-Transport between the steps (the planar table's shuttles as resource agents) and booking ahead are
-planned (docs/agents.md).
+Before it accepts, it has the product carried to the module: a module's proposal says where a shuttle
+hands the product over (its station, in the planar table's frame), and unless the product is there
+already, the product agent calls for Transporting to that pose: of every resource agent the first
+time (a free shuttle bids), after that of the shuttle that carries the product (its ``carrier``,
+which bids for no other product until it is released at the end). Once the product is there it
+accepts the module's proposal (the proposal is binding, so the module waits for it) and waits for the
+result. A step that cannot be carried to its module fails.
+
+A step that fails is asked for again of the other resource agents (``retries`` times); a step nobody
+proposes for, or that fails each time, ends the product (what was done, each attempt and each
+transport, is in ``history``). ``report_to`` (whoever ordered, the order's conversation) is informed
+at the end: ``informConfirm`` with the steps when every step was done, else ``failure``
+(lineagents.orders).
 """
 from __future__ import annotations
 
@@ -26,10 +33,11 @@ from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour
 
 from . import i40
-from .aas import Offer, Step, steps
+from .aas import Offer, steps, transport_request
 from .orders import ORDERING
 
 ROLE = i40.REQUESTER
+TRANSPORT = "Transporting"                     # a transport's name in the history
 
 
 @dataclass
@@ -56,6 +64,8 @@ class ProductAgent(Agent):
         self.answer_seconds, self.step_seconds, self.retries = answer_seconds, step_seconds, retries
         self.again_seconds, self.report_to = again_seconds, report_to
         self.history: list[Done] = []
+        self.carrier: str | None = None        # the shuttle carrying the product (its agent's JID)
+        self.at: tuple[float, float, float] | None = None      # where the product is on the table
         self.finished = asyncio.Event()
 
     @property
@@ -63,9 +73,13 @@ class ProductAgent(Agent):
         return self.product["assetAdministrationShells"][0]["idShort"]
 
     @property
-    def done(self) -> bool:
+    def complete(self) -> bool:
         """Every step of the product was carried out."""
-        return self.finished.is_set() and len({d.step for d in self.history if d.outcome == "done"}) == len(steps(self.product))
+        return {s.name for s in steps(self.product)} <= {d.step for d in self.history if d.outcome == "done"}
+
+    @property
+    def done(self) -> bool:
+        return self.finished.is_set() and self.complete
 
     def record(self) -> list[dict]:
         """What was done, as interaction elements: the product, its agent, each attempt at a step."""
@@ -95,7 +109,7 @@ class Order(OneShotBehaviour):
                 # A step that fails is asked for again, of the others (``retries`` times).
                 left_out: set[str] = set()
                 for _ in range(1 + agent.retries):
-                    done = await self.ask(step, left_out)
+                    done = await self.ask(step.name, step.required, left_out)
                     agent.history.append(done)
                     if done.outcome != "failed" or done.agent is None:
                         break
@@ -103,19 +117,23 @@ class Order(OneShotBehaviour):
                 if done.outcome != "done":
                     break
         finally:
-            agent.finished.set()
+            if agent.carrier:                  # the product is off the shuttle: free for others
+                await self.send(i40.I40Message(i40.DONE, str(agent.jid), agent.carrier, i40.new_id(),
+                                               [{"modelType": "Property", "idShort": "Released", "valueType": "xs:boolean",
+                                                 "value": "true"}], ROLE, i40.PROVIDER).to_spade())
             if agent.report_to:
                 orderer, conversation = agent.report_to
-                await self.send(i40.I40Message(i40.DONE if agent.done else i40.FAILED, str(agent.jid), orderer,
+                await self.send(i40.I40Message(i40.DONE if agent.complete else i40.FAILED, str(agent.jid), orderer,
                                                conversation, agent.record(), ROLE, protocol=ORDERING).to_spade())
+            agent.finished.set()
 
-    async def call(self, step: Step, resources: list[str]) -> tuple[str, list, int, int]:
+    async def call(self, required: dict, resources: list[str]) -> tuple[str, list, int, int]:
         """One call for proposals: its conversation, the proposals, the refusals, and how many of
         those only because the module was busy."""
         agent: ProductAgent = self.agent
         conversation, deadline = i40.new_id(), i40.reply_by(agent.answer_seconds)
         for resource in resources:
-            call = i40.I40Message(i40.CALL, str(agent.jid), resource, conversation, [step.required],
+            call = i40.I40Message(i40.CALL, str(agent.jid), resource, conversation, [required],
                                   ROLE, i40.PROVIDER, reply_by=deadline)
             await self.send(call.to_spade())
         proposals: list[tuple[i40.I40Message, Offer]] = []
@@ -131,27 +149,69 @@ class Order(OneShotBehaviour):
                 busy += any(e.get("idShort") == "Busy" and e.get("value") == "true" for e in answer.elements)
         return conversation, proposals, refusals, busy
 
-    async def ask(self, step: Step, left_out: set[str] = frozenset()) -> Done:
+    async def proposals(self, name: str, required: dict, resources: list[str]):
+        """Calls for proposals until one comes, asking again while the only ones that could propose
+        are busy: the step's record so far, the proposals, the conversation, when it started."""
         agent: ProductAgent = self.agent
         started = time.monotonic()
-        resources = [r for r in agent.resources() if r not in left_out]
         while True:
-            conversation, proposals, refusals, busy = await self.call(step, resources)
+            conversation, proposals, refusals, busy = await self.call(required, resources)
             if proposals or not busy or time.monotonic() - started > agent.step_seconds:
                 break
             await asyncio.sleep(agent.again_seconds)             # a module that offers it is busy
-        done = Done(step.name, proposals=len(proposals), refusals=refusals)
+        done = Done(name, proposals=len(proposals), refusals=refusals)
         if not proposals:
             done.outcome = "nobody"
             done.detail = (f"{busy} resource agents that offer it stayed busy" if busy else
                            f"no proposal from {len(resources)} resource agents")
             done.seconds = time.monotonic() - started
+        # A built skill before one a reconfiguration creates; then whoever answered first.
+        return done, sorted(proposals, key=lambda p: not p[1].built), conversation, started
+
+    async def ask(self, name: str, required: dict, left_out: set[str] = frozenset()) -> Done:
+        """A step: the module chosen, the product carried there, the step carried out."""
+        agent: ProductAgent = self.agent
+        done, proposals, conversation, started = await self.proposals(
+            name, required, [r for r in agent.resources() if r not in left_out])
+        if not proposals:
             return done
-        chosen = sorted(proposals, key=lambda p: not p[1].built)[0]
+        chosen, others = proposals[0], proposals[1:]
+        await self.reject(others)
+        station = chosen[1].station
+        if station is not None and station != agent.at:
+            moved = await self.transport(station)
+            agent.history.append(moved)
+            if moved.outcome != "done":
+                await self.reject([chosen])
+                done.resource, done.outcome = chosen[1].resource, "failed"
+                done.detail = f"not carried to {chosen[1].resource}: {moved.detail or moved.outcome}"
+                done.seconds = time.monotonic() - started
+                return done
+        return await self.carry_out(done, chosen, conversation, started)
+
+    async def transport(self, station: tuple[float, float, float]) -> Done:
+        """The product carried to ``station`` by its shuttle, or by a free one the first time."""
+        agent: ProductAgent = self.agent
+        resources = [agent.carrier] if agent.carrier else agent.resources()
+        done, proposals, conversation, started = await self.proposals(TRANSPORT, transport_request(*station), resources)
+        if not proposals:
+            return done
+        await self.reject(proposals[1:])
+        done = await self.carry_out(done, proposals[0], conversation, started)
+        if done.outcome == "done":
+            agent.carrier, agent.at = done.agent, station
+        return done
+
+    async def reject(self, proposals: list) -> None:
         for answer, _ in proposals:
-            await self.send(answer.answer(i40.ACCEPT if answer is chosen[0] else i40.REJECT,
-                                          [chosen[1].element()] if answer is chosen[0] else [], ROLE).to_spade())
-        done.resource, done.skill, done.agent = chosen[1].resource, chosen[1].skill, chosen[0].sender
+            await self.send(answer.answer(i40.REJECT, [], ROLE).to_spade())
+
+    async def carry_out(self, done: Done, chosen: tuple, conversation: str, started: float) -> Done:
+        """Accept the chosen proposal and wait for its result."""
+        agent: ProductAgent = self.agent
+        answer, offer = chosen
+        await self.send(answer.answer(i40.ACCEPT, [offer.element()], ROLE).to_spade())
+        done.resource, done.skill, done.agent = offer.resource, offer.skill, answer.sender
         result = await self.next_in(conversation, agent.step_seconds, types=(i40.DONE, i40.FAILED))
         if result is None:
             done.outcome, done.detail = "failed", "no result in time"
@@ -168,8 +228,9 @@ class Order(OneShotBehaviour):
         return done
 
     async def next_in(self, conversation: str, seconds: float, types=None) -> i40.I40Message | None:
-        """The next message of ``conversation`` (of one of ``types``) within ``seconds``; others are
-        left out (an answer to an earlier call that came too late)."""
+        """The next message of ``conversation`` (of one of ``types``) within ``seconds``. Others are
+        left out: an answer to an earlier call that came too late, whose proposal is rejected so that
+        it does not hold its module."""
         end = time.monotonic() + max(0.0, seconds)
         while (left := end - time.monotonic()) > 0:
             message = await self.receive(timeout=left)
@@ -178,4 +239,6 @@ class Order(OneShotBehaviour):
             found = i40.I40Message.from_spade(message)
             if found.conversation == conversation and (types is None or found.type in types):
                 return found
+            if found.type == i40.PROPOSAL:
+                await self.send(found.answer(i40.REJECT, [], ROLE).to_spade())
         return None

@@ -18,6 +18,26 @@ A running log of design considerations made while building, for writing the pape
 
 ## 30 Oct 2026
 
+- **Transport: each shuttle bids for Transporting like a module; the product is carried to the
+  module's station before the module's proposal is accepted.** *Journal* (and the slides).
+  - What: a shuttle's AAS offers Transporting (TargetX, TargetY, TargetRz over the table's extent;
+    vocabulary 0.6), realized by MoveToPosition, whose parameters now mean those properties
+    (`modreg.planar`). A module's proposal carries its station: its transfer point in the table's
+    frame, computed by the manager from the module's, the line's and the table's coordinates. The
+    product agent chooses the module, calls for Transporting to that station (every resource the first
+    time, then only the shuttle carrying the product), and accepts the module's proposal once the
+    shuttle reports the product there. The carrying shuttle bids for no other product until the
+    product agent releases it at the end. A proposal holds its module for up to 300 s; a late proposal
+    is rejected at once so it holds nothing.
+  - Why: the user's decision (30 Oct: the shuttles bid like modules). It keeps one mechanism for every
+    resource, and the transport is in the same conversation record as the steps. Accepting only once
+    the product is there makes VDI/VDE 2193-2's binding proposal the booking, without a message type of
+    our own.
+  - Instead of: the product agent commanding the table directly (transport outside the bidding); one
+    agent for the whole table (it would have to decide which xbot, which is the controller's or the
+    shuttle's own business); accepting the module first and moving afterwards (the module would start
+    with no vial under the needle); a separate "start" message after booking (not in VDI/VDE 2193).
+
 - **A product agent's step can need a reconfiguration: the syringe asks for BottomUpFilling, the
   filling module's agent creates the skill online and runs it.** *Journal* (and the CIRP demo).
   - What: a resource agent offers a capability of the required meaning or a narrower one (an exact

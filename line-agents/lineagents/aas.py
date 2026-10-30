@@ -12,7 +12,12 @@ whoever built it, with the helpers of the plan check (``modreg.plancheck``).
   the skill that realizes it, whether that skill is built (``Deployment``: it runs now) or only
   described (a reconfiguration creates it first), and the skill's arguments: each input of its Start
   command given the required value of the same meaning. Of several, one of the same meaning before a
-  narrower one, and a built skill before one a reconfiguration creates.
+  narrower one, and a built skill before one a reconfiguration creates. A module's offer also says
+  where a shuttle hands it the product (its station).
+- A module's **station** is its transfer point (the coordinate meaning TransferPoint) in the planar
+  table's frame, through the coordinates the AASs of the module, the line and the table give.
+- A **transport** is asked for as a product asks for a step: a required Transporting with the
+  target pose (TargetX, TargetY, TargetRz); a shuttle offers it (modreg.planar).
 """
 from __future__ import annotations
 
@@ -27,6 +32,9 @@ from modreg.plancheck import at, children, covers, number, resolve, semantic_ids
 
 MEANS = "https://smartproductionlab.aau.dk/semantics"
 MODULE_TYPE = "Resource/Module"          # the end of a module's assetType
+SYSTEM_TYPE = "Resource/System"          # the end of a line's
+TRANSPORTING = f"{MEANS}/Transporting"
+IDTA = "https://admin-shell.io/idta"
 
 
 @functools.cache
@@ -141,22 +149,28 @@ class Offer:
     skill: str                           # the skill that realizes it
     built: bool                          # it runs now; else a reconfiguration creates it first
     arguments: dict[str, float] = field(default_factory=dict)    # the skill's inputs by name
+    station: tuple[float, float, float] | None = None            # where the product is handed over (x, y, rz)
 
     def element(self) -> dict:
         """The offer as an interaction element of a proposal."""
         def prop(name, value, kind="xs:string"):
             return {"modelType": "Property", "idShort": name, "valueType": kind, "value": str(value)}
         args = [prop(name, value, "xs:double") for name, value in self.arguments.items()]
-        return {"modelType": "SubmodelElementCollection", "idShort": "Offer", "value": [
-            prop("Resource", self.resource), prop("Capability", self.capability), prop("Skill", self.skill),
-            prop("Reconfiguration", str(not self.built).lower(), "xs:boolean"),
-            {"modelType": "SubmodelElementCollection", "idShort": "Arguments", "value": args}]}
+        found = [prop("Resource", self.resource), prop("Capability", self.capability), prop("Skill", self.skill),
+                 prop("Reconfiguration", str(not self.built).lower(), "xs:boolean"),
+                 {"modelType": "SubmodelElementCollection", "idShort": "Arguments", "value": args}]
+        if self.station is not None:
+            found.append({"modelType": "SubmodelElementCollection", "idShort": "Station", "value": [
+                prop(name, value, "xs:double") for name, value in zip(("X", "Y", "Rz"), self.station)]})
+        return {"modelType": "SubmodelElementCollection", "idShort": "Offer", "value": found}
 
     @classmethod
     def from_element(cls, element: dict) -> "Offer":
         value = lambda name: (at(element, name) or {}).get("value")       # noqa: E731
+        station = {p["idShort"]: float(p["value"]) for p in children(at(element, "Station"))}
         return cls(value("Resource"), value("Capability"), value("Skill"), value("Reconfiguration") != "true",
-                   {a["idShort"]: float(a["value"]) for a in children(at(element, "Arguments"))})
+                   {a["idShort"]: float(a["value"]) for a in children(at(element, "Arguments"))},
+                   (station["X"], station["Y"], station["Rz"]) if station else None)
 
 
 def skill_element(module: dict, name: str) -> dict | None:
@@ -208,6 +222,56 @@ def _arguments(skill: dict, asked: dict[str, dict]) -> dict[str, float]:
             if value is not None:
                 found[variable["idShort"]] = value
     return found
+
+
+# Where a product goes on the table -----------------------------------------------------------------
+
+def station(envs: list[dict], module: str) -> tuple[float, float, float] | None:
+    """Where a shuttle stands to hand the product to ``module`` (its AAS's idShort): its transfer
+    point in the planar table's frame, (x, y, rz) in mm and degrees; None if the AASs do not place
+    it on the table."""
+    from modreg.frames import coordinates, relative
+    env = next((e for e in envs if shell_of(e)["idShort"] == module), None)
+    point = next((name for name, c in coordinates(env).items() if f"{MEANS}/TransferPoint" in meanings(c)), None) if env else None
+    root = next(((shell_of(e)["idShort"], name) for e in envs for name, c in coordinates(e).items()
+                 if f"{MEANS}/TableBase" in meanings(c)), None)
+    if point is None or root is None:
+        return None
+    try:
+        pose = relative(envs, root, (module, point))
+    except (KeyError, ValueError, StopIteration):
+        return None                                   # not placed on the table
+    x, y, _ = pose.position
+    rz = (pose.heading + 180.0) % 360.0 - 180.0
+    return tuple(round(v, 3) + 0.0 for v in (x, y, rz))
+
+
+def transport_request(x: float, y: float, rz: float) -> dict:
+    """A required Transporting to (x, y, rz) on the table, as a product's required capability is
+    written (IDTA 02020)."""
+    def ref(value):
+        return {"type": "ExternalReference", "keys": [{"type": "GlobalReference", "value": value}]}
+
+    def target(name, value, unit):
+        return {"modelType": "SubmodelElementCollection", "idShort": name,
+                "semanticId": ref(f"{IDTA}/CapabilityDescription/PropertyContainer/1/0"), "value": [
+                    {"modelType": "Property", "idShort": "Value", "valueType": "xs:double", "value": str(value),
+                     "semanticId": ref(f"{IDTA}/CapabilityPropertyType/Property/1/0"),
+                     "supplementalSemanticIds": [ref(f"{MEANS}/{name}")],
+                     "qualifiers": [{"type": "Unit", "valueType": "xs:string", "value": unit, "kind": "ConceptQualifier"}]}]}
+    return {"modelType": "SubmodelElementCollection", "idShort": "Transporting",
+            "semanticId": ref(f"{IDTA}/CapabilityDescription/CapabilityContainer/1/0"), "value": [
+                {"modelType": "Capability", "idShort": "Capability", "semanticId": ref(f"{IDTA}/CapabilityDescription/Capability/1/0"),
+                 "supplementalSemanticIds": [ref(TRANSPORTING)]},
+                {"modelType": "SubmodelElementCollection", "idShort": "PropertySet",
+                 "semanticId": ref(f"{IDTA}/CapabilityDescription/PropertySet/1/0"),
+                 "value": [target("TargetX", x, "mm"), target("TargetY", y, "mm"), target("TargetRz", rz, "deg")]}]}
+
+
+def carries(module: dict) -> bool:
+    """The resource offers Transporting: a shuttle."""
+    return any(TRANSPORTING in meanings(at(c, "Capability"))
+               for capability_set in children(submodel(module, "CapabilityDescription")) for c in children(capability_set))
 
 
 def _shown(value: dict) -> str:

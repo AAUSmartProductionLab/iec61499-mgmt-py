@@ -7,7 +7,10 @@ that meaning whose properties cover the values, the skill that realizes it, whet
 built or only described, its arguments), or refuses with the reasons. A proposal is binding (VDI/VDE
 2193-2): from the proposal until the product agent decides (or the decision is late) and while it
 carries out a step it refuses, saying it is busy, so that the product agent asks again later: a
-module does one step at a time.
+module does one step at a time. A module's proposal says where a shuttle hands it the product (its
+``station``, set by the manager from the AASs). A shuttle (a resource that offers Transporting) that
+has carried a product carries it until the product agent releases it (``informConfirm`` with
+Released), and meanwhile bids for that product only.
 
 Carrying out: on acceptance, a skill that is only described is created first (``execute.reconfigure``,
 when the agent knows the AAS server and the module's management host; or ``reconfigurer``, e.g.
@@ -25,11 +28,13 @@ from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 
 from . import i40
-from .aas import AasServer, Offer, offer
+from .aas import AasServer, Offer, carries, offer
 from .execute import Executor, Failed, reconfigure
 
 ROLE = i40.PROVIDER
-DECISION_SECONDS = 10.0          # how long after the call's replyBy a proposal waits for its decision
+# How long after the call's replyBy a proposal waits for its decision: the product agent decides once
+# the product has been carried to the module.
+DECISION_SECONDS = 300.0
 
 
 def refusal(reasons: list[str], busy: bool = False) -> list[dict]:
@@ -51,6 +56,8 @@ class ResourceAgent(Agent):
         self.server, self.management_host, self.reconfigurer = server, management_host, reconfigurer
         self.proposed: dict[str, tuple[Offer, float]] = {}   # by conversation: proposed, not decided; until when
         self.busy = False
+        self.station: tuple[float, float, float] | None = None   # where a shuttle hands it the product
+        self.carrying: str | None = None       # a shuttle: the product agent whose product it carries
         self.log: list[str] = []
 
     @property
@@ -61,6 +68,7 @@ class ResourceAgent(Agent):
         self.add_behaviour(Bidding(), Template(metadata={"type": i40.CALL}))
         decided = Template(metadata={"type": i40.ACCEPT}) | Template(metadata={"type": i40.REJECT})
         self.add_behaviour(Award(), decided)
+        self.add_behaviour(Release(), Template(metadata={"type": i40.DONE}))
 
     def note(self, line: str) -> None:
         self.log.append(line)
@@ -99,9 +107,12 @@ class Bidding(CyclicBehaviour):
             await self.send(call.answer(i40.NOT_UNDERSTOOD, [], ROLE).to_spade())
             return
         found = offer(agent.module, call.elements[0])
-        if isinstance(found, Offer) and (agent.busy or agent.reserved()):
+        if isinstance(found, Offer) and agent.carrying and agent.carrying != call.sender:
+            answer = call.answer(i40.REFUSE, refusal([f"{agent.name} carries another product"], busy=True), ROLE)
+        elif isinstance(found, Offer) and (agent.busy or agent.reserved()):
             answer = call.answer(i40.REFUSE, refusal([f"{agent.name} is busy with another step"], busy=True), ROLE)
         elif isinstance(found, Offer):
+            found.station = agent.station
             until = (call.reply_by / 1000 if call.reply_by else time.time()) + DECISION_SECONDS
             agent.proposed[call.conversation] = (found, until)
             answer = call.answer(i40.PROPOSAL, [found.element()], ROLE)
@@ -125,6 +136,8 @@ class Award(CyclicBehaviour):
             await self.send(decision.answer(i40.FAILED, refusal([f"{agent.name}'s proposal had lapsed"]), ROLE).to_spade())
             return
         agent.busy = True
+        if carries(agent.module):
+            agent.carrying = decision.sender              # the product is on it from now on
         asyncio.get_running_loop().create_task(self.carry_out(decision, proposed))
 
     async def carry_out(self, decision: i40.I40Message, proposed: Offer) -> None:
@@ -151,3 +164,17 @@ class Award(CyclicBehaviour):
         finally:
             agent.busy = False
         await self.send(answer.to_spade())
+
+
+class Release(CyclicBehaviour):
+    """A shuttle is told by the product agent of the product it carries that the product is off it."""
+
+    async def run(self) -> None:
+        message = await self.receive(timeout=1)
+        if message is None:
+            return
+        released = i40.I40Message.from_spade(message)
+        agent: ResourceAgent = self.agent
+        if released.sender == agent.carrying:
+            agent.carrying = None
+            agent.note(f"released by {released.sender}")
