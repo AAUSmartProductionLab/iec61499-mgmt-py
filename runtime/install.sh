@@ -11,6 +11,10 @@
 # module or modsync push). Management port 61499 (no authentication: lab network only),
 # OPC UA port 4840. Run the script again to update FORTE; the program is kept.
 #
+# Without internet: from the FORTE kit (runtime/make-kit.ps1; its install-pi.ps1 copies it to the
+# Pi over SSH), FORTE, the container files and the base images come with the script. Only Docker
+# itself, when missing, and fake-hwclock (optional) need a download.
+#
 # Settings (environment variables):
 #   FORTE_FILE  a FORTE binary already on this machine, instead of the repository's
 #   FORTE_URL   where to download it (default: runtime/bin/forte-aarch64 of the repository)
@@ -42,14 +46,22 @@ arch="$(uname -m)"
 if [ "$arch" != aarch64 ] && [ -z "${FORTE_FILE:-}" ]; then
     fail "this machine is $arch; the FORTE in the repository is built for aarch64 (set FORTE_FILE to use your own build)"
 fi
-# A clock that is far off breaks every download (certificate dates).
-if [ "$(date +%Y)" -lt 2026 ]; then
-    fail "the system clock is wrong ($(date)); set it first (sudo timedatectl set-ntp true)"
-fi
-if ! command -v curl >/dev/null; then
-    say "Installing curl"
-    $SUDO apt-get update -q && apt_install curl ca-certificates
-fi
+# Next to this script (a checkout, or the FORTE kit with its pi/ and images/), the files are taken
+# from there; piped from curl, downloaded. From the kit nothing is downloaded once Docker is there.
+here="$(cd "$(dirname "${BASH_SOURCE[0]:-/nonexistent/x}")" 2>/dev/null && pwd || true)"
+online=""
+need_internet() {   # need_internet <what is downloaded>
+    [ -z "$online" ] || return 0
+    # A clock that is far off breaks every download (certificate dates).
+    if [ "$(date +%Y)" -lt 2026 ]; then
+        fail "the system clock is wrong ($(date)) and $1 must be downloaded; set it first (sudo timedatectl set-ntp true)"
+    fi
+    if ! command -v curl >/dev/null; then
+        say "Installing curl"
+        $SUDO apt-get update -q && apt_install curl ca-certificates
+    fi
+    online=1
+}
 
 # --- Docker ----------------------------------------------------------------------------------
 have_docker() {
@@ -58,6 +70,7 @@ have_docker() {
 }
 if ! have_docker; then
     say "Installing Docker"
+    need_internet "Docker"
     . /etc/os-release
     if [ "${ID:-}" = ubuntu ]; then
         # Ubuntu carries Docker and the compose plugin itself.
@@ -65,7 +78,7 @@ if ! have_docker; then
         apt_install docker.io docker-compose-v2
     else
         # Raspberry Pi OS, Debian: Docker's own installer (adds Docker's package source).
-        curl -fsSL https://get.docker.com | $SUDO sh
+        curl -fsSL https://get.docker.com | $SUDO sh || fail "Docker could not be installed (no internet?); install it on this machine first"
     fi
 fi
 systemctl is-active --quiet docker 2>/dev/null || $SUDO systemctl enable --now docker >/dev/null 2>&1 || true
@@ -128,12 +141,13 @@ mkdir -p "$FORTE_DIR/boot"
 [ -e "$FORTE_DIR/boot/forte.fboot" ] || : > "$FORTE_DIR/boot/forte.fboot"
 printf 'GPIOCHIP=%s\n' "$gpiochip" > "$FORTE_DIR/.env"
 
-# Next to this script in a checkout, the files are taken from it; piped from curl, downloaded.
-here="$(cd "$(dirname "${BASH_SOURCE[0]:-/nonexistent/x}")" 2>/dev/null && pwd || true)"
 for file in Dockerfile compose.yaml .dockerignore; do
     if [ -n "$here" ] && [ -f "$here/../deploy/pi/$file" ]; then
         cp "$here/../deploy/pi/$file" "$FORTE_DIR/$file"
+    elif [ -n "$here" ] && [ -f "$here/pi/$file" ]; then
+        cp "$here/pi/$file" "$FORTE_DIR/$file"
     else
+        need_internet "deploy/pi/$file"
         curl -fsSL "$RAW/deploy/pi/$file" -o "$FORTE_DIR/$file" || fail "cannot download deploy/pi/$file from $RAW"
     fi
 done
@@ -152,6 +166,7 @@ elif [ -n "$here" ] && [ -f "$here/bin/forte-aarch64" ]; then
     cp "$here/bin/forte-aarch64" "$FORTE_DIR/forte.new"
     [ ! -f "$here/bin/forte-aarch64.sha256" ] || verify "$FORTE_DIR/forte.new" "$here/bin/forte-aarch64.sha256"
 else
+    need_internet "FORTE"
     say "Downloading FORTE from $FORTE_URL"
     curl -fL --progress-bar "$FORTE_URL" -o "$FORTE_DIR/forte.new" || fail "cannot download FORTE from $FORTE_URL.
     Copy a binary here and set FORTE_FILE (build: runtime/build-modules.ps1 -Config pi/modules-pi)."
@@ -163,6 +178,14 @@ chmod +x "$FORTE_DIR/forte.new"
 mv "$FORTE_DIR/forte.new" "$FORTE_DIR/forte"
 
 # --- container -------------------------------------------------------------------------------
+# The base images that came with the kit (images/*.tar, arm64): loaded, so none is pulled from Docker Hub.
+if [ -n "$here" ]; then
+    for image in "$here"/images/*.tar; do
+        [ -f "$image" ] || continue
+        say "Loading the image $(basename "$image" .tar)"
+        $DOCKER load -q -i "$image" >/dev/null || fail "cannot load $image"
+    done
+fi
 say "Building and starting the container"
 (cd "$FORTE_DIR" && $DOCKER compose up -d --build --force-recreate)
 
