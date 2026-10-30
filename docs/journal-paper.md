@@ -68,7 +68,10 @@ All in [paper-references.bib](paper-references.bib):
   itself is a state machine. Ours draws both levels, a product's plan and a module's composite skill,
   in one BPMN notation, as a view of a block-structured flow: the plan is carried out by the agents,
   the skill by FORTE, with no engine; the binding is by the agents, not the user; the plan is checked
-  before it runs. The point for the paper: BPMN as notation and exchange format, not as executor.
+  before it runs. Drawn freely (a catalog, wiring by hand), the drawing is read back into blocks by a
+  validator that names what keeps it from being well structured; only a flow is saved. The point for
+  the paper: BPMN as notation and exchange format, not as executor; well-structured BPMN as the part
+  that maps to our blocks.
 - **Reconfiguration and services:** zoitl2006dynamic, dai2017self, klose2019orchestration (MTP).
 - **Planning:** mayr2023skiros2, martin2021plansys2, bennulf2021goal, wally2019production,
   hoeller2020hddl, scala2016interval, godet2022chronicles, blair2009models,
