@@ -13,7 +13,7 @@ P11 = "11-the-mapping-rules"
 P12 = "12-matching-a-missing-effect-replanning"
 P12B = "12b-inside-the-agent-of-a-module"
 P12C = "12c-inside-the-agent-of-a-product"
-P13 = "13-agents-on-the-line-call-for-proposals-proposal-accept"
+P13 = "13-agents-on-the-line-modules-and-shuttles-bid"
 MOD = "1 · MODELLING"
 RECONF = "2 · RECONFIGURATION"
 AGENTS = "3 · NEXT: AGENT-BASED ORCHESTRATION"
@@ -77,7 +77,7 @@ At the start the line: the maglev table with its shuttles, the four stations, th
     def motion_slide(title, label, agents):
         if agents:
             labels = ["Arrive", "Occupy", "Reset", "Start", "Start skill", "Fill", "Done", "Release"]
-            caps = [("Arrive.", "The table brings the vial under the needle, as the agents agreed"),
+            caps = [("Arrive.", "Its shuttle brings the vial under the needle, as the agents agreed"),
                     ("Occupy.", "The module's agent occupies it over OPC UA: Occupy(s1) → True, 0"),
                     ("Reset.", "Resetting homes the axis to its switch; then Idle"),
                     ("Start.", "The module goes to Execute"),
@@ -295,13 +295,14 @@ At the start what exists: the filling module's AAS on the AAS server (Capability
 At the start its passive part: the product AAS (Production Sequence, Required Capabilities, Process Parameters) and the process AAS it fills in (Step Bindings, Process Information); and the vial, which has no interface of its own.
 1. The agent: messenger and interaction manager, here as the service requester.
 2. Requesting: the next step from the Production Sequence, a call for proposals with the required capability and its values, the best proposal chosen (the earliest), the others rejected.
-3. Recording and moving: the step bound to the module's skill in the process AAS, what was done to the vial recorded, and the table's agent asked to move the vial to the next module.""")
+3. Recording and moving: the step bound to the module's skill in the process AAS, what was done to the vial recorded, and the agent of the shuttle that carries the vial asked to take it to the next module's station.""")
 
     # ---- slides 15 and 16 become one: agents on the line ------------------------------------------------------
-    s = Slide("Agents on the line: call for proposals, propose, accept", AGENTS)
-    steps = [(1, "call-for-proposals-filling"), (2, "proposal-filling"), (3, "accept-filling"),
-             (4, "call-for-proposals-transport"), (5, "proposal-transport"), (6, "accept-transport")]
-    msgs = [f"{k}-{n}-{w}" for k, n in steps for w in ("card", "arrows")] + ["7-move-card"]
+    s = Slide("Agents on the line: modules and shuttles bid", AGENTS)
+    steps = [(1, "call-for-proposals-filling"), (2, "proposal-filling"), (3, "call-for-proposals-transport"),
+             (4, "proposal-transport"), (5, "accept-transport")]
+    msgs = [f"{k}-{n}-{w}" for k, n in steps for w in ("card", "arrows")] + ["6-arrived-card", "7-accept-filling-card",
+                                                                               "7-accept-filling-arrows"]
     L = s.figure(P13, ["the-line", "product-the-vial", "messages-header", "agents", "product-agent-on-the-vial"] + msgs)
     dx = 77.2 * s.emu_per_page_px / m.SW         # loading to the filling station, on the page
     dy = 44.6 * s.emu_per_page_px / m.SH
@@ -310,25 +311,26 @@ At the start its passive part: the product AAS (Production Sequence, Required Ca
         if k > 1:
             first.insert(0, ("out", L[f"{k - 1}-{steps[k - 2][1]}-arrows"]))
         s.plain_click(first)
-    s.plain_click([("out", L["6-accept-transport-arrows"]), ("in", L["7-move-card"]),
+    s.plain_click([("out", L["5-accept-transport-arrows"]), ("in", L["6-arrived-card"]),
                    ("path", L["product-the-vial"], {"x1": dx, "y1": dy, "dur": 1500}),
                    ("path", L["product-agent-on-the-vial"], {"x1": dx, "y1": dy, "dur": 1500})])
+    s.plain_click([("in", L["7-accept-filling-card"]), ("wipe", L["7-accept-filling-arrows"], {"dir": "left", "dur": 500})])
     s_agents = after("slide6.xml", s_inside2)
-    write(s_agents, s, """About 1.5 min, seven clicks. Planned, the paper's future work. Every order gets a product agent (P) that travels with its vial; every resource has a resource agent (R): each module, and the table, which is a resource too. They talk in the I4.0 language (VDI/VDE 2193): call for proposals, proposal or refuse, accept. One step at a time: here the vial's next step, Fill 2.0 mL, and the transport to it.
+    write(s_agents, s, """About 1.5 min, seven clicks. Built (30 Oct), tested with the modules and the shuttles simulated; on the line for the demo in January. Every vial ordered gets a product agent (P) that travels with it; every resource has a resource agent (R): each module, and each shuttle of the table, which bids for transport as a module bids for a step. They talk in the I4.0 language (VDI/VDE 2193): call for proposals, proposal or refuse, accept. One step at a time: here the vial's next step, Fill 2.0 mL, and the transport to it.
 
 1. The vial's product agent calls for proposals for its next step, Fill 2.0 mL, to every module.
-2. Each module's agent checks it against its capabilities: only Filling can, and proposes Dispensing, 40 s; Stoppering, Capping and Inspection refuse.
-3. The product agent accepts Filling's proposal: the step is booked.
-4. Now the transport: it calls for proposals to the table's agent, from loading to Filling.
-5. The table proposes shuttle 3, 6 s, now.
-6. Accepted.
-7. The table moves the vial to the filling module. There the module's agent takes over: the next slide.""")
+2. Each module's agent checks it against its capabilities: only Filling can, and proposes Dispensing, now, and where a shuttle hands it the vial (its station, from the AASs). The proposal is binding: Filling holds itself for this vial. Stoppering, Capping and Inspection refuse.
+3. Now the transport: it calls for proposals to the agent of the shuttle the vial is on, Transporting to Filling's station. (The first time, every free shuttle is asked; the one chosen carries the vial to the end and bids for no other vial meanwhile.)
+4. Shuttle 3 proposes MoveToPosition, now.
+5. Accepted: shuttle 3 goes.
+6. It reports the vial at Filling's station.
+7. Only now the product agent accepts Filling's proposal: the vial is there, and the module's agent runs Dispensing: the next slide.""")
 
     # ---- after it: at the filling module -------------------------------------------------------------------
     s = motion_slide("At the filling module: its agent runs the skill", AGENTS, True)
     write(after("slide6.xml", s_agents), s, """About 1.5 min, eight clicks. The same filling module as before, now run by its agent, not by an orchestrator. Planned: everything agent-related is dashed.
 
-1. The table brings the vial, as agreed on the slide before.
+1. Its shuttle brings the vial, as agreed on the slide before.
 2 to 5. The module's agent does what the orchestrator did: Occupy, Reset (the axis homes), Start, and Dispensing's Start with 2.0 mL.
 6. The skill runs: needle down, the pump fills, needle home, weigh.
 7. Succeeded: the module's agent reports to the product agent.
