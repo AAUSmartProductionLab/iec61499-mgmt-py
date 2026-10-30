@@ -68,6 +68,7 @@ cd ..; runtime/check-project.ps1 -ProjectDir cell/control/FillingModule   # and 
 runtime/build-modules.ps1                                     # IDE validation and C++ export, FORTE for Windows (output/bin/forte.exe)
 runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate # FORTE for the Pi (aarch64)
 runtime/package-runtime.ps1                                   # the Pi binary into runtime/bin/forte-aarch64 (+ checksum): commit both
+runtime/build-pi.ps1                                          # all of it for the Pi in one run (docs/forte-for-the-pi.md)
 ```
 
   The FORTE source is patched (`runtime/forte-patches/*.patch`, a stack applied in order;

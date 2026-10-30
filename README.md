@@ -46,7 +46,7 @@ runtime/build-modules.ps1                                      # IDE check + exp
 python -m pytest -q --module-forte-exe runtime/fbe/build/modules-win/forte/build/forte/forte.exe   # + live tests
 python cell/sim/run_module.py cell/modules/filling.yaml        # simulator + FORTE + module, OPC UA at opc.tcp://localhost:4840
 
-runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate  # FORTE for the Raspberry Pi (aarch64)
+runtime/build-pi.ps1                                           # FORTE for the Raspberry Pi (aarch64), see docs/forte-for-the-pi.md
 python deploy/pi.py install                                    # FORTE in Docker on the Pi of cell/modules/filling.yaml
 python deploy/pi.py module                                     # run the module on its Pi (--spec cell/modules/stoppering.yaml: the other Pi)
 python -m modsync pull --host 192.168.0.134                    # which module runs there, drift from its spec, its AAS
