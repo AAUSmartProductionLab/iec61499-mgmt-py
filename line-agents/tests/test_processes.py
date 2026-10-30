@@ -25,6 +25,7 @@ sys.path.insert(0, str(ROOT / "line-agents"))
 from lineagents.xmpp import free_port                                      # noqa: E402
 
 AAS = os.environ.get("AAS_SERVER", "http://localhost:8081")
+HANDLING = ("Receiving", "Transporting", "Releasing")          # what carries the vial, not a step of it
 
 
 @pytest.fixture
@@ -94,10 +95,10 @@ def test_a_product_agent_in_another_process_orders_over_xmpp(manager, tmp_path):
     found = next((l for l in done.stdout.splitlines() if l.startswith("HISTORY ")), None)
     assert found, done.stdout[-2000:] + done.stderr[-2000:]
     history = json.loads(found[len("HISTORY "):])
-    assert [h for h in history if h[0] != "Transporting"] == [
+    assert [h for h in history if h[0] not in HANDLING] == [
         ["Filling", "FillingModuleAAS", "done"], ["Stoppering", "StopperingModuleAAS", "done"],
         ["Capping", "CappingModuleAAS", "done"], ["Inspection", "InspectionModuleAAS", "done"]], history
-    carried = [h for h in history if h[0] == "Transporting"]
+    carried = [h for h in history if h[0] in HANDLING]
     assert carried and all(h[2] == "done" for h in carried) and len({h[1] for h in carried}) == 1, history
 
 
@@ -170,9 +171,9 @@ def test_an_order_over_http(manager):
             break
         time.sleep(1)
     assert mine["done"], mine
-    assert [s["resource"] for s in mine["steps"] if s["step"] != "Transporting"] == [
+    assert [s["resource"] for s in mine["steps"] if s["step"] not in HANDLING] == [
         "FillingModuleAAS", "StopperingModuleAAS", "CappingModuleAAS", "InspectionModuleAAS"]
-    assert {s["resource"] for s in mine["steps"] if s["step"] == "Transporting"} <= {
+    assert {s["resource"] for s in mine["steps"] if s["step"] in HANDLING} <= {
         "PlanarShuttle1AAS", "PlanarShuttle2AAS", "PlanarShuttle3AAS"}
     request = urllib.request.Request(f"http://localhost:{http}/orders", json.dumps({"product": "NoSuchProduct"}).encode(),
                                      method="POST", headers={"Content-Type": "application/json"})

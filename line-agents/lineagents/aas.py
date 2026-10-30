@@ -18,6 +18,13 @@ whoever built it, with the helpers of the plan check (``modreg.plancheck``).
   table's frame, through the coordinates the AASs of the module, the line and the table give.
 - A **transport** is asked for as a product asks for a step: a required Transporting with the
   target pose (TargetX, TargetY, TargetRz); a shuttle offers it (modreg.planar).
+- **Custody** (vocabulary 0.7): a resource that carries or holds a container has it from Receiving
+  to Releasing. An offered capability's Pre constraints are checked against the state the call
+  gives: the product's (HeldBy, as its agent sends it) and the resource's (Holding: it has this
+  product; Occupancy: how many it has), a named operand being a value of the capability (Capacity).
+  A constraint about a state nobody gives is not checked. What fails only on the resource's own
+  changing state (Occupancy) is a refusal for now (busy), the rest for good. A capability no skill
+  realizes whose Posts are about custody only (Receiving, Releasing) the agent carries out itself.
 """
 from __future__ import annotations
 
@@ -25,6 +32,7 @@ from dataclasses import dataclass, field
 import base64
 import functools
 import json
+import operator
 import urllib.parse
 import urllib.request
 
@@ -34,7 +42,11 @@ MEANS = "https://smartproductionlab.aau.dk/semantics"
 MODULE_TYPE = "Resource/Module"          # the end of a module's assetType
 SYSTEM_TYPE = "Resource/System"          # the end of a line's
 TRANSPORTING = f"{MEANS}/Transporting"
+RECEIVING, RELEASING = f"{MEANS}/Receiving", f"{MEANS}/Releasing"
+HELD_BY, HOLDING, OCCUPANCY = f"{MEANS}/HeldBy", f"{MEANS}/Holding", f"{MEANS}/Occupancy"
+CUSTODY = {HOLDING}                      # what a capability no skill realizes may change
 IDTA = "https://admin-shell.io/idta"
+COMPARE = {"=": operator.eq, "!=": operator.ne, "<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge}
 
 
 @functools.cache
@@ -150,6 +162,7 @@ class Offer:
     built: bool                          # it runs now; else a reconfiguration creates it first
     arguments: dict[str, float] = field(default_factory=dict)    # the skill's inputs by name
     station: tuple[float, float, float] | None = None            # where the product is handed over (x, y, rz)
+    effects: dict[str, object] = field(default_factory=dict)     # what its Posts set, by meaning (not sent)
 
     def element(self) -> dict:
         """The offer as an interaction element of a proposal."""
@@ -177,12 +190,55 @@ def skill_element(module: dict, name: str) -> dict | None:
     return at(submodel(module, "Skills"), name)
 
 
-def offer(module: dict, required: dict) -> Offer | list[str]:
-    """What the module offers for a required capability, or why it offers nothing."""
+class Refusal(list):
+    """Why a resource offers nothing; ``busy``: only because of its own state now, which changes."""
+    busy = False
+
+
+def constraints(container: dict) -> list[tuple[str, str, str, object]]:
+    """An offered capability's constraints: (kind, the meaning of the property it is about, the
+    operator, the operand: a value, or the value of the capability's property it names)."""
+    from modplan.expression import parse
+    props = {c["idShort"]: at(c, "Value") or {} for c in children(at(container, "PropertySet"))}
+    found = []
+    for record in children(at(container, "CapabilityRelations", "ConstraintSet")):
+        kind = (at(record, "PropertyConditionalType") or {}).get("value")
+        has = [r for r in children(at(record, "ConstraintPropertyRelations")) if r.get("second")]
+        if kind is None or not has:
+            continue
+        expression = parse(at(record, "BasicConstraint")["value"], kind)
+        about = next(iter(meanings(props.get(has[0]["second"]["keys"][-2]["value"]))), None)
+        operand = _typed(props.get(expression.named)) if expression.named else expression.operand
+        if about is not None:
+            found.append((kind, about, expression.op, operand))
+    return found
+
+
+def unmet(container: dict, state: dict[str, object]) -> list[tuple[str, str]]:
+    """The Pre constraints the state breaks: (meaning, as written). Those about a state not given
+    are not checked."""
+    found = []
+    for kind, about, op, operand in constraints(container):
+        if kind != "Pre" or about not in state or op not in COMPARE:
+            continue
+        try:
+            holds = COMPARE[op](state[about], operand)
+        except TypeError:
+            holds = False
+        if not holds:
+            found.append((about, f"{about.rsplit('/', 1)[-1]} {op} {operand} (it is {state[about]})"))
+    return found
+
+
+def offer(module: dict, required: dict, state: dict[str, object] | None = None,
+          changing: frozenset[str] = frozenset()) -> Offer | Refusal:
+    """What the module offers for a required capability, or why it offers nothing. ``state``: what
+    the Pre constraints are checked against, by meaning; ``changing``: those of its meanings that
+    change by themselves (a refusal only for them is busy)."""
     name = shell_of(module)["idShort"]
     wanted = meanings(at(required, "Capability"))
     asked = required_values(required)
-    reasons, found = [], []
+    reasons, found, waiting = Refusal(), [], []
     containers = [c for capability_set in children(submodel(module, "CapabilityDescription")) for c in children(capability_set)]
     for container in containers:
         offered = meanings(at(container, "Capability"))
@@ -196,16 +252,49 @@ def offer(module: dict, required: dict) -> Offer | list[str]:
                    if meaning in given and (unit_of(given[meaning]) != unit_of(value) or not covers(given[meaning], value))]
         if missing:
             reasons += missing
+            waiting.append(False)
             continue
+        broken = unmet(container, state or {})
+        if broken:
+            reasons += [f"{container['idShort']} needs {text}" for _, text in broken]
+            waiting.append(all(about in changing for about, _ in broken))
+            continue
+        effects = {about: operand for kind, about, op, operand in constraints(container) if kind == "Post" and op == "="}
         skills = [s for r in children(at(container, "CapabilityRelations")) if (s := resolve([module], r.get("second")))]
+        if not skills and effects and set(effects) <= CUSTODY and _available(container):
+            found.append((not exact, False, Offer(name, container["idShort"], "", True, effects=effects)))
+            continue
         if not skills:
             reasons.append(f"{container['idShort']}: no skill realizes it")
+            waiting.append(False)
             continue
         found.append((not exact, not _built(skills[0]),
-                      Offer(name, container["idShort"], skills[0]["idShort"], _built(skills[0]), _arguments(skills[0], asked))))
+                      Offer(name, container["idShort"], skills[0]["idShort"], _built(skills[0]), _arguments(skills[0], asked),
+                            effects=effects)))
     if found:
         return min(found, key=lambda f: f[:2])[2]
-    return reasons or [f"{name} offers no capability of the meaning {', '.join(sorted(wanted)) or '(none)'}"]
+    reasons.busy = bool(waiting) and all(waiting)
+    if not reasons:
+        reasons.append(f"{name} offers no capability of the meaning {', '.join(sorted(wanted)) or '(none)'}")
+    return reasons
+
+
+def _available(container: dict) -> bool:
+    """Offered now, not only after a reconfiguration."""
+    return not any(q.get("type") == "Availability" and q.get("value") == "AfterReconfiguration"
+                   for q in (at(container, "Capability") or {}).get("qualifiers") or [])
+
+
+def _typed(element: dict | None):
+    """A property's value as its type says (None if it has none)."""
+    text, kind = (element or {}).get("value"), (element or {}).get("valueType")
+    if text is None:
+        return None
+    if kind == "xs:boolean":
+        return str(text).lower() == "true"
+    if kind == "xs:string":
+        return text
+    return number(text)
 
 
 def _built(skill: dict) -> bool:
@@ -246,32 +335,49 @@ def station(envs: list[dict], module: str) -> tuple[float, float, float] | None:
     return tuple(round(v, 3) + 0.0 for v in (x, y, rz))
 
 
-def transport_request(x: float, y: float, rz: float) -> dict:
-    """A required Transporting to (x, y, rz) on the table, as a product's required capability is
-    written (IDTA 02020)."""
-    def ref(value):
-        return {"type": "ExternalReference", "keys": [{"type": "GlobalReference", "value": value}]}
+def _ref(value: str) -> dict:
+    return {"type": "ExternalReference", "keys": [{"type": "GlobalReference", "value": value}]}
 
-    def target(name, value, unit):
+
+def request(capability: str, values: dict[str, tuple[float, str]] | None = None) -> dict:
+    """A required capability (the name of its meaning) with values (name -> value, unit), as a
+    product's required capability is written (IDTA 02020)."""
+    def wanted(name, value, unit):
         return {"modelType": "SubmodelElementCollection", "idShort": name,
-                "semanticId": ref(f"{IDTA}/CapabilityDescription/PropertyContainer/1/0"), "value": [
+                "semanticId": _ref(f"{IDTA}/CapabilityDescription/PropertyContainer/1/0"), "value": [
                     {"modelType": "Property", "idShort": "Value", "valueType": "xs:double", "value": str(value),
-                     "semanticId": ref(f"{IDTA}/CapabilityPropertyType/Property/1/0"),
-                     "supplementalSemanticIds": [ref(f"{MEANS}/{name}")],
+                     "semanticId": _ref(f"{IDTA}/CapabilityPropertyType/Property/1/0"),
+                     "supplementalSemanticIds": [_ref(f"{MEANS}/{name}")],
                      "qualifiers": [{"type": "Unit", "valueType": "xs:string", "value": unit, "kind": "ConceptQualifier"}]}]}
-    return {"modelType": "SubmodelElementCollection", "idShort": "Transporting",
-            "semanticId": ref(f"{IDTA}/CapabilityDescription/CapabilityContainer/1/0"), "value": [
-                {"modelType": "Capability", "idShort": "Capability", "semanticId": ref(f"{IDTA}/CapabilityDescription/Capability/1/0"),
-                 "supplementalSemanticIds": [ref(TRANSPORTING)]},
-                {"modelType": "SubmodelElementCollection", "idShort": "PropertySet",
-                 "semanticId": ref(f"{IDTA}/CapabilityDescription/PropertySet/1/0"),
-                 "value": [target("TargetX", x, "mm"), target("TargetY", y, "mm"), target("TargetRz", rz, "deg")]}]}
+    found = [{"modelType": "Capability", "idShort": "Capability", "semanticId": _ref(f"{IDTA}/CapabilityDescription/Capability/1/0"),
+              "supplementalSemanticIds": [_ref(f"{MEANS}/{capability}")]}]
+    if values:
+        found.append({"modelType": "SubmodelElementCollection", "idShort": "PropertySet",
+                      "semanticId": _ref(f"{IDTA}/CapabilityDescription/PropertySet/1/0"),
+                      "value": [wanted(name, value, unit) for name, (value, unit) in values.items()]})
+    return {"modelType": "SubmodelElementCollection", "idShort": capability,
+            "semanticId": _ref(f"{IDTA}/CapabilityDescription/CapabilityContainer/1/0"), "value": found}
 
 
-def carries(module: dict) -> bool:
-    """The resource offers Transporting: a shuttle."""
-    return any(TRANSPORTING in meanings(at(c, "Capability"))
-               for capability_set in children(submodel(module, "CapabilityDescription")) for c in children(capability_set))
+def transport_request(x: float, y: float, rz: float) -> dict:
+    """A required Transporting to (x, y, rz) on the table."""
+    return request("Transporting", {"TargetX": (x, "mm"), "TargetY": (y, "mm"), "TargetRz": (rz, "deg")})
+
+
+def state_element(values: dict[str, object]) -> dict:
+    """A product's state (meaning -> value) as an interaction element of a call or a result."""
+    def kind(value):
+        return "xs:boolean" if isinstance(value, bool) else "xs:double" if isinstance(value, (int, float)) else "xs:string"
+    return {"modelType": "SubmodelElementCollection", "idShort": "State", "value": [
+        {"modelType": "Property", "idShort": meaning.rsplit("/", 1)[-1], "valueType": kind(value),
+         "value": str(value).lower() if isinstance(value, bool) else str(value), "semanticId": _ref(meaning)}
+        for meaning, value in values.items()]}
+
+
+def state_of(elements: list[dict]) -> dict[str, object]:
+    """The state among interaction elements, by meaning (empty if there is none)."""
+    return {meaning: _typed(prop) for element in elements if element.get("idShort") == "State"
+            for prop in children(element) for meaning in semantic_ids(prop)[:1]}
 
 
 def _shown(value: dict) -> str:

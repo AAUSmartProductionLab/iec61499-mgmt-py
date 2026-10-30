@@ -18,6 +18,41 @@ A running log of design considerations made while building, for writing the pape
 
 ## 30 Oct 2026
 
+- **Custody: a product and the resource that carries it are bound by capability constraints, not by
+  a rule of the agents.** *Journal* (and the slides).
+  - What: vocabulary 0.7. A resource that carries or holds a container has it in its custody from
+    Receiving to Releasing. Holding (the resource has this container), Occupancy (how many it has) and
+    Capacity (how many it can have) are states; HeldBy is the container's side of Holding. The
+    constraints: Transporting needs `Holding = true`; Receiving needs `Occupancy < Capacity` and gives
+    `Holding = true`; Releasing needs `Holding = true` and gives `Holding = false`. A shuttle's AAS
+    offers Receiving (Capacity 1) and Releasing next to Transporting; no skill realizes them, they
+    change only the custody, so the agent carries them out itself. The product agent sends its state
+    (HeldBy) with every call and sends every call to every resource agent: for its first transport it
+    asks for Receiving (the free shuttles propose, the modules refuse), then for Transporting (only the
+    shuttle that holds it proposes), and at the end for Releasing. A resource agent checks the Pre
+    constraints of its offered capabilities against the product's state and its own custody; a
+    constraint about a state nobody gives is not checked. A refusal only because of the resource's own
+    state that changes (Occupancy: a full shuttle) says Busy, so the product agent asks again; the rest
+    are for good. Custody is a lease (an hour), renewed by every call of the product's agent, so a
+    product agent that is gone does not hold a shuttle for ever.
+  - Why: the binding is the same kind of fact as a vial's content volume: a state that a capability
+    needs and changes. In the AAS it is what the IDTA Capability Description already has (Pre and Post
+    as BasicConstraints), so a resource's AAS says who may carry a product, and nothing in the agents
+    is about shuttles: an AGV, a gripper or a tray with room for twenty works the same. It answers the
+    question of the holonic literature (PROSA's order holon bound to its workpiece; the intelligent
+    product bound to its pallet, McFarlane et al. 2003) with the commitment rules of Jennings (1993):
+    how it starts (Receiving), how it ends (Releasing), when it lapses (the lease).
+  - Instead of: the product agent remembering its carrier and asking only it, and the shuttle refusing
+    others until a release message (built earlier the same day: two rules in the agents' code, one of
+    them about shuttles); one agent for the whole table (transport out of the bidding); custody as a
+    message protocol of its own. Loading as the step that starts the custody waits for the loading
+    module's AAS (the Kuka has none yet): when it exists, Loading is a step at the loading station and
+    Receiving happens before the shuttle drives there.
+  - Open: a handover between two carriers (a robot moving the vial from one shuttle to another) is
+    Releasing by one and Receiving by the other, with the robot's step between; not tried. `Holding`
+    from a product's side and from a resource's side is one fact seen twice (HeldBy, Holding), which
+    the vocabulary says in words, not in a rule.
+
 - **Transport: each shuttle bids for Transporting like a module; the product is carried to the
   module's station before the module's proposal is accepted.** *Journal* (and the slides).
   - What: a shuttle's AAS offers Transporting (TargetX, TargetY, TargetRz over the table's extent;
