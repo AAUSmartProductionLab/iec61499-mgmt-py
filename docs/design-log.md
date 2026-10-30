@@ -18,6 +18,27 @@ A running log of design considerations made while building, for writing the pape
 
 ## 30 Oct 2026
 
+- **The BPMN editors draw freely, and a validator reads the drawing back into the block-structured
+  flow.** *Journal*.
+  - What: steps, calls and blocks are dragged from a catalog (a product's process steps, a module's
+    component skills, the gateways) onto an arrow, after a shape, or anywhere on the canvas, and wired
+    by hand: from a shape's port, by moving an arrow's end, single gateways too. After each change a
+    validator reads the drawing back into the flow (sequence, parallel blocks, decisions, conditional
+    steps), or names what keeps it from being one: a shape not on the way from Start to End, a task with
+    two ways out, a gateway that neither splits nor joins, branches that do not meet at one join of
+    their kind, a loop, an exclusive split without one otherwise. Until it is a flow, the last valid
+    flow is kept and Save is off. Auto layout (default) lays the drawing out as the flow's structure
+    says; off, shapes stay where they are put. The skill service's checker (modplan) runs on a skill by
+    itself after each change. The layout is not saved: the AAS keeps the flow, not a diagram.
+  - Why: drawing by hand is what users of a BPMN modeler expect, and the block-only editing of the
+    first version felt like a form. Reading the drawing back into blocks keeps what the blocks gave:
+    every flow that is saved is well structured (a split has its join, no step runs twice), so FORTE's
+    rules for a module and the agents' plans need nothing new; the validator only says what to fix. This
+    is the classic result that well-structured BPMN is the part that maps to blocks without loss.
+  - Instead of: block-only editing (sound by construction but rigid); a free graph saved as it is and
+    checked on save (the flows would need a graph model in the AAS and in FORTE's rules); saving
+    diagram positions in the AAS (a second, presentational model next to the flow; asked first if wanted).
+
 - **Plans and composite skills in BPMN notation, as a view of the block-structured flow, without an
   engine.** *Journal*.
   - What: a second planner module and a second skill editor in the web UI fork (`ProcessSequenceBpmn`)
