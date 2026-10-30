@@ -26,18 +26,21 @@ from pathlib import Path
 import secrets
 
 from .aas import AasServer, is_module
-from .execute import OpcUaExecutor, SimulatedExecutor
+from .execute import DmpExecutor, OpcUaExecutor, SimulatedExecutor
 from .product import ProductAgent
 from .resource import ResourceAgent
 
 
-def executor_kind(kind: str):
-    """How the resource agents run their skills: ``opcua`` (modlink), or ``simulated``."""
+def executor_kind(kind: str, server: str | None = None):
+    """How the resource agents run their skills: ``opcua`` (modlink), ``dmp`` (through the AAS server
+    ``server`` and the DMP), or ``simulated``."""
     if kind == "opcua":
         return lambda env: OpcUaExecutor(env)
+    if kind == "dmp":
+        return lambda env: DmpExecutor(env, server)
     if kind == "simulated":
         return lambda env: SimulatedExecutor()
-    raise ValueError(f"no executor {kind!r}: opcua or simulated")
+    raise ValueError(f"no executor {kind!r}: opcua, dmp or simulated")
 
 
 def agents_secret() -> str:
@@ -66,7 +69,7 @@ class Manager:
     def __init__(self, server: str, domain: str = "localhost", port: int = 5222, executor: str = "opcua",
                  every: float = 5.0, reconfigure: bool = True, mqtt: str | None = None):
         self.server, self.domain, self.port = AasServer(server), domain, port
-        self.executor_for = executor_kind(executor)
+        self.executor_for = executor_kind(executor, server)
         self.every, self.reconfigure, self.mqtt = every, reconfigure, mqtt
         self._poke: asyncio.Event | None = None
         self._events = None

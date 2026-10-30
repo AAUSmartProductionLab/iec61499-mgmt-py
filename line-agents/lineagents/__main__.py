@@ -6,7 +6,8 @@
 
 The manager starts a resource agent for every module the AAS server holds and keeps them in step with
 it (lineagents.manager). ``--embedded`` runs SPADE's own XMPP server in this process. Skills run on
-the modules over OPC UA (``--executor opcua``), or are only simulated (``--executor simulated``).
+the modules over OPC UA (``--executor opcua``), through the AAS server and the DMP (``--executor dmp``),
+or are only simulated (``--executor simulated``).
 """
 from __future__ import annotations
 
@@ -52,7 +53,8 @@ def main(argv=None) -> int:
     parser.add_argument("--xmpp-domain", default="localhost")
     parser.add_argument("--xmpp-port", type=int, default=5222)
     parser.add_argument("--embedded", action="store_true", help="run SPADE's own XMPP server in this process")
-    parser.add_argument("--executor", choices=("opcua", "simulated"), default="opcua")
+    parser.add_argument("--executor", choices=("opcua", "dmp", "simulated"), default="opcua",
+                        help="how skills run: over the module's OPC UA, through the AAS server and the DMP, or simulated")
     parser.add_argument("--every", type=float, default=5.0, help="seconds between reading the AAS server")
     parser.add_argument("--mqtt", help="the broker the AAS server publishes its events to (host:port): an agent starts "
                                        "as soon as its module's AAS is published")
