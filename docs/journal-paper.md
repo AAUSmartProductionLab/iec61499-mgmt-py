@@ -63,6 +63,12 @@ line.
 All in [paper-references.bib](paper-references.bib):
 - **Skills and CSS:** pedersen2016robot, koecher2020formal, css2022, css2025, dorofeev2018skill,
   dorofeev2019agile, dorofeev2019evaluating, sidorenko2024bt, koecher2022model.
+- **BPMN for skills and processes:** koecher2022bpmn models the recipe as BPMN service tasks naming
+  capabilities, bound to skills when a run starts and run by Camunda outside the machines; the skill
+  itself is a state machine. Ours draws both levels, a product's plan and a module's composite skill,
+  in one BPMN notation, as a view of a block-structured flow: the plan is carried out by the agents,
+  the skill by FORTE, with no engine; the binding is by the agents, not the user; the plan is checked
+  before it runs. The point for the paper: BPMN as notation and exchange format, not as executor.
 - **Reconfiguration and services:** zoitl2006dynamic, dai2017self, klose2019orchestration (MTP).
 - **Planning:** mayr2023skiros2, martin2021plansys2, bennulf2021goal, wally2019production,
   hoeller2020hddl, scala2016interval, godet2022chronicles, blair2009models,

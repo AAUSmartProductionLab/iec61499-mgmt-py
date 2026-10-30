@@ -18,6 +18,25 @@ A running log of design considerations made while building, for writing the pape
 
 ## 30 Oct 2026
 
+- **Plans and composite skills in BPMN notation, as a view of the block-structured flow, without an
+  engine.** *Journal*.
+  - What: a second planner module and a second skill editor in the web UI fork (`ProcessSequenceBpmn`)
+    draw the same flows in BPMN: a step is a service task, a call a call activity, a parallel block a
+    pair of AND gateways, a decision or conditional steps a pair of XOR gateways (otherwise is the
+    default flow). Editing is by blocks only (insert on a sequence flow or after a step), so every
+    diagram is a well-structured BPMN process. Both read and write the existing AAS data; a step links
+    to the skill it runs, so a plan, a module's skill and its building blocks open in one notation. A
+    flow exports as a BPMN 2.0 file with its diagram, marked not executable. The classic editors stay;
+    a setting chooses which skill editor shows.
+  - Why: BPMN is the notation the related work and industry use (koecher2022bpmn, Lindorfer and
+    Froschauer, Stolze et al.), but as a free graph it allows unpaired gateways (a flow that hangs, a
+    step that runs twice) and knows nothing of equipment, stop propagation or parameter ranges. Drawing
+    our blocks in its symbols gives the familiar notation and the exchange file, keeps the flows sound
+    by construction and keeps the checks; FORTE runs a skill and the agents a plan, so an engine would
+    only add a central server.
+  - Instead of: bpmn-js as a free modeler with rules and a check on save (its licence also requires its
+    logo); executing BPMN in Camunda as koecher2022bpmn does; storing BPMN XML in the AAS.
+
 - **The kit installs FORTE on a Pi over SSH, without the internet.** *Journal* (a module needs no
   cloud to be set up).
   - What: the kit carries the container files and the arm64 base images (alpine, busybox, saved with
