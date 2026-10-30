@@ -18,6 +18,15 @@ A running log of design considerations made while building, for writing the pape
 
 ## 30 Oct 2026
 
+- **The BPMN editors' catalog floats over the canvas, and the drawing help sits behind an (i).** *Journal*.
+  - What: the catalog opens from a Catalog button in the toolbar as a panel over the canvas's left
+    edge (closed by default, kept per browser); Fit then lays the diagram out beside it. The help text
+    under the canvas became a tooltip; under the canvas there is now only what keeps the drawing from
+    being a flow.
+  - Why: between the page's side columns, a fixed catalog column left the canvas too narrow to read
+    a flow.
+  - Instead of: a fixed catalog column; a "+" menu (an item cannot stay open to drag from).
+
 - **The BPMN editors draw freely, and a validator reads the drawing back into the block-structured
   flow.** *Journal*.
   - What: steps, calls and blocks are dragged from a catalog (a product's process steps, a module's
