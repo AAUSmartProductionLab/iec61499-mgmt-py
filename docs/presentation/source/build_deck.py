@@ -376,15 +376,16 @@ def art(node, ids, x, y, h=None, w=None):
     return bw * k, bh * k
 
 
-BANDS = [("app", 10, 160, "Applications", "HMI · MES · planning"),
+BANDS = [("app", 10, 160, "Applications", "planning, operating"),
          ("orch", 168, 338, "Line level · CPPS", "AAS models and orchestration"),
          ("beh", 346, 496, "Module level · CPPM", "behaviour: IEC 61499"),
          ("asset", 504, 654, "Device level · CPS", "parts and their Pis"),
          ("line", 662, 890, "The line", "table, shuttles, stations, robots")]
 Y = {k: (y0, y1) for k, y0, y1, _, _ in BANDS}
 TINT = {"app": "#EAF4F3", "orch": "#DDEEEC", "beh": "#D3E9E6", "asset": "#C9E3DF", "line": "#BFDDD9"}
-COL6 = [200 + i * 230 for i in range(6)]          # behaviour and devices: a column per station, 214 wide
-COL5 = [200 + i * 280 for i in range(5)]          # the line level: 260 wide
+SLOT = lambda i, n, w: 200 + i * 1380 / n + (1380 / n - w) / 2     # the ith of n boxes w wide, centred in its slot
+COL = [SLOT(i, 4, 210) for i in range(4)]         # the modules and their parts: a column per station
+SYS = [SLOT(i, 3, 250) for i in range(3)]         # the line level
 
 
 def band_of(node, key):
@@ -395,15 +396,13 @@ def band_of(node, key):
          f"<b>{name}</b><br><font style='font-size:13px'>{sub}</font>", 17, "#FFFFFF")
 
 
-def frame(node, key, x, w, title, planned=False):
+def frame(node, key, x, w, title):
     """A system's box in its band, its name on a tab across the top edge; returns the group and the box."""
     y0, y1 = Y[key]
-    y, h = y0 + 22, y1 - y0 - 30
+    y, h = y0 + 26, y1 - y0 - 40
     g = node.group(f"System: {title}")
-    rect(g, x, y, w, h, "#FFFFFF", AAS, 1.5, 8, "dashed=1;" if planned else "")
-    tw = min(w - 20, 16 + 8.6 * len(title))
-    rect(g, x + 10, y - 12, tw, 24, "#FFFFFF" if planned else AAS, AAS, 1.5, 30, "dashed=1;" if planned else "",
-         title, 13, AAS if planned else "#FFFFFF", True)
+    rect(g, x, y, w, h, "#FFFFFF", AAS, 1.5, 8)
+    rect(g, x + 10, y - 12, min(w - 20, 16 + 8.6 * len(title)), 24, AAS, AAS, 1.5, 30, "", title, 13, "#FFFFFF", True)
     return g, (x, y, w, h)
 
 
@@ -411,9 +410,9 @@ def caption(g, b, words, left=None):
     """What a system does: under its picture, or right of it from ``left``."""
     x, y, w, h = b
     if left is None:
-        text(g, x + 8, y + h - 26, w - 16, 22, words, 13, INK, False, "center")
+        text(g, x + 8, y + h - 24, w - 16, 20, words, 13, INK, False, "center")
     else:
-        text(g, left, y + 16, x + w - left - 10, h - 22, words, 15, INK, False, "left")
+        text(g, left, y + 14, x + w - left - 8, h - 18, words, 14, INK, False, "left")
 
 
 life, assets, beh, orch, apps, leg = (Node("the line"), Node("devices", False), Node("modules", False),
@@ -428,89 +427,76 @@ g = life.group("The line, as on the first slide")
 w, h = art(None, LINE_IDS, 0, 0, h=y1 - y0 - 16)
 art(g, LINE_IDS, 200 + (1380 - w) / 2, y0 + 8, h=y1 - y0 - 16)
 
-# ---- devices and modules: a column per station ------------------------------------------------------
-STATIONS = [("Loading · unloading", ["c50", "c51"], "Kuka robots", None, "a Pi each, no AAS yet", True),
-            ("Filling", ["c53", "c54", "c55", "c56", "c57", "c58", "c59", "c60"], "axis, pump, scale, Pi 5",
-             ["c104", "c105"], "FORTE on the Pi", False),
-            ("Stoppering", ["c62", "c63", "c64", "c65", "c66", "c67"], "axis, piston, Pi 5", ["c106", "c107"],
-             "FORTE on the Pi", False),
+# ---- modules and their parts: a column per station ---------------------------------------------------
+STATIONS = [("Filling", ["c53", "c54", "c55", "c56", "c57", "c58", "c59", "c60"], "axis, pump, scale, Pi", ["c104", "c105"],
+             "FORTE on its Pi", "GPIO · PWM"),
+            ("Stoppering", ["c62", "c63", "c64", "c65", "c66", "c67"], "axis, piston, Pi", ["c106", "c107"],
+             "FORTE on its Pi", "GPIO · PWM"),
             ("Capping", ["c69", "c70", "c71", "c72", "c73", "c74"], "axis, crimper, Pi", ["c108", "c109"],
-             "planned", True),
-            ("Inspection", ["c76", "c77", "c78", "c79", "c80", "c81"], "two cameras, Pi", ["c110", "c111"],
-             "planned", True),
-            ("Transport", ["c83"], "planar table, xbots", ["c84", "c85"], "planar controller", False)]
-for i, (name, parts, says, program, does, planned) in enumerate(STATIONS):
-    x = COL6[i]
-    g, b = frame(assets, "asset", x, 214, name, planned and i != 3 and i != 4)
-    pw, _ = art(None, parts, 0, 0, h=b[3] - 44)
-    art(g, parts, x + (214 - pw) / 2, b[1] + 16, h=b[3] - 44)
+             "FORTE on its Pi", "GPIO · PWM"),
+            ("Transport", ["c83"], "planar table, xbots", ["c84", "c85"], "planar controller", "PMC")]
+for i, (name, parts, says, program, does, wire) in enumerate(STATIONS):
+    x = COL[i]
+    g, b = frame(assets, "asset", x, 210, name)
+    pw, _ = art(None, parts, 0, 0, h=b[3] - 40)
+    art(g, parts, x + (210 - pw) / 2, b[1] + 14, h=b[3] - 40)
     caption(g, b, says)
-    g, b = frame(beh, "beh", x, 214, name if i else "Kuka controllers", planned)
-    if program:
-        pw, _ = art(g, program, x + 12, b[1] + 14, h=b[3] - 20)
-        caption(g, b, does, left=x + 22 + pw)
-    else:
-        caption(g, b, does)
-    color, dashed, word = (GREEN, False, "GPIO · PWM") if i in (1, 2) else (GREY, i != 5, "PMC" if i == 5 else "")
-    link_g = beh.group(f"{name}: program to parts")
-    arrow(link_g, [(x + 107, Y["beh"][1] - 8), (x + 107, Y["asset"][0] + 8)], color, 2, dashed, word, 11)
+    g, b = frame(beh, "beh", x, 210, name)
+    pw, _ = art(g, program, x + 12, b[1] + 14, h=b[3] - 20)
+    caption(g, b, does, left=x + 22 + pw)
+    arrow(beh.group(f"{name}: program to parts"), [(x + 105, Y["beh"][1] - 14), (x + 105, Y["asset"][0] + 14)],
+          GREEN if wire != "PMC" else GREY, 2, False, wire, 11)
 
 # ---- the line level ---------------------------------------------------------------------------------
-y0, y1 = Y["orch"]
-SYSTEMS = [("Registration service", ["c135", "c136"], "finds modules, plans skills"),
-           ("modsync", ["c133", "c134"], "verifies, builds online"),
-           ("AAS server · BaSyx", ["c131", "c132"], "product, process, resource AASs"),
-           ("Line agents", ["c139", "c140"], "bid over XMPP"),
-           ("DMP · InfluxDB", ["c137", "c138"], "OPC UA calls, time series")]
+SYSTEMS = [("modsync", ["c133", "c134"], "verifies a program, builds a skill online"),
+           ("AAS server · BaSyx", ["c131", "c132"], "product, process, resource"),
+           ("Line agents", ["c139", "c140"], "bid for the steps, run the skills")]
 for i, (name, pic, says) in enumerate(SYSTEMS):
-    x = COL5[i]
-    g, b = frame(orch, "orch", x, 260, name)
+    x = SYS[i]
+    g, b = frame(orch, "orch", x, 250, name)
     pw, _ = art(g, pic, x + 12, b[1] + 14, h=b[3] - 20)
     if name.startswith("AAS server"):
         for k in range(3):
-            st, sw, sh, _ = iso_shell("", 36, 32, 10)
-            box(g, x + 26 + pw + k * 44, b[1] + 22, sw, sh, st)
-        text(g, x + 22 + pw, b[1] + 70, 260 - pw - 30, b[3] - 74, says, 15, INK)
+            st, sw, sh, _ = iso_shell("", 32, 28, 9)
+            box(g, x + 24 + pw + k * 40, b[1] + 18, sw, sh, st)
+        text(g, x + 22 + pw, b[1] + 62, 250 - pw - 30, b[3] - 66, says, 14, INK)
     else:
         caption(g, b, says, left=x + 22 + pw)
 
 # ---- the applications -------------------------------------------------------------------------------
-g, b = frame(apps, "app", 200, 540, "AAS web UI · process planner · skill editor")
-pw, _ = art(g, ["c172", "c173"], 214, b[1] + 14, h=b[3] - 18)
-art(g, ["c174", "c175"], 226 + pw, b[1] + 14, h=b[3] - 18)
-caption(g, b, "browse the AASs, bind a product's recipe to the line, compose a module's skills", left=250 + 2 * pw)
-g, b = frame(apps, "app", 760, 260, "HMI · modlink")
-pw, _ = art(g, ["c180", "c181"], 772, b[1] + 14, h=b[3] - 18)
-caption(g, b, "a module live: its state, its skills", left=784 + pw)
-g, b = frame(apps, "app", 1040, 260, "MES · ERP · scheduling", True)
-pw, _ = art(g, ["c176", "c177"], 1052, b[1] + 14, h=b[3] - 18)
-art(g, ["c178", "c179"], 1060 + pw, b[1] + 14, h=b[3] - 18)
-caption(g, b, "later", left=1072 + 2 * pw)
+web_x, hmi_x = SYS[0] - 40, SYS[1]
+g, b = frame(apps, "app", web_x, 330, "AAS web UI")
+pw, _ = art(g, ["c172", "c173"], web_x + 12, b[1] + 14, h=b[3] - 18)
+art(g, ["c174", "c175"], web_x + 20 + pw, b[1] + 14, h=b[3] - 18)
+caption(g, b, "process planner, skill editor", left=web_x + 32 + 2 * pw)
+g, b = frame(apps, "app", hmi_x, 250, "HMI")
+pw, _ = art(g, ["c180", "c181"], hmi_x + 12, b[1] + 14, h=b[3] - 18)
+caption(g, b, "a module live", left=hmi_x + 22 + pw)
 
 # ---- the lines between the bands --------------------------------------------------------------------
-top = lambda key: Y[key][0] + 10                  # a box's top edge in its band
-bottom = lambda key: Y[key][1] - 8
-mid5, mid6 = (lambda i: COL5[i] + 130), (lambda i: COL6[i] + 107)
-g = apps.group("Applications to the line level")
-arrow(g, [(400, bottom("app")), (mid5(0), top("orch"))], INK, 2, label="")
-arrow(g, [(560, bottom("app")), (mid5(2) - 30, top("orch"))], INK, 2)
-arrow(g, [(890, bottom("app")), (mid5(2) + 30, top("orch"))], INK, 2)
+top = lambda key: Y[key][0] + 14                  # a box's top edge in its band
+bottom = lambda key: Y[key][1] - 14
+mid = lambda i: COL[i] + 105
+g = apps.group("Applications to the AAS server")
+arrow(g, [(web_x + 290, bottom("app")), (SYS[1] + 95, top("orch"))], INK, 2)
+arrow(g, [(hmi_x + 155, bottom("app")), (SYS[1] + 155, top("orch"))], INK, 2)
 g = orch.group("The line level to the modules")
-for j, i in enumerate((1, 2, 5)):                  # the agents run the skills: OPC UA
-    arrow(g, [(mid5(3) - 20 + j * 20, bottom("orch")), (mid6(i) + 24, top("beh"))], BLUE, 2)
-for j, i in enumerate((1, 2)):                     # the DMP calls them and reads their values: OPC UA
-    arrow(g, [(mid5(4) - 10 + j * 20, bottom("orch")), (mid6(i) + 48, top("beh"))], BLUE, 2, dashed=True)
-for j, i in enumerate((1, 2)):                     # modsync builds skills online: the management protocol
-    arrow(g, [(mid5(1) - 10 + j * 20, bottom("orch")), (mid6(i) - 24, top("beh"))], GOLD, 2)
+for i in range(4):                                 # the agents run the skills: OPC UA
+    arrow(g, [(SYS[2] + 95 + i * 20, bottom("orch")), (mid(i) + 30, top("beh"))], BLUE, 2)
+for i in range(3):                                 # modsync builds skills online: the management protocol
+    arrow(g, [(SYS[0] + 105 + i * 20, bottom("orch")), (mid(i) - 30, top("beh"))], GOLD, 2)
+g = orch.group("The tools read and write the AASs")
+arrow(g, [(SYS[0] + 250, Y["orch"][0] + 86), (SYS[1], Y["orch"][0] + 86)], INK, 2, start="block")
+arrow(g, [(SYS[2], Y["orch"][0] + 86), (SYS[1] + 250, Y["orch"][0] + 86)], INK, 2, start="block")
+
 # ---- the legend -------------------------------------------------------------------------------------
 g = leg.group("Legend")
-rect(g, 1320, 32, 260, 108, "#FFFFFF", "#C9D3D2", 1, 8)
-for i, (color, label, dashed) in enumerate([(INK, "the AAS API (HTTP)", False), (BLUE, "OPC UA: run skills", False),
-                                            (BLUE, "OPC UA: the DMP", True), (GOLD, "management: build online", False),
-                                            (GREEN, "IO: GPIO, PWM", False)]):
-    cy = 46 + i * 20
-    line(g, [(1334, cy), (1366, cy)], f"endArrow=none;html=1;strokeColor={color};strokeWidth=3;" + ("dashed=1;" if dashed else ""))
-    text(g, 1374, cy - 9, 200, 18, label, 12, INK)
+rect(g, SYS[2], 36, 250, 92, "#FFFFFF", "#C9D3D2", 1, 8)
+for i, (color, label) in enumerate([(INK, "the AAS API (HTTP)"), (BLUE, "OPC UA: run skills"),
+                                    (GOLD, "management: build online"), (GREEN, "IO: GPIO, PWM")]):
+    cy = 52 + i * 20
+    line(g, [(SYS[2] + 14, cy), (SYS[2] + 46, cy)], f"endArrow=none;html=1;strokeColor={color};strokeWidth=3;")
+    text(g, SYS[2] + 54, cy - 9, 190, 18, label, 12, INK)
 page("03d The production system: a layered architecture", life, assets, beh, orch, apps, leg)
 
 # ==== 04 The IEC 61499 program's structure (module rules) =========================================
