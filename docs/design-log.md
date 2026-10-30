@@ -18,6 +18,42 @@ A running log of design considerations made while building, for writing the pape
 
 ## 30 Oct 2026
 
+- **A product agent's step can need a reconfiguration: the syringe asks for BottomUpFilling, the
+  filling module's agent creates the skill online and runs it.** *Journal* (and the CIRP demo).
+  - What: a resource agent offers a capability of the required meaning or a narrower one (an exact
+    one first, then a built skill first); on acceptance of an offer whose skill is only described,
+    the agent rebuilds the module (`execute.rebuild`: modsync creates the skill in the running FORTE
+    program, records it with its interface, derives the capabilities anew) and runs it over OPC UA.
+    `test_agents_live.py`: the syringe's Filling step goes to BottomUpFilling, created online, run with
+    1 mL, the weight back. modlink skips a capability offered after a reconfiguration (no interface yet).
+  - Why: this is the step from "a module that can be changed" to "a line that changes a module because
+    a product asks for it", the journal paper's claim; a narrower capability meets a broader request
+    (a bottom-up filler can fill a vial) but never the reverse.
+  - Instead of: matching capabilities by identical meaning only (a module that only fills bottom-up
+    would refuse a vial); a planned-only reconfiguration in the agent (the agent now does the real one
+    on FORTE).
+
+- **A skill can be written for a narrower capability than its steps contribute: BottomUpFilling, a
+  Filling (vocabulary 0.6).** *CIRP* and *Journal*.
+  - What: `lab:BottomUpFilling rdfs:subClassOf lab:Filling`; a composite skill names the capability it
+    was written for (`capability:` in the spec, a supplemental semantic id of the skill element in the
+    lab's semantics, `pprl:writtenFor` in the projection); the derivation offers that capability
+    instead of the one its steps contribute, characterized by the broader class's properties; what
+    holds of Filling (its constraints, the machine's stated facts: the containers it takes) holds of
+    it. `discover` does not plan narrower capabilities.
+  - Why: the user's call (30 Oct): a new or changed skill needs a capability of its own, or a product
+    cannot ask for it and the offer of "the same Filling, after a reconfiguration" is no reason to
+    reconfigure. What makes bottom-up filling different (the needle rising with the liquid) is how
+    the skill moves, which no constraint on the states before and after states, so it is declared by
+    whoever writes or plans the skill, not inferred.
+  - Instead of: a capability per skill name (`Filling_BottomUpFilling`: the product cannot name it);
+    inferring it from the flow's shape (a Dispense beside a rising axis: clever, and wrong for an axis
+    that moves down); planning narrower capabilities from their constraints (they are Filling's, so
+    any Dispense would be "bottom-up").
+  - Found on the way: `described_skill` named the components after "Module", so the steps of every
+    skill described through it referred to components that do not exist (`ModuleLinearAxisAAS`) and
+    the derivation saw no steps; it now takes the module's name from its components' AASs.
+
 - **Orders go to an order agent, which starts a product agent per unit; a module is reserved from its
   proposal until the decision.** *Journal*.
   - What: an `order` message (Product, Quantity) to `orders@<domain>`, or `POST /orders` on the

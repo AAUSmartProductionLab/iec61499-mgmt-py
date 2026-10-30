@@ -44,6 +44,7 @@ class Done:
     seconds: float = 0.0
     results: dict = field(default_factory=dict)
     agent: str | None = None                   # the resource agent that carried it out (its JID)
+    reconfigured: bool = False                 # the module was reconfigured for it first
 
 
 class ProductAgent(Agent):
@@ -75,7 +76,8 @@ class ProductAgent(Agent):
             results = [prop(k, v) for k, v in d.results.items()]
             attempts.append({"modelType": "SubmodelElementCollection", "idShort": f"Step{i:02d}", "value": [
                 prop("Name", d.step), prop("Outcome", d.outcome), prop("Resource", d.resource or ""),
-                prop("Skill", d.skill or ""), prop("Seconds", round(d.seconds, 2), "xs:double"), prop("Detail", d.detail),
+                prop("Skill", d.skill or ""), prop("Reconfigured", str(d.reconfigured).lower(), "xs:boolean"),
+                prop("Seconds", round(d.seconds, 2), "xs:double"), prop("Detail", d.detail),
                 {"modelType": "SubmodelElementCollection", "idShort": "Results", "value": results}]})
         return [{"modelType": "SubmodelElementCollection", "idShort": "Product", "value": [
             prop("Product", self.name), prop("Agent", str(self.jid)),
@@ -157,6 +159,8 @@ class Order(OneShotBehaviour):
             done.outcome = "done"
             done.results = {e["idShort"]: e.get("value") for r in result.elements for c in r.get("value", [])
                             if c.get("idShort") == "Results" for e in c.get("value", [])}
+            done.reconfigured = any(c.get("idShort") == "Reconfigured" and c.get("value") == "true"
+                                    for r in result.elements for c in r.get("value", []))
         else:
             done.outcome = "failed"
             done.detail = "; ".join(t["text"] for e in result.elements for t in e.get("value", []) if isinstance(t, dict))
