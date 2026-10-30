@@ -128,13 +128,25 @@ def offered(module: dict, spec: ModuleSpec, skills: list[str]) -> dict:
     return module
 
 
+def program_name(spec: ModuleSpec, components: list[dict]) -> str:
+    """The module's name as its components' AASs carry it (``<name><item>AAS``, ``profile.component_identity``)."""
+    for env in components:
+        short = env["assetAdministrationShells"][0]["idShort"]
+        for item in spec.equipment:
+            if short.endswith(f"{item}AAS") and len(short) > len(f"{item}AAS"):
+                return short[:-len(f"{item}AAS")]
+    return spec.module
+
+
 def described_skill(module: dict, components: list[dict], name: str, skill: Composite) -> dict:
     """The module's AAS with ``skill`` described as ``name`` in its Skills submodel (replacing one of
     that name), as the skill editor saves a skill: its parameters, steps and results, not built
     (Deployment Described), with no action of the interface yet."""
     spec = described(module, components)
-    # Not offered while it is only described: it gets its actions once it is built (``offered``).
-    spec = spec.model_copy(update={"composites": {**spec.composites, name: skill.model_copy(update={"offered": False})}})
+    # Not offered while it is only described: it gets its actions once it is built (``offered``). The
+    # module's name is what its components' AASs are named after: the steps refer to their skills.
+    spec = spec.model_copy(update={"module": program_name(spec, components),
+                                   "composites": {**spec.composites, name: skill.model_copy(update={"offered": False})}})
     shell = module["assetAdministrationShells"][0]
     interface = at(submodel(module, "AssetInterfacesDescription"), "interface_opcua")
     describer = Describer(spec, "", None, None, None, at(interface, "EndpointMetadata", "base")["value"])
