@@ -51,17 +51,18 @@ At the start, what it is physically: a station of the line with a linear axis (a
 
     # ---- after slide 5: the architecture, flat, one level at a time ------------------------------------------
     s = Slide("The production system: a layered architecture", MOD)
-    levels = ["device-level", "module-level", "protocols", "line-level", "applications", "legend"]
+    levels = ["the-line", "devices", "modules", "line-level", "applications", "legend"]
     L = s.figure(P03D, levels)
     for k in levels[1:5]:          # each level with the lines that reach up to it
         s.plain_click([("wipe", L[k], {"dir": "bottom", "dur": 600})])
-    write(after("slide6.xml", "slide5.xml"), s, """About 1.5 min, four clicks. The systems we have, in the four levels of the automation pyramid, and how they talk: a colour per protocol (the legend, top right). Dashed boxes are planned.
+    write(after("slide6.xml", "slide5.xml"), s, """About 1.5 min, four clicks. The production system in five layers, from the line up: what is there in each, and how they talk (the legend: a colour per protocol). Dashed is planned.
 
-At the start the devices: each module's parts (the linear axes, the filling pump, the scale, the stoppering piston, the crimper, the cameras), the planar table with its controller and xbots, the Kuka robots.
-1. The modules: the filling and stoppering modules are FORTE programs (IEC 61499) on a Raspberry Pi 5 each, with their skills, the PackML state machine and the occupation; capping and inspection have their spec and AAS, their programs are planned. The planar controller offers the table and each xbot as a module over OPC UA. The Pis drive their parts over GPIO and PWM.
-2. How the modules are reached: OPC UA (skills, states, values), FORTE's management protocol (creating a skill online), and discovery (a FORTE announces itself by mDNS and serves the manifest it was delivered with).
-3. The line level: the registration service finds and registers the modules and plans skills; the AAS server holds the product, process and resource AASs; modsync verifies and changes the programs; the DMP turns an Operation of an AAS into an OPC UA call and the values into time series in InfluxDB; the line's agents bid over XMPP and run the skills over OPC UA; the AAS server's events go out over MQTT.
-4. The applications: the AAS web UI with the process planner and the skill editor, the HMI, the orders; MES and ERP later.""")
+At the start the line: the planar table with its shuttles, the four stations, the two Kuka robots.
+1. The devices: each station's parts and the Raspberry Pi they are wired to (the filling module: the linear axis, the pump, the scale; the stoppering module: the axis and the piston); the planar table's controller; the robots.
+2. The modules: each Pi runs its module's IEC 61499 program on FORTE (filling and stoppering; capping and inspection planned); the planar controller offers the table and its shuttles like a module. The Pis drive their parts over GPIO and PWM.
+3. The line level: the AAS server holds the product, process and resource AASs, and every tool reads and writes them. The registration service finds the modules and plans skills; modsync builds a skill online over FORTE's management protocol; the line's agents bid over XMPP and run the skills over OPC UA; the DMP turns an Operation of an AAS into an OPC UA call and the values into time series.
+4. The applications: the AAS web UI with the process planner and the skill editor, the HMI; MES, ERP and scheduling later.""")
+
 
     # ---- after slide 7: the filling module at work ----------------------------------------------------------
     def motion_slide(title, label, agents):
