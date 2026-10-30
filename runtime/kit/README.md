@@ -97,6 +97,20 @@ Running the installer again replaces FORTE and keeps the program that is on the 
 (`~/forte/boot/forte.fboot`). On a lab module's Pi, ask first: the module's program starts again
 when FORTE restarts, and it may move an axis.
 
+### A Pi that already runs FORTE
+
+To update a Pi that has `~/forte` from an earlier install, replace the binary and rebuild the
+container. The image copies `forte` in when it is built, so `docker compose restart` alone would
+keep the old one:
+
+```powershell
+scp bin\forte-aarch64 pi@192.168.0.42:forte/forte
+ssh pi@192.168.0.42 "cd ~/forte && docker compose up -d --build --force-recreate forte && docker compose ps"
+ssh pi@192.168.0.42 "cd ~/forte && docker compose logs --tail 20 forte"
+```
+
+The log should say `FORTE is up and running`. The program on the Pi is kept and starts again.
+
 ## When it goes wrong
 
 - **"4diac IDE not found"**: set `FORDIAC_IDE` to `4diac-idec.exe` (with a `c`, the console version).
