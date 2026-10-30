@@ -211,16 +211,16 @@ where the stacks stood; the AAS server's, the skill editor's and the planner's l
 
 ### 03d The production system: a layered architecture (flat; on the slide in place of 03c)
 
-The isometric layers as a flat diagram, kept simple: the same five planes as bands (the line; devices,
-CPS; modules, CPPM; the line level, CPPS; applications), each named in a teal block on the left. A box
-per system with its picture and a few words: the pictures are the isometric figure's own image cells
-(`module-tools.drawio`, page "Layers (illustrated)"), placed flat by `art()` in `build_deck.py`: the
-screens (skill editor, planner, HMI, MES, ERP, AAS server, modreg, modsync, orchestrator, time series),
-the FORTE windows, the parts and Pis of each station, the planar controller, the robots and the whole
-line. A column per station in the module and device bands, so a module's program stands over its parts.
-Few lines, a colour per protocol (the legend): the applications to the AAS server and the registration
-service (HTTP), the agents and the DMP to the modules (OPC UA), modsync to the modules (management), each
-program to its parts (GPIO, PWM). Dashed is planned. One draw.io layer per band and the legend; each line
+The isometric layers as a flat diagram, kept to the main systems: the same five planes as bands (the
+line; devices, CPS; modules, CPPM; the line level, CPPS; applications), each named in a teal block on the
+left. A small box per system with its picture and a few words, nothing marked as planned: the filling,
+stoppering and capping modules and transport (the planar controller) over their parts; modsync, the AAS
+server and the line agents; the AAS web UI and the HMI. The pictures are the isometric figure's own image
+cells (`module-tools.drawio`, page "Layers (illustrated)"), placed flat by `art()` in `build_deck.py`. Few
+lines, a colour per protocol (the legend): the applications to the AAS server (HTTP), modsync and the
+agents to it, the agents to the modules (OPC UA), modsync to the modules (management), each program to
+its parts (GPIO, PWM). Left out to keep it simple, and named in the notes: the registration service, the
+DMP, InfluxDB, the brokers, inspection, the robots. One draw.io layer per band and the legend; each line
 is in the layer of its upper end, so on the slide every band appears with its lines, bottom up.
 `architecture.pptx` holds the slide alone.
 

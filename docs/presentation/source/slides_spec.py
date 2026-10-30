@@ -55,13 +55,16 @@ At the start, what it is physically: a station of the line with a linear axis (a
     L = s.figure(P03D, levels)
     for k in levels[1:5]:          # each level with the lines that reach up to it
         s.plain_click([("wipe", L[k], {"dir": "bottom", "dur": 600})])
-    write(after("slide6.xml", "slide5.xml"), s, """About 1.5 min, four clicks. The production system in five layers, from the line up: what is there in each, and how they talk (the legend: a colour per protocol). Dashed is planned.
+    write(after("slide6.xml", "slide5.xml"), s, """About 1 min, four clicks. The production system in five layers, from the line up, with its main systems, and how they talk (the legend: a colour per protocol).
 
-At the start the line: the planar table with its shuttles, the four stations, the two Kuka robots.
-1. The devices: each station's parts and the Raspberry Pi they are wired to (the filling module: the linear axis, the pump, the scale; the stoppering module: the axis and the piston); the planar table's controller; the robots.
-2. The modules: each Pi runs its module's IEC 61499 program on FORTE (filling and stoppering; capping and inspection planned); the planar controller offers the table and its shuttles like a module. The Pis drive their parts over GPIO and PWM.
-3. The line level: the AAS server holds the product, process and resource AASs, and every tool reads and writes them. The registration service finds the modules and plans skills; modsync builds a skill online over FORTE's management protocol; the line's agents bid over XMPP and run the skills over OPC UA; the DMP turns an Operation of an AAS into an OPC UA call and the values into time series.
-4. The applications: the AAS web UI with the process planner and the skill editor, the HMI; MES, ERP and scheduling later.""")
+At the start the line: the planar table with its shuttles, the stations, the two Kuka robots.
+1. The devices: each station's parts and the Raspberry Pi they are wired to (filling: the linear axis, the pump, the scale; stoppering: the axis and the piston; capping: the axis and the crimper); the planar table and its xbots.
+2. The modules: each Pi runs its module's IEC 61499 program on FORTE and drives its parts over GPIO and PWM; the planar controller offers the table and its shuttles like a module.
+3. The line level: the AAS server holds the product, process and resource AASs; modsync verifies a module's program against its AAS and builds a new skill online over FORTE's management protocol; the line's agents bid for the steps and run the skills over OPC UA. Both read and write the AASs.
+4. The applications: the AAS web UI with the process planner and the skill editor, and the HMI.
+
+Not drawn, to keep it simple: the registration service (it finds the modules and registers them), the DMP (an AAS Operation becomes an OPC UA call), InfluxDB, the XMPP and MQTT brokers, inspection and the loading and unloading robots.""")
+
 
 
     # ---- after slide 7: the filling module at work ----------------------------------------------------------
