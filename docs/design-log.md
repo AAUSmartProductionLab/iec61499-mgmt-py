@@ -18,6 +18,17 @@ A running log of design considerations made while building, for writing the pape
 
 ## 30 Oct 2026
 
+- **The kit installs FORTE on a Pi over SSH, without the internet.** *Journal* (a module needs no
+  cloud to be set up).
+  - What: the kit carries the container files and the arm64 base images (alpine, busybox, saved with
+    `docker save`); `install-pi.ps1` copies them with FORTE and `install.sh` to the Pi with scp and runs
+    the installer over ssh. The installer downloads only what is not next to it, and checks the
+    clock only before a download.
+  - Why: lab and shop-floor networks often have no internet, and a Pi without a clock chip starts
+    with a wrong date, which only matters for certificates.
+  - Instead of: the installer fetching the container files from GitHub and the images from Docker
+    Hub every time. Docker itself is still installed from the internet when missing.
+
 - **A FORTE kit for others' block types: the lab's runtime plus theirs, from any 4diac project.**
   *Journal* (the runtime can be extended by people outside the project).
   - What: `runtime/make-kit.ps1` zips the build scripts, FBE configurations, FORTE patches and the
