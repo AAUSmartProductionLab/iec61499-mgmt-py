@@ -146,7 +146,8 @@ class PlanarDescriber(Describer):
 
     def capabilities(self) -> model.ModuleCapabilityDescription | None:
         """A shuttle offers Transporting, realized by MoveToPosition, to any pose on the table (no
-        program to derive it from: it is the controller's)."""
+        program to derive it from: it is the controller's); and Receiving and Releasing a container,
+        one at a time, which no skill realizes: they change only what the shuttle has in its custody."""
         if "MoveToPosition" not in self.spec.skills:
             return None
         reach = {"X": (0.0, self.table.columns * self.table.flyway), "Y": (0.0, self.table.rows * self.table.flyway),
@@ -155,7 +156,9 @@ class PlanarDescriber(Describer):
         offer = Offer(meaning("Transporting"), f"{skills}/MoveToPosition", True,
                       [Property(meaning(f"Target{name}"), POSE[name][0], str(low), str(high)) for name, (low, high) in reach.items()],
                       [("Submodel", skills), ("SubmodelElementCollection", "MoveToPosition")])
-        return capability_description([offer], {})
+        custody = [Offer(meaning("Receiving"), "", True, [Property(meaning("Capacity"), value=1.0)]),
+                   Offer(meaning("Releasing"), "", True)]
+        return capability_description([offer, *custody], {})
 
     def errors(self, held: arso.Errors) -> None:
         super().errors(held)

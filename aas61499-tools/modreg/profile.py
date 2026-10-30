@@ -983,7 +983,9 @@ def capability_description(found: list[Offer], stated: dict[str, tuple[str, Capa
                  Qualifier(type_="Derived", value="true", kind="ConceptQualifier")]
         if not offer.built:
             marks.append(Qualifier(type_="Availability", value="AfterReconfiguration", kind="ConceptQualifier"))
-        how = f"realized by {offer.skill_name}" if offer.keys else "a skill for it can be planned from its components' capabilities"
+        how = (f"realized by {offer.skill_name}" if offer.keys else
+               "kept by the resource itself: it changes only what the resource has in its custody" if offer.built else
+               "a skill for it can be planned from its components' capabilities")
         capability = Capability(
             id_short="Capability", semantic_id=CAPABILITY, supplemental_semantic_ids=[offer.capability],
             display_name={"en": name}, description=(cap.description if cap else "") or f"{name}, {how}",
