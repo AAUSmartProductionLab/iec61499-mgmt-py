@@ -3,6 +3,7 @@ own slides (pictures, no timelines, slides merged)."""
 
 P03 = "03-the-filling-module-physical-and-digital"
 P03C = "03c-the-production-system-in-layers"
+P03D = "03d-the-production-system-a-layered-architecture"
 P05 = "05-the-filling-module-in-motion-an-orchestrator"
 P06 = "06-the-filling-module-in-motion-agents-bid-planned"
 P07 = "07-product-process-and-resource-aas"
@@ -48,30 +49,19 @@ At the start, what it is physically: a station of the line with a linear axis (a
 2. Its program: the boot file builds the application on FORTE: occupation, the PackML state machine, the Dispensing skill, the procedures, the OPC UA server; each part brings its equipment block and its primitive types, compiled into FORTE.
 3. The dashed lines: one part, three views. The linear axis is a physical part, an AAS and function blocks; names and asset ids join them. This is what a vendor ships: the module, its AAS and its program.""")
 
-    # ---- after slide 5: the layers, illustrated, one plane at a time ----------------------------------------
-    s = Slide("The production system, layer by layer", MOD)
-    planes = ["the-line", "digital-assets", "behaviour-iec-61499", "aas-models-and-orchestration",
-              "hmi-mes-planning-and-scheduling"]
-    L = s.figure(P03C, planes, area=(647700, 1206500, 5000000, 5393500))
-    TEXT = [(2790, "The line", "The maglev table and its shuttles, four stations, two robots"),
-            (2283, "Digital assets", "Each module's parts with their kind and asset id, wired to its Pi"),
-            (1771, "Behaviour · IEC 61499", "FORTE on each Pi runs the module's program"),
-            (1259, "AAS models and orchestration", "The AASs on the AAS server; modreg, modsync and modlink work on them"),
-            (747, "HMI, planning, MES", "The planner, the skill editor and the HMI work from the AASs; MES and ERP later")]
-    tx = []
-    for py, name, sub in TEXT:
-        y = s.at(0, py)[1]
-        tx.append(s.textbox(6000000, y - 380000, 5540000, 760000,
-                            [para([run(name, 18, True, m.TEAL_D)]), para([run(sub, 13, False, m.INK_T)])]))
-    for k in range(1, 5):         # each plane with the lines that reach up to it
-        s.plain_click([("wipe", L[planes[k]], {"dir": "bottom", "dur": 700}), ("in", tx[k])])
-    write(after("slide6.xml", "slide5.xml"), s, """About 1 min, four clicks. The same five layers as the slide before, drawn as the lab is built, from the line up; each line appears with the layer it reaches up to.
+    # ---- after slide 5: the architecture, flat, one level at a time ------------------------------------------
+    s = Slide("The production system: a layered architecture", MOD)
+    levels = ["device-level", "module-level", "protocols", "line-level", "applications", "legend"]
+    L = s.figure(P03D, levels)
+    for k in levels[1:5]:          # each level with the lines that reach up to it
+        s.plain_click([("wipe", L[k], {"dir": "bottom", "dur": 600})])
+    write(after("slide6.xml", "slide5.xml"), s, """About 1.5 min, four clicks. The systems we have, in the four levels of the automation pyramid, and how they talk: a colour per protocol (the legend, top right). Dashed boxes are planned.
 
-At the start the line: the maglev table with its shuttles, the four stations, the two robots.
-1. Digital assets: each module's parts, the linear axis, the process component and the Raspberry Pi 5, with kind and asset id; the robots and the transport with their own controllers.
-2. Behaviour: FORTE on each Pi runs the module's IEC 61499 program: the skills as function block networks, the PackML state machine of the module.
-3. AAS models and orchestration: product, process and resource AASs on the AAS server; modreg and modsync work on them, agents later.
-4. On top the applications: the planner, the skill editor and the HMI, all reading and writing the AASs; MES and ERP later.""")
+At the start the devices: each module's parts (the linear axes, the filling pump, the scale, the stoppering piston, the crimper, the cameras), the planar table with its controller and xbots, the Kuka robots.
+1. The modules: the filling and stoppering modules are FORTE programs (IEC 61499) on a Raspberry Pi 5 each, with their skills, the PackML state machine and the occupation; capping and inspection have their spec and AAS, their programs are planned. The planar controller offers the table and each xbot as a module over OPC UA. The Pis drive their parts over GPIO and PWM.
+2. How the modules are reached: OPC UA (skills, states, values), FORTE's management protocol (creating a skill online), and discovery (a FORTE announces itself by mDNS and serves the manifest it was delivered with).
+3. The line level: the registration service finds and registers the modules and plans skills; the AAS server holds the product, process and resource AASs; modsync verifies and changes the programs; the DMP turns an Operation of an AAS into an OPC UA call and the values into time series in InfluxDB; the line's agents bid over XMPP and run the skills over OPC UA; the AAS server's events go out over MQTT.
+4. The applications: the AAS web UI with the process planner and the skill editor, the HMI, the orders; MES and ERP later.""")
 
     # ---- after slide 7: the filling module at work ----------------------------------------------------------
     def motion_slide(title, label, agents):
