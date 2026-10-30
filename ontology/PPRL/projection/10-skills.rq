@@ -1,13 +1,16 @@
 # A skill element (ARSO Skills) describes a skill of its kind and of its type, both supplemental
 # semantic ids (the type a class of the Skills vocabulary for a primitive). Older AASs state the
-# type in a SemanticId property instead (the short form); it is read where it is given.
+# type in a SemanticId property instead (the short form); it is read where it is given. A
+# supplemental semantic id in the lab's semantics is the capability a composite skill was written
+# for (pprl:writtenFor), not its type.
 PREFIX pa:   <https://w3id.org/2025/pprl/aas#>
 PREFIX pprl: <https://w3id.org/2025/pprl#>
 PREFIX css:  <http://www.w3id.org/hsu-aut/css#>
 
 CONSTRUCT {
   ?element pprl:describes ?skill .
-  ?skill a css:Skill , ?kind , ?type .
+  ?skill a css:Skill , ?kind , ?type ;
+         pprl:writtenFor ?capability .
 }
 WHERE {
   ?element pa:semanticId <https://smartproductionlab.aau.dk/skill> ;
@@ -20,11 +23,17 @@ WHERE {
   OPTIONAL {
     { ?element pa:supplementalSemanticId ?type .
       FILTER(?type NOT IN (<https://smartproductionlab.aau.dk/skill/Primitive>, <https://smartproductionlab.aau.dk/skill/Composite>,
-                           <https://smartproductionlab.aau.dk/skill/ModuleControl>)) }
+                           <https://smartproductionlab.aau.dk/skill/ModuleControl>)
+             && !STRSTARTS(STR(?type), "https://smartproductionlab.aau.dk/semantics/")) }
     UNION
     { ?element pa:element ?named .
       ?named pa:idShort "SemanticId" ; pa:value ?text .
       BIND(IRI(?text) AS ?type) }
+  }
+  OPTIONAL {
+    ?element pa:supplementalSemanticId ?capability .
+    FILTER(?said = <https://smartproductionlab.aau.dk/skill/Composite>
+           && STRSTARTS(STR(?capability), "https://smartproductionlab.aau.dk/semantics/"))
   }
   BIND(IRI(CONCAT(STR(?element), "#it")) AS ?skill)
 }

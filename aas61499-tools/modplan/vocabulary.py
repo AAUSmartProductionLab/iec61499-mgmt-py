@@ -2,7 +2,8 @@
 (``ontology/Vocabulary``, 0.2): a capability class's constraints (PPRL's pre, post and invariant),
 the capability a skill type realizes, which properties are the product's, and what a result needs.
 A module's Capability Description states the same for its components' capabilities, and adds what
-holds on that module only.
+holds on that module only. What holds of a capability class holds of every class narrowing it
+(BottomUpFilling is a Filling).
 """
 from __future__ import annotations
 
@@ -46,12 +47,29 @@ class Vocabulary:
             found.append(Stated(kind, local(prop), parse(str(text), kind)))
         return sorted(found, key=lambda s: s.prop)
 
+    def lineage(self, capability: str) -> list[str]:
+        """The capability class and the lab's classes it narrows, nearest first (BottomUpFilling,
+        Filling)."""
+        return [local(c) for c in self.graph.transitive_objects(LAB[capability], RDFS.subClassOf)
+                if str(c).startswith(str(LAB)) and c not in (LAB.ProcessCapability, LAB.AuxiliaryCapability)]
+
+    def specializes(self, capability: str) -> str | None:
+        """The capability a class narrows, if it narrows one (BottomUpFilling: Filling)."""
+        return next(iter(self.lineage(capability)[1:]), None)
+
     def constraints(self, capability: str) -> list[Stated]:
-        """What a capability of the class needs, does and keeps; Post constraints on the product last,
+        """What a capability of the class needs, does and keeps, its own and those of the classes it
+        narrows (the nearest says it for a property and kind); Post constraints on the product last,
         so that a planner reaches them after the state of the resource."""
-        cls = LAB[capability]
-        found = [s for kind, predicate in KINDS.items() for s in self._stated(cls, kind, predicate)]
-        return sorted(found, key=lambda s: (list(KINDS).index(s.kind), self.product(s.prop)))
+        found: dict[tuple[str, str], list[Stated]] = {}
+        for cls in self.lineage(capability):
+            stated: dict[tuple[str, str], list[Stated]] = {}
+            for kind, predicate in KINDS.items():
+                for s in self._stated(LAB[cls], kind, predicate):
+                    stated.setdefault((s.kind, s.prop), []).append(s)
+            found = {**stated, **found}
+        return sorted((s for group in found.values() for s in group),
+                      key=lambda s: (list(KINDS).index(s.kind), self.product(s.prop), s.prop))
 
     def needs(self, result: str) -> list[Stated]:
         """The state that holds once a result is known (pprl:knownWhen), as goals."""
@@ -60,8 +78,8 @@ class Vocabulary:
     def results(self, capability: str) -> list[str]:
         """The properties describing ``capability`` that say when they are known: what a requirement
         can ask of it as a result (a fill weight)."""
-        return sorted(local(p) for p in self.graph.subjects(LAB.characterizes, LAB[capability])
-                      if self.graph.value(p, PPRL.knownWhen) is not None)
+        return sorted({local(p) for cls in self.lineage(capability) for p in self.graph.subjects(LAB.characterizes, LAB[cls])
+                       if self.graph.value(p, PPRL.knownWhen) is not None})
 
     def realized(self, skill_type: str) -> str | None:
         """The capability of its component a primitive of the type realizes (lab:realizes)."""

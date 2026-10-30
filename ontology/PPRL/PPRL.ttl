@@ -243,6 +243,10 @@ pprl:executedBy rdf:type owl:ObjectProperty ;
 pprl:means rdf:type owl:AnnotationProperty ;
   rdfs:comment "What a skill parameter sets, in a product's terms: a property class of the lab's vocabulary (the parameter's supplemental semantic id). A capability property of that class can be realized by the parameter." .
 
+pprl:writtenFor rdf:type owl:ObjectProperty ;
+  rdfs:domain pprl:CompositeSkill ;
+  rdfs:comment "The capability class a composite skill was written (or planned) for, when it is narrower than what the types of its steps contribute: a skill written for BottomUpFilling offers BottomUpFilling where its Dispense step alone would offer Filling. A supplemental semantic id of the skill element in the lab's semantics." .
+
 pprl:handedFrom rdf:type owl:ObjectProperty ;
   rdfs:domain css:SkillParameter ;
   rdfs:range css:SkillParameter ;
