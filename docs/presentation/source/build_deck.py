@@ -932,8 +932,8 @@ for x, name, sms in [(180, "Product AAS", ["Production Sequence", "Required Capa
     for i, s in enumerate(sms):
         sm_bar(g, x, 718 + i * 52, 440, 40, s, 17)
 g = pa_base.group("The vial")
-rect(g, 1200, 630, 380, 250, PROD_FILL, PURPLE, 2, 14, "", two_line("The vial", "no interface of its own: the table moves it", 22, 17), 22, INK)
-agent_frame(pa_agent, "The agent of a product", "module agents,<br>the table", "R", BLUE, "Service requester",
+rect(g, 1200, 630, 380, 250, PROD_FILL, PURPLE, 2, 14, "", two_line("The vial", "no interface of its own: a shuttle carries it", 22, 17), 22, INK)
+agent_frame(pa_agent, "The agent of a product", "module agents,<br>the shuttles", "R", BLUE, "Service requester",
             [("cfp", False), ("proposal", True), ("accept", False), ("inform", True)])
 g = pa_req.group("Requesting")
 text(g, 690, 80, 600, 34, "<b>Requesting</b>: one step after the other", 22, INK)
@@ -950,10 +950,10 @@ g = pa_rec.group("Recording")
 text(g, 690, 330, 600, 34, "<b>Recording and moving</b>", 22, INK)
 step_box(g, 690, 374, 260, 150, "Bind", "the step to the module's skill")
 step_box(g, 990, 374, 260, 150, "Record", "what was done to the vial")
-step_box(g, 1290, 374, 270, 150, "Move", "ask the table's agent: to the next module", PURPLE)
+step_box(g, 1290, 374, 270, 150, "Move", "ask its shuttle's agent: to the next module's station", PURPLE)
 proto(g, [(820, 524), (820, 630)], INK, "HTTP: write")
 proto(g, [(1120, 524), (1120, 630)], INK, "HTTP: write")
-proto(g, [(1425, 524), (1425, 630)], PURPLE, "via the table", dashed=True)
+proto(g, [(1425, 524), (1425, 630)], PURPLE, "via its shuttle", dashed=True)
 page("12c Inside the agent of a product", pa_base, pa_agent, pa_req, pa_rec)
 
 # ==== 13 Agents on the line: call for proposals, proposals, accept ===================================
@@ -971,14 +971,17 @@ ln_xml = "\n".join(ln.xml())
 
 PA, MOD = T(400, 360), {"Filling": T(700, 186), "Stoppering": T(805, 246), "Capping": T(910, 307),
                         "Inspection": T(1015, 368)}
-TA = T(330, 470)
+# Each shuttle is a resource with an agent of its own (the empty ones c21 to c24; the vial's, c10, moves with it).
+SHUTTLES = {n: T(x + 52, y + 4) for n, (x, y) in zip((1, 2, 4, 5), ((392.4, 439.7), (497.2, 500.2), (602.0, 560.7), (706.7, 621.2)))}
+VS = T(492, 352)
 ag = Node("agents")
 for name, (x, y) in MOD.items():
     badge(ag.group(f"Resource agent: {name}"), x, y, "R", BLUE, 22, 22)
-badge(ag.group("Resource agent: the table"), *TA, "R", BLUE, 22, 22)
+for n, (x, y) in SHUTTLES.items():
+    badge(ag.group(f"Resource agent: shuttle {n}"), x, y, "R", BLUE, 18, 16)
 g = ag.group("Legend")
-for i, (mark, fill, txt) in enumerate([("P", PURPLE, "product agent: one per order"),
-                                       ("R", BLUE, "resource agent: a module, or the table")]):
+for i, (mark, fill, txt) in enumerate([("P", PURPLE, "product agent: one per vial ordered"),
+                                       ("R", BLUE, "resource agent: a module, or a shuttle")]):
     badge(g, 62, 750 + i * 54, mark, fill, 20, 20)
     text(g, 94, 730 + i * 54, 420, 40, txt, 22, INK)
 g = ag.group("The order")
@@ -986,6 +989,7 @@ rect(g, 520, 700, 480, 150, PROD_FILL, PURPLE, 2, 16, "",
      two_line("Order 17: a vial", "its next step: 1 · Fill 2.0 mL", 24, 21), 24, INK, False, "left")
 pa = Node("product agent on the vial")
 badge(pa.group("Product agent: the vial"), *PA, "P", PURPLE, 22, 22)
+badge(pa.group("Resource agent: shuttle 3, carrying the vial"), *VS, "R", BLUE, 18, 16)
 
 CARD_X, CARD_W = 1040, 530
 
@@ -1019,28 +1023,30 @@ for name, (x, y) in MOD.items():
     arrow(A.group(f"call to {name}"), [(PA[0] + 22, PA[1] - 6), (x - 26, y)], PURPLE, 2.5, True)
 C, A = message(2, "proposal filling")
 card(C, CY(2), 100, "proposal ×1 · refuse ×3", BLUE,
-     f"Filling: Dispensing, 40 s<br><font color=\"{GREY}\">Stoppering, Capping, Inspection: refuse</font>")
+     f"Filling: Dispensing, now, at its station<br><font color=\"{GREY}\">Stoppering, Capping, Inspection: refuse</font>")
 for name, (x, y) in MOD.items():
     if name != "Filling":
         badge(C.group(f"{name} refuses"), x + 30, y - 26, "✗", GREY, 14, 16)
 arrow(A.group("proposal from Filling"), [(FI[0] - 24, FI[1] + 12), (PA[0] + 24, PA[1] + 8)], BLUE, 2.5)
-C, A = message(3, "accept filling")
-card(C, CY(3), 100, "acceptProposal", GREEN, "order 17 → Filling: step 1 booked")
-pill(C.group("Booked: Filling"), FI[0] + 18, FI[1] - 52, 40, 30, "1", GOOD_FILL, GREEN, 2, 18, INK, True)
-arrow(A.group("accept to Filling"), [(PA[0] + 22, PA[1] - 6), (FI[0] - 26, FI[1])], GREEN, 2.5)
-C, A = message(4, "call for proposals transport")
-card(C, CY(4), 100, "callForProposal", PURPLE, "order 17 → the table: from loading to Filling")
-arrow(A.group("call to the table"), [(PA[0] - 4, PA[1] + 26), (TA[0] - 4, TA[1] - 26)], PURPLE, 2.5, True)
-C, A = message(5, "proposal transport")
-card(C, CY(5), 100, "proposal", BLUE, "the table: shuttle 3, 6 s, now")
-arrow(A.group("proposal from the table"), [(TA[0] + 10, TA[1] - 24), (PA[0] + 18, PA[1] + 22)], BLUE, 2.5)
-C, A = message(6, "accept transport")
-card(C, CY(6), 100, "acceptProposal", GREEN, "order 17 → the table: booked")
-arrow(A.group("accept to the table"), [(PA[0] - 4, PA[1] + 26), (TA[0] - 4, TA[1] - 26)], GREEN, 2.5)
-C, A = message(7, "move")
-card(C, CY(7), 100, "The table moves the vial", INK, "to Filling, whose agent runs Dispensing: next slide")
+pill(C.group("Held: Filling"), FI[0] + 18, FI[1] - 52, 40, 30, "1", "#FFFFFF", GREEN, 2, 18, INK, True)
+C, A = message(3, "call for proposals transport")
+card(C, CY(3), 100, "callForProposal", PURPLE, "order 17 → its shuttle: to Filling's station")
+arrow(A.group("call to the vial's shuttle"), [(PA[0] + 20, PA[1] - 14), (VS[0] - 16, VS[1] - 12)], PURPLE, 2.5, True)
+C, A = message(4, "proposal transport")
+card(C, CY(4), 100, "proposal", BLUE, "shuttle 3: MoveToPosition, now")
+arrow(A.group("proposal from the shuttle"), [(VS[0] - 14, VS[1] + 10), (PA[0] + 22, PA[1] + 10)], BLUE, 2.5)
+C, A = message(5, "accept transport")
+card(C, CY(5), 100, "acceptProposal", GREEN, "order 17 → shuttle 3: go")
+arrow(A.group("accept to the shuttle"), [(PA[0] + 20, PA[1] - 14), (VS[0] - 16, VS[1] - 12)], GREEN, 2.5)
+C, A = message(6, "arrived")
+card(C, CY(6), 100, "informConfirm", BLUE, "shuttle 3: at Filling's station")
 msg.remove(A)
-page("13 Agents on the line: call for proposals, proposal, accept", ln_xml, base13, ag, pa, *msg)
+MOVED = (PA[0] + 77.2, PA[1] + 44.6)                  # where the vial's product agent is once carried
+C, A = message(7, "accept filling")
+card(C, CY(7), 100, "acceptProposal", GREEN, "order 17 → Filling: the vial is there; it runs Dispensing (next slide)")
+pill(C.group("Booked: Filling"), FI[0] + 18, FI[1] - 52, 40, 30, "1", GOOD_FILL, GREEN, 2, 18, INK, True)
+arrow(A.group("accept to Filling"), [(MOVED[0] + 22, MOVED[1] - 10), (FI[0] - 20, FI[1] + 18)], GREEN, 2.5)
+page("13 Agents on the line: modules and shuttles bid", ln_xml, base13, ag, pa, *msg)
 
 # ==== Backup pages ==================================================================================
 tree_page("skill-hierarchies.drawio", 1, "Backup: from recipe to process")

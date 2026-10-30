@@ -234,12 +234,16 @@ parameter gives that), `replan` (BottomUpFilling: NeedleDeep, then Dispense and 
 time, a parallel block, then Home and Weigh), `check` (matched again: the needle stays in the container
 while it rises). One click each.
 
-### 13 Agents on the line: call for proposals, proposal, accept (planned)
+### 13 Agents on the line: modules and shuttles bid (built 30 Oct, simulated)
 
 One step at a time: the vial's product agent (P) calls for proposals for its next step, Fill 2.0 mL; only
-Filling proposes, the other modules refuse; it accepts. Then the transport: the table's agent, a resource
-agent (R) like the modules', proposes and is accepted, and the vial moves to Filling, the way into page 06.
-Each message has a `card` layer (it stays) and an `arrows` layer (it goes with the next message).
+Filling proposes (with its station), the other modules refuse; its proposal holds Filling. Then the
+transport: every shuttle has a resource agent (R) like a module; the vial's shuttle is asked to carry it to
+Filling's station, proposes MoveToPosition, is accepted and reports it there (the vial moves); only then
+the product agent accepts Filling's proposal, the way into page 06. Each message has a `card` layer (it
+stays) and an `arrows` layer (it goes with the next message); "arrived" has no arrows. As the code does
+(`line-agents`, `test_transport.py`): the first time every free shuttle is asked, and the one chosen
+carries the vial to the end. `agents-and-shuttles.pptx` holds this slide and page 12c.
 
 ### Backup pages (copied)
 
