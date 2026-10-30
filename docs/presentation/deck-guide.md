@@ -211,17 +211,18 @@ where the stacks stood; the AAS server's, the skill editor's and the planner's l
 
 ### 03d The production system: a layered architecture (flat; on the slide in place of 03c)
 
-The systems we have as a flat diagram in four bands, as the automation pyramid has them: applications
-(MES / MOM: the AAS web UI with the process planner and the skill editor, the HMI, the orders; MES and
-ERP later), the line level (CPPS: registration service, AAS server, MQTT broker, DMP, modsync, the line
-agents, the XMPP server, InfluxDB), the module level (CPPM: the filling and stoppering modules on their
-Pis, capping and inspection planned, the planar controller, the Kuka robots without an AAS yet) and the
-device level (CPS: each module's parts, the planar table, the robots). A colour per protocol (the
-legend): HTTP for the AAS API, OPC UA, FORTE's management protocol, XMPP, MQTT, discovery, IO, time
-series. Between the line and the modules OPC UA, management and discovery run as buses that each module
-drops onto. Dashed is planned. One draw.io layer per band (`device level`, `module level`, `protocols`,
-`line level`, `applications`) and the legend; each connection is in the layer of its upper end, so on
-the slide every band appears with its lines, bottom up. `architecture.pptx` holds the slide alone.
+The isometric layers as a flat diagram, kept simple: the same five planes as bands (the line; devices,
+CPS; modules, CPPM; the line level, CPPS; applications), each named in a teal block on the left. A box
+per system with its picture and a few words: the pictures are the isometric figure's own image cells
+(`module-tools.drawio`, page "Layers (illustrated)"), placed flat by `art()` in `build_deck.py`: the
+screens (skill editor, planner, HMI, MES, ERP, AAS server, modreg, modsync, orchestrator, time series),
+the FORTE windows, the parts and Pis of each station, the planar controller, the robots and the whole
+line. A column per station in the module and device bands, so a module's program stands over its parts.
+Few lines, a colour per protocol (the legend): the applications to the AAS server and the registration
+service (HTTP), the agents and the DMP to the modules (OPC UA), modsync to the modules (management), each
+program to its parts (GPIO, PWM). Dashed is planned. One draw.io layer per band and the legend; each line
+is in the layer of its upper end, so on the slide every band appears with its lines, bottom up.
+`architecture.pptx` holds the slide alone.
 
 ### 12b, 12c Inside the agent of a module, of a product (planned)
 
