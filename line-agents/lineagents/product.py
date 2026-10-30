@@ -10,15 +10,18 @@ proposal of its own waiting for a decision), it asks again after ``again_seconds
 
 Before it accepts, it has the product carried to the module: a module's proposal says where a shuttle
 hands the product over (its station, in the planar table's frame), and unless the product is there
-already, the product agent calls for Transporting to that pose: of every resource agent the first
-time (a free shuttle bids), after that of the shuttle that carries the product (its ``carrier``,
-which bids for no other product until it is released at the end). Once the product is there it
-accepts the module's proposal (the proposal is binding, so the module waits for it) and waits for the
-result. A step that cannot be carried to its module fails.
+already, the product agent calls for Transporting to that pose. Who may carry it is the resources'
+business, through custody (vocabulary 0.7): Transporting needs the resource to hold the product, so
+the product agent first asks for Receiving if nobody holds it (a resource with room proposes; the one
+accepted holds it from then on), and at the end for Releasing. Every call goes to every resource
+agent with the product's state (its HeldBy), and the constraints decide who proposes: nothing here
+is about shuttles. Once the product is there it accepts the module's proposal (the proposal is
+binding, so the module waits for it) and waits for the result. A step that cannot be carried to its
+module fails.
 
 A step that fails is asked for again of the other resource agents (``retries`` times); a step nobody
 proposes for, or that fails each time, ends the product (what was done, each attempt and each
-transport, is in ``history``). ``report_to`` (whoever ordered, the order's conversation) is informed
+transport and each change of custody, is in ``history``). ``report_to`` (whoever ordered, the order's conversation) is informed
 at the end: ``informConfirm`` with the steps when every step was done, else ``failure``
 (lineagents.orders).
 """
@@ -33,11 +36,12 @@ from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour
 
 from . import i40
-from .aas import Offer, steps, transport_request
+from .aas import HELD_BY, Offer, request, state_element, state_of, steps, transport_request
 from .orders import ORDERING
 
 ROLE = i40.REQUESTER
-TRANSPORT = "Transporting"                     # a transport's name in the history
+TRANSPORT, RECEIVE, RELEASE = "Transporting", "Receiving", "Releasing"     # their names in the history
+HANDLING = (RECEIVE, TRANSPORT, RELEASE)       # what moves the product, not a step of it
 
 
 @dataclass
@@ -64,7 +68,7 @@ class ProductAgent(Agent):
         self.answer_seconds, self.step_seconds, self.retries = answer_seconds, step_seconds, retries
         self.again_seconds, self.report_to = again_seconds, report_to
         self.history: list[Done] = []
-        self.carrier: str | None = None        # the shuttle carrying the product (its agent's JID)
+        self.state: dict[str, object] = {HELD_BY: ""}           # the product's, by meaning: who holds it
         self.at: tuple[float, float, float] | None = None      # where the product is on the table
         self.finished = asyncio.Event()
 
@@ -76,6 +80,11 @@ class ProductAgent(Agent):
     def complete(self) -> bool:
         """Every step of the product was carried out."""
         return {s.name for s in steps(self.product)} <= {d.step for d in self.history if d.outcome == "done"}
+
+    @property
+    def held_by(self) -> str:
+        """The resource that has the product in its custody (its AAS's idShort), empty if none."""
+        return str(self.state.get(HELD_BY) or "")
 
     @property
     def done(self) -> bool:
@@ -117,10 +126,8 @@ class Order(OneShotBehaviour):
                 if done.outcome != "done":
                     break
         finally:
-            if agent.carrier:                  # the product is off the shuttle: free for others
-                await self.send(i40.I40Message(i40.DONE, str(agent.jid), agent.carrier, i40.new_id(),
-                                               [{"modelType": "Property", "idShort": "Released", "valueType": "xs:boolean",
-                                                 "value": "true"}], ROLE, i40.PROVIDER).to_spade())
+            if agent.held_by:                  # the product is off its carrier: the carrier is free
+                agent.history.append(await self.custody(RELEASE))
             if agent.report_to:
                 orderer, conversation = agent.report_to
                 await self.send(i40.I40Message(i40.DONE if agent.complete else i40.FAILED, str(agent.jid), orderer,
@@ -133,7 +140,7 @@ class Order(OneShotBehaviour):
         agent: ProductAgent = self.agent
         conversation, deadline = i40.new_id(), i40.reply_by(agent.answer_seconds)
         for resource in resources:
-            call = i40.I40Message(i40.CALL, str(agent.jid), resource, conversation, [required],
+            call = i40.I40Message(i40.CALL, str(agent.jid), resource, conversation, [required, state_element(agent.state)],
                                   ROLE, i40.PROVIDER, reply_by=deadline)
             await self.send(call.to_spade())
         proposals: list[tuple[i40.I40Message, Offer]] = []
@@ -179,8 +186,12 @@ class Order(OneShotBehaviour):
         await self.reject(others)
         station = chosen[1].station
         if station is not None and station != agent.at:
-            moved = await self.transport(station)
-            agent.history.append(moved)
+            moved = await self.custody(RECEIVE) if not agent.held_by else None    # Transporting needs a holder
+            if moved is not None:
+                agent.history.append(moved)
+            if moved is None or moved.outcome == "done":
+                moved = await self.transport(station)
+                agent.history.append(moved)
             if moved.outcome != "done":
                 await self.reject([chosen])
                 done.resource, done.outcome = chosen[1].resource, "failed"
@@ -190,17 +201,25 @@ class Order(OneShotBehaviour):
         return await self.carry_out(done, chosen, conversation, started)
 
     async def transport(self, station: tuple[float, float, float]) -> Done:
-        """The product carried to ``station`` by its shuttle, or by a free one the first time."""
+        """The product carried to ``station`` (by the resource that holds it: the others refuse)."""
         agent: ProductAgent = self.agent
-        resources = [agent.carrier] if agent.carrier else agent.resources()
-        done, proposals, conversation, started = await self.proposals(TRANSPORT, transport_request(*station), resources)
+        done = await self.handling(TRANSPORT, transport_request(*station))
+        if done.outcome == "done":
+            agent.at = station
+        return done
+
+    async def custody(self, name: str) -> Done:
+        """Receiving or Releasing: who holds the product changes (the result says)."""
+        return await self.handling(name, request(name))
+
+    async def handling(self, name: str, required: dict) -> Done:
+        """A call to every resource agent for something done to carry the product, not a step of it."""
+        agent: ProductAgent = self.agent
+        done, proposals, conversation, started = await self.proposals(name, required, agent.resources())
         if not proposals:
             return done
         await self.reject(proposals[1:])
-        done = await self.carry_out(done, proposals[0], conversation, started)
-        if done.outcome == "done":
-            agent.carrier, agent.at = done.agent, station
-        return done
+        return await self.carry_out(done, proposals[0], conversation, started)
 
     async def reject(self, proposals: list) -> None:
         for answer, _ in proposals:
@@ -221,6 +240,7 @@ class Order(OneShotBehaviour):
                             if c.get("idShort") == "Results" for e in c.get("value", [])}
             done.reconfigured = any(c.get("idShort") == "Reconfigured" and c.get("value") == "true"
                                     for r in result.elements for c in r.get("value", []))
+            agent.state.update(state_of(result.elements))          # who holds it now, if that changed
         else:
             done.outcome = "failed"
             done.detail = "; ".join(t["text"] for e in result.elements for t in e.get("value", []) if isinstance(t, dict))

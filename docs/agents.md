@@ -71,11 +71,11 @@ and the conversation in the message's metadata). One conversation per step:
 
 | Message | From → to | Carries |
 | --- | --- | --- |
-| `callForProposal` | product agent → every resource agent | The step's required capability: the container of the product's Capability Description (meaning, values) |
+| `callForProposal` | product agent → every resource agent | The step's required capability: the container of the product's Capability Description (meaning, values); and the product's state (`State`: HeldBy, who has it in custody) |
 | `proposal` | resource agent → product agent | Its offer: the offered capability, the skill, whether a reconfiguration comes first, the skill's arguments (the required values mapped by meaning onto the skill's inputs) |
 | `refuseProposal` / `notUnderstood` | resource agent → product agent | Why not / a call without a required capability |
 | `acceptProposal` / `rejectProposal` | product agent → resource agents | The chosen offer |
-| `informConfirm` / `failure` | resource agent → product agent | The skill's results, or why it failed |
+| `informConfirm` / `failure` | resource agent → product agent | The skill's results, or why it failed; the product's new state if it changed (HeldBy, after Receiving or Releasing) |
 
 **Orders** (built 30 Oct, `lineagents.orders`), a small protocol of the lab's own in the same frame
 (VDI/VDE 2193-2 has no ordering):
@@ -105,6 +105,9 @@ proposal is binding (VDI/VDE 2193-2).
 
 ## 5. What is built (30 Oct)
 
+- Later on 30 Oct: custody (vocabulary 0.7): a shuttle receives a vial, only the shuttle that has it
+  transports it, it releases it at the end; all three are capabilities with constraints in the
+  shuttle's AAS, checked by any resource agent (`test_transport.py`). See section 6.
 - Later on 30 Oct: orders (the order agent, a product agent per unit, `POST /orders`), a module
   reserved by its proposal, and A2 (a step that needs a reconfiguration, done on FORTE); see sections
   4 and 7.
@@ -129,7 +132,7 @@ proposal is binding (VDI/VDE 2193-2).
 | --- | --- | --- |
 | ~~**One offer per capability**~~ | The derivation already wrote a container per realizing skill (`Filling_DoubleDose`); what was missing was a capability of its own for a new skill, so that a product can ask for it, and a described skill's steps that resolve (they did not: `described_skill` named the components after "Module") | **Done 30 Oct**: a skill written for a narrower capability (BottomUpFilling, a Filling; vocabulary 0.6) offers it |
 | ~~**The shuttles offer nothing**~~ | No transport bids | **Done 30 Oct**: `modreg/planar.py` writes the shuttle's offered Transporting (TargetX, TargetY, TargetRz over the table), realized by MoveToPosition |
-| **Where a product is** | The product agent has to know whom to ask to move it, and where to | **Kept by the product agent** (its carrier and its place, 30 Oct); later the product instance's AAS. Where it is loaded is not modelled yet: the first transport goes to any free shuttle |
+| **Where a product is** | The product agent has to know whom to ask to move it, and where to | **Custody (30 Oct, your decision: as generic as possible)**: who has the product is a state (HeldBy, Holding) that Receiving, Transporting and Releasing constrain in the resources' AASs; every call goes to every agent and the constraints decide. The product agent keeps its state (later the product instance's AAS). Loading as the step that starts it waits for the loading module's AAS |
 | ~~**The station of a module**~~ | The target of a transport | **Done 30 Oct**: `lineagents.aas.station`, the module's TransferPoint in the table's frame; the manager gives each agent its station, the module's proposal carries it |
 | ~~**Accept starts at once**~~ | The module would start before the product is there | **Done 30 Oct**: the product agent accepts the module's proposal only once the product is at its station (the proposal holds the module meanwhile) |
 | **One step at a time per module, no queue** | A busy module refuses (with `Busy`, and the product agent asks again: built 30 Oct) | Proposals with a time: when it is free |
