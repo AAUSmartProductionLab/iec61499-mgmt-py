@@ -49,11 +49,19 @@
 # needle rising with the liquid) is how the skill moves, which no
 # constraint on the state before and after says. TargetX, TargetY and
 # TargetRz: where Transporting carries a container to.
+#
+# 0.7 (30 Oct): custody, who has a container. A resource that carries
+# or holds a container (a shuttle, a gripper, a tray) has it in its
+# custody from Receiving to Releasing, and only the resource that has
+# it can transport it: Transporting needs Holding. Holding is the
+# container's HeldBy seen from a resource; Occupancy and Capacity say
+# how many it has and can have. Nothing here is about shuttles: a
+# product's agent asks every resource, and the constraints decide.
 #################################################################
 
 <https://smartproductionlab.aau.dk/semantics>
   rdf:type owl:Ontology ;
-  owl:versionInfo "0.6" ;
+  owl:versionInfo "0.7" ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://w3id.org/2025/pprl> ;
   rdfs:comment "Capabilities and capability properties of aseptic filling lines for vials, prefilled syringes and cartridges (AAU Smart Production Lab)." .
@@ -126,7 +134,18 @@ lab:Crimping rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:Auxiliary
   pprl:post [ pprl:onProperty lab:Capped ; pprl:expression "= true" ] .
 
 lab:Transporting rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
-  rdfs:label "Transporting" ; rdfs:comment "Carry a container on a shuttle of the planar table to a pose on the table (X, Y in mm, Rz in degrees, in the table's frame): from one module's transfer point to the next." .
+  rdfs:label "Transporting" ; rdfs:comment "Carry a container on a shuttle of the planar table to a pose on the table (X, Y in mm, Rz in degrees, in the table's frame): from one module's transfer point to the next. Only the resource that has the container in its custody carries it (0.7)." ;
+  pprl:pre [ pprl:onProperty lab:Holding ; pprl:expression "= true" ] .
+
+lab:Receiving rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Receiving" ; rdfs:comment "Take a container into custody: a shuttle that will carry it, a gripper that will hold it. From then on the resource has it until Releasing, and has room for that many fewer (0.7)." ;
+  pprl:pre  [ pprl:onProperty lab:Occupancy ; pprl:expression "< Capacity" ] ;
+  pprl:post [ pprl:onProperty lab:Holding ; pprl:expression "= true" ] .
+
+lab:Releasing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Releasing" ; rdfs:comment "Give up the custody of a container, once it is handed on or taken off (0.7)." ;
+  pprl:pre  [ pprl:onProperty lab:Holding ; pprl:expression "= true" ] ;
+  pprl:post [ pprl:onProperty lab:Holding ; pprl:expression "= false" ] .
 
 lab:Imaging rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
   rdfs:label "Imaging" ; rdfs:comment "Take an image of the container and judge it." ;
@@ -265,6 +284,25 @@ lab:FillWeight rdf:type owl:Class ; rdfs:subClassOf css:Property ;
 
 
 # Properties of the product: a process changes or checks them (0.2) ------------
+
+lab:HeldBy rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Held by" ; lab:valueType "string" ;
+  rdfs:comment "The resource that has the container in its custody (the idShort of its AAS), empty if none: the container's side of Holding (0.7)." .
+
+lab:Holding rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Holding" ; lab:valueType "boolean" ;
+  rdfs:comment "The resource has the container the step is for in its custody: it carries or holds it, or has agreed to receive it. The container's HeldBy names the resource (0.7)." ;
+  lab:characterizes lab:Transporting , lab:Receiving , lab:Releasing .
+
+lab:Occupancy rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Occupancy" ; lab:valueType "number" ;
+  rdfs:comment "How many containers the resource has in its custody now (0.7)." ;
+  lab:characterizes lab:Receiving .
+
+lab:Capacity rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Capacity" ; lab:valueType "number" ;
+  rdfs:comment "How many containers the resource can have in its custody at once: one for a shuttle (0.7)." ;
+  lab:characterizes lab:Receiving .
 
 lab:ContentVolume rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
   rdfs:label "Content volume" ; lab:valueType "number" ; lab:unit "mL" ;
