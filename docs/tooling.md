@@ -69,6 +69,7 @@ runtime/build-modules.ps1                                     # IDE validation a
 runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate # FORTE for the Pi (aarch64)
 runtime/package-runtime.ps1                                   # the Pi binary into runtime/bin/forte-aarch64 (+ checksum): commit both
 runtime/build-pi.ps1                                          # all of it for the Pi in one run (docs/forte-for-the-pi.md)
+runtime/make-kit.ps1                                          # a zip for building FORTE with one's own block types, without this repository
 ```
 
   The FORTE source is patched (`runtime/forte-patches/*.patch`, a stack applied in order;

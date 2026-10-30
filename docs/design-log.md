@@ -18,6 +18,18 @@ A running log of design considerations made while building, for writing the pape
 
 ## 30 Oct 2026
 
+- **A FORTE kit for others' block types: the lab's runtime plus theirs, from any 4diac project.**
+  *Journal* (the runtime can be extended by people outside the project).
+  - What: `runtime/make-kit.ps1` zips the build scripts, FBE configurations, FORTE patches and the
+    lab's exported modules; `build-project.ps1` exports any 4diac IDE project next to them and builds
+    FORTE for the Pi (or the PC). Without modgen's type manifest, a type whose header path FORTE has
+    already (a copied standard block) is not compiled again.
+  - Why: a FORTE runs only the types compiled into it, so one binary per Pi has to hold the lab's
+    modules and the newcomer's blocks; with the lab's exports in the kit, the newcomer's FORTE still
+    runs the module programs and can go on a lab Pi.
+  - Instead of: sending the whole repository (modgen, Python, the module specs), or a FORTE with
+    only the newcomer's types, which would break the lab module on the same Pi.
+
 - **Custody: a product and the resource that carries it are bound by capability constraints, not by
   a rule of the agents.** *Journal* (and the slides).
   - What: vocabulary 0.7. A resource that carries or holds a container has it in its custody from
