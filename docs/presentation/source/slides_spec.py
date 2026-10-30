@@ -13,7 +13,7 @@ P11 = "11-the-mapping-rules"
 P12 = "12-matching-a-missing-effect-replanning"
 P12B = "12b-inside-the-agent-of-a-module"
 P12C = "12c-inside-the-agent-of-a-product"
-P13 = "13-agents-on-the-line-modules-and-shuttles-bid"
+P13 = "13b-agents-on-the-line-every-agent-is-asked"
 MOD = "1 · MODELLING"
 RECONF = "2 · RECONFIGURATION"
 AGENTS = "3 · NEXT: AGENT-BASED ORCHESTRATION"
@@ -298,7 +298,7 @@ At the start its passive part: the product AAS (Production Sequence, Required Ca
 3. Recording and moving: the step bound to the module's skill in the process AAS, what was done to the vial recorded, and the agent of the shuttle that carries the vial asked to take it to the next module's station.""")
 
     # ---- slides 15 and 16 become one: agents on the line ------------------------------------------------------
-    s = Slide("Agents on the line: modules and shuttles bid", AGENTS)
+    s = Slide("Agents on the line: every agent is asked", AGENTS)
     steps = [(1, "call-for-proposals-filling"), (2, "proposal-filling"), (3, "call-for-proposals-transport"),
              (4, "proposal-transport"), (5, "accept-transport")]
     msgs = [f"{k}-{n}-{w}" for k, n in steps for w in ("card", "arrows")] + ["6-arrived-card", "7-accept-filling-card",
@@ -316,15 +316,16 @@ At the start its passive part: the product AAS (Production Sequence, Required Ca
                    ("path", L["product-agent-on-the-vial"], {"x1": dx, "y1": dy, "dur": 1500})])
     s.plain_click([("in", L["7-accept-filling-card"]), ("wipe", L["7-accept-filling-arrows"], {"dir": "left", "dur": 500})])
     s_agents = after("slide6.xml", s_inside2)
-    write(s_agents, s, """About 1.5 min, seven clicks. Built (30 Oct), tested with the modules and the shuttles simulated; on the line for the demo in January. Every vial ordered gets a product agent (P) that travels with it; every resource has a resource agent (R): each module, and each shuttle of the table, which bids for transport as a module bids for a step. They talk in the I4.0 language (VDI/VDE 2193): call for proposals, proposal or refuse, accept. One step at a time: here the vial's next step, Fill 2.0 mL, and the transport to it.
+    write(s_agents, s, """About 1.5 min, seven clicks. Built (30 Oct), tested with the modules and the shuttles simulated; on the line for the demo in January. Every vial ordered gets a product agent (P) that travels with it; every resource has a resource agent (R): each module, and each shuttle of the table. They talk in the I4.0 language (VDI/VDE 2193): call for proposals, proposal or refuse, accept or reject. The product agent does not know who can do what: every call goes to every resource agent, and whoever cannot, refuses. One step at a time: here the vial's first step, Fill 2.0 mL, and the transport to it.
 
-1. The vial's product agent calls for proposals for its next step, Fill 2.0 mL, to every module.
-2. Each module's agent checks it against its capabilities: only Filling can, and proposes Dispensing, now, and where a shuttle hands it the vial (its station, from the AASs). The proposal is binding: Filling holds itself for this vial. Stoppering, Capping and Inspection refuse.
-3. Now the transport: it calls for proposals to the agent of the shuttle the vial is on, Transporting to Filling's station. (The first time, every free shuttle is asked; the one chosen carries the vial to the end and bids for no other vial meanwhile.)
-4. Shuttle 3 proposes MoveToPosition, now.
-5. Accepted: shuttle 3 goes.
+1. The vial's product agent calls for proposals for Fill 2.0 mL: to every resource agent, the four modules and the five shuttles.
+2. Each agent checks the call against the capabilities in its AAS. Only Filling can: it proposes Dispensing, now, and where a shuttle hands it the vial (its station, from the AASs). The proposal is binding: Filling holds itself for this vial. The other modules and all the shuttles refuse.
+3. Now the transport, the same way: a call for proposals for Transporting to Filling's station, again to every resource agent.
+4. This time the modules refuse and the shuttles propose MoveToPosition; shuttle 3, with the vial on it, is the earliest.
+5. Shuttle 3 is accepted, the other shuttles are rejected. Shuttle 3 now carries the vial to the end, bids for no other vial, and for the vial's later steps it is the only one asked.
 6. It reports the vial at Filling's station.
 7. Only now the product agent accepts Filling's proposal: the vial is there, and the module's agent runs Dispensing: the next slide.""")
+
 
     # ---- after it: at the filling module -------------------------------------------------------------------
     s = motion_slide("At the filling module: its agent runs the skill", AGENTS, True)

@@ -1048,6 +1048,70 @@ pill(C.group("Booked: Filling"), FI[0] + 18, FI[1] - 52, 40, 30, "1", GOOD_FILL,
 arrow(A.group("accept to Filling"), [(MOVED[0] + 22, MOVED[1] - 10), (FI[0] - 20, FI[1] + 18)], GREEN, 2.5)
 page("13 Agents on the line: modules and shuttles bid", ln_xml, base13, ag, pa, *msg)
 
+# ==== 13b Every resource agent is asked: Filling bids for the step, the shuttles for the transport ========
+# As the product agent does it: each call goes to every resource agent (the first transport too); who cannot,
+# refuses. The line, the agents and the vial are page 13's.
+ALL = {**{name: (xy, 26) for name, xy in MOD.items()},
+       **{f"shuttle {n}": (xy, 20) for n, xy in {**SHUTTLES, 3: VS}.items()}}
+
+
+def toward(p, q, d):
+    """The point d short of q, coming from p."""
+    dx, dy = p[0] - q[0], p[1] - q[1]
+    n = (dx * dx + dy * dy) ** 0.5
+    return q[0] + dx * d / n, q[1] + dy * d / n
+
+
+def ray(node, to, color, dashed=False, back=False, frm=PA):
+    """An arrow between the product agent and a resource agent."""
+    xy, r = ALL[to]
+    pts = [toward(xy, frm, 24), toward(frm, xy, r)]
+    arrow(node.group(f"{'from' if back else 'to'} {to}"), pts[::-1] if back else pts, color, 2.5, dashed)
+
+
+def refuses(node, names):
+    for name in names:
+        (x, y), r = ALL[name]
+        badge(node.group(f"{name} refuses"), x + r + 6, y - r - 2, "✗", GREY, 12 if r < 26 else 14, 15)
+
+
+msg = []
+SH = [k for k in ALL if k.startswith("shuttle")]
+C, A = message(1, "call for proposals filling")
+card(C, CY(1), 100, "callForProposal", PURPLE, "order 17 → every resource agent: Fill 2.0 mL")
+for name in ALL:
+    ray(A, name, PURPLE, True)
+C, A = message(2, "proposal filling")
+card(C, CY(2), 100, "proposal ×1 · refuse ×8", BLUE,
+     f"Filling: Dispensing, now, at its station<br><font color=\"{GREY}\">the other modules, the shuttles: refuse</font>")
+ray(A, "Filling", BLUE, back=True)
+refuses(A, [k for k in ALL if k != "Filling"])
+pill(C.group("Held: Filling"), FI[0] + 18, FI[1] - 52, 40, 30, "1", "#FFFFFF", GREEN, 2, 18, INK, True)
+C, A = message(3, "call for proposals transport")
+card(C, CY(3), 100, "callForProposal", PURPLE, "order 17 → every resource agent:<br>Transporting to Filling's station")
+for name in ALL:
+    ray(A, name, PURPLE, True)
+C, A = message(4, "proposal transport")
+card(C, CY(4), 100, "proposal ×5 · refuse ×4", BLUE,
+     f"the shuttles: MoveToPosition; shuttle 3, the vial on it, first<br><font color=\"{GREY}\">the modules: refuse</font>")
+for name in SH:
+    ray(A, name, BLUE, back=True)
+refuses(A, MOD)
+C, A = message(5, "accept transport")
+card(C, CY(5), 100, "acceptProposal · rejectProposal ×4", GREEN, "order 17 → shuttle 3: go<br>the other shuttles: rejected")
+ray(A, "shuttle 3", GREEN)
+for name in SH:
+    if name != "shuttle 3":
+        ray(A, name, GREY, True)
+C, A = message(6, "arrived")
+card(C, CY(6), 100, "informConfirm", BLUE, "shuttle 3: at Filling's station")
+msg.remove(A)
+C, A = message(7, "accept filling")
+card(C, CY(7), 100, "acceptProposal", GREEN, "order 17 → Filling: the vial is there; it runs Dispensing (next slide)")
+pill(C.group("Booked: Filling"), FI[0] + 18, FI[1] - 52, 40, 30, "1", GOOD_FILL, GREEN, 2, 18, INK, True)
+ray(A, "Filling", GREEN, frm=MOVED)
+page("13b Agents on the line: every agent is asked", ln_xml, base13, ag, pa, *msg)
+
 # ==== Backup pages ==================================================================================
 tree_page("skill-hierarchies.drawio", 1, "Backup: from recipe to process")
 mp = Copied("mapping.drawio", 0, "figure")
