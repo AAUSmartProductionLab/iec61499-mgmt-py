@@ -17,7 +17,7 @@ $kit = Join-Path $Out 'forte-kit'
 if (Test-Path -LiteralPath $kit) { Remove-Item -Recurse -Force -LiteralPath $kit }
 New-Item -ItemType Directory -Force -Path $kit | Out-Null
 $files = 'build-project.ps1', 'build-runtime.ps1', 'validate.ps1', 'validate.xml', 'check-project.ps1',
-         'package-runtime.ps1'
+         'package-runtime.ps1', 'update-pi.ps1'
 foreach ($file in $files) { Copy-Item -LiteralPath (Join-Path $PSScriptRoot $file) -Destination $kit }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'kit\README.md'), (Join-Path $PSScriptRoot 'kit\install-pi.ps1') -Destination $kit
 # What goes to the Pi, with Unix line ends whatever the checkout has.

@@ -36,7 +36,9 @@ guide. They run `build-project.ps1 -Project <their project folder>`. It exports 
 to the lab's modules, cross-compiles, and packages `bin/forte-aarch64`. `install-pi.ps1 -Pi
 user@address` copies it with `install.sh`, the container files and the arm64 base images (in the
 kit; Docker needed on the PC that makes it, or `-NoImages`) to the Pi over SSH and installs it
-there. The Pi needs no internet unless Docker is missing. That FORTE still runs the lab's module
+there. The Pi needs no internet unless Docker is missing. For a Pi that already runs FORTE,
+`update-pi.ps1 -Pi user@address -Project <folder>` builds, sends the binary, rebuilds the container
+and waits until FORTE is up (the old binary stays as `~/forte/forte.old`). That FORTE still runs the lab's module
 programs. The same script works here:
 `runtime/build-project.ps1 -Project <folder>` adds a project to this repository's build (its
 export stays in `runtime/.cache/modules` until the next `build-modules.ps1`).

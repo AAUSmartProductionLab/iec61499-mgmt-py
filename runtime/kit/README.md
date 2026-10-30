@@ -99,9 +99,20 @@ when FORTE restarts, and it may move an axis.
 
 ### A Pi that already runs FORTE
 
-To update a Pi that has `~/forte` from an earlier install, replace the binary and rebuild the
-container. The image copies `forte` in when it is built, so `docker compose restart` alone would
-keep the old one:
+To update a Pi that has `~/forte` from an earlier install, one command builds and sends it:
+
+```powershell
+.\update-pi.ps1 -Pi pi@192.168.0.42 -Project C:\path\to\MyProject
+```
+
+It asks once before FORTE restarts (`-Force`: it does not ask). Then it builds as `build-project.ps1`
+does and copies `bin\forte-aarch64` to the Pi. There it checks the checksum, keeps the old binary as
+`~/forte/forte.old`, rebuilds the image and recreates the container. It then waits until FORTE says
+`FORTE is up and running`. `-SkipBuild` sends the last build without building again. If FORTE does
+not come up, the script prints the command that puts the old binary back.
+
+The same by hand. The image copies `forte` in when it is built, so `docker compose restart` alone
+would keep the old binary:
 
 ```powershell
 scp bin\forte-aarch64 pi@192.168.0.42:forte/forte
