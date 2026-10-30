@@ -21,6 +21,23 @@ It ends by saying whether `runtime/bin/forte-aarch64` changed. If it did: commit
 `runtime/bin/forte-aarch64.sha256`, then install it on the Pi (step 6). `-NoPackage` leaves
 `runtime/bin` alone; the new FORTE is then only at `runtime/fbe/build/modules-pi/output/bin/forte`.
 
+## Someone else's block types: the kit
+
+To let someone build FORTE with block types from their own 4diac project, without this
+repository:
+
+```powershell
+runtime/build-pi.ps1 -SkipValidate   # first, so the lab's exports in runtime/.cache/modules are current
+runtime/make-kit.ps1                 # runtime/dist/forte-kit.zip (-NoLabModules: without the lab's modules)
+```
+
+Send them `forte-kit.zip`; its README ([runtime/kit/README.md](../runtime/kit/README.md)) is their
+guide. They run `build-project.ps1 -Project <their project folder>`. It exports their project next
+to the lab's modules, cross-compiles, and packages `bin/forte-aarch64`, which `install.sh` (in the
+kit) puts on a Pi. That FORTE still runs the lab's module programs. The same script works here:
+`runtime/build-project.ps1 -Project <folder>` adds a project to this repository's build (its
+export stays in `runtime/.cache/modules` until the next `build-modules.ps1`).
+
 ## What is needed once
 
 1. **The 4diac IDE 3.3** for the headless export. Its path is the default of `-Ide` in
