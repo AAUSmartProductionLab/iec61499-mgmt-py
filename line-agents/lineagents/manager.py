@@ -29,7 +29,7 @@ import os
 from pathlib import Path
 import secrets
 
-from .aas import AasServer, is_module
+from .aas import SYSTEM_TYPE, AasServer, is_module, station
 from .execute import DmpExecutor, OpcUaExecutor, SimulatedExecutor, simulated_reconfigure
 from .orders import OrderAgent
 from .product import ProductAgent
@@ -181,11 +181,16 @@ class Manager:
         shells = await asyncio.to_thread(self.server.shells)
         changed = []
         present = set()
+        placed = []                                       # the AASs that place the modules on the table
         for shell in shells:
-            if not (shell.get("assetInformation", {}).get("assetType") or "").endswith("Resource/Module"):
+            kind = shell.get("assetInformation", {}).get("assetType") or ""
+            if kind.endswith(SYSTEM_TYPE):
+                placed.append(await asyncio.to_thread(self.server.environment, shell))
+            if not kind.endswith("Resource/Module"):
                 continue
             present.add(shell["id"])
             env = await asyncio.to_thread(self.server.environment, shell)
+            placed.append(env)
             if not is_module(env):
                 continue
             found = digest(env)
@@ -210,6 +215,8 @@ class Manager:
             self.seen.pop(gone, None)
             await agent.stop()
             changed.append(f"stopped {agent.jid}")
+        for agent in self.agents.values():                # where a shuttle hands each module the product
+            agent.station = station(placed, agent.name)
         for line in changed:
             print(f"agent manager: {line}", flush=True)
         return changed

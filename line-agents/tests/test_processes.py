@@ -1,7 +1,8 @@
 """The agents in two processes, so their messages go through the XMPP server: the manager in one, a
 product agent or whoever orders in another, with the lab stack on this computer (deploy/aas.py up: the
 AAS server with the example line published, and Prosody, lab-xmpp), the skills simulated. Orders over
-HTTP as well.
+HTTP as well. The example line's shuttles carry the vial between the modules (their transports are in
+the history beside the steps).
 
     python -m pytest line-agents/tests/test_processes.py
 """
@@ -92,9 +93,12 @@ def test_a_product_agent_in_another_process_orders_over_xmpp(manager, tmp_path):
                           capture_output=True, text=True, timeout=180, env={**os.environ, "PYTHONUTF8": "1"})
     found = next((l for l in done.stdout.splitlines() if l.startswith("HISTORY ")), None)
     assert found, done.stdout[-2000:] + done.stderr[-2000:]
-    assert json.loads(found[len("HISTORY "):]) == [
+    history = json.loads(found[len("HISTORY "):])
+    assert [h for h in history if h[0] != "Transporting"] == [
         ["Filling", "FillingModuleAAS", "done"], ["Stoppering", "StopperingModuleAAS", "done"],
-        ["Capping", "CappingModuleAAS", "done"], ["Inspection", "InspectionModuleAAS", "done"]]
+        ["Capping", "CappingModuleAAS", "done"], ["Inspection", "InspectionModuleAAS", "done"]], history
+    carried = [h for h in history if h[0] == "Transporting"]
+    assert carried and all(h[2] == "done" for h in carried) and len({h[1] for h in carried}) == 1, history
 
 
 CUSTOMER = """
@@ -166,8 +170,10 @@ def test_an_order_over_http(manager):
             break
         time.sleep(1)
     assert mine["done"], mine
-    assert [s["resource"] for s in mine["steps"]] == ["FillingModuleAAS", "StopperingModuleAAS",
-                                                      "CappingModuleAAS", "InspectionModuleAAS"]
+    assert [s["resource"] for s in mine["steps"] if s["step"] != "Transporting"] == [
+        "FillingModuleAAS", "StopperingModuleAAS", "CappingModuleAAS", "InspectionModuleAAS"]
+    assert {s["resource"] for s in mine["steps"] if s["step"] == "Transporting"} <= {
+        "PlanarShuttle1AAS", "PlanarShuttle2AAS", "PlanarShuttle3AAS"}
     request = urllib.request.Request(f"http://localhost:{http}/orders", json.dumps({"product": "NoSuchProduct"}).encode(),
                                      method="POST", headers={"Content-Type": "application/json"})
     with pytest.raises(urllib.error.HTTPError) as refused:
