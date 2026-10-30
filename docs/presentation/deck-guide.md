@@ -243,7 +243,19 @@ Filling's station, proposes MoveToPosition, is accepted and reports it there (th
 the product agent accepts Filling's proposal, the way into page 06. Each message has a `card` layer (it
 stays) and an `arrows` layer (it goes with the next message); "arrived" has no arrows. As the code does
 (`line-agents`, `test_transport.py`): the first time every free shuttle is asked, and the one chosen
-carries the vial to the end. `agents-and-shuttles.pptx` holds this slide and page 12c.
+carries the vial to the end. `agents-and-shuttles.pptx` holds this slide and page 12c. The deck now uses
+page 13b in its place; this page stays as the later steps' picture (only the vial's own shuttle asked).
+
+### 13b Agents on the line: every agent is asked (built 30 Oct, simulated)
+
+Page 13's line, agents and messages, as the product agent sends them on the vial's first step: both calls
+go to every resource agent, the four modules and the five shuttles. For Fill 2.0 mL only Filling proposes
+and the other eight refuse (✗); for Transporting to Filling's station the five shuttles propose and the
+four modules refuse. Shuttle 3, the vial on it, is accepted and the other shuttles rejected (grey dashed
+arrows); it reports the vial at Filling's station, and Filling's proposal is accepted. The refusals belong
+to the `arrows` layer, so they go with the next message; the held and booked marks are on the cards. In the
+deck as the slide "Agents on the line: every agent is asked"; `agents-every-agent-asked.pptx` holds it
+between pages 12c and the agents at the filling module.
 
 ### Backup pages (copied)
 
