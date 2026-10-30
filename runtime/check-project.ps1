@@ -1,7 +1,8 @@
 param(
     # A 4diac project folder (its name is also the .sys name), e.g. cell/control/FillingModule.
     [Parameter(Mandatory)] [string]$ProjectDir,
-    [string]$Ide = 'C:\Users\marti\Downloads\4diac-ide_3.2.1-win32.win32.x86_64\4diac-ide\4diac-idec.exe'
+    # The 4diac IDE 3.3; elsewhere set FORDIAC_IDE to its 4diac-idec.exe.
+    [string]$Ide = $(if ($env:FORDIAC_IDE) { $env:FORDIAC_IDE } else { 'C:\Users\marti\Downloads\4diac-ide_3.2.1-win32.win32.x86_64\4diac-ide\4diac-idec.exe' })
 )
 # Import a 4diac project headless and run the IDE's own checks: the type library (every type
 # loads and compiles; the IDE treats ST warnings as failures) and the system (connections, and
