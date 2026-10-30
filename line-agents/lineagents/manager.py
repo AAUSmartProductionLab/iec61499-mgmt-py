@@ -30,7 +30,7 @@ from pathlib import Path
 import secrets
 
 from .aas import AasServer, is_module
-from .execute import DmpExecutor, OpcUaExecutor, SimulatedExecutor
+from .execute import DmpExecutor, OpcUaExecutor, SimulatedExecutor, simulated_reconfigure
 from .orders import OrderAgent
 from .product import ProductAgent
 from .resource import ResourceAgent
@@ -77,6 +77,7 @@ class Manager:
                  every: float = 5.0, reconfigure: bool = True, mqtt: str | None = None, http: int | None = None):
         self.server, self.domain, self.port = AasServer(server), domain, port
         self.executor_for = executor_kind(executor, server)
+        self.simulated = executor == "simulated"          # then a reconfiguration is simulated too
         self.every, self.reconfigure, self.mqtt, self.http = every, reconfigure, mqtt, http
         self._poke: asyncio.Event | None = None
         self._events = None
@@ -196,7 +197,8 @@ class Manager:
                 jid = self.jid(shell["idShort"])
                 agent = ResourceAgent(jid, password(jid), env, self.executor_for,
                                       server=self.server.url if self.reconfigure else None,
-                                      management_host=self._host(env), port=self.port)
+                                      management_host=self._host(env), port=self.port,
+                                      reconfigurer=simulated_reconfigure if self.simulated else None)
                 await agent.start(auto_register=True)
                 self.agents[shell["id"]] = agent
                 changed.append(f"started {agent.jid}")

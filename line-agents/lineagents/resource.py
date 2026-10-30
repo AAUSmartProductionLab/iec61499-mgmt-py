@@ -10,14 +10,15 @@ carries out a step it refuses, saying it is busy, so that the product agent asks
 module does one step at a time.
 
 Carrying out: on acceptance, a skill that is only described is created first (``execute.reconfigure``,
-when the agent knows the AAS server and the module's management host), then the executor runs it,
-and the agent informs the product agent of the result or of the failure.
+when the agent knows the AAS server and the module's management host; or ``reconfigurer``, e.g.
+``execute.simulated_reconfigure``), then the executor runs it, and the agent informs the product agent
+of the result or of the failure.
 """
 from __future__ import annotations
 
 import asyncio
 import time
-from typing import Callable
+from typing import Awaitable, Callable
 
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
@@ -42,11 +43,12 @@ def refusal(reasons: list[str], busy: bool = False) -> list[dict]:
 
 class ResourceAgent(Agent):
     def __init__(self, jid: str, password: str, module: dict, executor_for: Callable[[dict], Executor],
-                 server: str | None = None, management_host: str | None = None, **options):
+                 server: str | None = None, management_host: str | None = None,
+                 reconfigurer: Callable[["ResourceAgent"], Awaitable[list[str]]] | None = None, **options):
         super().__init__(jid, password, **options)
         self.module, self.executor_for = module, executor_for
         self.executor = executor_for(module)
-        self.server, self.management_host = server, management_host
+        self.server, self.management_host, self.reconfigurer = server, management_host, reconfigurer
         self.proposed: dict[str, tuple[Offer, float]] = {}   # by conversation: proposed, not decided; until when
         self.busy = False
         self.log: list[str] = []
@@ -62,6 +64,19 @@ class ResourceAgent(Agent):
 
     def note(self, line: str) -> None:
         self.log.append(line)
+
+    async def reconfigure(self, skill: str) -> list[str]:
+        """Create on the module what its AAS describes and its program lacks (``skill`` among it), and
+        take the AAS as it is afterwards; what was done."""
+        if self.reconfigurer is not None:
+            return await self.reconfigurer(self)
+        if not (self.server and self.management_host):
+            raise Failed(f"{skill} is only described, and {self.name} cannot reconfigure its module")
+        done = await asyncio.to_thread(reconfigure, self.server, self.name, self.management_host)
+        self.module = await asyncio.to_thread(AasServer(self.server).environment,
+                                              self.module["assetAdministrationShells"][0]["id"])
+        self.executor = self.executor_for(self.module)
+        return done
 
     def reserved(self) -> bool:
         """A proposal waits for its decision (one whose decision is late no longer counts)."""
@@ -117,12 +132,8 @@ class Award(CyclicBehaviour):
         done: list[str] = []
         try:
             if not proposed.built:
-                if not (agent.server and agent.management_host):
-                    raise Failed(f"{proposed.skill} is only described, and {agent.name} cannot reconfigure its module")
-                done = await asyncio.to_thread(reconfigure, agent.server, agent.name, agent.management_host)
-                agent.module = await asyncio.to_thread(AasServer(agent.server).environment,
-                                                       agent.module["assetAdministrationShells"][0]["id"])
-                agent.executor = agent.executor_for(agent.module)
+                done = await agent.reconfigure(proposed.skill)
+                agent.note(f"reconfigured for {proposed.skill}: {'; '.join(done)}")
             result = await agent.executor.run(proposed, session=decision.conversation)
             values = [{"modelType": "Property", "idShort": k, "valueType": "xs:string", "value": str(v)}
                       for k, v in result.results.items()]

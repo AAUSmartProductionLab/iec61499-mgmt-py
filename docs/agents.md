@@ -105,6 +105,10 @@ proposal is binding (VDI/VDE 2193-2).
 
 ## 5. What is built (30 Oct)
 
+- Later on 30 Oct: orders (the order agent, a product agent per unit, `POST /orders`), a module
+  reserved by its proposal, and A2 (a step that needs a reconfiguration, done on FORTE); see sections
+  4 and 7.
+
 - `lineagents.i40`: the messages; `aas`: a product's steps from its Production Sequence, a module's
   offer for a required capability (meaning, values covered, the realizing skill, built or described,
   the arguments); `resource`: the bidding and the carrying out, a described skill created first with
@@ -123,7 +127,7 @@ proposal is binding (VDI/VDE 2193-2).
 
 | Gap | Why it matters | Proposal |
 | --- | --- | --- |
-| **One offer per capability**: `modreg`'s derivation merges two skills that realize the same capability (Dispensing, a described DoubleDose) into one container, the first skill's | A module cannot offer "Filling up to 10 mL now" and "Filling up to 20 mL after a reconfiguration" side by side, so no bid needs a reconfiguration | A container per realizing skill (the capability's name with the skill's), each with its range and its availability |
+| ~~**One offer per capability**~~ | The derivation already wrote a container per realizing skill (`Filling_DoubleDose`); what was missing was a capability of its own for a new skill, so that a product can ask for it, and a described skill's steps that resolve (they did not: `described_skill` named the components after "Module") | **Done 30 Oct**: a skill written for a narrower capability (BottomUpFilling, a Filling; vocabulary 0.6) offers it |
 | **The shuttles offer nothing**: their AASs have no Capability Description, although the vocabulary has Transporting realized by MoveToPosition | No transport bids | `modreg/planar.py` writes the shuttle's offered Transporting (target X, Y, Rz with the table's ranges), realized by MoveToPosition (your decision: section 8) |
 | **Where a product is**: nothing says which shuttle carries the product and where it stands | The product agent has to know whom to ask to move it, and where to | The product agent keeps it (an order's state); later the product instance's AAS |
 | **The station of a module**: the transfer point is in the module's AAS, the table's frame in the table's | The target of a transport | `example_line.stations` computes it from the AASs; move it into `lineagents.aas` |
@@ -136,7 +140,7 @@ proposal is binding (VDI/VDE 2193-2).
 | # | When | Work | Done when |
 | --- | --- | --- | --- |
 | A1 | Nov, after 18 Nov | Transport: the shuttles' Transporting offer (8.1), the station of a module from the AASs, the product agent asks for transport before each step (any free shuttle first, then the one carrying the product), accept books and a start message starts | The vial goes loading → filling → stoppering → unloading on the planar controller's simulation, and on the table |
-| A2 | Nov | Offers per skill (8.2), proposals that need a reconfiguration, the product agent preferring a built skill | A product that needs a described skill gets it created online by the module's agent and the step runs (on FORTE on the PC, then on the filling Pi) |
+| A2 | Nov | ~~Offers per skill (8.2), proposals that need a reconfiguration, the product agent preferring a built skill~~ **Built 30 Oct** on FORTE on the PC: the syringe asks for BottomUpFilling, the filling module's agent creates it online (`execute.rebuild`), records it and runs it (`test_agents_live.py`). Left: the same on the filling Pi; the example line's syringe asking for BottomUpFilling itself (now only in the tests: its process AAS binds Dispensing) | A product that needs a described skill gets it created online by the module's agent and the step runs (on FORTE on the PC, then on the filling Pi) |
 | A3 | Nov–Dec | Planned skills in a bid: a resource agent that has no skill for a required capability plans one (`modplan.compose`), describes it, and bids "after a reconfiguration" | The syringe's BottomUpFilling (the paper's scenario) planned by the filling module's agent for an order |
 | A4 | Dec | Deployment: the agents as a service of the lab's AAS stack (`deploy/aas`); ~~an XMPP server~~ (Prosody, built 30 Oct); ~~the manager started by the AAS server's events~~ (MQTT, built 30 Oct); ~~passwords not in files~~ (derived from a secret outside the repository) | Plug in the filling Pi: its agent is up within seconds; unplug: it goes |
 | A5 | Dec | ~~The DMP executor (invoke the Operation, follow the state in InfluxDB)~~ **Built 30 Oct** (`DmpExecutor`, `test_dmp_executor.py`: Dispensing through the AAS on FORTE, the weight from InfluxDB). Left: the series' names from the Variables submodel instead of the DMP's naming; chosen per module | The same order runs through the AAS |

@@ -7,15 +7,18 @@ whoever built it, with the helpers of the plan check (``modreg.plancheck``).
   capability it names: a capability container of the product's Capability Description (the
   capability, its meaning as a supplemental id, and the values the product needs in its property
   set). The container is what a call for proposals carries.
-- An **offer** is what a resource answers with: the offered capability of the same meaning whose
-  properties cover the required values, the skill that realizes it, whether that skill is built
-  (``Deployment``: it runs now) or only described (a reconfiguration creates it first), and the
-  skill's arguments: each input of its Start command given the required value of the same meaning.
+- An **offer** is what a resource answers with: the offered capability of the same meaning (or of
+  a narrower one: a module that fills bottom-up fills) whose properties cover the required values,
+  the skill that realizes it, whether that skill is built (``Deployment``: it runs now) or only
+  described (a reconfiguration creates it first), and the skill's arguments: each input of its Start
+  command given the required value of the same meaning. Of several, one of the same meaning before a
+  narrower one, and a built skill before one a reconfiguration creates.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 import base64
+import functools
 import json
 import urllib.parse
 import urllib.request
@@ -24,6 +27,21 @@ from modreg.plancheck import at, children, covers, number, resolve, semantic_ids
 
 MEANS = "https://smartproductionlab.aau.dk/semantics"
 MODULE_TYPE = "Resource/Module"          # the end of a module's assetType
+
+
+@functools.cache
+def _vocabulary():
+    from modplan.vocabulary import Vocabulary
+    return Vocabulary()
+
+
+def narrows(offered: str, wanted: str) -> bool:
+    """The capability ``offered`` is ``wanted`` or a narrower one (both meanings, IRIs)."""
+    if offered == wanted:
+        return True
+    if not (offered.startswith(MEANS) and wanted.startswith(MEANS)):
+        return False
+    return wanted.rsplit("/", 1)[-1] in _vocabulary().lineage(offered.rsplit("/", 1)[-1])
 
 
 def b64(identifier: str) -> str:
@@ -150,25 +168,29 @@ def offer(module: dict, required: dict) -> Offer | list[str]:
     name = shell_of(module)["idShort"]
     wanted = meanings(at(required, "Capability"))
     asked = required_values(required)
-    reasons = []
-    for capability_set in children(submodel(module, "CapabilityDescription")):
-        for container in children(capability_set):
-            if not wanted & meanings(at(container, "Capability")):
-                continue
-            given = {m: at(c, "Value") for c in children(at(container, "PropertySet"))
-                     for m in meanings(at(c, "Value"))}
-            missing = [f"{container['idShort']}: {meaning.rsplit('/', 1)[-1]} = {_shown(value)} is not offered"
-                       for meaning, value in asked.items()
-                       if meaning in given and (unit_of(given[meaning]) != unit_of(value) or not covers(given[meaning], value))]
-            if missing:
-                reasons += missing
-                continue
-            for relation in children(at(container, "CapabilityRelations")):
-                skill = resolve([module], relation.get("second"))
-                if skill is None:
-                    continue
-                return Offer(name, container["idShort"], skill["idShort"], _built(skill), _arguments(skill, asked))
+    reasons, found = [], []
+    containers = [c for capability_set in children(submodel(module, "CapabilityDescription")) for c in children(capability_set)]
+    for container in containers:
+        offered = meanings(at(container, "Capability"))
+        exact = bool(wanted & offered)
+        if not exact and not any(narrows(o, w) for o in offered for w in wanted):
+            continue
+        given = {m: at(c, "Value") for c in children(at(container, "PropertySet"))
+                 for m in meanings(at(c, "Value"))}
+        missing = [f"{container['idShort']}: {meaning.rsplit('/', 1)[-1]} = {_shown(value)} is not offered"
+                   for meaning, value in asked.items()
+                   if meaning in given and (unit_of(given[meaning]) != unit_of(value) or not covers(given[meaning], value))]
+        if missing:
+            reasons += missing
+            continue
+        skills = [s for r in children(at(container, "CapabilityRelations")) if (s := resolve([module], r.get("second")))]
+        if not skills:
             reasons.append(f"{container['idShort']}: no skill realizes it")
+            continue
+        found.append((not exact, not _built(skills[0]),
+                      Offer(name, container["idShort"], skills[0]["idShort"], _built(skills[0]), _arguments(skills[0], asked))))
+    if found:
+        return min(found, key=lambda f: f[:2])[2]
     return reasons or [f"{name} offers no capability of the meaning {', '.join(sorted(wanted)) or '(none)'}"]
 
 

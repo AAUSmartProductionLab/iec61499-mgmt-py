@@ -13,6 +13,9 @@ run it.
     OPC UA methods by the DMP, the module's and the skill's state read from the time series the DMP
     writes (InfluxDB): one way in for every client, every call in the module's log, slower;
   - ``SimulatedExecutor``: no module, the time a skill takes (tests, a demo without hardware).
+
+``simulated_reconfigure`` stands in for a reconfiguration with no module: the described skills are
+marked built in the agent's AAS.
 """
 from __future__ import annotations
 
@@ -46,22 +49,49 @@ class Result:
     reconfigured: list[str] = field(default_factory=list)    # what a reconfiguration did, if one ran
 
 
-def reconfigure(server: str, module_id_short: str, host: str, port: int = MANAGEMENT_PORT) -> list[str]:
-    """Create on the running module what its AAS on ``server`` describes and the program lacks, record
-    it and put the AAS back (blocking: run it in a thread)."""
+def rebuild(module: dict, components: list[dict], host: str, port: int = MANAGEMENT_PORT,
+            trigger: str = "agent") -> tuple[list[str], dict]:
+    """Create on the running module what its AAS (``module``, with its ``components``) describes and the
+    program lacks, and record it: what was done, and the module's AAS afterwards (the skill Built, with
+    its interface; its capabilities derived anew). Blocking: run it in a thread."""
     from iec61499_mgmt.protocol import Client
     from modsync.desired import read, reconfigure as online, record
-    from modsync.sources import load, store
-    module, components = load(server, module_id_short)
     with Client(host, port) as client:
         done, after = online(client, host, port, module, components)
         if done and done[0].startswith("the program is what"):
-            return done
-        recorded, _ = record(module, after, done, "agent", components)
-        done.append(f"recorded: {store(server, recorded, module)}")
+            return done, module
+        recorded, _ = record(module, after, done, trigger, components)
         # What the module offers now that the skill is built, read again with its interface.
         assert read(client, host, port, recorded, components).differences.empty
+    return done, recorded
+
+
+def reconfigure(server: str, module_id_short: str, host: str, port: int = MANAGEMENT_PORT) -> list[str]:
+    """``rebuild`` the module whose AAS is on ``server``, and put the AAS back (blocking)."""
+    from modsync.sources import load, store
+    module, components = load(server, module_id_short)
+    done, recorded = rebuild(module, components, host, port)
+    if recorded is not module:
+        done.append(f"recorded: {store(server, recorded, module)}")
     return done
+
+
+async def simulated_reconfigure(agent, seconds: float = 0.1) -> list[str]:
+    """A reconfiguration with no module: every skill described in the agent's AAS becomes Built."""
+    import copy
+    await asyncio.sleep(seconds)
+    agent.module = copy.deepcopy(agent.module)
+    skills = next(s for s in agent.module["submodels"] if s.get("idShort") == "Skills")
+    built = []
+    for skill in skills.get("submodelElements") or []:
+        if not isinstance(skill.get("value"), list):
+            continue
+        deployment = next((e for e in skill["value"] if e.get("idShort") == "Deployment"), None)
+        if deployment is not None and deployment.get("value") == "Described":
+            deployment["value"] = "Built"
+            built.append(skill["idShort"])
+    agent.executor = agent.executor_for(agent.module)
+    return [f"built {name} (simulated)" for name in built]
 
 
 class Executor:
