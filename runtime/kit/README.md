@@ -74,16 +74,20 @@ To run only the IDE's checks on a project (nothing is built):
 
 ## Put it on the Pi
 
-Copy the installer and the binary to the Pi and run the installer there. You need sudo on the Pi,
-and the Pi needs internet (it downloads Docker and the container definition):
+From this PC, over the local network, with the Pi's login and address (SSH enabled on the Pi):
 
 ```powershell
-ssh pi@<address> "mkdir -p forte-kit/bin"
-scp install.sh pi@<address>:forte-kit/
-scp bin\forte-aarch64 bin\forte-aarch64.sha256 pi@<address>:forte-kit/bin/
-ssh -t pi@<address> "bash forte-kit/install.sh"
-
+.\install-pi.ps1 -Pi pi@192.168.0.42
 ```
+
+It copies the installer, `bin\forte-aarch64` with its checksum, the container files (`pi\`) and the
+base images (`images\`) to `~/forte-kit` on the Pi with `scp`, and runs the installer there over
+`ssh`. Both come with Windows (the "OpenSSH Client" feature). They ask for the Pi's password,
+and the installer asks for the sudo password.
+
+Nothing is downloaded when the Pi already has Docker, as the lab's Pis do. On a fresh Pi,
+the installer still has to download Docker itself, so that Pi needs internet once. It also tries
+fake-hwclock, which keeps the clock across restarts; without internet it says so and goes on.
 
 The installer checks the checksum and runs FORTE in a Docker container that starts with the Pi.
 It also gives FORTE the GPIO lines and enables the two PWM channels; reboot once after the first
