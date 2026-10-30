@@ -47,7 +47,8 @@
 # container up. A capability that narrows another is offered only by a
 # skill written for it (pprl:writtenFor): what makes it narrower (the
 # needle rising with the liquid) is how the skill moves, which no
-# constraint on the state before and after says.
+# constraint on the state before and after says. TargetX, TargetY and
+# TargetRz: where Transporting carries a container to.
 #################################################################
 
 <https://smartproductionlab.aau.dk/semantics>
@@ -180,6 +181,21 @@ lab:GraspDiameter rdf:type owl:Class ; rdfs:subClassOf css:Property ;
   rdfs:label "Grasp diameter" ; lab:valueType "number" ; lab:unit "mm" ;
   rdfs:comment "Outer diameter of the container where it is held." ;
   lab:characterizes lab:Loading , lab:Filling , lab:Stoppering , lab:Capping , lab:Inspection , lab:Unloading .
+
+lab:TargetX rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Target X" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where a container is carried to along the planar table's X axis, in the table's frame." ;
+  lab:characterizes lab:Transporting .
+
+lab:TargetY rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Target Y" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where a container is carried to along the planar table's Y axis, in the table's frame." ;
+  lab:characterizes lab:Transporting .
+
+lab:TargetRz rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Target Rz" ; lab:valueType "number" ; lab:unit "deg" ;
+  rdfs:comment "How the shuttle carrying a container is turned about Z when it arrives, in the table's frame." ;
+  lab:characterizes lab:Transporting .
 
 lab:FillVolume rdf:type owl:Class ; rdfs:subClassOf css:Property ;
   rdfs:label "Fill volume" ; lab:valueType "number" ; lab:unit "mL" ;
