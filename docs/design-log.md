@@ -18,6 +18,23 @@ A running log of design considerations made while building, for writing the pape
 
 ## 30 Oct 2026
 
+- **Orders go to an order agent, which starts a product agent per unit; a module is reserved from its
+  proposal until the decision.** *Journal*.
+  - What: an `order` message (Product, Quantity) to `orders@<domain>`, or `POST /orders` on the
+    manager, starts one product agent per unit (`<product>-<n>`); the orderer gets `orderConfirm`
+    with the agents' JIDs, then from each product agent `informConfirm` with its steps (who did each,
+    the results) or `failure`, all in the order's conversation. A resource agent refuses a call with
+    `Busy` while it carries out a step or while one of its proposals waits for a decision; a product
+    agent that hears only busy refusals asks again a second later.
+  - Why: an agent per product is how product-driven control is described (the product carries its
+    own process through the line), and it lets three vials share four modules without a central
+    schedule. A binding proposal (VDI/VDE 2193-2) must reserve the module, or two products that both
+    accept the same module's proposals collide. Ordering is not in VDI/VDE 2193-2, so it is a small
+    protocol of the lab's own in the same frame.
+  - Instead of: one product agent per order walking the units one after another (no sharing of the
+    line); the manager as a plain REST service only (orders could not come from another agent);
+    refusing a busy module's call like any other (the product would end with "nobody").
+
 - **The line's agents: SPADE on the server, VDI/VDE 2193 over XMPP, an agent per module started by a
   manager that watches the AAS server.** *Journal*.
   - What: `line-agents` (`lineagents`): a resource agent per module bids for one step at a time with

@@ -4,8 +4,10 @@ the steps it wins.
 Bidding: a call for proposals carries a required capability (a container of the product's Capability
 Description). The agent answers with its module's offer (``aas.offer``: the offered capability of
 that meaning whose properties cover the values, the skill that realizes it, whether the skill is
-built or only described, its arguments), or refuses with the reasons. While it carries out a step it
-refuses: a module does one step at a time.
+built or only described, its arguments), or refuses with the reasons. A proposal is binding (VDI/VDE
+2193-2): from the proposal until the product agent decides (or the decision is late) and while it
+carries out a step it refuses, saying it is busy, so that the product agent asks again later: a
+module does one step at a time.
 
 Carrying out: on acceptance, a skill that is only described is created first (``execute.reconfigure``,
 when the agent knows the AAS server and the module's management host), then the executor runs it,
@@ -14,6 +16,7 @@ and the agent informs the product agent of the result or of the failure.
 from __future__ import annotations
 
 import asyncio
+import time
 from typing import Callable
 
 from spade.agent import Agent
@@ -25,6 +28,16 @@ from .aas import AasServer, Offer, offer
 from .execute import Executor, Failed, reconfigure
 
 ROLE = i40.PROVIDER
+DECISION_SECONDS = 10.0          # how long after the call's replyBy a proposal waits for its decision
+
+
+def refusal(reasons: list[str], busy: bool = False) -> list[dict]:
+    """The interaction elements of a refusal: why, and whether only because the module is busy."""
+    found = [{"modelType": "MultiLanguageProperty", "idShort": "Reason",
+              "value": [{"language": "en", "text": "; ".join(reasons)[:500]}]}]
+    if busy:
+        found.append({"modelType": "Property", "idShort": "Busy", "valueType": "xs:boolean", "value": "true"})
+    return found
 
 
 class ResourceAgent(Agent):
@@ -34,7 +47,7 @@ class ResourceAgent(Agent):
         self.module, self.executor_for = module, executor_for
         self.executor = executor_for(module)
         self.server, self.management_host = server, management_host
-        self.proposed: dict[str, Offer] = {}       # by conversation: what was proposed and not yet decided
+        self.proposed: dict[str, tuple[Offer, float]] = {}   # by conversation: proposed, not decided; until when
         self.busy = False
         self.log: list[str] = []
 
@@ -50,6 +63,13 @@ class ResourceAgent(Agent):
     def note(self, line: str) -> None:
         self.log.append(line)
 
+    def reserved(self) -> bool:
+        """A proposal waits for its decision (one whose decision is late no longer counts)."""
+        now = time.time()
+        for conversation in [c for c, (_, until) in self.proposed.items() if until < now]:
+            del self.proposed[conversation]
+        return bool(self.proposed)
+
 
 class Bidding(CyclicBehaviour):
     async def run(self) -> None:
@@ -64,15 +84,15 @@ class Bidding(CyclicBehaviour):
             await self.send(call.answer(i40.NOT_UNDERSTOOD, [], ROLE).to_spade())
             return
         found = offer(agent.module, call.elements[0])
-        if agent.busy and isinstance(found, Offer):
-            found = [f"{agent.name} is carrying out another step"]
-        if isinstance(found, Offer):
-            agent.proposed[call.conversation] = found
+        if isinstance(found, Offer) and (agent.busy or agent.reserved()):
+            answer = call.answer(i40.REFUSE, refusal([f"{agent.name} is busy with another step"], busy=True), ROLE)
+        elif isinstance(found, Offer):
+            until = (call.reply_by / 1000 if call.reply_by else time.time()) + DECISION_SECONDS
+            agent.proposed[call.conversation] = (found, until)
             answer = call.answer(i40.PROPOSAL, [found.element()], ROLE)
             agent.note(f"proposed {found.skill} for {call.conversation}")
         else:
-            answer = call.answer(i40.REFUSE, [{"modelType": "MultiLanguageProperty", "idShort": "Reason",
-                                                "value": [{"language": "en", "text": "; ".join(found)[:500]}]}], ROLE)
+            answer = call.answer(i40.REFUSE, refusal(found), ROLE)
         await self.send(answer.to_spade())
 
 
@@ -83,8 +103,11 @@ class Award(CyclicBehaviour):
             return
         decision = i40.I40Message.from_spade(message)
         agent: ResourceAgent = self.agent
-        proposed = agent.proposed.pop(decision.conversation, None)
-        if decision.type == i40.REJECT or proposed is None:
+        proposed, _ = agent.proposed.pop(decision.conversation, (None, 0.0))
+        if decision.type == i40.REJECT:
+            return
+        if proposed is None:                 # accepted after the proposal lapsed
+            await self.send(decision.answer(i40.FAILED, refusal([f"{agent.name}'s proposal had lapsed"]), ROLE).to_spade())
             return
         agent.busy = True
         asyncio.get_running_loop().create_task(self.carry_out(decision, proposed))

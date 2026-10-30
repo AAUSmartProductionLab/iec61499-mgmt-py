@@ -1,13 +1,15 @@
 """python -m lineagents: the line's agents.
 
     python -m lineagents --aas http://localhost:8081 --embedded                 # a resource agent per module
-    python -m lineagents --aas http://localhost:8081 --embedded --order Vial2mLAAS   # ... and one order
-    python -m lineagents --aas http://localhost:8081 --mqtt localhost:1883     # the lab stack: Prosody, the AAS events
+    python -m lineagents --aas http://localhost:8081 --embedded --order Vial2mLAAS:3   # ... and three vials
+    python -m lineagents --aas http://localhost:8081 --mqtt localhost:1883 --http 8095   # the lab stack
 
 The manager starts a resource agent for every module the AAS server holds and keeps them in step with
-it (lineagents.manager). ``--embedded`` runs SPADE's own XMPP server in this process. Skills run on
-the modules over OPC UA (``--executor opcua``), through the AAS server and the DMP (``--executor dmp``),
-or are only simulated (``--executor simulated``).
+it, and the order agent, which starts a product agent for every product ordered (lineagents.manager,
+lineagents.orders). ``--embedded`` runs SPADE's own XMPP server in this process. Skills run on the
+modules over OPC UA (``--executor opcua``), through the AAS server and the DMP (``--executor dmp``), or
+are only simulated (``--executor simulated``). ``--http``: orders over HTTP as well (``POST /orders``
+``{"product": "Vial2mLAAS", "quantity": 3}``, ``GET /orders``).
 """
 from __future__ import annotations
 
@@ -21,11 +23,16 @@ from .xmpp import embedded_server, run
 
 async def main_async(args) -> int:
     async def go(port: int) -> int:
-        manager = Manager(args.aas, args.xmpp_domain, port, args.executor, args.every, not args.no_reconfigure, args.mqtt)
+        manager = Manager(args.aas, args.xmpp_domain, port, args.executor, args.every, not args.no_reconfigure,
+                          args.mqtt, args.http)
         await manager.start()
-        print(f"agents: {', '.join(manager.resources()) or 'no module yet'}; watching {args.aas}", flush=True)
+        print(f"agents: {', '.join(manager.resources()) or 'no module yet'}; orders to {manager.taker.jid}"
+              f"{f' and http://localhost:{args.http}/orders' if args.http else ''}; watching {args.aas}", flush=True)
         try:
-            orders = [await manager.order(product) for product in args.order]
+            orders = []
+            for asked in args.order:
+                product, _, quantity = asked.partition(":")
+                orders += await manager.place(product, int(quantity or 1))
             for order in orders:
                 await order.finished.wait()
                 print(f"{order.jid}:", flush=True)
@@ -59,7 +66,8 @@ def main(argv=None) -> int:
     parser.add_argument("--mqtt", help="the broker the AAS server publishes its events to (host:port): an agent starts "
                                        "as soon as its module's AAS is published")
     parser.add_argument("--no-reconfigure", action="store_true", help="never create a described skill on a module")
-    parser.add_argument("--order", nargs="*", default=[], help="products to order once the agents run (AAS idShort)")
+    parser.add_argument("--order", nargs="*", default=[], help="products to order once the agents run: AAS idShort[:quantity]")
+    parser.add_argument("--http", type=int, help="take orders over HTTP on this port as well (POST /orders, GET /orders)")
     parser.add_argument("--stay", action="store_true", help="keep running after the orders")
     args = parser.parse_args(argv)
     try:
