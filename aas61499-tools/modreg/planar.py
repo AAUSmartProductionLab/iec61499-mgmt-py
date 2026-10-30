@@ -8,7 +8,9 @@ describes a FORTE module, from a module spec made here:
 - ``PlanarShuttle<N>AAS`` per xbot, a module of its own as in the controller (it is occupied, reset
   and started on its own). The shuttle is the xbot: the skill MoveToPosition(X, Y, Rz) in mm and
   degrees is its own, not a component's (no AAS of the xbot apart from the shuttle's); where the
-  xbot is, is data (Equipment/Xbot/X, Y, Rz).
+  xbot is, is data (Equipment/Xbot/X, Y, Rz). It offers Transporting (its Capability Description),
+  realized by MoveToPosition, to any pose on the table: its parameters mean TargetX, TargetY and
+  TargetRz, so that the lab's agents bid with the shuttle as with a module.
 - ``PlanarTableAAS``, the table: its own commands (its Reset, Start, Stop, Abort and Clear reach the
   shuttles), whether the PMC is connected, and in its Hierarchical Structures the shuttles (each
   found by its asset id) and the flyways (co-managed, meaning Flyway). Its coordinates (ARSO 0.13)
@@ -40,7 +42,9 @@ from modgen.spec import Location, ModuleSpec, Parameter, Skill
 from . import model
 from aas_model.submodel_templates.arso import skills as arso
 from aas_model.submodel_templates.coordinates import Coordinates
-from .profile import Describer, coordinate, coordinate_ref, meaning, prop, record_field_ref
+from .derive import Offer, Property
+from .profile import (Describer, capability_description, coordinate, coordinate_ref, identity, meaning, prop,
+                      record_field_ref)
 
 NAMESPACE = "urn:aau:smartproductionlab:planar"
 TABLE = "PlanarTable"
@@ -99,7 +103,8 @@ def shuttle_spec(n: int) -> ModuleSpec:
         description="Move the shuttle to a pose on the table (in the table's frame); the controller finds the way "
                     "past the other shuttles, and the skill succeeds when the xbot has arrived",
         equipment="Xbot", command="Move",
-        parameters={name: Parameter(unit=unit, minimum=low, maximum=high, default=0.0, description=about)
+        parameters={name: Parameter(unit=unit, minimum=low, maximum=high, default=0.0, description=about,
+                                    meaning=f"Target{name}")
                     for name, (unit, low, high, about) in POSE.items()},
         results={name: name for name in POSE})
     return spec(shuttle(n), {"Xbot": {"kind": "PlanarXbot", "description": f"Xbot {n}: a mover of the planar table",
@@ -117,6 +122,7 @@ class PlanarDescriber(Describer):
 
     def __init__(self, spec: ModuleSpec, table: Table, designation: str):
         super().__init__(spec, "controller", None, None, None, table.endpoint)
+        self.table = table
         # The shuttle is its xbot, and the table its PMC: their skills are their own, not a component's.
         self.components = []
         self.namespace = table.namespace
@@ -137,6 +143,19 @@ class PlanarDescriber(Describer):
                 if variable.id_short in POSE:
                     variable.id_short = f"Reached{variable.id_short}"
         return made
+
+    def capabilities(self) -> model.ModuleCapabilityDescription | None:
+        """A shuttle offers Transporting, realized by MoveToPosition, to any pose on the table (no
+        program to derive it from: it is the controller's)."""
+        if "MoveToPosition" not in self.spec.skills:
+            return None
+        reach = {"X": (0.0, self.table.columns * self.table.flyway), "Y": (0.0, self.table.rows * self.table.flyway),
+                 "Rz": POSE["Rz"][1:3]}
+        skills = f"{identity(self.spec)[1]}/submodels/Skills"
+        offer = Offer(meaning("Transporting"), f"{skills}/MoveToPosition", True,
+                      [Property(meaning(f"Target{name}"), POSE[name][0], str(low), str(high)) for name, (low, high) in reach.items()],
+                      [("Submodel", skills), ("SubmodelElementCollection", "MoveToPosition")])
+        return capability_description([offer], {})
 
     def errors(self, held: arso.Errors) -> None:
         super().errors(held)
