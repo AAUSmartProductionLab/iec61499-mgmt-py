@@ -40,6 +40,7 @@ repository. In short:
 | `deploy/` | The Pi: FORTE in Docker, `pi.py` (install, module, log); the lab's AAS stack on this PC: BaSyx, the DMP, InfluxDB (`aas/compose.yaml`, `aas.py`) |
 | `cell/` | Module specs, the generated projects (`cell/control/`), simulator, the example line's AASs |
 | `aas-model/`, `aas-camel-dmp/`, `iec61499-opcua-hmi/`, `basyx-aas-web-ui/`, `planar-controller/` | Submodules: the lab's pydantic AAS model; the DMP that runs an AAS's mappings (Operations to OPC UA methods, values to InfluxDB); the HMI with `modlink`; the BaSyx web UI fork with the process planner and the skill editor; the planar table's controller (Python, OPC UA like a module) |
+| `line-agents/` | `lineagents`: the line's agents (SPADE, XMPP, VDI/VDE 2193): resource agents per module, product agents per order, the manager that starts them from the AAS server ([agents.md](agents.md)) |
 | `ontology/`, `docs/` | Ontologies (ARSO and others); working documents |
 
 The documents in `docs/`: [tooling.md](tooling.md) (every tool, command and check),
@@ -192,6 +193,12 @@ the IEC 61499 module architecture that makes skills, and updating a running modu
 
 If time runs short, cut C (clients), E4 and E5, then B3 on real hardware (keep the Pi with
 simulated IO), then A3. Not to be cut: A1, A2, B1, B2.
+
+**After the paper: the agents and the demo in January** ([agents.md](agents.md), started 30 Oct, with
+the literature in [agents-literature.md](agents-literature.md)). Built: discovery (FORTE announces itself,
+`modreg serve --discover`), resource and product agents bidding in the I4.0 language, started by the AAS
+server's events, skills run over OPC UA or through the DMP, Prosody in the lab stack. Next: transport by
+the shuttles and offers per skill (decisions 8.1 and 8.2 there).
 
 **Waiting for the user** (do not decide these yourself): the go for the two Pis above; the eleven open
 decisions of [state-and-parameters.md](state-and-parameters.md); how the `arso-submodels` branch

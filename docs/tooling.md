@@ -269,6 +269,22 @@ python -m modreg manifest filling --target pi --out manifest.json               
 server. **The lab's AAS server is never published to without the user's go**: the same ids would
 overwrite the shells the lab's stations use.
 
+## 6b. The agents (lineagents)
+
+```powershell
+python -m pip install -e ".[agents]"                                  # SPADE, paho-mqtt
+python deploy/aas.py up                                               # the lab stack, with Prosody (lab-xmpp) and Mosquitto
+python -m lineagents --aas http://localhost:8081 --mqtt localhost:1883                     # an agent per module, started on the AAS server's events
+python -m lineagents --aas http://localhost:8081 --mqtt localhost:1883 --order Vial2mLAAS  # ... and one order
+python -m lineagents --aas http://localhost:8081 --embedded --executor simulated --order Vial2mLAAS   # no stack's XMPP, no modules
+python -m pytest line-agents/tests --module-forte-exe runtime/fbe/build/modules-win/forte/build/forte/forte.exe
+```
+
+The agents' XMPP passwords come from `LINEAGENTS_SECRET`, else from `~/.lineagents-secret` (made once,
+outside the repository). After changing the secret, Prosody's accounts no longer match: remove the
+volume `lab-aas_prosody-data`. `--executor dmp` runs skills through the AAS server and the DMP (the
+InfluxDB token from `deploy/aas/.env`). The design and plan: [agents.md](agents.md).
+
 ## 7. Planning new skills (modplan)
 
 `modplan` (in `aas61499-tools/`, the `planning` extra: GTPyhop) reads a module's AAS and plans new
