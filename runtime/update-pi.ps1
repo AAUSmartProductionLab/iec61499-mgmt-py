@@ -51,10 +51,14 @@ $ready = 'FORTE is up and running'
 $remote = @(
     "cd $Folder || exit 2",
     "echo '$hash  forte.new' | sha256sum -c --quiet || exit 3",
+    # scp from Windows drops the execute bit, and the image keeps the file's mode.
+    'chmod +x forte.new',
     '{ [ ! -f forte ] || mv -f forte forte.old; } && mv forte.new forte',
     'if docker info >/dev/null 2>&1; then D=docker; else D=''sudo docker''; fi',
     'echo Rebuilding the image and starting FORTE',
-    '$D compose up -d --build --force-recreate forte || exit 4',
+    # Docker's progress goes to a file, shown only when something fails.
+    '$D compose build -q forte >compose.log 2>&1 || { cat compose.log; exit 4; }',
+    '$D compose up -d --force-recreate forte >compose.log 2>&1 || { cat compose.log; exit 4; }',
     "for i in `$(seq 1 30); do `$D compose logs forte 2>&1 | grep -q '$ready' && break; sleep 1; done",
     '$D compose logs --tail 15 forte',
     "`$D compose logs forte 2>&1 | grep -q '$ready' || exit 5"
