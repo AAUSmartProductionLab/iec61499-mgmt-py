@@ -5,7 +5,9 @@ param(
     # Config name (fbe/configurations/<name>.txt) or path below it (e.g. pi/modules-pi).
     [string]$Config = 'modules-win',
     # 4diac FORTE release built against; must match the IDE that exports the types.
-    [string]$ForteTag = '3.3.0'
+    [string]$ForteTag = '3.3.0',
+    # Only fetch and patch the FORTE source (build-project.ps1 compares exports against it).
+    [switch]$FetchOnly
 )
 # Builds FORTE only, from the exports build-modules.ps1 validated and wrote.
 $ErrorActionPreference = 'Stop'
@@ -13,7 +15,10 @@ $root = Join-Path $PSScriptRoot 'fbe'
 # The FBE builds $root/4diac-forte when it exists (instead of its own bundled FORTE).
 $forte = Join-Path $root '4diac-forte'
 if (-not (Test-Path (Join-Path $forte 'CMakeLists.txt'))) {
-    & git clone --depth 1 --branch $ForteTag https://github.com/eclipse-4diac/4diac-forte.git $forte
+    # git reports progress on stderr, which Windows PowerShell 5.1 turns into errors under 'Stop'.
+    $ErrorActionPreference = 'Continue'
+    & git -c advice.detachedHead=false clone -q --depth 1 --branch $ForteTag https://github.com/eclipse-4diac/4diac-forte.git $forte
+    $ErrorActionPreference = 'Stop'
     if ($LASTEXITCODE -ne 0) { throw "Could not fetch 4diac FORTE $ForteTag" }
 }
 $have = (& git -C $forte describe --tags --exact-match 2>$null)
@@ -35,6 +40,7 @@ foreach ($patch in $patches[($applied + 1)..($patches.Count - 1)]) {
     "Applied $($patch.Name)"
 }
 $ErrorActionPreference = 'Stop'
+if ($FetchOnly) { return }
 Push-Location $root
 try {
     # Out-of-tree FBE build: configurations/ and build/ live in $root. Call the shell script
