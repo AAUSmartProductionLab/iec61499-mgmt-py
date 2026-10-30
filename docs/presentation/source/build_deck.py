@@ -1048,11 +1048,14 @@ pill(C.group("Booked: Filling"), FI[0] + 18, FI[1] - 52, 40, 30, "1", GOOD_FILL,
 arrow(A.group("accept to Filling"), [(MOVED[0] + 22, MOVED[1] - 10), (FI[0] - 20, FI[1] + 18)], GREEN, 2.5)
 page("13 Agents on the line: modules and shuttles bid", ln_xml, base13, ag, pa, *msg)
 
-# ==== 13b Every resource agent is asked: Filling bids for the step, the shuttles for the transport ========
-# As the product agent does it: each call goes to every resource agent (the first transport too); who cannot,
-# refuses. The line, the agents and the vial are page 13's.
+# ==== 13b Every resource agent is asked: custody decides who carries the vial ==========================
+# As the product agent does it: each call goes to every resource agent, and the constraints of the
+# capabilities in their AASs decide who proposes (vocabulary 0.7, custody): Receiving needs room
+# (Occupancy < Capacity), Transporting needs Holding. The line, the agents and the vial are page 13's.
 ALL = {**{name: (xy, 26) for name, xy in MOD.items()},
        **{f"shuttle {n}": (xy, 20) for n, xy in {**SHUTTLES, 3: VS}.items()}}
+SH = [k for k in ALL if k.startswith("shuttle")]
+CY2 = lambda n: 66 + (n - 1) * 82
 
 
 def toward(p, q, d):
@@ -1072,42 +1075,58 @@ def ray(node, to, color, dashed=False, back=False, frm=PA):
 def refuses(node, names):
     for name in names:
         (x, y), r = ALL[name]
-        badge(node.group(f"{name} refuses"), x + r + 6, y - r - 2, "✗", GREY, 12 if r < 26 else 14, 15)
+        dx = r + 6 if name.startswith("shuttle") else -(r + 6)       # a module's left: its held mark is right
+        badge(node.group(f"{name} refuses"), x + dx, y - r - 2, "✗", GREY, 12 if r < 26 else 14, 15)
+
+
+def small_card(node, n, head, color, body):
+    g = node.group(f"Message: {head}")
+    rect(g, CARD_X, CY2(n), CARD_W, 80, "#FFFFFF", color, 2.5, 12)
+    text(g, CARD_X + 18, CY2(n) + 2, CARD_W - 36, 26, head, 20, color, True)
+    text(g, CARD_X + 18, CY2(n) + 28, CARD_W - 36, 48, body, 16, INK, valign="top")
+
+
+def call_all(n, title, body):
+    C, A = message(n, title)
+    small_card(C, n, "callForProposal", PURPLE, body)
+    for name in ALL:
+        ray(A, name, PURPLE, True)
+    return C, A
 
 
 msg = []
-SH = [k for k in ALL if k.startswith("shuttle")]
-C, A = message(1, "call for proposals filling")
-card(C, CY(1), 100, "callForProposal", PURPLE, "order 17 → every resource agent: Fill 2.0 mL")
-for name in ALL:
-    ray(A, name, PURPLE, True)
+grey = lambda t: f"<font color=\"{GREY}\">{t}</font>"
+call_all(1, "call for proposals filling", "order 17 → every resource agent: Fill 2.0 mL")
 C, A = message(2, "proposal filling")
-card(C, CY(2), 100, "proposal ×1 · refuse ×8", BLUE,
-     f"Filling: Dispensing, now, at its station<br><font color=\"{GREY}\">the other modules, the shuttles: refuse</font>")
+small_card(C, 2, "proposal ×1 · refuse ×8", BLUE, f"Filling: Dispensing, now, at its station<br>{grey('the other modules, the shuttles: refuse')}")
 ray(A, "Filling", BLUE, back=True)
 refuses(A, [k for k in ALL if k != "Filling"])
 pill(C.group("Held: Filling"), FI[0] + 18, FI[1] - 52, 40, 30, "1", "#FFFFFF", GREEN, 2, 18, INK, True)
-C, A = message(3, "call for proposals transport")
-card(C, CY(3), 100, "callForProposal", PURPLE, "order 17 → every resource agent:<br>Transporting to Filling's station")
-for name in ALL:
-    ray(A, name, PURPLE, True)
-C, A = message(4, "proposal transport")
-card(C, CY(4), 100, "proposal ×5 · refuse ×4", BLUE,
-     f"the shuttles: MoveToPosition; shuttle 3, the vial on it, first<br><font color=\"{GREY}\">the modules: refuse</font>")
+call_all(3, "call for proposals receiving", f"order 17 → every resource agent: Receiving<br>{grey('nobody holds the vial yet')}")
+C, A = message(4, "proposal receiving")
+small_card(C, 4, "proposal ×5 · refuse ×4", BLUE, f"the shuttles: room for it (Occupancy 0 &lt; Capacity 1)<br>{grey('the modules: no Receiving to offer')}")
 for name in SH:
     ray(A, name, BLUE, back=True)
 refuses(A, MOD)
-C, A = message(5, "accept transport")
-card(C, CY(5), 100, "acceptProposal · rejectProposal ×4", GREEN, "order 17 → shuttle 3: go<br>the other shuttles: rejected")
+C, A = message(5, "accept receiving")
+small_card(C, 5, "acceptProposal · rejectProposal ×4", GREEN, f"shuttle 3 holds the vial from now on<br>{grey('the other shuttles: rejected')}")
 ray(A, "shuttle 3", GREEN)
 for name in SH:
     if name != "shuttle 3":
         ray(A, name, GREY, True)
-C, A = message(6, "arrived")
-card(C, CY(6), 100, "informConfirm", BLUE, "shuttle 3: at Filling's station")
+call_all(6, "call for proposals transport", "order 17 → every resource agent: Transporting to Filling's station")
+C, A = message(7, "proposal transport")
+small_card(C, 7, "proposal ×1 · refuse ×8", BLUE, f"shuttle 3: MoveToPosition (Holding = true)<br>{grey('the others: Holding = false, or no Transporting')}")
+ray(A, "shuttle 3", BLUE, back=True)
+refuses(A, [k for k in ALL if k != "shuttle 3"])
+C, A = message(8, "accept transport")
+small_card(C, 8, "acceptProposal", GREEN, "order 17 → shuttle 3: go")
+ray(A, "shuttle 3", GREEN)
+C, A = message(9, "arrived")
+small_card(C, 9, "informConfirm", BLUE, "shuttle 3: at Filling's station")
 msg.remove(A)
-C, A = message(7, "accept filling")
-card(C, CY(7), 100, "acceptProposal", GREEN, "order 17 → Filling: the vial is there; it runs Dispensing (next slide)")
+C, A = message(10, "accept filling")
+small_card(C, 10, "acceptProposal", GREEN, "order 17 → Filling: the vial is there; it runs Dispensing (next slide)")
 pill(C.group("Booked: Filling"), FI[0] + 18, FI[1] - 52, 40, 30, "1", GOOD_FILL, GREEN, 2, 18, INK, True)
 ray(A, "Filling", GREEN, frm=MOVED)
 page("13b Agents on the line: every agent is asked", ln_xml, base13, ag, pa, *msg)

@@ -299,10 +299,11 @@ At the start its passive part: the product AAS (Production Sequence, Required Ca
 
     # ---- slides 15 and 16 become one: agents on the line ------------------------------------------------------
     s = Slide("Agents on the line: every agent is asked", AGENTS)
-    steps = [(1, "call-for-proposals-filling"), (2, "proposal-filling"), (3, "call-for-proposals-transport"),
-             (4, "proposal-transport"), (5, "accept-transport")]
-    msgs = [f"{k}-{n}-{w}" for k, n in steps for w in ("card", "arrows")] + ["6-arrived-card", "7-accept-filling-card",
-                                                                               "7-accept-filling-arrows"]
+    steps = [(1, "call-for-proposals-filling"), (2, "proposal-filling"), (3, "call-for-proposals-receiving"),
+             (4, "proposal-receiving"), (5, "accept-receiving"), (6, "call-for-proposals-transport"),
+             (7, "proposal-transport"), (8, "accept-transport")]
+    msgs = [f"{k}-{n}-{w}" for k, n in steps for w in ("card", "arrows")] + ["9-arrived-card", "10-accept-filling-card",
+                                                                               "10-accept-filling-arrows"]
     L = s.figure(P13, ["the-line", "product-the-vial", "messages-header", "agents", "product-agent-on-the-vial"] + msgs)
     dx = 77.2 * s.emu_per_page_px / m.SW         # loading to the filling station, on the page
     dy = 44.6 * s.emu_per_page_px / m.SH
@@ -311,20 +312,24 @@ At the start its passive part: the product AAS (Production Sequence, Required Ca
         if k > 1:
             first.insert(0, ("out", L[f"{k - 1}-{steps[k - 2][1]}-arrows"]))
         s.plain_click(first)
-    s.plain_click([("out", L["5-accept-transport-arrows"]), ("in", L["6-arrived-card"]),
+    s.plain_click([("out", L["8-accept-transport-arrows"]), ("in", L["9-arrived-card"]),
                    ("path", L["product-the-vial"], {"x1": dx, "y1": dy, "dur": 1500}),
                    ("path", L["product-agent-on-the-vial"], {"x1": dx, "y1": dy, "dur": 1500})])
-    s.plain_click([("in", L["7-accept-filling-card"]), ("wipe", L["7-accept-filling-arrows"], {"dir": "left", "dur": 500})])
+    s.plain_click([("in", L["10-accept-filling-card"]), ("wipe", L["10-accept-filling-arrows"], {"dir": "left", "dur": 500})])
     s_agents = after("slide6.xml", s_inside2)
-    write(s_agents, s, """About 1.5 min, seven clicks. Built (30 Oct), tested with the modules and the shuttles simulated; on the line for the demo in January. Every vial ordered gets a product agent (P) that travels with it; every resource has a resource agent (R): each module, and each shuttle of the table. They talk in the I4.0 language (VDI/VDE 2193): call for proposals, proposal or refuse, accept or reject. The product agent does not know who can do what: every call goes to every resource agent, and whoever cannot, refuses. One step at a time: here the vial's first step, Fill 2.0 mL, and the transport to it.
+    write(s_agents, s, """About 2 min, ten clicks. Built (30 Oct), tested with the modules and the shuttles simulated; on the line for the demo in January. Every vial ordered gets a product agent (P) that travels with it; every resource has a resource agent (R): each module, and each shuttle of the table. They talk in the I4.0 language (VDI/VDE 2193): call for proposals, proposal or refuse, accept or reject. The product agent does not know who can do what: every call goes to every resource agent with the vial's state, and the constraints of the capabilities in each resource's AAS decide who proposes. Who carries the vial is one of those states: custody.
 
-1. The vial's product agent calls for proposals for Fill 2.0 mL: to every resource agent, the four modules and the five shuttles.
-2. Each agent checks the call against the capabilities in its AAS. Only Filling can: it proposes Dispensing, now, and where a shuttle hands it the vial (its station, from the AASs). The proposal is binding: Filling holds itself for this vial. The other modules and all the shuttles refuse.
-3. Now the transport, the same way: a call for proposals for Transporting to Filling's station, again to every resource agent.
-4. This time the modules refuse and the shuttles propose MoveToPosition; shuttle 3, with the vial on it, is the earliest.
-5. Shuttle 3 is accepted, the other shuttles are rejected. Shuttle 3 now carries the vial to the end, bids for no other vial, and for the vial's later steps it is the only one asked.
-6. It reports the vial at Filling's station.
-7. Only now the product agent accepts Filling's proposal: the vial is there, and the module's agent runs Dispensing: the next slide.""")
+1. The vial's product agent calls for proposals for Fill 2.0 mL, to every resource agent: the four modules and the five shuttles.
+2. Only Filling can: it proposes Dispensing, now, and where a shuttle hands it the vial (its station, from the AASs). The proposal is binding: Filling holds itself for this vial. The others refuse.
+3. To be carried, the vial needs a resource that has it in its custody, and nobody has it yet: a call for Receiving, again to everyone.
+4. Receiving needs room: Occupancy less than Capacity, one vial for a shuttle. The five empty shuttles propose; the modules offer no Receiving and refuse.
+5. Shuttle 3, with the vial on it, is accepted, the others rejected. Shuttle 3 holds the vial from now on, and has no room for another.
+6. Now the transport: a call for Transporting to Filling's station, to everyone.
+7. Transporting needs Holding: only shuttle 3 holds the vial, so only it proposes. The other shuttles refuse, and so do the modules. Nothing in the agents is about shuttles: the same rule binds a vial to a gripper or a tray.
+8. Shuttle 3 is accepted and goes.
+9. It reports the vial at Filling's station.
+10. Only now the product agent accepts Filling's proposal: the vial is there, and the module's agent runs Dispensing: the next slide. At the end of the order the vial asks for Releasing, and shuttle 3 is free again.""")
+
 
 
     # ---- after it: at the filling module -------------------------------------------------------------------

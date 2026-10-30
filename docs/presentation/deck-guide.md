@@ -248,14 +248,17 @@ page 13b in its place; this page stays as the later steps' picture (only the via
 
 ### 13b Agents on the line: every agent is asked (built 30 Oct, simulated)
 
-Page 13's line, agents and messages, as the product agent sends them on the vial's first step: both calls
-go to every resource agent, the four modules and the five shuttles. For Fill 2.0 mL only Filling proposes
-and the other eight refuse (✗); for Transporting to Filling's station the five shuttles propose and the
-four modules refuse. Shuttle 3, the vial on it, is accepted and the other shuttles rejected (grey dashed
-arrows); it reports the vial at Filling's station, and Filling's proposal is accepted. The refusals belong
-to the `arrows` layer, so they go with the next message; the held and booked marks are on the cards. In the
-deck as the slide "Agents on the line: every agent is asked"; `agents-every-agent-asked.pptx` holds it
-between pages 12c and the agents at the filling module.
+Page 13's line, agents and vial, as the product agent does it since custody (vocabulary 0.7): every
+call goes to every resource agent, the four modules and the five shuttles, and the constraints in each
+resource's AAS decide who proposes. Ten messages: Fill 2.0 mL (only Filling proposes, the others
+refuse with ✗; Filling is held); Receiving, since nobody holds the vial (the five empty shuttles
+propose, room for one; the modules refuse); shuttle 3 accepted and holding the vial, the others
+rejected (grey dashed arrows); Transporting to Filling's station (only shuttle 3, Holding = true,
+proposes; the other eight refuse); accepted; arrived (the vial moves); Filling's proposal accepted.
+The cards are smaller than page 13's (ten of them); a module's ✗ is on its left, clear of the held
+mark. The refusals belong to the `arrows` layer, so they go with the next message. In the deck as the
+slide "Agents on the line: every agent is asked"; `agents-every-agent-asked.pptx` holds it between
+page 12c and the agents at the filling module.
 
 ### Backup pages (copied)
 
