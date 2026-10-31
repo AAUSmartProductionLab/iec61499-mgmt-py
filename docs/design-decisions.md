@@ -3,7 +3,9 @@
 The decisions the method rests on, each with why it was taken and what it was taken instead of.
 Written on 27 Oct 2026 as the material for the paper's method section; the log of every decision
 with its date is [decisions.md](decisions.md), and this file points there rather than repeating
-dates. Decisions still open are listed at the end.
+dates. Decisions still open are listed at the end. Brought up to date on 31 Oct where a later
+decision changed one (3.1, 3.4, 3.7 to 3.9, 4.1, 4.7, 4.8 and section 6); the numbers stay, since
+other files cite them.
 
 Each decision says where it belongs: **Method** (the paper's contribution), **Model** (the
 information model), **Implementation** (how it is built here; another implementation could
@@ -175,8 +177,10 @@ whole new boot file could be made.
 ### 3.1 A resource AAS per line, module and component (Model)
 
 **Decision.** The line, each module and each active component (an axis, a pump, a camera) has an
-AAS of its own. They are the lab's `Resource` (aas-model) with ARSO's submodels added: Skills,
-Operational Data, Control Configuration.
+AAS of its own. They are the lab's `Resource` (aas-model) with ARSO's Skills submodel added and the
+Control Component Instance left out. Until 27 and 28 Oct ARSO also added Operational Data and the
+Control Configuration; aas-model's Variables now hold a module's states (3.8), and what was built
+is the integrator's record outside the AAS (3.7).
 
 **Why.** A component is the same in every module that has it (every linear axis offers `MoveAxis`
 and `Home`), so its skills belong with it and are described once. The module composes them. The
@@ -218,9 +222,14 @@ changes (a new skill without a capability, a changed limit the capability does n
 Derived, they cannot. "Offered after a reconfiguration" is the answer a product-driven change
 needs: the line can do it once a described skill is built.
 
-**To change (27 Oct).** With planning (3.9, 4.8), a module offers a capability after a
-reconfiguration also when a skill for it can be planned; the derivation from the skill types
-(`lab:contributes`) gives way to that (G5 in [next-steps.md](next-steps.md)).
+**Changed since (28 and 30 Oct).** With planning (3.9, 4.8), a module also offers "after a
+reconfiguration" a capability that a skill can be planned for (discovery, G5 in
+[next-steps.md](next-steps.md)); the derivation from the skill types (`lab:contributes`) stays for
+the skills that exist. A derived offer's range is what its skill reaches when run through the
+states (DoubleDose, two doses of 0.5 to 10 mL, offers 1 to 20 mL), not its parameter's limits. A
+composite skill may name the capability it was written for when that is narrower than what its
+steps contribute (BottomUpFilling, a Filling), as a supplemental id, and offers that one
+([skill-planning.md](skill-planning.md), sections 6 and 10).
 
 ### 3.5 Three ids, three jobs (Model)
 
@@ -243,23 +252,44 @@ and a skill); the resource AAS what a resource offers and how it is called.
 changes the resource AAS and at most the process AAS, never the product; one product on two lines
 is two process AASs; each AAS has one owner (product designer, line engineer, vendor).
 
-### 3.7 What is wanted and what was built (Model; under review)
+### 3.7 What is wanted and what was built (Model)
 
-**Decision so far.** The Skills submodel says what is wanted; the Control Configuration records
-what was built (instances, block types, type hashes, a change log).
+**Decided 27 Oct and built** (option C of [control-configuration.md](control-configuration.md)).
 
-**Under review** ([control-configuration.md](control-configuration.md)): only two of its facts are
-read by anyone but modsync (the rule set, and whether a skill is built). The proposal keeps those
-two in the Skills submodel and moves the rest into the integrator's backend.
+**Decision.** The Skills submodel says what is wanted and the two facts of what was built that
+clients need: the rule set the program follows (`RuleSet`) and, per module level skill, whether it
+is built or only described (`Deployment`: `Built`, `Described`). The rest of the record (instances,
+block types, type hashes, the change log, the management endpoint) is the integrator's, kept by the
+registration service (`/build/<idShort>`) or in a folder, outside the AAS.
 
-### 3.8 States as time series with a latest value (Model; after the paper)
+**Why.** Only those two facts are read by anyone but modsync: from `Deployment` the derivation
+offers a described skill's capability "after a reconfiguration", which the planner and the agents
+read. The hashes were all read from a running FORTE, so they prove "unchanged since the last
+record", the integrator's bookkeeping, not something the vendor delivers.
 
-**Decision.** States, measurements and events of a module go into Operational Data as series shaped
-like IDTA's Time Series, each with a `Latest` property and a reference to its history in a
-time-series database.
+**Instead of.** The Control Configuration submodel in every module's AAS (until 27 Oct): IEC 61499
+bookkeeping no client read, with site and repository details that do not belong in a delivered
+description, and nothing to put there for a resource that is not an IEC 61499 module.
 
-**Why.** An HMI or an agent then reads a module's state from its AAS like everything else, and the
-history stays out of the AAS. Not built yet; the HMI reads the values over OPC UA today.
+### 3.8 States as time series, no live value in the AAS (Model)
+
+**Changed 28 Oct and built before the paper.** The latest value in the AAS (the plan of 26 Oct) was
+dropped.
+
+**Decision.** A module keeps no live value in its AAS. Its states, measurements and the calls of its
+commands are time series in a time-series database (InfluxDB), and the AAS says where: aas-model's
+Variables (ARSO 0.14, in place of Operational Data) holds a series per group of values that change
+together (`State/Module`, `State/<Skill>`, `Measurements/<Item>`, `Log/<action>`), shaped like IDTA's
+Time Series (02008), each field with its meaning as a supplemental id and naming the measurement its
+rows are in. The DMP observes the module over OPC UA and writes the rows.
+
+**Why.** The values change fast (a position while the axis moves); written into the AAS server they
+load it with writes nobody reads there, and keep no history. A reader finds in the AAS where a value
+is and asks the database for the latest row or a span. The lab's stations use the same Variables.
+
+**Instead of.** A `Latest` property per series in the AAS (26 Oct); a Property per value that the
+mapping keeps current. Built 28 and 29 Oct (`cell/tests/test_dmp_live.py`); the HMI still reads the
+values over OPC UA (C6 in [next-steps.md](next-steps.md)).
 
 ### 3.9 A module's Capability Description is what it plans from (Model)
 
@@ -267,8 +297,9 @@ history stays out of the AAS. Not built yet; the HMI reads the values over OPC U
 (Offered) and, in a set per component, its components' capabilities (NotAssigned), each realized by
 a primitive. Pre- and postconditions and invariants are 02020 property constraints, written as a
 `BasicConstraint` expression over the capability's own properties (`= 40.0`, `+= Volume`,
-`unchanged`); a property names the state it is with `SameProperty` (a data point of Operational
-Data). A primitive's `Conditions` and `Completion` (ARSO 0.11) are the run-time form of the same.
+`unchanged`); a property names the state it is with `SameProperty` (a data point of the module's
+Variables; Operational Data until 28 Oct). A primitive's `Conditions` and `Completion` (ARSO 0.11)
+are the run-time form of the same.
 
 **Why.** 02020 already has the constraints a planner needs, and keeps its relations inside one
 submodel, so the module's description is the whole planning domain; nothing planning-specific is
@@ -289,7 +320,8 @@ PDDL, and the goal sits in a component's AAS. A capability description in each c
 management protocol; read it by the module rules into a structure; compare it with what the AAS
 describes; sort the differences into create, write, restart and wrong record; refuse what is not
 possible online or what the module could not carry out; apply the rest; read the program back and
-compare again; add the change to the boot file; record it in the AAS.
+compare again; add the change to the boot file; record it: `Deployment` in the AAS, the instances,
+hashes and the change in the integrator's record (3.7).
 
 **Why.** Each step answers a question the engineer would otherwise check by hand: is the module
 what its AAS says, is the change possible, did it happen, will it survive a restart, can a client
@@ -342,8 +374,12 @@ client reads it.
 ### 4.7 The skill editor is a web UI plugin in the planner's style (Implementation)
 
 **Decision.** Skills are edited in a plugin of the BaSyx web UI that opens on the Skills submodel,
-in the style of the product's sequence editor. A proposal to split it into an overview and a skill
-view and to give it the planner's flow kinds: [skill-authoring.md](skill-authoring.md).
+in the style of the product's sequence editor. Built 27 Oct as an overview on the Skills submodel and
+an editor on one skill, with the planner's flow kinds ([skill-authoring.md](skill-authoring.md)).
+Since 29 Oct the editor has a flow checked and a skill planned by `modreg serve`; since 30 Oct a
+second editor draws the same flows in BPMN notation and reads a drawing back into the
+block-structured flow, and a setting chooses which editor shows ([design-log.md](design-log.md),
+30 Oct).
 
 ### 4.8 New skills are planned, then created online (Method)
 
@@ -354,6 +390,9 @@ hold becomes a goal. The plan is lifted to parallel blocks where no state or inv
 steps, written into the Skills submodel as a described skill, and created online like any other
 (4.1). The same model checks a flow written by hand. HDDL and PDDL are generated from it for
 standard planners. Only the module plans: the line is run by agents; optimality is not a goal.
+(Since 31 Oct the demo's line is run by either of two orchestrators, the agents or a policy FOND-AAS
+plans with PDDL, run as a behaviour tree; this planner still plans only a module's skills:
+[framework-plan.md](framework-plan.md), section 1.)
 
 **Why.** The planning problem of one module is small and its knowledge is local, so each agent can
 plan over its own AAS; the hierarchy (agents, modules, components) keeps relational models (many
@@ -377,10 +416,8 @@ skill.
 
 | Question | Where |
 | --- | --- |
-| The Control Configuration in the AAS or in the backend | [control-configuration.md](control-configuration.md) |
-| Branches, conditions and parallel steps in a skill (rule set 2) before or after the paper | [skill-authoring.md](skill-authoring.md) |
 | Changing a skill's order online (delete and create while idle) | [skill-authoring.md](skill-authoring.md), section 3 |
-| Which changes the paper shows | [next-steps.md](next-steps.md), open questions |
-| The planner's open points (Home or MoveAxis(0), the HDDL planner, numbers in PDDL) | [skill-planning.md](skill-planning.md), section 9 |
+| The planner's open points (when the scale may be tared, decisions in a planned skill, the range of a discovered offer with `+=`) | [skill-planning.md](skill-planning.md), section 9 |
+| Whether modsync checks the module's `RuleSet` before a change (written by modreg, read by nothing yet) | [control-configuration.md](control-configuration.md), section 3 |
 | Are Occupy and Release skills at all? | [next-steps.md](next-steps.md) |
 | The eleven decisions on states and parameters | [state-and-parameters.md](state-and-parameters.md) |
