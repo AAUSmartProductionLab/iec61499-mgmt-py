@@ -5,6 +5,7 @@
     { "entryId": "iso-computers", "libName": "Isometric · computers and software", "file": "${workspaceFolder}/docs/figures/library/iso-computers.xml" },
     { "entryId": "iso-aas", "libName": "Isometric · AAS", "file": "${workspaceFolder}/docs/figures/library/iso-aas.xml" },
     { "entryId": "iso-planes", "libName": "Isometric · planes and sketches", "file": "${workspaceFolder}/docs/figures/library/iso-planes.xml" },
-    { "entryId": "flat", "libName": "Flat · AAS, agents, icons", "file": "${workspaceFolder}/docs/figures/library/flat.xml" }
+    { "entryId": "flat", "libName": "Flat · AAS, agents, icons", "file": "${workspaceFolder}/docs/figures/library/flat.xml" },
+    { "entryId": "tools", "libName": "Icons · repositories and apps", "file": "${workspaceFolder}/docs/figures/library/tools.xml" }
   ]
 }
