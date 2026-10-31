@@ -1,4 +1,4 @@
-"""AASPIRE's logo, the icons of its repositories and apps, and the AP2030 organization's map.
+"""AASPIRE's logo, the icons of its repositories and apps, and the map of the AP2030 project's organization.
 
     python docs/presentation/source/build_icons.py .
 
@@ -172,8 +172,8 @@ def dmp(i):
             f"strokeWidth={i.sw(2)};")
 
 
-def uns_schemas(i):
-    """The broker and its publishers and subscribers: one namespace."""
+def mqtt_schemas(i):
+    """The broker and its publishers and subscribers."""
     spokes = [(48, 16), (76, 32), (76, 64), (48, 80), (20, 64), (20, 32)]
     for p in spokes:
         i.stroke([(48, 48), p], width=4)
@@ -242,13 +242,6 @@ def lineagents(i):
     i.shape(16, 46, 36, 28, f"shape=or;direction=north;fillColor={W};strokeColor=none;")
     i.dot(62, 40, 11, W, i.color, 3)
     i.shape(44, 56, 36, 28, f"shape=or;direction=north;fillColor={W};strokeColor={i.color};strokeWidth={i.sw(3)};")
-
-
-def packml_stations(i):
-    """A station's state machine: states around a cycle."""
-    i.outline(22, 22, 52, 52, W, 5, 0, "shape=ellipse;perimeter=ellipsePerimeter;")
-    for cx, cy in ((48, 22), (74, 48), (48, 74), (22, 48)):
-        i.dot(cx, cy, 9, W, i.color, 3)
 
 
 def planar(i):
@@ -323,7 +316,7 @@ ICONS = [
     ("planner", "Planner", "Planning", "web UI app", planner),
     ("registration-service", "registration-service", "Integration", "repository", registration),
     ("aas-camel-dmp", "aas-camel-dmp", "Integration", "repository", dmp),
-    ("uns-schemas", "uns-schemas", "Integration", "repository", uns_schemas),
+    ("mqtt-schemas", "mqtt-schemas", "Integration", "repository", mqtt_schemas),
     ("modlink", "modlink", "Integration", "repository", modlink),
     ("modsync", "modsync", "Reconfiguration", "repository", modsync),
     ("iec61499-skill-lib", "iec61499-skill-lib", "Reconfiguration", "repository", skill_lib),
@@ -333,7 +326,6 @@ ICONS = [
     ("skill-editor", "Skill Editor", "Reconfiguration", "web UI app", skill_editor),
     ("bt-controller", "bt-controller", "Execution", "repository", bt_controller),
     ("lineagents", "lineagents", "Execution", "repository", lineagents),
-    ("packml-stations", "packml-stations", "Execution", "repository", packml_stations),
     ("planar-controller", "planar-controller", "Execution", "repository", planar),
     ("hmi", "HMI", "Execution", "web UI app", hmi),
     ("orders", "Orders", "Execution", "web UI app", orders),
@@ -398,7 +390,7 @@ COLUMNS = [
     ("Integration", [
         (["registration-service"], "registration-service", "build, check, discover, publish"),
         (["aas-camel-dmp"], "aas-camel-dmp (fork)", "AAS operations and data mapped"),
-        (["uns-schemas"], "uns-schemas", "the namespace's MQTT messages"),
+        (["mqtt-schemas"], "mqtt-schemas", "the MQTT messages' schemas"),
         (["modlink"], "modlink", "skills from the AAS over OPC UA")]),
     ("Reconfiguration", [
         (["modsync"], "modsync", "a running program against its AAS"),
@@ -406,9 +398,8 @@ COLUMNS = [
         (["iec61499-mgmt-py"], "iec61499-mgmt-py", "the FORTE management client"),
         (["forte-runtime"], "forte-runtime", "FORTE per platform, releases")]),
     ("Execution", [
-        (["bt-controller"], "bt-controller", "processes as behaviour trees"),
-        (["lineagents"], "lineagents", "order, product, resource agents"),
-        (["packml-stations"], "packml-stations", "PackML stations over MQTT"),
+        (["bt-controller"], "bt-controller", "centralized: policies as trees"),
+        (["lineagents"], "lineagents", "multi-agent: recipes and bids"),
         (["planar-controller"], "planar-controller", "the planar table")]),
 ]
 COLUMNS_2 = [
@@ -419,7 +410,7 @@ COLUMNS_2 = [
         (["deploy-server"], "deploy-server", "the server stack"),
         (["deploy-module"], "deploy-module", "a Raspberry Pi as a module")]),
     ("Lines", [
-        (["aseptic-line"], "aseptic-line", "AP2030's line, its AASs and trees")]),
+        (["aseptic-line"], "aseptic-line", "AP2030's line: AASs, scenario")]),
 ]
 
 
@@ -452,8 +443,9 @@ def organization_page():
     icon(g, "aaspire", mx + 20, 47, 96)
     text(g, mx + 134, 40, main_w - 150, 40, WORDMARK, 30, INK, True)
     text(g, mx + 134, 78, main_w - 150, 22, EXPANSION, 13, GREY)
-    text(g, mx + 134, 102, main_w - 150, 44, "<b>aaspire</b>, the main repository of the AP2030 organization: "
-         "every repository below as a submodule, the documentation, the whole line in simulation", 12, GREY)
+    text(g, mx + 134, 102, main_w - 150, 44, "<b>aaspire</b>, the main repository of <b>ap2030-project</b>: "
+         "every repository below as a submodule, the documentation, the line in simulation with either "
+         "orchestrator", 12, GREY)
     gray = f"html=1;endArrow=none;strokeColor={GREY};strokeWidth=2;"
     arrow = f"html=1;endArrow=block;endFill=1;endSize=6;strokeColor={GREY};strokeWidth=2;"
     colh1 = 52 + max(len(r) for _, r in COLUMNS) * rowh
