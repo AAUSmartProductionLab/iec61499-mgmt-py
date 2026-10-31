@@ -12,6 +12,7 @@ shows every shape with its name, a page per category.
 | [iso-aas.xml](iso-aas.xml) | The AAS shell as an isometric solid, standing or lying flat on a plane, blank or named (Product, Process, Resource, Module, Component, Line); AASs drawn as stacks of documents |
 | [iso-planes.xml](iso-planes.xml) | The layers' planes, their labels, and the sketches that lie on a plane (a function block network, PackML, a skill's state machine, a module's AAS, product and process AAS, agents, a schedule, the HMI) |
 | [flat.xml](flat.xml) | For flat figures: the AAS shell (blank and named), a submodel bar, the agents' badges, the icons of the layers |
+| [tools.xml](tools.xml) | An icon per repository and web UI app of the framework ([framework-plan.md](../../framework-plan.md), section 7); built by `docs/presentation/source/build_icons.py` with [framework-icons.drawio](../framework-icons.drawio) |
 
 ## Using them
 
