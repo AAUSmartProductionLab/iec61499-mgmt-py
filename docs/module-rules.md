@@ -34,9 +34,10 @@ Fixed for every module; nothing here changes online.
    the module, `loc[<Module>/release]`: a holder named there gives up every item it holds. A block
    added online therefore needs no connection to them.
 5. Every block has `INIT` and `INITO`. The application's blocks form one chain, started by the
-   resource's own `START` block (`COLD` and `WARM`, drawn in the resource): IO lines,
-   `Occupation`, `Module`, equipment, offered skill primitives, procedures, then the module level
-   skills. A block added online is appended to the end of the chain.
+   resource's own `START` block (`COLD` and `WARM`, drawn in the resource): `Occupation`,
+   `Module`, equipment, offered skill primitives, procedures, then the module level skills. There
+   are no line blocks: each IO point sets up its own line from its address (rule 3). A block added
+   online is appended to the end of the chain.
 
 ## 2. A skill primitive
 
@@ -192,7 +193,7 @@ like any module level skill. Besides the steps (rule 1 of a sequence, unchanged)
 | --- | --- |
 | Equipment item that a skill moves | A component: an AAS of its own (`<Module><Item>AAS`), a part in the module's Hierarchical Structures |
 | Skill primitive | In its component's Skills: `Skills/<Skill>` with the semantic id `skill`, the kind `skill/Primitive` and its type `skills/<Skill>` as supplemental ids, its commands, its `Conditions` and its `Completion` |
-| Module level skill | In the module's Skills: `Skills/<Skill>` with the semantic id `skill`, the kind `skill/Composite` and its type, and its commands |
+| Module level skill | In the module's Skills: `Skills/<Skill>` with the semantic id `skill`, the kind `skill/Composite`, its type and, for a skill written for a capability (`BottomUpFilling`, since 30 Oct), that capability as supplemental ids, and its commands |
 | A command (the method, what it takes and answers) | `<Skill>/<Command>`: `InterfaceReference` to the action, the Operation named like the command |
 | A parameter, a result | An input or output variable of the Start Operation, with value, unit and limits |
 | `Execute` and `Stop` sequences | `Start/Steps` and `Stop/Steps`: `Step_0000`, ... in the elements of the planner's Production Sequence (`NodeId` = the instance name, `Kind` = `step`, `Order`), each with the `Skill` it runs |
