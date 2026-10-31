@@ -4,31 +4,36 @@ AAS-driven online reconfiguration of IEC 61499 devices: modules (filling, stoppe
 Eclipse 4diac FORTE programs on Raspberry Pis, are described by their Asset Administration
 Shells, and are reconfigured from product, process and resource models.
 
-Each top-level folder is a future repository; for now they share this one, with one Python
-project (`pyproject.toml`) for the three packages. The files in `docs/` are
-working documents (notes, plans, learnings), in the repository for now so they can be shared
-between computers; they are not finished documentation and will be cleaned up or removed. So
-is `ontology/` (the product, process and resource ontologies; ARSO is what `modreg` generates
-classes from and checks every resource AAS against), until the repository is split.
+The work is part of AASPIRE (AAS-based Planning, Integration, Reconfiguration and Execution), the
+framework of the AP2030 project. Its plan, [docs/framework-plan.md](docs/framework-plan.md) (31 Oct
+2026), puts every part into one GitHub organization, `ap2030-project`, with `aaspire` as the main
+repository; this repository becomes the line's, `aseptic-line`. Nothing is split yet: the top-level
+folders share this repository, with one Python project (`pyproject.toml`) for the six packages, and
+the map says which repository each folder goes to. The files in `docs/` are working documents
+(notes, plans, learnings), in the repository so they can be shared between computers; they are not
+finished documentation. The working notes go with the line, the rest is rewritten for the
+framework's documentation site. `ontology/` (the product, process and resource ontologies; ARSO is
+what `modreg` generates classes from and checks every resource AAS against) becomes the
+`ontologies` repository.
 
 ## Map
 
 | Folder | Future repository | What |
 | --- | --- | --- |
 | `iec61499-mgmt-py/` | iec61499-mgmt-py | `iec61499_mgmt`: FORTE management library (typed commands, client, networks and plans, `.sys` flattening, boot files, type library, read-back verification) |
-| `iec61499-skill-lib/` | iec61499-skill-lib | `modgen`: generator from module specs to 4diac projects; `ModLib`: the generated module library (occupation, PackML module state manager, skill state machine, composite control, IO primitives for sim, GPIO, PWM, Modbus); `stdtypes`: IDE declarations of standard FBs; `tests/modules`, `tests/control`: the generator's own small test module (`filler`), built into FORTE with the others |
-| `aas61499-tools/` | aas61499-tools | `modsync`: module ⇄ spec ⇄ AAS (read what runs, report drift, describe as AAS, push changes; `verify` and `reconfigure`: the module against its AAS as the desired state, without a spec); `modreg`: a module's profile on the lab's shared AAS model, the ontology check and the registration service |
-| `runtime/` | runtime | FORTE build: FBE configurations (PC, Pi), FORTE patches (IO handle fix, sysfs PWM module, stand-ins for GPIOChip and PWMChip where FORTE has no GPIO), header shims, IDE validation and export (`validate.ps1`), the IDE's checks alone (`check-project.ps1`), `build-modules.ps1`, `build-runtime.ps1` |
-| `deploy/` | deploy | Raspberry Pi: FORTE in Docker (`pi/`), install and deployment (`pi.py`), a bench test of a stepper driver without FORTE (`steptest.py`); the lab's AAS stack on a PC (`aas/compose.yaml`, `aas.py`): BaSyx, the DMP, InfluxDB |
-| `line-agents/` | line-agents | `lineagents`: the line's agents (SPADE over XMPP, the I4.0 language of VDI/VDE 2193): a resource agent per module that bids for steps and carries them out (modlink, reconfiguring a described skill first), a product agent per order, the manager that starts an agent for each module the AAS server holds |
-| `cell/` | the filling line | `modules/`: module specs (`planned/`: capping and inspection, described but not built); `control/`: generated 4diac projects (FillingModule, StopperingModule); `sim/`: Modbus simulator, `run_module.py`, OPC UA client; `examples/`: a product planned on the four resources, and the builder that puts all five AASs on an AAS server |
-| `aas-model/` | (submodule) | The lab's shared pydantic AAS model; `modreg` builds on it and uses its generator |
-| `aas-camel-dmp/` | (submodule) | The data-mapping processor (Java, Apache Camel): runs the mappings of the published AASs, so an Operation calls a module's OPC UA method and the module's values are written to InfluxDB; built into the AAS stack's `dmp` image |
-| `iec61499-opcua-hmi/` | (submodule) | `modlink` (runs a module from its AAS over OPC UA), the HMI, an OPC UA stand-in for a module, the Linux FORTE build, the end-to-end test; here so both can change together. Its tests run in its own folder, not with this repository's |
-| `basyx-aas-web-ui/` | (submodule) | The user's fork of the BaSyx AAS web UI, branch `feat/process-sequence-pharma`: the process sequence planner and the skill editor (`aas-web-ui/src/pages/modules/ProcessSequence`); here so the planner, the editor and the tools can change together |
-| `planar-controller/` | (submodule) | The Planar Motor table's controller (Python): the table and each xbot over OPC UA, built like the generated modules (occupation, module state, `MoveToPosition`), with a multi-xbot planner. Its tests run in its own folder |
-| `ontology/` | (working copy) | The product, process, resource and link ontologies with their notes; ARSO is the blueprint of the resource AAS |
-| `docs/` | (working notes) | `onboarding.md`: where to start (objective, rules, state, next steps); `tooling.md`: every tool, command and check; `pipeline.md`: from AAS to running code and how it is changed; `ppr-model.md`: the product, process and resource model, its ontologies and applications (figures in `figures/`); `work.md`: what is built, how, learnings; `next-steps.md`: the plan; `decisions.md`: what was decided; `aas-models.md`: the product, plan and resource AAS, their submodels and how they connect; `aas-examples.md`: the example line's five AASs with class diagrams; `module-rules.md`: the rules a module is built by; `modules.md`: the two modules and what was ported; `repositories.md`: how the work divides into repositories; `archive/`: superseded plans and figures |
+| `iec61499-skill-lib/` | iec61499-skill-lib (`modgen.spec`: skill-model) | `modgen`: generator from module specs to 4diac projects; `ModLib`: the generated module library (occupation, PackML module state manager, skill state machine, composite control, IO primitives for sim, GPIO, PWM, Modbus); `stdtypes`: IDE declarations of standard FBs; `tests/modules`, `tests/control`: the generator's own small test module (`filler`), built into FORTE with the others |
+| `aas61499-tools/` | modsync, modplan, registration-service (`modreg`); skill-model (what every tool shares) | `modsync`: module ⇄ spec ⇄ AAS (read what runs, report drift, describe as AAS, push changes; `verify` and `reconfigure`: the module against its AAS as the desired state, without a spec); `modreg`: a module's profile on the lab's shared AAS model, the ontology check and the registration service (with discovery: `serve --discover`); `modplan`: a new skill planned from a module's Capability Description (HTN; PDDL and HDDL for standard planners) |
+| `runtime/` | forte-runtime (`install.sh`, `kit/`: deploy-module) | FORTE build: FBE configurations (PC, Pi), FORTE patches (IO handle fix, sysfs PWM module, stand-ins for GPIOChip and PWMChip where FORTE has no GPIO), header shims, IDE validation and export (`validate.ps1`), the IDE's checks alone (`check-project.ps1`), `build-modules.ps1`, `build-runtime.ps1`; the Pi's FORTE built and packaged (`build-pi.ps1`) and put on a Pi that runs FORTE already (`update-pi.ps1`); the Pi's installer (`install.sh`); a kit for building FORTE with one's own block types (`make-kit.ps1`, `build-project.ps1`, `kit/`) |
+| `deploy/` | deploy-server (`aas/`), deploy-module (`pi/`, `pi.py`) | Raspberry Pi: FORTE in Docker and the module's manifest beside it (`pi/`), install and deployment (`pi.py`), a bench test of a stepper driver without FORTE (`steptest.py`); the lab's AAS stack on a PC (`aas/compose.yaml`, `aas.py`): BaSyx, the DMP, InfluxDB, Mosquitto, Prosody (XMPP, for the agents) |
+| `line-agents/` | lineagents | `lineagents`: the line's agents (SPADE over XMPP, the I4.0 language of VDI/VDE 2193): a resource agent per module and per shuttle that bids for steps and carries them out (over OPC UA with modlink or through the DMP, reconfiguring a described skill first), an order agent that starts a product agent per unit ordered, the manager that starts an agent for each module the AAS server holds |
+| `cell/` | aseptic-line | `modules/`: module specs (`planned/`: capping and inspection, described but not built); `control/`: generated 4diac projects (FillingModule, StopperingModule); `sim/`: Modbus simulator, `run_module.py`, OPC UA client; `examples/`: the example line's AASs (the line, the planar table and its shuttles, the four modules and their components, three products and the process of each), built, checked and published by `example_line.py`; `eval/`: the paper's evaluation (each change online and by a restart, the planners timed, the figures) |
+| `aas-model/` | aas-model (submodule) | The lab's shared pydantic AAS model, here the user's fork on branch `lab-ppr-models` (the lab's types and ARSO's submodels) until its pull request is merged; `modreg` builds on it and uses its generator |
+| `aas-camel-dmp/` | aas-camel-dmp (submodule) | The data-mapping processor (Java, Apache Camel): runs the mappings of the published AASs, so an Operation calls a module's OPC UA method and the module's values are written to InfluxDB; built into the AAS stack's `dmp` image |
+| `iec61499-opcua-hmi/` | modlink (submodule; the HMI repository is then archived) | `modlink` (runs a module from its AAS over OPC UA), the HMI, an OPC UA stand-in for a module, the Linux FORTE build, the end-to-end test; here so both can change together. Its tests run in its own folder, not with this repository's |
+| `basyx-aas-web-ui/` | basyx-aas-web-ui (submodule) | The user's fork of the BaSyx AAS web UI, branch `feat/process-sequence-pharma`: the process sequence planner and the skill editor (`aas-web-ui/src/pages/modules/ProcessSequence`; in BPMN notation `ProcessSequenceBpmn`); here so the planner, the editor and the tools can change together |
+| `planar-controller/` | planar-controller (submodule) | The Planar Motor table's controller (Python): the table and each xbot over OPC UA, built like the generated modules (occupation, module state, `MoveToPosition`), with a multi-xbot planner. Its tests run in its own folder |
+| `ontology/` | ontologies | The product, process, resource and link ontologies with their notes; ARSO is the blueprint of the resource AAS |
+| `docs/` | aseptic-line (the working notes); the documentation site | `onboarding.md`: where to start (objective, rules, state, next steps), with every document listed; `framework-plan.md`: AASPIRE, its repositories and what the January demo needs; `tooling.md`: every tool, command and check; `pipeline.md`: from AAS to running code and how it is changed; `ppr-model.md`: the product, process and resource model, its ontologies and applications (figures in `figures/`); `work.md`: what is built, how, learnings; `next-steps.md`: the plan; `agents.md`: the agents' design and plan to the demo; `decisions.md`: what was decided; `aas-models.md`: the product, plan and resource AAS, their submodels and how they connect; `aas-examples.md`: the example line's 24 AASs with class diagrams; `module-rules.md`: the rules a module is built by; `modules.md`: the two modules and what was ported; `archive/`: superseded plans and figures |
 
 Each folder has its own `tests/`; `conftest.py` at the top holds the shared live-test options.
 
@@ -38,7 +43,7 @@ repository) and `arduino_cpp_examples/` (the ESP32 station code the modules were
 ## Quick start
 
 ```powershell
-python -m pip install -e ".[test,registration,opcua,planning]"
+python -m pip install -e ".[test,registration,opcua,planning,agents]"
 python -m pytest -q                                            # offline tests of every folder
 
 python -m modgen                                               # regenerate ModLib and the module projects
@@ -73,10 +78,12 @@ with the Pi's address); the tools themselves are not installed on the Pi.
 
 Running the installer again updates FORTE; the module's program (`~/forte/boot/forte.fboot`) is
 kept. It takes FORTE from this repository (`runtime/bin/forte-aarch64`, with its
-checksum). A Pi can only run a program whose block types its FORTE was built with, so after a
-change of block types: build (`runtime/build-modules.ps1 -Config pi/modules-pi`), put the result
-into the repository (`runtime/package-runtime.ps1`), commit, and run the installer on the Pi again.
-Settings are listed at the top of the script.
+checksum), or from next to it. A Pi can only run a program whose block types its FORTE was built
+with, so after a change of block types: build and package (`runtime/build-pi.ps1`), commit, and run
+the installer on the Pi again. Settings are listed at the top of the script. For a Pi without
+internet, the FORTE kit (`runtime/make-kit.ps1`) carries FORTE, the container files and the base
+images, and its `install-pi.ps1` runs the installer over SSH (Docker itself, when missing, still
+needs a download).
 
 On a Raspberry Pi 5 the PWM channels have other numbers than on a Pi 4: GPIO18 is channel 2 and
 GPIO19 channel 3 of `pwmchip0` (Pi 4: channels 0 and 1). A module description names the channel.
@@ -85,8 +92,9 @@ GPIO19 channel 3 of `pwmchip0` (Pi 4: channels 0 and 1). A module description na
 
 A module describes itself with a **profile**: its AAS on the lab's shared pydantic model
 ([aas-model](https://github.com/tristan-schwoerer/aas-model)) without what its type says anyway.
-The types are aas-model's `Resource` with the resource ontology's own submodels (Skills,
-Operational Data, Control Configuration) added. The registration service reads the profile into
+The types are aas-model's `Module`, `Component` and `ProductionSystem`: its `Resource` with the
+resource ontology's Skills and aas-model's Variables (here from the user's fork, branch
+`lab-ppr-models`, until its pull request is merged). The registration service reads the profile into
 the model, builds the AAS from it, checks the AAS against the ontology and publishes it to an AAS
 server. It also takes the plain `Resource` export of the lab's MQTT stations that aas-model
 authors.
@@ -104,37 +112,41 @@ modsync pull --host 192.168.0.203 --register http://<host>:8090    # ... or with
 when it comes online or changes). The service keeps each profile and AAS in its `--store`
 folder; a profile registered again unchanged is not published again. A broken restriction of the
 ontology refuses the registration; `--strict` also refuses what the ontology does not describe.
-`ModuleTypeAAS` (`modreg/model.py`) is aas-model's `Resource` in the structure of the resource
-ontology (ARSO) for an OPC UA module; the plain `Resource` export of the lab's own stations goes
-through the same service.
-Nameplate, Hierarchical Structures, interface description and mapping configuration are aas-model's
-classes. The ontology's own submodels (Skills, Operational Data, Parameters, Control
-Configuration) have no IDTA template, so their classes are made the way aas-model makes its own:
+`modreg/model.py` names the types a profile may be of (`TYPES`; the names of before 28 Oct, such
+as `ModuleTypeAAS`, still read the profiles written then); the plain `Resource` export of the lab's
+own stations goes through the same service.
+Nameplate, Hierarchical Structures, interface description, mapping configuration and Variables are
+aas-model's classes. The ontology's own submodels (Skills, Parameters, Control Configuration) have
+no IDTA template, so their classes are made the way aas-model makes its own:
 
 ```powershell
 git submodule update --init aas-model                          # the aas-model checkout (not --recursive)
-modreg generate --ontology ontology/ARSO                       # ontology -> modreg/templates/*.json -> modreg/generated/*.py
+modreg generate --ontology ontology/ARSO                       # ontology -> aas-model/templates/arso/*.json -> aas-model's classes
 ```
 
 `modreg generate` writes a submodel template per submodel from what the ontology states (element
-types, idShorts, semanticIds, cardinalities) and has aas-model's generator
-(`aas-model/scripts/idta_generate.py`) make the pydantic classes from it. Both are committed; a
-test fails when they no longer match the ontology. The submodule is at the commit the
-`registration` extra installs. aas-model loads its message schemas
-from the lab's GitHub pages when it is imported, unless `MQTT_SCHEMAS_DIR` names a local copy.
+types, idShorts, semanticIds, cardinalities) into aas-model's `templates/arso` and has aas-model's
+generator (`aas-model/scripts/lab_generate.py`) make the pydantic classes from it
+(`aas_model.submodel_templates.arso`). Both are committed in aas-model; a test fails when they no
+longer match the ontology. The submodule is at the commit the `registration` extra installs.
+aas-model loads its message schemas from the lab's GitHub pages when it is imported, unless
+`MQTT_SCHEMAS_DIR` names a local copy.
 
-A product with its plan is described the same way. `ProductTypeAAS` (`modreg/product.py`) holds a
-Nameplate, the bill of material (Hierarchical Structures), Process Parameters (IDTA 02031-1),
-the required capabilities (Capability Description) and the Production Sequence of the lab's
-process planner. Its profile is a file, and `modreg build` makes the AAS from it:
+A product and its process are described with aas-model's `Product` (a Nameplate, the bill of
+material, Process Parameters (IDTA 02031-1), the required capabilities (Capability Description)
+and the recipe, the Production Sequence of the lab's process planner) and `Process` (the recipe
+bound to a line's modules and skills, and the plan check's result). The example line's are written
+out in Python (`cell/examples/products`, `cell/examples/processes`); `example_line.py` builds them
+with the line, the planar table and the modules, checks every process and publishes them:
 
 ```powershell
-modreg build cell/examples/Vial2mLAAS.json                     # aas/Vial2mLAAS.json: the vial of the example line
-python cell/examples/example_line.py --out aas --publish http://<host>:8081   # the line's five AASs, the plan checked first
+python cell/examples/example_line.py --out aas --publish http://<host>:8081   # every AAS of the example line, each process checked
+modreg build profiles/FillingModuleAAS.json                    # the AAS of any profile (aas/)
 ```
 
-The templates of Process Parameters and Production Sequence are files in `modreg/templates`
-(IDTA's with the lab's extension; the planner's); `modreg generate` makes their classes too.
+The templates of Process Parameters, Production Sequence and the process AAS's submodels are
+aas-model's own (`templates/product`, `templates/process`); `modreg generate` has their classes made
+again with ARSO's.
 
 In the 4diac IDE (a workspace outside the repository), import `iec61499-skill-lib/ModLib` and
 the projects in `cell/control/` (and `iec61499-skill-lib/tests/control/`) without copying them.
