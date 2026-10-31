@@ -1,5 +1,9 @@
 # AAS models: implementation plan and example structures
 
+> Archived. The resource AAS is now [aas-models.md](../aas-models.md); the product and process AASs
+> are [ppr-model.md](../ppr-model.md) (26 Oct) and aas-model's `Product` and `Process` (28 Oct,
+> [aas-examples.md](../aas-examples.md)). APSO 0.2 and AProSO 0.1 below are not what is built.
+
 How the [conceptual model](../../ontology/conceptual-model.md) is carried in the product, process and resource
 AAS, shown on the filling line (the Filling module, the HGH vial), and the plan to get there.
 Drafted 30 Sep 2026; the manifest, backlog and plan sections brought up to date on 5 Oct 2026

@@ -24,9 +24,9 @@ Sep 25, 2026 · @Martin Jensen
 >   The submodel list under *Model specification: resource AAS* and *Our own submodel templates*
 >   is superseded where it differs.
 > - **Repositories**: one repository with a top-level folder per planned repository (see the
->   README), to be split later.
+>   README), to be split later; since 31 Oct the target is [framework-plan.md](../framework-plan.md).
 > - **Schedule**: the build plan's dates are past; what is done and what is next is in
->   `docs/work.md` (Status against the plan's work packages, Next steps).
+>   [onboarding.md](../onboarding.md) and [next-steps.md](../next-steps.md).
 
 ## Scope and fixed decisions
 
