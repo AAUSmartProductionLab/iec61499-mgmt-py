@@ -1,10 +1,14 @@
 # The line's agents: design and plan to the demo in January
 
 Started 30 Oct 2026, after the CIRP paper's experiments were set up. The goal is the demo in January
-2027: orders come in, a product agent per order asks for one step at a time, the modules' agents bid,
-the planar table carries the product between the modules, and a module that cannot do a step yet
+2027: orders come in, a product agent per unit ordered asks for one step at a time, the modules' agents
+bid, the planar table carries the product between the modules, and a module that cannot do a step yet
 gets the skill it needs, planned and created online. A module that is plugged in is found,
 registered and given its agent without anybody starting one.
+
+The agents are one of the demo's two orchestrators (decided 31 Oct): the same line is also run
+centralized, by FOND-AAS's policies as behaviour trees, and everything below the orchestration is
+shared ([framework-plan.md](framework-plan.md), section 1). This file is the multi-agent one.
 
 What exists and what the literature does: [agents-literature.md](agents-literature.md). The code:
 `line-agents/` (`lineagents`).
@@ -17,7 +21,7 @@ What exists and what the literature does: [agents-literature.md](agents-literatu
 | Its AAS | the AAS server (BaSyx), on the lab's server | What it is and offers: skills, capabilities, interface, variables |
 | The registration service | the lab's server (`modreg serve --discover`) | Finds the modules (mDNS), fetches each one's manifest, checks and publishes its AAS |
 | The DMP | the lab's server | Carries an AAS Operation to the module's OPC UA method; writes the module's values to InfluxDB |
-| The XMPP server | the lab's server | Carries the agents' messages (SPADE's own for now) |
+| The XMPP server | the lab's server | Carries the agents' messages: Prosody (`lab-xmpp` in the lab stack); SPADE's own (`--embedded`) for tests in one process |
 | **The agent manager** | the lab's server (`python -m lineagents`) | A resource agent for each module on the AAS server, the order agent, a product agent per product ordered |
 | **The order agent** | in the manager's process (`orders@<domain>`; `POST /orders` with `--http`) | Takes an order (product, quantity) and starts a product agent for each unit |
 | **A resource agent** | in the manager's process | Bids for steps its module can do; reconfigures its module when a bid needs a new skill; runs the skill |
@@ -37,8 +41,8 @@ in IEC 61499, wrapped in skills (Leitão et al. 2023; [agents-literature.md](age
 2. The registration service finds it, fetches its manifest (`http://<Pi>:8088/manifest.json`, the
    profiles of its AAS and its components') and publishes the AAS on the AAS server.
 3. The agent manager sees a module's AAS it has no agent for and starts a resource agent
-   (`<idShort>@<domain>`, registering its XMPP account on first start). When the AAS changes (a skill
-   built), the agent gets the new AAS; when the module's AAS goes, the agent stops.
+   (`<idShort>@<domain>` in lower case, registering its XMPP account on first start). When the AAS
+   changes (a skill built), the agent gets the new AAS; when the module's AAS goes, the agent stops.
 
 **Built 30 Oct:** with `--mqtt` the manager listens to the AAS server's events (BaSyx publishes
 `aas-repository/<repo>/shells/created`, `.../updated`, `.../deleted` and the submodels' events over
@@ -97,11 +101,12 @@ The frame's fields (`inReplyTo`, `replyBy`, ...), the message types and the role
 `serviceProvider`) are those of VDI/VDE 2193 as the OvGU testbed implements them; no implementation over
 XMPP was found, so this one is the first (literature, 5.1).
 
-**Planned:** transport between the steps (section 6), booking a module ahead (the accept books it, a
-second message starts the step once the product is there), proposals that carry a time (when the
-module is free, how long the skill takes, and the setup: the time to plan and create a skill online),
-and every decision written into the product's AAS (the batch record a pharmaceutical line needs). A
-proposal is binding (VDI/VDE 2193-2).
+**Planned:** booking a module ahead, proposals that carry a time (when the module is free, how long
+the skill takes, and the setup: the time to plan and create a skill online), and every decision
+written into the product's AAS (the batch record a pharmaceutical line needs). Built on 30 Oct:
+transport between the steps (section 6), and the product agent accepts a module's proposal once the
+product is at its station, with no second message to start the step. A proposal is binding (VDI/VDE
+2193-2): it holds the module until then.
 
 ## 5. What is built (30 Oct)
 
@@ -158,7 +163,7 @@ proposal is binding (VDI/VDE 2193-2).
 | 8.1 | The shuttles' offer: Transporting in each shuttle's AAS (Capability Description written by `modreg/planar.py`), or transport left out of the bidding (the product agent commands the table directly)? | **In the AAS (30 Oct, yours)**: the shuttles bid like modules; the slides show it too |
 | 8.2 | One offered capability container per realizing skill (`modreg` derivation)? | **Yes (30 Oct, yours)**, and a new or changed skill gets a capability of its own (BottomUpFilling: filling while the needle rises), so that a product can ask for it |
 | 8.3 | XMPP server for the lab: SPADE's own (pyjabber), Prosody or ejabberd? | **Prosody, done 30 Oct** (`lab-xmpp` in the lab stack): pyjabber left an agent of another process unanswered now and then (a registration never answered, a stream without a version); SPADE's own stays for tests in one process |
-| 8.4 | Running skills: modlink over OPC UA (built), or through the AAS and the DMP? | modlink for the demo, the DMP executor next to it (section 3) |
+| 8.4 | Running skills: modlink over OPC UA (built), or through the AAS and the DMP? | modlink for the demo, the DMP executor next to it (section 3). Open again since 31 Oct, for both orchestrators: [framework-plan.md](framework-plan.md), section 10, question 3 (recommended there: through the DMP) |
 | 8.5 | Agents as a few processes on the server, or one container per agent (as SMIA deploys them)? | **One process, the manager (30 Oct, yours)**; per-agent containers only if a module brings its own agent |
 | 8.6 | The orders: from where? An order screen in the web UI, a REST call to the manager, or an order AAS? | **The order agent (30 Oct, yours: the product agents receive the order and carry it out, one per product)**: an `order` message over XMPP or `POST /orders`; the screen on top (A7) |
 

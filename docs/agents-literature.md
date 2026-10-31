@@ -7,6 +7,13 @@ FORTE (Raspberry Pi), OPC UA skills, AASs in Eclipse BaSyx (Skills, IDTA Capabil
 the Camel-based DMP, LDS-ME discovery, online creation of composite skills, HTN planning, and a Planar
 Motor table exposed as a module.
 
+What was decided and built since is in [agents.md](agents.md). Where it settles or differs from the
+recommendations below: each shuttle bids as an agent of its own (no agent for the whole table); a
+module's proposal is accepted only once the transport has brought the product to it; the agents start
+on BaSyx's MQTT events; Prosody is the XMPP server; a resource agent creates a skill with `modsync`
+over FORTE's management protocol, not through the DMP. Since 31 Oct the agents are one of the demo's
+two orchestrators ([framework-plan.md](framework-plan.md), section 1).
+
 How it was verified. Every reference in section 8 was checked against Crossref, OpenAlex or Semantic
 Scholar metadata, the publisher page, or the primary repository/documentation. Where a statement about a
 paper's content comes only from its abstract, it says so. Statements marked **[unverified]** could not be
