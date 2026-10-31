@@ -5,7 +5,13 @@ manner of the CSS reference model figure: one area per layer, associations named
 multiplicities at both ends. Iterated here in mermaid; once it settles it is redrawn in draw.io
 as the formal figure. Drafted 30 Sep 2026; second iteration the same day after reviewing
 CaSk/CaSkMan (below). How the concepts are carried in AAS, with example structures and the
-implementation plan (30 Sep, archived): [aas-implementation-plan.md](../docs/archive/aas-implementation-plan.md).
+implementation plan (30 Sep, archived): [aas-implementation-plan.md](aas-implementation-plan.md).
+
+**Not kept up to date** (31 Oct 2026): a draft of 30 Sep. The model the work proceeds by is
+[ppr-model.md](../ppr-model.md) (26 Oct), and the relations are formalised in PPRL. The
+column "Carried in the AAS by" names elements of ARSO 0.5 (Uses, Occupies, StateReference,
+Implementation, RealizesProperty, OperationalData), gone since ARSO 0.7 and 0.14, and AProSO
+structures that nothing builds.
 
 **Legend.** Fill = layer: services / agents (pink) and product and process (yellow),
 capabilities (blue) and skills (orange) as in the CSS figure; resources (green), interface

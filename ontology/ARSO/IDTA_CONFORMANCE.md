@@ -7,19 +7,28 @@ the templates are the `SMT/Cardinality` qualifiers carried in the template JSON.
 Scope: ARSO only (ARSO_AAS.ttl + Modules/), with its AAS v3.1 and CSS imports.
 APSO is out of scope.
 
+Written in the AAS generation project (ARSO_Ontology_AAS_Generation) and copied here with the
+ontology. Its builder, converter (`aas_to_rdf.py`), `semantic_ids.py`, the UI's `semanticIds.ts`,
+the SHACL files `arso-rules.shacl.ttl` and `shapes.generated.shacl.ttl` and the templates above
+are that project's, not this repository's; its pushed ARSO is 0.7 (0.8 in a working copy), this
+folder's 0.14.
+Here the AASs are built and checked by `modreg` (`modreg check`), which the notes below mark where
+it differs. Counts as of 31 Oct (named classes and `arso:semanticId` values per file).
+
 ## Coverage
 
 | ARSO module | IDTA source | Classes | `arso:semanticId` | Status |
 | --- | --- | --- | --- | --- |
 | `nameplate.ttl` | 02006-3-0 | 35 | 40 | Complete |
-| `hierarchical-structures.ttl` | 02011-1-1 | 8 | 8 | Complete |
-| `aid.ttl` | 02017-1-1 | 44 | 32 (was 4) | Filled in |
-| `capabilities.ttl` | 02020 | 25 | 26 (was 5) | Filled in |
+| `hierarchical-structures.ttl` | 02011-1-1 | 9 | 8 | Complete |
+| `aid.ttl` | 02017-1-1 | 49 | 40 (was 4) | Filled in; AID 1.2 and aas-model's action extension since 19 Oct |
+| `capabilities.ttl` | 02020 | 28 | 30 (was 5) | Filled in; constraints since 0.11 |
 | `technical-data.ttl` | 02003 | 26 | 26 (was 0) | Filled in; now built |
 | `aimc.ttl` | 02027 | 15 | 15 | New; built |
-| `skills.ttl` (was `control-component.ttl`) | 02015 (not supplied) | 45 | 32 | ARSO's own Skills submodel; began from 02015 |
-| `operational-data.ttl` | none (ARSO-specific) | 3 | 1 | n/a |
-| `parameters.ttl` | none (ARSO-specific) | 3 | 1 | n/a |
+| `skills.ttl` (was `control-component.ttl`) | 02015 (not supplied) | 49 | 34 | ARSO's own Skills submodel; began from 02015 |
+| `variables.ttl` (was `operational-data.ttl` until 0.13) | none: aas-model's Variables, with IDTA 02008 time series and IDTA 02075 frame ids inside | 17 | 17 | n/a |
+| `control-configuration.ttl` | none (ARSO-specific) | 18 | 2 | Since 0.10 the schema of the integrator's record, outside the AAS |
+| `parameters.ttl` | none (ARSO-specific) | 5 | 1 | n/a |
 
 ## Added to the ontology
 
@@ -54,16 +63,20 @@ should stay; they are listed so the delta is visible.
    as an *empty* SMC and delegates its contents to IDTA 02002, so the template
    states no inner cardinality at all.
 2. **Nameplate submodel is mandatory.** `ARSO_AAS.ttl` requires exactly one
-   `DigitalNameplateSubmodel` per AAS; IDTA 02006-3-0 has no submodel-level
-   cardinality qualifier.
-3. **HierarchicalStructures submodel is mandatory.** ARSO requires exactly one;
-   the IDTA 02011-1-1 template marks it `ZeroToOne`.
+   `DigitalNameplateSubmodel` per module AAS (`arso:ResourceAAS`; a component's
+   and a system's AAS at most one, since 0.7); IDTA 02006-3-0 has no
+   submodel-level cardinality qualifier.
+3. **HierarchicalStructures submodel is mandatory.** ARSO requires exactly one
+   of a module and of a system (not of a component); the IDTA 02011-1-1
+   template marks it `ZeroToOne`.
 4. **At least one interface.** `AIDSubmodel` requires `some InterfaceSMC`; every
    `InterfaceTemplateFor*` in IDTA 02017-1-1 is `ZeroToMany`.
 5. **Cross-submodel reference targets.** The SPARQL rules in
    `arso-rules.shacl.ttl` require Skill, Capability, Variables, Parameters
    and AIMC references to resolve inside the same AAS. No IDTA template
-   expresses cross-submodel constraints.
+   expresses cross-submodel constraints. (Those rules predate ARSO 0.11, by
+   which `CapabilityRealizedBy` may name a skill in a component's AAS, and
+   0.13, by which a coordinate's `RelativeTo` may name one in another AAS.)
 6. **Flattened Skills.** `skills.ttl` (until 26 Oct `control-component.ttl`) began from IDTA 02015 CCType
    and keeps none of its containers but `Errors`: the skills are the submodel's own elements, and an
    error is a property whose value is its code (0.9); see the design note in that file.
@@ -89,12 +102,13 @@ should stay; they are listed so the delta is visible.
    `arso:idShort` cannot fix it: the converter reads only `idshorts[0]`
    (`aas_to_rdf.py`, `_StructuralRules`), and rdflib does not order multiple
    values. The ontology and builder must change together, or the converter must
-   match a set of idShorts.
+   match a set of idShorts. (In this folder `FormsSMC` takes both idShorts, and
+   `modreg check` matches either; `modreg` writes `forms`.)
 2. **`semantic_ids.py` still emits the `smartfactory.de` ids** for
    CapabilitySet/CapabilityContainer. IDTA 02020 defines both; ARSO accepts either.
 3. **`CapabilityRealizedBy` is wrapped in an SML.** IDTA 02020 places repeated
    `CapabilityRealizedBy` RelationshipElements directly under
-   `CapabilityRelations`.
+   `CapabilityRelations`. (`modreg` writes `RealizedBy` there, as IDTA does.)
 4. **`TechnicalManufacturerNameMLP` is modelled as a MultiLanguageProperty.** IDTA
    02003 and the builder both emit `ManufacturerName` as a `Property`.
 5. **Legacy AID idShorts with no IDTA counterpart:** `modv_address`,
@@ -117,7 +131,8 @@ should stay; they are listed so the delta is visible.
    Variables, live values as Properties (their meaning a supplemental semanticId) and
    State, Measurements and Log holding IDTA 02008 time series as SMCs instead of
    submodels of their own. The Coordinates in Measurements carry IDTA 02075's frame ids
-   on their six values. The AAS generation project's builder emits a collection per
+   on their six values. `modreg` writes only the time series and the coordinates, no
+   live values (28 Oct). The AAS generation project's builder emits a collection per
    variable around an InterfaceReference, which ARSO no longer declares.
 9. **Generated shapes are stale.** `shapes.generated.shacl.ttl` predates the
    TechnicalData annotations and the AIMC module, so their OWL restrictions
