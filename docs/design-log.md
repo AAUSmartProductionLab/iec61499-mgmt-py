@@ -18,6 +18,25 @@ A running log of design considerations made while building, for writing the pape
 
 ## 31 Oct 2026
 
+- **One line, two orchestrators: only the orchestration changes.** *Journal*.
+  - What: the demo runs the line centralized, with a FOND policy planned with PDDL from the AASs and
+    run as a behaviour tree [schwoerer2026fond], and multi-agent, with product agents that follow
+    their recipes and resource agents that bid for the steps. Both start from the same order and share
+    everything below them:
+    - the resource, product and process AASs;
+    - the IEC 61499 modules with ModLib's occupation, PackML module state and skill state machines;
+    - one way of running a skill (occupy, Execute, start, wait, release);
+    - the DMP, registration and online reconfiguration.
+
+    Occupation hands the line from one to the other. AP2030-UNS, the project's first stack (PackML
+    stations over MQTT run by behaviour trees), is the predecessor and is archived
+    ([framework-plan.md](framework-plan.md), section 1).
+  - Why: plug and produce should not depend on who orchestrates; a module is made once and runs under
+    either. With everything else equal, the two can be compared on one scenario, which is the journal
+    paper's evaluation of orchestration.
+  - Instead of: one orchestrator for the demo; two stacks for one line, as AP2030-UNS and ours were;
+    each orchestrator calling the modules its own way.
+
 - **The framework is AASPIRE, in one organization for the AP2030 project.** *CIRP*, *Journal*.
   - What: AASPIRE, AAS-based Planning, Integration, Reconfiguration and Execution. The AP2030
     organization holds every repository, ours and the colleagues'; its main repository `aaspire` is the
