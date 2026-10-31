@@ -57,8 +57,8 @@ backend) and [control-configuration.md](control-configuration.md), [ppr-model.md
 [aas-models.md](aas-models.md), [aas-examples.md](aas-examples.md),
 [state-and-parameters.md](state-and-parameters.md) (a modelling plan waiting for decisions),
 [repositories.md](repositories.md), [framework-plan.md](framework-plan.md) (AASPIRE: the framework that
-holds the lab's AAS work, its repositories in the AP2030 organization, documentation site and icons, and
-what the January demo still needs).
+holds the lab's AAS work, one line run by two orchestrators, its repositories in the `ap2030-project`
+organization, documentation site and icons, and what the January demo still needs).
 
 ## How the work is done
 
@@ -219,6 +219,7 @@ the stations from outside) and then move its pin; whether to change submodules t
   user's own clone in `C:\Users\marti\Documents\repos\basyx-aas-web-ui` is used by another session:
   leave it alone.
 - The ARSO generation and SHACL validation project: https://github.com/MartinJensen37/ARSO_Ontology_AAS_Generation.
-- The lab's AAS infrastructure (registration over MQTT, BaSyx): https://github.com/aausmartproductionlab/AP2030-UNS.
+- AP2030-UNS, the project's first stack (registration over MQTT, BaSyx, PackML stations run by behaviour
+  trees); no longer used, AASPIRE succeeds it: https://github.com/aausmartproductionlab/AP2030-UNS.
 - The overall plug-and-produce architecture is a note in the user's own notes; ask for it before
   planning work that crosses repositories.

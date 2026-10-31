@@ -5,7 +5,7 @@ a narrow scope: restructuring a running module through its AAS. This file collec
 the journal paper:
 - the modelling of skills and capabilities;
 - planning;
-- orchestration with multi-agent systems;
+- orchestration with multi-agent systems, compared with a centralized orchestrator on the same line;
 - what the CIRP paper had no room for.
 
 Add to it whenever a change or a design consideration belongs here. Each consideration found while
@@ -17,7 +17,9 @@ A module that describes itself:
 - its skills and capabilities in the AAS (ARSO [jensen2026ontology]);
 - new composite skills planned from them;
 - built online in its IEC 61499 program;
-- offered to a line that is run by agents.
+- offered to a line run by either of two orchestrators: centralized (FOND policies run as behaviour
+  trees [schwoerer2026fond]) or multi-agent (product agents following their recipes). Only the
+  orchestration differs (31 Oct, [framework-plan.md](framework-plan.md) section 1).
 
 The CIRP paper is the module-level mechanism. The journal paper is the models, the planning and the
 line.
@@ -34,6 +36,7 @@ line.
 | **Runtime conditions** | A primitive's `Conditions` and `Completion` (ARSO 0.11), and their link to the capability constraints through shared data points | [skill-planning.md](skill-planning.md) section 5 |
 | **Product, process, resource** | ISA-88 recipe levels across product, process and resource AAS; matching by meaning (supplemental ids); three ids, three jobs. Built as aas-model's types; reference models of three products (vial, syringe, cartridge) and their process AASs on the line, checked by following every binding; a capability property listing the containers a module takes | [ppr-model.md](ppr-model.md), [aas-examples.md](aas-examples.md), DD 3.5, 3.6, aas-model's `docs/lab-aas.md` |
 | **Orchestration by agents** | Product and resource agents bidding for process steps (VDI/VDE 2193 over XMPP, SPADE); a product agent per unit ordered; shuttles bid for Transporting like modules, the module's binding proposal held until the product is at its station; custody (who carries a product) as capability constraints in the resources' AASs, Receiving and Releasing, so that no rule of the agents is about shuttles; a capability narrower than its steps contribute (BottomUpFilling, a Filling) declared by the skill written for it, so a product can ask for it; the module's agent creating that skill online on FORTE before it carries the step out (built 30 Oct, on the PC). Still to do: the agent planning the skill itself (A3); line-level FOND policies [schwoerer2026fond] as the complement for uncertain outcomes | [agents.md](agents.md), [design-log.md](design-log.md) (30 Oct), `line-agents/` |
+| **One line, two orchestrators** | Planned 31 Oct, with the colleagues. The same resource, product and process AASs, the same IEC 61499 modules (occupation, PackML module state, the skills' state machines) and one way of running a skill (occupy, Execute, start, wait, release), under a centralized orchestrator (FOND-AAS's policy run as a behaviour tree [schwoerer2026fond]) and a multi-agent one; occupation hands the line from one to the other | [framework-plan.md](framework-plan.md) section 1, [design-log.md](design-log.md) (31 Oct) |
 | **The AAS as the configuration of its own connection** | A module's AAS is what the DMP (aas-camel-dmp) runs: an Operation invoked at the AAS server is delegated to the DMP, which calls the module's OPC UA method as the AIMC maps it and answers with the method's reply; the module's values are observed over OPC UA and written as rows of the time series the Variables name (InfluxDB), never as live values in the AAS. Generated from the module spec with the program, checked end to end against a simulated module | [design-log.md](design-log.md) (28 Oct), [tooling.md](tooling.md) section 6, `cell/tests/test_dmp_live.py` |
 | **Locations** | Coordinates in Variables (aas-model's; ARSO 0.14) as a tree of transforms rooted at the table's base: mounts and end effectors following measured positions, shuttles following the controller, products re-parented at handover; the stations derived from the AASs; the first version as frames on BoM nodes, and why it was replaced | [locations-and-layout.md](locations-and-layout.md), [design-log.md](design-log.md) |
 
@@ -57,6 +60,9 @@ line.
 - **The cases T1 to T12**, including discovery (T10), a missing scale (T11) and a missing integration
   constraint (T12).
 - **Agents:** time from a product's request to a module offering a new skill.
+- **The two orchestrators on one scenario** (proposed 31 Oct): the same orders and events (a module
+  failing, a rush order, a module plugged in) run by both; the time to finish the orders, the reaction
+  to the failure, the time until a new module is used, the work to set each up.
 
 ## Related work beyond the CIRP paper's 17
 
@@ -92,6 +98,8 @@ All in [paper-references.bib](paper-references.bib):
 
 ## Open questions for the journal paper
 
+- **The comparison's place:** the centralized orchestrator is the colleagues' work (FOND-AAS, the BT
+  controller); whether the comparison is this paper's or a joint one.
 - **Taring:** the plan tares after dispensing from an untared start
   ([skill-planning.md](skill-planning.md) section 9).
 - **Composites of composites:** inlined today; whether to keep them as calls.
