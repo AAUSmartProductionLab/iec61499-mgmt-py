@@ -27,7 +27,7 @@ To let someone build FORTE with block types from their own 4diac project, withou
 repository:
 
 ```powershell
-runtime/build-pi.ps1 -SkipValidate   # first, so the lab's exports in runtime/.cache/modules are current
+runtime/build-pi.ps1                 # first (not -SkipValidate), so the lab's exports in runtime/.cache/modules are current
 runtime/make-kit.ps1                 # runtime/dist/forte-kit.zip (-NoLabModules: without the lab's modules)
 ```
 
@@ -46,8 +46,8 @@ export stays in `runtime/.cache/modules` until the next `build-modules.ps1`).
 ## What is needed once
 
 1. **The 4diac IDE 3.3** for the headless export. Its path is the default of `-Ide` in
-   `runtime/validate.ps1`; change it there if yours is elsewhere. The IDE's version must match the
-   FORTE release (3.3.0, `-ForteTag` in `runtime/build-runtime.ps1`).
+   `runtime/validate.ps1`; elsewhere set `FORDIAC_IDE` to its `4diac-idec.exe`. The IDE's version
+   must match the FORTE release (3.3.0, `-ForteTag` in `runtime/build-runtime.ps1`).
 2. **The FBE** in `C:\4diac-fbe`: `git clone https://github.com/eclipse-4diac/4diac-fbe C:\4diac-fbe`.
    The first build runs its `toolchains\etc\install.cmd`, which downloads the toolchains; the first
    Pi build also downloads the aarch64 cross compiler (`aarch64-linux-musl`). Both take a while,
