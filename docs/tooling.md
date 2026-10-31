@@ -5,12 +5,13 @@ talking to a FORTE, running a whole module, deploying to a Pi, and building and 
 AASs. Commands run from the repository root with the repository's venv
 (`.venv/Scripts/python.exe`, shown as `python`) and `PYTHONUTF8=1`, unless a folder is named.
 Learnings behind these recipes are in [work.md](work.md); search it before debugging something odd.
+How each tool works inside (its algorithm, for the paper) is [tools.md](tools.md).
 
 ## 1. Tests
 
 | What | Command | Notes |
 | --- | --- | --- |
-| Offline, every folder | `python -m pytest -q` | 2 to 4 min. One known failure: `test_the_submodule_is_the_aas_model_the_package_installs` (the `aas-model` submodule is on the local branch `arso-submodels`) |
+| Offline, every folder | `python -m pytest -q` | 2 to 4 min. No known failure (31 Oct: the `aas-model` submodule is on `lab-ppr-models` at the commit `pyproject.toml` pins) |
 | One folder or test | `python -m pytest -q iec61499-skill-lib/tests/test_modgen.py -k layout` | |
 | Live, against a FORTE on this PC | `python -m pytest -q --module-forte-exe runtime/fbe/build/modules-win/forte/build/forte/forte.exe` | About 12 min. Run it in the background with the output in a log file: FORTE's console output drowns the pipe. Each test starts its own FORTE (and Modbus simulator) on free ports and stops it |
 | Live, against a Pi | `python -m pytest cell/tests/test_module_live.py --pi-host <Pi IP> --sim-host <this PC's IP>` | Deploys each module as the Pi's boot file (it replaces the Pi's program: ask the user first, and deploy the module again afterwards); the Pi's FORTE talks Modbus to the simulator on this PC, no header pin is used |
@@ -20,9 +21,10 @@ Learnings behind these recipes are in [work.md](work.md); search it before debug
 
 Where the tests are: `iec61499-mgmt-py/tests` (protocol, boot files, planner),
 `iec61499-skill-lib/tests/test_modgen.py` (the generator and the committed projects),
-`aas61499-tools/tests` (`test_modsync*`, `test_modreg*`; `*_live.py` need FORTE), `cell/tests`
-(modules live, the example line, the vocabulary), `deploy/tests`. The shared live-test options are
-in `conftest.py` at the top.
+`aas61499-tools/tests` (`test_modsync*`, `test_modreg*`, `test_modplan*`; `*_live.py` need FORTE),
+`cell/tests` (modules live, the example line, the vocabulary, the DMP live), `deploy/tests`,
+`line-agents/tests` (the agents; `test_agents_live.py` needs FORTE). The shared live-test options
+are in `conftest.py` at the top.
 
 `test_committed_module_projects_match_the_generator` regenerates every project into a temporary
 folder and compares it with the committed one: a change to the generator is committed together
@@ -39,6 +41,7 @@ XML: change the spec or the generator, regenerate, check.
 | A library block (module state manager, occupation, skill core, IO blocks, parameter blocks) | `modgen/library.py` (writes ModLib; module projects carry copies) |
 | The structure of a module's program (applications, groups, a module level skill's pattern, equipment and skill primitive blocks, start-up) | `modgen/module.py`; the rules it follows are [module-rules.md](module-rules.md) |
 | Pin comments | `modgen/pins.py` (a test requires a comment on every pin) |
+| Type and block comments in plain words | `modgen/explain.py` |
 | Layout | `modgen/layout.py`; XML writing, kept layouts and hidden connections in `modgen/fbxml.py` |
 
 ```powershell
@@ -124,15 +127,18 @@ python -m modsync pull --host 192.168.0.203            # which module runs there
 python -m modsync push cell/modules/filling.yaml --target pi --dry-run   # what would change online
 python -m modsync verify aas --host 192.168.0.203      # is the module what its AAS describes? (no spec read)
 python -m modsync reconfigure http://localhost:8081 --shell FillingModuleAAS --dry-run   # what the AAS wants changed
-python -m modsync reconfigure aas --host 192.168.0.203 --record   # apply online, verify, add to the boot file, record
+python -m modsync reconfigure aas --host 192.168.0.203 --user admin   # apply online, verify, add to the boot file (SSH), record
 python -m modsync project --host 192.168.0.203         # the 4diac project of what runs -> projects/
 python -m modsync watch                                # pull whenever a module comes online or changes
 ```
 
-`reconfigure` refuses a running or occupied module unless `--force`; it changes values (a step's
-constant, a parameter's default or limits) and creates module level skills that are described but
-not built. The Python functions behind it (for scripts and the scenario runner, plan step A4) are in
-`modsync/desired.py`: `load`, `read`, `differences`, `reconfigure`, `record`, `store`.
+`reconfigure` changes values (a step's constant, a parameter's default or limits) only while the
+module is Stopped, Idle or Aborted and nobody occupies it, unless `--force`; it creates module level
+skills that are described but not built in any state. It adds the change to the boot file on this
+PC, or on a Pi given `--user` (without it a FORTE restart loses the change), and records what it did
+(it takes no `--record`; that option is `verify`'s). The Python functions behind it (for
+scripts and the scenario runner, plan step A4) are in `modsync/desired.py`: `load`, `read`,
+`differences`, `reconfigure`, `record`, `store`.
 
 **OPC UA**: each module below `/Objects/<Module>`: `Occupation` (Occupy, Release), `Module`
 (Reset, Start, Stop, Abort, Clear; State), `Skills/<Skill>` (Start, Stop, Abort, Reset; State,
@@ -226,9 +232,10 @@ with a flow not saved yet in the body if wanted, and `POST /plan/<shell>`; `modp
 contributes (a test fails otherwise).
 
 **A new submodel or element**: ARSO first (ask), then `modreg generate`, then the profile code
-(`modreg/profile.py`), then the readers (`modsync/desired.py`, and `modlink` in the HMI submodule if
-it uses it), then `docs/aas-models.md`. Tests: `aas61499-tools/tests/test_modreg_*.py` (a test fails
-when the templates no longer match the ontology) and `cell/tests/test_example_line.py`.
+(`modreg/profile.py`), then the readers (`modsync/described.py` and `aasjson.py`, `modplan/read.py`,
+`modreg/plancheck.py`, `lineagents/aas.py`, and `modlink` in the HMI submodule if it uses it), then
+`docs/aas-models.md`. Tests: `aas61499-tools/tests/test_modreg_*.py` (a test fails when the
+templates no longer match the ontology) and `cell/tests/test_example_line.py`.
 
 **Publishing.** The local AAS server is the lab's AAS stack on this PC (`deploy/aas/compose.yaml`,
 `lab-*` containers): the AAS environment `http://localhost:8081`, the web UI `http://localhost:3000`,
@@ -267,9 +274,9 @@ curl http://localhost:8090/discovered                                           
 python -m modreg manifest filling --target pi --out manifest.json                # what a module serves for that
 ```
 
-`modsync reconfigure http://localhost:8081 ... --record` writes the changed submodels back to the
-server. **The lab's AAS server is never published to without the user's go**: the same ids would
-overwrite the shells the lab's stations use.
+`modsync reconfigure http://localhost:8081 ...` writes the changed submodels back to the server once
+it has changed the module. **The lab's AAS server is never published to without the user's go**:
+the same ids would overwrite the shells the lab's stations use.
 
 ## 6b. The agents (lineagents)
 
@@ -309,3 +316,16 @@ only** (the needle in the vial while dosing) is the `capability` of the skill in
 `values`, `precondition`, `postcondition`, `invariant`, with `<Item>.<meaning>` for another item's
 state. Tests: `aas61499-tools/tests/test_modplan*.py`; on FORTE `test_modplan_live.py` (with
 `--module-forte-exe`).
+
+## 8. The evaluation (cell/eval)
+
+The paper's numbers (plan steps B1, B2 and G6 in [next-steps.md](next-steps.md)); each script
+writes its results to `cell/eval/results`.
+
+```powershell
+python cell/eval/scenarios.py --forte runtime/fbe/build/modules-win/forte/build/forte/forte.exe --runs 5   # each change online and by a restart
+python cell/eval/scenarios.py --pi --only plug value written --runs 5   # on the filling Pi: moves the axis, only with the user at the bench
+python cell/eval/planners.py --runs 5    # the planning cases through GTPyhop, ENHSP and Aries (the planners extra)
+python cell/eval/figures.py              # the downtime figure: docs/figures/evaluation-downtime.pdf and .svg (needs matplotlib)
+python cell/eval/effort.py               # the user actions a new skill takes, three ways
+```

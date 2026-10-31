@@ -19,9 +19,10 @@ interface of the module:
 | **modlink** | Operate the module | The module's AAS | Calls of skills and module commands; their states and results | OPC UA |
 | **modplan** | Compose new skills | The module's AAS (its Capability Description) | A planned skill described in the AAS (modsync builds it); findings on the skills it has; what the module can carry out | – (reads and writes the AAS) |
 
-A fourth tool, **modreg**, makes and checks the AAS (from a spec, or from what modsync read), derives
+A fifth tool, **modreg**, makes and checks the AAS (from a spec, or from what modsync read), derives
 the offered capabilities from the skills, and registers the AAS; it is the vendor's and the
-registration service's tool and is described in [aas-models.md](aas-models.md).
+registration service's tool and is described in [aas-models.md](aas-models.md). The line's agents
+(`lineagents`, [agents.md](agents.md)) use modsync to create a skill online and modlink to run it.
 
 **The contract is the module rules, not the tools.** modgen writes programs by the rules, modsync
 reads programs back by them, modreg describes programs by them, and modlink calls the interface they
@@ -35,8 +36,9 @@ decisions made of three library block types).
 only modsync uses it after the first deployment; operating goes over OPC UA and only modlink (and the
 HMI built on it) uses it. Operating a module never changes it; changing it never runs a skill.
 
-**Sizes** (Python, without tests and generated code): modgen 4,235 lines, modsync 2,171, modlink
-1,369, modreg 3,050, modplan 1,145 (28 Oct), and the management protocol client they share (`iec61499_mgmt`) 926.
+**Sizes** (Python, without tests and generated code, 31 Oct): modgen 4,559 lines, modsync 2,217,
+modlink 1,404, modreg 4,449, modplan 1,823, and the management protocol client they share
+(`iec61499_mgmt`) 926; the agents (`lineagents`) 1,715.
 
 ```mermaid
 flowchart LR
@@ -68,7 +70,7 @@ use different equipment, a condition compares what is known when it is evaluated
 
 | Generated | Pattern |
 | --- | --- |
-| ModLib types | Occupation, the PackML state manager, the skill state machine (`SKILL_Core`), parameter latches, IO blocks, and the flow blocks `SKILL_Join2` to `4`, `SKILL_Condition_LREAL` and `_BOOL`, `SKILL_Merge` |
+| ModLib types | Occupation, the PackML state manager, the skill state machine (`SKILL_Core`), parameter latches, `SKILL_FailMerge` (two failures into one), IO blocks, and the flow blocks `SKILL_Join2` to `4`, `SKILL_Condition_LREAL` and `_BOOL`, `SKILL_Merge` |
 | `EQ_<Item>` per equipment item | Owns its IO points; writes what its one holder commands; publishes its inputs |
 | `SK_<Skill>` per primitive | `SKILL_Core`, one latch per parameter, the contract, the command table of its equipment |
 | The application per target | Occupation, Module, the equipment with that target's IO addresses, the offered primitives, the procedures, each module level skill as a subapplication of library and primitive instances; one INIT chain from the resource's `START` |
@@ -232,8 +234,9 @@ modlink follows references and meanings, never names:
    interface; the Start Operation's inputs are the parameters, its outputs the results. The module's
    own commands (Occupy, Release, Reset, Start, Stop, Abort, Clear) are skills of the kind
    ModuleControl, called by their Start.
-3. **Mapping Configuration** with **Operational Data**: which interface property shows a skill's
-   state, its error and each result (matched by the data point's meaning).
+3. **Mapping Configuration** with **Variables** (aas-model's; Operational Data until 28 Oct): which
+   interface property shows a skill's state, its error and each result (matched by the data point's
+   meaning, its supplemental id).
 4. **Asset Interfaces Description**: the endpoint and the browse path of every action and property.
 
 A skill built online is found as soon as modsync has recorded its interface; no client changes.
@@ -258,13 +261,13 @@ and the skill's defaults for the rest.
 ### 4.3 What modlink does not do
 
 It writes nothing into the AAS and never uses the management protocol. It does not plan (which module
-runs which step is the planner's, later the agents'), and it does not check a value against the
-capability's range before calling: FORTE refuses an out-of-range value itself.
+runs which step is the planner's or the agents', which call it), and it does not check a value
+against the capability's range before calling: FORTE refuses an out-of-range value itself.
 
 ## 5. modplan: new skills by planning
 
-The design is [skill-planning.md](skill-planning.md); the model it reads, ARSO 0.11's Capability
-Description.
+The design is [skill-planning.md](skill-planning.md); the model it reads, the Capability Description
+as ARSO has it since 0.11 (ARSO is at 0.14).
 
 **Takes** the module's AAS and its components' AASs (a folder or an AAS server) and a requirement: a
 capability the module offers, the values of its properties (FillVolume 2.0) and the results asked for
