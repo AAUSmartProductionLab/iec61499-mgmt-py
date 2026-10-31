@@ -18,7 +18,20 @@ A running log of design considerations made while building, for writing the pape
 
 ## 31 Oct 2026
 
-- **The framework gets a name, one organization and a main repository (proposed).** *CIRP*, *Journal*.
+- **The framework is AASPIRE, in one organization for the AP2030 project.** *CIRP*, *Journal*.
+  - What: AASPIRE, AAS-based Planning, Integration, Reconfiguration and Execution. The AP2030
+    organization holds every repository, ours and the colleagues'; its main repository `aaspire` is the
+    framework, with the parts grouped by the pillars and the line (`aseptic-line`) as one more part.
+    What exists twice in the lab (three registration services, two web UI forks, two planar
+    controllers, two brokers, two time-series databases) is resolved with the colleagues
+    ([framework-plan.md](framework-plan.md)).
+  - Why: the framework has to hold the lab's other AAS work too (planning with PDDL, behaviour trees,
+    the DMP); one letter per pillar gives each group's part its place; the papers cite one name.
+  - Instead of: Skillshell (skills and IEC 61499 only, below); an organization of the framework's
+    own, with AP2030 as its main repository.
+
+- **The framework gets a name, one organization and a main repository (proposed; superseded the same
+  day by AASPIRE above).** *CIRP*, *Journal*.
   - What: Skillshell as the name; one GitHub organization; 17 repositories by family (definitions,
     module, engineering, operation, deployment, the line); only the main repository has submodules;
     one documentation site; an icon per repository in the figures' colours
