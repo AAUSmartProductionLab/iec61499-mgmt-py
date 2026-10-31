@@ -21,6 +21,10 @@ process component (the filling pump, the stoppering piston). The line is six mod
 | Inspection | top camera, side camera | planned: `cell/modules/planned/inspection.yaml`, no program |
 | Unloading | Kuka robot, gripper | not described yet; the robot has its own Raspberry Pi |
 
+The vials ride between them on the shuttles of the planar table (`planar-controller/`, Python over
+OPC UA, not IEC 61499); the table and each shuttle have an AAS like a module's (`modreg profile
+planar`, [locations-and-layout.md](locations-and-layout.md)).
+
 We call them **modules** (not stations or units). Each module runs on its own Raspberry Pi and
 is deployed on its own; it is orchestrated only through OPC UA methods and variables (MQTT may
 come back later as an option). The structure of a generated module is in [work.md](work.md).
@@ -142,11 +146,14 @@ is for that case and runs first when the module resets.
 
 ## IO on the Raspberry Pi
 
-- **Digital in and out**: `GPIOChip` + `IX`/`QX` (one FB per line).
+- **Digital in and out**: each IO point's block (`IO_DI`, `IO_DO` of ModLib) sets up its line from
+  its address (`gpio[0:23:pull_up:active_low]`) with a `GPIOChip` inside it and reads or writes it
+  with `IX`/`QX`. No separate line blocks since 21 Oct.
 - **PWM** (motor speed, servo): FORTE 3.3 has none for Linux, so the runtime carries a small
-  module for Linux sysfs PWM (`runtime/forte-patches/0002-pwmsysfs-module.patch`): one config FB
-  `PWMChip` per channel, used with the standard `QW` output FB (duty 0..65535; the servo angle is
-  converted by the generated IO block). It drives the Pi's two hardware channels
+  module for Linux sysfs PWM (`runtime/forte-patches/0002-pwmsysfs-module.patch`): a config FB
+  `PWMChip` per channel, which the IO point's block (`IO_AO`) holds with the standard `QW` output FB,
+  set up from its address `pwm[...]` (duty 0..65535; the servo angle is converted by the generated
+  IO block). It drives the Pi's two hardware channels
   (`dtoverlay=pwm-2chan`, PWM0 on GPIO18, PWM1 on GPIO19) and would drive a PCA9685 board through
   the kernel `pwm-pca9685` driver. Tested on the aarch64 binary under emulation and on the lab Pi.
 - **Channel count** (one Pi per module): each module needs 1 PWM channel, for the step pulses of
@@ -169,4 +176,6 @@ Decided: OPC UA methods and variables, as the generated modules have them (Occup
 module Reset/Start/Stop/Abort/Clear, skill Start/Stop/Abort/Reset with parameters, State and
 ErrorID variables). The ESP32s' MQTT topics (`NN/Nybrovej/InnoLab/<Module>/CMD/<Action>` with
 a JSON `Uuid`, answers on `/DATA/...`) are not carried over; an MQTT facade may be added later
-as an option, since FORTE has MQTT.
+as an option, since FORTE has MQTT. Both orchestrators of the demo use these calls
+([framework-plan.md](framework-plan.md), section 1): straight over OPC UA, or through the AAS
+server, where the DMP turns an invoked Operation into the method call.
