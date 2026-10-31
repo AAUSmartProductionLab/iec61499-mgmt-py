@@ -52,10 +52,16 @@ composites:
 ```
 
 - `execute` is the steps in order. A step is a primitive's name, or `{<Primitive>: {<parameter>:
-  <value or the skill's parameter>}, as: <name>}`. Steps may also run side by side (`parallel`) or
-  depend on a decision (`if`); see [module-rules.md](module-rules.md), section 3.
+  <value or the skill's parameter>}, as: <name>}`. Steps may also run side by side,
+  `{parallel: [[<steps>], [<steps>]], as: <name>}` (2 to 4 branches), or depend on a decision,
+  `{if: {operand: Weigh.Weight, op: lt, value: 2.5}, then: [<steps>], else: [<steps>], as: <name>}`
+  (`op` one of `eq`, `ne`, `gt`, `gte`, `lt`, `lte`; `all:` or `any:` a list of such; `else` may be
+  left out). The blocks they become are rule set 2 in [module-rules.md](module-rules.md), section 3;
+  `BottomUpFilling` in `cell/eval/scenarios.py` is an example with a parallel block.
 - A constant has to lie within the limits of the primitive's parameter; the generator checks it.
 - `stop` is optional; without it a stopped skill only ends.
+- `capability` is optional: the capability the skill is written for when it is narrower than what
+  its steps contribute (`BottomUpFilling`, a Filling); the skill then offers that one.
 
 Then:
 
@@ -68,7 +74,9 @@ python -m modsync push cell/modules/filling.yaml --target pi             # creat
 `modsync push` creates the new blocks and wires in the running FORTE, links the skill to the end of
 the start-up chain, starts it once, verifies what runs and adds it to the Pi's boot file, so it is
 there after a restart too. The module may be in use meanwhile. It can also be done from the AAS:
-describe the skill in the skill editor, then `python -m modsync reconfigure`.
+describe the skill in the skill editor, then `python -m modsync reconfigure http://localhost:8081
+--shell FillingModuleAAS --host 192.168.0.203 --user admin` (the AAS server that holds it; `--user`
+adds the skill to the Pi's boot file; `--dry-run` first shows what would change).
 
 ### 2.2 By hand in the 4diac IDE
 
@@ -196,6 +204,7 @@ skills:
 | `parameters` | Name, unit, limits, default; `meaning` says what it is in the lab's vocabulary |
 | `results` | Result name to an equipment input: its value when the skill ends (`{Weight: Weight}`) |
 | `offered` | `false`: no instance of its own, only usable as a step (default `true`) |
+| `capability` | For the planner, what holds on this module of the capability the primitive realizes: `values` (`FillPosition`), and `precondition`, `postcondition`, `invariant` on another item's state (`{LinearAxis.Position: ">= FillPosition"}`) or on a property of the capability; see [skill-planning.md](skill-planning.md), section 4. Not compiled into the block |
 
 Then regenerate, rebuild FORTE (section 5), and deploy the new program.
 

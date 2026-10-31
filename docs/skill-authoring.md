@@ -11,11 +11,23 @@ editor) are to change, so that:
   requirement the line does not offer yet;
 - one **backend** does the checking, deriving and proposing, for both modules.
 
+**Since then** (31 Oct) this file is the proposal and its reasons, not the description of what was
+built. Phase 3 and most of phase 4 were overtaken by planning ([skill-planning.md](skill-planning.md)):
+`modreg serve` checks a skill (`POST /check/<shell>`) and plans one for a capability the module
+offers (`POST /plan/<shell>`), and the editor uses both (29 Oct); a resource agent planning a skill
+for a bid is still to come (A3 in [agents.md](agents.md)). The flow blocks as built are rule set 2 in
+[module-rules.md](module-rules.md), section 3; the editor as built is described in the web UI fork
+(`aas-web-ui/src/pages/modules/ProcessSequence/skills/README.md`). Since 30 Oct the planner and the
+skill editor also draw the same flows in BPMN notation (`ProcessSequenceBpmn`;
+[design-log.md](design-log.md), 30 Oct).
+
 Where the tools stand today: [tools.md](tools.md). The model: [aas-models.md](aas-models.md) and
 [ppr-model.md](ppr-model.md). The Control Configuration question, which touches the overview:
-[control-configuration.md](control-configuration.md).
+[control-configuration.md](control-configuration.md) (decided 27 Oct: option C).
 
 ## 1. Today
+
+The state on 27 Oct, before the work of section 7.
 
 Both modules live in the web UI fork (`basyx-aas-web-ui`, branch `feat/process-sequence-pharma`,
 folder `aas-web-ui/src/pages/modules/ProcessSequence`).
@@ -73,8 +85,7 @@ that is only described (a built one needs a restart, so it is refused with that 
 
 Saving writes **only that skill's element** (the AAS server's API replaces one submodel element by
 its path), not the whole submodel, so two skills edited in two tabs do not overwrite each other.
-After saving, the editor asks the backend to derive the capabilities again (step F3, still
-missing today).
+After saving, the editor asks the backend to derive the capabilities again (step F3; built 27 Oct).
 
 ## 3. Branches, conditions and parallel steps in a skill
 
@@ -129,6 +140,10 @@ read):
 | Failures | As today: every step's `FAILURE` goes through `SKILL_FailMerge` to the sequence's `FAILED` | – |
 | Stop, Abort, Reset | As today: `HALT`, `ABORT` and `RESET` go to every step instance | – |
 
+As built (27 Oct; [module-rules.md](module-rules.md), section 3): `SKILL_Join2` to `SKILL_Join4`;
+`SKILL_Condition_LREAL` and `_BOOL`, whose events are `EVAL`, `YES` and `NO`; and `SKILL_Merge`
+where a decision's branches meet, in place of `E_MERGE`.
+
 Rules the check has to add:
 
 1. Two parallel branches never use the same equipment item. All steps of a skill hold their
@@ -176,6 +191,14 @@ capabilities:
 | `POST /reconfigure/<shell>` | Apply it, guarded as on the command line | The same. On a Pi only with someone at the bench (our rule for anything that can move an axis; creating a skill moves nothing, but a written value can) |
 | `GET /build/<shell>` | The backend's record of what was built, if the Control Configuration moves there | [control-configuration.md](control-configuration.md), option C |
 
+**As built (27 to 29 Oct):** `POST /check/<shell>` (the checker of `modplan`, on the module's skills
+or on the one skill the editor holds, in place of `/skills/check`; the editor keeps its TypeScript
+checks as well), `POST /plan/<shell>` (a skill planned for a capability the module offers and, with
+`write`, described on the AAS server, in place of `/skills/propose`), `POST /capabilities/<shell>`
+(without `preview`), `GET` and `PUT /build/<idShort>`. Not built: `preview`, `/vocabulary`,
+`/reconfigure`; reconfiguration as a service is item 8 of [framework-plan.md](framework-plan.md),
+section 4.
+
 ## 5. Recommendations and automation from the ontology
 
 ### What the vocabulary can say today
@@ -214,6 +237,10 @@ module as "offered after a reconfiguration", and `modsync reconfigure` (or the b
 dry run first) builds it. Later a resource agent calls the same `propose`, `check` and
 `reconfigure` without the editor.
 
+Not built as proposed: planning took its place (G5 and G7 in [next-steps.md](next-steps.md)).
+Discovery offers what a planned skill would reach, and *Plan a skill* in the skill overview plans
+one for a capability the module offers and describes it.
+
 ### What the vocabulary needs for more (after the paper)
 
 - **Preconditions and effects of skill types** (Dispense needs the needle at the filling position;
@@ -225,6 +252,12 @@ dry run first) builds it. Later a resource agent calls the same `propose`, `chec
 - **Aggregate rules** (DoubleDose fills twice the volume), so a skill with two dispensing steps
   offers the right range.
 
+Done 28 Oct for planning ([skill-planning.md](skill-planning.md)): each capability class's Pre, Post
+and Invariant in the vocabulary (0.2), what holds on one module in its spec (a skill's
+`capability`), and the fill position as a named value of the module's Dosing. A skill's offered
+range is what it reaches when run through the states (case T9 there), in place of aggregate rules.
+Proposing a constant from the product's container is not built.
+
 ## 6. The planner
 
 | Change | Why |
@@ -233,6 +266,9 @@ dry run first) builds it. Later a resource agent calls the same `propose`, `chec
 | On "not offered": **make a skill for this**, which opens the proposed module's Skills with the proposal (section 5) | The product-driven entry into the skill editor |
 | Re-read the offered capabilities when the skill editor has saved | So the planner sees the new skill at once |
 | Share its flow editor with the skill editor (section 3) | One editor for recipes and skills |
+
+Built: the matches with `Availability` (27 Oct) and one graph for both editors (30 Oct). *Make a
+skill for this* is not built; a skill is planned from the skill overview instead (29 Oct).
 
 ## 7. Order of work
 
@@ -253,6 +289,10 @@ graph layout, not yet its components); tried on FORTE on this PC (two decisions 
 created online while the module ran, and run). FORTE for the Pi is built and in `runtime/bin`, **not
 installed on the Pis** (waits for you at the bench). Not built: `POST /skills/check` (the editor
 checks in TypeScript, kept the same as modsync's rules by a shared fixture), phase 3.
+
+**Since:** the service checks and plans (`POST /check/<shell>`, `POST /plan/<shell>`, 28 Oct), and the
+editor sends the flow on screen to the check and plans from the overview (29 Oct); see the top of
+this file.
 
 **Decisions needed (answered 27 Oct: C; phase 2 before the paper; the fork committed):**
 

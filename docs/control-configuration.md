@@ -12,6 +12,9 @@ module then need nothing from the backend, so the paper's claim still holds.
 
 ## 1. What it holds today and who uses each part
 
+The state before option C was built (27 Oct). Since then the AAS holds none of this: the same
+elements are the integrator's record (section 3), written by `modreg` (`record`) and `modsync record`.
+
 The submodel as `modreg` writes it ([profile.py](../aas61499-tools/modreg/profile.py),
 `control_configuration`) and `modsync record` updates it
 ([desired.py](../aas61499-tools/modsync/desired.py), `record`), against ARSO's module
@@ -68,8 +71,8 @@ not an IEC 61499 module (the ACOPOS 6D table, a Kuka robot) would have nothing t
 
 | Element | Where | Values | Written by | Read by |
 | --- | --- | --- | --- | --- |
-| `RuleSet` (xs:anyURI) | The Skills submodel, once | `https://smartproductionlab.aau.dk/rules/module/1` | The vendor (modreg) | modsync: refuses to change a module that names no rule set it knows |
-| `Deployment` (xs:string) | Each skill of the kind Composite | `Described` (in the AAS, not in the program), `Built` | The skill editor writes `Described` for a new skill; `modsync record` writes `Built` | The derivation (`Availability`), the planner, the skill editor's overview, an agent |
+| `RuleSet` (xs:string, a URI) | The Skills submodel, once | `https://smartproductionlab.aau.dk/rules/module/2` (rule set 2 since 27 Oct; 1 before) | The vendor (modreg) | Meant for modsync, to refuse changing a module that names no rule set it knows; not checked yet |
+| `Deployment` (xs:string) | Each skill of the kind Composite | `Described` (in the AAS, not in the program), `Built` | The skill editor writes `Described` for a new skill, modreg for a planned one (`modplan`); `modsync record` writes `Built`, modreg for the skills of a module's spec | The derivation (`Availability`), the planner, the skill editor's overview, an agent |
 
 This also answers an open question of [next-steps.md](next-steps.md) ("does a described skill get a
 state of its own that a client can read?"): yes, `Deployment`.
@@ -79,8 +82,9 @@ a built skill gives it its interface (`modreg.offer`). It breaks for a built ski
 deliberately not offered (`offered: false` in a spec; none exists today). The explicit property is
 clearer.
 
-**In the backend** (the integrator's record, one per module, keyed by the AAS id; kept by the
-registration service `modreg serve` next to the profiles it already keeps):
+**In the backend** (the integrator's record, one per module, keyed by the module's AAS idShort; kept
+by the registration service `modreg serve` next to the profiles it already keeps, or in a folder:
+`modsync --records`):
 
 - the management endpoint (or given on the command line, as `--host` is today);
 - the instances with block types and hashes, as last read;
@@ -99,9 +103,12 @@ registration service `modreg serve` next to the profiles it already keeps):
   rules and start its own, which is what modsync does on first contact anyway.
 - **ARSO changes**: the Control Configuration module leaves ARSO (or stays as the schema of the
   backend's record), and two elements join the Skills module. ARSO is authoritative: this needs
-  your go.
+  your go. (Built in ARSO 0.10: the module stays, as the schema of the record.)
 
 ## 5. The work for option C
+
+**Done 27 Oct**, all seven steps (the record kept at `/build/<idShort>`). Since 28 Oct the
+templates and classes are aas-model's (`modreg generate` writes ARSO's templates into it).
 
 About one to two days, with tests passing after each step:
 

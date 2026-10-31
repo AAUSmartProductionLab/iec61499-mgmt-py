@@ -15,7 +15,7 @@ recommendation.
 
 | Level | Who decides | Planned here |
 | --- | --- | --- |
-| Line | Agents: products and modules negotiate; nothing plans the line centrally | No |
+| Line | Agents: products and modules negotiate; since 31 Oct, for the demo, also centrally: FOND-AAS plans a policy with PDDL and a behaviour tree runs it ([framework-plan.md](framework-plan.md), section 1) | No |
 | Module | The module (its agent): which skill carries out a capability it is asked for | **Yes**: composite skills from its components' capabilities; now and then a composite of composites |
 | Component | – | No: its skills are primitives (block types) |
 
@@ -74,9 +74,10 @@ holds until a Post sets it again (the frame rule).
 
 **A property is a state variable**, identified by:
 
-1. its `SameProperty`, if it has one: the data point of the module's Variables it names
-   (`LinearAxis_ActualPosition`, `LinearAxis_Homed`, `Scale_Weight`). Every capability that points at
-   the same data point talks about the same state; the start state can be read live; and the runtime
+1. its `SameProperty`, if it has one: the data point of the module's Variables it names, a field of
+   its item's series (`LinearAxis_ActualPosition` and `LinearAxis_Homed` in
+   `Measurements/LinearAxis`, `Scale_Weight` in `Measurements/Scale`). Every capability that points
+   at the same data point talks about the same state; the start state can be read live; and the runtime
    conditions (section 5) talk about the same signals;
 2. otherwise its meaning, if that is a property of the product (vocabulary): the product in the module;
 3. otherwise its meaning, on the component whose CapabilitySet holds it (the scale's `Tared`, which has
@@ -93,12 +94,13 @@ which would be a parallel block; not used yet.
 | --- | --- | --- | --- | --- | --- | --- |
 | LinearAxis | Referencing | Home | Position, Referenced | – | Referenced `= true`, Position `= 0.0` | – |
 | LinearAxis | Positioning | MoveAxis | Position (0–60 mm), Referenced | Referenced `= true` | Position `given` | – |
-| Pump | Dosing | Dispense | Volume (0.5–10 mL), FlowRate, FillPosition (40.0 mm), NeedlePosition, ContentVolume, Weighed | NeedlePosition `>= FillPosition` | ContentVolume `+= Volume`, Weighed `= false` | NeedlePosition `>= FillPosition` |
+| Pump | Dosing | Dispense | Volume (0.5–10 mL), FlowRate, FillPosition (40.0 mm), LinearAxisPosition, ContentVolume, Weighed | LinearAxisPosition `>= FillPosition` | ContentVolume `+= Volume`, Weighed `= false` | LinearAxisPosition `>= FillPosition` |
 | Scale | Taring | Tare | Tared | – | Tared `= true` | – |
-| Scale | Weighing | Weigh | Tared, Weight, NeedlePosition, Weighed | Tared `= true`, NeedlePosition `= 0.0` | Weight `measured`, Weighed `= true` | NeedlePosition `unchanged` |
+| Scale | Weighing | Weigh | Tared, Weight, LinearAxisPosition, Weighed | Tared `= true`, LinearAxisPosition `= 0.0` | Weight `measured`, Weighed `= true` | LinearAxisPosition `unchanged` |
 | Offered | Filling | Dispensing | FillVolume, FillWeight (a result), ContainerType, GraspDiameter, AbsoluteFillError, ContentVolume | ContentVolume `= 0.0` | ContentVolume `= FillVolume` | – |
 
-Position and NeedlePosition name `LinearAxis_ActualPosition`, Referenced names `LinearAxis_Homed`,
+Position and LinearAxisPosition (the needle's height, named after the item the spec's condition is
+about) name `LinearAxis_ActualPosition`, Referenced names `LinearAxis_Homed`,
 Weight names `Scale_Weight`; ContentVolume and Weighed are the product's. A requirement's **result**
 adds a goal: FillWeight needs Weighed `= true` at the end (the vocabulary says which state a result
 needs), so a requirement without it is planned without weighing.
@@ -111,16 +113,16 @@ CapabilityContainer  Dosing                    lab:Dosing, NotAssigned          
     Volume           Range 0.5–10.0 mL         lab:Volume
     FlowRate         Range 0.1–5.0 mL/s        lab:FlowRate
     FillPosition     40.0 mm                   lab:FillPosition
-    NeedlePosition   –                         lab:Position, SameProperty → Variables/LinearAxis_ActualPosition
+    LinearAxisPosition –                       lab:Position, SameProperty → Variables/Measurements/LinearAxis, field LinearAxis_ActualPosition
     ContentVolume    –                         lab:ContentVolume
     Weighed          –                         lab:Weighed
   CapabilityRelations
     CapabilityRealizedBy → the pump's Skills/Dispense
     ConstraintSet
-      Pre        NeedlePosition   ">= FillPosition"
-      Post       ContentVolume    "+= Volume"
-      Post       Weighed          "= false"
-      Invariant  NeedlePosition   ">= FillPosition"
+      Pre        LinearAxisPosition   ">= FillPosition"
+      Post       ContentVolume        "+= Volume"
+      Post       Weighed              "= false"
+      Invariant  LinearAxisPosition   ">= FillPosition"
 ```
 
 **Where it comes from.** modreg writes the description. What holds of a kind of capability wherever
@@ -165,7 +167,9 @@ one can be written from the other.
 
 1. **One domain model** (Python), made by SPARQL from the projection of the module's AASs and the
    vocabulary: the state variables (section 3); an action per NotAssigned capability; a task per
-   process capability with its Pre and Post; the methods; the rest state; the named values.
+   process capability with its Pre and Post; the methods; the rest state; the named values. As built
+   (28 Oct), it is read from the AAS's JSON (`modplan.read`) and the vocabulary's Turtle
+   (`modplan.vocabulary`), not through the projection, which the few rules do not need.
 2. **One simulator** on it: the checker of the editor, and the validation of every plan.
 3. **GTPyhop** plans on it directly, numbers included. For a task the methods are tried in this order:
    1. the capability's compositions (02020 `ComposedOfSet`), the integrator's way, if stated: the parts
@@ -207,7 +211,10 @@ For each process capability of the vocabulary the module has no skill for, the p
 from the rest state; if a plan exists, the module offers it after a reconfiguration, with the range the
 limits of the plan's capabilities give. modreg adds such offers when it derives a module's capabilities
 anew (after a skill is described or built): no skill realizes them yet. The derivation from the skills
-(`lab:contributes`) stays for the skills that exist; it gives their ranges exactly.
+(`lab:contributes`) stays for the skills that exist; it gives their ranges exactly. A capability
+narrower than its parent (BottomUpFilling, a Filling; vocabulary 0.6, 30 Oct) is not discovered: no
+constraint says what makes it narrower, so only a skill written for it (`capability:` in the spec)
+offers it.
 
 ## 7. Compared with AAS2PDDL (Nabizada et al., CASE 2026, arXiv 2606.02167)
 
@@ -237,7 +244,8 @@ CSS, with inputs as preconditions and outputs as effects: the same view of state
 
 ## 8. Changes, in order
 
-All but 6 and 7 done on 27 and 28 Oct (the plan's G0 to G5, [next-steps.md](next-steps.md)):
+All done: 1 to 6 on 27 and 28 Oct, 7 on 28 and 29 Oct (the plan's G0 to G7,
+[next-steps.md](next-steps.md)):
 
 1. **Vocabulary 0.2 and PPRL 0.2**: the capabilities Referencing, Dosing, Taring, Pressing, Crimping,
    Imaging (auxiliary, each a class of its own: as subclasses they would inherit their parent's
@@ -245,8 +253,9 @@ All but 6 and 7 done on 27 and 28 Oct (the plan's G0 to G5, [next-steps.md](next
    FillWeight (a result), ContentVolume, Weighed, Stoppered, Capped, Inspected (of the product);
    `lab:realizes` on every skill type; each capability's constraints as `pprl:pre`, `pprl:post` and
    `pprl:invariant` with the expression a BasicConstraint holds; the process capabilities defined by
-   what they do to the product. Checked by `tests/test_modplan_vocabulary.py`. Dispense's parameter
-   keeps its meaning FillVolume for the derivation; the capability's property of that name is a Volume.
+   what they do to the product. Checked by `aas61499-tools/tests/test_modplan_vocabulary.py`.
+   Dispense's parameter keeps its meaning FillVolume for the derivation; the capability's property of
+   that name is a Volume.
 2. **ARSO 0.11**: `Conditions` and `Completion`; `CapabilityRealizedBy` to a component's skill; the
    constraint elements and conventions. modreg writes them, modsync also reads a 0.10 `Contract`; the
    module specs use the same words (`precondition`, `postcondition`, `invariant`, `after`, `timeout`).
@@ -255,10 +264,14 @@ All but 6 and 7 done on 27 and 28 Oct (the plan's G0 to G5, [next-steps.md](next
    points; the offered capabilities with their Pre and Post.
 4. **modplan** (`read`, `check`): the domain from the AAS alone, the checker.
 5. **modplan** (`plan`, `lift`, `compose`, `discover`): GTPyhop, the lifting, the skill described in the
-   AAS and created online by `modsync reconfigure` (on FORTE: `tests/test_modplan_live.py`); discovery,
-   with the offers modreg adds. The command line: `python -m modplan`.
-6. HDDL and PDDL generation; a planner of each kind and VAL, for the evaluation.
-7. The recommendations in the editor.
+   AAS and created online by `modsync reconfigure` (on FORTE:
+   `aas61499-tools/tests/test_modplan_live.py`); discovery, with the offers modreg adds. The command
+   line: `python -m modplan`.
+6. HDDL and PDDL generation; a planner of each kind and VAL, for the evaluation (built with ENHSP,
+   Aries and unified-planning's validator in place of VAL: section 6).
+7. The recommendations in the editor (G7): `modreg serve` checks a skill (`POST /check/<shell>`) and
+   plans one (`POST /plan/<shell>`); the skill editor shows each finding at its step, and its overview
+   plans a skill for a capability the module offers.
 
 ## 9. Open points
 
@@ -286,7 +299,7 @@ The module's skills are the ground truth: Dispensing (the spec) and the test ski
 | T6 Check: missing step | Dispensing without NeedleDown | Dosing's Pre fails; MoveAxis(40.0) recommended before it |
 | T7 Check: invariant | Home ∥ Weigh | Weigh's invariant (the needle still) is broken by Home |
 | T8 Check: the module's skills | Dispensing, DoubleDose, Ready, Checked | No finding, except Checked: it weighs with the needle in the vial (it was written to test decisions) |
-| T9 DoubleDose's offer | DoubleDose, two doses of Dose (0.5–10 mL) | FillVolume 1.0–20.0; today's derivation says 0.5–10.0 |
+| T9 DoubleDose's offer | DoubleDose, two doses of Dose (0.5–10 mL) | FillVolume 1.0–20.0: what the skill reaches, run through the states (done 28 Oct; a rule over its parameter's meaning gave 0.5–10.0) |
 | T10 Discovery | Every composite deleted | Filling offered after a reconfiguration |
 | T11 No scale | The scale removed | Filling offered without FillWeight; with FillWeight refused |
 | T12 Missing constraint | "Needle at the fill position" removed | The plan fills with the needle up: the integration constraints carry the meaning |
@@ -294,4 +307,7 @@ The module's skills are the ground truth: Dispensing (the spec) and the test ski
 | T14 Out of the container | T13 with the needle rising to 30.0 | Dispense keeps Position `>= 40.0` while NeedleRise changes it |
 
 Each case also runs through HDDL and PDDL where it fits, every plan through VAL, and the times are
-recorded.
+recorded. As built (28 and 29 Oct): T1 to T14 are tests of `modplan`, GTPyhop's plans and the
+checker's findings (`aas61499-tools/tests/test_modplan.py`, `test_modplan_discover.py`); four cases
+also run through ENHSP and Aries, every plan validated by unified-planning, timed by
+`cell/eval/planners.py` (section 6).
