@@ -16,6 +16,16 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 31 Oct 2026
+
+- **The editors' side panels hide to a tab along their edge.**
+  - What: in the planner, the product structure and the details each hide to a narrow tab with their
+    name (a button in the sequence's header hides or shows both); in the skill editor, so do the details.
+    The choice is kept per browser, and alike in every editor on the page; the BPMN diagram fits again
+    into the width it gets.
+  - Why: the flow is what is worked on; the panels are needed now and then.
+  - Instead of: fixed columns; only resizing them (the existing splitter, which stays).
+
 ## 30 Oct 2026
 
 - **The BPMN editors' catalog floats over the canvas, and the drawing help sits behind an (i).** *Journal*.
