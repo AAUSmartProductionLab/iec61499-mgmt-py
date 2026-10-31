@@ -18,6 +18,31 @@ A running log of design considerations made while building, for writing the pape
 
 ## 31 Oct 2026
 
+- **A line keeps the planar table's routing as a parameter of its own.** *Journal*.
+  - What: the planar controller has a line mode: the shuttles travel only on lanes (one-way or
+    two-way), turn only on turn spots and wait in an idle area (the loading queue), so the way
+    between two stations is always the same. The Configurator draws it on the table for a line and
+    keeps it in the line's AAS: `Parameters/PlanarRouting/Value`, the controller's JSON as it is. The
+    controller reads it at startup from that value's URL (`MODE=line`, `LINE_LAYOUT`).
+  - Why: the routes join the line's stations, which the line places; another line on the same table
+    has other routes. The line's AAS is the configurator's own, so nothing else overwrites it.
+  - Instead of: in the table's AAS (modreg writes that one again from the controller, and a table
+    serves more than one line); as a collection of lanes and points in the AAS (an element per point,
+    and a second format for the controller to read); free routing only (the planner's ways change
+    with the traffic, which a line engineer cannot foresee).
+
+- **The planar table's frame is a parameter, read from the PMC and never written.** *Journal*.
+  - What: modreg gives the table's AAS `Parameters` (ARSO's) with `Columns`, `Rows` and
+    `FlywaySize`, as the PMC is set up, from what the controller shows. Which positions of that frame
+    hold a flyway stays the flyways' coordinates. The Configurator draws the table from both and
+    writes neither.
+  - Why: the frame is fixed and a flyway may be in any position of it; from the flyways alone a
+    configurator cannot tell a table with an empty edge from a smaller table. Only Planar Motor's
+    tool changes the frame, so the AAS shows it and nothing writes it back.
+  - Instead of: deriving the frame from the outermost flyways (as the Configurator did); a
+    measurement series (the frame is set up, not measured, and a configurator would have to read
+    its latest record); the frame in the controller's configuration (the PMC already knows it).
+
 - **One line, two orchestrators: only the orchestration changes.** *Journal*.
   - What: the demo runs the line centralized, with a FOND policy planned with PDDL from the AASs and
     run as a behaviour tree [schwoerer2026fond], and multi-agent, with product agents that follow
