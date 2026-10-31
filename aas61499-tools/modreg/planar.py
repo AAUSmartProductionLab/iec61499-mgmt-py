@@ -15,7 +15,8 @@ describes a FORTE module, from a module spec made here:
   shuttles), whether the PMC is connected, and in its Hierarchical Structures the shuttles (each
   found by its asset id) and the flyways (co-managed, meaning Flyway). Its coordinates (ARSO 0.13)
   are the root of a line's: the table's base, and each flyway's centre relative to it (the layout a
-  configurator draws). A shuttle's coordinate, its xbot, is relative to the table's base and follows
+  configurator draws); its Parameters the frame the flyways are in (Columns, Rows, FlywaySize), as
+  the PMC is set up. A shuttle's coordinate, its xbot, is relative to the table's base and follows
   the pose the controller measures (Equipment/Xbot/X, Y, Rz).
 
 Nothing of it is FORTE's: no rule set and no record of a program. The errors are the module
@@ -40,11 +41,12 @@ from aas_pydantic.submodel_templates.nameplate import ManufacturerProductDesigna
 from modgen.spec import Location, ModuleSpec, Parameter, Skill
 
 from . import model
+from aas_model.submodel_templates.arso import parameters as settings
 from aas_model.submodel_templates.arso import skills as arso
 from aas_model.submodel_templates.coordinates import Coordinates
 from .derive import Offer, Property
 from .profile import (Describer, capability_description, coordinate, coordinate_ref, identity, meaning, prop,
-                      record_field_ref)
+                      record_field_ref, text)
 
 NAMESPACE = "urn:aau:smartproductionlab:planar"
 TABLE = "PlanarTable"
@@ -193,6 +195,19 @@ def table_coordinates(table: Table) -> Coordinates:
     return Coordinates(coordinate=found)
 
 
+def table_parameters(table: Table) -> settings.Parameters:
+    """The table's frame as its PMC is set up: columns by rows of flyway positions, and the flyways'
+    size. Only Planar Motor's tool changes it; the AAS has it from the controller, and nothing writes
+    it back. Which positions hold a flyway, the flyways' coordinates say."""
+    def entry(name: str, value, value_type: str, unit: str, description: str) -> settings.ParameterEntry:
+        return settings.ParameterEntry(id_short=name, description=description, Unit=settings.Unit(value=unit) if unit else None,
+                                       Value=settings.Value(value=text(value), value_type=value_type))
+    entries = [entry("Columns", table.columns, "xs:int", "", "Flyway positions along the table's X axis (a position may hold none)"),
+               entry("Rows", table.rows, "xs:int", "", "Flyway positions along the table's Y axis (a position may hold none)"),
+               entry("FlywaySize", table.flyway, "xs:double", "mm", "A flyway's side")]
+    return settings.Parameters(id_short="Parameters", ParameterEntry={e.id_short: e for e in entries})
+
+
 def shuttle_coordinates(table_aas: str) -> Coordinates:
     """The xbot, relative to the table's base (``table_aas``: the table's AAS id): its X, Y and
     Yaw are the fields of the pose the controller measures (Measurements/Xbot)."""
@@ -207,6 +222,7 @@ def describe_all(table: Table) -> list[dict]:
     built = PlanarDescriber(table_spec(), table, "Planar table (Planar Motor), through the planar controller").build()
     module = built[0][0]
     module.variables.Measurements.value["Coordinates"] = table_coordinates(table)
+    module.parameters = table_parameters(table)
     nodes = module.hierarchical_structures.EntryNode.Node
     for n in table.shuttles:
         nodes[shuttle(n)] = model.LocatedNode(id_short=shuttle(n), entity_type="SelfManagedEntity",
