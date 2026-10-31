@@ -56,8 +56,9 @@ backend) and [control-configuration.md](control-configuration.md), [ppr-model.md
 [module-rules.md](module-rules.md), [modules.md](modules.md) (the two modules and their hardware),
 [aas-models.md](aas-models.md), [aas-examples.md](aas-examples.md),
 [state-and-parameters.md](state-and-parameters.md) (a modelling plan waiting for decisions),
-[repositories.md](repositories.md), [framework-plan.md](framework-plan.md) (the framework's name,
-repositories, documentation site and icons, and what the January demo still needs).
+[repositories.md](repositories.md), [framework-plan.md](framework-plan.md) (AASPIRE: the framework that
+holds the lab's AAS work, its repositories in the AP2030 organization, documentation site and icons, and
+what the January demo still needs).
 
 ## How the work is done
 
