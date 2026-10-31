@@ -35,6 +35,9 @@ def test_the_table_lists_its_shuttles_and_its_flyways_with_where_they_are():
     assert len(flyways) == 11 and "Flyway_2_1" not in flyways                  # 4 x 3, the hole left out
     assert where(list(envs.values()), "PlanarTableAAS", "Flyway_3_2").position == (840.0, 600.0, 0.0)
     assert nodes["Flyway_0_0"]["supplementalSemanticIds"][0]["keys"][0]["value"].endswith("/semantics/Flyway")
+    # The frame the flyways are in, as the PMC is set up: the hole is a position without a flyway.
+    frame = {e["idShort"]: at(e, "Value")["value"] for e in children(submodel(envs["PlanarTableAAS"], "Parameters"))}
+    assert frame == {"Columns": "4", "Rows": "3", "FlywaySize": "240.0"}
     # The table's base is the root; a shuttle's xbot is relative to it and follows the controller's pose.
     assert chain(list(envs.values()), "PlanarShuttle1AAS", "Xbot") == [("PlanarShuttle1AAS", "Xbot"), ("PlanarTableAAS", "TableBase")]
     xbot = coordinates(envs["PlanarShuttle1AAS"])["Xbot"]
