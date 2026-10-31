@@ -1,5 +1,8 @@
 # Repositories: how the work divides
 
+**The target is now [framework-plan.md](framework-plan.md)** (31 Oct: a name, one organization, a
+main repository and the demo's scope); the analysis of the parts below still holds.
+
 Proposal of 6 Oct 2026, facts brought up to date on 8 Oct; nothing is split yet. Everything built
 so far sits in four places:
 

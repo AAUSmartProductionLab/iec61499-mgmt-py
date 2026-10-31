@@ -18,6 +18,16 @@ A running log of design considerations made while building, for writing the pape
 
 ## 31 Oct 2026
 
+- **The framework gets a name, one organization and a main repository (proposed).** *CIRP*, *Journal*.
+  - What: Skillshell as the name; one GitHub organization; 17 repositories by family (definitions,
+    module, engineering, operation, deployment, the line); only the main repository has submodules;
+    one documentation site; an icon per repository in the figures' colours
+    ([framework-plan.md](framework-plan.md)). Waiting for the user's decisions.
+  - Why: the papers need the code citable at their version; the demo needs a server and modules set
+    up from repositories made for that; a vendor or another lab needs the parts without our line.
+  - Instead of: six repositories split late ([repositories.md](repositories.md), 6 Oct); the lab's
+    organization, which holds 19 unrelated repositories.
+
 - **The editors' side panels hide to a tab along their edge.**
   - What: in the planner, the product structure and the details each hide to a narrow tab with their
     name (a button in the sequence's header hides or shows both); in the skill editor, so do the details.
