@@ -31,14 +31,16 @@ FillingLineAAS   Infeed, Outfeed      relative to TableBase
   (AutomationML's frame attributes); the coordinate's meaning is a supplemental semantic id of the
   vocabulary: TableBase, ModuleBase, Mount, EndEffector, Mover, Flyway, and the points below.
 - **Moving coordinates:** a moving part is a fixed mount and, relative to it, a coordinate whose
-  moving values each follow a data point (`XSource` … `YawSource`). Its values in the AAS are the
-  latest known. A product riding a shuttle is relative to the xbot (or a fixture on it): only the
-  xbot's values change, and where the product was at any time is composed, never stored. When it is
-  handed over, its `RelativeTo` changes.
+  moving values each follow a data point (`XSource` … `YawSource`, each a field of a time series).
+  Its values in the AAS stay as described (the axis at home): since 28 Oct the AAS keeps no live
+  value, and the current one is that field's latest row in the time-series database. A product
+  riding a shuttle is relative to the xbot (or a fixture on it): only the xbot's values change, and
+  where the product was at any time is composed, never stored. When it is handed over, its
+  `RelativeTo` changes.
 - **Measured, not configured:** a module reports where it is put on the table (later by RFID), so even
-  a module's base is a measurement. Each coordinate is the latest value of a series, as every
-  measurement in Variables is to be ([state-and-parameters.md](state-and-parameters.md),
-  section 3); the series in the time-series database comes with that part.
+  a module's base is a measurement. Each coordinate is to be the latest value of a series, as the
+  modules' other measurements are since 28 Oct (time series in Variables, the rows in InfluxDB);
+  not built for coordinates yet: their values are in the AAS until a module reports where it is.
 - **Where it lives:** in the AAS of the asset it belongs to; a module may hold several (ours hold a
   base, a mount and an end effector per axis, and their points), components hold none.
 - **Hierarchical Structures** stays a bill of material: parts only, no frames, no point nodes.
@@ -108,10 +110,13 @@ centre relative to the table's base. What differs from a FORTE module: the brows
 Conditions or Completion (the controller decides when a move has ended), and the results are
 `ReachedX`, `ReachedY`, `ReachedRz` in the AAS, because an Operation's variables need idShorts of
 their own (AASd-022) and the controller calls parameters and results both X, Y, Rz; they show the
-controller's `Results/X` all the same.
+controller's `Results/X` all the same. Since 30 Oct each shuttle's AAS (not the table's) has a
+Capability Description: Transporting, realized by `MoveToPosition`, whose parameters mean TargetX,
+TargetY and TargetRz, and Receiving and Releasing, which say whose custody a container is in
+(vocabulary 0.6 and 0.7, `modreg/planar.py`).
 
 The controller shows its layout since 28 Oct (`Equipment/PMC/Columns`, `Rows`, `FlywaySize`, `Holes`,
-known once the PMC is connected; a commit in the submodule, not pushed yet). `modreg profile planar
+known once the PMC is connected; a commit in the submodule, pushed on 30 Oct). `modreg profile planar
 --host <controller>` reads it with the shuttles, and `modreg register planar ... --every 10`
 registers the AASs again whenever they change. `test_modreg_planar.py` runs the controller on its
 simulated driver: the table brought to Execute and a shuttle moved with `modlink`, from the AASs alone.
@@ -131,7 +136,7 @@ Configurator lays that out for a line and keeps it in the line's AAS, `Parameter
 
 | Where | Change |
 | --- | --- |
-| ARSO (`operational-data.ttl`, 0.13) | `Measurements/Coordinates`: a coordinate with `RelativeTo`, the six values with their units, and the sources of its moving values |
+| ARSO (`operational-data.ttl`, 0.13; `variables.ttl` since 0.14) | `Measurements/Coordinates`: a coordinate with `RelativeTo`, the six values with their units, and the sources of its moving values |
 | Vocabulary | The point meanings; a transport capability with the target as its properties |
 | `modreg` | Coordinates from the specs (a module's base; an item's `location` as its mount, with the end effector of an axis; `points` of a module); the planar table's AAS from its spec and the controller, with the table's and the shuttles' coordinates and the table's frame (Parameters) |
 | `planar-controller` | The layout over OPC UA; line mode, its routing read from a URL |
@@ -142,8 +147,8 @@ Configurator lays that out for a line and keeps it in the line's AAS, `Parameter
 
 | Point | Proposal |
 | --- | --- |
-| Units of a frame | AutomationML's, checked against IEC 62714 before building; the interfaces stay in mm and degrees |
+| Units of a frame | Settled 28 Oct: mm and degrees, as the interfaces ([design-log.md](design-log.md)) |
 | A building AAS, or Asset Location on the line | Neither (28 Oct): the line is the root. IDTA 02045-1-0 was read; it is for tracking and tracing, without orientation or parent-relative frames ([design-log.md](design-log.md)) |
 | The frame as an extension of 02011 | Gone (28 Oct): coordinates in Variables instead, and Hierarchical Structures is a bill of material again |
 | Which configurator reads the layout | The Web UI's Configurator (31 Oct): the frame from the table's Parameters, the flyways from their coordinates; the routing it keeps in the line's Parameters |
-| Transport as a capability for the agents | With the agents, after the paper |
+| Transport as a capability for the agents | Built 30 Oct: each shuttle offers Transporting, Receiving and Releasing (section 3), and its agent bids for transport like a module's |

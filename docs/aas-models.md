@@ -8,10 +8,17 @@ on 8 Oct 2026 (a skill as its commands; components and the line as AASs of their
 **28 Oct 2026:** the types, templates and classes are aas-model's now (branch `lab-ppr-models`:
 `Module`, `Component`, `ProductionSystem`, `Product`, `Process`; its `docs/lab-aas.md` and a
 description per submodel in `docs/lab-submodels`). aas-model's Variables replace Operational Data
-(ARSO 0.14): a data point is a `VariableProp` whose meaning is its supplemental semantic id, and the
-coordinates are in `Variables/Measurements`. The process AAS is built, and the reference products'
-recipes name no equipment: the bindings are the process AAS's. The example line's AASs, three
-products and their processes, are in [aas-examples.md](aas-examples.md).
+(ARSO 0.14): a module's values are fields of time series there, each field's meaning its
+supplemental semantic id, and the AAS holds no value (the first step that day, a `VariableProp` per
+data point, was replaced the same evening); the coordinates are in `Variables/Measurements`. The
+process AAS is built, and the reference products' recipes name no equipment: the bindings are the
+process AAS's. The example line's AASs, three products and their processes, are in
+[aas-examples.md](aas-examples.md).
+
+**Since then (28 to 31 Oct 2026):** the DMP writes the series' rows into InfluxDB, and every call of
+a command is logged (`Variables/Log`, 29 Oct); `modreg serve` writes a product's process AAS from the planner's bindings
+(`POST /process/<product>`); the agents (`lineagents`) run a product's steps. The sections below say
+where this changed them.
 
 It describes what is **built**, and says where a model exists only on paper. The target model
 (product, process and resource AAS, their ontologies and applications, decided 26 Oct) is in
@@ -19,10 +26,10 @@ It describes what is **built**, and says where a model exists only on paper. The
 
 | What | Where it was read from |
 | --- | --- |
-| Resource AASs: line, module, component | `modreg` in this repository and the AASs it builds for the example line; ARSO 0.9 (`ontology/ARSO`) |
+| Resource AASs: line, module, component | `modreg` in this repository and the AASs it builds for the example line; ARSO 0.14 (`ontology/ARSO`) |
 | Product AAS, plan, stations of the planner | the demo data on the local AAS server (37 AASs, 31 sequences), which a newer planner than the pushed one wrote; and the planner's process sequence module (fork `basyx-aas-web-ui`, branch `feat/process-sequence-pharma`, commit `058a03e`) for its README and readers |
-| Product AAS and plan as built here | `modreg` (`product.py`), the templates in `aas61499-tools/modreg/templates`, and the vial of the example line |
-| Intended product and process models | APSO 0.2, AProSO 0.1 and PPRL 0.1 (`ontology/`), [aas-implementation-plan.md](archive/aas-implementation-plan.md) (30 Sep, the product and process parts) |
+| Product AAS and plan as built here | aas-model's `Product` and its templates (`templates/product`; `modreg/product.py` and `modreg/templates` until 28 Oct), and the three products of the example line (`cell/examples/products`) |
+| Intended product and process models | APSO 0.2, AProSO 0.1 and PPRL 0.2 (`ontology/`), [aas-implementation-plan.md](archive/aas-implementation-plan.md) (30 Sep, the product and process parts). APSO and AProSO describe structures nothing builds and are to be remade (F5 in [next-steps.md](next-steps.md)) |
 | Deviations of the generator's resource AAS from IDTA | [IDTA_CONFORMANCE.md](../ontology/ARSO/IDTA_CONFORMANCE.md) |
 
 Not seen: AASs on the lab's server, and the source of the planner version that is running locally.
@@ -61,7 +68,6 @@ flowchart LR
   PS -- "step assigned to a skill,<br/>parameters bound" --> RS
   RC -- "realized by" --> RS
   RS -- "a step runs" --> CS
-  RX -- "a step runs" --> CS
   RS -- "command called by" --> RI
   CS -- "command called by" --> RI
   RM -- "maps" --> RI
@@ -72,19 +78,23 @@ flowchart LR
 
 | AAS | One per | Built by | Checked against |
 | --- | --- | --- | --- |
-| Module, component | module; component as built into one | `modreg` from the module spec or the running module | ARSO 0.9: `modreg check`, and the closed SHACL validation of the generator (all fourteen resource AASs of the example line conform, 9 Oct) |
-| Line | line | `modreg` from a profile (`cell/examples/example_line.py`) | ARSO 0.9: `modreg check`, and the generator's validation |
-| Product | product, and each part that has its own plan | the planner (demo data), and `modreg` from the product's profile | its pydantic type (`ProductTypeAAS`); no ontology (APSO is not applied to it) |
-| Plan | product (a submodel of the product AAS, not an AAS of its own) | the planner, and `modreg` as part of the product | its pydantic class; against the resources by following its links (`cell/examples/plan_check.py`); AProSO is not applied to it |
+| Module, component | module; component as built into one | `modreg` from the module spec or the running module | ARSO 0.14: `modreg check` (no restriction broken, 31 Oct). The generator's closed SHACL validation is at ARSO 0.8 (a working copy); all fourteen resource AASs of the example line conformed on 9 Oct |
+| Line | line | `modreg` from a profile (`cell/examples/example_line.py`) | ARSO 0.14: `modreg check` |
+| Product | product, and each part that has its own plan | the planner (demo data); the three reference products written out in Python (`cell/examples/products`) | its pydantic type (aas-model's `Product`); no ontology (APSO is not applied to it) |
+| Plan | product (a submodel of the product AAS, not an AAS of its own) | the planner, and `modreg` as part of the product | its pydantic class; against the resources by following its links (`modreg.plancheck`, was `cell/examples/plan_check.py`); AProSO is not applied to it |
+| Process (since 28 Oct) | product and line | written out in Python for the reference products (`cell/examples/processes`); `modreg serve` from the planner's bindings (29 Oct) | aas-model's `Process`; the plan check's result is its Validation; AProSO is not applied to it |
 
 All three are built the same way: an AAS type on the lab's shared pydantic model (aas-model), a
 profile that is the dump of that type without what the type says anyway, and `modreg build` to
-make the AAS from it. `ModuleTypeAAS`, `ComponentTypeAAS` and `SystemTypeAAS` are the resources,
-`ProductTypeAAS` the product with its plan.
+make the AAS from it. aas-model's `Module`, `Component` and `ProductionSystem` are the resources,
+`Product` the product with its plan and `Process` the process AAS (until 28 Oct `ModuleTypeAAS`,
+`ComponentTypeAAS`, `SystemTypeAAS` and `ProductTypeAAS` in `modreg`; profiles with those names
+still read).
 
-There is no process AAS today. The ontologies describe one (AProSO); the planner keeps the plan
-as the Production Sequence submodel of the product it is for. Section 7 lists this and the other
-places where two descriptions of the same thing differ.
+Since 28 Oct there is a process AAS, one per product and line ([ppr-model.md](ppr-model.md),
+section 2), built from templates written by hand, not from AProSO. The planner still keeps its
+bindings in the product's Production Sequence as well (F6 in [next-steps.md](next-steps.md)).
+Section 7 lists this and the other places where two descriptions of the same thing differ.
 
 ## 2. Resource AASs: line, module, component
 
@@ -103,24 +113,25 @@ type and so the same skills. A part is found from its parent by its asset id.
 
 ### The module
 
-Shell `FillingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/FillingModule`. Eight
-submodels:
+Shell `FillingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/FillingModule`. Seven
+submodels (the Control Configuration left the AAS on 27 Oct):
 
 | Submodel | Template | What it holds | Status |
 | --- | --- | --- | --- |
 | Nameplate | IDTA 02006-3-0 | Manufacturer, designation, address, year, country | Unchanged |
 | Hierarchical Structures | IDTA 02011-1-1 | The module as entry node and its components as parts (`LinearAxis`, `Pump`, `Scale`), each with the asset id of its AAS; archetype OneDown | Unchanged |
 | Asset Interfaces Description | IDTA 02017-1-1 with W3C WoT terms | One OPC UA interface: every method as an action (arguments in call order), every published variable as a property, each with its browse path | Extended |
-| Asset Interfaces Mapping Configuration | IDTA 02027 (2/0) | Which interface property feeds which data point, and which action each command's Operation calls | Extended |
-| Capability Description | IDTA 02020 | The capabilities the module offers, with values or ranges and units, each realized by a skill; derived from the skills since 26 Oct (qualifiers `Derived`, and `Availability` for a skill not built yet; [ppr-model.md](ppr-model.md), section 5) | One change |
-| Skills | ours (ARSO 0.10, `Modules/skills.ttl`); began from IDTA 02015 Control Component Type and is no longer that template | The skills the module composes and the module's own commands (Occupy, Release, Reset, Start, Stop, Abort, Clear), each as its commands, directly in the submodel; the error codes (`Errors`, a property each); the rule set the program is built by (`RuleSet`) and, per module level skill, whether the program carries it out (`Deployment`: `Built` or `Described`) | Custom |
-| Variables (Operational Data until 28 Oct) | aas-model's (ARSO 0.14) | One decimal data point per published variable: states, error ids, parameters and results of the last run, equipment inputs; in `Measurements`, the coordinates | Custom |
+| Asset Interfaces Mapping Configuration | IDTA 02027 (2/0) | Which interface properties make a row of which time series (one mapping per series), and which action each command's Operation calls | Extended |
+| Capability Description | IDTA 02020 | The capabilities the module offers, with values or ranges and units, each realized by a skill; derived from the skills since 26 Oct (qualifiers `Derived`, and `Availability` for a skill not built yet; [ppr-model.md](ppr-model.md), section 5). Since ARSO 0.11 also its components' capabilities (role NotAssigned) with their constraints, which the planner reads | One change |
+| Skills | ours (ARSO 0.14, `Modules/skills.ttl`); began from IDTA 02015 Control Component Type and is no longer that template | The skills the module composes and the module's own commands (Occupy, Release, Reset, Start, Stop, Abort, Clear), each as its commands, directly in the submodel; the error codes (`Errors`, a property each); the rule set the program is built by (`RuleSet`) and, per module level skill, whether the program carries it out (`Deployment`: `Built` or `Described`) | Custom |
+| Variables (Operational Data until 28 Oct) | aas-model's (ARSO 0.14) | No values: a time series (IDTA 02008 as an SMC) per group of published variables that change together, `State/Module`, `State/<Skill>`, `State/Procedures`, `Measurements/<Item>`, each a Record of decimal fields and a segment naming its InfluxDB measurement; a call log per command (`Log/<action>`, 29 Oct); in `Measurements/Coordinates`, the coordinates | Custom |
 
 A component's AAS holds one submodel, Skills, with its primitives. Its interface is the module's:
 the module carries the skills out.
 
 Known to ARSO but not written for a module: **Parameters** (ours; optional, and what it is for is
-open) and **Technical Data** (IDTA 02003; the generator writes it).
+open; since 31 Oct only the planar table's AAS has it, with the table's frame) and **Technical
+Data** (IDTA 02003; the generator writes it).
 
 ### 2.1 What a skill is
 
@@ -131,6 +142,7 @@ beside its `Errors`. The filling module's, with its `Dispensing`:
 Skills (submodel)
 ├─ Dispensing                      semanticId .../skill; beside it .../skill/Composite (its kind)
 │   │                              and .../skills/Dispensing (its type: what it does)
+│   ├─ Deployment                  Built (or Described: in the AAS, not yet in the program)
 │   ├─ Start                       semanticId .../skill/Start
 │   │   ├─ InterfaceReference      → the action Dispensing_Start of the interface
 │   │   ├─ Start  (Operation)      in: Session, Volume [mL, 0.5..10]   out: Accepted, ErrorID, Weight [g]
@@ -148,6 +160,7 @@ Skills (submodel)
 │   ├─ Abort                       InterfaceReference, Abort (Operation)
 │   └─ Reset                       InterfaceReference, Reset (Operation)
 ├─ Occupy, Release, Reset, ...     the module's own commands (kind ModuleControl)
+├─ RuleSet                         the rule set the program is built by (.../rules/module/2)
 └─ Errors                          a property per error, its value the code: PreconditionViolated 1,
                                    InvariantViolated 2, Timeout 3, ...
 ```
@@ -164,7 +177,8 @@ Skills (submodel)
   Start); its `Bindings` say what each input of that skill is handed, a constant (`Value`) or a
   variable of the command's own Operation (`SourceElement`); its `Outputs` say which result of the
   command it gives. ARSO also describes `parallel` (branches that all have to end), `decision` and
-  `conditional` (a condition); the module rules, and so `modreg` and `modsync`, know `step` only.
+  `conditional` (a condition); since 27 Oct (rule set 2) the module rules, `modreg` and `modsync`
+  know them too.
 - A **primitive** runs nothing: its commands have no steps, and it states what starts, ends and
   bounds it (`Conditions`: Precondition, Postcondition, Invariant; `Completion`: After, Timeout;
   until ARSO 0.10 one `Contract`). It is in the AAS of the
@@ -172,7 +186,8 @@ Skills (submodel)
   would describe a skill of the line made of skills of its modules.
 - Every skill element has the semantic id `.../skill`; what kind it is, is a supplemental id
   (`Primitive`, `Composite` or `ModuleControl`), and so is what it does, its type (a class of the
-  Skills vocabulary, `.../skills/<Name>`).
+  Skills vocabulary, `.../skills/<Name>`). Since 30 Oct a composite written for a narrower
+  capability names that capability as one more supplemental id (BottomUpFilling, a Filling).
 - The module's own commands are skills of the kind **ModuleControl** in the same list: `Occupy`,
   `Release`, `Reset`, `Start`, `Stop`, `Abort`, `Clear`. Each is called by its `Start`. What the
   module runs itself while resetting and stopping are the steps of `Reset` and of `Stop`. A skill
@@ -185,7 +200,7 @@ What is deliberately not in Skills:
 
 | Not there | Where it is instead |
 | --- | --- |
-| The skill's state, why it failed, its results as they are now | Variables: data points, fed from the interface by the mapping. A data point carries the semantic id of the Operation variable it shows as its supplemental semantic id |
+| The skill's state, why it failed, its results as they are now | Variables: fields of the skill's time series (`State/<Skill>`), whose rows the DMP writes into InfluxDB from the interface (the mapping); the AAS holds no value. A field carries the semantic id of the Operation variable it shows as its supplemental semantic id |
 | Which block of the program a skill or a step is | Since 27 Oct (ARSO 0.10) the integrator's record of what was built, outside the AAS ([control-configuration.md](control-configuration.md)): a Control Configuration submodel per module with `Instances` (instance path, block type, type hash, a reference to the skill or the step), the change log and the management endpoint. The AAS keeps only `RuleSet` and each skill's `Deployment` |
 | What a primitive occupies | The component whose AAS it is described in |
 | Which capability it realizes | The capability says which skill realizes it; a skill never refers back |
@@ -201,13 +216,13 @@ What is deliberately not in Skills:
 | Step | an element named like a variable | a variable of the command's Operation | What is handed down, or which result it becomes |
 | Hierarchical Structures | a part's `globalAssetId` | the AAS of the component (or, for a line, of the module) | What it is made of |
 | The record of what was built (outside the AAS) | `Instances/<block>/Skill` | a skill or a step | Which block of the program it is |
-| Mapping Configuration | source → sink | interface property → data point | Where a published value lands in the AAS |
+| Mapping Configuration | source → sink | interface properties → a time series (its segment) | Which series a published value is a field of; the DMP writes the row into InfluxDB |
 | Mapping Configuration | source → sink | Operation of a command → interface action | Which call an invoked Operation becomes |
 
-Two links are by a shared semantic id, not by a reference: a data point and the Operation variable
-it shows; and a parameter of a skill and the capability property it sets (the `Volume` of
-Dispensing carries `.../semantics/FillVolume`, as the capability's `FillVolume` and the product's
-parameter do). That is how a product's value finds the parameter it belongs to.
+Two links are by a shared semantic id, not by a reference: a field of a time series and the
+Operation variable it shows; and a parameter of a skill and the capability property it sets (the
+`Volume` of Dispensing carries `.../semantics/FillVolume`, as the capability's `FillVolume` and the
+product's parameter do). That is how a product's value finds the parameter it belongs to.
 
 The interface description holds only how to reach things. The Skills submodel holds what they
 mean. The mapping joins the two.
@@ -228,8 +243,9 @@ Skills, against IDTA 02015 Control Component Type:
 
 - Kept: the `Errors` container, an error a property since 0.9.
 - Dropped: the per-skill Modes, Disabled and Errors structure and the device-level interface entries.
-- Ours (ARSO 0.7): the commands with their `InterfaceReference`, Operation and `Steps`; `Contract`.
-  Everything `modreg` writes in Skills and Control Configuration is declared in ARSO.
+- Ours (ARSO 0.7): the commands with their `InterfaceReference`, Operation and `Steps`; `Contract`
+  (since 0.11 `Conditions` and `Completion`). Everything `modreg` writes in Skills and Control
+  Configuration is declared in ARSO.
 - Changed with 0.8 (9 Oct): the steps are a flow in the planner's elements (`P1, P2, ...` with one
   element per variable are gone); the kind of a skill moved from the semantic id to a supplemental
   one; the Module submodel is gone, its commands are skills of the kind ModuleControl. The Skills
@@ -239,6 +255,9 @@ Skills, against IDTA 02015 Control Component Type:
   gone); the empty `Interfaces` container is gone (a command refers to its AID action); an error
   is a property whose value is its code (not a collection holding one `ErrorCode`); a skill's type
   is a supplemental id beside its kind (the `SemanticId` property only in the short form).
+- Changed with 0.10 and 0.11 (27 Oct): `RuleSet` and, per skill, `Deployment` take the place of
+  the Control Configuration in the AAS; a primitive's `Contract` becomes `Conditions` and
+  `Completion`.
 - Still valid, for the AAS generator's MQTT stations: the short form of a skill (`SemanticId`, one
   Operation and one `InterfaceReference` directly in the skill).
 - Gone with 0.7: `Kind`, `Parameters`, `RealizesProperty`, `Uses`, `Execute` and `Stop` lists,
@@ -252,9 +271,12 @@ Skills, against IDTA 02015 Control Component Type:
 | --- | --- | --- | --- | --- |
 | Built with | `modreg` on aas-model | demo data in the planner | the AAS generator's builder | aas-model's `Resource`, authored in Python (since 16 Oct) |
 | Interface | OPC UA | none | MQTT, OPC UA, Modbus | MQTT (aas-model's AID extension also describes OPC UA, Modbus, HTTP and others) |
-| Skills | ARSO Skills 0.8 (commands, steps as a flow) | "Application Skills 1.0" (the planner's own template) | ARSO Skills, short form (no parameters or composition) | IDTA 02015 Control Component Instance |
+| Skills | ARSO Skills 0.14 (commands, steps as a flow) | "Application Skills 1.0" (the planner's own template) | ARSO Skills, short form (no parameters or composition) | IDTA 02015 Control Component Instance |
 | Capabilities | IDTA 02020, meaning as supplemental id | IDTA 02020, meaning as supplemental id | IDTA 02020, meaning as the main id | IDTA 02020 (in the type since 16 Oct; content not compared yet) |
-| Live values | Operational Data | none | Operational Data | Variables |
+| Live values | aas-model's Variables, time series only (the values in InfluxDB) | none | Operational Data | Variables |
+
+The lab's MQTT stations are AP2030-UNS's PackML stations over MQTT, which are no longer used
+([decisions.md](decisions.md), 31 Oct).
 
 The first two agree on capabilities down to the semantic ids, the role qualifier and the shape of
 `RealizedBy` (compared element by element against the planner's reader; not run in the planner), so
@@ -262,7 +284,8 @@ a module should already show as a station there. They differ on skills (section 
 
 ## 3. Product AAS
 
-As the planner builds it, and as `modreg` builds it from a profile (`ProductTypeAAS`). A product (a
+As the planner builds it, and as aas-model's `Product` (`ProductTypeAAS` until 28 Oct) of which the
+three reference products are written out in Python (`cell/examples/products`). A product (a
 recipe) and each part with a plan of its own are AASs.
 
 | Submodel | Template | What it holds | Changed |
@@ -281,10 +304,12 @@ recipe) and each part with a plan of its own are AASs.
     material, `Role` (workpiece, incorporated, output), and `Quantity` with `Unit` or a
     `QuantityParameterReference` to the parameter that gives the amount;
   - the three parameter collections hold one Property per parameter, named by its idShort.
-- **Where the classes come from:** two submodel templates in `aas61499-tools/modreg/templates`:
-  `ProcessParameters.json` is IDTA's published template with the extension above;
-  `ProductionSequence.json` is written from the plans the planner saves. aas-model's generator makes
-  the pydantic classes from them (`modreg generate`), as it does for ARSO's own submodels.
+- **Where the classes come from:** two submodel templates in aas-model's `templates/product` (in
+  `aas61499-tools/modreg/templates` until 28 Oct): `ProcessParameters.json` is IDTA's published
+  template with the extension above; `ProductionSequence.json` is written from the plans the
+  planner saves. aas-model's generator makes the pydantic classes from them
+  (`scripts/lab_generate.py`), as it does for ARSO's own submodels, whose templates `modreg
+  generate` writes.
 - **Checked against the planner's data (7 Oct):** all 31 Production Sequences on the local server
   read into the class without losing an element, and 26 of the 29 Process Parameters submodels once
   their durations are taken as text. The other three are older demo data that names a material by a
@@ -314,7 +339,7 @@ APSO describes a product AAS differently. Neither is wrong; only one is built:
 Semantic id `https://smartproductionlab.aau.dk/SubmodelTemplate/ProductionSequence/2/0`, schema
 `production-sequence/2.0`, as the planner on the local server wrote it on 7 Oct. The planner now
 writes `ProductionSequence/3/0` (local sub-recipes embedded, decisions, grouped conditions);
-`modreg`'s template is still 2.0 (plan step F5). One submodel per sequence, in the AAS of the product it plans: the
+the template in aas-model is still 2.0 (plan step F5). One submodel per sequence, in the AAS of the product it plans: the
 product's own sequence (`Role` Primary, identifier
 `https://smartproductionlab.aau.dk/sm/process-plan/{base64url(AAS id)}`) and one more for every
 sequence it calls (`Role` Subprocess).
@@ -345,7 +370,9 @@ ProductionSequence
   product (no source means the constant).
 - It is an editable plan. It has no approval, no check result and no execution history.
 
-AProSO describes a process AAS of its own. The mapping:
+AProSO describes a process AAS of its own. The mapping (AProSO against the plan; the process AAS
+built since 28 Oct is aas-model's `Process`, with Process Information, Bindings and Validation,
+[ppr-model.md](ppr-model.md) section 2):
 
 | AProSO 0.1 (on paper) | Production Sequence (built) |
 | --- | --- |
@@ -365,7 +392,7 @@ AProSO describes a process AAS of its own. The mapping:
 | 3 | Required matches offered | Required capability of the product | Offered capability of a resource | Built in the planner and in `modlink` as code: same meaning, values within range, same unit. As an ontology check: planned |
 | 4 | Step assigned to a station | step `Resource` | resource AAS | Built in the planner |
 | 5 | Step assigned to a skill | step `Skill`, found through the capability's `RealizedBy` | skill of the resource | Built, for the planner's stations and (since the web UI fork's `ac9eb64`) for a module's ARSO skills |
-| 6 | Value handed to the skill | step `Binding` (source: a process parameter) | an input variable of the skill's Start | Built in the planner's model; nothing executes it yet |
+| 6 | Value handed to the skill | step `Binding` (source: a process parameter); since 28 Oct the process AAS's `InputBinding` | an input variable of the skill's Start | Built in the planner's model and in the process AAS; nothing executes a binding yet: the agents hand a skill the product's values by meaning (30 Oct) |
 | 7 | Line consists of modules | line's Hierarchical Structures (asset ids) | module AASs | Built for the example line (`FillingLineAAS`) |
 | 8 | Module consists of components | module's Hierarchical Structures (asset ids) | component AASs | Built |
 | 9 | A module's skill runs a component's | step `Skill` | skill in the component's AAS | Built |
@@ -382,12 +409,12 @@ Inside the resource the chain continues with section 2.2: capability → skill �
 | 4. 2 mL lies in the range, the meanings are the same | matching | Built (planner, `modlink`) |
 | 5. Filling is realized by the skill Dispensing | module, `RealizedBy` | Built |
 | 6. Its parameter Volume sets FillVolume | module: the input `Volume` of Dispensing's Start carries the meaning `.../semantics/FillVolume` | Built |
-| 7. The plan's step is assigned to Dispensing, and Volume is bound to the product's FillVolume | plan, step `Resource`, `Skill`, `Bindings` | Built: the planner reads the module's ARSO skills and binds Volume to FillVolume by their meaning |
-| 8. Someone runs the step: occupies the module, invokes Dispensing with Volume = 2 | executor (agents) | **Missing** |
-| 9. The Operation becomes the OPC UA call `Skills/Dispensing/Start(Session, 2.0)` | module, Mapping Configuration and interface description | Built (`modlink` runs a capability of one module with given values; the HMI uses it) |
+| 7. The plan's step is assigned to Dispensing, and Volume is bound to the product's FillVolume | plan, step `Resource`, `Skill`, `Bindings`; for the reference products the process AAS's Bindings | Built: the planner reads the module's ARSO skills and binds Volume to FillVolume by their meaning |
+| 8. Someone runs the step: occupies the module, invokes Dispensing with Volume = 2 | executor (agents) | Built 30 Oct (`lineagents`): the product agent asks for the step, the filling module's agent occupies the module and runs Dispensing over OPC UA or through the DMP |
+| 9. The Operation becomes the OPC UA call `Skills/Dispensing/Start(Session, 2.0)` | module, Mapping Configuration and interface description | Built (`modlink` runs a capability of one module with given values; the HMI uses it). Since 28 Oct the DMP also makes the call when the Operation is invoked at the AAS server |
 | 10. Dispensing hands Volume to its Dispense step; the flow rate is a constant of that step | module program; described by the step (`Volume` → the command's variable, `FlowRate` = 1.0) | Built |
 | 11. Dispense waits Volume / FlowRate, the needle homes, the scale is read | module program | Built (no pump yet: a time stands in) |
-| 12. State and result show as variables and as data points | interface, Mapping Configuration, Operational Data | Variables: built. Data points: modelled, nothing executes the mapping |
+| 12. State and result show as variables of the interface and as rows of time series | interface, Mapping Configuration, Variables | Built: the DMP writes the rows into InfluxDB (28 Oct); the AAS holds no value |
 
 ## 7. Where two descriptions differ
 
@@ -401,22 +428,27 @@ Inside the resource the chain continues with section 2.2: capability → skill �
    example line refers to the modules' ARSO skills.
 2. **Process AAS or submodel.** AProSO: an AAS per product and line. Planner: a submodel of the
    product. Consequence of the planner's way: one plan per product, so the same product on two
-   lines needs something more.
+   lines needs something more. **Decided 26 Oct, built 28 Oct:** a process AAS per product and
+   line ([ppr-model.md](ppr-model.md)); since 29 Oct `modreg serve` writes it from the planner's
+   bindings, which the planner still keeps in the recipe too (F6).
 3. **Product processes.** APSO's Bill of Process (a tree, with order) against IDTA 02031 Process
    Parameters (a list) plus the plan (the order).
 4. **Nothing checks a product AAS or a plan against an ontology.** APSO and AProSO exist but
    describe structures that are not the ones built. The pydantic type checks the structure, and
-   `plan_check` the links into the resources.
+   the plan check (`modreg.plancheck`) the links into the resources.
 5. **Capability element in the generator.** It writes the meaning as the main semantic id; the
    modules and the planner follow IDTA 02020 (decided 6 Oct). Both are accepted by the validator.
-6. **The interface terms aas-model writes that ARSO does not declare** (key, type, title,
-   operation type, browse path). Skills and Control Configuration are declared in full.
-7. **Two forms of a skill, one ARSO.** This repository has ARSO 0.9; the AAS generation project's
+6. **The interface terms aas-model writes that ARSO does not declare** (a property's key, type,
+   title, observable and unit, an action's title, the browse path on a form: 299 elements of the
+   filling module, 31 Oct). Skills and Control Configuration are declared in full.
+7. **Two forms of a skill, one ARSO.** This repository has ARSO 0.14; the AAS generation project's
    pushed copy is still 0.7 (its update to 0.8 is in a working copy, not committed). It builds the
    short form of a skill, which both versions keep valid; its validation accepts both forms, and
    tells a module, a component and a system apart by the asset type. `modlink` (HMI repository, a
-   submodule here since 19 Oct) reads 0.9, 0.8, 0.7 and the short form. The HMI's own reader, its
-   built-in module descriptions and its simulator are still those of the modules before 8 Oct.
+   submodule here since 19 Oct) reads the Skills as they are since 0.9 with aas-model's Variables,
+   and 0.8, 0.7 and the short form. The HMI's own committed reader, its built-in module
+   descriptions and its simulator are still those of the modules before 8 Oct (its reader's
+   rewrite for 0.8 is not committed).
 8. **ARSO's resource AAS and aas-model's `Resource`.** Since 16 to 18 Oct aas-model authors
    resources in Python as a `Resource` with Control Component Instance, Variables and Parameters.
    **Decided 19 Oct:** a line, a module and a component are `Resource`s; ARSO's own submodels
@@ -424,12 +456,17 @@ Inside the resource the chain continues with section 2.2: capability → skill �
    (Control Component Instance, Variables) is left out. Built the same day (`modreg/model.py`).
    The registration service is `modreg serve`; it takes these types and a plain `Resource` export
    of the lab's stations. Operational Data may become a Time Series Data submodel later.
+   **Since then:** the Control Configuration left the AAS (27 Oct, ARSO 0.10); aas-model's Variables,
+   with time series, replace Operational Data (28 Oct, ARSO 0.14); the types are aas-model's
+   `Module`, `Component` and `ProductionSystem`.
 9. **Live values.** The mapping into Operational Data is described but nothing runs it, so the
-   data points in the AAS hold no values.
+   data points in the AAS hold no values. **Since 28 Oct** the DMP runs the mappings and writes
+   the rows into InfluxDB; the AAS holds no value by design, only the series that say where.
 
 ## 8. What would complete this
 
 - The source of the planner that writes Production Sequence 2.0, so that its rules can be read and
   not only its data; and how real products (not the demo recipes) are meant to look.
-- Where the plan belongs when there are two lines (the line has an AAS now).
+- ~~Where the plan belongs when there are two lines (the line has an AAS now).~~ In a process AAS
+  per product and line (decided 26 Oct, built 28 Oct).
 - The lab's own resource AASs on the server, to compare with section 2.4.

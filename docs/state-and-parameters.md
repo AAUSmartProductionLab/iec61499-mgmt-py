@@ -1,6 +1,6 @@
 # States, measurements, events and parameters in the resource AAS: a plan
 
-Plan of 21 Oct 2026 (relation to skills added 22 Oct, Section 8; Operational Data's series decided 26 Oct), not built. How a resource AAS (line, module, component) tracks what happens
+Plan of 21 Oct 2026 (relation to skills added 22 Oct, Section 8; Operational Data's series decided 26 Oct), built in part since 28 Oct (the note below). How a resource AAS (line, module, component) tracks what happens
 to the resource over time, using the structure of IDTA's Time Series Data template inside a
 submodel of our own; how states, measurements and events are told apart; and what goes into the
 Parameters submodel instead. The database behind the history is left out on purpose: the model
@@ -12,10 +12,22 @@ InfluxDB segment. It replaces ARSO's Operational Data (ARSO 0.14); read "Operati
 Variables. The coordinates are in `Measurements` ([locations-and-layout.md](locations-and-layout.md)).
 The modules' series are built (`modreg/profile.py`, `series_of`): a module keeps no live value in its
 AAS, only series that say where the values are in the database (`State/Module`, `State/<Skill>`,
-`State/Procedures`, `Measurements/<Item>`); the reasons are in [design-log.md](design-log.md). `Log`
-is not written yet.
+`State/Procedures`, `Measurements/<Item>`); the reasons are in [design-log.md](design-log.md).
+
+**Since then (28 to 31 Oct):** `Log` is written (29 Oct): a series per command an Operation invokes
+(`Log/<action>`: how the call ended, how long it took, a reference to the Operation). The DMP
+(`aas-camel-dmp`, the lab stack in `deploy/aas`) writes the rows of every series into InfluxDB
+(28 Oct), which is S6's collector and database. Built differently from Section 3: no `Latest` (a
+reader asks the database), the segment is `Live` (a LinkedSegment with InfluxDB's endpoint and
+query), no `Source`, `Trigger` or `Origin`. The open decisions of Sections 7 and 8.8 stay open; each
+says what has been built since.
 
 ## 1. Where we are
+
+As on 21 Oct. Since 28 Oct the first row is replaced by the series of the note above, and
+`operational-data.ttl` by `variables.ttl` (aas-model's Variables); `parameters.ttl` is still
+minimal (an entry with `Value` and `Unit`) and since 31 Oct holds only the planar table's frame; a
+FORTE module's facts and settings are still only in its module spec.
 
 | Today | Problem |
 | --- | --- |
@@ -58,6 +70,12 @@ Rules for the cases in between:
 | Counters (vials filled, hours run) | Measurement (a counter) | Observed, monotone |
 
 ## 3. Operational Data as states, measurements and events
+
+**Superseded in part on 28 Oct** ([design-log.md](design-log.md), 28 Oct; the note at the top): built
+as aas-model's Variables with `State`, `Measurements` and `Log`, each series an SMC with IDTA's
+`Metadata`, `Record` and `Segments` as below, but without `Latest`, `Source`, `Trigger` and
+`Origin`, and with the segment `Live` instead of `History`. The rest of this section is the plan of
+26 Oct.
 
 **Decided 26 Oct:** Operational Data (ARSO's, version 2) holds three collections, `States`,
 `Measurements` and `Events` (the logs). Each entry is one series: an SMC with the inside of IDTA
@@ -195,7 +213,7 @@ log, which already records reconfigurations).
 | Technical Data | Fixed facts of the asset | Axis: lead 5 mm, travel 160 mm, motor rated 3 A |
 | Parameters | Its settings | Axis: 4 microsteps, 2.8 A, 160 pulses/mm, 2 kHz, 12.5 mm/s, home timeout 60 s, move timeout 30 s; module: stop timeout 10 s; scale: scale factor |
 | Skills | Per-call parameters with default and limits; step constants | Dispensing.Volume; Dispense.FlowRate = 1.0 |
-| Control Configuration | What was built from all that | Instances, types, hashes, change log |
+| Control Configuration | What was built from all that (since 27 Oct the integrator's record, outside the AAS) | Instances, types, hashes, change log |
 | Operational Data | What happens | States, measurements, events |
 
 aas-model's `Parameters` (a Property per parameter, nested groups) carries the value only. Ours
@@ -229,19 +247,38 @@ S1 to S4 change ARSO, the generated classes and every module's AAS, so they come
 paper's evaluation (B in [next-steps.md](next-steps.md)) unless the paper needs the states over
 time for a figure (the downtime of a reconfiguration is a state series, so B1 may want S5).
 
+**State on 31 Oct.** S5 is replaced (there is no `Latest` to write) and S6 is done in part: the DMP
+writes every series' rows into InfluxDB, and each series' `Live` segment names them. Of S1 to S4,
+ARSO 0.14 and aas-model's Variables gave the series and the call log; the kinds, `Origin`, the
+ConceptDescriptions (S3), a module's Parameters, the lifecycle series and the events are not
+built. ARSO's templates are aas-model's `templates/arso` (branch `lab-ppr-models`), not
+`modreg/templates` and `arso-submodels`. B1 and B2 were built on 28 Oct without the series: the
+runner times the downtime itself.
+
 ## 7. Decisions needed
 
 1. ~~Series inside Operational Data or standard Time Series submodels?~~ **Decided 26 Oct:**
    inside Operational Data, an SMC per series shaped as IDTA's template, with a `Latest`
-   property for the live value (Section 3).
+   property for the live value (Section 3). **Changed 28 Oct:** inside aas-model's Variables, and
+   without `Latest`: the AAS keeps no value ([decisions.md](decisions.md), "Where do a module's
+   live values go?").
 2. **One series per value, or grouped** (a skill's State and ErrorID together, as proposed)?
+   Built grouped on 28 Oct: a series holds what changes together (`modreg/profile.py`, `series_of`).
 3. **Component data in the component's AAS** (as proposed), or all in the module's AAS as today?
+   Built all in the module's AAS (`Measurements/<Item>`); a component's AAS holds its Skills only.
 4. **Skill results**: only in the execution events (as proposed), or also a measurement series?
+   Built: a skill's parameters and results are fields of its state series (`State/<Skill>`), and
+   each call is logged (`Log/<action>`, 29 Oct); there are no execution events.
 5. **Parameters**: build on aas-model's `Parameters` (add unit, limits, ChangedBy, Target as
-   optional children, as proposed), or ARSO's own form?
+   optional children, as proposed), or ARSO's own form? Not decided. Since 31 Oct the planar
+   table's AAS has ARSO's Parameters (an entry with `Value` and `Unit`: its frame, `Columns`,
+   `Rows`, `FlywaySize`) and the Configurator keeps a line's shuttle routing in the line's
+   Parameters ([locations-and-layout.md](locations-and-layout.md)); no FORTE module writes any.
 6. **Technical Data and Parameters from the module spec**: put the axis' facts and settings that
    are only in the YAML today into the AAS (as proposed), or leave the spec as their source?
+   Nothing built: they are only in the spec.
 7. **When**: after the paper's evaluation (as proposed), or the state series (S5) for B1 now?
+   B1 and B2 were built without them; the series came the same day (28 Oct), S5 is replaced.
 
 ## 8. How this relates to skills
 
@@ -255,7 +292,7 @@ matching names.
 | View | Submodel | What it says about MoveAxis | Changes |
 | --- | --- | --- | --- |
 | Description | Skills | Commands, parameter Position (0 to 160 mm), contract (requires Homed, ensures not Moving and at Position, timeout 30 s), the component that holds it | When the skill is edited (engineer, skill editor) |
-| Build | Control Configuration | Instance `MoveAxis`, type `filling::SK_MoveAxis`, its hash | When it is built or rebuilt (`modsync reconfigure`, a deployment) |
+| Build | Control Configuration (since 27 Oct the integrator's record, outside the AAS; the AAS keeps the skill's `Deployment`) | Instance `MoveAxis`, type `filling::SK_MoveAxis`, its hash | When it is built or rebuilt (`modsync reconfigure`, a deployment) |
 | Offer | Capability Description | Positioning, 0 to 160 mm, realized by MoveAxis | With the description (ranges come from the parameters' limits) |
 | Behaviour | Operational Data | Its state over time (Idle, Running, Succeeded, ErrorID), each run as an event (Position asked, duration, outcome, session) | Continuously |
 
@@ -267,7 +304,8 @@ following references, also for a skill created online.
 
 ### 8.2 Contracts are expressions over states, measurements and parameters
 
-The contracts are written over the resource's variables, by name:
+The contracts are written over the resource's variables, by name (since ARSO 0.11 a primitive's
+`Conditions`, Precondition, Postcondition and Invariant, and `Completion`, After and Timeout):
 
 | Skill | Contract | Uses |
 | --- | --- | --- |
@@ -360,7 +398,8 @@ Dispensing goes, step by step.
 
 ### 8.6 Reconfiguration is an event in the same log
 
-`modsync reconfigure` writes the Control Configuration's change log today. In the same terms it
+`modsync reconfigure` writes the Control Configuration's change log today (since 27 Oct in the
+integrator's record, outside the AAS). In the same terms it
 is an event of the resource (`Events/Reconfigurations`: what changed, from and to, trigger,
 outcome, how long the module was affected) with references to the skills it created or changed,
 and the lifecycle states of those skills change with it. The downtime of a reconfiguration (the
@@ -381,14 +420,20 @@ skills' execution states around the event's time. That is the reason to build th
 ### 8.8 More decisions (add to Section 7)
 
 8. **A `Skill` reference on every series and event** that belongs to a skill or step (as proposed)?
+   Not built: a series names its skill only through its fields' meanings
+   (`.../skills/Dispensing/State`); a call log refers to the Operation it logs.
 9. **Contracts list what they use** (`Uses` references) next to the expression (as proposed), or
-   stay strings?
+   stay strings? Not built: `Conditions` are strings; since ARSO 0.11 a capability property of the
+   Capability Description names the state it is with `SameProperty` (a field of a series), which
+   the planner reads.
 10. **A lifecycle state per skill** (Described, Built, Offered), next to its execution state (as
-    proposed)?
+    proposed)? In part: `Deployment` (`Described`, `Built`) in Skills since 27 Oct, a property, not
+    a series; the matching reads it.
 11. **Order and plan step in a run's event**, handed by the caller with the session (as
-    proposed), or only the session?
+    proposed), or only the session? Not built: a call log keeps the session (in the Operation's
+    variables), not the order or the step.
 12. **Measured durations and success rates** kept in the Capability Description (as proposed),
-    or only in the events?
+    or only in the events? Not built.
 
 ## 9. What the HMI will read (26 Oct)
 
@@ -403,4 +448,6 @@ OPC UA bridge is temporary; the target is an HMI that uses the AAS alone:
 
 That makes S5 (current values written into the AAS) and S6 (the database) part of the HMI's
 path. Where the states live was decided with it (decision 1): in Operational Data, not in
-aas-model's Variables submodel.
+aas-model's Variables submodel. **Changed 28 Oct:** in aas-model's Variables, without `Latest`: the
+HMI is to read the current state and the history from InfluxDB, through each series' `Live`
+segment (C6 in [next-steps.md](next-steps.md)).

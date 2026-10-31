@@ -86,10 +86,10 @@ FillingLineAAS
 | AAS | Kind | Submodels |
 | --- | --- | --- |
 | `FillingLineAAS` | system | Variables, HierarchicalStructures |
-| `PlanarTableAAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
-| `PlanarShuttle1AAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
-| `PlanarShuttle2AAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
-| `PlanarShuttle3AAS` | module | Nameplate, AssetInterfacesDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
+| `PlanarTableAAS` | module | Nameplate, AssetInterfacesDescription, Variables, Parameters, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
+| `PlanarShuttle1AAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
+| `PlanarShuttle2AAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
+| `PlanarShuttle3AAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
 | `FillingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
 | `StopperingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
 | `CappingModuleAAS` | module | Nameplate, AssetInterfacesDescription, CapabilityDescription, Variables, AssetInterfacesMappingConfiguration, HierarchicalStructures, Skills |
@@ -549,11 +549,11 @@ flowchart BT
 | Weigh() → Weight [g] | FillingScaleAAS | Primitive | – (After 0.2) | – |
 
 - **Capability Filling** (`https://smartproductionlab.aau.dk/semantics/Filling`), realized by Dispensing: ContainerType [{'modelType': 'Property', 'value': 'vial', 'valueType': 'xs:string'}, {'modelType': 'Property', 'value': 'syringe', 'valueType': 'xs:string'}, {'modelType': 'Property', 'value': 'cartridge', 'valueType': 'xs:string'}]; GraspDiameter 6.0 to 30.0 mm; AbsoluteFillError 0.05 mL; FillVolume 0.5 to 10.0 mL; Pre ContentVolume = 0.0, Post ContentVolume = FillVolume.
-- **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Pump's Dosing (Dispense): Post ContentVolume += Volume, Post Weighed = false, Pre LinearAxisPosition = FillPosition, Invariant LinearAxisPosition unchanged; Scale's Taring (Tare): Post Tared = true; Scale's Weighing (Weigh): Pre Tared = true, Post Weight measured, Post Weighed = true, Pre LinearAxisPosition = 0.0, Invariant LinearAxisPosition unchanged.
+- **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Pump's Dosing (Dispense): Post ContentVolume += Volume, Post Weighed = false, Pre LinearAxisPosition >= FillPosition, Invariant LinearAxisPosition >= FillPosition; Scale's Taring (Tare): Post Tared = true; Scale's Weighing (Weigh): Pre Tared = true, Post Weight measured, Post Weighed = true, Pre LinearAxisPosition = 0.0, Invariant LinearAxisPosition unchanged.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home → Tare), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `FillingLinearAxisAAS`, Pump → `FillingPumpAAS`, Scale → `FillingScaleAAS`.
 - **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (240, 720, 0), Yaw 180 relative to TableBase; LinearAxisMount (Mount) at (0, 60, 100), Roll 180 relative to ModuleBase; LinearAxis (EndEffector) at (0, 0, 0) relative to LinearAxisMount, Z = LinearAxis_ActualPosition; Transfer (TransferPoint) at (0, 60, 0), Yaw 180 relative to ModuleBase; Fill (ProcessingPoint) at (0, 60, 60) relative to ModuleBase.
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 10 time series with 45 fields (State/Module, State/Procedures, State/Dispensing, State/Home, State/MoveAxis, State/Dispense, State/Tare, State/Weigh, Measurements/LinearAxis, Measurements/Scale); 41 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 31 actions and 45 properties; 41 time series with 138 fields (State/Module, State/Procedures, State/Dispensing, State/Home, State/MoveAxis, State/Dispense, State/Tare, State/Weigh, Measurements/LinearAxis, Measurements/Scale, Log/Occupation_Occupy, Log/Occupation_Release, Log/Module_Reset, Log/Module_Start, Log/Module_Stop, Log/Module_Abort, Log/Module_Clear, Log/Dispensing_Start, Log/Dispensing_Stop, Log/Dispensing_Abort, Log/Dispensing_Reset, Log/Home_Start, Log/Home_Stop, Log/Home_Abort, Log/Home_Reset, Log/MoveAxis_Start, Log/MoveAxis_Stop, Log/MoveAxis_Abort, Log/MoveAxis_Reset, Log/Dispense_Start, Log/Dispense_Stop, Log/Dispense_Abort, Log/Dispense_Reset, Log/Tare_Start, Log/Tare_Stop, Log/Tare_Abort, Log/Tare_Reset, Log/Weigh_Start, Log/Weigh_Stop, Log/Weigh_Abort, Log/Weigh_Reset); 41 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Dispensing built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### StopperingModuleAAS
@@ -595,7 +595,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (RetractPiston → Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `StopperingLinearAxisAAS`, Piston → `StopperingPistonAAS`.
 - **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (600, 720, 0), Yaw 180 relative to TableBase; LinearAxisMount (Mount) at (0, 60, 100), Roll 180 relative to ModuleBase; LinearAxis (EndEffector) at (0, 0, 0) relative to LinearAxisMount, Z = LinearAxis_ActualPosition; Transfer (TransferPoint) at (0, 60, 0), Yaw -90 relative to ModuleBase; Press (ProcessingPoint) at (0, 60, 60) relative to ModuleBase.
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 8 time series with 32 fields (State/Module, State/Procedures, State/Stoppering, State/Home, State/MoveAxis, State/PressStopper, State/RetractPiston, Measurements/LinearAxis); 35 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 27 actions and 32 properties; 35 time series with 113 fields (State/Module, State/Procedures, State/Stoppering, State/Home, State/MoveAxis, State/PressStopper, State/RetractPiston, Measurements/LinearAxis, Log/Occupation_Occupy, Log/Occupation_Release, Log/Module_Reset, Log/Module_Start, Log/Module_Stop, Log/Module_Abort, Log/Module_Clear, Log/Stoppering_Start, Log/Stoppering_Stop, Log/Stoppering_Abort, Log/Stoppering_Reset, Log/Home_Start, Log/Home_Stop, Log/Home_Abort, Log/Home_Reset, Log/MoveAxis_Start, Log/MoveAxis_Stop, Log/MoveAxis_Abort, Log/MoveAxis_Reset, Log/PressStopper_Start, Log/PressStopper_Stop, Log/PressStopper_Abort, Log/PressStopper_Reset, Log/RetractPiston_Start, Log/RetractPiston_Stop, Log/RetractPiston_Abort, Log/RetractPiston_Reset); 35 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Stoppering built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### CappingModuleAAS
@@ -635,7 +635,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `CappingLinearAxisAAS`, Crimper → `CappingCrimperAAS`.
 - **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (960, 360, 0), Yaw 90 relative to TableBase; Transfer (TransferPoint) at (0, 120, 0), Yaw -90 relative to ModuleBase.
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 7 time series with 30 fields (State/Module, State/Procedures, State/Capping, State/Home, State/MoveAxis, State/Crimp, Measurements/LinearAxis); 30 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 time series with 99 fields (State/Module, State/Procedures, State/Capping, State/Home, State/MoveAxis, State/Crimp, Measurements/LinearAxis, Log/Occupation_Occupy, Log/Occupation_Release, Log/Module_Reset, Log/Module_Start, Log/Module_Stop, Log/Module_Abort, Log/Module_Clear, Log/Capping_Start, Log/Capping_Stop, Log/Capping_Abort, Log/Capping_Reset, Log/Home_Start, Log/Home_Stop, Log/Home_Abort, Log/Home_Reset, Log/MoveAxis_Start, Log/MoveAxis_Stop, Log/MoveAxis_Abort, Log/MoveAxis_Reset, Log/Crimp_Start, Log/Crimp_Stop, Log/Crimp_Abort, Log/Crimp_Reset); 30 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Capping built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ### InspectionModuleAAS
@@ -672,7 +672,7 @@ flowchart BT
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset, Start, Stop, Abort, Clear.
 - **Components:** TopCamera → `InspectionTopCameraAAS`, SideCamera → `InspectionSideCameraAAS`.
 - **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (960, 120, 0), Yaw 90 relative to TableBase.
-- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 6 time series with 22 fields (State/Module, State/Inspection, State/CaptureTop, State/CaptureSide, Measurements/TopCamera, Measurements/SideCamera); 25 mappings.
+- **Interface:** OPC UA at `opc.tcp://localhost:4840`, 19 actions and 22 properties; 25 time series with 79 fields (State/Module, State/Inspection, State/CaptureTop, State/CaptureSide, Measurements/TopCamera, Measurements/SideCamera, Log/Occupation_Occupy, Log/Occupation_Release, Log/Module_Reset, Log/Module_Start, Log/Module_Stop, Log/Module_Abort, Log/Module_Clear, Log/Inspection_Start, Log/Inspection_Stop, Log/Inspection_Abort, Log/Inspection_Reset, Log/CaptureTop_Start, Log/CaptureTop_Stop, Log/CaptureTop_Abort, Log/CaptureTop_Reset, Log/CaptureSide_Start, Log/CaptureSide_Stop, Log/CaptureSide_Abort, Log/CaptureSide_Reset); 25 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Inspection built. Which block is which skill or step is the integrator's record, outside the AAS.
 
 ## The products and their processes
