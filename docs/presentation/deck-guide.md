@@ -3,8 +3,8 @@
 For whoever designs the slides (a person or an LLM) from **[deck.drawio](deck.drawio)**: every figure of
 the talk in one draw.io file, one page per slide, in the order of the story. This guide says what each
 page is for, how its layers and groups are made, and how to turn the layers into PowerPoint
-animations. The facts behind the figures are in [presentation.md](presentation.md) (terms, facts to get
-right) and [animations.md](animations.md) (the filling module's animation, beat by beat).
+animations. The facts to keep and the terms are at the end of this guide; the filling module's
+animation, beat by beat, is under page 05.
 
 ## Files
 
@@ -13,6 +13,7 @@ right) and [animations.md](animations.md) (the filling module's animation, beat 
 | The figures, editable | `docs/presentation/deck.drawio` (open in draw.io or the VS Code draw.io extension) |
 | Every page as one picture, and every layer as its own picture | `docs/presentation/figures/deck/<page>/00-still.png` and `<nn>-<layer>.png` |
 | The exporter | `python docs/figures/export_layers.py docs/presentation/deck.drawio <out-dir> --page <n>` (n from 0) |
+| The other scripts in `source/` | `big_picture.py` (the big picture on one slide, with `big-picture.drawio`), `iec61499_explainer.py` (one slide on IEC 61499), `build_icons.py` (AASPIRE's icons, [framework-plan.md](../framework-plan.md) section 8), `build_library.py` (the figures' shape pack in `docs/figures/library`); each says at its top how it is run |
 
 A page of 1600 × 900 exports at 2400 × 1350 (a slide at 16:9; a pixel is the page's coordinate × 1.5).
 Every layer's PNG is the size of the whole page and transparent outside what it draws, so the layers of
@@ -26,10 +27,11 @@ the layers that are visible in the file: use it where a slide has no animation.
   draw.io stencil, so it scales to any size and takes its colour from the fill (Format panel). To reuse
   it, copy a group whose name ends in "AAS" (e.g. "Filling module AAS"), or the 20 px shells in the
   tree pages. A submodel is a grey bar (`#A7ACB6`, white bold text) under or beside its shell.
-- **Colours carry meaning** (as in [presentation.md](presentation.md)): orange `#F07D2E` the modules,
+- **Colours carry meaning**: orange `#F07D2E` the modules,
   purple `#9080B7` the product, green `#5B963B` IEC 61499 events and a Pi running its program, blue
   `#6C91B2` resources and OPC UA, gold `#B88A1C` modsync and the management protocol, teal `#2A918B` an
-  AAS. A dashed outline is planned, not built (agents, the pump and the scale's hardware).
+  AAS. A dashed outline is planned, not built (the pump and the scale's hardware; the agents on pages
+  06, 12b and 12c, drawn before they were built).
 - **Arial** everywhere; dark text `#252B2D`, secondary `#6E777B`.
 - **A layer is a unit of animation; a group is a unit of moving and editing.** Each thing that appears,
   disappears or moves on its own is a layer; the parts of one thing are a group, nested where a part has
@@ -103,8 +105,64 @@ by one (`OPC UA server` to `Equipment IO`), then the two brackets ("the same in 
 ### 05 The filling module in motion: an orchestrator
 
 *"Inside the filling module: commands in, states change, the needle moves."* The same figure as
-`docs/figures/module-motion.drawio`; its 29 layers and the 12 beats are in
-[animations.md](animations.md#filling-motion) (the layer numbers there are this page's).
+`docs/figures/module-motion.drawio`, page "Filling module in motion": a front view of the filling
+module beside an orchestrator and the module's PackML and Dispensing state machines. Each part that
+moves or switches is a layer of its own; within a layer, the parts that belong together are draw.io
+groups (the vial inside "Shuttle with vial", the pump and the needle inside "Carriage", the motor and
+the switch inside "Linear axis"), so a part is moved or edited as one. `python
+docs/figures/export_layers.py docs/figures/module-motion.drawio docs/presentation/figures/filling-motion`
+exports every layer as a PNG of the whole page; the layer numbers below are also this page's.
+
+**How to set it up.** Insert all the layer PNGs except `00-still.png` at once, each at position 0, 0
+and the slide's full size (13.33 × 7.5 in). Keep the file order as the stacking order (01 at the
+back). Layers 01, 03 and 10 are always shown; every other layer starts hidden and comes in with its
+first animation (Appear, or the effect below). After an edit in draw.io, export again and use *Change
+Picture* on each picture: its animations stay.
+
+| Layers | What | PowerPoint |
+| --- | --- | --- |
+| `01-module` | Table, frame and lid, the linear axis (column, motor at its foot, home switch at its top), Pi with its wires, scale | Always shown |
+| `02-shuttle-and-vial` | The vial on its shuttle | Fly In from the left; Fly Out to the right at the end |
+| `03-carriage` | Carriage, arm, pump, needle, drawn at home | Motion path, a line straight down by **28.9 % of the slide's height** (40 mm, 260 of the page's 900 px), and the same line back up |
+| `04-home-switch-pressed` | Green ring, `AtHome` | Appear while the carriage is at the switch |
+| `05-step-pulses` | Pulse train, ring on the motor | Appear while the carriage moves |
+| `06-travel-40-mm` | Dimension of NeedleDown's 40 mm | Appear with the move down |
+| `07-pump-running` | Ring on the pump, the stream, drawn where the pump is when down | Appear during Dispense |
+| `08-liquid` | 2 mL in the vial | Wipe from the bottom during Dispense; Fly Out to the right *with* the shuttle |
+| `09-weight-2-0-g` | The scale reads 2.0 g | Appear at Weigh |
+| `10-state-machines` | The orchestrator, PackML with the occupation, Dispensing's states and steps, plain | Always shown |
+| `11` to `15` | PackML Stopped, Resetting, Idle, Starting, Execute highlighted | Appear on entry, Disappear on exit |
+| `16-occupied` | Occupation: `occupied · s1` over `free` | Appear at Occupy, Disappear at Release |
+| `17` to `19` | Skill Idle, Running, Succeeded highlighted | Appear on entry, Disappear on exit |
+| `20` to `23` | Step NeedleDown, Dispense, Home, Weigh highlighted | Appear when the step starts, Disappear when it ends |
+| `24` to `29` | A command: the arrow from the orchestrator to what it addresses (the occupation, PackML, the skill), with the command and its answer | Appear (or Wipe in the arrow's direction), Disappear with the next command |
+
+The commands: `24` the skill's Start refused (orange, `False, 5`, not occupied), `25` Occupy, `26`
+Reset (homes), `27` the module's Start, `28` the skill's Start with 2.0 mL, `29` Release.
+
+**The beats** (one click each, or *After Previous* for autoplay; within a beat everything is *With
+Previous* unless it says *after*). At the start: 01, 03, 10, `11-packml-stopped`, `17-skill-idle`.
+
+| # | Command | What moves or switches |
+| --- | --- | --- |
+| 1 | – | `02` flies in: the vial arrives under the needle |
+| 2 | `24` on | – (refused: nobody occupies the module) |
+| 3 | `24` off, `25` on | `16` appears |
+| 4 | `25` off, `26` on | `11` off, `12` on; `05` on; *after* `04` on, `05` off; *after* `12` off, `13` on |
+| 5 | `26` off, `27` on | `13` off, `14` on; *after* `14` off, `15` on |
+| 6 | `27` off, `28` on | `17` off, `18` on |
+| 7 | `28` off | NeedleDown: `20` on, `04` off, `05` on, `06` on; `03` moves down; *after* `05` off |
+| 8 | – | Dispense: `20` off, `21` on, `07` on; `08` wipes up; *after* `07` off |
+| 9 | – | Home: `21` off, `22` on, `06` off, `05` on; `03` moves up; *after* `04` on, `05` off |
+| 10 | – | Weigh: `22` off, `23` on, `09` on |
+| 11 | – | `23` off, `18` off, `19` on; *after* `19` off, `17` on (Succeeded, then Idle by itself) |
+| 12 | `29` on | `16` off; `02` and `08` fly out to the right together; `09` off; *after* `29` off |
+
+Facts: every command is answered at once with `[Accepted, ErrorID]` (`True, 0` accepted, `False, 5`
+NotPermitted); a skill starts only for the session that occupies the module, in Execute; Reset homes
+the axis to its limit switch; the steps follow each other by events; Succeeded returns to Idle by
+itself. The pump and the scale are not real hardware yet: the pump is a time at a flow rate, the scale
+is simulated (dashed). No durations or measured values; an illustration, not a recording.
 
 ### 06 The filling module in motion: agents bid (planned)
 
@@ -119,9 +177,9 @@ orchestrator replaced by agents, all dashed (planned, the paper's future work).
 | The rest | As on page 05 (module, shuttle, carriage, highlights, liquid, weight) |
 
 Beats: messages 01, 02, 03 (each replaces the one before); message 04 and the shuttle flies in; message
-05; then the commands and the module's run as in beats 3 to 11 of
-[animations.md](animations.md#filling-motion) (here without the refused Start: the agent occupies
-first); message 06; command 05 (Release); message 07 and the shuttle with the liquid flies out.
+05; then the commands and the module's run as in beats 3 to 11 of page 05 (here without the refused
+Start: the agent occupies first); message 06; command 05 (Release); message 07 and the shuttle with
+the liquid flies out.
 
 ### 07 Product, process and resource AAS
 
@@ -285,20 +343,22 @@ page 12c and the agents at the filling module.
 
 ## The animated deck
 
-`modular-production-animated-v4.pptx` is the user's `modular-production.pptx` with these figures added as
-animated slides in its own style (title, section label, speaker notes). Only the two walks through the
+The animated deck is the user's `modular-production.pptx` with these figures added as animated slides
+in its own style (title, section label, speaker notes); the newest build here is
+`modular-production-animated-v5.pptx` (29 Oct, before pages 03d and 13b). Only the two walks through the
 filling module (with an orchestrator, with its agent) and "From the AAS to function blocks" keep the click
 timeline with a caption per step; the user's own slides lose theirs (`strip_timeline`: the shapes below
 the figure, their effects and the clicks left empty go; the rest is scaled and centred). Slides 13 and 14
-of the original become page 12, slides 15 and 16 pages 12b, 12c and 13, followed by the agents at the filling module. Slide 6's illustration is page 03c.
+of the original become page 12, slides 15 and 16 pages 12b, 12c and 13b, followed by the agents at the
+filling module. After slide 5 comes page 03d (page 03c until 30 Oct).
 The line and the tools pictures (slides 1, 3 and 11) are new exports of `docs/figures/slides.drawio`, in
 `figures/pictures`. Each figure is its layer PNGs, cropped and stacked; the animations are PowerPoint's
 own (fade, wipe, fly in, motion paths), so they can be changed in the Animation Pane.
 
 `python docs/presentation/source/build_pptx.py . <out.pptx>` builds it from `modular-production.pptx` and
 the exports in `figures/deck` (`slides_spec.py` says what each new slide shows and how it animates, and
-what changes on the user's slides; the skill's `add_slide.py`, `clean.py` and `validate.py` do the package
-work). `export_slides.vbs` renders every slide with PowerPoint and `video_slide.vbs` one slide as a video,
+what changes on the user's slides; the pptx skill's `add_slide.py` and `clean.py` do the package work).
+`export_slides.vbs` renders every slide with PowerPoint and `video_slide.vbs` one slide as a video,
 to check an animation frame by frame. A motion path in PowerPoint starts from where the shape is laid out,
 not where the last path ended: a way back is the path from the moved place to 0. A wipe's filter names
 the side it starts from, as its subtype does (From Left: 8 and `wipe(left)`; From Bottom: 4 and
@@ -306,7 +366,10 @@ the side it starts from, as its subtype does (From Left: 8 and `wipe(left)`; Fro
 
 ## Facts to keep
 
-- Agents do not exist yet: page 06 is planned (dashed), the paper's future work.
+- Agents are built (30 Oct, on the PC, with simulated modules or FORTE on the PC; pages 13 and 13b).
+  Since 31 Oct they are one of the demo's two orchestrators, beside FOND-AAS's policies run as
+  behaviour trees ([framework-plan.md](../framework-plan.md), section 1). Pages 06, 12b and 12c were
+  drawn before and still mark them planned (dashed); for the CIRP paper they stay future work.
 - The filling and stoppering modules are built; capping and inspection are planned. The filling
   module's pump is not wired (dispensing is a time at a flow rate) and its scale is simulated.
 - No durations, counts or measured values in an animation: they illustrate the order of things.
@@ -316,3 +379,21 @@ the side it starts from, as its subtype does (From Left: 8 and `wipe(left)`; Fro
 `replanning-and-agents.pptx` holds the replanning slide of 29 Oct (TaredDispensing) and the
 agents-on-the-line slide; `reconfiguration-syringe.pptx` the replanning slide as it is now (the syringe):
 `keep_slides.py <deck> <out> "<title text>" ...` keeps the slides whose titles contain the texts.
+
+## Terms, for the slides and the notes
+
+| Term | Meaning here |
+| --- | --- |
+| AAS | Asset Administration Shell: the standard digital description of an asset, made of submodels |
+| Submodel | One aspect of an AAS (Nameplate, Skills, Capability Description, ...) |
+| IEC 61499 | The standard for distributed control applications built from function blocks |
+| 4diac, FORTE | Eclipse 4diac: the IDE, and FORTE, the runtime that runs the program on the Pi |
+| Management protocol | FORTE's protocol to create, connect, write and query blocks in a running program |
+| OPC UA | How clients occupy a module, call its skills and follow its state |
+| PackML | The state machine of a module (Stopped, Idle, Execute, ...) |
+| Skill | Something a module can be asked to do: a primitive (one command on one equipment item) or a composite skill (steps that call other skills; also called a module level skill) |
+| Capability | What a module can do for a product (Filling 0.5 to 10 mL), realized by a skill |
+| ARSO | Our resource ontology: what each element of a resource AAS is |
+| ISA-88 | The batch control standard whose recipe levels the three kinds of AAS follow |
+| BaSyx | The Eclipse AAS server and web UI the lab uses |
+| Orchestrator | What decides which module does which step: the agents, or FOND-AAS's policy run as a behaviour tree |

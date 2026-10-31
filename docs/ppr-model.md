@@ -25,7 +25,7 @@ Figures (draw.io; open them at app.diagrams.net or in the draw.io desktop app, a
 | | Layers (illustrated) | The same layers drawn further: the stations open in front and reach over the vial with their tools, shuttles with black rims, names on signs above the stations; the programs as windows with the server they run on at the side; the agents as a product and miniature modules, the AASs as stacks, people at the planner and the HMI; the HMI with a state machine and buttons per module, a trend and alarms. Only the lines that matter, along x, y and z |
 | | Layers (slide) | The same layers for a slide: a few objects with a word or two on each, the layers apart, big cards naming them on the right |
 | [figures/mapping.drawio](figures/mapping.drawio) | AAS skill to IEC 61499, Flow kinds as blocks, The AAS as the target | Dispensing's AAS elements beside the blocks, values and connections they are (numbered to match), with its OPC UA nodes and the names that join them; each kind of step as its pattern of library blocks, and groups of conditions as chains; modsync's loop from the AAS and the running program to the commands, the check and the record ([mapping.md](mapping.md)) |
-| [figures/slides.drawio](figures/slides.drawio) | 01 to 19, 06b | One figure per slide of [presentation/presentation.md](presentation/presentation.md): 16:9 pages, big type, few elements, no title of their own; 01 is the line alone, for the title slide; 06b the layers across a whole slide, drawn dimetrically so each layer is a long shelf |
+| [figures/slides.drawio](figures/slides.drawio) | 01 to 19, 06b | One figure per slide of the first deck (27 Oct; the slides are now made from `presentation/deck.drawio`, [presentation/deck-guide.md](presentation/deck-guide.md)): 16:9 pages, big type, few elements, no title of their own; 01 is the line alone, for the title slide; 06b the layers across a whole slide, drawn dimetrically so each layer is a long shelf |
 
 They follow the style of the module architecture figure (Arial, grey panels, white cards, rounded
 pills, small blue tags, dashed for what is not built yet).
@@ -37,7 +37,7 @@ The split follows ISA-88's recipe levels, which pharmaceutical batch production 
 | ISA-88 | AAS | One per | Holds | Changes when | Owner | Ontology | Built |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | General recipe | **Product AAS** | Product, and each part with a recipe of its own | What the product is, the processes it needs with their parameters and materials, the capabilities they require, the recipe (steps, order, conditions), no equipment named | The product changes | Product designer | APSO | Yes, but the recipe still holds the bindings |
-| Master recipe | **Process AAS** | Product and line | The recipe bound to one line: each step's resource, skill and parameter bindings, and the plan check's result | The line is reconfigured, or the product moves to another line | Line engineer | AProSO | No |
+| Master recipe | **Process AAS** | Product and line | The recipe bound to one line: each step's resource, skill and parameter bindings, and the plan check's result | The line is reconfigured, or the product moves to another line | Line engineer | AProSO | Yes, since 28 Oct (section 2) |
 | (equipment) | **Resource AAS** | Line, module, component | What it offers and how it is called, what its skills are made of, what was built, what it does | The vendor delivers it; the integrator's tools change it online | Vendor | ARSO | Yes |
 | Control recipe, batch record | Order, product instance | Order; vial | How many, which run; what was done to each vial | Every order | The executor (agents) | APSO, PPRL | After the paper |
 
@@ -52,8 +52,9 @@ Why the process AAS is separate from the product AAS:
 **The planner fills the process AAS.** The process sequence planner (a module of the BaSyx web UI)
 takes the recipe from the product AAS, matches each step's required capability against the offered
 capabilities of the resources, binds the step to a skill (by the matching or by hand) with its
-parameters, and writes these bindings into the process AAS. Today it keeps them in the product's
-Production Sequence; they move with the planner change (F6).
+parameters, and writes these bindings into the process AAS. It still keeps them in the product's
+Production Sequence; since 29 Oct `modreg serve` writes the process AAS from them after each save
+(`POST /process/<product>`, `modreg/process.py`). Taking them out of the recipe is the rest of F6.
 
 ## 2. The submodels
 
@@ -91,13 +92,13 @@ specific asset ids, so it is found from either)
 | --- | --- | --- | --- |
 | Nameplate | IDTA 02006 | What the resource is | Yes |
 | Hierarchical Structures | IDTA 02011 | Its parts: a line's modules, a module's components | Yes |
-| Capability Description | IDTA 02020, role Offered | What it offers, with ranges, each capability realized by a skill; derived from the skills (section 5) | Yes, derived since 26 Oct |
+| Capability Description | IDTA 02020, role Offered | What it offers, with ranges, each capability realized by a skill; derived from the skills (section 5). A module's also holds its components' capabilities (role NotAssigned) with their constraints, for planning (ARSO 0.11) | Yes, derived since 26 Oct |
 | Skills | ours (ARSO) | Each skill as its commands, directly in the submodel; the Start's variables are the parameters with limits; a composite's steps; the error codes | Yes |
 | Asset Interfaces Description | IDTA 02017 (+ aas-model's actions) | The OPC UA endpoint and every action and property | Yes |
 | Asset Interfaces Mapping Configuration | IDTA 02027 | Which interface element feeds which data, which action an Operation calls | Yes |
-| Variables | aas-model's (ARSO 0.14; Operational Data until 0.13) | Live values as Properties (their meaning a supplemental id), and `State`, `Measurements` and `Log` holding IDTA 02008 time series as SMCs; the coordinates in `Measurements` | Data points and coordinates; series planned ([state-and-parameters.md](state-and-parameters.md)) |
+| Variables | aas-model's (ARSO 0.14; Operational Data until 0.13) | No live values (28 Oct): `State`, `Measurements` and `Log` holding IDTA 02008 time series as SMCs, each field's meaning a supplemental id and each series' segment naming its rows in InfluxDB; the coordinates in `Measurements` | Yes: the series and coordinates (28 Oct), the call logs (29 Oct); the DMP writes the rows. The rest of [state-and-parameters.md](state-and-parameters.md) waits for decisions |
 | (in Skills) `RuleSet`, `Deployment` | ours (ARSO 0.10) | The rule set the program is built by; per module level skill, `Built` or `Described`. What was built in detail (instances, block types, hashes, the change log) is the integrator's record outside the AAS ([control-configuration.md](control-configuration.md)) | Yes, since 27 Oct |
-| Parameters | ours | The resource's settings (microsteps, speed, timeouts) | Planned |
+| Parameters | ours | The resource's settings (microsteps, speed, timeouts) | Planned; since 31 Oct the planar table's frame (Columns, Rows, FlywaySize, [locations-and-layout.md](locations-and-layout.md)) |
 | Technical Data | IDTA 02003 | Fixed facts (screw lead, motor current) | Planned |
 
 ## 3. Ontologies and ids
@@ -125,7 +126,8 @@ states, and the lab's `apex` state ids are in none; about half the ids name one 
 a concept (`.../skills/Dispensing/Execute/NeedleDown/Position`) and are to be moved out (`modlink`
 joins a data point to its variable by such an id; that join changes with them). APSO and AProSO
 describe a Bill of Process and a process AAS nothing builds and carry no semantic ids: they are
-remade like ARSO, from the submodels above.
+remade like ARSO, from the submodels above (F5, not started; the process AAS built since 28 Oct
+follows templates written by hand).
 
 ## 4. Hierarchies and relations
 
@@ -147,10 +149,11 @@ The projection runs in three passes: type each element by its `semanticId` (as `
 for ARSO today), create an individual for each element with a `supplementalSemanticId`
 (`pprl:describes`), turn the references into the relations above (rules kept in PPRL as data). One
 projection serves the checks, the matching and the derivation; the AAS generation project's
-converter and `modreg`'s check become one. **Built 26 Oct** for the resource AASs' Skills,
-Capability Description and Control Configuration (`modreg/projection.py`, rules in
-`ontology/PPRL/projection`, `modreg graph` writes the graph); the product side, Hierarchical
-Structures and the process AAS are still to do.
+converter and `modreg`'s check become one. **Built 26 Oct** for the resource AASs' Skills and
+Capability Description (`modreg/projection.py`, rules in `ontology/PPRL/projection`, `modreg graph`
+writes the graph); which skills are built it reads from each skill's `Deployment` since 27 Oct
+(from the Control Configuration before). The product side, Hierarchical Structures and the process
+AAS are still to do.
 
 ## 5. Capabilities derived from skills
 
@@ -174,9 +177,9 @@ not built yet (`Deployment = Described`, since 27 Oct; before, no instance in th
 `Availability = AfterReconfiguration`. Written by `modreg profile` (the module spec's
 `capabilities` keep only the facts of the machine; a capability no skill offers is refused), by
 `modsync record` (with the components' AASs) and by `POST /capabilities/<shell>` of `modreg serve`,
-which the skill editor is to call after saving. Still to do: the skill editor calling it, the
-planner showing the availability. Aggregates (DoubleDose fills twice the Volume) need a rule of
-their own and come later.
+which the skill editor calls after saving; the planner shows the availability (both 27 Oct). An
+aggregate (DoubleDose fills twice the Volume) offers what its skill reaches when run through the
+states (28 Oct, `modreg/offer.py` with `modplan.discover.reached`: DoubleDose 1 to 20 mL).
 
 ## 6. Submodel templates of our own
 
@@ -189,20 +192,20 @@ its elements in the form of IDTA's specifications written from the template (`do
 | --- | --- | --- | --- |
 | Skills, Control Configuration, Parameters | ARSO | Yes, from the ontology | Yes |
 | Variables (with the coordinates) | ARSO 0.14 describes aas-model's | aas-model's own classes | Yes (`docs/lab-aas.md`) |
-| Production Sequence (the recipe) | APSO (remade) | Copied from the planner (2.0) | Yes |
-| Process Parameters extension | APSO (remade) | Yes | Yes |
-| Process Information, Bindings, Validation | AProSO (remade) | Yes, written by hand | Yes |
+| Production Sequence (the recipe) | APSO, once remade (F5) | Copied from the planner (2.0) | Yes |
+| Process Parameters extension | APSO, once remade (F5) | Yes | Yes |
+| Process Information, Bindings, Validation | AProSO, once remade (F5) | Yes, written by hand | Yes |
 
 ## 7. The applications
 
 | Application | Reads | Writes | Acts on the module | Built |
 | --- | --- | --- | --- | --- |
-| Process sequence planner (web UI module) | Product AAS; offered capabilities and skills of the resources | The recipe (product AAS), the bindings (process AAS) | – | Yes; the process AAS is planned |
-| Skill editor (web UI plugin) | A module's Skills and its components' | The module's Skills | – | Yes; its fixes not committed; calling the derivation after saving is to do |
+| Process sequence planner (web UI module) | Product AAS; offered capabilities and skills of the resources | The recipe (product AAS), the bindings (process AAS) | – | Yes; the bindings go into the recipe, and `modreg serve` writes the process AAS from them after a save (29 Oct) |
+| Skill editor (web UI plugin) | A module's Skills and its components' | The module's Skills | – | Yes; its fixes not committed; it calls the derivation after saving (27 Oct) |
 | `modreg` | Specs, profiles, the ontologies | Every AAS (built, checked, registered); derived capabilities | – | Yes |
 | `modsync` | Skills, the integrator's record, the running program | `Deployment`, the interface of a new skill, the record, the boot file | Creates, writes, verifies (management protocol) | Yes |
 | `modlink`, HMI | Interface description, mapping, Skills | – | Occupies, calls skills (OPC UA) | Yes; the HMI moves into the web UI (C5), later the AAS alone (C6) |
-| Agents | Process and resource AAS | Bindings per order | Through `modlink` and `modsync` | After the paper |
+| Agents | Process and resource AAS | Bindings per order | Through `modlink` and `modsync` | Started 30 Oct for the demo (`lineagents`, [agents.md](agents.md)): they read the product's recipe and the resource AASs, run skills over OPC UA or through the DMP, and reconfigure with `modsync`; they write no bindings yet |
 
 ## 8. The pipeline
 
@@ -211,15 +214,15 @@ From [figures/reconfiguration-pipeline.drawio](figures/reconfiguration-pipeline.
 | # | Step | Application | Built |
 | --- | --- | --- | --- |
 | 1 | The product's recipe: processes, parameters, required capabilities | Planner | Yes |
-| 2 | Match required against offered: offered now, offered after a reconfiguration, not offered | Planner | Yes; "after a reconfiguration" is in the AAS (`Availability`), the planner does not show it yet |
+| 2 | Match required against offered: offered now, offered after a reconfiguration, not offered | Planner | Yes; "after a reconfiguration" is in the AAS (`Availability`) and the planner shows it (27 Oct) |
 | 3 | Not offered: change a skill (a new one from an existing one, a limit, a constant) | Skill editor | Yes |
-| 4 | Derive the capabilities from the changed skills | `modreg` (`serve`, `profile`), `modsync record` | Yes; the skill editor does not call it yet |
+| 4 | Derive the capabilities from the changed skills | `modreg` (`serve`, `profile`), `modsync record` | Yes; the skill editor calls it after saving (27 Oct) |
 | 5 | Compare the Skills with the running program; check; guard | `modsync` | Yes |
 | 6 | Apply online: instances, values, connections by the module rules; INIT | `modsync`, FORTE | Yes |
-| B2 | Or, as the baseline: a new boot file and a restart | `pi.py`, FORTE | No (B2) |
+| B2 | Or, as the baseline: a new boot file and a restart | `cell/eval/scenarios.py`, FORTE | Yes, on this PC (B2, 28 Oct); on the Pi with `--pi`, not run yet (B3) |
 | 7 | Verify by reading the program back | `modsync` | Yes |
 | 8 | Record: `Deployment`, the new skill's interface, the integrator's record, the boot file | `modsync` | Yes |
-| 9 | Match again, bind in the process AAS, run: occupy, Start over OPC UA | Planner, `modlink` | Matching and running yes; the process AAS no |
+| 9 | Match again, bind in the process AAS, run: occupy, Start over OPC UA | Planner, `modlink` | Yes; the process AAS is written by `modreg serve` after the planner saves (29 Oct); the agents also run a product's steps (30 Oct) |
 
 Steps 5 to 8 against B2 are what the evaluation times (B1, B2).
 
@@ -229,5 +232,5 @@ Steps 5 to 8 against B2 are what the evaluation times (B1, B2).
 | --- | --- |
 | Skill types in the vocabulary, each with the capability it contributes (done 26 Oct) | Variables and states (aligned with the lab's `apex` ids), equipment and product kinds, DIN 8580 and VDI 2860 |
 | The projection of Skills and Capability Description (done 26 Oct) | The projection of everything else |
-| Capabilities derived from skills, written back (done 26 Oct); the skill editor calling it and "after a reconfiguration" in the planner (to do, web UI) | APSO and AProSO remade; templates and element descriptions for all our submodels |
-| The figures and this model as the paper's overview | The process AAS and the planner writing into it; per-instance ids moved out |
+| Capabilities derived from skills, written back (done 26 Oct); the skill editor calling it and "after a reconfiguration" in the planner (done 27 Oct) | APSO and AProSO remade; templates and element descriptions for all our submodels (in aas-model since 28 Oct, section 6; those of the product and process AAS written by hand, not yet from APSO and AProSO) |
+| The figures and this model as the paper's overview | The process AAS (built 28 Oct, written from the planner's bindings since 29 Oct) and the bindings out of the recipe; per-instance ids moved out |
