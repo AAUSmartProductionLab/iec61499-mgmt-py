@@ -1,9 +1,10 @@
 # Paper outline (CIRP CMS 2026, six pages, due 18 Nov)
 
-A draft of 28 Oct, for the authors. Each paragraph of the paper as a topic sentence, then why we
-chose it and instead of what. The paper has a narrow scope: restructuring a running IEC 61499 module
-through its AAS. What goes deeper (the capability model, planning, agents) is kept for the journal
-paper, in [journal-paper.md](journal-paper.md). Citation keys are in
+A draft of 28 Oct, for the authors; its numbers are those of the runs of 29 Oct (`cell/eval/results`).
+Each paragraph of the paper as a topic sentence, then why we chose it and instead of what. The paper
+has a narrow scope: restructuring a running IEC 61499 module through its AAS. What goes deeper (the
+capability model, planning, agents) is kept for the journal paper, in
+[journal-paper.md](journal-paper.md). Citation keys are in
 [paper-references.bib](paper-references.bib); at most 17 are cited (list at the end). DD n points to
 [design-decisions.md](design-decisions.md); considerations found while coding go into
 [design-log.md](design-log.md).
@@ -21,8 +22,8 @@ paper, in [journal-paper.md](journal-paper.md). Citation keys are in
    running program online, verified by reading it back, and recorded.
 4. A new skill is described in the AAS in a skill editor, or planned by the module from its
    standard Capability Description.
-5. On a filling module, a new skill takes 131 to 151 user actions by hand in 4diac, 19 to 26 in the
-   skill editor and 3 when planned. It is created online in 0.04 s while another skill keeps
+5. On a filling module, a new skill takes 131 to 155 user actions by hand in 4diac, 19 to 22 in the
+   skill editor and 3 when planned. It is created online in 0.05 s while another skill keeps
    running, where a restart stops the module for 3.3 s.
 
 ## Budget
@@ -43,8 +44,8 @@ figures and tables.
 ## 1 Introduction
 
 1. **Pharmaceutical production moves to small batches built from modules** [schwoerer2025modular].
-   Restructuring a module's behaviour, such as another sequence or a second dose, means its control
-   program: the vendor's project, the IDE and a restart.
+   Restructuring a module's behaviour, such as another sequence or filling from the bottom, means its
+   control program: the vendor's project, the IDE and a restart.
 2. **Our earlier work orchestrated modules from their AASs** [jensen2026service] and planned
    line-level policies from them [schwoerer2026fond], but both take a module's skills as given.
    [jensen2026service] names two limits: hand-written orchestration, and MQTT without the real-time
@@ -179,8 +180,8 @@ abstracts only.
 
 | # | Question | Measure | State |
 | --- | --- | --- | --- |
-| E1 | How much effort is a new skill? | User actions, as [dorofeev2021orchestrator] counts them: by hand in 4diac, in the skill editor, planned (`cell/eval/effort.py`) | By hand 131 to 151; editor 19 to 26; planned 3 (Dispensing, DoubleDose, 15 mL) |
-| E2 | Does it reach the running module without stopping it? | Change, verify and down time, online against a restart (`cell/eval/scenarios.py`) | PC: 0.02 to 0.04 s against 3.3 s down; the running skill kept running. Pi 5 to do |
+| E1 | How much effort is a new skill? | User actions, as [dorofeev2021orchestrator] counts them: by hand in 4diac, in the skill editor, planned (`cell/eval/effort.py`) | By hand 131 to 155; editor 19 to 22; planned 3 (Dispensing, BottomUpFilling, a planned 15 mL; 29 Oct) |
+| E2 | Does it reach the running module without stopping it? | Change, verify and down time, online against a restart (`cell/eval/scenarios.py`) | PC, 29 Oct: a new skill 0.05 s with the running skill kept running, a value 0.03 s (the module out of Execute 2.2 s), against 3.3 s down by a restart; the changeover of both modules 3.2 s down online (the stoppering module, for its value) against 7.1 s. Pi 5 to do |
 | E3 | Is the result right? | Read back equals the AAS, before and after a restart; a planned skill equals the hand-written one (T2, T5); it runs on FORTE | Done |
 
 **Table 2** gives E1 and E2. **Fig. 4** is `figures/evaluation-downtime.pdf`.
@@ -188,6 +189,7 @@ abstracts only.
 To do:
 - The planned scenario plans 2.0 mL; it should plan 15 mL.
 - Count E1 for the Pi deployment as well: the IDE route then also includes the restart.
+- Fig. 4 drawn again (`cell/eval/figures.py`): it is from the runs of 28 Oct and has no changeover.
 
 ## 5 Discussion and conclusion (300 words)
 
