@@ -1,7 +1,10 @@
 # Working notes: IEC 61499 modules, their AAS and their reconfiguration
 
 State on 26 Oct 2026, branch `main`. What is built, how it is put together and what was learned
-on the way; what comes next is in [next-steps.md](next-steps.md). The repository map and the commands are in the
+on the way; what comes next is in [next-steps.md](next-steps.md). The table below was last updated
+on 26 Oct: what was built since (planning, the evaluation on this PC, locations, the reference models
+in aas-model, the DMP, discovery, the agents) is in the dated sections below, and the current state
+in [onboarding.md](onboarding.md). The repository map and the commands are in the
 [README](../README.md); the modules themselves (what was ported from the ESP32 stations) in
 [modules.md](modules.md); the OPC UA interface of each module is described by its AAS
 ([aas-models.md](aas-models.md)); the plan this work started from in the [build and modelling plan](archive/build-and-modelling-plan.md).
@@ -302,7 +305,7 @@ server (`tests/integration/skill-editor.pw.ts` in the fork: change a flow rate, 
 not take is refused, save, read back). The look in the browser found three faults (the components'
 skills were not found because the module's Hierarchical Structures is version 1/1; cards too tall;
 warnings before the components were loaded). They are fixed in a working copy of the fork and not
-yet committed. Not in
+yet committed (committed on 27 Oct). Not in
 it: parallel, decision and conditional steps (the control cannot run them), adding or removing a
 skill's parameters, deleting a skill. The interface description of a new skill is written when the
 change is recorded (above).
@@ -473,12 +476,12 @@ The design is [locations-and-layout.md](locations-and-layout.md); H1 to H4 of [n
   placeholder layout these are the simulated table's stations.
 - **The planar table** (`modreg/planar.py`, Vocabulary 0.4): the table and each shuttle described as
   modules by the Describer, from specs made in code; the controller shows its layout over OPC UA (a
-  commit in the planar-controller submodule, not pushed yet), `modreg profile planar --host` reads
+  commit in the planar-controller submodule, not pushed yet; pushed 30 Oct), `modreg profile planar --host` reads
   it, `modreg register planar --every` keeps the AAS up to date. modlink moves a shuttle from the AAS.
 - **The stations** (H5): the line's Infeed and Outfeed points and the modules' transfer points give
   the line scenario's five stations exactly; the scenario ran to them on the simulated driver (two
   agents, four products, no problems). Two commits wait in the planar-controller submodule (the
-  layout over OPC UA, the stations from outside), not pushed.
+  layout over OPC UA, the stations from outside), not pushed (pushed, and the pin moved, on 30 Oct).
 
 Learned:
 
@@ -564,7 +567,11 @@ its steps; the module's own commands were the Module submodel in 0.7 and are ski
 ModuleControl since 0.8; a primitive is in the AAS of its component
 (`modreg profile <module>` writes the module's profile and one per component); block type and
 instance are in the Control Configuration. [aas-models.md](aas-models.md) section 2 describes it.
-What follows is how it was until then.
+What follows is how it was until then. **Since 28 Oct** the types, templates and classes are
+aas-model's (`Module`, `Component`, `ProductionSystem`, `Product`, `Process`, on the fork's branch
+`lab-ppr-models`): `modreg generate` writes ARSO's templates into `aas-model/templates/arso`, and
+`modreg/templates/`, `modreg/generated/` and `modreg/product.py` are gone; Variables replace
+Operational Data (ARSO 0.14).
 
 Consequences of following ARSO strictly:
 
@@ -645,6 +652,10 @@ description with WoT actions and events, and changed its generator. What `modreg
 - The vial's committed profile gains the description of each `Name` of its plan.
 
 ### A product and its plan (7 Oct)
+
+(Since 28 Oct a product is aas-model's `Product`, and the example line's three products and their
+processes are written out in Python, `cell/examples/products` and `processes`; `modreg/product.py`
+and the vial's profile are gone.)
 
 The same path as a module: `ProductTypeAAS` (`modreg/product.py`) on aas-model, a profile that is
 its dump, `modreg build` for the AAS. It replaces a YAML description of our own and a builder that
@@ -1037,7 +1048,9 @@ toolchains, 4diac IDE 3.2.x.
 ## Status against the plan's work packages (5 Oct 2026; updated 26 Oct)
 
 The work packages of the first plan. Since 8 Oct the plan is [next-steps.md](next-steps.md); the
-notes in brackets say what changed since 5 Oct.
+notes in brackets say what changed since 5 Oct. Since this table's last update (26 Oct), WP 8 (the
+scenario runner and the baseline, on this PC) and WP 4's time series (InfluxDB through the DMP) were
+built on 28 Oct.
 
 | WP | Plan deliverable | Status |
 | --- | --- | --- |
@@ -1063,5 +1076,6 @@ Smaller open items that are in no phase of that plan:
 
 - Mount the filling axis' limit switch and measure a move; wire the stoppering module to its Pi 5.
 - Split the work into repositories once one product runs end to end on two modules: six
-  repositories, the ontologies first ([repositories.md](repositories.md)). Until then keep the
-  folders independent. CI.
+  repositories, the ontologies first (the plan of 6 Oct). Until then keep the folders independent.
+  CI. (Superseded on 31 Oct by [framework-plan.md](framework-plan.md): the `ap2030-project`
+  organization, the split after 18 Nov.)
