@@ -116,14 +116,26 @@ known once the PMC is connected; a commit in the submodule, not pushed yet). `mo
 registers the AASs again whenever they change. `test_modreg_planar.py` runs the controller on its
 simulated driver: the table brought to Execute and a shuttle moved with `modlink`, from the AASs alone.
 
+**The frame (31 Oct).** The table's AAS has `Parameters` (ARSO's) with `Columns`, `Rows` and
+`FlywaySize`: the frame of flyway positions as the PMC is set up, which only Planar Motor's tool
+changes. A position without a flyway has no `Flyway_<c>_<r>`. The Web UI's Configurator draws the
+table from both and writes neither (its README, "The planar table and shuttle routing").
+
+**Routing (31 Oct).** In line mode the controller moves the shuttles only on lanes, turns them only
+on turn spots and queues the free ones in an idle area (`planar-controller/planar/lines.py`). The
+Configurator lays that out for a line and keeps it in the line's AAS, `Parameters/PlanarRouting`
+(its `Value` the controller's JSON), and shows the URL the controller reads it from at startup
+(`MODE=line`, `LINE_LAYOUT=<…/PlanarRouting.Value/$value>`).
+
 ## 4. What changes where
 
 | Where | Change |
 | --- | --- |
 | ARSO (`operational-data.ttl`, 0.13) | `Measurements/Coordinates`: a coordinate with `RelativeTo`, the six values with their units, and the sources of its moving values |
 | Vocabulary | The point meanings; a transport capability with the target as its properties |
-| `modreg` | Coordinates from the specs (a module's base; an item's `location` as its mount, with the end effector of an axis; `points` of a module); the planar table's AAS from its spec and the controller, with the table's and the shuttles' coordinates |
-| `planar-controller` | The layout over OPC UA |
+| `modreg` | Coordinates from the specs (a module's base; an item's `location` as its mount, with the end effector of an axis; `points` of a module); the planar table's AAS from its spec and the controller, with the table's and the shuttles' coordinates and the table's frame (Parameters) |
+| `planar-controller` | The layout over OPC UA; line mode, its routing read from a URL |
+| The Web UI's Configurator | The table drawn from its AAS; a line's shuttle routing in the line's Parameters |
 | A small library | Compose frames, a point in another frame (for agents, the configurator, the line scenario) |
 
 ## 5. Open
@@ -133,5 +145,5 @@ simulated driver: the table brought to Execute and a shuttle moved with `modlink
 | Units of a frame | AutomationML's, checked against IEC 62714 before building; the interfaces stay in mm and degrees |
 | A building AAS, or Asset Location on the line | Neither (28 Oct): the line is the root. IDTA 02045-1-0 was read; it is for tracking and tracing, without orientation or parent-relative frames ([design-log.md](design-log.md)) |
 | The frame as an extension of 02011 | Gone (28 Oct): coordinates in Variables instead, and Hierarchical Structures is a bill of material again |
-| Which configurator reads the layout | To be named |
+| Which configurator reads the layout | The Web UI's Configurator (31 Oct): the frame from the table's Parameters, the flyways from their coordinates; the routing it keeps in the line's Parameters |
 | Transport as a capability for the agents | With the agents, after the paper |
