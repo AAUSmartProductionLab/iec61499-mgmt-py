@@ -4,8 +4,8 @@ A description for the paper's method and implementation sections, kept with the 
 27 Oct 2026). Each tool is given by what it takes and gives, the algorithm it runs, and what it
 assumes. The rules the tools rely on are [module-rules.md](module-rules.md); the AAS they read is
 [aas-models.md](aas-models.md); how an AAS skill maps to IEC 61499 blocks, with figures, is
-[mapping.md](mapping.md); how to run them is [tooling.md](tooling.md); what could be made simpler is
-[simplification.md](simplification.md).
+[mapping.md](mapping.md); how to run them is [tooling.md](tooling.md); what changes in them before the
+repository is split is [framework-plan.md](framework-plan.md), section 4.
 
 ## 1. Three tools, one contract
 
@@ -216,7 +216,8 @@ could be made. It changes no block types.
 Besides the AAS mode above, modsync has an older mode against a module spec (`pull`, `push`, `watch`):
 the program modgen generates from the spec is compared instance by instance, and anything other than
 a value or a new skill is deployed by a new boot file and a restart. It is the vendor's and the lab's
-development tool; [simplification.md](simplification.md) proposes to fold it into the AAS mode.
+development tool; [framework-plan.md](framework-plan.md) (section 4, item 2) folds it into the AAS
+mode.
 
 ## 4. modlink: operating a module from its AAS
 

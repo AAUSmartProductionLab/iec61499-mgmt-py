@@ -7,9 +7,9 @@ Proposal of 31 Oct 2026, revised the same day with the user's decisions:
 - AP2030-UNS, the project's first stack, is its predecessor and is archived;
 - the demo runs one line with two orchestrators, and only the orchestration differs between them.
 
-It replaces the target of [repositories.md](repositories.md) (6 Oct), which stays as the analysis of
-our own parts. Nothing here is done yet except the icons (section 8). The decisions still open are in
-section 10, each with a recommendation.
+It replaces the plan of 6 Oct for splitting this repository (`repositories.md`, removed 31 Oct; what
+still held of it is in sections 3 and 4). Nothing here is done yet except the icons (section 8). The
+decisions still open are in section 10, each with a recommendation.
 
 The framework has to hold more than our work: the lab's other AAS work has to fit in too, namely
 planning with PDDL (FOND-AAS), behaviour trees (the BT controller) and the DMP. The scope is the
@@ -141,6 +141,8 @@ What stands out:
 | Ontologies | `ontology/` here, the generator's copy (`ppr-ontology`) | One `ontologies` repository; the generator takes it as a package. AP2030-UNS's Aseptic Production Ontology goes in only if something still uses it |
 | 4diac FORTE | Tristan's fork, our patches applied by `runtime/` | One fork of FORTE with our patches as commits; `forte-runtime` builds from it |
 | The behaviour trees' runner | AP2030-UNS's `BT_Controller` (BehaviorTree.CPP, PackML commands over MQTT), Tristan's AASBT.CPP (BehaviorTree.CPP with the AAS) | One `bt-controller`, whose action nodes run a module's skills as in section 1. Which code is the base is decided with Tristan |
+| Matching a product's step to a resource's skill | The planner (TypeScript, in the web UI), `modlink`, `modreg.plancheck`, `lineagents` | One matcher in `skill-model`; the planner calls the registration service's `/check` for it |
+| FORTE built for Linux | The HMI repository's `tools/forte`, `runtime/` here | `forte-runtime` only |
 | What a resource can do, for planning | FOND-AAS's AI-Planning submodel; the Capability Description and Skills | What the AI-Planning submodel repeats is generated from the other two, so that a module plugged in can be planned by both orchestrators without being modelled twice; what only line-level planning needs (uncertain outcomes) stays its own. Decided with Tristan |
 
 Settled by retiring AP2030-UNS:
@@ -149,8 +151,9 @@ Settled by retiring AP2030-UNS:
 - **Planar table:** `planar-controller` with its simulator; AP2030-UNS's controller and simulator go.
 - **A station's logic:** IEC 61499 modules with ModLib's PackML state machine, for both orchestrators;
   the PackML stations over MQTT go.
-- **MQTT schemas:** only Tristan's `mqtt_message_schemas`, if they are still needed without the
-  PackML stations (aas-model loads them); AP2030-UNS's `MQTTSchemas` goes.
+- **MQTT schemas:** one copy, in `mqtt-schemas`, if they are still needed without the PackML stations.
+  aas-model loads them from AP2030-UNS's GitHub Pages (`SCHEMA_BASE` in `constants.py`) when its own
+  copy is missing, so they move, and that address with them, before AP2030-UNS is archived.
 - **Registration:** AP2030-UNS's `Registration_Service` goes.
 - **Orchestration:** both orchestrators stay, as the demo's comparison (section 1).
 
@@ -159,13 +162,16 @@ Settled by retiring AP2030-UNS:
 The three tools now go to three pillars, so they are split, and their circle is broken first:
 
 1. **`skill-model`**: `modgen.spec` (skills, flows, parameters), `modsync.aasjson`, `modsync.described`,
-   `modplan.vocabulary` and `modplan.expression` become a package of their own, used by every tool.
+   `modplan.vocabulary` and `modplan.expression` become a package of their own, used by every tool. The
+   AAS JSON helpers that `modreg/plancheck.py` keeps a second copy of go there too.
 2. **The circle broken.** The profile written from a running program (`modreg.profile` calls `modsync`'s
    reading) moves to `modsync describe`; `described_skill` and storing a described skill move to
-   `skill-model`. Then: `skill-model` ← `modplan` ← `modreg` ← `modsync` ← `lineagents`.
+   `skill-model`. Then: `skill-model` ← `modplan` ← `modreg` ← `modsync` ← `lineagents`. At the same
+   time modsync gets one desired state: its older mode against a module spec (`pull`, `push`,
+   `watch`, also used by `modreg profile --host`) is folded into the AAS mode, a sixth of modsync.
 3. **`modlink` out of the HMI repository**, its copy of ModLib's state and error numbers generated from
-   `iec61499-skill-lib`. The HMI's Python service is retired once the HMI is an app of the web UI (C5 in
-   [next-steps.md](next-steps.md)).
+   `iec61499-skill-lib`, its reading of AASs older than ARSO 0.8 dropped. The HMI's Python service is
+   retired once the HMI is an app of the web UI (C5 in [next-steps.md](next-steps.md)).
 
 And three that the deployment needs:
 
