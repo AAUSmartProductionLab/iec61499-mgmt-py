@@ -213,15 +213,15 @@ And two that let either orchestrator run the line (section 1):
 | Integration | **mqtt-schemas** | The MQTT messages' JSON schemas, on GitHub Pages (aas-model loads them) | Tristan's `mqtt_message_schemas`, if still needed (section 3) |
 | Integration | **modlink** | Running a resource's skills from its AAS over OPC UA | iec61499-opcua-hmi |
 | Reconfiguration | **modsync** | A running IEC 61499 program against its AAS: verify, change online, record, the IDE project | `aas61499-tools/modsync` |
-| Reconfiguration | **iec61499-skill-lib** | ModLib, the standard blocks' declarations, `modgen`, the module rules | `iec61499-skill-lib/` |
+| Reconfiguration | **iec61499-skill-lib** | ModLib, the standard blocks' declarations, `modgen`, the module rules; the base of the equipment services (Python beside FORTE, [demo-modules.md](demo-modules.md)) | `iec61499-skill-lib/` |
 | Reconfiguration | **iec61499-mgmt-py** | The FORTE management protocol client | `iec61499-mgmt-py/` |
 | Reconfiguration | **forte-runtime** | FORTE with ModLib per platform, the kit for one's own blocks; releases and the image | `runtime/`, the FORTE forks |
 | Execution | **bt-controller** | The centralized orchestrator: FOND-AAS's policies run as behaviour trees, its action nodes running skills as in section 1 | Section 3 (AP2030-UNS's `BT_Controller` or AASBT.CPP) |
 | Execution | **lineagents** | The multi-agent orchestrator: order, product and resource agents, following the products' recipes | `line-agents/` |
 | Execution | **planar-controller** | The planar table with its simulator | planar-controller (lab organization) |
 | Interfaces | **basyx-aas-web-ui** (fork) | Planner, Skill Editor, the BPMN editors, Configurator, HMI, Orders | Section 3 |
-| Deployment | **deploy-server** | The server stack by Compose: BaSyx (environment, registries, discovery), Mosquitto, Prosody (XMPP), InfluxDB, the DMP, registration, the web UI, both orchestrators (the BT controller with Groot2; the agents); `.env.example`. Images by version, no source | `deploy/aas` |
-| Deployment | **deploy-module** | A Raspberry Pi becomes an IEC 61499 module: `install.sh`, its compose, the manifest server, `pi.py`, the offline kit | `deploy/pi`, `runtime/install.sh`, `runtime/kit` |
+| Deployment | **deploy-server** | The server stack by Compose: BaSyx (environment, registries, discovery), Mosquitto, Prosody (XMPP), InfluxDB, an S3 store for the inspection images (SeaweedFS, proposed), the DMP, registration, the web UI, both orchestrators (the BT controller with Groot2; the agents); `.env.example`. Images by version, no source | `deploy/aas` |
+| Deployment | **deploy-module** | A Raspberry Pi becomes an IEC 61499 module: `install.sh`, its compose, the manifest server, the module's equipment service beside FORTE where it has one, `pi.py`, the offline kit | `deploy/pi`, `runtime/install.sh`, `runtime/kit` |
 | Lines | **aseptic-line** | AP2030's line: its AASs, the module specs and generated projects, the simulated modules, products and recipes, the scenario both orchestrators run, the evaluation, the inventory, the working notes | `cell/` and `docs/` here |
 
 Pinned, not ours: Eclipse 4diac FORTE, BaSyx's images, BehaviorTree.CPP and AASBT.CPP, Groot2,
@@ -289,8 +289,9 @@ papers' drafts) stay in `aseptic-line`'s `notes/` and are not on the site.
 | --- | --- |
 | Filling module | Dispensing on the real axis; the scale is simulated (a real one, e.g. an HX711, later) |
 | Stoppering module | The old container removed and the new runtime installed (the user's go); its wiring written down; the axis wired and moving |
-| Capping and inspection | Specs in `cell/modules/planned` only: modules generated from their specs, simulated (FORTE with simulated IO) where there is no hardware (section 10) |
-| Loading and unloading | The two Kuka robots (a Pi each): no AAS or module of ours. Behind a module each (occupation, the PackML state, skills), both orchestrators can use them; AP2030-UNS's trees show the steps. Loading is also where a product's custody starts |
+| Capping | Built as the filling module (1 Nov): its linear axis on a stepper, on a Pi 5 of its own; the crimper simulated for now ([demo-modules.md](demo-modules.md), section 4) |
+| Inspection | Triggered over OPC UA like every module; the cameras and their evaluation in a Python service beside FORTE; the images over HTTP to an object store on the server ([demo-modules.md](demo-modules.md), sections 2 and 5) |
+| Loading and unloading | A Pi per KUKA robot, a module like the others. The Pi starts a job in one robot program, written by hand, and waits for it, over the robot's network interface (which one depends on the controllers' options, to check) through a Python service beside FORTE. Loading is where a product's custody starts ([demo-modules.md](demo-modules.md), section 3) |
 | Planar table | The controller against the real table (only the simulated driver has run); the shuttles' AASs from it; MoveToPosition from the agents, then on the table; the vial holders |
 | Centralized orchestration | The colleagues' (1 Nov): FOND-AAS on our AASs, its goal from the product's recipe; the BT controller's action nodes for our modules (section 4, item 7); a batch on the simulated line, then on the hardware; Groot2 to watch it. Ours: the shared parts kept compatible (section 1) |
 | Agents ([agents.md](agents.md), section 7) | A1: loading and unloading as steps, MoveToPosition on the planar controller. A2 on the filling Pi. A3: a planned skill in a bid. A4: the agents as a service; a Pi plugged in has its agent within seconds. A5: the series' names from Variables. A6: a resource that goes away, timeouts, restarts. A7: the Orders app, the messages logged, the scenario script. A8: the rehearsal |
@@ -307,7 +308,7 @@ papers' drafts) stay in `aseptic-line`'s `notes/` and are not on the site.
 | --- | --- |
 | Now to 18 Nov | The paper first. From this plan only what helps it: the organization created; `aaspire` as a main repository that pins today's repositories (no split yet), tagged `2026.11` with a DOI, so the paper can cite it |
 | 19 to 30 Nov | A meeting with the colleagues on section 3, the glossary and how the BT controller runs a skill; the code changes of section 4; the split (section 5) of this repository; AP2030-UNS archived; CI with the shared workflow; images; FORTE as releases; deploy-server and deploy-module |
-| December | The site's first version; agents A3 to A6; the stoppering module; loading and unloading; the Orders app. The colleagues: the BT controller on the simulated line |
+| December | The site's first version; agents A3 to A6; the stoppering module; capping, inspection, loading and unloading ([demo-modules.md](demo-modules.md), M0 to M6); the Orders app. The colleagues: the BT controller on the simulated line |
 | January | The rehearsal on the hardware, the same orders by both orchestrators; release `2027.01` |
 
 ## 8. Icons and figures
@@ -360,7 +361,11 @@ Decided on 31 Oct:
 
 Decided on 1 Nov:
 - the centralized orchestrator is the colleagues' work; we build the agents and keep the shared parts
-  compatible (section 1).
+  compatible (section 1);
+- capping, inspection, loading and unloading are modules like filling (question 7 below): capping with
+  the filling module's axis and a simulated crimper; inspection triggered over OPC UA, its images
+  straight to a store; a Pi per KUKA robot that starts the robot's jobs over a network protocol. How
+  they are built: [demo-modules.md](demo-modules.md), with its own open questions.
 
 | # | Open question | Recommendation |
 | --- | --- | --- |
@@ -370,4 +375,4 @@ Decided on 1 Nov:
 | 4 | The line's repository: `aseptic-line` (from this repository, with its history) | Yes |
 | 5 | When: the organization and the first `aaspire` before 18 Nov, the split after | Yes |
 | 6 | The documentation: Sphinx with MyST, or MkDocs? | Sphinx with MyST |
-| 7 | Capping, inspection, the loading and unloading robots in the demo | Modules with ModLib's behaviour: generated from their specs, simulated where there is no hardware; each robot behind a module of its own, so both orchestrators can use it |
+| 7 | ~~Capping, inspection, the loading and unloading robots in the demo~~ | Decided 1 Nov: modules with ModLib's behaviour, each robot behind a module of its own ([demo-modules.md](demo-modules.md)) |

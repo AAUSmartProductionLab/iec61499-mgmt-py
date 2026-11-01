@@ -243,7 +243,9 @@ then B3 on real hardware (keep the Pi with simulated IO), then A3. Not to be cut
 
 **The demo in January runs one line with two orchestrators** (decided 31 Oct): FOND-AAS's policy as
 a behaviour tree, and the agents. The framework, its repositories and what the demo still needs are
-in [framework-plan.md](framework-plan.md) (sections 1 and 7). **The agents' design and plan: [agents.md](agents.md)**
+in [framework-plan.md](framework-plan.md) (sections 1 and 7); the centralized one is the colleagues'
+work (1 Nov). **The four other modules (capping, inspection, loading and unloading with the KUKA
+robots): [demo-modules.md](demo-modules.md)** (1 Nov). **The agents' design and plan: [agents.md](agents.md)**
 (started 30 Oct; the literature in [agents-literature.md](agents-literature.md)). What follows was
 the first list; most of it was built on 30 Oct (agents.md, section 5).
 
