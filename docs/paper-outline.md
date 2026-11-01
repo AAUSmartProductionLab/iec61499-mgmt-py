@@ -96,6 +96,10 @@ abstracts only.
 
 ## 3 Concept and method
 
+Drafted in LaTeX on 1 Nov: [paper/cirp/method.tex](paper/cirp/method.tex), with the design
+considerations below written in, about 2,000 words to cut down to the budget. Sources still to add are
+marked `\todocite`.
+
 ### 3.1 Concept (200 words, Fig. 1)
 
 1. **The AAS is the desired state of the module's IEC 61499 program** [jensen2026ontology]. An engineer

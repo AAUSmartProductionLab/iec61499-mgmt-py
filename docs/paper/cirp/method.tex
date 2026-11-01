@@ -1,0 +1,294 @@
+% Section 3 of the CIRP CMS 2026 paper: concept and method. Draft of 1 Nov 2026.
+%
+% Written from docs/paper-outline.md (section 3) and docs/design-decisions.md; "DD n" in the
+% comments points to the decision a paragraph rests on. Citation keys are those of
+% docs/paper-references.bib. \todocite marks a source still to be added (the paper cites at most 17).
+% Budget in the outline: 1,200 words and Figs. 1 to 3; this draft is longer, so that the authors can
+% cut. Paragraphs marked "% cut first" are the first to go.
+%
+% Terms (outline): module, component; primitive skill, composite skill; requirement, flow;
+% described, built; verify, reconfigure, record.
+
+\providecommand{\todocite}[1]{\textbf{[cite: #1]}}
+
+\section{Concept and method}
+\label{sec:method}
+
+\subsection{Concept}
+\label{sec:concept}
+
+% DD 1.1, 1.4
+A module is delivered with two artefacts: its control program, an IEC~61499 application on the
+module's controller~\cite{iec61499}, and its AAS. We make the AAS the desired state of the program
+(Fig.~\ref{fig:concept}). A change to the module's behaviour is a change to its AAS, made by an
+engineer in a skill editor or by the module's own planner. A reconciler then brings the running
+program to what the AAS describes, verifies the result by reading the program back, and records it
+in the AAS. Changing and operating use different interfaces: the program is changed only over the
+IEC~61499 management protocol, and operated only over the OPC~UA interface it serves. Operating a
+module therefore never changes it, and changing it never runs a skill.
+
+% DD 1.1
+The AAS is the source because every module is delivered with it and every client already reads it,
+the line's orchestrator among them~\cite{jensen2026service}. The integrator who adapts a module over
+its life has the program and the AAS, not the vendor's engineering project. The alternatives fall
+short. The vendor's project ties every change to one vendor and its tools. The running program says
+what is, not what is wanted. A separate change recipe is one more document that has to agree with
+the AAS.
+
+% DD 1.2
+The scope is the changeover: a module is changed on an engineer's request between products, not
+while a product is being processed. Nothing changes under a running skill, which keeps the
+guarantees simple.
+
+% DD 3.1
+Behaviour is organised in three levels, each composing only the one below, as device primitives,
+skills and tasks are in~\cite{schou2018skill}. Components (an axis, a pump, a scale) offer primitive
+skills. A module composes them into composite skills. The line orchestrates the modules' composite
+skills~\cite{jensen2026service,schwoerer2026fond}; that level is outside this paper. Each component
+has an AAS of its own, so its primitives are described once and composed by every module that has
+the component.
+
+\begin{figure}[t]
+  \centering
+  \IfFileExists{figures/reconfiguration-pipeline.pdf}{%
+    \includegraphics[width=\columnwidth]{figures/reconfiguration-pipeline.pdf}}{%
+    \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2em}Fig.~1: docs/figures/reconfiguration-pipeline.drawio,
+      redrawn smaller\vspace{2em}}}}
+  \caption{The AAS as the desired state of the module's IEC~61499 program. An engineer or the
+    module's planner changes the AAS; the reconciler compares the running program with it, checks,
+    applies the change online, verifies it by reading the program back and records it. Components
+    offer primitive skills, a module composes them, the line orchestrates modules.}
+  \label{fig:concept}
+\end{figure}
+
+\subsection{Module architecture}
+\label{sec:architecture}
+
+The program of a module follows fixed rules that make a composite skill data rather than code
+(Fig.~\ref{fig:blocks}).
+
+% DD 2.2, 2.8, 2.9
+\emph{The shell} is the same in every module. It consists of:
+\begin{itemize}
+  \item a block for occupation: only the client that occupies the module may command it;
+  \item a PackML module state machine~\todocite{PackML, ISA-TR88.00.02};
+  \item one block per equipment item, owning the item's IO points;
+  \item one initialisation chain, started by the runtime's resource.
+\end{itemize}
+An equipment block does not know what its outputs mean. It enforces only what every writer must
+respect: one holder at a time, break before make, and everything off on release or abort.
+
+% DD 2.2, 2.4
+\emph{A primitive skill} is a block type. It sends one command to one equipment item until a sensor
+condition holds or a time has passed, within a timeout. The command tables are in the primitive, not
+in the equipment, because the equipment is fixed and the skills are what changes.
+
+% DD 2.5, 2.7
+\emph{Every skill}, primitive or composite, has the same small state machine (Idle, Running,
+Stopping, Succeeded, Failed, Aborted) and the same OPC~UA methods (Start, Stop, Abort, Reset). Each
+method answers at once whether the call was accepted. A skill is called, runs and ends, like a node
+of a behaviour tree. PackML's full state machine runs once, for the module. A skill's parameters are
+the arguments of its Start method and are range-checked before anything moves.
+
+% DD 2.4, module rules section 3 (rule set 2)
+\emph{A composite skill} has no type of its own. It is a subapplication that holds only instances:
+\begin{itemize}
+  \item a library block for the skill's state machine and its OPC~UA methods;
+  \item one latch per parameter, which checks the parameter's range and holds its default;
+  \item publishers for the parameters and results;
+  \item one instance of a primitive per step, named like the step and holding the step's constants.
+\end{itemize}
+Steps are chained by their success events, and their failures are merged pairwise. Parallel blocks
+and decisions add three library blocks: a join of two to four branches, a merge of two branches, and
+a comparison that evaluates a decision's condition. The rules derive all the wiring from the flow,
+so the flow alone determines the program.
+
+% DD 2.4
+A composite is made of instances, not a new type, for three reasons:
+\begin{itemize}
+  \item Every IEC~61499 runtime creates instances and connections online through the standard
+    management commands~\cite{iec61499}. Loading a new block type is optional: 4diac
+    FORTE~\todocite{Eclipse 4diac} does it only when built with its Lua type loader, and never for
+    service interface blocks.
+  \item Each step stays an instance that can be read back and watched in the IDE.
+  \item A type per composite~\cite{dorofeev2021orchestrator} needs a build or a type loader, and its
+    parallel steps grow its state machine as $2^n$ states, where the rules add one join block.
+    Interpreting a sequence in one generic block, such as a behaviour-tree
+    engine~\cite{sidorenko2024composition}, turns the sequence into data the IDE cannot show.
+\end{itemize}
+
+% DD 2.3, 2.9
+\emph{A new composite touches nothing that runs.} Blocks reach the equipment, the occupation and the
+module's release over the runtime's local publish/subscribe channels, not over connections. A
+composite created online therefore needs only one connection to an existing block: its
+initialisation is appended to the end of the module's initialisation chain. Adding a skill thus
+causes no downtime by construction, and a skill that runs meanwhile goes on running.
+
+% DD 2.10
+\emph{What may change online} follows from these rules:
+\begin{itemize}
+  \item \emph{Online:} a parameter's default or limits, a step's constant, and a new composite made
+    of the module's primitives. A written value is taken at the skill's next start, and a new
+    composite touches nothing that exists.
+  \item \emph{By a restart:} another order of steps, or a removed skill. Either would delete
+    instances of a skill that may be running.
+  \item \emph{By a new build:} a new primitive, a new equipment item, or other IO. These need new
+    block types.
+\end{itemize}
+
+% DD 1.3, 4.2 % cut first
+\emph{The rules, not our generator, are the contract.} Generating a module from its specification
+is compositional, so reading a program back means parsing it by the same rules. A module written by
+hand in the same form is read and changed in the same way. A module states in its AAS which rule set
+its program follows.
+
+\begin{figure}[t]
+  \centering
+  \IfFileExists{figures/skill-blocks.pdf}{%
+    \includegraphics[width=\columnwidth]{figures/skill-blocks.pdf}}{%
+    \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2em}Fig.~2: docs/figures/skill-blocks.drawio\vspace{2em}}}}
+  \caption{Skills as blocks. A primitive skill (MoveAxis of a linear axis) is a block type. A
+    composite skill (Dispensing of the filling module) is a subapplication of library blocks and one
+    primitive instance per step, wired by the module rules.}
+  \label{fig:blocks}
+\end{figure}
+
+\subsection{The skill in the AAS}
+\label{sec:aas}
+
+% DD 3.2, module rules section 5
+Skills are described in a Skills submodel defined by the resource ontology of~\cite{jensen2026ontology}:
+primitives in their component's AAS, composites in the module's. A skill is a collection of its
+commands, since commands are what a client calls. Each command refers to the action of the module's
+interface description that calls it~\todocite{IDTA 02017 Asset Interfaces Description}. It also has
+an Operation of the same name. The Operation's input variables are the parameters, with unit, limits,
+default and meaning; its output variables are the results. A primitive also states its conditions
+(pre- and postcondition, invariant) and its completion (a duration, a timeout).
+
+% DD 3.3
+A composite's Start command holds its flow. The flow is written in the elements that the lab's
+process planner uses for a product's recipe~\todocite{process planner}:
+\begin{itemize}
+  \item steps, with their order and the skill each runs;
+  \item bindings of a constant or of one of the command's parameters, and outputs;
+  \item the step kinds parallel, decision and conditional;
+  \item conditions that compare a parameter or an earlier step's result.
+\end{itemize}
+One format thus serves products and skills, and one editor writes both.
+
+% module rules section 5
+Names join the AAS and the program (Fig.~\ref{fig:blocks}). A skill is the subapplication of the
+same name, a step the instance of the same name, and a parameter the latch of the same name. The
+rules make any further mapping unnecessary.
+
+% DD 3.4, 3.7
+Each composite states whether the program carries it out: \emph{Built} or \emph{Described}. A
+described skill is one the module can get. A product's required capability is matched against the
+offered capabilities in the module's Capability Description~\cite{idta02020}, which are derived from
+the skills; a new skill's capability therefore cannot drift from the skill. Matching gets a third
+answer beside offered and not offered: \emph{offered after a reconfiguration}.
+
+% DD 3.7 % cut first
+The rest of what was built (instances, block types and their hashes, the change log) is the
+integrator's record, kept outside the AAS. No client of the AAS reads it, and a resource that is not
+an IEC~61499 module would have nothing to put there.
+
+\subsection{Reconciling the running program}
+\label{sec:reconcile}
+
+% DD 4.1
+Let $\Pi$ be the running program and $A$ the module's AAS. The reconciler reads $\Pi$ back over the
+management protocol, which reports every instance, connection, type hash and value. It parses the
+result by the rules into skills, steps, constants and types, $\mathit{read}(\Pi)$. The same structure
+is built from the AAS, $\mathit{desc}(A)$. The module is verified when
+\begin{equation}
+  \mathit{read}(\Pi) = \mathit{desc}(A).
+  \label{eq:verify}
+\end{equation}
+Otherwise the differences are sorted into four kinds: a composite to create, a value to write, a
+change that needs a restart, and a record that does not match.
+
+% DD 4.1, 4.3
+A reconfiguration applies the least disruptive change and proves it, in six steps:
+\begin{enumerate}
+  \item \emph{Compare:} compute the differences.
+  \item \emph{Check:} the steps name primitives the module has, bound values lie within their
+    limits, and the AAS passes the ontology's checks. A missing block type refuses the change before
+    anything is sent.
+  \item \emph{Guard:} values are written only while the module is neither executing nor occupied. A
+    new composite may be created in any state, since it touches nothing that runs.
+  \item \emph{Apply:} what the rules allow online is applied by management commands; anything else
+    is refused as needing a restart.
+  \item \emph{Verify:} the program is read back and Eq.~(\ref{eq:verify}) is evaluated again.
+  \item \emph{Record:} the change is added to the program's boot file, so that it survives a
+    restart. The skill is marked Built in the AAS together with its interface, so that clients,
+    which follow the AAS's references and never names, find and call it unchanged.
+\end{enumerate}
+
+% DD 4.1, 4.2, 4.4
+Each step answers a question an engineer would otherwise check by hand: is the module what its AAS
+says, is the change possible online, did it happen, will it survive a restart, and can a client use
+it? The management commands that create a composite come from the same function the generator uses
+to generate it. A program changed online and one generated with the skill are therefore identical
+by construction. The usual alternative, a new boot file and a restart, stops the module; deploying
+without reading back leaves the result unchecked. % cut first: the next sentence
+A 4diac project of exactly what runs can be produced from $\mathit{read}(\Pi)$, so that an engineer
+can open and monitor the changed program in the IDE.
+
+\subsection{Authoring a new skill}
+\label{sec:authoring}
+
+A new composite enters the AAS as a described skill, written or planned. Either way,
+Section~\ref{sec:reconcile} builds it.
+
+% DD 4.7, G3 and G7
+\emph{Written:} the skill editor is a web application on the AAS server. It opens on the module's
+Skills submodel and draws a composite as a flow of the module's primitives. A checker simulates the
+flow on the module's capability model (below). It reports a condition that does not hold, with the
+step at which it fails and a step that would make it hold.
+
+% DD 3.9
+\emph{Planned:} the module plans from its Capability Description~\cite{idta02020}, which holds:
+\begin{itemize}
+  \item the process capabilities the module offers to products;
+  \item one capability set per component, with the component's capabilities, each realized by a
+    primitive.
+\end{itemize}
+Pre- and postconditions and invariants are the template's property constraints, written as
+expressions over the capability's properties. For dosing, the needle must be at the fill position
+or deeper before and while it runs, and the content grows by the volume dosed. A property names the
+module's data point it stands for, so the planner's state and the primitives' run-time conditions
+refer to the same signals.
+
+% DD 4.8
+For a required capability, the planner combines hierarchical task network planning with goal
+regression~\cite{nau2021gtpyhop}:
+\begin{enumerate}
+  \item compositions stated by the integrator are tried first, then existing composites;
+  \item otherwise, each goal of the capability's postcondition is reached by a component capability
+    whose postcondition makes it hold, after that capability's own precondition;
+  \item the plan ends in the module's rest state, the state its reset procedure establishes.
+\end{enumerate}
+The plan is then lifted to a partial order. Steps on different components with no state between
+them become a parallel block, unless an invariant forbids it. Fig.~\ref{fig:planned} shows a plan for
+2.0\,mL; a volume above the limit of one dose is planned as two doses.
+
+% DD 3.9 (one sentence in the paper; the argument goes to the journal paper)
+Nothing planning-specific is added to the AAS, unlike approaches that generate PDDL from conditions
+added to the AAS~\cite{bernhard2024leverage} or from planning submodels per
+component~\cite{nabizada2026capability}. Inside one module the state is a handful of property values,
+and the standard constraints already say what each capability needs and does. Because the rules
+derive the wiring, a planned flow needs nothing more to become a program.
+
+\begin{figure}[t]
+  \centering
+  \IfFileExists{figures/planned-skill.pdf}{%
+    \includegraphics[width=\columnwidth]{figures/planned-skill.pdf}}{%
+    \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2em}Fig.~3: docs/figures/planned-skill.drawio,
+      adapted\vspace{2em}}}}
+  \caption{A skill planned from the module's Capability Description and created online. Goal
+    regression from the requirement (content volume 2.0\,mL, weighed) gives the steps MoveAxis,
+    Dispense, Home and Weigh. They are written into the module's Skills submodel as a described
+    composite, whose steps become instances of the same names.}
+  \label{fig:planned}
+\end{figure}
