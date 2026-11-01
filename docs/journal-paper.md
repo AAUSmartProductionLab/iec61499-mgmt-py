@@ -96,6 +96,29 @@ All in [paper-references.bib](paper-references.bib):
   contract net. The contribution against them is in [agents.md](agents.md), section 9: an agent that
   plans and creates a skill online to win a bid.
 
+## Candidate figures (1 Nov)
+
+Eleven pages of [figures/journal-figures.drawio](figures/journal-figures.drawio), each exported to
+`paper/journal/figures/<page>.pdf`, for the authors to choose from. All are drawn 960 px wide (two
+columns), with the names and values of the example line (`cell/examples`, `cell/modules`).
+
+| Page | What it shows |
+| --- | --- |
+| `ppr-overview` | Product, process and resource AAS around the capability: what each holds, who keeps it, how the process AAS binds the other two, and what the three make possible |
+| `submodel-references` | The vial's, its process's, the line's, the filling module's and the pump's AASs as trees, every reference between them drawn |
+| `product-bom` | The three products' bills of material, each part with its quantity and the process that uses it (workpiece or incorporated) |
+| `resource-bom` | The line's bill of material: modules, table and shuttles, components, each with its own AAS |
+| `skill-hierarchy` | Per module: the offered capability, the composite realizing it, its steps, the primitives per component, the capability each realizes and its constraints (the vocabulary's and the module's) |
+| `ppr-map` | The vial's parts, its recipe, required against offered capability, skill, module and components, column by column; each column a binding of the process AAS |
+| `capability-match` | The filling module's offer against the three products, property by property, and an ampoule the container type excludes |
+| `isa88-levels` | ISA-88's recipes, procedural elements and equipment against the AASs and skills |
+| `bpmn-levels` | Recipe, process on the line (a lane per resource) and Dispensing opened (a lane per component) as three BPMN pools |
+| `bpmn-integration` | A module plugged in and a new product as one BPMN process, a lane per tool, with the AASs each task reads and writes |
+| `model-use` | Which activity reads and writes which submodel |
+
+The page `product-to-process` of [figures/cirp-figures.drawio](figures/cirp-figures.drawio) (one column)
+fits here as well.
+
 ## Open questions for the journal paper
 
 - **The comparison's place:** the centralized orchestrator is the colleagues' work (FOND-AAS, the BT
