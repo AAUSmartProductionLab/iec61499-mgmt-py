@@ -188,12 +188,13 @@ marked `\todocite`.
 | E2 | Does it reach the running module without stopping it? | Change, verify and down time, online against a restart (`cell/eval/scenarios.py`) | PC, 29 Oct: a new skill 0.05 s with the running skill kept running, a value 0.03 s (the module out of Execute 2.2 s), against 3.3 s down by a restart; the changeover of both modules 3.2 s down online (the stoppering module, for its value) against 7.1 s. Pi 5 to do |
 | E3 | Is the result right? | Read back equals the AAS, before and after a restart; a planned skill equals the hand-written one (T2, T5); it runs on FORTE | Done |
 
-**Table 2** gives E1 and E2. **Fig. 4** is `figures/evaluation-downtime.pdf`.
+**Figs. 5 and 6** are the effort (E1) and the downtime (E2), drawn by `cell/eval/figures.py` into
+[paper/cirp/figures](paper/cirp/figures), the downtime with the changeover. **Table 2** keeps the
+commands and the times of change and verify.
 
 To do:
 - The planned scenario plans 2.0 mL; it should plan 15 mL.
 - Count E1 for the Pi deployment as well: the IDE route then also includes the restart.
-- Fig. 4 drawn again (`cell/eval/figures.py`): it is from the runs of 28 Oct and has no changeover.
 
 ## 5 Discussion and conclusion (300 words)
 

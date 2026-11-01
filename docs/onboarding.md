@@ -185,7 +185,7 @@ the IEC 61499 module architecture that makes skills, and updating a running modu
   skill editor, which asks it for both (G7, 29 Oct).
 - **The evaluation, B1 and B2 on this PC**: `cell/eval/scenarios.py` (each change online and by a
   restart, five runs in `cell/eval/results`), `cell/eval/planners.py` (the planners timed),
-  `cell/eval/figures.py` (the downtime figure). Since 29 Oct the paper's scenario is the changeover
+  `cell/eval/figures.py` (the downtime and effort charts). Since 29 Oct the paper's scenario is the changeover
   to the prefilled syringe (BottomUpFilling written as a new skill).
 - **The DMP in the lab's AAS stack** (28 and 29 Oct): an Operation invoked at the AAS server calls
   the module's OPC UA method, the module's values are rows in InfluxDB, every call is logged
