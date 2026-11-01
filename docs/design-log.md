@@ -18,6 +18,20 @@ A running log of design considerations made while building, for writing the pape
 
 ## 1 Nov 2026
 
+- **A figure of the product's, the module's and the process's AASs as trees, from requirement to
+  binding (proposed for Fig. 3).** *CIRP*.
+  - What: the three AASs drawn as the BaSyx web UI shows them, as in `skill-hierarchies.drawio`.
+    The product's required capability Filling is matched against the module's offered Filling (2).
+    The product's FillVolume goes into the planned skill PlannedFilling (3), which is built online
+    (4). The process AAS binds the recipe's step, the module and the new skill by references (5).
+    The numbers are Fig. 1's steps.
+    - The module has no composite for Filling yet. Its offer of 0.5 to 10 mL is the planner's
+      (discovery), qualified as after a reconfiguration.
+    - The leaves share one icon in the web UI, so they carry its badges (Cap, Prop, Ref); the
+      submodels and collections do not, to save width.
+  - Why: it shows in the standard's own terms how product, resource and process meet. Every element
+    drawn exists in the AASs of the example line and the planner.
+  - Instead of: the goal regression drawn (Fig. 3 now), which the text already gives in three steps.
 - **The skill hierarchy is folded into Fig. 1, and the filling module gets a figure.** *CIRP*.
   - What:
     - Fig. 1's rows are the three levels (line, module, components) and its columns are the asset,
