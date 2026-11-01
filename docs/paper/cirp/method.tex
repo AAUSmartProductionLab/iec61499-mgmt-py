@@ -45,8 +45,8 @@ while a product is being processed. Nothing changes under a running skill, which
 guarantees simple.
 
 % DD 3.1
-Behaviour is organised in three levels (Fig.~\ref{fig:hierarchy}), each composing only the one
-below, as device primitives, skills and tasks are in~\cite{schou2018skill}. Components (an axis, a pump, a scale) offer primitive
+Behaviour is organised in three levels (the rows of Fig.~\ref{fig:concept}), each composing only the
+one below, as device primitives, skills and tasks are in~\cite{schou2018skill}. Components (an axis, a pump, a scale) offer primitive
 skills. A module composes them into composite skills. The line orchestrates the modules' composite
 skills~\cite{jensen2026service,schwoerer2026fond}; that level is outside this paper. Each component
 has an AAS of its own, so its primitives are described once and composed by every module that has
@@ -55,24 +55,17 @@ the component.
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/pipeline.pdf}
-  \caption{The AAS as the desired state of the module's IEC~61499 program. (1)~A product's process
-    step requires a capability, and (2)~matching answers offered, offered after a reconfiguration,
-    or not offered. (3)~An engineer writes a new skill in the skill editor, or the module plans it;
-    it enters the module's AAS as Described. (4)~The reconciler compares the running program with the
-    AAS, applies the change online over the IEC~61499 management protocol, verifies it by reading the
-    program back and records it, marking the skill Built. (5)~The orchestrator calls the skill over
-    OPC~UA. A new boot file and a restart is the baseline compared.}
+  \caption{The AAS as the desired state of the module's IEC~61499 program, over the three levels
+    (rows): the line orchestrates modules, the filling module composes the primitive skills of its
+    components, each step running one primitive. (1)~A product's process step requires a
+    capability, and (2)~matching answers offered, offered after a reconfiguration, or not offered.
+    (3)~An engineer writes a new skill in the skill editor, or the module plans it; it enters the
+    module's AAS as Described. (4)~The reconciler compares the running program with the AAS, applies
+    the change online over the IEC~61499 management protocol, verifies it by reading the program back
+    and records it, marking the skill Built. (5)~The orchestrator calls the skill over OPC~UA. A new
+    boot file and a restart is the baseline compared.}
   \label{fig:concept}
 \end{figure*}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{figures/skill-hierarchy.pdf}
-  \caption{Three levels of skills, each with its AASs. The line orchestrates its modules. The filling
-    module composes the primitive skills of its components into composite skills, each step running
-    one primitive. PlannedFilling is the skill planned in Fig.~\ref{fig:planned}.}
-  \label{fig:hierarchy}
-\end{figure}
 
 \subsection{Module architecture}
 \label{sec:architecture}
