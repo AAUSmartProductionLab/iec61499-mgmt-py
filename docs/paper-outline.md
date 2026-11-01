@@ -221,6 +221,21 @@ To do:
 - **Figures:** R2 as a timeline of the running skill's steps with the change marked; R1 and R3 as
   tables or one small chart.
 
+**Against other approaches (1 Nov, to decide).** R1 to R4 measure the method against weaker
+versions of itself. These put other approaches on the same module and the same task, so that each
+side wins something:
+
+| # | Compared with | Measured on the same task | What each side should win | Needs |
+| --- | --- | --- | --- | --- |
+| C1 | An outside orchestrator: a client calls the primitives one by one over OPC UA, as skill-based control usually composes [koecher2023reference, sidorenko2024composition] | Dispensing on the physical module, n runs each: the gap between steps, the cycle time and its spread; the network cut during a run; a step's condition broken during a run | Outside: a new sequence needs no change in the controller at all. Ours: timing, and the module finishes or stops safely on its own (no needle left in the vial) | A small orchestrator on modlink (the primitives have the same OPC UA methods; to verify); runs at the bench |
+| C2 | A generated orchestrator type [dorofeev2021orchestrator] | The same skills with 1 to 4 parallel branches: states and blocks; whether the new skill can be added online (a new type needs a type loader in FORTE, else a restart) | Theirs: one block to read. Ours: online, and growing linearly | A generator of the ECC (about a day), or the size argument only |
+| C3 | Standard planners on the domain generated from the AAS: Aries (HDDL), ENHSP (numeric PDDL) | R3's product variants: solved, time, plan length, the makespan after lifting | Standard planners: speed and generality. GTPyhop: the integrator's compositions first, numbers and invariants | Built (`cell/eval/planners.py`); the variants added |
+| C4 | AAS2PDDL [nabizada2026capability] | The filling module modelled in their four planning submodels: AAS elements needed, what can be stated (numbers, invariants, task structure), the plans | Theirs: many objects and relations (transport). Ours: nothing planning-specific added | Modelling the module in their metamodel (about half a day) |
+| C5 | Reported numbers | Downtime of an online change [rooker2007zero], call overhead of OPC UA skills, planning times [nabizada2026capability] | One table, each setup named | Reading |
+
+Recommendation: C1 and C3 in the paper, C4 as one sentence with its numbers, C2 and C5 only if room
+is left.
+
 ## 5 Discussion and conclusion (300 words)
 
 - **The effort moves into the AAS,** and from there into the module's capabilities. As in
@@ -244,7 +259,7 @@ proposal; if space runs out, Fig. 3 goes first.
 | --- | --- | --- |
 | Fig. 1, two columns | The pipeline over the three levels (rows): the assets as small icons (the line on its planar table, the filling module, its components), their AASs, the tools, the running system; change over the management protocol, operate over OPC UA, the restart as the baseline | `cirp-figures.drawio`, page pipeline |
 | Fig. 2 | A skill in the AAS and the blocks it becomes, in numbered pairs | page aas-to-blocks |
-| Fig. 3 | A planned skill: goal regression, the lifted flow | page planned-skill |
+| Fig. 3 | A planned skill: goal regression, the lifted flow. Proposed 1 Nov (to decide): replaced by page product-to-process, the product's, module's and process's AASs as trees: (1) the requirement, (2) the match, (3) the plan, (4) the skill built online, (5) the process AAS binding step, module and skill. Goal regression is then text only | page planned-skill; page product-to-process |
 | Fig. 4 | The filling module, drawn and as built, its parts numbered alike | page filling-module; the photo to come (`figures/filling-module-photo.jpg`) |
 | Figs. 5, 6 | Effort (E1) and downtime (E2), until section 4's proposal is decided | `cell/eval/figures.py` |
 | Table 1 | Related work against the gap | New |
