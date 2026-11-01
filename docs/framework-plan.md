@@ -58,6 +58,10 @@ Everything below the orchestration is the same for both:
 
 What it takes (section 4, items 7 and 8; section 7.2):
 
+- **Who builds what (1 Nov):** the colleagues build the centralized half (FOND-AAS, the BT controller);
+  we build the agents. Ours is to keep what both share compatible, so their controller runs the same
+  line with nothing of its own below the orchestration. A change they need goes into the shared part,
+  for both.
 - **The BT controller's action nodes run a skill as the agents' executors do:** the same steps, by the
   same route. AP2030-UNS's BT controller commanded PackML stations over MQTT instead.
 - **FOND-AAS reads the same resource AASs and takes its goal from the same recipe.** Its AI-Planning
@@ -188,7 +192,7 @@ And two that let either orchestrator run the line (section 1):
    per resource in the configuration; the BT controller's action nodes take the same steps by the
    same route.
 8. **Reconfiguration as a service**: `modsync`'s online reconfiguration, today a function the agents
-   call, behind an endpoint that a behaviour tree can call too.
+   call, behind an endpoint that a behaviour tree can call too; when the colleagues need it.
 
 ## 5. The repositories
 
@@ -288,7 +292,7 @@ papers' drafts) stay in `aseptic-line`'s `notes/` and are not on the site.
 | Capping and inspection | Specs in `cell/modules/planned` only: modules generated from their specs, simulated (FORTE with simulated IO) where there is no hardware (section 10) |
 | Loading and unloading | The two Kuka robots (a Pi each): no AAS or module of ours. Behind a module each (occupation, the PackML state, skills), both orchestrators can use them; AP2030-UNS's trees show the steps. Loading is also where a product's custody starts |
 | Planar table | The controller against the real table (only the simulated driver has run); the shuttles' AASs from it; MoveToPosition from the agents, then on the table; the vial holders |
-| Centralized orchestration | With the colleagues: FOND-AAS on our AASs, its goal from the product's recipe; the BT controller's action nodes for our modules (section 4, item 7); a batch on the simulated line, then on the hardware; Groot2 to watch it |
+| Centralized orchestration | The colleagues' (1 Nov): FOND-AAS on our AASs, its goal from the product's recipe; the BT controller's action nodes for our modules (section 4, item 7); a batch on the simulated line, then on the hardware; Groot2 to watch it. Ours: the shared parts kept compatible (section 1) |
 | Agents ([agents.md](agents.md), section 7) | A1: loading and unloading as steps, MoveToPosition on the planar controller. A2 on the filling Pi. A3: a planned skill in a bid. A4: the agents as a service; a Pi plugged in has its agent within seconds. A5: the series' names from Variables. A6: a resource that goes away, timeouts, restarts. A7: the Orders app, the messages logged, the scenario script. A8: the rehearsal |
 | The comparison | Proposed: one scenario of orders and events, run by both orchestrators; measured the same way: the time to finish the orders, the reaction to a module failing, the time until a module plugged in is used, the work to set each up. In the demo, the line handed from one to the other |
 | Models | Proposals with a time (booking ahead); the product instance's AAS as the batch record; the bindings out of the recipe into the process AAS (F6); the eleven decisions of [state-and-parameters.md](state-and-parameters.md); taring |
@@ -303,7 +307,7 @@ papers' drafts) stay in `aseptic-line`'s `notes/` and are not on the site.
 | --- | --- |
 | Now to 18 Nov | The paper first. From this plan only what helps it: the organization created; `aaspire` as a main repository that pins today's repositories (no split yet), tagged `2026.11` with a DOI, so the paper can cite it |
 | 19 to 30 Nov | A meeting with the colleagues on section 3, the glossary and how the BT controller runs a skill; the code changes of section 4; the split (section 5) of this repository; AP2030-UNS archived; CI with the shared workflow; images; FORTE as releases; deploy-server and deploy-module |
-| December | The site's first version; agents A3 to A6; the BT controller on the simulated line; the stoppering module; loading and unloading; the Orders app |
+| December | The site's first version; agents A3 to A6; the stoppering module; loading and unloading; the Orders app. The colleagues: the BT controller on the simulated line |
 | January | The rehearsal on the hardware, the same orders by both orchestrators; release `2027.01` |
 
 ## 8. Icons and figures
@@ -353,6 +357,10 @@ Decided on 31 Oct:
 - AP2030-UNS is the predecessor, archived once what is still of use is copied out;
 - the demo runs one line with two orchestrators, centralized (PDDL and behaviour trees) and
   multi-agent (product recipes), with everything below the orchestration the same for both (section 1).
+
+Decided on 1 Nov:
+- the centralized orchestrator is the colleagues' work; we build the agents and keep the shared parts
+  compatible (section 1).
 
 | # | Open question | Recommendation |
 | --- | --- | --- |

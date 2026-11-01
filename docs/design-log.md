@@ -16,6 +16,18 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 1 Nov 2026
+
+- **The centralized orchestrator is the colleagues'; ours keeps what both share compatible.** *Journal*.
+  - What: we build the multi-agent orchestrator only. FOND-AAS and the BT controller are built by the
+    colleagues. A change they need goes into what both orchestrators share (the AASs, a module run
+    only through its skills over OPC UA, occupation), so it holds for both.
+  - Why: the user does not work on the centralized half, and the comparison still needs both to run
+    the same line without a path of their own.
+  - Instead of: building the BT controller's action nodes ourselves. The shared way to run a skill
+    stays in the plan (framework-plan.md, section 4, item 7); reconfiguration as a service waits until
+    the colleagues need it.
+
 ## 31 Oct 2026
 
 - **A line keeps the planar table's routing as a parameter of its own.** *Journal*.
