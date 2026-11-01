@@ -12,7 +12,7 @@ stands behind the equipment's IO points:
 | Module | Behind its points | New for it |
 | --- | --- | --- |
 | Capping | A stepper axis on the Pi's pins, as filling's; the crimper simulated | A spec and a Pi |
-| Inspection | Two cameras and their evaluation, in Python on the Pi | Python beside FORTE (section 2); an image store on the server |
+| Inspection | A USB camera and its evaluation, in Python on the Pi | Python beside FORTE (section 2); an image store on the server |
 | Loading, Unloading | A KUKA robot each, running a program written by hand | Python beside FORTE, talking to the robot controller over the network |
 
 ## 1. Decided (1 Nov, yours)
@@ -26,7 +26,16 @@ stands behind the equipment's IO points:
   a store made for them, not through OPC UA.
 - **The centralized orchestrator is not built here** (section 6).
 
-What follows is proposed; the open points are in section 8.
+Your answers to the plan's first questions, later on 1 Nov:
+- **Python beside FORTE:** the equipment service over Modbus (section 2), as the start to test with.
+- **The robot runs one program and takes a job number** (section 3.1).
+- **The gripper runs on the robot's own IO**, switched by the robot program inside its jobs.
+- **A module stopped during a robot job:** the robot finishes the job.
+- **The image store: SeaweedFS**, on the server that runs the AAS server (section 5.2).
+- **The camera is a USB FPV camera** (section 5.1).
+- **The robot controllers are KR C4s.** What they have installed is checked on Monday 2 Nov (step M0).
+
+The rest is proposed; the open points are in section 8.
 
 ## 2. Python beside FORTE
 
@@ -42,7 +51,7 @@ a Python server, which runs a task and answers. For FORTE there are four ways:
 | python61499's way on FORTE | FORTE's own `CLIENT_n_m` sends the request over TCP, in the typed ASN.1 encoding of its `fbdk` layer, to a Python server and waits for the answer | No Python library speaks that encoding (a small one to write); a new kind of primitive in `modgen`: a call, not a command on points |
 | **A Python service that serves the equipment's points** (proposed) | The service is a Modbus TCP server on the Pi; FORTE reaches its points as it reaches the simulator's on the PC (`modbus[...]`) | Numbers and booleans only; the points are polled (every 10 ms) |
 
-**Proposed: the last.** It needs no new block, no change to `modgen` and no change to the runtime:
+**Decided (1 Nov): the last, as the start to test with.** It needs no new block, no change to `modgen` and no change to the runtime:
 - FORTE for the Pi is already built with Modbus, and with raw TCP, HTTP, MQTT and OPC UA
   (`FORTE_COM_*` in the build of `pi/modules-pi`).
 - A Pi target with `io: gpio` and a `modbus` server already puts the points that have a pin on the
@@ -64,8 +73,8 @@ demo does not need it.
 
 ### 3.1 The robot's side: one program, a job number
 
-The robot runs one program that waits for a job and runs it (the second of the ways you named: states
-in one program). A job is a number; each starts a routine of the program: pick from the tray, place on
+The robot runs one program that waits for a job and runs it (decided 1 Nov; the second of the ways you
+named: states in one program). A job is a number; each starts a routine of the program: pick from the tray, place on
 the shuttle, home. This is instead of selecting programs from outside. KUKA's way to select a program
 from outside is Automatic External, by program number on digital inputs (`PGNO`, `PGNO_VALID`,
 `EXT_START`). The network interfaces below write variables; they do not select programs. One program
@@ -90,30 +99,39 @@ The contract between the module and the robot program, the same whatever carries
 This is the usual handshake between a PLC and a robot, and it fits a primitive as `modgen` has them: a
 command that sets `Job` and `Start`, the postcondition `Done`, the invariant `NOT Error` (a broken
 invariant ends the skill), a timeout. The robot keeps its own safety: the Pi starts jobs only in the
-operating mode the operator chose, and moves nothing itself.
+operating mode the operator chose, and moves nothing itself. A module stopped during a job lets the
+robot finish it (decided 1 Nov); the robot's own stop stays for emergencies.
 
 For the demo the robot program counts the tray's slots itself. A slot as a parameter of the job comes
 later (the skill's `arg` written into a point).
 
 ### 3.2 How the Pi reaches the robot
 
-Which interface depends on what the robot controllers have. That is checked first (step M0):
-- the controller: KR C4, KR C4 compact, KR C5, or Sunrise for an LBR iiwa;
-- its KSS version;
-- its option packages;
-- whether it has free digital IO.
+The controllers are KR C4s. **On a KR C4 no interface for an outside program is guaranteed:** KUKA's
+network interfaces (Ethernet KRL, OPC UA, DeviceConnector, PROFINET, EtherNet/IP) are option packages
+under licence. Every KR C4 has these:
+- the KLI Ethernet port (for WorkVisual);
+- EtherCAT as its system bus;
+- Automatic External in its base software.
+
+Its user IO depends on the IO modules fitted. The gripper runs on the robot's own IO (decided 1 Nov),
+so there will be an IO module. Spare channels on it can carry the contract, and that needs no licence.
+
+What to check on Monday 2 Nov (step M0):
+- the installed option packages: on the smartPAD, *Start-up > Additional software*;
+- the KSS version: *Help > Info*;
+- the IO modules in the cabinet and their free channels.
 
 | The controller has | The equipment service talks | The robot program |
 | --- | --- | --- |
 | KUKA.Ethernet KRL (EKI) | XML over TCP; the robot is the server, the service connects | An EKI configuration with the contract's elements, and `EKI_` calls in the program |
-| KUKA.OPC UA, or KUKA.DeviceConnector (installed on a KR C5) | OPC UA: the contract as global variables of the program | The variables in `$config.dat`, exposed by the option |
-| Neither | KukaVarProxy (TCP 7000, global variables): not KUKA's, a program on the controller's Windows, which KUKA advises against | The variables in `$config.dat` |
-| An LBR iiwa (Sunrise) | TCP to a socket the robot application opens | A Java application |
+| KUKA.OPC UA, or KUKA.DeviceConnector | OPC UA: the contract as global variables of the program | The variables in `$config.dat`, exposed by the option |
+| Neither | KukaVarProxy (TCP 7000 over the KLI, global variables): not KUKA's, a program on the controller's Windows, which KUKA advises against | The variables in `$config.dat` |
+| Neither, and KukaVarProxy not allowed | No service: the contract on digital IO, the Pi's pins through 24 V optocouplers to spare channels of the robot's IO module (`gpio` points, as filling's) | The signals mapped in WorkVisual; `Job` as a few bits |
 
-**Proposed: EKI or OPC UA, whichever the controllers have** (both are option packages under licence).
-KukaVarProxy only to start with if neither is there. Without any network option the fallback is
-digital IO with Automatic External: the Pi's pins through 24 V optocouplers. The generator already does
-pins, but that is the wiring you want to avoid.
+**Proposed: EKI or OPC UA, whichever the controllers have.** If neither is installed, KukaVarProxy to
+start with: no licence and no wiring. Digital IO is the fallback that always works, but it is the
+wiring you want to avoid.
 
 With the service in between, the module's program and AAS do not change with the interface; only the
 service does. If the controller speaks OPC UA, FORTE could later reach it directly (an `opc_ua[...]`
@@ -123,7 +141,7 @@ backend for IO points in `modgen.library`) and the service would go. The demo do
 
 | Module | Components | Primitives (one per job) | Composite |
 | --- | --- | --- | --- |
-| Loading | Robot (the gripper is part of the robot's jobs) | `Home`, `PickFromTray`, `PlaceOnShuttle` | `Loading`: pick, place, home |
+| Loading | Robot (the gripper is on the robot's IO, switched inside its jobs) | `Home`, `PickFromTray`, `PlaceOnShuttle` | `Loading`: pick, place, home |
 | Unloading | Robot | `Home`, `PickFromShuttle`, `PlaceInTray` | `Unloading`: pick, place, home |
 
 Each spec (`cell/modules/loading.yaml`, `unloading.yaml`) names:
@@ -172,8 +190,13 @@ On `Trigger` the service:
 
 The skill's results are `Passed` and `ImageNo`.
 
-A Pi 5 takes two cameras on its own camera ports (picamera2), or USB cameras (OpenCV). Which cameras
-is open.
+**The camera is a USB FPV camera** (1 Nov): a UVC device, read with OpenCV (V4L2) on the Pi. An
+analog FPV camera behind a USB grabber is read the same way, since the grabber is then the UVC device.
+The service keeps the camera open and takes the newest frame on `Trigger`. Opening it for each
+image, as AP2030-UNS did, costs time, and the first frames come dark while the exposure settles.
+
+The spec plans two cameras, top and side. With one camera the module has one camera component and
+one capture skill (section 8).
 
 ### 5.2 The images
 
@@ -185,17 +208,30 @@ The service sends the image to the store over HTTP, not through IEC 61499 or OPC
 IEC 61499 carries only the verdict and the number. AP2030-UNS sent each image base64 in an MQTT
 message instead.
 
-**The store, proposed: SeaweedFS** in the lab stack (`deploy/aas`): one node, the S3 API on port 8333,
-Apache 2.0. MinIO's open-source edition has published no images since October 2025 and was archived
-in April 2026. Garage (AGPL) is the other choice.
+**The store: SeaweedFS** (decided 1 Nov): one node, the S3 API on port 8333, Apache 2.0. MinIO's
+open-source edition has published no images since October 2025 and was archived in April 2026; Garage
+(AGPL) was the other choice.
 
-**The AAS says where the images are, not what they are:**
-- The camera's Asset Interfaces Description gets a second interface, HTTP, with the image as a
-  property at a URL template (`{ImageNo}`).
-- A skill's results go into the time series as every result does (the DMP, InfluxDB), so each image's
-  number is there with its skill call.
-- No image and no live value goes into the AAS ([decisions.md](decisions.md), 28 Oct).
-- The product's batch record (its instance AAS, planned) refers to its images.
+**It runs on the server that runs the AAS server**, as a container of its own in the same stack
+(`deploy/aas`, later `deploy-server`), beside BaSyx, InfluxDB and the DMP. It is not part of BaSyx.
+The AAS holds no image; it links to them by URL:
+- **Where a camera's images are:** the camera's Asset Interfaces Description gets a second interface,
+  HTTP, with the store's address and the image as a property at a URL template (`{ImageNo}`). A client
+  finds the images from the AAS, as it finds the camera's OPC UA.
+- **Which images belong to a product:** the product's batch record (its instance AAS, planned) gets a
+  `File` element per image whose value is the image's URL. A `File` may name its file by URL, so the
+  AAS points to the image without holding it.
+- **When each image was taken:** a skill's results go into the time series as every result does (the
+  DMP, InfluxDB), so each image's number is there with its skill call.
+- **The web UI** shows an image from its URL.
+
+This is instead of BaSyx's own attachments (a `File` element's content uploaded to the AAS server),
+which would put the images into the AAS server's database. No image and no live value goes into the
+AAS ([decisions.md](decisions.md), 28 Oct).
+
+Proposed for access: the bucket readable by anyone in the lab network, so the web UI needs no key;
+writing needs a key, which only the camera service has, from its environment and never from a file in
+the repository.
 
 A live view of the cameras for the demo is a separate thing: MJPEG over HTTP from the service, or RTSP
 through MediaMTX. The inspection itself does not need it.
@@ -215,7 +251,7 @@ So the new modules need nothing for the BT controller that the filling module do
 
 | # | Step | Needs | Done when |
 | --- | --- | --- | --- |
-| M0 | The robot controllers: model, KSS version, option packages (Ethernet KRL, OPC UA, DeviceConnector), free digital IO | You, at the robots | The interface of 3.2 is chosen |
+| M0 | The KR C4s: option packages (Ethernet KRL, OPC UA, DeviceConnector), KSS version, IO modules and free channels (section 3.2) | You, at the robots, Monday 2 Nov | The interface of 3.2 is chosen |
 | M1 | The equipment service: its base shared with the simulator, a container in `deploy/pi`; a Pi target with pins and a local Modbus server tried on a Pi | – | One program on a Pi has a point on the service and one on a pin |
 | M2 | Capping: the spec moved to `cell/modules`, the program generated and run with the simulator; then on its Pi | A Pi 5, a TB6600, a stepper, a switch; you at the bench for the axis | `Capping` runs on the Pi with the axis moving and the crimper simulated |
 | M3 | Loading and unloading: the contract with your program, the specs, the simulator's robot; in the agents, loading as the step that starts custody ([agents.md](agents.md), A1) | Your robot program's job numbers | The line in simulation takes a vial from loading to unloading |
@@ -227,10 +263,11 @@ So the new modules need nothing for the BT controller that the filling module do
 
 | # | Question | Recommendation |
 | --- | --- | --- |
-| 1 | Python beside FORTE: a service that serves the equipment's points over Modbus (section 2), or python61499's request and answer over FORTE's `CLIENT` | The service now; the request and answer when a call needs text |
-| 2 | The robot: one program with job numbers, or programs selected from outside | One program (3.1) |
-| 3 | The robot's interface | After M0: EKI or OPC UA, whichever the controllers have |
-| 4 | The image store | SeaweedFS |
-| 5 | The gripper: inside the robot's jobs, or a component of the module with an AAS of its own | Inside the jobs for the demo |
-| 6 | A module stopped during a job: the robot finishes the job, or the program also takes an abort | It finishes the job; the robot's own stop stays for emergencies |
-| 7 | Which cameras: Pi camera modules or USB, and their lenses | – |
+| 1 | ~~Python beside FORTE~~ | Decided 1 Nov: the service over Modbus, as the start |
+| 2 | ~~The robot: one program with job numbers, or programs selected from outside~~ | Decided 1 Nov: one program |
+| 3 | The robot's interface | After M0 (2 Nov): EKI or OPC UA, whichever the KR C4s have; else KukaVarProxy; else digital IO |
+| 4 | ~~The image store~~ | Decided 1 Nov: SeaweedFS, beside the AAS server |
+| 5 | ~~The gripper~~ | Decided 1 Nov: on the robot's own IO, inside its jobs |
+| 6 | ~~A module stopped during a job~~ | Decided 1 Nov: the robot finishes the job |
+| 7 | ~~Which cameras~~ One camera or two (the spec plans top and side) | Decided 1 Nov: a USB FPV camera; how many is open |
+| 8 | Who may read the images | Anyone in the lab network; writing with a key only the camera service has (5.2) |

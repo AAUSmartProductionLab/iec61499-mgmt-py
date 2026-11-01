@@ -78,4 +78,10 @@ What was decided, in the order it happened. The plan itself is in
 | The capping module (1 Nov) | Like the filling module: a linear axis on a stepper. The crimper is simulated for now |
 | The loading and unloading robots (1 Nov; how they are driven, after "How many robots?" above) | A Raspberry Pi per KUKA robot runs a module like the others and talks to the robot over a network protocol, not GPIO. The robot programs are written by hand; the module selects what the robot does, starts it and waits for it ([demo-modules.md](demo-modules.md)) |
 | The inspection module (1 Nov) | Triggered over OPC UA like every module. Its images go straight to an image store, not through OPC UA |
+| Python beside FORTE (1 Nov) | An equipment service on the module's Pi that serves the equipment's points over Modbus TCP, as the start to test with ([demo-modules.md](demo-modules.md), section 2) |
+| The robot program (1 Nov) | One program per robot that waits for a job number and runs it; the module stopped during a job lets the robot finish it |
+| The gripper (1 Nov) | On the KUKA's own IO, switched by the robot program inside its jobs |
+| The image store (1 Nov) | SeaweedFS, a container of its own on the server that runs the AAS server; the AAS links to the images by URL and holds none |
+| The inspection camera (1 Nov) | A USB FPV camera |
+| The robot controllers (1 Nov) | KR C4s; their option packages are checked on 2 Nov |
 | Who builds the centralized orchestrator? (1 Nov) | The colleagues (FOND-AAS, the BT controller). We build the agents and keep what both share compatible: the AASs, a module run only through its skills over OPC UA, occupation |

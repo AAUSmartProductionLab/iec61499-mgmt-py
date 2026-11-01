@@ -18,7 +18,27 @@ A running log of design considerations made while building, for writing the pape
 
 ## 1 Nov 2026
 
-- **Python beside FORTE: a service that serves the equipment's points over Modbus (proposed).** *Journal*.
+- **The inspection images are stored beside the AAS server and linked by URL.** *Journal*.
+  - What: SeaweedFS runs as a container of its own in the stack that runs BaSyx. The AAS links to the
+    images and holds none of them:
+    - the camera's interface description gives the store's address and a URL template;
+    - the product's batch record has a `File` element per image whose value is the image's URL;
+    - the image's number is in the skill's results in InfluxDB.
+  - Why: images are neither a description nor a live value; a `File` may name its file by URL, so
+    the AAS points to them in its own terms.
+  - Instead of: BaSyx's attachments (the image uploaded into a `File` element, so into the AAS
+    server's database); a store with no link from the AAS.
+
+- **On a KR C4 the robot's interface follows what is installed; digital IO is the fallback that needs
+  no licence.** *Journal*.
+  - What: Ethernet KRL or OPC UA if installed; else KukaVarProxy over the KLI; else the contract on
+    spare channels of the IO module the gripper already needs, wired to the Pi's pins.
+  - Why: every network interface KUKA offers for the KR C4 is an option package; the KLI port,
+    EtherCAT and Automatic External are standard, user IO depends on the modules fitted.
+  - Instead of: choosing the interface before the controllers are checked (2 Nov).
+
+- **Python beside FORTE: a service that serves the equipment's points over Modbus (decided 1 Nov, as
+  the start).** *Journal*.
   - What: a module whose equipment needs Python (cameras, a robot's protocol) gets an equipment service
     on its Pi: a Modbus TCP server that holds the equipment's points and runs a handler when an output
     changes. FORTE reaches it through the IO route it already has (`modbus[...]`), and a Pi target
@@ -30,7 +50,7 @@ A running log of design considerations made while building, for writing the pape
     python61499's request and answer over FORTE's `CLIENT` (needs the ASN.1 encoding in Python and a
     new kind of primitive; kept for when a call needs text).
 
-- **A KUKA robot runs one program and takes a job number (proposed).** *Journal*.
+- **A KUKA robot runs one program and takes a job number (decided 1 Nov).** *Journal*.
   - What: the robot program waits for a job and runs it. The module and the program share a contract
     (`Job`, `Start` to the robot; `Ready`, `Busy`, `Done`, `Error` from it) with the usual PLC-robot
     handshake. The robot's network interface (Ethernet KRL or OPC UA, whichever the controllers have)
@@ -42,7 +62,7 @@ A running log of design considerations made while building, for writing the pape
     FORTE speaking the robot's protocol itself.
 
 - **Inspection images go straight to an S3 store; IEC 61499 carries only the verdict and the image's
-  number (proposed).** *Journal*.
+  number (SeaweedFS decided 1 Nov).** *Journal*.
   - What: the camera service puts each JPEG into an object store over HTTP (S3). The skill's results
     are `Passed` and `ImageNo`, logged as every result is. The camera's AAS says where its images are:
     an HTTP interface with a URL template.
