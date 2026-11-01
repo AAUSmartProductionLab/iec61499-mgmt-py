@@ -33,8 +33,8 @@ capability model, planning, agents) is kept for the journal paper, in
 | Abstract | 170 | |
 | 1 Introduction | 400 | |
 | 2 Related work | 500 | Table 1 |
-| 3 Concept and method | 1,200 | Figs. 1 to 4 |
-| 4 Evaluation | 650 | Figs. 5 and 6, Table 2 |
+| 3 Concept and method | 1,200 | Figs. 1 to 3 |
+| 4 Evaluation | 650 | Fig. 4 and one or two more, Table 2 |
 | 5 Discussion and conclusion | 300 | |
 | References | 17 | |
 
@@ -196,6 +196,31 @@ To do:
 - The planned scenario plans 2.0 mL; it should plan 15 mL.
 - Count E1 for the Pi deployment as well: the IDE route then also includes the restart.
 
+### Proposal of 1 Nov: test what only this method does (to decide)
+
+**Why change.**
+- E1 counts user actions as [dorofeev2021orchestrator] counts them, and our composite made from a flow
+  is close to their generated orchestrator. With their measure as well, the paper reads as a variant
+  of theirs.
+- E2's zero downtime is the classic claim of [rooker2007zero].
+- The plan of September ([archive/build-and-modelling-plan.md](archive/build-and-modelling-plan.md),
+  "Evaluation plan") left effort out for this reason.
+- What no other work has is the closed loop: the AAS as the desired state, the program read back and
+  reconciled to it, and a new skill from a product's requirement. The evaluation should test that loop.
+
+| # | Question | Measure | Baseline | Needs |
+| --- | --- | --- | --- | --- |
+| R1 | Does the program stay what its AAS says? | Differences injected n times per kind. Into the program: a value written from the IDE, a connection deleted, a stray instance, a composite half created. Into the AAS: a value, a new step, a reordered flow, a removed skill. Each is to be detected, classified (online, restart, record) and repaired where allowed. Also: a reconfiguration cut after each of its k commands and run again must converge | A deployment that does not read back (the IDE's) | A harness (`cell/eval/drift.py`); modsync completing a half-created described composite (today it asks for a restart) |
+| R2 | Does a change reach the running machine without disturbing it? | On the physical filling module: the running skill's step times and axis motion, with and without a change made meanwhile. The internal setup time of the control change (SMED), online against a restart; on the machine a restart also re-references the axis and re-occupies the module | A restart | Runs at the bench; step times from OPC UA timestamps |
+| R3 | Which products can the module take, and do they come out right? | Product variants: volumes within one dose and above it, with and without weighing, from the bottom for a syringe, the scale removed. Each is offered now, after a reconfiguration, or not. Each planned skill runs on the simulated module, and the product's content and weight are compared with the requirement | Matching against the built skills only | A process model in the simulator: volume into the container while the needle is in it, weight on the scale |
+| R4, if time | Does the checker catch the faults that matter? | Every single edit of Dispensing (a step deleted, swapped, duplicated or inserted; a bound value changed). The checker's verdict is compared with the product's outcome in the process model: precision and recall | A structural check (types and connections, what the IDE checks) | R3's process model |
+
+- **Effort:** no longer a research question; at most one sentence.
+- **Size:** stays an analytic argument. n parallel branches are 2ⁿ states in a generated type
+  [dorofeev2021orchestrator], and one join block here.
+- **Figures:** R2 as a timeline of the running skill's steps with the change marked; R1 and R3 as
+  tables or one small chart.
+
 ## 5 Discussion and conclusion (300 words)
 
 - **The effort moves into the AAS,** and from there into the module's capabilities. As in
@@ -212,16 +237,16 @@ Drawn on 1 Nov, in [paper/cirp/figures](paper/cirp/figures). The diagrams are th
 [figures/cirp-figures.drawio](figures/cirp-figures.drawio), exported by
 `python docs/figures/export_pdf.py docs/figures/cirp-figures.drawio docs/paper/cirp/figures`;
 the evaluation's charts are in [paper/cirp/figures-evaluation.tex](paper/cirp/figures-evaluation.tex).
-Eight floats with the two tables. If space runs out, the proposal is to drop Fig. 4 first.
+The skill hierarchy was folded into Fig. 1 on 1 Nov. The evaluation's figures follow section 4's
+proposal; if space runs out, Fig. 3 goes first.
 
 | | Content | Source |
 | --- | --- | --- |
-| Fig. 1, two columns | The pipeline: requirement, match, author, reconcile, bind and run; change over the management protocol, operate over OPC UA; the restart as the baseline | `cirp-figures.drawio`, page pipeline |
-| Fig. 2 | The skill hierarchy: line, module, components | page skill-hierarchy |
-| Fig. 3 | A skill in the AAS and the blocks it becomes, in numbered pairs | page aas-to-blocks |
-| Fig. 4 | A planned skill: goal regression, the lifted flow | page planned-skill |
-| Fig. 5 | Effort (E1): user actions by hand, in the editor, planned | `cell/eval/figures.py` |
-| Fig. 6 | Downtime (E2): online and by a restart, with the changeover | `cell/eval/figures.py` |
+| Fig. 1, two columns | The pipeline over the three levels (rows): the assets as small icons (the line on its planar table, the filling module, its components), their AASs, the tools, the running system; change over the management protocol, operate over OPC UA, the restart as the baseline | `cirp-figures.drawio`, page pipeline |
+| Fig. 2 | A skill in the AAS and the blocks it becomes, in numbered pairs | page aas-to-blocks |
+| Fig. 3 | A planned skill: goal regression, the lifted flow | page planned-skill |
+| Fig. 4 | The filling module, drawn and as built, its parts numbered alike | page filling-module; the photo to come (`figures/filling-module-photo.jpg`) |
+| Figs. 5, 6 | Effort (E1) and downtime (E2), until section 4's proposal is decided | `cell/eval/figures.py` |
 | Table 1 | Related work against the gap | New |
 | Table 2 | Commands, times of change and verify | `cell/eval/results` |
 
