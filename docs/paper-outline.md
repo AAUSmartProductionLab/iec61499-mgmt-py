@@ -33,8 +33,8 @@ capability model, planning, agents) is kept for the journal paper, in
 | Abstract | 170 | |
 | 1 Introduction | 400 | |
 | 2 Related work | 500 | Table 1 |
-| 3 Concept and method | 1,200 | Figs. 1 to 3 |
-| 4 Evaluation | 650 | Fig. 4, Table 2 |
+| 3 Concept and method | 1,200 | Figs. 1 to 4 |
+| 4 Evaluation | 650 | Figs. 5 and 6, Table 2 |
 | 5 Discussion and conclusion | 300 | |
 | References | 17 | |
 
@@ -208,14 +208,22 @@ To do:
 
 ## Figures and tables
 
+Drawn on 1 Nov, in [paper/cirp/figures](paper/cirp/figures). The diagrams are the pages of
+[figures/cirp-figures.drawio](figures/cirp-figures.drawio), exported by
+`python docs/figures/export_pdf.py docs/figures/cirp-figures.drawio docs/paper/cirp/figures`;
+the evaluation's charts are in [paper/cirp/figures-evaluation.tex](paper/cirp/figures-evaluation.tex).
+Eight floats with the two tables. If space runs out, the proposal is to drop Fig. 4 first.
+
 | | Content | Source |
 | --- | --- | --- |
-| Fig. 1 | Two artefacts, the reconciliation loop, three levels | `figures/reconfiguration-pipeline.drawio`, redraw smaller |
-| Fig. 2 | A skill as blocks | `figures/skill-blocks.drawio` |
-| Fig. 3 | A skill in the AAS and its blocks; a planned flow | `figures/planned-skill.drawio`, adapted |
-| Fig. 4 | Downtime, online and by restart | `figures/evaluation-downtime.pdf` |
+| Fig. 1, two columns | The pipeline: requirement, match, author, reconcile, bind and run; change over the management protocol, operate over OPC UA; the restart as the baseline | `cirp-figures.drawio`, page pipeline |
+| Fig. 2 | The skill hierarchy: line, module, components | page skill-hierarchy |
+| Fig. 3 | A skill in the AAS and the blocks it becomes, in numbered pairs | page aas-to-blocks |
+| Fig. 4 | A planned skill: goal regression, the lifted flow | page planned-skill |
+| Fig. 5 | Effort (E1): user actions by hand, in the editor, planned | `cell/eval/figures.py` |
+| Fig. 6 | Downtime (E2): online and by a restart, with the changeover | `cell/eval/figures.py` |
 | Table 1 | Related work against the gap | New |
-| Table 2 | Effort and times | `cell/eval/results` |
+| Table 2 | Commands, times of change and verify | `cell/eval/results` |
 
 ## The 17 references
 

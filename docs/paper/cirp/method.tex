@@ -3,8 +3,12 @@
 % Written from docs/paper-outline.md (section 3) and docs/design-decisions.md; "DD n" in the
 % comments points to the decision a paragraph rests on. Citation keys are those of
 % docs/paper-references.bib. \todocite marks a source still to be added (the paper cites at most 17).
-% Budget in the outline: 1,200 words and Figs. 1 to 3; this draft is longer, so that the authors can
-% cut. Paragraphs marked "% cut first" are the first to go.
+% Budget in the outline: 1,200 words; this draft is longer, so that the authors can cut. Paragraphs
+% marked "% cut first" are the first to go.
+%
+% Figures: figures/*.pdf beside this file. The diagrams are the pages of
+% docs/figures/cirp-figures.drawio (export: docs/figures/export_pdf.py); the evaluation's charts, in
+% figures-evaluation.tex, are drawn by cell/eval/figures.py.
 %
 % Terms (outline): module, component; primitive skill, composite skill; requirement, flow;
 % described, built; verify, reconfigure, record.
@@ -41,31 +45,40 @@ while a product is being processed. Nothing changes under a running skill, which
 guarantees simple.
 
 % DD 3.1
-Behaviour is organised in three levels, each composing only the one below, as device primitives,
-skills and tasks are in~\cite{schou2018skill}. Components (an axis, a pump, a scale) offer primitive
+Behaviour is organised in three levels (Fig.~\ref{fig:hierarchy}), each composing only the one
+below, as device primitives, skills and tasks are in~\cite{schou2018skill}. Components (an axis, a pump, a scale) offer primitive
 skills. A module composes them into composite skills. The line orchestrates the modules' composite
 skills~\cite{jensen2026service,schwoerer2026fond}; that level is outside this paper. Each component
 has an AAS of its own, so its primitives are described once and composed by every module that has
 the component.
 
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/pipeline.pdf}
+  \caption{The AAS as the desired state of the module's IEC~61499 program. (1)~A product's process
+    step requires a capability, and (2)~matching answers offered, offered after a reconfiguration,
+    or not offered. (3)~An engineer writes a new skill in the skill editor, or the module plans it;
+    it enters the module's AAS as Described. (4)~The reconciler compares the running program with the
+    AAS, applies the change online over the IEC~61499 management protocol, verifies it by reading the
+    program back and records it, marking the skill Built. (5)~The orchestrator calls the skill over
+    OPC~UA. A new boot file and a restart is the baseline compared.}
+  \label{fig:concept}
+\end{figure*}
+
 \begin{figure}[t]
   \centering
-  \IfFileExists{figures/reconfiguration-pipeline.pdf}{%
-    \includegraphics[width=\columnwidth]{figures/reconfiguration-pipeline.pdf}}{%
-    \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2em}Fig.~1: docs/figures/reconfiguration-pipeline.drawio,
-      redrawn smaller\vspace{2em}}}}
-  \caption{The AAS as the desired state of the module's IEC~61499 program. An engineer or the
-    module's planner changes the AAS; the reconciler compares the running program with it, checks,
-    applies the change online, verifies it by reading the program back and records it. Components
-    offer primitive skills, a module composes them, the line orchestrates modules.}
-  \label{fig:concept}
+  \includegraphics[width=\columnwidth]{figures/skill-hierarchy.pdf}
+  \caption{Three levels of skills, each with its AASs. The line orchestrates its modules. The filling
+    module composes the primitive skills of its components into composite skills, each step running
+    one primitive. PlannedFilling is the skill planned in Fig.~\ref{fig:planned}.}
+  \label{fig:hierarchy}
 \end{figure}
 
 \subsection{Module architecture}
 \label{sec:architecture}
 
 The program of a module follows fixed rules that make a composite skill data rather than code
-(Fig.~\ref{fig:blocks}).
+(Fig.~\ref{fig:mapping}).
 
 % DD 2.2, 2.8, 2.9
 \emph{The shell} is the same in every module. It consists of:
@@ -144,13 +157,14 @@ its program follows.
 
 \begin{figure}[t]
   \centering
-  \IfFileExists{figures/skill-blocks.pdf}{%
-    \includegraphics[width=\columnwidth]{figures/skill-blocks.pdf}}{%
-    \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2em}Fig.~2: docs/figures/skill-blocks.drawio\vspace{2em}}}}
-  \caption{Skills as blocks. A primitive skill (MoveAxis of a linear axis) is a block type. A
-    composite skill (Dispensing of the filling module) is a subapplication of library blocks and one
-    primitive instance per step, wired by the module rules.}
-  \label{fig:blocks}
+  \includegraphics[width=\columnwidth]{figures/aas-to-blocks.pdf}
+  \caption{A composite skill in the AAS and the blocks it becomes, joined by name. Dispensing of the
+    filling module is a subapplication of instances only: (1)~the skill gives its control block,
+    (2)~a parameter a latch that checks its range, (3)~a step an instance of its primitive's block
+    type, (4)~a bound value an input's value, (5)~a bound parameter a data connection from the latch,
+    and (6)~the order of the steps the chain of their events. Left out: the method servers, the
+    merging of failures, the initialisation chain.}
+  \label{fig:mapping}
 \end{figure}
 
 \subsection{The skill in the AAS}
@@ -177,7 +191,7 @@ process planner uses for a product's recipe~\todocite{process planner}:
 One format thus serves products and skills, and one editor writes both.
 
 % module rules section 5
-Names join the AAS and the program (Fig.~\ref{fig:blocks}). A skill is the subapplication of the
+Names join the AAS and the program (Fig.~\ref{fig:mapping}). A skill is the subapplication of the
 same name, a step the instance of the same name, and a parameter the latch of the same name. The
 rules make any further mapping unnecessary.
 
@@ -282,13 +296,11 @@ derive the wiring, a planned flow needs nothing more to become a program.
 
 \begin{figure}[t]
   \centering
-  \IfFileExists{figures/planned-skill.pdf}{%
-    \includegraphics[width=\columnwidth]{figures/planned-skill.pdf}}{%
-    \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2em}Fig.~3: docs/figures/planned-skill.drawio,
-      adapted\vspace{2em}}}}
-  \caption{A skill planned from the module's Capability Description and created online. Goal
-    regression from the requirement (content volume 2.0\,mL, weighed) gives the steps MoveAxis,
-    Dispense, Home and Weigh. They are written into the module's Skills submodel as a described
-    composite, whose steps become instances of the same names.}
+  \includegraphics[width=\columnwidth]{figures/planned-skill.pdf}
+  \caption{A skill planned from the module's Capability Description. Goal regression from the
+    requirement finds Dispense for the content volume, which needs the needle at the fill position,
+    reached by MoveAxis, and Weigh, which needs it up, reached by Home. No two steps are
+    independent, so the lifted plan is a sequence. It is written into the Skills submodel as the
+    described composite PlannedFilling and reconciled online.}
   \label{fig:planned}
 \end{figure}
