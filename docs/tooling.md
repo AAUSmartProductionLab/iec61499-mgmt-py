@@ -326,6 +326,6 @@ writes its results to `cell/eval/results`.
 python cell/eval/scenarios.py --forte runtime/fbe/build/modules-win/forte/build/forte/forte.exe --runs 5   # each change online and by a restart
 python cell/eval/scenarios.py --pi --only plug value written --runs 5   # on the filling Pi: moves the axis, only with the user at the bench
 python cell/eval/planners.py --runs 5    # the planning cases through GTPyhop, ENHSP and Aries (the planners extra)
-python cell/eval/figures.py              # the downtime figure: docs/figures/evaluation-downtime.pdf and .svg (needs matplotlib)
+python cell/eval/figures.py              # the downtime and effort charts: docs/paper/cirp/figures (needs matplotlib)
 python cell/eval/effort.py               # the user actions a new skill takes, three ways
 ```
