@@ -18,6 +18,27 @@ A running log of design considerations made while building, for writing the pape
 
 ## 1 Nov 2026
 
+- **Candidate figures for the journal paper on the product, process and resource AASs.** *Journal*.
+  - What: eleven pages of [figures/journal-figures.drawio](figures/journal-figures.drawio), listed in
+    [journal-paper.md](journal-paper.md) ("Candidate figures"). There is an overview, the submodels
+    with their references, the bills of material of products and line, the skill hierarchy, a map
+    from parts to components through the process AAS, the capability match, ISA-88's levels, two
+    BPMN figures and a matrix of which activity reads and writes which submodel.
+    - Trees as the web UI shows them, as in `skill-hierarchies.drawio`; bills of material in the
+      isometric style of slide 07. The product's parts (vial, stopper, cap, syringe barrel, plunger,
+      cartridge) are new icons drawn in that style.
+    - BPMN as a notation, not run by an engine, as journal-paper.md says of the plan and skill
+      editors. Transport is dashed: the process AAS binds no transport; a shuttle is chosen at run
+      time.
+    - ISA-88's procedural elements against ours: a composite skill is an operation and runs on the
+      unit (a module); a primitive is a phase and runs on an equipment module (a component). This
+      is a proposal; [ppr-model.md](ppr-model.md) maps only the recipe levels.
+    - The module's data submodel is drawn as Variables (time series, no live value in the AAS). The
+      trees of `skill-hierarchies.drawio` still show the Operational Data it replaced.
+  - Why: the paper argues that the three models are what plug and produce and AAS-driven
+    reconfiguration need. The figures show the whole structure, and every element drawn exists in the
+    example line's AASs.
+  - Instead of: one figure per aspect chosen in advance; figures that show only the filling module.
 - **A figure of the product's, the module's and the process's AASs as trees, from requirement to
   binding (proposed for Fig. 3).** *CIRP*.
   - What: the three AASs drawn as the BaSyx web UI shows them, as in `skill-hierarchies.drawio`.
