@@ -18,6 +18,40 @@ A running log of design considerations made while building, for writing the pape
 
 ## 1 Nov 2026
 
+- **The evaluation's charts share one palette with the method's colours, validated.** *CIRP*.
+  - What: the usual way in blue (a restart; by hand in 4diac), ours in green (online; the skill
+    editor), planned in berry `#B8336A`, with each value written at its bar's end. The downtime
+    chart is drawn from the runs of 29 Oct and has the changeover of two modules.
+  - Why: a colour means the same in both charts, and the three pass the dataviz validator's
+    colour-vision checks over all pairs.
+  - Instead of: orange or gold beside the green (too close under protanopia); purple or the AAS
+    teal (too close to the blue).
+- **Six figures: the pipeline across two columns, five in one column.** *CIRP*.
+  - What:
+    - Fig. 1, the pipeline: requirement, match, author, reconcile, bind and run, in three lanes
+      (line, module AAS, program). Changing goes over the management protocol and operating over
+      OPC UA, with the restart drawn as the baseline.
+    - The skill hierarchy: line, module, components; a step runs a component's primitive.
+    - A skill in the AAS and its blocks, in numbered pairs: the skill and its Control block, a
+      parameter and its latch, a step and its instance, a value, a data connection, the order and
+      the event chain.
+    - A planned skill: goal regression, the lifted flow, Described and then reconciled.
+    - The downtime (E2) and the effort (E1).
+  - Why: one big pipeline figure, and small figures of the hierarchy, the conversion from the AAS
+    to blocks and the tests, as the authors planned on 1 Nov. The sixth is the planned skill,
+    because planning is a contribution (C3) that no other figure shows.
+  - Instead of: the shell's architecture as the sixth (the pipeline's program box shows the shell
+    and the composites); a figure of the test setup (one sentence covers it).
+- **The paper's diagrams are drawn at print size in one draw.io file, exported to PDF.** *CIRP*.
+  - What: [figures/cirp-figures.drawio](figures/cirp-figures.drawio), one page per diagram. The
+    pipeline is 960 px wide for two columns (17.4 cm); the others are 440 px for one (8.4 cm). No
+    text is below 12 px, so none prints below about 6.5 pt.
+    [figures/export_pdf.py](figures/export_pdf.py) writes each page as a cropped vector PDF with
+    Arial embedded, into `paper/cirp/figures/`, beside the section that includes them.
+  - Why: the slide drafts are 1,100 to 2,300 px wide, so their text would print at 3 to 4 pt.
+    A PDF keeps text and lines sharp at any zoom.
+  - Instead of: the drafts scaled down; PNG exports; the draw.io desktop app, which is not
+    installed (the VS Code extension's viewer in Chrome renders the same).
 - **The inspection images are stored beside the AAS server and linked by URL.** *Journal*.
   - What: SeaweedFS runs as a container of its own in the stack that runs BaSyx. The AAS links to the
     images and holds none of them:
