@@ -18,6 +18,18 @@ A running log of design considerations made while building, for writing the pape
 
 ## 1 Nov 2026
 
+- **The skill hierarchy is folded into Fig. 1, and the filling module gets a figure.** *CIRP*.
+  - What:
+    - Fig. 1's rows are the three levels (line, module, components) and its columns are the asset,
+      its AAS, the tools and the running system. The pipeline's five steps run over that grid, and
+      a step's line to a component's primitive shows the hierarchy.
+    - The assets are small icons copied from the slides' drawings: the line on its planar table,
+      the filling module, the axis, the pump and the scale.
+    - The module's figure is its side view with numbered parts. The photo goes beside it, numbered
+      alike.
+  - Why: six figures were too many for six pages. One figure now shows where each level's AAS and
+    program sit and what the pipeline changes. A reader of the evaluation sees the machine it ran on.
+  - Instead of: a figure of its own for the hierarchy; a figure of the test setup as boxes.
 - **The evaluation's charts share one palette with the method's colours, validated.** *CIRP*.
   - What: the usual way in blue (a restart; by hand in 4diac), ours in green (online; the skill
     editor), planned in berry `#B8336A`, with each value written at its bar's end. The downtime
