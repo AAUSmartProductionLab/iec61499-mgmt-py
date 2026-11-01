@@ -18,6 +18,43 @@ A running log of design considerations made while building, for writing the pape
 
 ## 1 Nov 2026
 
+- **Python beside FORTE: a service that serves the equipment's points over Modbus (proposed).** *Journal*.
+  - What: a module whose equipment needs Python (cameras, a robot's protocol) gets an equipment service
+    on its Pi: a Modbus TCP server that holds the equipment's points and runs a handler when an output
+    changes. FORTE reaches it through the IO route it already has (`modbus[...]`), and a Pi target
+    already mixes pins and a Modbus server per point ([demo-modules.md](demo-modules.md), section 2).
+  - Why: no new block type, no change to `modgen` or to the runtime. The program is the same in
+    simulation and on the Pi, because the simulator serves the same points.
+  - Instead of: DINASORE (a second runtime that cannot run ModLib's C++ blocks); CPython embedded in
+    FORTE (an interpreter in the static binary, and a Python fault stops the module's control);
+    python61499's request and answer over FORTE's `CLIENT` (needs the ASN.1 encoding in Python and a
+    new kind of primitive; kept for when a call needs text).
+
+- **A KUKA robot runs one program and takes a job number (proposed).** *Journal*.
+  - What: the robot program waits for a job and runs it. The module and the program share a contract
+    (`Job`, `Start` to the robot; `Ready`, `Busy`, `Done`, `Error` from it) with the usual PLC-robot
+    handshake. The robot's network interface (Ethernet KRL or OPC UA, whichever the controllers have)
+    is behind the equipment service, so a skill is a plain primitive: a command, the postcondition
+    `Done`, the invariant `NOT Error`.
+  - Why: the robots' network interfaces write variables and cannot select programs. One running
+    program starts a job at once. The module's program and AAS do not change with the interface.
+  - Instead of: programs selected by Automatic External on digital inputs (24 V wiring to the Pi);
+    FORTE speaking the robot's protocol itself.
+
+- **Inspection images go straight to an S3 store; IEC 61499 carries only the verdict and the image's
+  number (proposed).** *Journal*.
+  - What: the camera service puts each JPEG into an object store over HTTP (S3). The skill's results
+    are `Passed` and `ImageNo`, logged as every result is. The camera's AAS says where its images are:
+    an HTTP interface with a URL template.
+  - Why: images are large and are not live values; the AAS keeps no live values (28 Oct). A store
+    keeps them by name for the batch record.
+  - Instead of: images base64 in MQTT messages (AP2030-UNS) or over OPC UA; images in the AAS; MinIO
+    (its open-source edition was archived in April 2026), so SeaweedFS.
+
+- **The capping module is built as the filling module, its crimper simulated.** *Journal*. The user's
+  decision: the same linear axis on a stepper; a second actuator crimps and is simulated until it is
+  chosen.
+
 - **The centralized orchestrator is the colleagues'; ours keeps what both share compatible.** *Journal*.
   - What: we build the multi-agent orchestrator only. FOND-AAS and the BT controller are built by the
     colleagues. A change they need goes into what both orchestrators share (the AASs, a module run

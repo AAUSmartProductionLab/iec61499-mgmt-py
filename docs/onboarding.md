@@ -64,6 +64,8 @@ engineers), [filling-program.md](filling-program.md) (the filling program block 
 [aas-models.md](aas-models.md), [aas-examples.md](aas-examples.md),
 [state-and-parameters.md](state-and-parameters.md) (a modelling plan waiting for decisions),
 [agents.md](agents.md) and [agents-literature.md](agents-literature.md) (the agents),
+[demo-modules.md](demo-modules.md) (capping, inspection, and loading and unloading with the KUKA
+robots: how the demo's other four modules are built, Python beside FORTE),
 [paper-outline.md](paper-outline.md) and [journal-paper.md](journal-paper.md) (the papers),
 [design-log.md](design-log.md) (design considerations, newest first),
 [framework-plan.md](framework-plan.md) (AASPIRE: the framework that
@@ -233,15 +235,19 @@ server's events, skills run over OPC UA or through the DMP, Prosody in the lab s
 orders to an order agent, transport by the shuttles (custody, on simulated shuttles) and a step that
 needs a reconfiguration (the syringe's BottomUpFilling created online). Next: the plan in section 7
 of agents.md (A1: MoveToPosition on the planar controller, loading and unloading; A2 on the filling
-Pi; A3: a planned skill in a bid).
+Pi; A3: a planned skill in a bid). The other four modules of the line (capping, inspection, loading
+and unloading with the KUKA robots) are planned in [demo-modules.md](demo-modules.md) (1 Nov), steps
+M0 to M6. The centralized orchestrator is the colleagues' to build (1 Nov); ours is to keep what both
+share compatible.
 
 **Waiting for the user** (do not decide these yourself): the go for the two Pis above; the eleven open
 decisions of [state-and-parameters.md](state-and-parameters.md); opening aas-model's pull request
 from the fork's `lab-ppr-models`; the go to push the web UI fork's commits and to commit the
 generation project's ARSO 0.8; whether module level skills become typed subapplications in the IDE;
 when to commit the HMI's 0.8 reader; the open decisions of the framework plan
-([framework-plan.md](framework-plan.md), section 10); how taring and the liquid level are to be
-modelled.
+([framework-plan.md](framework-plan.md), section 10) and of the demo's modules
+([demo-modules.md](demo-modules.md), section 8); what the KUKA controllers have (M0 there); how
+taring and the liquid level are to be modelled.
 
 ## Outside this repository
 
