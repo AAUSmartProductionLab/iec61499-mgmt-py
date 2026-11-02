@@ -98,14 +98,16 @@ All in [paper-references.bib](paper-references.bib):
 
 ## Candidate figures (1 Nov)
 
-Eleven pages of [figures/journal-figures.drawio](figures/journal-figures.drawio), each exported to
-`paper/journal/figures/<page>.pdf`, for the authors to choose from. All are drawn 960 px wide (two
-columns), with the names and values of the example line (`cell/examples`, `cell/modules`).
+The pages of [figures/journal-figures.drawio](figures/journal-figures.drawio), each exported to
+`paper/journal/figures/<page>.pdf`, for the authors to choose from. Most are drawn 960 px wide (two
+columns), with the names and values of the example line (`cell/examples`, `cell/modules`). Since
+2 Nov each figure is to become generic, with a `-battery` page (remanufacturing, simulated) and a
+`-pharma` page (the example line) beside it; `submodel-references` is the first.
 
 | Page | What it shows |
 | --- | --- |
 | `ppr-overview` | Product, process and resource AAS around the capability: what each holds, who keeps it, how the process AAS binds the other two, and what the three make possible |
-| `submodel-references` | The vial's, its process's, the line's, the filling module's and the pump's AASs as trees, every reference between them drawn |
+| `submodel-references` | Generic, full page: product, subassembly and part AASs, the process AAS, line, module and component AASs as trees, every reference between them drawn (capability, skill, interface description, mapping configuration, variables, parameters). `-battery`: a pack remanufactured in a simulated disassembly cell; `-pharma`: the vial on the example line |
 | `product-bom` | The three products' bills of material, each part with its quantity and the process that uses it (workpiece or incorporated) |
 | `resource-bom` | The line's bill of material: modules, table and shuttles, components, each with its own AAS |
 | `skill-hierarchy` | Per module: the offered capability, the composite realizing it, its steps, the primitives per component, the capability each realizes and its constraints (the vocabulary's and the module's) |

@@ -16,6 +16,44 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 2 Nov 2026
+
+- **The journal figures: generic first, then two use cases.** *Journal*.
+  - What: each figure that is built on the example line gets three pages:
+    - `<page>`, generic: ProductAAS, ModuleMAAS, CapabilityA, ParameterA, …;
+    - `<page>-battery`: remanufacturing of an EV battery pack in a simulated disassembly cell;
+    - `<page>-pharma`: the example line.
+
+    The method section takes the generic page; the case study picks examples.
+  - Why: every figure was pharma, which reads as if the models were made for filling. Battery
+    remanufacturing stresses the models where pharma does not:
+    - the product is an instance whose condition is not known until it is tested;
+    - parts are taken out (the material role `output`), not only built in;
+    - a subassembly (a battery module) has a plan of its own, which the pack's plan calls.
+  - Instead of: pharma-only figures, or one page per figure with the generic structure above two
+    example strips (too tall and dense for a paper).
+- **`submodel-references` redrawn with every reference.** *Journal*.
+  - What, besides capability and skill:
+    - the module's interface description (actions, properties) and mapping configuration (properties
+      to a time series, an Operation to an action);
+    - the Variables and the Operation's input and output variables (the skill's parameters and
+      results);
+    - a primitive's `InterfaceReference` into the module's interface.
+
+    The product side gets a subassembly and parts, each its own AAS found by asset id, as a module's
+    components are. The process AAS sits between the two hierarchies, with its bindings to a step of
+    the product and to a step of the subassembly it calls. The rows one value passes through, from
+    the product's parameter to the interface action, are shaded.
+  - Why: the figure has to show that the three kinds of AAS reach each other on every level, not
+    only at the capability; the mapping and the interface were missing.
+  - 1760 px wide, a full-page figure, instead of 960 (two columns): a tree per AAS with every link
+    does not fit in two columns.
+  - Open:
+    - where a remanufactured product's measured condition (state of health) lives is not modelled
+      yet;
+    - in the pharma version the flip-off seal is a bought subassembly with no plan of its own, so
+      that page has no call step.
+
 ## 1 Nov 2026
 
 - **Candidate figures for the journal paper on the product, process and resource AASs.** *Journal*.
