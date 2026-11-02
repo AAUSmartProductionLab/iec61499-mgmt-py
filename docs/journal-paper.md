@@ -8,9 +8,14 @@ the journal paper:
 - orchestration with multi-agent systems, compared with a centralized orchestrator on the same line;
 - what the CIRP paper had no room for.
 
-The method section and the use cases are structured and drafted in
-[journal-method.md](journal-method.md) (2 Nov). It drafts the concepts, the resource AAS and the
-process AAS, and leaves the product AAS to the colleagues.
+Since the colleagues' introduction and related work (2 Nov), three files carry the paper:
+- **[journal-method.md](journal-method.md):** the method as blueprints, with the joints J1 to J7 as
+  relations and the constraints by scope; a draft of our parts of section 3; what to settle with the
+  colleagues;
+- **[journal-rationale.md](journal-rationale.md):** every design decision against the alternatives,
+  for the method and the discussion;
+- **[journal-evaluation.md](journal-evaluation.md):** how the two cases are built and evaluated, E1 to
+  E8.
 
 Add to it whenever a change or a design consideration belongs here. Each consideration found while
 coding goes first into [design-log.md](design-log.md), tagged *Journal*.
@@ -27,6 +32,12 @@ A module that describes itself:
 
 The CIRP paper is the module-level mechanism. The journal paper is the models, the planning and the
 line.
+
+**Proposed on 2 Nov:** the colleagues' introduction narrows the paper to the blueprints and their
+checking (RQ1 to RQ4). Planning and the comparison of the orchestrators then answer no research
+question. They would stay in only as users of the blueprints, and the comparison would get a paper of
+its own ([journal-method.md](journal-method.md), section 2, D4). The rows below are kept until that is
+decided.
 
 ## Content
 

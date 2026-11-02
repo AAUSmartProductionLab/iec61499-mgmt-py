@@ -18,6 +18,36 @@ A running log of design considerations made while building, for writing the pape
 
 ## 2 Nov 2026
 
+- **The journal method rebuilt around the blueprints (proposed,
+  [journal-method.md](journal-method.md)).** *Journal*.
+  - What:
+    - a blueprint per asset class in four parts (composition, structure, relations, constraints),
+      built by one procedure; a submodel's three origins (as published, with additions, ours);
+    - each of J1 to J7 one relation of PPRL, stated by a named element and checked by a numbered
+      constraint. The constraints, C01 to C21, have four scopes: submodel, shell, shells of one class,
+      across classes;
+    - a step may have several step bindings, each a validated candidate the run chooses from; the
+      record of a run is IDTA 02031-2 in the product's instance AAS, with four added references (both
+      proposed, D1 and D2);
+    - sections in the order product, resource, process; planning and the comparison of the
+      orchestrators out of this paper (proposed, D3 and D4);
+    - eleven points to settle with the colleagues (A1 to A11). Among them: where the connections
+      live, where their BoM puts them, which reverses our choice of the same day; and one recipe, as a
+      partial order.
+  - Why:
+    - **The frame came after the first version.** The colleagues' introduction states the
+      contributions (blueprints; an abstract ontology mapped onto APSO, APrSO and ARSO; constraints
+      from the mapping) and the research questions. The first version of the file was written before
+      them.
+    - **Candidates serve both cases with one structure:** a step bound once before the batch
+      (pharma), and a step chosen by the unit's condition (battery).
+    - **The record reuses an IDTA template** instead of adding one.
+  - Instead of:
+    - the first version's order (concepts, references, then the three AASs);
+    - a process instance AAS per unit as the control recipe: one more shell per unit, and a deviation
+      would become a recipe;
+    - a record template of our own.
+
 - **The evaluation of the two cases, planned per research question
   ([journal-evaluation.md](journal-evaluation.md)).** *Journal*.
   - What:
