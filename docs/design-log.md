@@ -18,6 +18,53 @@ A running log of design considerations made while building, for writing the pape
 
 ## 2 Nov 2026
 
+- **The evaluation of the two cases, planned per research question
+  ([journal-evaluation.md](journal-evaluation.md)).** *Journal*.
+  - What:
+    - E1 composition by origin, and who reads and writes which submodel, measured on the AAS server
+      (RQ1);
+    - E2 each joint's closing element taken away to see which stage breaks; E3 plug and produce on
+      the line, timed and counted (RQ2);
+    - E4 faults made by element kind, against five checkers from the metamodel to the constraints
+      across classes, and the real errors of the project's history (RQ3);
+    - E6 reuse across the cases, and E7 runs of the battery cell with conditions found while it runs
+      (RQ4); E5 traceability; E8 authoring effort;
+    - the battery case's dynamics in the blueprint's terms: validated candidates per step, checked
+      again when a condition is written into the pack's instance AAS;
+    - three ways to couple Plant Simulation: a bridge (the stations as OPC UA modules), a decision
+      service (recommended), a replay.
+  - Why:
+    - "seven joints closed" is circular, since we chose the joints. Taking each closing element away
+      and seeing what breaks makes it a test;
+    - faults made per constraint would find only what the constraints were written for, so they are
+      made per element kind;
+    - the decision service gives many packs, faster than real time, which the statistics need. The
+      bridge shows that the way a skill is called carries over, for a few packs.
+  - Instead of: counting the joints closed and the violations found only, as the related work
+    announces; the replay alone, where the models would decide nothing.
+
+- **The design decisions, set against the alternatives
+  ([journal-rationale.md](journal-rationale.md)).** *Journal*.
+  - What:
+    - seventeen decisions of the blueprints (M), five of the ontologies and checks (O);
+    - eight things left out on purpose (X);
+    - twelve technologies, each with what could replace it (T);
+    - a table for the discussion;
+    - a first pass, from the related work's text, at how far each reviewed work closes J1 to J7.
+  - Why: the paper needs one sentence per added element in section 3, naming the alternative and who
+    uses it, and the full comparison in its discussion. The normative decisions are kept apart from the
+    technologies, so it is clear what another implementation must follow and what it may replace.
+  - Found on the way:
+    - **The call has to be described in the shell (M9).** IDTA 02027 1.0 considers only a mapping from
+      asset to AAS, and leaves the other direction to later versions. FA³ST builds asset connections
+      from AID and AIMC, but needs its own configuration to write or to call operations. BaSyx's
+      DataBridge has route files of its own.
+    - **The record template names no resource (M15).** IDTA 02031-2 Executed Processes records, per
+      run and per process, the values as executed, the times, the status, the stages and the errors,
+      but no resource or skill.
+  - Instead of: [design-decisions.md](design-decisions.md), which serves the CIRP paper and is about
+    the module in IEC 61499.
+
 - **The Production Sequence 4.0 in aas-model, as a template with classes.** *Journal*.
   - What:
     - `templates/product/ProductionSequence4.json` beside the 2.0 template, generated into a module
