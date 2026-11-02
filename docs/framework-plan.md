@@ -252,8 +252,9 @@ slides and the paper is checked afterwards.
 ## 6. Documentation on Read the Docs
 
 **One site, `aaspire.readthedocs.io`, built from `aaspire`** with its submodules: one navigation, one
-search, one version per release. Sphinx with MyST (Markdown), the Python reference generated from the
-code, Mermaid for small diagrams, the draw.io figures as SVG. Each repository keeps a README (what it is,
+search, one version per release. MkDocs with the Material theme (decided 3 Nov; the first version is
+in `aaspire/` of this repository), the Python reference later generated from the code, the draw.io
+figures as PNG. Each repository keeps a README (what it is,
 install, one example, a link to its part of the site) and a `docs/` folder of its own pages, which the
 site gathers; each pillar's pages are written by the people who build it.
 
@@ -374,5 +375,5 @@ Decided on 1 Nov:
 | 3 | The route by which both orchestrators run a skill: through the AAS server and the DMP, or straight over OPC UA | Through the DMP: one way in for every client in any language, and every call in the module's log. Straight over OPC UA stays an option for both, for speed |
 | 4 | The line's repository: `aseptic-line` (from this repository, with its history) | Yes |
 | 5 | When: the organization and the first `aaspire` before 18 Nov, the split after | Yes |
-| 6 | The documentation: Sphinx with MyST, or MkDocs? | Sphinx with MyST |
+| 6 | ~~The documentation: Sphinx with MyST, or MkDocs?~~ | Decided 3 Nov: MkDocs (the user); first version in `aaspire/` |
 | 7 | ~~Capping, inspection, the loading and unloading robots in the demo~~ | Decided 1 Nov: modules with ModLib's behaviour, each robot behind a module of its own ([demo-modules.md](demo-modules.md)) |

@@ -1,0 +1,105 @@
+# AASPIRE's documentation site. Build and serve it from this folder:
+#   python -m mkdocs serve        # http://127.0.0.1:8000, rebuilt on every save
+#   python -m mkdocs build --strict
+# How the pages and the figures are made: docs/how-to/this-site.md.
+site_name: AASPIRE
+site_description: >-
+  AAS-based Planning, Integration, Reconfiguration and Execution: plug and produce with the Asset
+  Administration Shell. The framework of the AP2030 project.
+site_author: AAU Smart Production Lab
+copyright: AAU Smart Production Lab, the AP2030 project
+repo_url: https://github.com/AAUSmartProductionLab/iec61499-mgmt-py
+repo_name: iec61499-mgmt-py
+edit_uri: edit/main/aaspire/docs/
+docs_dir: docs
+
+theme:
+  name: material
+  logo: assets/logo.png
+  favicon: assets/logo.png
+  font: false                     # the system's fonts: nothing fetched from outside, Arial like the figures
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - toc.follow
+
+extra_css:
+  - stylesheets/aaspire.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+
+validation:
+  links:
+    not_found: warn
+    anchors: warn
+    absolute_links: info
+
+nav:
+  - Home: index.md
+  - Overview:
+      - Repositories: overview/repositories.md
+      - Glossary: overview/glossary.md
+  - AAS:
+      - aas/index.md
+      - aas-model: aas/aas-model.md
+      - Ontologies: aas/ontologies.md
+  - Planning:
+      - planning/index.md
+      - modplan: planning/modplan.md
+  - Integration:
+      - integration/index.md
+      - Registration service: integration/registration.md
+      - DMP: integration/dmp.md
+      - modlink: integration/modlink.md
+  - Reconfiguration:
+      - reconfiguration/index.md
+      - modsync: reconfiguration/modsync.md
+      - Skill library: reconfiguration/skill-lib.md
+      - Management library: reconfiguration/mgmt.md
+      - FORTE runtime: reconfiguration/runtime.md
+  - Execution:
+      - execution/index.md
+      - Line agents: execution/agents.md
+      - Planar controller: execution/planar-controller.md
+  - Interfaces: interfaces/web-ui.md
+  - Deployment: deployment/deploy.md
+  - Lines: lines/aseptic-line.md
+  - How-to:
+      - Run a module on a PC: how-to/simulation.md
+      - Put a module on a Raspberry Pi: how-to/raspberry-pi.md
+      - Register a module, publish a line: how-to/register.md
+      - Change a skill online: how-to/change-a-skill.md
+      - Work on this site: how-to/this-site.md

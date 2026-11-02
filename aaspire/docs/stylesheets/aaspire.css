@@ -1,0 +1,47 @@
+/* AASPIRE's colours: teal for the AAS, orange as the accent (docs/framework-plan.md, section 8). */
+:root > * {
+  --md-primary-fg-color: #2A918B;
+  --md-primary-fg-color--light: #4FAFA8;
+  --md-primary-fg-color--dark: #1F6F6A;
+  --md-accent-fg-color: #F07D2E;
+  --md-accent-fg-color--transparent: rgba(240, 125, 46, 0.1);
+}
+
+/* Wider pages, so a figure (drawn 950 wide) shows at about its own size beside the navigation. */
+.md-grid {
+  max-width: 76rem;
+}
+
+/* The figures: white drawings with a thin frame, also in the dark scheme. */
+.md-typeset figure {
+  max-width: 100%;
+}
+.md-typeset figure img {
+  border: 1px solid #D3D7DA;
+  border-radius: 6px;
+  background: #FFFFFF;
+}
+.md-typeset figcaption {
+  max-width: 48rem;
+  font-style: normal;
+  color: var(--md-default-fg-color--light);
+}
+
+/* A pillar's name in its colour. */
+.md-typeset .pillar {
+  display: inline-block;
+  padding: 0 0.45em;
+  border-radius: 0.3em;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+.md-typeset .pillar.aas { background: #2A918B; }
+.md-typeset .pillar.planning { background: #F07D2E; }
+.md-typeset .pillar.integration { background: #B88A1C; }
+.md-typeset .pillar.reconfiguration { background: #5B963B; }
+.md-typeset .pillar.execution { background: #6C91B2; }
+.md-typeset .pillar.interfaces { background: #56708A; }
+.md-typeset .pillar.deployment { background: #4A5560; }
+.md-typeset .pillar.lines { background: #9080B7; }

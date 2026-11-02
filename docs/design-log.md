@@ -16,6 +16,38 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 3 Nov 2026
+
+- **AASPIRE's documentation site in MkDocs, in `aaspire/` (the user's request).** *Journal*.
+  - What: MkDocs with the Material theme in `aaspire/`, the future main repository: a section per
+    pillar (AAS, Planning, Integration, Reconfiguration, Execution; then Interfaces, Deployment,
+    Lines), a page per part with its figure, how-to pages, a glossary and the repository map;
+    `python -m mkdocs build --strict` passes. The `docs` extra installs it.
+  - Why:
+    - **MkDocs, not Sphinx with MyST.** The framework plan (section 6) recommended Sphinx; the user
+      asked for MkDocs, which settles its open question 6. The pages are plain Markdown, and the Python
+      reference can come later from the code (mkdocstrings).
+    - **Its own folder, not `docs/`.** The working notes stay with the line and are not on the site
+      (framework plan, section 6); the site is written from them for a reader who was not there and
+      links to them on GitHub. `aaspire/` is where the plan puts the site.
+    - **A page per part, organized by pillar,** so the site has the framework's structure and each
+      repository later brings its own pages.
+    - Material announces its end of life for 5 May 2027; its successor, Zensical, reads `mkdocs.yml`,
+      so moving is cheap.
+- **The site's figures: draw.io pages drawn by a kit in the style of `docs/figures`, shown as PNG.**
+  *Journal*.
+  - What: `aaspire/figures/aaspire.drawio`, one page per part and one for the framework, drawn by
+    `build_figures.py` with `figlib.py` (lanes, cards, pills, tags, step numbers, the framework's icons,
+    the arrows' colours by meaning) and exported by `export_png.py` (the VS Code extension's draw.io
+    viewer and headless Chrome, at twice the size, cropped to the drawing). The logo is the framework's
+    AASPIRE icon.
+  - Why: one look across the old figures and the new; the arrows' colours mean the same on every
+    figure; the PNGs the user asked for (the plan had SVG); no draw.io desktop needed. The builder adds
+    pages and leaves a page edited in draw.io alone unless told to draw it again, so the `.drawio` file
+    stays the source.
+  - Instead of: drawing each figure by hand (seventeen figures, the style drifting), or Mermaid in the
+    pages (no layout control, a look of its own).
+
 ## 2 Nov 2026
 
 - **The journal method rebuilt around the blueprints (proposed,
