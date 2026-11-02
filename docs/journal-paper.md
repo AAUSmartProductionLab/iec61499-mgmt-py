@@ -8,6 +8,10 @@ the journal paper:
 - orchestration with multi-agent systems, compared with a centralized orchestrator on the same line;
 - what the CIRP paper had no room for.
 
+The method section and the use cases are structured and drafted in
+[journal-method.md](journal-method.md) (2 Nov). It drafts the concepts, the resource AAS and the
+process AAS, and leaves the product AAS to the colleagues.
+
 Add to it whenever a change or a design consideration belongs here. Each consideration found while
 coding goes first into [design-log.md](design-log.md), tagged *Journal*.
 
