@@ -55,6 +55,7 @@ A running log of design considerations made while building, for writing the pape
   - Open: inside a module's skills `partial` is not allowed (FORTE runs blocks), unless the planner
     lifts it to blocks; the BPMN editor needs a box in which free wiring is allowed; the 4.0
     template goes with the 3.0 update in aas-model (F5).
+  - Described for the colleagues in [precedence-graphs.md](precedence-graphs.md).
 - **The journal figures: generic first, then two use cases.** *Journal*.
   - What: each figure that is built on the example line gets three pages:
     - `<page>`, generic: ProductAAS, ModuleMAAS, CapabilityA, ParameterA, …;
