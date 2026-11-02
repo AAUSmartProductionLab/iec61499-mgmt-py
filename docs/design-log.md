@@ -18,6 +18,28 @@ A running log of design considerations made while building, for writing the pape
 
 ## 2 Nov 2026
 
+- **Example models of the Production Sequence 4.0 (`cell/examples/precedence/`).** *Journal*.
+  - What:
+    - the battery pack with four module AASs and a cell type, the pack's Disassembly and Assembly
+      sequences, and its process AAS in the simulated disassembly cell;
+    - the 2 mL vial with a 4.0 Assembly sequence, its flip-off seal (bought, no sequence) and its
+      process AAS on the line;
+    - a build that writes AAS JSON and checks references, `After`, joints and bindings.
+  - Why these choices:
+    - **One sequence per archetype is told apart by the submodel id.** It is
+      `…/process-plan/<AAS>/<ArcheType>`, the idShort `ProductionSequence<ArcheType>`. Two submodels
+      named `ProductionSequence` in one AAS would leave readers that look up by idShort guessing.
+    - **The pack and its modules are instances.** In remanufacturing each comes back with its own
+      history, and a module's state of health is its own. The cell is a type, counted twelve times,
+      until cells are tested one by one.
+    - **The battery process AAS binds only the recipe it runs (Disassembly).** Closing the pack may
+      be another cell's job, so the Assembly sequence waits for its own process AAS.
+    - **The vial's cap becomes the flip-off seal**, a bought subassembly, as in the figures. It shows
+      a part with an AAS and no sequence.
+    - **The sequences are written with BaSyx's classes.** aas-model's template is 2.0, and its
+      `aas_pydantic` has no AnnotatedRelationshipElement.
+  - Instead of: hand-written JSON (no type checks); waiting for the 4.0 template in aas-model.
+
 - **The Production Sequence as a partial order, with joints and archetypes (proposed, drawn in
   `production-sequence`).** *Journal*.
   - What, as a version 4.0 of the sequence:
