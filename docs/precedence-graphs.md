@@ -215,7 +215,18 @@ The process AAS's Validation reports rules 2, 3 and 5, and that every step is bo
 How they are written:
 - Nameplate, bill of material, Process Parameters and Capability Description use aas-model's
   classes, as the reference products do.
-- The 4.0 sequences use BaSyx's classes, since aas-model's template is still 2.0.
+- The 4.0 sequences use BaSyx's classes here.
+
+**The same models are in aas-model**, to be reused and built again (branch `production-sequence-4`
+of the fork):
+- the 4.0 template, `templates/product/ProductionSequence4.json`, with generated classes
+  (`aas_model.submodel_templates.product.production_sequence_4`) and a description
+  (`docs/lab-submodels/ProductionSequence4.md`);
+- `Product` takes an `assembly_sequence` and a `disassembly_sequence` and checks their `ArcheType`;
+- the examples, every sequence written with those classes: `aas_model.product_instances` and
+  `aas_model.process_instances`;
+- `scripts/export_precedence_examples.py`, which writes and checks them as `build.py` does here, and
+  a test that runs the checks.
 
 `python cell/examples/precedence/build.py --out <folder> --against <folder of the line's AAS JSON>`
 writes them as AAS JSON and checks them:

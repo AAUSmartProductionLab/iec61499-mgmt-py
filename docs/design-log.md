@@ -18,6 +18,30 @@ A running log of design considerations made while building, for writing the pape
 
 ## 2 Nov 2026
 
+- **The Production Sequence 4.0 in aas-model, as a template with classes.** *Journal*.
+  - What:
+    - `templates/product/ProductionSequence4.json` beside the 2.0 template, generated into a module
+      of its own (`production_sequence_4`) and described in `docs/lab-submodels/`;
+    - AnnotatedRelationshipElement in `aas_pydantic`: built, read back and generated, its
+      annotations as named fields;
+    - `Product.assembly_sequence` and `Product.disassembly_sequence`;
+    - the battery and vial examples in `aas_model.product_instances` and `process_instances`, with
+      an export script that checks them, as `cell/examples/precedence/build.py` does.
+  - Why:
+    - **The examples are built again from the library.** BaSyx-written sequences would drift from
+      any later template; with generated classes the template, the classes and the examples are
+      checked together (`tests/test_lab_templates.py`, `tests/test_precedence_examples.py`).
+    - **Annotations as named fields,** as a collection's children are, so a joint reads
+      `joint.JointType.value`. Annotations without a field land in an `annotations` map, so a joint
+      from elsewhere still reads back.
+    - **Two fields on Product, one per archetype,** instead of a list of sequences: the rule "at most
+      one of each" is then the model's, and the field says which one a reader wants.
+    - **Next to 2.0, not in its place:** the server's products and the planner still use 2.0.
+  - Left out of the 4.0 template: PlanSchema, SequenceId, Role, Subprocesses and a step's
+    equipment (Resource, Skill, ExecutionMode, Bindings). The process AAS binds the equipment.
+  - On the branch `production-sequence-4` of the aas-model fork, not pushed yet, so the open pull
+    request to Tristan stays as it is.
+
 - **Example models of the Production Sequence 4.0 (`cell/examples/precedence/`).** *Journal*.
   - What:
     - the battery pack with four module AASs and a cell type, the pack's Disassembly and Assembly
