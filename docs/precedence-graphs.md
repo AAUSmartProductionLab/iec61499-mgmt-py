@@ -160,8 +160,9 @@ disassembly.
 2. **No cycles.**
 3. **`Order` stays and must respect `After`.**
    - In a normal block it is binding, as in 3.0.
-   - In a `partial` block it is one valid order, the default. A reader that knows only `Order` (the
-     agents today, the planner's older views) runs the plan correctly, without the freedom.
+   - In a `partial` block it is one valid order, the default. A reader that walks the blocks in
+     `Order` runs the plan correctly, without the freedom. The agents today read only the top-level
+     steps, so they need the 4.0 change in any case.
 4. **At most one sequence per archetype in an AAS.** A joint is defined once, in one of them; the
    other archetype's step refers to it with a ReferenceElement in its `Joints`.
 5. **A joint's parts are found** in the bill of material of the AAS holding the step.
@@ -204,6 +205,33 @@ The process AAS's Validation reports rules 2, 3 and 5, and that every step is bo
   - Stoppering makes J_Stopper (press fit) and Capping makes J_Seal (crimp).
   - Inspection outputs TopPassed and SidePassed.
 - **The flip-off seal** is bought: it has an AAS with a bill of material and no sequence.
+
+**The example models** are in `cell/examples/precedence/`, one Python file per AAS:
+- the battery case: `battery_pack.py`, `battery_module.py`, `battery_cell.py`,
+  `battery_pack_on_disassembly_cell.py`;
+- the pharma case: `vial_2ml.py`, `flip_off_seal.py`, `aluminium_seal.py`,
+  `vial_2ml_on_filling_line.py`.
+
+How they are written:
+- Nameplate, bill of material, Process Parameters and Capability Description use aas-model's
+  classes, as the reference products do.
+- The 4.0 sequences use BaSyx's classes, since aas-model's template is still 2.0.
+
+`python cell/examples/precedence/build.py --out <folder> --against <folder of the line's AAS JSON>`
+writes them as AAS JSON and checks them:
+- every reference resolves;
+- `After` names only siblings, there are no cycles, and `Order` respects `After`;
+- the joints' parts are in the bill of material, and each joint is defined once;
+- every step a process AAS runs is bound.
+
+Some choices made in them:
+- **Sequence ids:** a sequence's submodel id is `…/sm/process-plan/<AAS>/<ArcheType>`, and its idShort
+  is `ProductionSequence<ArcheType>`.
+- **Instances and types:** the pack and its four modules are instances, each with a serial number. A
+  module's state of health is its own. The cell is one type AAS, counted twelve times.
+- **The vial's cap** is the flip-off seal, a bought subassembly with an AAS of its own.
+- **The battery process AAS** binds only the Disassembly sequence. Which cell closes the pack is still
+  open, and the stations of the disassembly cell are not modelled yet.
 
 ## 9. From 3.0 to 4.0
 
