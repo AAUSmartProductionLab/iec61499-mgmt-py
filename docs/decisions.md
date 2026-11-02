@@ -85,3 +85,4 @@ What was decided, in the order it happened. The plan itself is in
 | The inspection camera (1 Nov) | A USB FPV camera |
 | The robot controllers (1 Nov) | KR C4s; their option packages are checked on 2 Nov |
 | Who builds the centralized orchestrator? (1 Nov) | The colleagues (FOND-AAS, the BT controller). We build the agents and keep what both share compatible: the AASs, a module run only through its skills over OPC UA, occupation |
+| The documentation site (3 Nov) | MkDocs with the Material theme, in `aaspire/`, by the framework's pillars with a page and a draw.io figure per part, shown as PNG; the working notes stay off the site (the user's request; settles question 6 of the framework plan) |

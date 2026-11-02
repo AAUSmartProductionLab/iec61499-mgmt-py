@@ -28,6 +28,8 @@ planning = ["gtpyhop-core==2.0.2", "rdflib>=7,<8"]
 # unified-planning, ENHSP (needs Java) and Aries.
 planners = ["unified-planning==1.3.0", "up-enhsp==0.1.1", "up-aries==0.5.0"]
 test = ["pytest>=7,<9", "asyncua>=1.1", "basyx-python-sdk>=2,<3"]
+# The documentation site (aaspire/): MkDocs with the Material theme.
+docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.5,<10"]
 
 [project.scripts]
 iec61499 = "iec61499_mgmt.cli:main"
