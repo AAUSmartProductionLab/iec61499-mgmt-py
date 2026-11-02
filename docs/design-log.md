@@ -18,6 +18,43 @@ A running log of design considerations made while building, for writing the pape
 
 ## 2 Nov 2026
 
+- **The Production Sequence as a partial order, with joints and archetypes (proposed, drawn in
+  `production-sequence`).** *Journal*.
+  - What, as a version 4.0 of the sequence:
+    - a step kind `partial`: its steps run in any order that respects each step's `After`, a list of
+      references to sibling steps;
+    - edges only between siblings of one `partial` block, never across block boundaries;
+    - `Order` stays, and in a `partial` block it must be a valid order (the check says so), so a
+      reader that knows only `Order` still runs the plan, without the freedom;
+    - `call` stays: a subassembly's sequence is a node of the graph, run by an agent of its own,
+      so the four modules of a pack are taken apart at once;
+    - the joints (the colleagues' `JointConnection`, an AnnotatedRelationshipElement, `first` and
+      `second` the two parts as BoM entities, `JointType` and `JointStandard` as annotations) sit in
+      the step that makes or breaks them, in a `Joints` collection (a collection, not a list, so
+      that a joint keeps its idShort and can be referred to);
+    - their `JointParamsRef` is left out: it would point at the process the step's
+      `ProcessReference` already names; their `ProcessOrder` between joints becomes `After`;
+    - one Production Sequence per archetype in an AAS (`ArcheType` Assembly or Disassembly); a joint
+      is defined in one of them and referred to from the other, so a remanufactured pack, taken
+      apart and closed again, holds each joint once.
+  - Why:
+    - nested sequence and parallel blocks express only series-parallel orders; the N shape (busbars
+      after cover and HV plug, BMS after the HV plug only) needs a graph;
+    - a product agent can call for proposals on every ready step, not only the next; real
+      parallelism comes from the subassemblies, since one workpiece is at one station at a time;
+    - disassembly is planned on joints in the literature (liaison and disassembly precedence
+      graphs); the colleagues model it so;
+    - Hierarchical Structures stays the tree of parts and HasPart: the joints only refer to it.
+  - Instead of:
+    - a separate precedence-graph submodel beside the sequence (a second description of the recipe,
+      one more entry in aas-models.md section 7);
+    - the joints in Hierarchical Structures, as the colleagues have them (it mixes the plan's facts
+      into the tree);
+    - AND/OR graphs for alternatives: capability matching covers "Unscrewing or Cutting", decisions
+      on a step's output cover the state of health.
+  - Open: inside a module's skills `partial` is not allowed (FORTE runs blocks), unless the planner
+    lifts it to blocks; the BPMN editor needs a box in which free wiring is allowed; the 4.0
+    template goes with the 3.0 update in aas-model (F5).
 - **The journal figures: generic first, then two use cases.** *Journal*.
   - What: each figure that is built on the example line gets three pages:
     - `<page>`, generic: ProductAAS, ModuleMAAS, CapabilityA, ParameterA, …;
