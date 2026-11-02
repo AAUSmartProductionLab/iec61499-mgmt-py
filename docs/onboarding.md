@@ -44,6 +44,7 @@ nothing is split yet). In short:
 | `aas-model/`, `aas-camel-dmp/`, `iec61499-opcua-hmi/`, `basyx-aas-web-ui/`, `planar-controller/` | Submodules: the lab's pydantic AAS model (the user's fork, branch `lab-ppr-models`); the DMP that runs an AAS's mappings (Operations to OPC UA methods, values to InfluxDB); the HMI with `modlink`; the BaSyx web UI fork with the process planner and the skill editor; the planar table's controller (Python, OPC UA like a module) |
 | `line-agents/` | `lineagents`: the line's agents (SPADE, XMPP, VDI/VDE 2193): resource agents per module and per shuttle, an order agent that starts a product agent per unit ordered, the manager that starts them from the AAS server ([agents.md](agents.md)) |
 | `ontology/`, `docs/` | Ontologies (ARSO and others); working documents |
+| `aaspire/` | The documentation site (MkDocs) for a reader who was not there: a page and a figure per part; `cd aaspire; python -m mkdocs serve` |
 
 The documents in `docs/`: [tooling.md](tooling.md) (every tool, command and check),
 [pipeline.md](pipeline.md) (from AAS to running code, and how code is changed),
