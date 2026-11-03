@@ -1,0 +1,298 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EQ_LinearAxis" Comment="An equipment block: the only block that touches this equipment's pins. Skills send it what to switch over a local channel; it switches the outputs (off first, then on), reads the inputs every cycle and reports them to the skills and to OPC UA. One skill holds it at a time; on release or when the module aborts it switches everything off. Technical: Lift of the crimping head, a stepper motor through a step and direction driver, with a limit switch at the top (home); equipment IO: owns its IO points, writes the output values its holder sends, reads its inputs every cycle and reports changes">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="capping" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
+        <With Var="Module" />
+        <With Var="Name" />
+        <With Var="UaRoot" />
+        <With Var="UaEnable" />
+        <With Var="CycleTime" />
+        <With Var="AtHome_Address" />
+        <With Var="AtHome_Sim" />
+        <With Var="Enable_Address" />
+        <With Var="Down_Address" />
+        <With Var="Step_Address" />
+        <With Var="Step_Gain" />
+        <With Var="Step_Bias" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="Name" Type="WSTRING" InitialValue="&quot;LinearAxis&quot;" Comment="The equipment item's name: its local channels and OPC UA folder" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" Comment="Publish on OPC UA" />
+      <VarDeclaration Name="CycleTime" Type="TIME" InitialValue="T#50ms" Comment="How often the inputs are read" />
+      <VarDeclaration Name="AtHome_Address" Type="STRING" Comment="Where AtHome is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="AtHome_Sim" Type="BOOL" InitialValue="FALSE" Comment="The value of AtHome when simulated (address 'sim')" />
+      <VarDeclaration Name="Enable_Address" Type="STRING" Comment="Where Enable is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="Down_Address" Type="STRING" Comment="Where Down is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="Step_Address" Type="STRING" Comment="Where Step is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="Step_Gain" Type="LREAL" InitialValue="655.35" Comment="Step: raw = Bias + value * Gain" />
+      <VarDeclaration Name="Step_Bias" Type="LREAL" InitialValue="0.0" Comment="Step: raw = Bias + value * Gain" />
+    </InputVars>
+    <OutputVars />
+  </InterfaceList>
+  <FBNetwork>
+    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="7105" height="3180" locked="false" />
+    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="1000" y="4480" width="7930" height="3580" locked="false" />
+    <Group Name="Inputs" Comment="The equipment's sensors: read every cycle, one block per IO point" x="9230" y="4480" width="2910" height="1380" locked="false" />
+    <Group Name="Outputs" Comment="The equipment's actuators: written on a change and every cycle, one block per IO point" x="1000" y="8360" width="7850" height="1680" locked="false" />
+    <FB Name="Logic" Type="capping::EL_LinearAxis" x="950" y="150" Comment="The equipment's logic (EL_): takes commands from one holder at a time, switches the outputs (off first, then on), switches all off on release or module abort, and reports input changes.">
+      <Attribute Name="GroupName" Type="STRING" Value="Core" />
+    </FB>
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="3955" y="150" Comment="Ticks every cycle so the inputs are read and the outputs refreshed.">
+      <Attribute Name="GroupName" Type="STRING" Value="Core" />
+    </FB>
+    <FB Name="MoveT" Type="iec61499::events::E_DELAY" x="5705" y="150" Comment="Times a move to a position: the distance divided by the axis' speed.">
+      <Attribute Name="GroupName" Type="STRING" Value="Core" />
+    </FB>
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="950" y="150" Comment="Watches the module's PackML state, to switch everything off when the module aborts.">
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_8" x="3500" y="150" Comment="Receives the commands skills send on this equipment's command channel.">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="6210" y="150" Comment="Hears the module's release channel: when its holder gives up, everything goes off.">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_5" x="1150" y="1850" Comment="Publishes the inputs and the holder on this equipment's state channel, for the skills.">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_4" x="3860" y="1850" Comment="Writes the inputs (and a position, if it keeps one) to OPC UA, below Equipment/&lt;item&gt;.">
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="In_AtHome" Type="modlib::IO_DI" x="1270" y="150" Comment="The pin AtHome: reads the input at AtHome_Address (a Pi pin, Modbus, or simulated).">
+      <Attribute Name="GroupName" Type="STRING" Value="Inputs" />
+    </FB>
+    <FB Name="Out_Enable" Type="modlib::IO_DO" x="1270" y="150" Comment="The pin Enable: switches the output at Enable_Address (a Pi pin, Modbus, or simulated).">
+      <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
+    </FB>
+    <FB Name="Out_Down" Type="modlib::IO_DO" x="3880" y="150" Comment="The pin Down: switches the output at Down_Address (a Pi pin, Modbus, or simulated).">
+      <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
+    </FB>
+    <FB Name="Out_Step" Type="modlib::IO_AO" x="6380" y="150" Comment="The pin Step: switches the output at Step_Address (a Pi pin, Modbus, or simulated).">
+      <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
+    </FB>
+    <EventConnections>
+      <Connection Source="Logic.MOVE_START" Destination="MoveT.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.MOVE_STOP" Destination="MoveT.STOP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="MoveT.EO" Destination="Logic.MOVE_T">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="INIT" Destination="Logic.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.INITO" Destination="Mode.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.INITO" Destination="SubCmd.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.INITO" Destination="SubRelease.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubRelease.INITO" Destination="PubState.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubState.INITO" Destination="PubUa.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubUa.INITO" Destination="In_AtHome.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_AtHome.INITO" Destination="Out_Enable.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Enable.INITO" Destination="Out_Down.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Down.INITO" Destination="Out_Step.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Step.INITO" Destination="Cycle.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Step.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.IND" Destination="Logic.CMD">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubRelease.IND" Destination="Logic.RELEASE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.CHG" Destination="Logic.MOD_CHG">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Cycle.EO" Destination="Logic.REFRESH">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Cycle.EO" Destination="In_AtHome.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_AtHome.CNF" Destination="Logic.SAMPLE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.STATE" Destination="PubState.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.STATE" Destination="PubUa.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.DRIVE" Destination="Out_Enable.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Enable.CNF" Destination="Out_Down.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Down.CNF" Destination="Out_Step.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_Step.CNF" Destination="Logic.DRIVEN">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Logic.MoveDT" Destination="MoveT.DT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Module" Destination="Logic.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Name" Destination="Logic.Name">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaRoot" Destination="Logic.UaRoot">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Module" Destination="Mode.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdCmd" Destination="SubCmd.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdRelease" Destination="SubRelease.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdState" Destination="PubState.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdPub" Destination="PubUa.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="PubUa.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="CycleTime" Destination="Cycle.DT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_1" Destination="Logic.C_Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_2" Destination="Logic.C_Release">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_3" Destination="Logic.C_Enable">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_4" Destination="Logic.C_Down">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_5" Destination="Logic.C_Step">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_6" Destination="Logic.CE_Step">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_7" Destination="Logic.C_Move">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_8" Destination="Logic.C_Goal">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubRelease.RD_1" Destination="Logic.R_Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.State" Destination="Logic.ModuleState">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="AtHome_Address" Destination="In_AtHome.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="AtHome_Sim" Destination="In_AtHome.SimValue">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_AtHome.IN" Destination="Logic.I_AtHome">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.AtHome" Destination="PubState.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.AtHome" Destination="PubUa.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ActualPosition" Destination="PubState.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ActualPosition" Destination="PubUa.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Homed" Destination="PubState.SD_3">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Homed" Destination="PubUa.SD_3">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Moving" Destination="PubState.SD_4">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Moving" Destination="PubUa.SD_4">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Holder" Destination="PubState.SD_5">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Enable_Address" Destination="Out_Enable.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.O_Enable" Destination="Out_Enable.OUT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Down_Address" Destination="Out_Down.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.O_Down" Destination="Out_Down.OUT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Step_Address" Destination="Out_Step.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.O_Step" Destination="Out_Step.OUT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.E_Step" Destination="Out_Step.EN">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Step_Gain" Destination="Out_Step.Gain">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Step_Bias" Destination="Out_Step.Bias">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </DataConnections>
+  </FBNetwork>
+</FBType>

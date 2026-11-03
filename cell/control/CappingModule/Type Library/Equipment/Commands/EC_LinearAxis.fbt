@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EC_LinearAxis" Comment="The equipment's command table: turns a command's name (Up, Down, Run, ...) into the output values to switch, phase by phase with their times. Technical: Commands of LinearAxis as output values, in timed phases: Stop=0, Up=1, Down=2, MoveTo=3">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="capping" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="PLAY" Type="Event" Comment="Play a command: its output values, phase by phase">
+        <With Var="Holder" />
+        <With Var="Command" />
+        <With Var="Arg" />
+        <With Var="Release" />
+      </Event>
+      <Event Name="PHASE_T" Type="Event" Comment="A phase's time is up" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="OUT" Type="Event" Comment="Send the output values">
+        <With Var="O_Holder" />
+        <With Var="O_Release" />
+        <With Var="N_Enable" />
+        <With Var="N_Down" />
+        <With Var="N_Step" />
+        <With Var="NE_Step" />
+        <With Var="N_Move" />
+        <With Var="N_Goal" />
+      </Event>
+      <Event Name="PHASE_START" Type="Event" Comment="Start a phase's timer (PhaseDT)">
+        <With Var="PhaseDT" />
+      </Event>
+      <Event Name="PHASE_STOP" Type="Event" Comment="Stop the phase's timer" />
+      <Event Name="PLAYED" Type="Event" Comment="All phases were played" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who sends the command" />
+      <VarDeclaration Name="Command" Type="USINT" Comment="The command's code" />
+      <VarDeclaration Name="Arg" Type="LREAL" Comment="The command's argument (e.g. a position)" />
+      <VarDeclaration Name="Release" Type="BOOL" Comment="Give up the equipment after the command" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="O_Holder" Type="WSTRING" Comment="Sent: who holds the equipment" />
+      <VarDeclaration Name="O_Release" Type="BOOL" Comment="Sent: give up the equipment after this" />
+      <VarDeclaration Name="N_Enable" Type="BOOL" Comment="Sent: the value of Enable" />
+      <VarDeclaration Name="N_Down" Type="BOOL" Comment="Sent: the value of Down" />
+      <VarDeclaration Name="N_Step" Type="LREAL" Comment="Sent: the value of Step" />
+      <VarDeclaration Name="NE_Step" Type="BOOL" Comment="Sent: Step enabled" />
+      <VarDeclaration Name="N_Move" Type="BOOL" Comment="Sent: move to a position" />
+      <VarDeclaration Name="N_Goal" Type="LREAL" Comment="Sent: the position to move to" />
+      <VarDeclaration Name="PhaseDT" Type="TIME" Comment="How long the phase lasts" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Phase" Type="USINT" />
+      <VarDeclaration Name="Timed" Type="BOOL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Play" x="570" y="100">
+        <ECAction Algorithm="Alg_Play" Output="PHASE_STOP" />
+      </ECState>
+      <ECState Name="Next" x="990" y="100">
+        <ECAction Algorithm="Alg_Next" />
+      </ECState>
+      <ECState Name="Send" x="1410" y="100">
+        <ECAction Algorithm="Alg_Send" Output="OUT" />
+      </ECState>
+      <ECState Name="Hold" x="150" y="330">
+        <ECAction Output="PHASE_START" />
+      </ECState>
+      <ECState Name="Played" x="570" y="330">
+        <ECAction Output="PLAYED" />
+      </ECState>
+      <ECTransition Source="START" Destination="Play" Condition="PLAY" x="0" y="0" />
+      <ECTransition Source="START" Destination="Next" Condition="PHASE_T" x="0" y="0" />
+      <ECTransition Source="Play" Destination="Send" Condition="1" x="0" y="0" />
+      <ECTransition Source="Next" Destination="Send" Condition="1" x="0" y="0" />
+      <ECTransition Source="Send" Destination="Hold" Condition="Timed" x="0" y="0" />
+      <ECTransition Source="Send" Destination="Played" Condition="1" x="0" y="0" />
+      <ECTransition Source="Hold" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Played" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Play">
+      <ST>Phase := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Next">
+      <ST>Phase := Phase + 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Send">
+      <ST>N_Enable := FALSE;
+N_Down := FALSE;
+N_Step := 0.0;
+NE_Step := FALSE;
+N_Move := FALSE;
+N_Goal := 0.0;
+Timed := FALSE;
+PhaseDT := T#0ms;
+IF Command = 1 THEN
+  N_Enable := TRUE;
+  N_Step := 50.0;
+  NE_Step := TRUE;
+ELSIF Command = 2 THEN
+  N_Enable := TRUE;
+  N_Down := TRUE;
+  N_Step := 50.0;
+  NE_Step := TRUE;
+ELSIF Command = 3 THEN
+  N_Move := TRUE;
+  N_Goal := Arg;
+END_IF;
+O_Holder := Holder;
+O_Release := Release AND NOT Timed;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>
