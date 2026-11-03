@@ -32,6 +32,7 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+import re
 import time
 import xml.etree.ElementTree as ET
 
@@ -225,15 +226,28 @@ def fragment(spec: ModuleSpec, names: list[str], tail: str) -> tuple[FlatApplica
 
 def amended(boot: str, commands: list[Command]) -> str:
     """The boot file ``boot`` with an online change added, so a restart brings up the changed
-    program: what was created, written and connected goes in before the resource is started.
-    Starting single instances and firing INIT are left out (a boot does both for everything)."""
+    program: what was created and connected goes in before the resource is started, and a value
+    written takes the place of the boot file's own write of it (so the boot file is the one the
+    generator makes of the changed program, not the old one with the change behind it). Starting
+    single instances and firing INIT are left out (a boot does both for everything)."""
     lines = boot.splitlines()
     if not lines or 'Action="START"' not in lines[-1]:
         raise ValueError("not a boot file that ends by starting its resource")
-    kept = [c for c in commands if c.op in ("create_fb", "write", "connect") and c.value != "$e"]
-    added = [f"{c.resource};{c.xml(i)}" for i, c in enumerate(kept, len(lines))]
-    last = lines[-1].replace(f'ID="{len(lines)}"', f'ID="{len(lines) + len(kept)}"')
-    return "\n".join([*lines[:-1], *added, last]) + "\n"
+    writes = {}
+    for i, line in enumerate(lines):
+        if 'Action="WRITE"' in line and (found := re.search(r'Destination="([^"]*)"', line)):
+            writes[(line.split(";", 1)[0], found.group(1))] = i
+    added = []
+    for c in (c for c in commands if c.op in ("create_fb", "write", "connect") and c.value != "$e"):
+        at_ = writes.get((c.resource, c.destination)) if c.op == "write" else None
+        if at_ is None:
+            added.append(c)
+        else:
+            request = int(re.search(r'ID="(\d+)"', lines[at_]).group(1))
+            lines[at_] = f"{c.resource};{c.xml(request)}"
+    new = [f"{c.resource};{c.xml(i)}" for i, c in enumerate(added, len(lines))]
+    last = lines[-1].replace(f'ID="{len(lines)}"', f'ID="{len(lines) + len(added)}"')
+    return "\n".join([*lines[:-1], *new, last]) + "\n"
 
 
 def reconfigure(client: Client, host: str, port: int, module: dict, components: list[dict], deployer=None,

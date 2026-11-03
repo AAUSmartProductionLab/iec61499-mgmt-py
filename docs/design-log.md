@@ -20,6 +20,25 @@ A running log of design considerations made while building, for writing the pape
 
 ## 3 Nov 2026
 
+- **A value written online takes the place of the boot file's own write of it.** *CIRP*.
+  - The reconciler amended the boot file by appending everything it sent, so a changed value was
+    written twice at boot, the old value and then the new; the module came up right, but every change
+    left a stale line, and the boot file was not the one the generator makes of the changed program.
+    Found by the Q1 pilot's check V8 (the amended and the generated boot file compared as sets).
+  - Now a write to a port the boot file already writes replaces that line (its request id kept); new
+    instances, connections and their values are still added before the resource starts.
+
+- **The evaluation as a study, and a scaling limit it found.** *CIRP*, *Journal*.
+  - What: Q1, Q3 and Q4 of the outline as protocols with hypotheses, checks in every run and an
+    analysis fixed beforehand ([cirp-evaluation.md](cirp-evaluation.md)); the reconciler times its
+    phases (`stats` of `modsync.desired.reconfigure` and `read`) for Q1.
+  - Found: deriving a module's capabilities (the RDF projection and its SPARQL queries) grows much
+    faster than its skills: 17 s for 1 composite, 565 s for 10, over two hours for 20. The
+    reconciler does not need it, so Q1 builds its AASs without it.
+  - Why it matters: the skill editor derives the capabilities after every save, so a module with many
+    skills would wait minutes. Instead of: deriving for the whole module, derive for the changed skill
+    only, or index the projection; after the paper.
+
 - **The kit carries the lab's FORTE (`bin/forte-aarch64`).** *CIRP* (the demonstrator's tooling).
   - A new Pi is set up with `install-pi.ps1` straight away; before, it needed a first build of
     half an hour, as install-pi sends `bin/`. The first `deploy-pi.ps1` replaces it with the
