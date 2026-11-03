@@ -52,8 +52,10 @@ This takes four steps:
    `forte-patches`.
 2. The IDE runs without a window. It loads your project, checks every type and the system, and
    exports the types as C++ to `.cache\modules\<project>`. The log is
-   `.cache\validate-<Project>.log`. A type that is a copy of a FORTE standard block (E_CTU, E_SR, ...)
-   is left out, since FORTE has it already.
+   `.cache\validate-<Project>.log`. A type that is a copy of a FORTE standard block (E_CTU, E_SR,
+   GPIOChip, ...) or of one the kit has (ModLib's) is left out, since FORTE has it already. A
+   project that is a copy of a lab module (the same package, e.g. `filling` in `FillingModule`)
+   replaces the kit's export of that module.
 3. The FBE cross-compiles FORTE with your types and the lab's.
 4. The result is stripped into `bin\forte-aarch64`, with its checksum in `bin\forte-aarch64.sha256`.
 
@@ -135,6 +137,8 @@ The log should say `FORTE is up and running`. The program on the Pi is kept and 
   error. The IDE treats warnings as errors. Read `.cache\validate-<Project>.log`, or run
   `check-project.ps1` for a list. Every type must be in your project's `Type Library`.
 - **"has no <Project>.sys"**: `-Project` must be the project folder itself.
+- **"... differs from the one in modlib (the kit's)"**: your project has its own version of a type
+  the kit has as well, changed. Give your version its own name or package, or build with `-Alone`.
 - **The FBE build fails**: the log is `fbe\build\modules-pi\forte.log`. A changed setting has no
   effect until `fbe\build\modules-pi\forte\build\CMakeCache.txt` is deleted.
 - **"fbe/4diac-forte is at ..."** or **a patch does not apply**: delete `fbe\4diac-forte` and build again.

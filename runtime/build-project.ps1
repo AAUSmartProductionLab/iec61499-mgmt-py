@@ -26,7 +26,10 @@ foreach ($dir in $Project) {
     $export = Join-Path $exports $name.ToLower()
     # Every module is linked to the lab's library when it is there: its types may use ModLib's.
     $link = if (Test-Path -LiteralPath (Join-Path $exports 'modlib')) { @('forte-modlib') } else { @() }
-    $validate = @{ ProjectDir = $dir; Export = $export; Link = $link }
+    # Compiled with the exports already there: a copy of a lab module replaces it, and the types a
+    # copy shares with them (ModLib's) are compiled once.
+    $besides = @(Get-ChildItem -LiteralPath $exports -Directory | Where-Object { $_.FullName -ne $export } | ForEach-Object FullName)
+    $validate = @{ ProjectDir = $dir; Export = $export; Link = $link; Besides = $besides }
     if ($Ide) { $validate.Ide = $Ide }
     & (Join-Path $PSScriptRoot 'validate.ps1') @validate
 }
