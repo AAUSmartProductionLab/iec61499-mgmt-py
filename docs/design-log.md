@@ -35,6 +35,13 @@ A running log of design considerations made while building, for writing the pape
     modgen's modules.
   - Tested on the filling Pi (.203): the program alone, replacing the running one while a
     connection held the port, a program with a missing type, and binary and program together.
+  - Then from fresh in one command, `deploy-pi.ps1 -Pi <login@address> -Project <folder>`: the
+    program of the device whose `MGR_ID` is the Pi's address, made from the `.sys`
+    (`make-bootfile.ps1`: the blocks mapped to its resources, their parameters and connections,
+    subapplications as name prefixes), FORTE built with the project's types, the container stopped
+    and deleted, the image built and a new container run. In PowerShell rather than with
+    `iec61499_mgmt.sysfile`, which does the same: the kit needs no Python then. Its boot file for
+    the filling module is byte-identical to the Python one; tested end to end on .203 from the kit.
 
 - **The robot modules run in Python: modpy serves a module spec as FORTE serves a generated
   module.** *CIRP* (the demonstrator's six modules), *Journal* (a module described by the same models,
