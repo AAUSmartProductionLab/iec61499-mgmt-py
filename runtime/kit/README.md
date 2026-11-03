@@ -19,7 +19,10 @@ You need:
 
 Then:
 
-1. **Unzip the kit** to `C:\forte-kit`. Use a folder whose path has no spaces.
+1. **Unzip the kit to `C:\`**: right-click `forte-kit.zip`, **Extract All...**, type `C:\` as the
+   folder, **Extract**. You then have the folder `C:\forte-kit`, and every command below runs
+   there. Keep it there: in a deep folder (Downloads, OneDrive) the build's paths get too long for
+   Windows.
 2. **Allow the kit's scripts.** In PowerShell:
 
    ```powershell
@@ -125,6 +128,7 @@ The scripts say what went wrong. Find the message here:
 | The message says ... | What to do |
 |---|---|
 | `running scripts is disabled` | Step 1.2 again |
+| `This folder's path is too long` or `Filename too long` | Move the kit to `C:\forte-kit` (step 1.1), and run it from there |
 | `4diac IDE not found` | Step 1.3 again; the file is `4diac-idec.exe`, with a **c** |
 | `has no MyProject.sys` | `-Project` must be the project folder itself (step 2) |
 | `no device has MGR_ID ...` | Set your Pi's address in the device's `MGR_ID` (step 2), and save |

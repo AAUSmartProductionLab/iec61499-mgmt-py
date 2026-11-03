@@ -11,13 +11,18 @@ param(
 )
 # Builds FORTE only, from the exports build-modules.ps1 validated and wrote.
 $ErrorActionPreference = 'Stop'
+# Windows allows 260 characters per path, and the build's deepest files are 174 below this folder.
+$depth = $PSScriptRoot.TrimEnd('\').Length + 1
+if ($depth -gt 80) {
+    throw "This folder's path is too long for the build ($depth characters; Windows allows 260 per file and the build needs about 175 more): $PSScriptRoot. Move the kit to C:\forte-kit and run it from there."
+}
 $root = Join-Path $PSScriptRoot 'fbe'
 # The FBE builds $root/4diac-forte when it exists (instead of its own bundled FORTE).
 $forte = Join-Path $root '4diac-forte'
 if (-not (Test-Path (Join-Path $forte 'CMakeLists.txt'))) {
     # git reports progress on stderr, which Windows PowerShell 5.1 turns into errors under 'Stop'.
     $ErrorActionPreference = 'Continue'
-    & git -c advice.detachedHead=false clone -q --depth 1 --branch $ForteTag https://github.com/eclipse-4diac/4diac-forte.git $forte
+    & git -c advice.detachedHead=false -c core.longpaths=true clone -q --depth 1 --branch $ForteTag https://github.com/eclipse-4diac/4diac-forte.git $forte
     $ErrorActionPreference = 'Stop'
     if ($LASTEXITCODE -ne 0) { throw "Could not fetch 4diac FORTE $ForteTag" }
 }
