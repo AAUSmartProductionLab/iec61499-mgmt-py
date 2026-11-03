@@ -7,7 +7,7 @@ comes next. The details are in the documents it links; read [next-steps.md](next
 
 ## What the work is for
 
-Modules of a pharmaceutical filling line (filling, stoppering; capping and inspection planned) run
+Modules of a pharmaceutical filling line (filling, stoppering, capping; inspection planned) run
 as Eclipse 4diac FORTE programs (IEC 61499) on Raspberry Pis. Each module is described by an Asset
 Administration Shell (AAS). The aim is a specification of three things:
 
@@ -241,7 +241,8 @@ needs a reconfiguration (the syringe's BottomUpFilling created online). Next: th
 of agents.md (A1: MoveToPosition on the planar controller, loading and unloading; A2 on the filling
 Pi; A3: a planned skill in a bid). The other four modules of the line (capping, inspection, loading
 and unloading with the KUKA robots) are planned in [demo-modules.md](demo-modules.md) (1 Nov), steps
-M0 to M6. The centralized orchestrator is the colleagues' to build (1 Nov); ours is to keep what both
+M0 to M6; capping's program is generated and runs against the simulator since 3 Nov (M2 but its
+Pi). The centralized orchestrator is the colleagues' to build (1 Nov); ours is to keep what both
 share compatible.
 
 **Waiting for the user** (do not decide these yourself): the go for the two Pis above; the eleven open

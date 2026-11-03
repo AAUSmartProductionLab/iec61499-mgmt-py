@@ -73,7 +73,7 @@ the transfer points are the simulated table's stations, Filling (240, 660, 0) an
 660, 90), and the needle at 40 mm is at the fill point (`test_modreg_frames.py`).
 
 **The stations from the AAS (H5).** The line has points of its own where its loading and unloading
-robots place and pick (Infeed, a PlacePoint; Outfeed, a PickPoint), and the planned capping module a
+robots place and pick (Infeed, a PlacePoint; Outfeed, a PickPoint), and the capping module a
 transfer point. `example_line.stations` gives all five in the table's frame; they are the scenario's
 stations, and the scenario runs to them when it is handed them (`run_line(places=...)`).
 
