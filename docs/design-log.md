@@ -20,6 +20,15 @@ A running log of design considerations made while building, for writing the pape
 
 ## 3 Nov 2026
 
+- **The kit for students: one command, and a README in steps.** *CIRP* (the demonstrator's
+  tooling).
+  - `deploy-pi.ps1` removes a block of the resource's type (EMB_RES's `START`) that the IDE saved
+    into the resource as well, keeping the `.sys` as `.sys.bak`: once on the filling project, it
+    failed the IDE's check and every Deploy (`INVALID_STATE`). Instead of telling students to edit
+    the XML.
+  - The README leads with the steps a student runs (set up once, `deploy-pi.ps1`, what to do after
+    which change) and a table from each message to what to do; the details come last.
+
 - **Deploy from the IDE works on the Pis again: FORTE's crash on deleting running IO blocks is
   fixed (patches 0004 to 0006).** *Orchestration* (redeploying a module's program), *CIRP* (the
   demonstrator's runtime).

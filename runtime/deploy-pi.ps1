@@ -29,6 +29,44 @@ param(
 $ErrorActionPreference = 'Stop'
 $dir = (Resolve-Path -LiteralPath $Project).Path
 $name = Split-Path -Leaf $dir
+$sysPath = Join-Path $dir "$name.sys"
+if (!(Test-Path -LiteralPath $sysPath)) { throw "$dir has no $name.sys: give the project folder itself (the one with $name.sys and Type Library)" }
+
+# The IDE may save a block of the resource's type (EMB_RES's START) into the resource as well. Then
+# its check fails ("Duplicate element with name 'START'") and Deploy reports INVALID_STATE, as
+# FORTE has that block already. Such a block is removed; the .sys before is kept as .sys.bak.
+$text = [IO.File]::ReadAllText($sysPath)
+$script:removed = @()
+$fixed = [regex]::Replace($text, '(?s)<Device\b[^>]*>.*?</Device>', [Text.RegularExpressions.MatchEvaluator] {
+    param($device)
+    $script:deviceName = [regex]::Match($device.Value, '^<Device\b[^>]*\bName="([^"]+)"').Groups[1].Value
+    [regex]::Replace($device.Value, '(?s)<Resource\b[^>]*>.*?</Resource>', [Text.RegularExpressions.MatchEvaluator] {
+    param($resource)
+    $head = [regex]::Match($resource.Value, '^<Resource\b[^>]*')
+    $resName = [regex]::Match($head.Value, '\bName="([^"]+)"').Groups[1].Value
+    $typeName = [regex]::Match($head.Value, '\bType="([^"]+)"').Groups[1].Value.Split(':')[-1]
+    $typeFile = Get-ChildItem -LiteralPath $dir -Recurse -File -Filter "$typeName.res" | Select-Object -First 1
+    $builtIn = if ($typeFile) {
+        [regex]::Matches([IO.File]::ReadAllText($typeFile.FullName), '<FB\b[^>]*\bName="([^"]+)"') | ForEach-Object { $_.Groups[1].Value }
+    } elseif ($typeName -eq 'EMB_RES') { 'START' } else { @() }
+    $value = $resource.Value
+    foreach ($block in $builtIn) {
+        $pattern = '(?m)^[ \t]*<FB Name="' + [regex]::Escape($block) + '"[^>]*?(/>|>\s*</FB>)[ \t]*\r?\n'
+        if ([regex]::IsMatch($value, $pattern)) {
+            $value = [regex]::Replace($value, $pattern, '')
+            $script:removed += "$block from $($script:deviceName).$resName"
+        }
+    }
+    $value
+    })
+})
+if ($script:removed) {
+    Copy-Item -LiteralPath $sysPath -Destination "$sysPath.bak" -Force
+    [IO.File]::WriteAllText($sysPath, $fixed, (New-Object Text.UTF8Encoding($false)))
+    "Removed $($script:removed -join ', '): the resource type has it already (it made Deploy in the IDE fail)."
+    "  The file before is $name.sys.bak. If the project is open in the IDE, close it without saving and open it again."
+}
+
 $cache = Join-Path $PSScriptRoot '.cache'
 New-Item -ItemType Directory -Force -Path $cache | Out-Null
 $program = Join-Path $cache "$name-program.fboot"
