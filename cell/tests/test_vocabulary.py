@@ -25,8 +25,10 @@ def vocabulary():
 
 
 def line_specs():
-    """The line's modules, the planned ones too: they are described before they are built."""
-    return [load(path) for path in [*specs(), *sorted((SPECS / "planned").glob("*.yaml"))]]
+    """The line's modules, the planned ones too (they are described before they are built) and those
+    run in Python (the robots)."""
+    return [load(path) for path in [*specs(), *sorted((SPECS / "planned").glob("*.yaml")),
+                                    *sorted((SPECS / "python").glob("*.yaml"))]]
 
 
 def test_every_offered_capability_and_property_is_in_the_vocabulary(vocabulary):
@@ -63,7 +65,8 @@ def test_every_skill_primitive_has_a_type_that_says_what_it_contributes(vocabula
         for cap_name in spec.capabilities:
             assert any((SKILLS[s], LAB.contributes, LAB[cap_name]) in vocabulary for s in steps), \
                 f"{spec.module}: no step of its skills contributes {cap_name}"
-    assert {LAB.Filling, LAB.Stoppering, LAB.Capping, LAB.Inspection, LAB.Positioning} <= contributed
+    assert {LAB.Loading, LAB.Filling, LAB.Stoppering, LAB.Capping, LAB.Inspection, LAB.Unloading,
+            LAB.Positioning} <= contributed
 
 
 def test_what_a_parameter_means_is_a_property_of_the_vocabulary_in_its_unit(vocabulary):

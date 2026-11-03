@@ -23,11 +23,17 @@
 # primitive of the type realizes (lab:realizes), with what that
 # capability needs, does and keeps (capabilities.ttl): what a module's
 # new skills are planned from.
+#
+# 0.3 (3 Nov): a robot's jobs, the primitives of the loading and
+# unloading modules (docs/demo-modules.md, section 3). Picking a
+# container up realizes Receiving and putting it down Releasing: the
+# gripper has it in its custody in between (capabilities.ttl 0.7).
+# Home is a component's way to its reference, a robot's home pose too.
 #################################################################
 
 <https://smartproductionlab.aau.dk/skills>
   rdf:type owl:Ontology ;
-  owl:versionInfo "0.2" ;
+  owl:versionInfo "0.3" ;
   owl:imports <https://smartproductionlab.aau.dk/semantics> ;
   rdfs:comment "The skill types of the components of aseptic filling lines and the capability each contributes (AAU Smart Production Lab)." .
 
@@ -40,7 +46,7 @@ skl:MoveAxis rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   lab:realizes lab:Positioning .
 
 skl:Home rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
-  rdfs:label "Home" ; rdfs:comment "Move an axis to its limit switch, where its position is known." ;
+  rdfs:label "Home" ; rdfs:comment "Bring a component to its reference: an axis to its limit switch, where its position is known; a robot to its home pose (0.3)." ;
   lab:contributes lab:Positioning ;
   lab:realizes lab:Referencing .
 
@@ -100,3 +106,29 @@ skl:CaptureSide rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
   rdfs:label "CaptureSide" ; rdfs:comment "Take an image of a container from the side and judge it." ;
   lab:contributes lab:Inspection ;
   lab:realizes lab:Imaging .
+
+
+# Loading and unloading: a robot's jobs ----------------------------------------
+
+skl:PickFromTray rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
+  rdfs:label "PickFromTray" ; rdfs:comment "A robot takes a container from a tray; its gripper has it from then on (0.3)." ;
+  lab:contributes lab:Loading ;
+  lab:realizes lab:Receiving .
+
+skl:PlaceOnShuttle rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
+  rdfs:label "PlaceOnShuttle" ; rdfs:comment "A robot puts the container it holds onto a shuttle and lets it go (0.3)." ;
+  lab:contributes lab:Loading ;
+  lab:realizes lab:Releasing .
+
+skl:PickFromShuttle rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
+  rdfs:label "PickFromShuttle" ; rdfs:comment "A robot takes a container off a shuttle; its gripper has it from then on (0.3)." ;
+  lab:contributes lab:Unloading ;
+  lab:realizes lab:Receiving .
+
+skl:PlaceInTray rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
+  rdfs:label "PlaceInTray" ; rdfs:comment "A robot puts the container it holds into a tray and lets it go (0.3)." ;
+  lab:contributes lab:Unloading ;
+  lab:realizes lab:Releasing .
+
+skl:AwaitJob rdf:type owl:Class ; rdfs:subClassOf css:Skill ;
+  rdfs:label "AwaitJob" ; rdfs:comment "Wait until a robot has ended the job it runs, as after a stop; contributes no capability (0.3)." .

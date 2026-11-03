@@ -28,6 +28,8 @@ planning = ["gtpyhop-core==2.0.2", "rdflib>=7,<8"]
 # unified-planning, ENHSP (needs Java) and Aries.
 planners = ["unified-planning==1.3.0", "up-enhsp==0.1.1", "up-aries==0.5.0"]
 test = ["pytest>=7,<9", "asyncua>=1.1", "basyx-python-sdk>=2,<3"]
+# A module run in Python (modpy, module-py/): its OPC UA server and its mDNS announcement.
+modpy = ["asyncua>=1.1", "zeroconf>=0.132"]
 # The documentation site (aaspire/): MkDocs with the Material theme.
 docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.5,<10"]
 
@@ -38,10 +40,11 @@ modsync = "modsync.__main__:main"
 modreg = "modreg.__main__:main"
 modplan = "modplan.__main__:main"
 lineagents = "lineagents.__main__:main"
+modpy = "modpy.__main__:main"
 
 # One folder per future repository; the Python packages live inside them.
 [tool.setuptools]
-packages = ["iec61499_mgmt", "modgen", "modsync", "modreg", "modplan", "lineagents"]
+packages = ["iec61499_mgmt", "modgen", "modsync", "modreg", "modplan", "lineagents", "modpy"]
 
 [tool.setuptools.package-dir]
 iec61499_mgmt = "iec61499-mgmt-py/iec61499_mgmt"
@@ -50,9 +53,10 @@ modsync = "aas61499-tools/modsync"
 modreg = "aas61499-tools/modreg"
 modplan = "aas61499-tools/modplan"
 lineagents = "line-agents/lineagents"
+modpy = "module-py/modpy"
 
 [tool.setuptools.package-data]
 modreg = ["templates/*.json"]
 
 [tool.pytest.ini_options]
-testpaths = ["iec61499-mgmt-py/tests", "iec61499-skill-lib/tests", "aas61499-tools/tests", "deploy/tests", "cell/tests", "line-agents/tests"]
+testpaths = ["iec61499-mgmt-py/tests", "iec61499-skill-lib/tests", "aas61499-tools/tests", "deploy/tests", "cell/tests", "line-agents/tests", "module-py/tests"]
