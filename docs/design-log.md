@@ -20,6 +20,23 @@ A running log of design considerations made while building, for writing the pape
 
 ## 3 Nov 2026
 
+- **Deploy from the IDE works on the Pis again: FORTE's crash on deleting running IO blocks is
+  fixed (patches 0004 to 0006).** *Orchestration* (redeploying a module's program), *CIRP* (the
+  demonstrator's runtime).
+  - Found with gdb on the filling Pi (a debug container with the unstripped build), by deploying
+    parts of the program and deleting them: `IO_DI`, `IO_DO` and `IO_AO` each crashed FORTE when
+    deleted after INIT, and not before it. `~IOConfigFBController` called `deInit` and so
+    `stopped()`, which sets `STATUS()`: a pure virtual of GPIOChip and PWMChip, already destroyed in
+    the base destructor, so the call jumped to address 0. 0006: when destructing, only the
+    controller is stopped and deleted.
+  - 0004: a GPIO input is never written; its handle is reset to FALSE when its observer is
+    deleted, the write failed and the controller restarted during the teardown. 0005: TCP servers
+    open with `SO_REUSEADDR`, so a restarted FORTE always takes its port back.
+  - Tested on .203 with the build: the filling program deployed four times as the IDE does (KILL
+    and DELETE RES, then the program), over the running one; no crash, every IO block `QO` TRUE.
+  - The boot file route (`deploy-pi.ps1`) stays: it builds FORTE with the types, and its program
+    is the one the Pi starts with after a reboot.
+
 - **A program made in the IDE goes onto a Pi as a boot file, not by Deploy.** *Orchestration* (how
   a module's program is replaced).
   - What: `update-pi.ps1 -Program <file.fboot>` (the IDE's Create FORTE Boot-Files) makes it
