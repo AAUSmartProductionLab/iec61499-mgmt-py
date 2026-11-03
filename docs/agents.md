@@ -180,8 +180,9 @@ From [agents-literature.md](agents-literature.md) (survey of 30 Oct, every refer
 | OvGU (Diedrich, Belyaev, Stolze) | The I4.0 language, proactive AAS, the testbed over MQTT | Where the message names here come from |
 | IEEE 2660.1-2020; Leitão et al. 2023 | How agents interface with devices | Our interface is the recommended "hybrid, tightly coupled, OPC UA" |
 
-**What is new here** (for the journal paper, [journal-paper.md](journal-paper.md)): a resource agent that,
-having no skill for a required capability, plans one from the module's Capability Description and
+**What is new here** (for the orchestration journal paper,
+[orchestration-paper.md](orchestration-paper.md)): a resource agent that, having no skill for a
+required capability, plans one from the module's Capability Description and
 creates it online in the running IEC 61499 program before it carries the step out; the cost of that
 in the bid; one chain from LDS-ME discovery to an agent's start (IDTA 02020, AID, AIMC, VDI/VDE 2193,
 OPC UA skills, the IEC 61499 management interface); planar transport bid for like a module; the

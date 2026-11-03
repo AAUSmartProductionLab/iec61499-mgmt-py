@@ -6,8 +6,10 @@ A running log of design considerations made while building, for writing the pape
 - what was chosen;
 - why;
 - what it was chosen instead of;
-- which paper it serves: *CIRP* ([paper-outline.md](paper-outline.md)), *Journal*
-  ([journal-paper.md](journal-paper.md)), or both.
+- which paper it serves: *CIRP* ([paper-outline.md](paper-outline.md)), *Journal*, the models
+  ([journal-paper.md](journal-paper.md)), or *Orchestration*
+  ([orchestration-paper.md](orchestration-paper.md); since 3 Nov, earlier entries say *Journal*), or
+  more than one.
 
 **Rules:**
 - Newest entries first, dated.
@@ -17,6 +19,31 @@ A running log of design considerations made while building, for writing the pape
   settled decisions are in [design-decisions.md](design-decisions.md).
 
 ## 3 Nov 2026
+
+- **The journal paper is about the models; the machinery behind them goes to an orchestration paper
+  (decided by the user).** *Journal*, *Orchestration*.
+  - What:
+    - the models' paper: the blueprints, their ontologies and constraints, and the design
+      considerations for using them in real systems, with a small showcase of integration, planning
+      (matching and binding) and execution;
+    - the execution in the showcase is a minimal executor that follows a process AAS through the AAS
+      API alone: the agents' executor through the AAS server (`DmpExecutor`), without the agents;
+    - IEC 61499 and online reconfiguration, the HTN and standard planners, FOND and behaviour trees,
+      the agents and the comparison of orchestrators go to
+      [orchestration-paper.md](orchestration-paper.md), which takes those parts of journal-paper.md;
+    - the elements of the models that serve reconfiguration and planning (`Deployment`, `RuleSet`,
+      `Availability`, `Conditions`, `Completion`, the components' constraints) stay in the blueprints,
+      counted and checked, and are named in one paragraph;
+    - [journal-rationale.md](journal-rationale.md) gains a section on what real systems demand of
+      the models (R1 to R12: derived ids, generated shells, stable interface names, the order of
+      publication, the metamodel's limits, strict consumers, security, versions side by side, one
+      writer, a module's own description, large data by reference, commands not repeated). Its
+      technologies are now the showcase's only.
+  - Why: one paper on the models, and one on what runs on them. A modelling paper that also argues
+    the controllers, planners and orchestrators shows each half only briefly. An executor that knows
+    nothing but the AAS API is the plainest evidence for "invoked from its AAS alone".
+  - Instead of: one journal paper with both; the agents, or the behaviour tree, as the showcase's
+    executor (each would bring its own argument into the paper).
 
 - **AASPIRE's documentation site in MkDocs, in `aaspire/` (the user's request).** *Journal*.
   - What: MkDocs with the Material theme in `aaspire/`, the future main repository: a section per

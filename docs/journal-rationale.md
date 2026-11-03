@@ -8,23 +8,28 @@ Written on 2 Nov 2026, for the authors. It collects every decision behind the bl
 
 It serves two places in the paper:
 - **Section 3:** one sentence where each element is introduced, naming the alternative and its source;
-- **Section 6 (discussion):** a table of the main decisions (section 5 here), and a table of how far
-  each reviewed work closes the joints (section 6 here).
+- **Section 6 (discussion):** a table of the main decisions (section 6 here), a table of how far
+  each reviewed work closes the joints (section 7 here), and the lessons for real systems (section 3
+  here).
 
 The method is in [journal-method.md](journal-method.md), the evaluation in
 [journal-evaluation.md](journal-evaluation.md). The settled decisions of the CIRP paper, mostly about
 the module in IEC 61499, are in [design-decisions.md](design-decisions.md), and the day-by-day reasons
-in [design-log.md](design-log.md).
+in [design-log.md](design-log.md). Decisions about controllers, planning and orchestration (IEC 61499,
+the planners, the agents) belong to the orchestration paper
+([orchestration-paper.md](orchestration-paper.md)) and are not argued here.
 
 Citation keys are those of the paper's bib file. A key written *[cite: ...]* is not in it yet.
 
-The decisions fall into four kinds, and the paper should keep them apart:
+The decisions fall into five kinds, and the paper should keep them apart:
 - **M, the blueprints:** normative. They are the contribution, and another implementation would have
   to follow them.
 - **O, the ontologies and the checks:** normative. They are how conformance is defined and checked.
+- **R, what real systems demand:** design considerations found by running the models with a real
+  server, runtime and modules.
 - **X, what is deliberately left out:** scope. A reviewer asks for these, so they are stated.
-- **T, technologies:** our implementation, replaceable. Each could be swapped without changing a
-  blueprint.
+- **T, technologies:** the showcase's implementation, replaceable. Each could be swapped without
+  changing a blueprint.
 
 ## 1. The blueprints (M)
 
@@ -110,8 +115,7 @@ The decisions fall into four kinds, and the paper should keep them apart:
 - **Why:**
   - an offer and the skill behind it cannot drift apart: a new skill without a capability, or a
     changed limit the capability does not follow;
-  - a skill that is only described offers its capability "after reconfiguration", which is the answer a
-    product-driven change needs.
+  - what is written by hand shrinks to the skills and the facts of the machine.
 - **Price:**
   - the rules of derivation live in the vocabulary (which skill type contributes which capability);
   - the facts of the machine (container types) are still stated by hand.
@@ -146,20 +150,14 @@ The decisions fall into four kinds, and the paper should keep them apart:
   - the hierarchy of line, module and component mirrors that of product, subassembly and part.
 - **Price:**
   - flows are block-structured: well-structured BPMN only, read back into blocks;
-  - partial blocks are allowed in a product's recipe but not inside a module's skills, since an
-    IEC 61499 program runs blocks.
+  - partial blocks are allowed in a product's recipe but not inside a module's skills, whose
+    controllers run block-structured flows.
 - **In the paper:** 3.4, idea 3 in 3.1.
 
-**M8. Each skill has a small state machine; PackML runs once, for the module.**
-- **Instead of:** a harmonised state machine per skill, often PackML [koecher2023reference,
-  isaTR88PackML, opcPackML].
-- **Why:**
-  - a skill is called, runs and ends, like a node of a behaviour tree, so Idle, Running, Stopping,
-    Succeeded, Failed and Aborted suffice;
-  - one machine for every skill means one way to call any of them;
-  - Start, Stop, Abort and Reset answer at once with `Accepted` and `ErrorID`.
-- **Price:** a client that expects PackML per skill has to map.
-- **In the paper:** one sentence in 3.4; the module side is the CIRP paper's.
+**M8. (Moved to the orchestration paper.)** How a controller runs a skill (a small state machine
+per skill, PackML once per module) is not a decision about the models. The models assume only the
+contract of a command in M6: it is called with its parameters, and answers at once, accepted or
+refused with an error code.
 
 **M9. The interface is described for acting, not only for monitoring.**
 - **Instead of:**
@@ -175,9 +173,9 @@ The decisions fall into four kinds, and the paper should keep them apart:
   what "invoked from its AAS alone" (RQ2) means.
 - **Price:**
   - it depends on the server delegating Operations, and on a runtime that executes AIMC in this
-    direction (T2);
-  - a call through the server is slower than a direct OPC UA call, so the agents also call directly
-    (T6).
+    direction (T3);
+  - a call through the server is slower than a direct one. For the showcase that does not matter, and
+    a client that needs speed can still read the action from the AID and call it directly.
 - **In the paper:** 3.4.
 
 **M10. No live values in the AAS: Variables names time series.**
@@ -195,23 +193,21 @@ The decisions fall into four kinds, and the paper should keep them apart:
 - **Instead of:** the build record in the AAS (our own Control Configuration until 27 Oct).
 - **Why:**
   - the shell is what a vendor delivers;
-  - instances, type hashes and change logs change with every build and are read by the integrator's
-    tools only;
+  - how a controller was built changes with every build, and only the integrator's tools read it;
   - the shell keeps what clients read: `RuleSet` and each skill's `Deployment`.
 - **Price:** two places to read for the whole picture.
 - **In the paper:** one sentence in 3.4.
 
-**M12. Planning constraints go into 02020; there is no planning submodel.**
+**M12. Capability constraints go into 02020; there is no planning submodel.**
 - **Instead of:**
   - planning submodels that mirror PDDL [nabizada2026capability];
-  - an AI-planning submodel of our own [cite: schwoerer2026fond];
+  - an AI-planning submodel of the lab's own [cite: schwoerer2026fond];
   - transition constraints between capabilities only [plattform2025cssplus].
-- **Why:**
-  - 02020's property constraints already state preconditions, postconditions and invariants;
-  - a module's Capability Description is then its whole planning domain;
-  - PDDL and HDDL are generated from it, so the blueprint does not depend on a planner.
+- **Why:** 02020's property constraints already state preconditions, postconditions and invariants.
+  The blueprint holds what a planner needs without depending on any planner. How planners use it is
+  the orchestration paper's.
 - **Price:** the constraints say only what 02020's `BasicConstraint` expressions can say.
-- **In the paper:** one sentence in 3.4, if planning stays out (D4).
+- **In the paper:** one sentence in 3.4.
 
 **M13. Alternatives come from matching, not from OR nodes in the recipe.**
 - **What:** a step names the capability it requires, and any offer that covers it is a candidate.
@@ -271,7 +267,7 @@ D2).**
 - **Why:**
   - a disassembly order is often not series-parallel: in our example pack, the busbars come off after
     the cover and the HV plug, the BMS after the HV plug only;
-  - a product agent can call for proposals on every step that is ready, not only the next.
+  - an executor can start every step that is ready, not only the next.
 - **Price:**
   - a reader that knows only `Order` must still get a valid order, so `Order` must respect `After`
     (C08);
@@ -340,37 +336,145 @@ D2).**
   - the same fault found during a batch can stop the line.
 - **In the paper:** 3.6.
 
-## 3. What the blueprints deliberately leave out (X)
+## 3. What real systems demand of the models (R)
+
+Running the models with a real AAS server, a real connection runtime and real modules taught what no
+template says. These are the design considerations a reader needs who builds such a system, and the
+lessons the paper's discussion can report. Each was found while building; the dates point into
+[design-log.md](design-log.md).
+
+**R1. Ids are derived, not chosen.**
+- **What:** every id is derived from the asset's:
+  - a shell from its asset id;
+  - a submodel from its shell and its idShort;
+  - a recipe from its product and its sequence type (`…/process-plan/<AAS>/<SequenceType>`, idShort
+    `ProductionSequence<SequenceType>`).
+- **Why:**
+  - references across shells survive the shells being generated again;
+  - two submodels with one idShort in a shell would leave a reader that looks them up by idShort
+    guessing (2 Nov);
+  - on a shared server, equal ids overwrite another party's shells, so the namespace says whose they
+    are.
+- **Price:** renaming an asset renames its shells.
+
+**R2. A module's shell is too large to write by hand.**
+- **What:** a module's shell is 4 to 7 MB, about 1,200 interface and 600 mapping elements (28 Oct).
+  It is generated from the module's description. Only products and processes are written, as explicit
+  reference models.
+- **Why:** the share of elements a blueprint adds (RQ1) is small, but their number is not. Whoever
+  builds a module needs a generator, or the module must bring its own shell (R10).
+- **Price:** the generator must follow every version of the templates. Ours generates its classes from
+  the templates, and both are tested together.
+
+**R3. An interface is described by what stays stable.**
+- **What** (28 Oct):
+  - an owning object is named by its browse path, since a server may number its nodes anew at every
+    start;
+  - a method's arguments are named as the server names them, and matched by name, so that a reordered
+    method is never called with the wrong values.
+- **Why:** the AID describes the device as it is, and the runtime checks it against the server.
+- **Price:** browse paths are longer, and slower to resolve, than node ids.
+
+**R4. Dependencies between submodels also order their publication.**
+- **What:** a mapping whose referenced submodel arrives after it stays unresolved in the connection
+  runtime. So the components' shells are published before the module's, and within a shell the AIMC
+  comes last (28 Oct).
+- **Why:** the references the constraints follow (C05 to C14) must resolve when a runtime reads them,
+  not only when a checker does.
+- **For the paper:** shells are checked before they are published, and published in the order their
+  references run.
+
+**R5. The metamodel's limits shape the models.**
+- Items of a SubmodelElementList have no idShort (AASd-120). Where an element is referred to by name,
+  such as a connection, it goes into a collection; where not, such as `After`, into a list (2 Nov).
+- An AnnotatedRelationshipElement takes only data elements as annotations, never a collection. A
+  connection's parameters cannot sit inside it, which is one reason they live in Process Parameters
+  (A3 in journal-method.md).
+- A time series field has one type: a Boolean goes into a decimal field as 0 or 1 (28 Oct).
+
+**R6. Consumers are strict, so a shell must be exactly its blueprint.**
+- **What** (28 Oct):
+  - the connection runtime refuses a mapping that has elements it does not know. Helper properties
+    that an SDK leaves behind (temporary idShorts) are therefore stripped before publishing;
+  - it requires every output that is not marked optional. A skill's results are marked optional: the
+    method answers at once, and the results come when the skill ends.
+- **Why:** what the blueprint does not describe breaks a consumer. Strict mode (C04) finds it before
+  publishing.
+
+**R7. Security is declared in the shell; credentials stay outside it.**
+- **What:** AID 1.1 requires an interface to select a security scheme. The lab's modules select
+  `nosec`. A real plant selects a scheme that needs credentials, and the runtime holds them, never the
+  shell, since shells are published.
+- **Price:** the showcase uses no security, and the paper should say so.
+
+**R8. Versions live side by side.**
+- **What:**
+  - the recipe's 2.0 and 4.0 templates coexist, told apart by their semanticIds, because the server's
+    products and the planner still read 2.0 (2 Nov);
+  - a process shell records the revision of the recipe it was bound for (C21).
+- **Why:** a line in production cannot switch every shell and every reader at once.
+
+**R9. One writer per shell, or per submodel.**
+- **What:** each shell has one owner (P2). Where a value has a natural writer, only that writer
+  writes it (31 Oct):
+  - the planar table's frame is read from its controller and never written back;
+  - the line's routing is kept in the line's shell, which only its configurator writes.
+- **Why:** of two tools writing one shell, the last one wins.
+
+**R10. A module brings its own description.**
+- **What:** a module announces itself by OPC UA multicast discovery, and serves the content of its
+  shells beside its server. The registration service fetches it, checks it against the blueprint and
+  publishes it (29 Oct).
+- **Why:** plug and produce means that the integrator does not type in what a module is. The vendor
+  delivers the shell with the module.
+
+**R11. Large data by reference.**
+- **What:** inspection images are kept in an object store and linked by URL from a `File` element of
+  the record. The AAS server holds none of them (1 Nov).
+- **Why:** an image is neither a description nor a live value, and a `File` may name its file by URL,
+  so the shell points to it in its own terms.
+
+**R12. A command is not repeated blindly.**
+- **What:** a call lost in transit is not sent again: starting Dispensing twice fills twice. The
+  connection runtime waits for a reconnect before it sends, and never resends what it has sent
+  (29 Oct). Every call is logged with its outcome.
+- **Why:** the record must say what happened, and an executor must be able to tell a refused call from
+  a lost one.
+
+**In the paper:** a subsection "Lessons for real systems" in the discussion, with R1, R5 and R8 also
+stated where the elements are introduced in section 3.
+
+## 4. What the blueprints deliberately leave out (X)
 
 | # | Left out | Where it is instead | Why |
 | --- | --- | --- | --- |
 | X1 | The commercial service of CSS: cost, delivery time | Out of scope, as section 2 says | No implementation examples to build on [koecher2023reference] |
-| X2 | Scheduling: when a step runs | The orchestrators | A schedule changes with every order; the blueprints describe what does not |
+| X2 | Scheduling: when a step runs | The executor here; the orchestrators of the orchestration paper | A schedule changes with every order; the blueprints describe what does not |
 | X3 | Transport: which shuttle carries a product | Chosen at run time; shuttles offer Transporting like modules | It depends on traffic the line engineer cannot foresee |
 | X4 | Live values | Time series named in Variables (M10) | |
 | X5 | The build record | The integrator's record (M11) | |
-| X6 | Planning models in PDDL or HDDL | Generated from 02020 (M12) | |
-| X7 | The control strategy: centralised or by agents | The orchestrators read the same shells | Plug and produce must not depend on who orchestrates (P7) |
+| X6 | Planning models in PDDL or HDDL | Generated from 02020 by the planners of the orchestration paper (M12) | |
+| X7 | The control strategy | Any orchestrator reads the same shells (the orchestration paper) | Plug and produce must not depend on who orchestrates (P7) |
 | X8 | Diagram layouts (BPMN) | Not stored: the shell keeps the flow | A second, presentational model beside the flow |
 
-## 4. Technologies (T): our implementation, replaceable
+## 5. Technologies (T): the showcase's, replaceable
+
+Only what the showcase needs. How the modules' controllers are built, the planners and the
+orchestrators are the orchestration paper's ([orchestration-paper.md](orchestration-paper.md)).
 
 | # | Chosen | Instead of | Why | Replaceable by |
 | --- | --- | --- | --- | --- |
 | T1 | AAS (IEC 63278) with IDTA templates | AutomationML, for engineering exchange [schleipen2009threeview]; OPC UA information models; MTP for process modules [vdivde2658] | A standard digital twin over the life cycle, with a REST API, registries and templates for capabilities and interfaces [iec63278, sakurada2025tenyears]. OPC UA stays the run-time interface, described by the AID | – (the paper's premise) |
-| T2 | Eclipse BaSyx: the AAS environment with Operation delegation, registries, discovery, MQTT events, the web UI [cite: basyx] | FA³ST [cite: fa3st]; the AASX Server | Operation delegation and the lab's existing stack and web UI fork | Any AAS server that delegates Operations |
-| T3 | The data management platform (aas-camel-dmp, on Apache Camel) runs AID and AIMC both ways: an Operation becomes the OPC UA method's call; values become rows of InfluxDB | BaSyx DataBridge, own route files [cite: basyx-databridge]; FA³ST, own configuration for writing and operations [cite: fa3st] | The shell is the configuration of its own connection (M9) | Any runtime that executes AIMC from AAS to asset |
-| T4 | IEC 61499 on Eclipse 4diac FORTE, one Raspberry Pi per module [cite: iec61499, 4diac] | IEC 61131-3 PLCs; ROS 2; PackML stations over MQTT (our predecessor, AP2030-UNS) | Distributed, event-driven control whose standard management interface creates instances and connections while the program runs, so a described skill is built online; open source; an OPC UA server built in | For the blueprints: any controller that serves the skills' commands |
-| T5 | OPC UA methods for the commands; OPC UA multicast discovery (LDS-ME) [cite: opcua-part12] | OPC UA programs [dorofeev2018skill]; PackML tags over MQTT; MTP services [vdivde2658] | Each command answers at once, accepted or refused with an error; any OPC UA client calls it; a module announces itself | Any protocol the AID can describe |
-| T6 | Agents: SPADE over XMPP (Prosody), VDI/VDE 2193 messages [cite: spade, vdivde2193] | JADE with FIPA-ACL; SARL agents with Kafka at the DFKI SmartFactory ([agents-literature.md](agents-literature.md)); SMIA [hurtado2025smia] | Python like the rest of the tools; XMPP gives each agent an address, presence and delivery; VDI/VDE 2193 is the I4.0 language of the AAS community. SMIA is the closest system but uses its own FIPA-ACL dialect and an OWL capability model instead of 02020 | Any agent platform |
-| T7 | Centralised: a FOND policy planned from the shells, run as a behaviour tree (the colleagues) [cite: schwoerer2026fond] | BPMN engines [koecher2022bpmn, nguyen2025aas]; orchestration by a language model [li2026agentic] | Handles outcomes that are not known in advance; a behaviour tree executes and monitors | Any orchestrator that reads the shells |
-| T8 | HTN with goal regression (GTPyhop) for a module's new skills; PDDL and HDDL generated for ENHSP and Aries | A flat PDDL problem over the line | Small, local domains with the integrator's methods; 1 to 2 ms per plan | Any planner (the domain is generated) |
-| T9 | OWL 2 and SHACL, with rdflib and pySHACL | JSON Schema; aas-core's metamodel verification | Constraints across shells are paths in a graph | Any SHACL engine |
-| T10 | Python classes generated from the templates (aas-model, aas_pydantic) | The AASX Package Explorer; hand-written JSON | Templates, classes, descriptions and examples checked together in the tests; the example shells written out in full | Any SDK |
-| T11 | InfluxDB for the time series | TimescaleDB (our predecessor's); values in the AAS | The lab's stack; the series is named in IDTA 02008's terms | Any time-series database |
-| T12 | Siemens Plant Simulation for the battery cell (the colleagues) | A cell simulated in FORTE, as the pharma modules are on the PC; other discrete-event tools | The REVAMP demonstrator's model exists in it; stochastic conditions; an industrial tool | Any discrete-event simulator |
+| T2 | Eclipse BaSyx: the AAS environment with Operation delegation, registries, discovery, the web UI [cite: basyx] | FA³ST [cite: fa3st]; the AASX Server | Operation delegation, and the lab's existing stack | Any AAS server that delegates Operations |
+| T3 | The data management platform (aas-camel-dmp, on Apache Camel) runs AID and AIMC both ways: an invoked Operation becomes the call of the module's method; published values become rows of a time series | BaSyx DataBridge, with route files of its own [cite: basyx-databridge]; FA³ST, with its own configuration for writing and operations [cite: fa3st] | The shell is the configuration of its own connection (M9) | Any runtime that executes AIMC from AAS to asset |
+| T4 | OPC UA as the modules' interface: a method per command; multicast discovery (LDS-ME) [cite: opcua-part12] | OPC UA programs [dorofeev2018skill]; PackML tags over MQTT; MTP services [vdivde2658] | Each command answers at once, accepted or refused; any OPC UA client calls it; a module announces itself. The controller behind the server is the CIRP paper's and the orchestration paper's | Any protocol the AID can describe |
+| T5 | A minimal executor: it follows a process AAS's bindings, invokes each skill's Operations at the AAS server, reads the results from the time series, and writes the record | The orchestrators of the orchestration paper | It speaks only the AAS API and the time-series database, and nothing in it names a module, so it shows "invoked from its AAS alone". It is the agents' executor through the AAS server (`lineagents.execute.DmpExecutor`) without the agents | Any orchestrator |
+| T6 | OWL 2 and SHACL, with rdflib and pySHACL | JSON Schema; aas-core's metamodel verification | Constraints across shells are paths in a graph | Any SHACL engine |
+| T7 | Python classes generated from the templates (aas-model, aas_pydantic) | The AASX Package Explorer; hand-written JSON | Templates, classes, descriptions and examples checked together in the tests; the example shells written out in full | Any SDK |
+| T8 | InfluxDB for the time series | Values in the AAS | The lab's stack; each series is named in IDTA 02008's terms | Any time-series database |
+| T9 | Siemens Plant Simulation for the battery cell (the colleagues) | A cell simulated on the PC, as the pharma modules are; other discrete-event tools | The REVAMP demonstrator's model exists in it; stochastic conditions; an industrial tool | Any discrete-event simulator |
 
-## 5. A table for the paper's discussion
+## 6. A table for the paper's discussion
 
 The main decisions, condensed for section 6. Each row is one of the entries above.
 
@@ -389,7 +493,7 @@ The main decisions, condensed for section 6. Each row is one of the entries abov
 | Structure ontology per class plus a link ontology, SHACL across shells (O1, O2) | Mandatory-property shapes [bader2019semantic]; metamodel tests [otto2025test]; reference comparison [ellwein2026settheoretic] | Constraints between submodels and shells | A projection to maintain |
 | Matching by meaning and coverage, recorded (O4) | OWL [koecher2023reference]; language models [shi2026cognitive, dasilva2026llm] | Deterministic and explained | Needs the shared vocabulary |
 
-## 6. How far the reviewed works close the joints
+## 7. How far the reviewed works close the joints
 
 A first pass, from section 2's own text only, for the authors to check against each paper before it
 is used. A cell is left as "?" where section 2 does not say.

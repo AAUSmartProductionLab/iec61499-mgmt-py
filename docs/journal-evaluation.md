@@ -33,24 +33,40 @@ Two rules for the whole evaluation:
 | Order of steps | A chain (GMP) | A partial order; the subassemblies' own sequences |
 | Candidates per step | One, approved | Several, chosen per unit |
 | Bound | Before the batch | Before the run, and again when a condition is found |
-| Resources | Physical modules on Raspberry Pis (IEC 61499, OPC UA) | Stations simulated in Plant Simulation |
+| Resources | Physical modules, each behind an OPC UA server | Stations simulated in Plant Simulation |
 | What binds the case | Validation (GMP) | What the unit's condition allows |
 | Main evidence for | RQ1, RQ2 (plug and produce), RQ3 | RQ1, RQ3, RQ4 |
 
+**The showcase, the same in both cases.** Around the models, a small infrastructure in three parts,
+each only as much as shows that the models serve it:
+
+| Part | What it does | Built |
+| --- | --- | --- |
+| Integration | A module is discovered by OPC UA multicast discovery, registered, and checked against its blueprint; its offered capabilities are derived | Yes: `modreg serve --discover`, `modreg check` |
+| Planning | Required capabilities are matched against offered ones, and a recipe is bound to a line as a process AAS, its Validation written by the check | Yes: the planner in the web UI, `POST /process/<product>`, the plan check. Candidates (D1) to add |
+| Execution | A minimal executor follows the process AAS's bindings in the recipe's order. For each step it occupies the module, starts the skill, waits for its end and releases the module, each by invoking an Operation at the AAS server. It reads the results from the time series and writes the record | The calls exist (`lineagents.execute.DmpExecutor`, `cell/tests/test_dmp_live.py`); the executor around them and the record are to build |
+
+The executor speaks only the AAS API and the time-series database. Nothing in it names a module, a
+skill or a protocol, which is the evidence for "invoked from its AAS alone". Transport between
+stations is not bound by the process AAS (X3): the executor moves a shuttle by the shuttle's own skill,
+or the product is moved by hand.
+
+What the showcase leaves out, for the orchestration paper: online reconfiguration, the planning of new
+skills, agents, scheduling.
+
 ## 3. Pharma: the physical line
 
-**The system as it stands:**
+**The system,** as far as the showcase needs it:
 - a planar table (B&R ACOPOS 6D) with three shuttles;
-- the filling and stoppering modules, each running its IEC 61499 program in FORTE on a Raspberry Pi
-  with an OPC UA server;
-- capping, being built like the filling module, its crimper simulated;
-- inspection, a camera service beside FORTE;
-- loading and unloading by two KUKA KR C4 robots;
+- the filling and stoppering modules, and capping once it is built, each behind its own OPC UA server;
 - three products: a 2 mL vial, a 1 mL prefilled syringe and a 3 mL cartridge.
+
+Inspection, and loading and unloading by the robots, are not needed to show the models: a vial can be
+put on a shuttle by hand.
 
 **The blueprints instantiated:**
 - **Resource shells:** the line, the modules, their components, the table and the shuttles,
-  generated from the module specs by `modreg`. The robots get theirs once their specs exist.
+  generated from the module specs by `modreg`.
 - **Product shells:** the three types, written out in full with aas-model's classes
   (`cell/examples/products`).
 - **Process shells:** one per product on the line, with one candidate per step, status Approved
@@ -58,10 +74,9 @@ Two rules for the whole evaluation:
 - **Records:** Executed Processes in the instance AAS of each batch. To build (D2).
 
 **The stack:**
-- BaSyx: the AAS environment with Operation delegation, registries, the web UI;
-- the data management platform: AID and AIMC to OPC UA, and time series into InfluxDB;
-- Prosody, the XMPP server, for the agents;
-- the two orchestrators: our agents, and the colleagues' FOND policy run as a behaviour tree.
+- BaSyx: the AAS environment with Operation delegation, the registries, the web UI;
+- the data management platform: AID and AIMC to OPC UA, and the time series into InfluxDB;
+- the minimal executor (section 2).
 
 **Scenarios:**
 - **P1 Changeover.** The line makes the three products in turn. Each process shell says Fits, and the
@@ -77,13 +92,10 @@ Two rules for the whole evaluation:
   This is E3.
 - **P3 A product the line cannot make.** An ampoule: Validation says DoesNotFit, with the finding, and
   nothing runs.
-- **P4 A capability after a reconfiguration.** The syringe needs BottomUpFilling:
-  1. a described skill offers it, with `AfterReconfiguration`;
-  2. it is built online;
-  3. it is bound and run.
+- **P4 Traceability.** After a batch, the record's questions (E5).
 
-  This is the CIRP paper's case. Here it is evidence for `Deployment` and `Availability`.
-- **P5 Traceability.** After a batch, the record's questions (E5).
+A capability offered after a reconfiguration, with its skill built online, is the CIRP paper's case
+and the orchestration paper's, not this one's.
 
 ## 4. Battery: the simulated disassembly cell
 
@@ -119,7 +131,7 @@ material and station list once the colleagues share them.
 1. **A pack arrives.** Its instance AAS is made from the type AAS. Its condition is not known yet, so
    the type's nominal values apply.
 2. **Before each step,** its candidates are checked against the instance's values: C17 and C18, with
-   the instance's values in place of the type's. The orchestrator takes one that fits.
+   the instance's values in place of the type's. The executor takes one that fits.
 3. **A station finds a condition.** Examples: a screw that does not break loose at the cell's highest
    torque; a corroded screw; a missing fastener; a module of another variant. The finding is written
    into the pack's instance AAS as a value. No element is added.
@@ -142,8 +154,8 @@ the same as the effort attribute of the colleagues' JointParams, as a value the 
 - **A bridge: the stations behind the same interface as the pharma modules.**
   - How: each simulated station is a module whose OPC UA server is a bridge, written in Python like
     the planar controller. Plant Simulation, as an OPC UA client, reads the bridge's command flags and
-    writes back completions, results and the conditions it found. The data management platform, the
-    agents or the behaviour tree call the stations as they call the pharma modules.
+    writes back completions, results and the conditions it found. The executor calls the stations
+    through the AAS server, as it calls the pharma modules.
   - Shows that the resource blueprint, and the way a skill is called, carry over to the second case.
   - Cost: it runs in real time, so only a few packs.
 - **A decision service** (recommended for E7's statistics).
@@ -191,7 +203,7 @@ The seeds are fixed and published.
      An element of ours inside an IDTA submodel is an addition.
   3. Count the definitions per blueprint and per submodel, by origin.
   4. Count the shells' elements by origin, in each case.
-- **Who uses what:** log which client reads and writes which submodel on the AAS server, during P1 to P5
+- **Who uses what:** log which client reads and writes which submodel on the AAS server, during P1 to P4
   and B1 to B4. Read per client from BaSyx's request log, this gives each phase's use of each submodel:
   `model-use` measured instead of drawn.
 - **Output:** Table 5.1, and the measured read and write matrix.
@@ -205,7 +217,7 @@ The seeds are fixed and published.
 
 - **Purpose:** to show that each addition is needed, not only present.
 - **Procedure:** for each joint, replace the closing element by what the template or the related work
-  has instead. Then run the stages below on the simulated pharma modules (FORTE on the PC) and on the
+  has instead. Then run the stages below on the simulated pharma modules (their simulators on the PC) and on the
   battery models.
 
   | Joint | Replaced by |
@@ -223,7 +235,7 @@ The seeds are fixed and published.
   outside the shells, and what the check reports.
 - **Output:** Table 5.2: the joint, the element, the stage that needs it, and what breaks without it.
 - **To build:** replacement scripts on the example shells (small to medium). The stages already exist:
-  `modreg`, the plan check, the data management platform's live test, the agents.
+  `modreg`, the plan check, the data management platform's live test; the executor once it is built.
 
 ### E3 Plug and produce on the physical line (RQ2)
 
@@ -232,8 +244,7 @@ The seeds are fixed and published.
   - the time from power on to each stage: registered, checked, capabilities derived, Fits, first skill
     call answered;
   - the integrator's actions, counted as in the CIRP paper's effort measure [cite: dorofeev2021];
-  - code and configuration changed outside the module's shell, in lines (expected zero);
-  - the same with the other orchestrator, if the colleagues' behaviour tree runs by then.
+  - code and configuration changed outside the module's shell, in lines (expected zero).
 - **Runs:** five, reported as medians and ranges.
 - **Optional baseline:** the same module added to AP2030-UNS, the project's predecessor, counted the
   same way.
@@ -306,7 +317,7 @@ The seeds are fixed and published.
   - which deviations happened, and why;
   - who called (the session).
 - **Metric:** the share of questions answered, and how many references each answer follows.
-- **To build:** the record (Executed Processes with the four references), and the orchestrators
+- **To build:** the record (Executed Processes with the four references), and the executor
   writing it (medium).
 
 ### E6 Transfer across the cases (RQ4)
@@ -365,7 +376,7 @@ The elements written by hand against those generated, per case:
   - Counting elements depends on what counts as one. Define it once (a path of idShorts with a
     semanticId), and report the instance counts beside the definitions.
   - The joints are ours. Mitigations: derive them from IDTA's own texts, as section 2 does, and set the
-    related work against them (journal-rationale.md, section 6).
+    related work against them (journal-rationale.md, section 7).
 - **External.**
   - Two cases; a lab line, not a GMP-validated one; a simulated battery cell.
   - The vocabulary is ours: another lab's would need aligning before matching works across labs.
@@ -394,8 +405,8 @@ Rough sizes: S is a day or less, M a few days, L a week or more.
 | 6 | E1's counting script and the logging per client | 2 | S |
 | 7 | E4's mutation tool and the runner for K1 to K5, first on the pharma shells, which exist | – (until 5 is done, the Python checks stand in for K4 and K5) | M |
 | 8 | E2's replacements on the pharma shells, with the modules simulated | – | M |
-| 9 | Pharma on the hardware: capping on its Pi; P1 batches; E3, with the user at the bench | capping built | L |
-| 10 | The record written by the orchestrators; E5 | 2, 9 | M |
+| 9 | The minimal executor around the existing calls, and the record it writes | 2 | M |
+| 10 | Pharma on the hardware: capping built; P1 batches; E3 and E5, with the user at the bench | 9, capping built | L |
 | 11 | Battery: the REVAMP shells (A10), the station shells, candidates, condition, the decision service, the coupling to Plant Simulation | 1, 2, 5 | L |
 | 12 | E7 runs; then E6 from E1's script over both cases | 11 | M |
 

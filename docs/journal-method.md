@@ -127,7 +127,7 @@ The product subsection's "maintained once as a type-level AAS" means the type AA
 | P1 | Reuse, then extend, then add | An IDTA template as published where it suffices. Additions where it nearly suffices, never a changed or removed element. A template of ours only where none exists. Every added element carries our semanticId, so a reader can tell standard from addition | M2 |
 | P2 | One owner and one reason to change per shell | The product designer, the line engineer, the vendor | M1 |
 | P3 | References bind, meanings find | Idea 2 | M3, M4 |
-| P4 | Derive what can be derived | Offered capabilities from skills; resource shells from the module's description; planning domains from capability constraints | M5, M12 |
+| P4 | Derive what can be derived | Offered capabilities from skills; resource shells from the module's description | M5 |
 | P5 | Descriptions in the AAS, data beside it | No live values in the shell; time series are named, not copied; build records stay with the integrator | M10, M11 |
 | P6 | Check where information changes hands | At registration (vendor to integrator), at binding (line engineer), and at every change during a run (orchestrator) | O5 |
 | P7 | Neutral to the orchestrator | The blueprints say what is needed, offered and bound, not how the line is controlled | X7 |
@@ -147,11 +147,11 @@ Description, then Process and Resource Description; 4 Case Studies; 5 Results; 6
 | 3.5 | Process blueprint | RQ1; J3, J4, J5 | What is bound; candidates; values to inputs; whether it fits; what happened | `ppr-map` (or `isa88-levels`) | us |
 | 3.6 | Constraints and conformance | RQ3 | Four scopes; the catalogue C01 to C21; who checks when | a table | us |
 | 4 | Case studies | RQ4 | | | |
-| 4.1 | Pharmaceutical filling | | The physical line; its shells; scenarios P1 to P5 | `submodel-references-pharma` | us |
+| 4.1 | Pharmaceutical filling | | The physical line; its shells; scenarios P1 to P4 | `submodel-references-pharma` | us |
 | 4.2 | Battery disassembly | | REVAMP in Plant Simulation; its shells; the dynamics; the coupling; scenarios B1 to B4 | `submodel-references-battery`, `production-sequence-battery` | colleagues and us |
 | 4.3 | Evaluation design | RQ1–RQ4 | Experiments E1 to E7, their metrics and baselines | – | us |
 | 5 | Results | RQ1–RQ4 | One subsection per RQ | Tables; one heatmap | all |
-| 6 | Discussion | | Decisions against related work; joint coverage of the reviewed works; limits; threats to validity | the decisions table, the coverage table | all |
+| 6 | Discussion | | Decisions against related work; joint coverage of the reviewed works; lessons for real systems (journal-rationale.md, section 3); limits; threats to validity | the decisions table, the coverage table | all |
 | 7 | Conclusion | | | | |
 
 How we got to this structure:
@@ -175,14 +175,27 @@ How we got to this structure:
 - **Too many figures.** We recommend `ppr-map` over `isa88-levels` and dropping `bpmn-integration`.
   The measured read and write matrix of E1 replaces `model-use` in section 5.
 
-**Scope.** The introduction makes this paper about the blueprints and their checking. Planning (the
-HTN planner against standard planners) and the comparison of the two orchestrators answer none of
-RQ1 to RQ4. We recommend:
-- they appear only as users of the blueprints in the cases: they read and write the shells, which is
-  part of RQ1's four phases;
-- the comparison of the orchestrators becomes a paper of its own.
+**Scope (decided 3 Nov).** This paper is about the models: the blueprints, their ontologies and
+constraints, and the design considerations for using them in real systems. A small showcase around
+them shows that they serve plug and produce, planning and execution, in a deliberately limited scope
+([journal-evaluation.md](journal-evaluation.md), section 2):
+- **integration:** a module is discovered, registered and checked against its blueprint, and its
+  capabilities are derived;
+- **planning:** required capabilities are matched against offered ones, and a recipe is bound into a
+  process AAS, with its Validation;
+- **execution:** a minimal executor follows the process AAS through the AAS API alone, and writes the
+  record.
 
-[journal-paper.md](journal-paper.md) still lists both as content; its scope note now points here.
+The machinery behind the models belongs to the orchestration journal paper
+([orchestration-paper.md](orchestration-paper.md)): IEC 61499 and online reconfiguration, the HTN
+planner and the standard planners, FOND and behaviour trees, the agents, and the comparison of
+orchestrators. In this paper:
+- a module is an asset with an OPC UA server, described by its AAS. How its controller is built is
+  cited, not described;
+- the elements that serve reconfiguration and planning (`Deployment`, `RuleSet`, `Availability`,
+  `Conditions`, `Completion`, the components' capability constraints) are part of the blueprint. They
+  are counted in RQ1 and checked like any other element, and named in one paragraph of 3.4;
+- "planning" means matching and binding, nothing more.
 
 ## 3. How each blueprint subsection is written
 
@@ -371,8 +384,8 @@ What still differs between the colleagues' draft and the models we built is in s
 - how that is called;
 - where its data goes.
 
-The vendor writes it, or it is generated from the module's description. The integrator's tools
-change it online when a skill is added. A line is made of modules, and a module of components. Each
+The vendor writes it, or it is generated from the module's description, and the integrator's tools
+update it when the resource changes. A line is made of modules, and a module of components. Each
 has a shell of its own, and its asset type says which of the three it is (Fig. `resource-bom`). A
 component is a part of a module that acts: an axis, a pump, a scale. It holds only its skills, the
 primitives, and has no interface of its own, since its module carries its skills out.
@@ -398,8 +411,7 @@ The optional submodels depend on each other (C05 to C07):
 
 **What it can do (J1, J3).** A module's Capability Description (IDTA 02020 [idtaCapability]) holds its
 offered capabilities. Their properties are values, ranges, or lists of the values the module takes,
-such as the container types a filling module accepts. We give one element of the template a target,
-and add two qualifiers:
+such as the container types a filling module accepts. Two things are ours:
 - **`CapabilityRealizedBy` gets a target.** It is a RelationshipElement whose second element is a
   model reference to a skill, in the module's Skills or in one of its components'. The template points
   it at "a Skill implementation, not defined in this Submodel template" [idtaCapability]. Ours has a
@@ -411,13 +423,9 @@ and add two qualifiers:
   - The facts of the machine, such as the container types, are stated once.
 
   Derived elements carry the qualifier `Derived`, so a new derivation replaces only what it derived.
-- **A capability whose skill is only described,** not yet built, carries
-  `Availability = AfterReconfiguration`. A planner then sees what the line could do after a change.
 
 Every property carries its meaning, as a supplemental semantic id, and its unit; matching compares
-these (J3). A module also lists its components' capabilities with the role NotAssigned. Each carries,
-as 02020 BasicConstraint expressions, the precondition, postcondition and invariant of the primitive
-that realises it. New composite skills are planned from these.
+these (J3).
 
 **How it is called (J2, J6).** No published template describes a skill with its parameters, the
 commands that call it and what it runs. IDTA's Control Component templates [idtaCCType, idtaCCInstance]
@@ -438,12 +446,12 @@ Skills
 │   │   └── Steps                 of a composite: what the command runs        (J6)
 │   ├── Conditions                of a primitive: Precondition, Postcondition, Invariant
 │   └── Completion                of a primitive: After, Timeout
-├── RuleSet                       the rules the module's program follows
+├── RuleSet                       the rules the module's controller follows
 └── Errors                        the codes an ErrorID can carry
 ```
 
-- **A skill is its commands.** A skill is a state machine that is started, stopped, aborted and
-  reset, and each command is called and answers on its own. So a skill holds up to four commands,
+- **A skill is its commands.** A skill is started, stopped, aborted and reset, and each command is
+  called on its own and answers at once, accepted or refused. So a skill holds up to four commands,
   each with three parts:
   - an `InterfaceReference` to the action of the module's interface that calls it (J2);
   - an Operation, the call's signature. Its variables are the protocol (`Session` in; `Accepted` and
@@ -452,7 +460,8 @@ Skills
   - for a composite, the `Steps` the command runs (J6).
 - **Three kinds,** told apart by a supplemental id rather than by structure, so one reader finds them
   all:
-  - **primitive:** one function block that moves one component, described in the component's shell;
+  - **primitive:** one function of one component (an axis moves, a pump doses, a scale weighs),
+    described in the component's shell;
   - **composite:** a module-level skill whose steps run primitives;
   - **module control:** the module's own commands (occupy, release, reset, start, stop).
 
@@ -469,14 +478,17 @@ Skills
   These close J6: the module's skill names the component skills it runs, in order, with what each is
   handed. Where the Control Component templates list the skills used, ours give their order and their
   values.
-- **Conditions and Completion.** A primitive states its precondition, postcondition and invariant as
-  expressions over the module's state variables, and when it is complete. They are the run-time form
-  of the capability constraints that skills are planned from.
-- **Deployment and RuleSet.**
-  - `Deployment` says whether the module's program carries the skill out (`Built`) or the skill is
-    only described (`Described`).
-  - `RuleSet` names the rules by which skills map to the program, so that a tool knows it can read the
-    program back and build a described skill.
+
+**Elements for reconfiguration and planning.** The blueprint also carries elements that other uses
+of the models need:
+- a skill's `Deployment` (`Built`, or only `Described`), and the `RuleSet` its controller follows;
+- a capability's `Availability` (`AfterReconfiguration` while its skill is only described);
+- a primitive's `Conditions` (precondition, postcondition, invariant) and `Completion`;
+- the components' capabilities, role NotAssigned, with their constraints as 02020 BasicConstraint
+  expressions.
+
+They are counted in RQ1 and checked like every other element. How they are used is the subject of
+[cite: the CIRP paper] and of the orchestration paper.
 
 **How the call reaches the asset (J2).** Three submodels share the work:
 - the Asset Interfaces Description (IDTA 02017 [idtaAID]) holds how to reach things;
@@ -514,19 +526,18 @@ execution record refers to the call's row in the log (3.5).
 
 **Settings.** Parameters (ours) holds a resource's settings that are not a skill's: a value, its unit,
 and the interface property it is written through. They change when the resource is set up. A skill's
-parameters change with every call, so they stay in its Operation. What was built on the controller
-(block instances, type hashes, a change log) is the integrator's record, kept outside the shell. The
-shell keeps only `RuleSet` and each skill's `Deployment`.
+parameters change with every call, so they stay in its Operation. How a controller was built is the
+integrator's record, kept outside the shell.
 
 **Constraints.** C01 to C04 (structure); C05 to C07, C10, C11 (within the shell); C12 to C14 (across
 the shells of a module and its components); C16 to C19 (across classes).
 
 **What it leaves out, and where that lives instead:**
 - a skill's current state and results: in Variables' time series;
-- which block of the program is which skill: in the integrator's record;
+- how a controller carries a skill out: in the integrator's record;
 - which capability a skill realises: the capability refers to its skill, never the other way, so
   only one direction has to be kept;
-- when a skill runs: the orchestrators decide.
+- when a skill runs: the executor decides.
 
 ### 3.5 Process blueprint
 
@@ -543,7 +554,7 @@ Most implementations keep plans in the product's shell [jungbluth2022dynamic, sa
 dasilva2026modular]. Keeping them out of it has three consequences:
 - a reconfiguration changes the resource shells and at most the process shell, never the product's;
 - one product on two lines is one product shell and two process shells;
-- an orchestrator that chooses a station per unit changes a choice, not the recipe.
+- an executor that chooses a station per unit changes a choice, not the recipe.
 
 **Table P1. The process blueprint.**
 
@@ -625,10 +636,9 @@ record, not a new recipe, as a deviation in a GMP batch record is [iec61512part4
 **Constraints.** C16 to C21 (across classes).
 
 **What it leaves out:**
-- when a step runs, and on which shuttle: the orchestrators decide, and transport is chosen at run
-  time;
+- when a step runs, and on which shuttle: the executor decides, and transport is chosen at run time;
 - the order of the steps: that is the recipe's;
-- the control strategy, centralized or by agents (P7).
+- the control strategy (P7).
 
 ### 3.6 Constraints and conformance
 
@@ -703,8 +713,8 @@ Each item ends with our recommendation. The first five decide whether 3.3 and 3.
   extended, by an addition, which 02011 allows.
 - **A2. One recipe, as a partial order.** The colleagues' BoP and our Production Sequence are two
   descriptions of the same thing. The draft calls the BoP "an ordered list of process steps", but the
-  battery case needs a partial order: the modules come out in parallel, and the agents call for
-  proposals on every ready step. APSO's `ProcessOrder` relations already are a partial order.
+  battery case needs a partial order: the modules come out in parallel, and an executor may start any
+  step that is ready. APSO's `ProcessOrder` relations already are a partial order.
   **Recommendation:** one element set under one name, partially ordered. The process AAS binds its
   steps by `NodeId` and path.
 - **A3. Where a connection's parameters live.**
@@ -759,8 +769,7 @@ Each item ends with our recommendation. The first five decide whether 3.3 and 3.
   references. **Recommended:** it is needed for E5 and for the battery case, and it reuses IDTA instead
   of adding a template.
 - **D3. The order of sections:** product, resource, process. **Recommended** (section 2).
-- **D4. Scope:** planning and the comparison of orchestrators stay out; the orchestrators appear only
-  as users. **Recommended** (section 2).
+- **D4. Scope:** decided on 3 Nov: the models, with a small showcase (section 2).
 - **D5. The constraints as SHACL.** Port the plan check and the sequence check to SHACL-SPARQL over the
   projection, and add C10, C11, C14, C19 and C21. **Recommended:** RQ3 claims they are formalised.
 - **D6. PPRL 0.3:**

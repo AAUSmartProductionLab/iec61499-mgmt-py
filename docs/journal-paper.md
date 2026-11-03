@@ -1,115 +1,75 @@
-# Journal paper: what goes in
+# Journal paper on the models: what goes in
 
-Started 28 Oct 2026, for the authors. The CIRP CMS paper ([paper-outline.md](paper-outline.md)) keeps
-a narrow scope: restructuring a running module through its AAS. This file collects what goes into
-the journal paper:
-- the modelling of skills and capabilities;
-- planning;
-- orchestration with multi-agent systems, compared with a centralized orchestrator on the same line;
-- what the CIRP paper had no room for.
+Started on 28 Oct 2026, for the authors, and split in two on 3 Nov:
+- **this file:** the models' journal paper;
+- **[orchestration-paper.md](orchestration-paper.md):** the orchestration journal paper, with IEC 61499
+  and online reconfiguration, the planners, FOND and behaviour trees, the agents, and the comparison of
+  orchestrators.
 
-Since the colleagues' introduction and related work (2 Nov), three files carry the paper:
+The CIRP CMS paper ([paper-outline.md](paper-outline.md)) is the module-level mechanism: restructuring
+a running module through its AAS.
+
+Three files carry this paper:
 - **[journal-method.md](journal-method.md):** the method as blueprints, with the joints J1 to J7 as
   relations and the constraints by scope; a draft of our parts of section 3; what to settle with the
   colleagues;
 - **[journal-rationale.md](journal-rationale.md):** every design decision against the alternatives,
-  for the method and the discussion;
-- **[journal-evaluation.md](journal-evaluation.md):** how the two cases are built and evaluated, E1 to
-  E8.
+  and what real systems demand of the models;
+- **[journal-evaluation.md](journal-evaluation.md):** the showcase, and how the two cases are built
+  and evaluated, E1 to E8.
 
 Add to it whenever a change or a design consideration belongs here. Each consideration found while
 coding goes first into [design-log.md](design-log.md), tagged *Journal*.
 
-## Scope, as it stands
+## Scope (decided on 3 Nov)
 
-A module that describes itself:
-- its skills and capabilities in the AAS (ARSO [jensen2026ontology]);
-- new composite skills planned from them;
-- built online in its IEC 61499 program;
-- offered to a line run by either of two orchestrators: centralized (FOND policies run as behaviour
-  trees [schwoerer2026fond]) or multi-agent (product agents following their recipes). Only the
-  orchestration differs (31 Oct, [framework-plan.md](framework-plan.md) section 1).
+The models:
+- the product, process and resource blueprints;
+- their ontologies and constraints;
+- the design considerations for using them in real systems.
 
-The CIRP paper is the module-level mechanism. The journal paper is the models, the planning and the
-line.
+A small showcase around them, in a deliberately limited scope, shows that they serve:
+- **plug and produce integration:** discovery, registration and the check against the blueprint;
+- **planning:** matching required against offered capabilities, and binding a recipe into a process
+  AAS;
+- **execution:** a minimal executor that follows the process AAS through the AAS API alone.
 
-**Proposed on 2 Nov:** the colleagues' introduction narrows the paper to the blueprints and their
-checking (RQ1 to RQ4). Planning and the comparison of the orchestrators then answer no research
-question. They would stay in only as users of the blueprints, and the comparison would get a paper of
-its own ([journal-method.md](journal-method.md), section 2, D4). The rows below are kept until that is
-decided.
+Not in this paper, only cited: how the modules' controllers are built (IEC 61499), online
+reconfiguration, the planning of new skills, the agents and the centralized orchestrator.
 
 ## Content
 
 | Topic | What we have | Where it is written up |
 | --- | --- | --- |
-| **The capability model** | One IDTA 02020 Capability Description per module: offered (process) capabilities, a set per component of capabilities realized by primitives, Pre/Post/Invariant as `BasicConstraint` expressions, properties as state variables through `SameProperty`. Kind-level constraints in the vocabulary, integration constraints per module | [skill-planning.md](skill-planning.md) sections 2 to 4, DD 3.9 |
-| **Why no planning submodel** | Against AAS2PDDL [nabizada2026capability], Bernhard et al. [bernhard2024leverage] and our own AI-Planning submodel [schwoerer2026fond]. Inside a module: a fixed cast, state as a few values, deletes generated. Execution constraints (occupation) are the shell's business. PDDL/HDDL generated, not modelled. Line level, with relational and uncertain outcomes, keeps a planning model of its own | [skill-planning.md](skill-planning.md) section 7, DD 3.9 |
-| **The planner** | HTN with goal regression (GTPyhop): compositions, then existing composites, then generated methods; `+=` in equal doses; lifting to parallel blocks by state and invariants | [skill-planning.md](skill-planning.md) section 6 |
-| **Checking and discovery** | Checker for hand-written flows (unmet preconditions with the step that fixes them; invariants broken by parallel branches); discovery of capabilities offered after a reconfiguration | [skill-planning.md](skill-planning.md) section 6; `modplan check`, `discover` |
-| **Standard planners** | The same domain as numeric PDDL (ENHSP) and HDDL (Aries), validated by unified-planning; the HDDL encoding with values as objects and sums as static facts | `modplan/export.py`, [skill-planning.md](skill-planning.md) section 6 |
-| **Runtime conditions** | A primitive's `Conditions` and `Completion` (ARSO 0.11), and their link to the capability constraints through shared data points | [skill-planning.md](skill-planning.md) section 5 |
 | **Product, process, resource** | ISA-88 recipe levels across product, process and resource AAS; matching by meaning (supplemental ids); three ids, three jobs. Built as aas-model's types; reference models of three products (vial, syringe, cartridge) and their process AASs on the line, checked by following every binding; a capability property listing the containers a module takes | [ppr-model.md](ppr-model.md), [aas-examples.md](aas-examples.md), DD 3.5, 3.6, aas-model's `docs/lab-aas.md` |
-| **Orchestration by agents** | Product and resource agents bidding for process steps (VDI/VDE 2193 over XMPP, SPADE); a product agent per unit ordered; shuttles bid for Transporting like modules, the module's binding proposal held until the product is at its station; custody (who carries a product) as capability constraints in the resources' AASs, Receiving and Releasing, so that no rule of the agents is about shuttles; a capability narrower than its steps contribute (BottomUpFilling, a Filling) declared by the skill written for it, so a product can ask for it; the module's agent creating that skill online on FORTE before it carries the step out (built 30 Oct, on the PC). Still to do: the agent planning the skill itself (A3). FOND policies [schwoerer2026fond] are, since 31 Oct, the other orchestrator of the same line (next row) | [agents.md](agents.md), [design-log.md](design-log.md) (30 Oct), `line-agents/` |
-| **One line, two orchestrators** | Planned 31 Oct, with the colleagues. The same resource, product and process AASs, the same IEC 61499 modules (occupation, PackML module state, the skills' state machines) and one way of running a skill (occupy, Execute, start, wait, release), under a centralized orchestrator (FOND-AAS's policy run as a behaviour tree [schwoerer2026fond]) and a multi-agent one; occupation hands the line from one to the other | [framework-plan.md](framework-plan.md) section 1, [design-log.md](design-log.md) (31 Oct) |
-| **The AAS as the configuration of its own connection** | A module's AAS is what the DMP (aas-camel-dmp) runs: an Operation invoked at the AAS server is delegated to the DMP, which calls the module's OPC UA method as the AIMC maps it and answers with the method's reply; the module's values are observed over OPC UA and written as rows of the time series the Variables name (InfluxDB), never as live values in the AAS. Generated from the module spec with the program, checked end to end against a simulated module | [design-log.md](design-log.md) (28 Oct), [tooling.md](tooling.md) section 6, `cell/tests/test_dmp_live.py` |
-| **Locations** | Coordinates in Variables (aas-model's; ARSO 0.14) as a tree of transforms rooted at the table's base: mounts and end effectors following measured positions, shuttles following the controller, products re-parented at handover; the stations derived from the AASs; the first version as frames on BoM nodes, and why it was replaced | [locations-and-layout.md](locations-and-layout.md), [design-log.md](design-log.md) |
+| **Skills and capabilities** | A skill as its commands, each with its interface reference, its Operation and the steps it runs; offered capabilities (IDTA 02020) derived from the skills, `CapabilityRealizedBy` a model reference to the skill. The elements for reconfiguration and planning are part of the models and counted, their use is the orchestration paper's | [aas-models.md](aas-models.md) section 2, DD 3.2 to 3.4, aas-model's `docs/lab-submodels/Skills.md` |
+| **The recipe as a partial order** | The Production Sequence 4.0 (proposed): `partial` blocks with `After`, connections in the steps that make or break them, one sequence per sequence type; examples of a battery pack and the vial, built and checked | [precedence-graphs.md](precedence-graphs.md), aas-model's `docs/lab-submodels/ProductionSequence4.md` |
+| **The AAS as the configuration of its own connection** | A module's AAS is what the DMP (aas-camel-dmp) runs: an Operation invoked at the AAS server is delegated to the DMP, which calls the module's OPC UA method as the AIMC maps it and answers with the method's reply; the module's values are observed over OPC UA and written as rows of the time series the Variables name (InfluxDB), never as live values in the AAS. Checked end to end against a simulated module | [design-log.md](design-log.md) (28 Oct), [tooling.md](tooling.md) section 6, `cell/tests/test_dmp_live.py` |
+| **The ontologies and checks** | ARSO, APSO, AProSO (APrSO in the paper) and the link ontology PPRL with its SHACL rules; the projection from AAS JSON to RDF; `modreg check`, the plan check, the sequence check | [ontology/README.md](../ontology/README.md), [journal-method.md](journal-method.md) sections 3.2 and 3.6 |
+| **Locations** | Coordinates in Variables as a tree of transforms rooted at the table's base. Probably out: not the paper's argument | [locations-and-layout.md](locations-and-layout.md) |
 
-## Evaluation the CIRP paper leaves out
+## What is checked today
 
-- **Planning against standard planners:** GTPyhop 1 to 2 ms, Aries 41 to 66 ms, ENHSP 282 to 348 ms;
-  all valid (`cell/eval/planners.py`).
-- **Plan quality** against the engineer's skill:
-  - GTPyhop's plan equals Dispensing.
-  - Aries returns by MoveAxis(0) instead of Home.
-  - ENHSP weighs the empty vial first.
-- **Scaling with plan size:** one probe, 1 to 20 doses. GTPyhop 2 to 4 ms, ENHSP about 0.37 s, Aries
-  0.08 to 6.8 s on our HDDL encoding. Five-run medians are to do; the method is borrowed from
-  [schwoerer2026fond].
-- **Modelling effort** (borrowed from [nabizada2026capability], who report 77 AAS elements for one
-  action):
-  - Filling: 16 constraints (102 AAS elements), of which 4 are written for the module.
-  - Stoppering: 9 constraints, 2 written.
-  - The HDDL (9 tasks, 17 methods, 5 actions) is generated.
-- **Repeatability:** successful runs out of N (borrowed from [schwoerer2026fond]).
-- **The cases T1 to T14**, including discovery (T10), a missing scale (T11), a missing integration
-  constraint (T12) and filling from the bottom (T13, T14).
-- **Agents:** time from a product's request to a module offering a new skill.
-- **The two orchestrators on one scenario** (proposed 31 Oct): the same orders and events (a module
-  failing, a rush order, a module plugged in) run by both; the time to finish the orders, the reaction
-  to the failure, the time until a new module is used, the work to set each up.
+The reference models, built and checked by following every reference
+(`aas-model/scripts/export_precedence_examples.py`):
+- **battery:** 7 AASs, 30 submodels, 195 references; the only ones that do not resolve point into the
+  four stations not yet modelled; 20 steps run;
+- **pharma:** 4 AASs, 38 references, 4 steps.
 
-## Related work beyond the CIRP paper's 17
+The plan for the evaluation is in [journal-evaluation.md](journal-evaluation.md).
 
-All in [paper-references.bib](paper-references.bib):
+## Related work beyond the colleagues' section 2
+
+All in [paper-references.bib](paper-references.bib) unless said otherwise:
 - **Skills and CSS:** pedersen2016robot, koecher2020formal, css2022, css2025, dorofeev2018skill,
   dorofeev2019agile, dorofeev2019evaluating, sidorenko2024bt, koecher2022model.
 - **BPMN for skills and processes:** koecher2022bpmn models the recipe as BPMN service tasks naming
-  capabilities, bound to skills when a run starts and run by Camunda outside the machines; the skill
-  itself is a state machine. Ours draws both levels, a product's plan and a module's composite skill,
-  in one BPMN notation, as a view of a block-structured flow: the plan is carried out by the agents,
-  the skill by FORTE, with no engine; the binding is by the agents, not the user; the plan is checked
-  before it runs. Drawn freely (a catalog, wiring by hand), the drawing is read back into blocks by a
-  validator that names what keeps it from being well structured; only a flow is saved. The point for
-  the paper: BPMN as notation and exchange format, not as executor; well-structured BPMN as the part
-  that maps to our blocks.
-- **Reconfiguration and services:** zoitl2006dynamic, dai2017self, klose2019orchestration (MTP).
-- **Planning:** mayr2023skiros2, martin2021plansys2, bennulf2021goal, wally2019production,
-  hoeller2020hddl, scala2016interval, godet2022chronicles, blair2009models,
-  jarvenpaa2019development.
-- **Not yet in the file:**
-  - Lindorfer and Froschauer, INDIN 2019: BPMN skill workflows with meta-model rules.
-  - Spitzer et al., ETFA 2020: an OPC UA skill interface for PLCs, atomic and composite skills.
-  - Stolze et al., ETFA 2024: a proactive AAS through BPMN and the I4.0 language bidding.
-
-- **Agents** (survey of 30 Oct, [agents-literature.md](agents-literature.md), BibTeX in its section 8.2,
-  not yet in the bib file): SMIA (Hurtado et al., JII 2025, doi:10.1016/j.jii.2025.100915) as the
-  closest system; Lepuschitz et al. (TSMC-C 2011), Zoitl et al. (ETFA 2010), Vallée et al. (TII 2011) for
-  agents reconfiguring IEC 61499; Lyu and Brennan (2020, 2025) for SPADE with 4diac; Bernhard et al.
-  (2023) and Jungbluth et al. (2022, 2023) for AAS agents with VDI/VDE 2193 bidding and transport; IEEE
-  2660.1-2020 and Leitão et al. (OJIES 2023) for the agent-device interface; Smith (1980) for the
-  contract net. The contribution against them is in [agents.md](agents.md), section 9: an agent that
-  plans and creates a skill online to win a bid.
+  capabilities, bound to skills when a run starts; the skill itself is a state machine. Ours draws
+  both levels, a product's recipe and a module's composite skill, in one BPMN notation, as a view of a
+  block-structured flow. The point for this paper: BPMN as notation and exchange format, not as the
+  model; well-structured BPMN as the part that maps to our blocks.
+- **Not yet in the file:** Lindorfer and Froschauer, INDIN 2019: BPMN skill workflows with meta-model
+  rules.
 
 ## Candidate figures (1 Nov)
 
@@ -117,7 +77,8 @@ The pages of [figures/journal-figures.drawio](figures/journal-figures.drawio), e
 `paper/journal/figures/<page>.pdf`, for the authors to choose from. Most are drawn 960 px wide (two
 columns), with the names and values of the example line (`cell/examples`, `cell/modules`). Since
 2 Nov each figure is to become generic, with a `-battery` page (remanufacturing, simulated) and a
-`-pharma` page (the example line) beside it; `submodel-references` is the first.
+`-pharma` page (the example line) beside it; `submodel-references` is the first. Two new figures are
+proposed in [journal-method.md](journal-method.md), section 2: `blueprints` and `ontology-layers`.
 
 | Page | What it shows |
 | --- | --- |
@@ -134,15 +95,8 @@ columns), with the names and values of the example line (`cell/examples`, `cell/
 | `bpmn-integration` | A module plugged in and a new product as one BPMN process, a lane per tool, with the AASs each task reads and writes |
 | `model-use` | Which activity reads and writes which submodel |
 
-The page `product-to-process` of [figures/cirp-figures.drawio](figures/cirp-figures.drawio) (one column)
-fits here as well.
+## Open questions
 
-## Open questions for the journal paper
-
-- **The comparison's place:** the centralized orchestrator is the colleagues' work (FOND-AAS, the BT
-  controller); whether the comparison is this paper's or a joint one.
-- **Taring:** the plan tares after dispensing from an untared start
-  ([skill-planning.md](skill-planning.md) section 9).
-- **Composites of composites:** inlined today; whether to keep them as calls.
-- **A discovered offer's range under `+=`:** it needs the container's capacity.
-- **Decisions in planned skills:** "top up if light".
+- **What to settle with the colleagues, and what to decide among us:** [journal-method.md](journal-method.md),
+  sections 5 and 6.
+- **Composites of composites:** inlined today; whether a composite's step may call another composite.

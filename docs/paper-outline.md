@@ -3,8 +3,9 @@
 A draft of 28 Oct, for the authors; its numbers are those of the runs of 29 Oct (`cell/eval/results`).
 Each paragraph of the paper as a topic sentence, then why we chose it and instead of what. The paper
 has a narrow scope: restructuring a running IEC 61499 module through its AAS. What goes deeper (the
-capability model, planning, agents) is kept for the journal paper, in
-[journal-paper.md](journal-paper.md). Citation keys are in
+capability model, planning, agents) is kept for the journal papers, in
+[journal-paper.md](journal-paper.md) (the models) and [orchestration-paper.md](orchestration-paper.md)
+(planning and agents). Citation keys are in
 [paper-references.bib](paper-references.bib); at most 17 are cited (list at the end). DD n points to
 [design-decisions.md](design-decisions.md); considerations found while coding go into
 [design-log.md](design-log.md).
