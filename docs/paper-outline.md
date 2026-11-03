@@ -50,7 +50,7 @@ a page, page 1 about 550 below the abstract):
 | 3 Concept and method | 2 at least | 1,600 | Figs. 1 to 3 | 2,400 words, 1 Nov: to cut |
 | 4 Evaluation | 1 | 600 | one figure, Table 2 | |
 | 5 Discussion and conclusion | last page, with the references | 250 | | |
-| References | | about 30 | | |
+| References | | 17 at most | | [paper/cirp/references.bib](paper/cirp/references.bib), 3 Nov |
 
 The first draft of sections 1 and 2 is about a quarter page over; the sentences to cut first are
 marked `% cut first` in the two files.
