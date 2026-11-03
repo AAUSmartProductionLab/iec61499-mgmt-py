@@ -20,6 +20,26 @@ A running log of design considerations made while building, for writing the pape
 
 ## 3 Nov 2026
 
+- **Reading a large program back: by part, on a FORTE of the evaluation's own.** *CIRP*, *Journal*.
+  - Found by the Q1 pilot: FORTE 3.3.0 sends a management answer in one frame whose length field has
+    16 bits and cuts off what lies beyond 64 KiB, and its connection query takes no filter (the
+    command parser reads the Source, the resource ignores it). A program of more than about 600
+    connections, some 9 skills of Dispensing's size (13 instances, 63 connections each, with long
+    hierarchical names), cannot be read back, so the reconciler cannot verify it. Deploying is not
+    affected (one small request per element), nor is monitoring; the IDE's upload from a device
+    would be.
+  - Also found: the module's mode reaches every block at once, one event each, and with 20 such
+    skills FORTE's event list (256) drops events at boot.
+  - The user's choice: the lab's FORTE and the kit stay as they are. The evaluation runs on a FORTE
+    of its own (`cell/eval/forte/build.ps1`): the lab's patches, `0008-connection-query-by-part`
+    (the query answers the connections leaving a named instance or container), and event lists of
+    1024 (`configurations/eval/modules-win-eval.txt`). The paper says so and why.
+  - The reader asks for the whole first and, when that does not fit, part by part (each instance and
+    container below the resource, a container by its own parts again); on a FORTE without the patch
+    it says so instead of failing on broken XML. Instead of: always by part (more round trips for
+    every program), or a longer frame (the IDE could not talk to that FORTE any more).
+  - Not solved: the instance query has the same limit, at about 600 instances.
+
 - **A value written online takes the place of the boot file's own write of it.** *CIRP*.
   - The reconciler amended the boot file by appending everything it sent, so a changed value was
     written twice at boot, the old value and then the new; the module came up right, but every change

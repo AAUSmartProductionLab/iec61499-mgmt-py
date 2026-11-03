@@ -1,0 +1,8 @@
+// For the CIRP paper's evaluation only (docs/cirp-evaluation.md, Q1), not the lab's FORTE: the lab's
+// FORTE for Windows (modules-win.txt), built by cell/eval/forte/build.ps1 with the evaluation's patch
+// (cell/eval/forte/0008-connection-query-by-part.patch), into build/modules-win-eval.
+include=../modules-win.txt
+// The module's mode reaches every block at once, one event each: with 20 skills of Dispensing's
+// size more than 256, and FORTE drops the rest at boot. Room for about 70.
+FORTE_EventChainEventListSize:STRING=1024
+FORTE_EventChainExternalEventListSize:STRING=1024
