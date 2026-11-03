@@ -237,3 +237,6 @@ arduino_cpp_examples/
 
 # Left from when FORTE was prepared for a GitHub release
 runtime/dist/
+
+# The manifest a robot Pi serves (deploy/modpy/compose.yaml): made by modreg manifest
+/deploy/modpy/manifest/

@@ -1,0 +1,5 @@
+*
+!iec61499-skill-lib/modgen
+!module-py/modpy
+!cell/modules/python
+**/__pycache__
