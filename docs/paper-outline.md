@@ -10,6 +10,16 @@ capability model, planning, agents) is kept for the journal papers, in
 [design-decisions.md](design-decisions.md); considerations found while coding go into
 [design-log.md](design-log.md).
 
+**3 Nov:** the paper's main file is on Overleaf (Elsevier CRC template, `elsarticle` 5p with `ecrc`),
+with the title "Asset Administration Shell-driven reconfiguration of skill-based IEC 61499 devices" and
+an abstract that frames the work in the product, process and resource AASs. Sections 1 and 2 are
+drafted in LaTeX in those terms ([paper/cirp/introduction.tex](paper/cirp/introduction.tex),
+[paper/cirp/related-work.tex](paper/cirp/related-work.tex)). The page budget is now: introduction and
+related work two pages and a little more; architecture and method at least two; evaluation one;
+conclusion and references the last. The scope is wider again than on 28 Oct: the skill and product
+hierarchies, both routes to a new skill (handcrafted, or planned from a product's requirement), the
+check against the product's need, and planning in brief.
+
 ## The argument
 
 1. Modular production makes changeovers frequent, but a module's behaviour is its vendor's control
@@ -29,20 +39,35 @@ capability model, planning, agents) is kept for the journal papers, in
 
 ## Budget
 
-| Section | Words | Figures, tables |
-| --- | --- | --- |
-| Abstract | 170 | |
-| 1 Introduction | 400 | |
-| 2 Related work | 500 | Table 1 |
-| 3 Concept and method | 1,200 | Figs. 1 to 3 |
-| 4 Evaluation | 650 | Fig. 4 and one or two more, Table 2 |
-| 5 Discussion and conclusion | 300 | |
-| References | 17 | |
+Since 3 Nov (the pages as decided; the words are what the two-column template holds, about 1,000
+a page, page 1 about 550 below the abstract):
+
+| Section | Pages | Words | Figures, tables | Draft |
+| --- | --- | --- | --- | --- |
+| Abstract | (page 1) | on Overleaf | | Overleaf |
+| 1 Introduction | 2 and a little, with section 2 | 750 | | 850 words, 3 Nov |
+| 2 Related work | | 850 | Table 1 | 830 words and Table 1, 3 Nov |
+| 3 Concept and method | 2 at least | 1,600 | Figs. 1 to 3 | 2,400 words, 1 Nov: to cut |
+| 4 Evaluation | 1 | 600 | one figure, Table 2 | |
+| 5 Discussion and conclusion | last page, with the references | 250 | | |
+| References | | about 30 | | |
+
+The first draft of sections 1 and 2 is about a quarter page over; the sentences to cut first are
+marked `% cut first` in the two files.
+
+The budget before (28 Oct): abstract 170 words, introduction 400, related work 500 with Table 1,
+method 1,200 with Figs. 1 to 3, evaluation 650, conclusion 300, 17 references.
 
 Our CIRP CMS 2025 paper [jensen2026service] had 4,250 words in all, with 17 references and six
 figures and tables.
 
 ## 1 Introduction
+
+Drafted on 3 Nov in [paper/cirp/introduction.tex](paper/cirp/introduction.tex), in seven paragraphs:
+the setting and what IEC 61499 and the AAS promise; where the state of the art leaves it; our earlier
+work; the approach in the abstract's terms (the three AASs, the module's fixed design, the translation
+rules); the two routes to a new skill and the one path every change takes; the contributions C1 to
+C4; the structure. The outline of 28 Oct it was written from:
 
 1. **Pharmaceutical production moves to small batches built from modules** [schwoerer2025modular].
    Restructuring a module's behaviour, such as another sequence or filling from the bottom, means its
@@ -61,6 +86,35 @@ figures and tables.
    - an evaluation of effort, downtime and correctness on a filling module.
 
 ## 2 Related work and gap
+
+Drafted on 3 Nov in [paper/cirp/related-work.tex](paper/cirp/related-work.tex), from the full texts
+of the eight papers in `Papers-cirp-cms` and `Downloads/AAS-IEC61499-Paper` (not in the repository):
+the four strands below, the gap, and Table 1. What the full texts changed:
+
+- **Closest work: Huang et al. 2026** (IEC 61499 and MTP). An MTP file sent to the runtime is compared
+  with what runs and turned into management commands, online, in at most 96 ms. But the orchestration
+  is redrawn by hand, the MTP describes services and not a product's need, and nothing is read back
+  after the change. It goes in the online-change strand.
+- **Terzimehić et al. 2021**: recipe, topology and component models give an SMT deployment and a
+  generated IEC 61499 application (sequence, parallel, repetition). It is engineering time only; how
+  the result reaches running PLCs is not described.
+- **Lindorfer and Froschauer 2019**: BPMN skill sequences validated against a rule set before they run,
+  in an external workflow engine; FORTE is their future work. Our checker answers the same question
+  from the capabilities' conditions instead of hand-written rules.
+- **Albus et al. 2025** (CIRP CMS 2025): product-driven, from the CAD model to a bill of process, capability
+  matching, line rebalancing and agents orchestrating OPC UA skills. It has no AAS and no change of a
+  control program.
+- **Blumhofer et al. 2025**: CSS in the AAS (offered capabilities with constraints, a Skills submodel
+  with OPC UA endpoints and conditions). How a skill is composed of atomic skills stays inside the
+  machine, not in the AAS.
+- **Stolze et al. 2024**: the proactive AAS as BPMN workflows on a process engine, for bidding; no
+  control program.
+- **Nabizada et al. 2024**: PDDL generated from SysML at engineering time, for evaluating variants. It
+  is not the AAS2PDDL paper (nabizada2026capability).
+- **Dorofeev et al. 2021**: the 2.7- to 5.5-fold lower effort, measured in 4diac user actions, is
+  theirs; so is the future work of keeping the skill in the AAS.
+
+The outline of 28 Oct:
 
 1. **Composing skills on controllers.**
    - Skills are built from device primitives [schou2018skill]. CSS separates a capability from the
@@ -266,11 +320,23 @@ proposal; if space runs out, Fig. 3 goes first.
 | Table 1 | Related work against the gap | New |
 | Table 2 | Commands, times of change and verify | `cell/eval/results` |
 
-## The 17 references
+## The references
 
-schwoerer2025modular, jensen2026service, schwoerer2026fond, jensen2026ontology, schou2018skill,
-koecher2023reference, iec61499, dorofeev2021orchestrator, sidorenko2024composition, rooker2007zero,
-lepuschitz2011self, wenger2018connecting, koecher2024smt, bernhard2024leverage,
+Since 3 Nov, sections 1 to 3 cite 26 keys. With the method's four `\todocite` (PackML, IDTA 02017, the
+process planner, and 4diac, for which `strasser2008framework` is now in the bib), that makes about 30.
+
+- **Sections 1 and 2:** schwoerer2025modular, iec61499, rooker2007zero, koecher2023reference, css2022,
+  schou2018skill, idta02020, dorofeev2021orchestrator, jensen2026service, sidorenko2024composition,
+  bernhard2024leverage, nabizada2026capability, schwoerer2026fond, strasser2008framework,
+  terzimehic2021service, lindorfer2019user, wenger2018connecting, blumhofer2025enhancing,
+  stolze2024proactive, albus2025automated, lepuschitz2011self, huang2026plug, koecher2024smt,
+  nabizada2024workflow.
+- **Only in section 3:** jensen2026ontology, nau2021gtpyhop.
+- **To cut first:** nabizada2024workflow, wenger2018connecting, lepuschitz2011self, css2022.
+
+The 17 of 28 Oct were: schwoerer2025modular, jensen2026service, schwoerer2026fond, jensen2026ontology,
+schou2018skill, koecher2023reference, iec61499, dorofeev2021orchestrator, sidorenko2024composition,
+rooker2007zero, lepuschitz2011self, wenger2018connecting, koecher2024smt, bernhard2024leverage,
 nabizada2026capability, nau2021gtpyhop, and idta02020 (in 3.5).
 
 Swap candidates:
@@ -294,3 +360,8 @@ The rest of [paper-references.bib](paper-references.bib) is for the journal pape
 | --- | --- |
 | "Composite skill" instead of "module level skill", in paper and docs | Yes |
 | The planned scenario to 15 mL | Yes, before the Pi runs |
+| The abstract (3 Nov): "process parameters, including loop counts, to parameter writes" and "dosing cycles". A flow has steps, parallel blocks, decisions and conditional steps, and the BPMN validator refuses a loop | Say "number of doses" (DoubleDose, or a plan with two doses), or build a counted repeat block first |
+| The abstract: "the process AAS holds the procedure in BPMN, ... the BPMN procedure to a subapplication". The flow that becomes a subapplication is a composite skill's, in the module's Skills submodel. The process AAS binds the product's steps to modules and skills. Both are written in the same flow elements and drawn in BPMN | Say so: the procedure binds steps to skills, and a composite's flow becomes a subapplication. The introduction is written that way |
+| The abstract: every change is "applied online". Today a reordered or removed skill needs a restart, and a new primitive or IO a new build (DD 2.10) | "Applied online where its class allows it" (as the introduction says), or build delete-and-create while the module is idle |
+| The abstract: the resource AAS describes "the deployed control configuration". Since DD 3.7 the AAS holds each skill's Deployment and interface; the instances, types and hashes are the integrator's record, outside the AAS | Keep DD 3.7 and reword the abstract, or move the record into the AAS |
+| Which conference: the docs say CIRP CMS 2026, the Overleaf head says the 60th CIRP CMS (2027). Albus et al. give the 58th as 2025 | The head is right; the docs' "2026" to be corrected |
