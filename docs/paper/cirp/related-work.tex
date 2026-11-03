@@ -4,9 +4,9 @@
 % text" below (in Papers-cirp-cms, not in the repository; read 3 Nov). For rooker2007zero we have the
 % abstract only. Budget: about 850 words and Table 1; with section 1 it fills the first two pages. The
 % paper cites at most 17 sources: those of references.bib beside this file. Left out to keep to 17 (in
-% docs/paper-references.bib): sidorenko2024composition, wenger2018connecting, stolze2024proactive,
-% lepuschitz2011self, koecher2024smt, bernhard2024leverage, nabizada2024workflow, css2022,
-% strasser2008framework. Needs amssymb (\checkmark), which the template loads.
+% docs/paper-references.bib): sidorenko2024composition, wenger2018connecting, lepuschitz2011self,
+% koecher2024smt, bernhard2024leverage, nabizada2024workflow, css2022, strasser2008framework,
+% jensen2026ontology. Needs amssymb (\checkmark), which the template loads.
 
 \section{Related work}
 \label{sec:related}
@@ -34,12 +34,16 @@ composition is made at engineering time and either deployed as new code or inter
 controller's program. None reads the deployed program back to compare it with the description it
 came from.
 
-% Full text: blumhofer2025enhancing, albus2025automated. Cut first: "Our earlier work ...".
+% Full text: blumhofer2025enhancing, stolze2024proactive, albus2025automated. Cut first: "Our earlier
+% work ...".
 \emph{The AAS as a source for control.} In approaches based on capabilities, skills and services, the
 AAS describes offered capabilities with their constraints, and skills with their OPC~UA endpoints. A
 product's features are matched against the offered capabilities and turned into a manufacturing
 sequence~\cite{blumhofer2025enhancing}. How a skill is composed from atomic skills stays inside the
-machine's implementation and is not described in the AAS. Albus et al. go from a product's CAD model to
+machine's implementation and is not described in the AAS. Stolze et al. make the AAS proactive by
+running the bidding of the I4.0 language as BPMN workflows on a process engine, so that a product
+selects the resources that offer its required capabilities~\cite{stolze2024proactive}. Albus et al. go
+from a product's CAD model to
 a bill of process, match it against the resources' capabilities, rebalance the line, and let agents
 orchestrate the resources' skills over OPC~UA~\cite{albus2025automated}; they start from the
 observation that new processes otherwise need manual integration into the control system. Our earlier
@@ -80,6 +84,7 @@ verified by reading the program back, and recorded in the AAS.
 % - huang2026plug: management commands online; the runtime is queried and compared with the MTP file
 %   before the commands are sent (read back, in part); behaviour contracts are future work.
 % - blumhofer2025enhancing: capability constraints checked in production planning (check, in part).
+% - stolze2024proactive: BPMN on a process engine; no control program.
 % - albus2025automated: validated by simulation (check, in part); no AAS; execution by agents.
 \begin{table}[t]
   \centering
@@ -99,6 +104,7 @@ verified by reading the program back, and recorded in the AAS.
     \cite{lindorfer2019user} & BPMN by the user & -- & -- & -- & \checkmark & -- \\
     \cite{huang2026plug} & MTP file & -- & \checkmark & \checkmark & -- & (\checkmark) \\
     \cite{blumhofer2025enhancing} & product features & \checkmark & -- & -- & (\checkmark) & -- \\
+    \cite{stolze2024proactive} & bidding & \checkmark & -- & -- & -- & -- \\
     \cite{albus2025automated} & CAD model & -- & -- & -- & (\checkmark) & -- \\
     Ours & AAS, written or planned & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
     \hline

@@ -327,17 +327,19 @@ At most 17, decided again on 3 Nov. They are in
 written from the sections' citations, copied out of [paper-references.bib](paper-references.bib),
 which stays the library for the journal paper. The 17, in the order first cited:
 
-- **Our work:** schwoerer2025modular, jensen2026service, schwoerer2026fond, jensen2026ontology,
-  schou2018skill.
+- **Our work:** schwoerer2025modular, jensen2026service, schwoerer2026fond, schou2018skill.
 - **Standards and models:** iec61499, idta02020, koecher2023reference.
 - **The closest works:** dorofeev2021orchestrator, terzimehic2021service, lindorfer2019user,
-  huang2026plug, rooker2007zero, blumhofer2025enhancing, albus2025automated, nabizada2026capability.
+  huang2026plug, rooker2007zero, blumhofer2025enhancing, stolze2024proactive, albus2025automated,
+  nabizada2026capability.
 - **The planner:** nau2021gtpyhop.
 
 Named in the text without a reference: PackML, 4diac FORTE, IDTA 02017, the process planner.
-Dropped for the count: sidorenko2024composition, wenger2018connecting, stolze2024proactive,
-lepuschitz2011self, koecher2024smt, bernhard2024leverage, nabizada2024workflow, css2022,
-strasser2008framework. The first to swap in, if a reviewer asks: PackML (ISA-TR88.00.02) for
+Dropped for the count: sidorenko2024composition, wenger2018connecting, lepuschitz2011self,
+koecher2024smt, bernhard2024leverage, nabizada2024workflow, css2022, strasser2008framework,
+jensen2026ontology. The last was dropped on the authors' word (3 Nov): the Skills submodel now
+points to blumhofer2025enhancing, the closest skill model in an AAS, and its slot went to
+stolze2024proactive. The first to swap in, if a reviewer asks: PackML (ISA-TR88.00.02) for
 albus2025automated.
 
 The 17 of 28 Oct were: schwoerer2025modular, jensen2026service, schwoerer2026fond, jensen2026ontology,
