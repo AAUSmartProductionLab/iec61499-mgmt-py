@@ -5,11 +5,13 @@ param(
     # kit then cannot run the lab's module programs.
     [switch]$NoLabModules,
     # Leave out the base images (alpine, busybox for arm64); the Pi then pulls them from Docker Hub.
-    [switch]$NoImages
+    [switch]$NoImages,
+    # The lab's module projects (cell/control) that go into projects/, as committed, to start from.
+    [string[]]$Projects = @('FillingModule', 'StopperingModule')
 )
 # A kit for building FORTE with one's own block types without this repository: the build scripts,
 # FBE configurations, FORTE patches and the lab's exported modules (from the last build-modules.ps1),
-# with kit/README.md. It builds the same FORTE as runtime/bin/forte-aarch64 plus the new types.
+# the lab's module projects (projects/) with kit/README.md. It builds the same FORTE as runtime/bin/forte-aarch64 plus the new types.
 # For the Pi it holds what install.sh would download: the container files (pi/) and the base
 # images (images/), which kit/install-pi.ps1 copies over SSH; then the Pi needs no internet.
 $ErrorActionPreference = 'Stop'
@@ -52,6 +54,22 @@ if (!$NoLabModules) {
     if (!(Test-Path -LiteralPath (Join-Path $modules 'modlib'))) { throw "No exports in $modules; run build-modules.ps1 first" }
     New-Item -ItemType Directory -Force -Path (Join-Path $kit '.cache') | Out-Null
     Copy-Item -Recurse -LiteralPath $modules -Destination (Join-Path $kit '.cache\modules')
+}
+if ($Projects) {
+    # From the last commit, not the working copy: what is in the kit is what the repository has.
+    $repo = Split-Path -Parent $PSScriptRoot
+    $folder = Join-Path $kit 'projects'
+    New-Item -ItemType Directory -Force -Path $folder | Out-Null
+    $ErrorActionPreference = 'Continue'
+    foreach ($name in $Projects) {
+        $tar = Join-Path $folder "$name.tar"
+        & git -C $repo archive --format=tar --prefix="$name/" -o $tar "HEAD:cell/control/$name"
+        if ($LASTEXITCODE -ne 0) { throw "git archive of cell/control/$name failed" }
+        & tar -xf $tar -C $folder
+        if ($LASTEXITCODE -ne 0) { throw "Could not unpack $tar" }
+        Remove-Item -LiteralPath $tar
+    }
+    $ErrorActionPreference = 'Stop'
 }
 $zip = Join-Path $Out 'forte-kit.zip'
 if (Test-Path -LiteralPath $zip) { Remove-Item -Force -LiteralPath $zip }

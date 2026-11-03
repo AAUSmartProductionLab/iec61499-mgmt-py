@@ -99,6 +99,23 @@ Running the installer again replaces FORTE and keeps the program that is on the 
 (`~/forte/boot/forte.fboot`). On a lab module's Pi, ask first: the module's program starts again
 when FORTE restarts, and it may move an axis.
 
+## The lab's module projects
+
+`projects\` holds the lab's module projects as they are now: `FillingModule` and
+`StopperingModule`, with their applications, block types and devices. Start from one of them, or
+compare yours with it:
+
+1. In the IDE: **File > Import > General > Existing Projects into Workspace**, select
+   `projects\FillingModule` and tick **Copy projects into workspace**.
+2. Set the device's `MGR_ID` to your Pi's address: in the System, the device `FORTE_PI`, parameter
+   `MGR_ID`, e.g. `"192.168.0.42:61499"`.
+3. Put it on the Pi with `deploy-pi.ps1 -Project <the project in your workspace>` (below).
+
+An older project of your own also builds, also with fewer or older blocks: its block types are
+compiled from its own `Type Library`. If it carries its own older copies of ModLib's blocks, the
+build stops and names them (`... differs from the one in modlib`): build it with `-Alone`, or move
+your application onto the current project.
+
 ## Put your project on the Pi
 
 One command takes your project as it is on disk and puts it on the Pi, from fresh:
