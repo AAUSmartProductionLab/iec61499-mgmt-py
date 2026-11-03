@@ -39,7 +39,7 @@ kit; Docker needed on the PC that makes it, or `-NoImages`) to the Pi over SSH a
 there. The Pi needs no internet unless Docker is missing. For a Pi that already runs FORTE,
 `update-pi.ps1 -Pi user@address -Project <folder>` builds, sends the binary, rebuilds the container
 and waits until FORTE is up (the old binary stays as `~/forte/forte.old`). That FORTE still runs the lab's module
-programs. Their program goes on as a boot file made in the IDE (Create FORTE Boot-Files):
+programs. `deploy-pi.ps1 -Pi user@address -Project <folder>` does it all: the program of the device at that address from the .sys (`make-bootfile.ps1`), FORTE built with the types, and a new container on the Pi that starts with the program. A boot file made in the IDE (Create FORTE Boot-Files) goes on with
 `update-pi.ps1 -Program <file.fboot>` makes it the Pi's `boot/forte.fboot` and restarts FORTE with it.
 Not by Deploy: a deployment deletes the running resource first, and FORTE crashes when it holds GPIO
 blocks (seen on the filling Pi, 3 Nov). The same script works here:

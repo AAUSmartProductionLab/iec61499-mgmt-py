@@ -24,8 +24,8 @@ param(
 #   1. build-project.ps1 (with -Project): export the project, cross-compile, bin/forte-aarch64,
 #   2. scp the binary and the boot file (-Program) to the Pi, next to the ones that run,
 #   3. on the Pi: check their checksums, keep the old ones (forte.old, boot/forte.fboot.old), put the
-#      new ones in place, stop FORTE, wait until its port is free, rebuild the image (a new binary:
-#      the image copies it in when it is built) and start a new container,
+#      new ones in place, stop and delete the FORTE container, wait until its port is free, build
+#      the image (a new binary: the image copies it in when it is built) and run a new container,
 #   4. wait until FORTE says it is up and running, show the end of its log, check that the program
 #      loaded and that FORTE answers on its port.
 # Two connections to the Pi (scp, ssh): each asks for the password unless an SSH key is set up.
@@ -99,13 +99,13 @@ if ($NoProgram) { $remote += "$keep && : > boot/forte.fboot" }
 $remote += @(
     'if docker info >/dev/null 2>&1; then D=docker; else D=''sudo docker''; fi',
     # Docker's progress goes to a file, shown only when something fails.
-    $(if ($binary) { 'echo Rebuilding the image; $D compose build -q forte >compose.log 2>&1 || { cat compose.log; exit 4; }' }),
-    'echo Stopping FORTE',
-    '$D compose stop forte >compose.log 2>&1 || { cat compose.log; exit 4; }',
+    'echo Stopping and deleting the FORTE container',
+    '$D compose rm -f -s forte >compose.log 2>&1 || { cat compose.log; exit 4; }',
     # A connection FORTE had open (the IDE's) holds its port for up to a minute after it stops, and
     # FORTE does not take a port that is held: it would run without its management port.
     'if command -v ss >/dev/null; then for i in $(seq 1 90); do ss -Htan ''( sport = :61499 )'' | grep -q . || break; [ $i = 1 ] && echo Waiting until port 61499 is free; sleep 1; done; fi',
-    'echo Starting FORTE',
+    $(if ($binary) { 'echo Building the image; $D compose build -q forte >compose.log 2>&1 || { cat compose.log; exit 4; }' }),
+    'echo Running a new FORTE container',
     '$D compose up -d --force-recreate forte >compose.log 2>&1 || { cat compose.log; exit 4; }',
     "for i in `$(seq 1 30); do `$D compose logs forte 2>&1 | grep -q '$ready' && break; sleep 1; done",
     # The boot file is read after that line, block by block.
