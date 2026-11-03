@@ -131,6 +131,7 @@ class Bench:
                           if v.startswith("'modbus[")}
         self.stack.enter_context(separate(spec, host="127.0.0.1", port=self.modbus))
         self.running: ExitStack | None = None
+        self.forte_dir: Path | None = None             # the last FORTE's folder, its log (forte.log) in it
 
     def boot(self, spec=None) -> str:
         cand = self.cand if spec is None else Candidate(self.spec, spec, self.target)
@@ -141,6 +142,7 @@ class Bench:
         self.running = ExitStack()
         folder = self.folder / f"forte{time.monotonic_ns()}"
         folder.mkdir(parents=True)
+        self.forte_dir = folder
         (folder / "forte.fboot").write_text(boot, encoding="utf-8", newline="\n")
         self.ua_port = free_port()
         self.port = self.running.enter_context(launch_forte(

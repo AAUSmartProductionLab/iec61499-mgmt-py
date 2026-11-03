@@ -240,3 +240,6 @@ runtime/dist/
 
 # The manifest a robot Pi serves (deploy/modpy/compose.yaml): made by modreg manifest
 /deploy/modpy/manifest/
+
+# The evaluation's AASs, built by cell/eval/q1.py before its runs (regenerated when missing).
+cell/eval/results/q1-cache/
