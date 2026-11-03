@@ -511,7 +511,7 @@ capability is realized by a module level skill.
 
 ### FillingModuleAAS
 
-`https://smartproductionlab.aau.dk/aas/FillingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/FillingModule`. Built: its program is generated and runs on FORTE, on the PC against the simulator and on its own Raspberry Pi 5.
+`https://smartproductionlab.aau.dk/aas/FillingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/FillingModule`. Built: its program is generated from its spec and runs on FORTE, on the PC against the simulator.
 
 ```mermaid
 flowchart BT
@@ -558,7 +558,7 @@ flowchart BT
 
 ### StopperingModuleAAS
 
-`https://smartproductionlab.aau.dk/aas/StopperingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/StopperingModule`. Built: its program is generated and runs on FORTE, on the PC against the simulator and on its own Raspberry Pi 5.
+`https://smartproductionlab.aau.dk/aas/StopperingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/StopperingModule`. Built: its program is generated from its spec and runs on FORTE, on the PC against the simulator.
 
 ```mermaid
 flowchart BT
@@ -600,7 +600,7 @@ flowchart BT
 
 ### CappingModuleAAS
 
-`https://smartproductionlab.aau.dk/aas/CappingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/CappingModule`. **Planned only:** described from a spec; there is no program and no hardware behind it yet.
+`https://smartproductionlab.aau.dk/aas/CappingModuleAAS`, asset `https://smartproductionlab.aau.dk/assets/CappingModule`. Built: its program is generated from its spec and runs on FORTE, on the PC against the simulator.
 
 ```mermaid
 flowchart BT
@@ -626,15 +626,15 @@ flowchart BT
 | Skill | Held by | Kind | Start runs | Stop runs |
 | --- | --- | --- | --- | --- |
 | Capping() | the module | Composite | MoveAxis (Position = 40.0) → Crimp → Home | Home |
-| Home() | CappingLinearAxisAAS | Primitive | – (Postcondition AtHome; Timeout 8s) | – |
-| MoveAxis(Position = 0.0 mm) | CappingLinearAxisAAS | Primitive | – (Precondition Homed; Postcondition NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 8s) | – |
+| Home() | CappingLinearAxisAAS | Primitive | – (Postcondition AtHome; Timeout 60s) | – |
+| MoveAxis(Position = 0.0 mm) | CappingLinearAxisAAS | Primitive | – (Precondition Homed; Postcondition NOT Moving AND ABS(ActualPosition - Position) < 0.001; Timeout 30s) | – |
 | Crimp(Duration = 1.5 s) | CappingCrimperAAS | Primitive | – (After Duration) | – |
 
 - **Capability Capping** (`https://smartproductionlab.aau.dk/semantics/Capping`), realized by Capping: ContainerType vial; GraspDiameter 6.0 to 30.0 mm; CapDiameter 13.0 to 20.0 mm; Pre Stoppered = true, Post Capped = true.
-- **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Crimper's Crimping (Crimp): Post Capped = true.
+- **The components' capabilities** (role NotAssigned: parts of the module's, what the planner composes skills from), what each needs, does and keeps: LinearAxis's Referencing (Home): Post Position = 0.0, Post Referenced = true; LinearAxis's Positioning (MoveAxis): Pre Referenced = true, Post Position given; Crimper's Crimping (Crimp): Post Capped = true, Pre LinearAxisPosition = CrimpPosition, Invariant LinearAxisPosition unchanged.
 - **The module's own commands** (skills of the kind ModuleControl): Occupy, Release, Reset (Home), Start, Stop (Home), Abort, Clear.
 - **Components:** LinearAxis → `CappingLinearAxisAAS`, Crimper → `CappingCrimperAAS`.
-- **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (960, 360, 0), Yaw 90 relative to TableBase; Transfer (TransferPoint) at (0, 120, 0), Yaw -90 relative to ModuleBase.
+- **Coordinates** (Variables, mm and degrees): ModuleBase (ModuleBase) at (960, 360, 0), Yaw 90 relative to TableBase; LinearAxisMount (Mount) at (0, 120, 100), Roll 180 relative to ModuleBase; LinearAxis (EndEffector) at (0, 0, 0) relative to LinearAxisMount, Z = LinearAxis_ActualPosition; Transfer (TransferPoint) at (0, 120, 0), Yaw -90 relative to ModuleBase.
 - **Interface:** OPC UA at `opc.tcp://localhost:4840`, 23 actions and 30 properties; 30 time series with 99 fields (State/Module, State/Procedures, State/Capping, State/Home, State/MoveAxis, State/Crimp, Measurements/LinearAxis, Log/Occupation_Occupy, Log/Occupation_Release, Log/Module_Reset, Log/Module_Start, Log/Module_Stop, Log/Module_Abort, Log/Module_Clear, Log/Capping_Start, Log/Capping_Stop, Log/Capping_Abort, Log/Capping_Reset, Log/Home_Start, Log/Home_Stop, Log/Home_Abort, Log/Home_Reset, Log/MoveAxis_Start, Log/MoveAxis_Stop, Log/MoveAxis_Abort, Log/MoveAxis_Reset, Log/Crimp_Start, Log/Crimp_Stop, Log/Crimp_Abort, Log/Crimp_Reset); 30 mappings.
 - **Program:** built by the rule set `https://smartproductionlab.aau.dk/rules/module/2`; module level skills Capping built. Which block is which skill or step is the integrator's record, outside the AAS.
 

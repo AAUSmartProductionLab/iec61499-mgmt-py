@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EV_Crimper" Comment="Unpacks the equipment's state channel into named values (its inputs and who holds it) for a skill. Technical: Typed view of Crimper's state channel (inputs and holder)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="capping" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="REQ" Type="Event" Comment="The equipment's state arrived">
+        <With Var="I_Holder" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="CNF" Type="Event" Comment="The values below are updated">
+        <With Var="Holder" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="I_Holder" Type="WSTRING" Comment="Holder as read or received" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who holds the equipment (empty: free)" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="REQ">
+      <ECAction Algorithm="REQ" Output="CNF" />
+    </ECState>
+    <Algorithm Name="REQ">
+      <ST>Holder := I_Holder;</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

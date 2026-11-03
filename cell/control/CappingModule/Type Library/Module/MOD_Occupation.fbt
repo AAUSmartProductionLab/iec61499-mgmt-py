@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="MOD_Occupation" Comment="Who may command the module. A client first calls the OPC UA method Occupy with a session id it chose; until it calls Release, only commands carrying that session id are accepted. Publishes Occupied (never the id) and tells every block of the module who the owner is. Technical: Module occupation: OPC UA methods Occupy(Session) and Release(Session) answer [Accepted, ErrorID]; publishes Occupied (never the session ID) and shares the owner on a local channel">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
+        <With Var="Module" />
+        <With Var="UaRoot" />
+        <With Var="UaEnable" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" Comment="Publish on OPC UA" />
+    </InputVars>
+    <OutputVars />
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="Ids" Type="modlib::MOD_OccupationIds" x="1750" y="1000" Comment="Builds the OPC UA addresses and channel names from the module's name." />
+    <FB Name="Occupy" Type="iec61499::net::SERVER_2_1" x="4620" y="1000" Comment="The OPC UA method Occupation/Occupy(Session)." />
+    <FB Name="Release" Type="iec61499::net::SERVER_2_1" x="7310" y="1000" Comment="The OPC UA method Occupation/Release(Session)." />
+    <FB Name="Logic" Type="modlib::MOD_OccupationLogic" x="1630" y="2100" Comment="Decides who may occupy and release." />
+    <FB Name="PubOwner" Type="iec61499::net::PUBLISH_1" x="4460" y="2100" Comment="Tells every block of the module the owner, on the owner channel.">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <FB Name="SubQuery" Type="iec61499::net::SUBSCRIBE_0" x="7190" y="2100" Comment="Answers a block that asks who the owner is (at its start).">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1830" y="3300" Comment="Writes Occupation/Occupied to OPC UA." />
+    <EventConnections>
+      <Connection Source="INIT" Destination="Ids.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.INITO" Destination="Occupy.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Occupy.INITO" Destination="Release.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Release.INITO" Destination="PubOwner.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubOwner.INITO" Destination="SubQuery.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubQuery.INITO" Destination="PubUa.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubUa.INITO" Destination="PubUa.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubUa.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Occupy.IND" Destination="Logic.OCCUPY_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.OCCUPY_RSP" Destination="Occupy.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Release.IND" Destination="Logic.RELEASE_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.RELEASE_RSP" Destination="Release.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubQuery.IND" Destination="Logic.QUERY_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.CHG" Destination="PubOwner.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.CHG" Destination="PubUa.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Module" Destination="Ids.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaRoot" Destination="Ids.UaRoot">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="Occupy.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="Release.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="PubUa.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdOccupy" Destination="Occupy.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdRelease" Destination="Release.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdPub" Destination="PubUa.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdOwner" Destination="PubOwner.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Ids.IdQuery" Destination="SubQuery.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Occupy.RD_1" Destination="Logic.OccupySession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Accepted" Destination="Occupy.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ErrorID" Destination="Occupy.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Release.RD_1" Destination="Logic.ReleaseSession">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Accepted" Destination="Release.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ErrorID" Destination="Release.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Owner" Destination="PubOwner.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Occupied" Destination="PubUa.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </DataConnections>
+  </FBNetwork>
+</FBType>

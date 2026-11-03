@@ -18,7 +18,7 @@ def vocabulary() -> Vocabulary:
     return Vocabulary()
 
 
-@pytest.mark.parametrize("spec", ["filling.yaml", "stoppering.yaml", "planned/capping.yaml", "planned/inspection.yaml"])
+@pytest.mark.parametrize("spec", ["filling.yaml", "stoppering.yaml", "capping.yaml", "planned/inspection.yaml"])
 def test_every_primitive_realizes_a_capability_of_its_component(vocabulary, spec):
     for name in load(SPECS / spec).skills:
         realized = vocabulary.realized(name)

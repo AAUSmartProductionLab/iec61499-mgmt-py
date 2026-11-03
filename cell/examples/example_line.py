@@ -7,9 +7,9 @@ Every AAS is an instance of aas-model's types (``Module``, ``Component``, ``Prod
 ``Product``, ``Process``):
 
 - The modules' AASs are made from their module specs by ``modreg``, the same spec their IEC 61499
-  program is generated from: the filling and stoppering modules are built and run (``cell/modules``);
-  the capping and inspection modules are planned only (``cell/modules/planned``: no program behind
-  them yet). The table's and the shuttles' come from what the planar controller says
+  program is generated from: the filling and stoppering modules are built and run (``cell/modules``),
+  the capping module's program is generated too (its Raspberry Pi is still to come), and the
+  inspection module is planned only (``cell/modules/planned``: no program behind it yet). The table's and the shuttles' come from what the planar controller says
   (``modreg.planar``).
 - The products are written out in Python (``products/``): a 2 mL vial, a prefilled syringe of 1 mL
   and a cartridge of 3 mL. Their recipes name no equipment.
@@ -51,7 +51,7 @@ from products.prefilled_syringe_1ml import prefilled_syringe_1ml  # noqa: E402
 from products.vial_2ml import vial_2ml                  # noqa: E402
 
 # The resources of the example line, in the order a product passes them.
-RESOURCES = [SPECS / "filling.yaml", SPECS / "stoppering.yaml", SPECS / "planned" / "capping.yaml",
+RESOURCES = [SPECS / "filling.yaml", SPECS / "stoppering.yaml", SPECS / "capping.yaml",
              SPECS / "planned" / "inspection.yaml"]
 
 

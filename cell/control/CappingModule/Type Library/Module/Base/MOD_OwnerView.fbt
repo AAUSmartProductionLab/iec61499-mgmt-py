@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="MOD_OwnerView" Comment="Tells the block it sits in who occupies the module, and asks for it once at start. Technical: The module's occupation owner from its local channel; asks for the current value at INIT">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
+        <With Var="Module" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
+      <Event Name="CHG" Type="Event" Comment="The value changed">
+        <With Var="Owner" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Owner" Type="WSTRING" Comment="Session ID of the module's owner (empty: free)" />
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="Latch" Type="modlib::MOD_OwnerLatch" x="1750" y="1000" Comment="Keeps the last owner heard." />
+    <FB Name="Listen" Type="iec61499::net::SUBSCRIBE_1" x="4240" y="1000" Comment="Listens to the owner channel.">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <FB Name="Query" Type="iec61499::net::PUBLISH_0" x="6630" y="1000" Comment="Asks for the owner once at start.">
+      <Parameter Name="QI" Value="TRUE" />
+    </FB>
+    <EventConnections>
+      <Connection Source="INIT" Destination="Latch.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Latch.INITO" Destination="Listen.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Listen.INITO" Destination="Query.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Query.INITO" Destination="Query.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Query.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Listen.IND" Destination="Latch.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Latch.CNF" Destination="CHG">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Module" Destination="Latch.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Latch.IdSub" Destination="Listen.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Latch.IdQuery" Destination="Query.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Listen.RD_1" Destination="Latch.Received">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Latch.Owner" Destination="Owner">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </DataConnections>
+  </FBNetwork>
+</FBType>

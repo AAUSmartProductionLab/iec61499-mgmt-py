@@ -22,7 +22,7 @@ BASE = "https://smartproductionlab.aau.dk"
 # the skill realizing it, and the properties a parameter of that skill sets (name, limits, unit).
 LINE = {"filling": ("Filling", "Dispensing", [("FillVolume", "0.5", "10.0", "mL", "Volume")]),
         "stoppering": ("Stoppering", "Stoppering", []),
-        "planned/capping": ("Capping", "Capping", []),
+        "capping": ("Capping", "Capping", []),
         "planned/inspection": ("Inspection", "Inspection", [])}
 
 

@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="MOD_OccupationIds" Comment="Builds the OPC UA addresses (Occupy, Release, Occupied) and the local channel names of the occupation from the module's name and OPC UA root. Technical: OPC UA and local channel IDs of the occupation">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
+        <With Var="Module" />
+        <With Var="UaRoot" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
+        <With Var="IdOccupy" />
+        <With Var="IdRelease" />
+        <With Var="IdPub" />
+        <With Var="IdOwner" />
+        <With Var="IdQuery" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="IdOccupy" Type="WSTRING" Comment="OPC UA ID of the method Occupy" />
+      <VarDeclaration Name="IdRelease" Type="WSTRING" Comment="OPC UA ID of the method Release" />
+      <VarDeclaration Name="IdPub" Type="WSTRING" Comment="OPC UA ID of the published value" />
+      <VarDeclaration Name="IdOwner" Type="WSTRING" Comment="Local channel of the owner" />
+      <VarDeclaration Name="IdQuery" Type="WSTRING" Comment="Local channel that asks for the current value (a block that starts later)" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="INIT">
+      <ECAction Algorithm="INIT" Output="INITO" />
+    </ECState>
+    <Algorithm Name="INIT">
+      <ST>IdOccupy := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, "/Occupation/")), "Occupy"), "]");
+IdRelease := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, "/Occupation/")), "Release"), "]");
+IdPub := CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, "/Occupation/")), "Occupied"), "]");
+IdOwner := CONCAT(CONCAT("loc[", Module), "/owner]");
+IdQuery := CONCAT(CONCAT("loc[", Module), "/owner/query]");</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

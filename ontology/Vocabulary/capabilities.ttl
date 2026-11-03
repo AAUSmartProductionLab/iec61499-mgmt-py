@@ -57,11 +57,14 @@
 # container's HeldBy seen from a resource; Occupancy and Capacity say
 # how many it has and can have. Nothing here is about shuttles: a
 # product's agent asks every resource, and the constraints decide.
+#
+# 0.8 (3 Nov): CrimpPosition, where the crimping head closes around
+# the cap, as PressPosition is where the press meets the stopper.
 #################################################################
 
 <https://smartproductionlab.aau.dk/semantics>
   rdf:type owl:Ontology ;
-  owl:versionInfo "0.7" ;
+  owl:versionInfo "0.8" ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://w3id.org/2025/pprl> ;
   rdfs:comment "Capabilities and capability properties of aseptic filling lines for vials, prefilled syringes and cartridges (AAU Smart Production Lab)." .
@@ -255,6 +258,11 @@ lab:PressPosition rdf:type owl:Class ; rdfs:subClassOf css:Property , lab:Positi
   rdfs:label "Press position" ; lab:valueType "number" ; lab:unit "mm" ;
   rdfs:comment "Where the press meets the stopper in the container: the position of the axis at which a stopper is pressed in." ;
   lab:characterizes lab:Pressing .
+
+lab:CrimpPosition rdf:type owl:Class ; rdfs:subClassOf css:Property , lab:Position ;
+  rdfs:label "Crimp position" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where the crimping head closes around the cap: the position of the axis at which a cap is crimped on (0.8)." ;
+  lab:characterizes lab:Crimping .
 
 lab:Volume rdf:type owl:Class ; rdfs:subClassOf css:Property ;
   rdfs:label "Volume" ; lab:valueType "number" ; lab:unit "mL" ;

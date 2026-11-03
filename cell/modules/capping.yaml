@@ -1,0 +1,105 @@
+# Capping module. Built like the filling and stoppering modules since 3 Nov 2026 (decided 1 Nov): a
+# linear axis that lowers the crimping head onto the cap (a stepper motor through a TB6600 with a limit
+# switch, moved to a position, as filling's) and a crimper that closes around the cap. The crimper is
+# simulated until it is chosen: a valve, a relay or a servo is then an output on a pin, and the skill
+# stays. Its Raspberry Pi 5 is still to come; the pi target is wired as filling's.
+# Regenerate: python -m modgen
+module: Capping
+project: CappingModule
+package: capping
+opcua_root: /Objects/Capping
+modbus: {host: 127.0.0.1, port: 1504, unit: 1, poll_ms: 10}   # cell/sim/module_sim.py
+
+targets:
+  pc: {host: localhost, io: modbus}
+  # Its address once the Pi is there; the pins are filling's.
+  pi: {host: capping-module.local, user: admin, io: gpio, board: pi5,
+       pwm_root: /hostsys/class/pwm}   # the capping Pi, a Raspberry Pi 5
+
+equipment:
+  LinearAxis:
+    kind: LinearAxis
+    description: Lift of the crimping head, a stepper motor through a step and direction driver, with a limit switch at the top (home)
+    # As the filling module's axis: a TB6600, PUL+, DIR+ and ENA+ straight to the Pi's pins, PUL-, DIR-
+    # and ENA- on GND.
+    inputs:
+      # An ordinary limit switch at the top, between the line and GND, closing when pressed.
+      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up, active_low: true}}   # Pi pin 16
+    outputs:
+      # ENA+ high switches the TB6600 off: the motor is on while the line is low.
+      Enable: {modbus: c0, gpio: {line: 17, active_low: true}}     # Pi pin 11
+      Down:   {modbus: c1, gpio: 27}                               # Pi pin 13, DIR: on is down, away from the switch
+      # PUL: PWM0 on GPIO18 (Pi pin 12; channel 2 on a Pi 5), one step per period at 2 kHz; 50 % duty
+      # while it moves.
+      Step:   {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 500000}, gain: 655.35,
+               minimum: 0, maximum: 100, unit: "%"}
+    commands:
+      Stop: {}
+      Up:   {Enable: true, Step: 50}
+      Down: {Enable: true, Down: true, Step: 50}
+    # No encoder: the controller counts the time it steps (12.5 mm/s at 2 kHz, as filling's stage). The
+    # travel is a placeholder until the station is measured.
+    position: {unit: mm, speed: 12.5, increase: Down, decrease: Up, home: AtHome, minimum: 0.0, maximum: 60.0}
+    location: {y: 120.0, z: 100.0, rx: 180.0}   # the crimping head at home, over the transfer point; Z down the stroke
+    sim: {stepper: {step: Step, direction: Down, enable: Enable, speed: 12.5, travel: 60.0, start: 15.0,
+                    switches: {AtHome: 0.0}}}
+  Crimper:
+    kind: CapCrimper
+    description: Crimping head that closes around the cap; simulated until it is chosen (no pin on the Pi yet)
+    outputs:
+      Close: {modbus: c2}
+    commands:
+      Open: {}
+      Close: [Close]
+
+skills:
+  Home:
+    description: Head up to the limit switch; from there its position is known
+    equipment: LinearAxis
+    command: Up
+    postcondition: AtHome
+    # Ends on the switch; the timeout only stops the motor if the switch never closes.
+    timeout: 60s
+  MoveAxis:
+    description: Head to Position, measured down from the limit switch; the direction follows from where it is
+    equipment: LinearAxis
+    move_to: Position
+    parameters:
+      Position: {unit: mm, minimum: 0.0, maximum: 60.0, default: 0.0, meaning: Position, description: Where to move to}
+    timeout: 30s
+  Crimp:
+    description: Close the crimper around the cap for Duration, then open it
+    equipment: Crimper
+    command: Close
+    parameters:
+      Duration: {unit: s, minimum: 0.0, maximum: 5.0, default: 1.5, description: How long the crimper stays closed}
+    after: Duration
+    # The crimper closes around the cap with the head down on it, and the head stays there meanwhile.
+    capability:
+      values: {CrimpPosition: {value: 40.0, unit: mm}}
+      precondition: {LinearAxis.Position: "= CrimpPosition"}
+      invariant: {LinearAxis.Position: unchanged}
+
+composites:
+  Capping:
+    description: Head down onto the cap, crimp, head up again
+    # The crimp position and time are the station's: constants of the steps, changed by reconfiguration.
+    execute: [{MoveAxis: {Position: 40.0}, as: HeadDown}, Crimp, Home]
+    stop: [Home]                     # after an interruption the switch is what is certain
+
+procedures:
+  Resetting: [Home]                # find the reference
+  Stopping: [Home]
+
+# Where things are (as filling.yaml says): the shuttle stands on a flyway's centre, 120 mm in front of
+# the module, turned as the simulated table's Capping station has it. Placeholders.
+points:
+  Transfer: {meaning: TransferPoint, location: {y: 120.0, rz: -90.0}, description: Where a shuttle stands with the vial under the crimping head}
+
+capabilities:
+  Capping:
+    description: Put a cap on a stoppered vial and crimp it
+    properties:
+      ContainerType: {value: vial}
+      GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
+      CapDiameter: {minimum: 13.0, maximum: 20.0, unit: mm}

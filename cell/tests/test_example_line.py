@@ -101,10 +101,10 @@ def test_the_modules_take_three_kinds_of_container(line):
         assert listed == takes, name
 
 
-def test_the_planned_modules_follow_the_resource_ontology(line):
+def test_the_modules_follow_the_resource_ontology(line):
     resources, _ = line
     blueprint = Blueprint(ARSO)
-    for name in ("CappingModuleAAS", "InspectionModuleAAS"):
+    for name in ("FillingModuleAAS", "StopperingModuleAAS", "CappingModuleAAS", "InspectionModuleAAS"):
         report = ontology_check(resources[name], blueprint)
         assert report.ok, report.errors
 

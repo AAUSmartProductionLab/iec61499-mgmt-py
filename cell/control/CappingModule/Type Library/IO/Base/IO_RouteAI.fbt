@@ -1,0 +1,143 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="IO_RouteAI" Comment="Picks the way an IO block reaches its signal from the Address (a Pi line, a local IO handle, Modbus or simulated) and passes values through that way only. Technical: Backend router for IO_AI; Address: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]' or 'pwm[chip:channel:period_ns]' a Raspberry Pi's line, set up here; 'modbus[...]' a Modbus CLIENT ID; 'sim' simulated; another name a local IO handle set up elsewhere (IX/QX PARAMS); empty: not connected (QO = FALSE)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="Event" Comment="Work out from Address how the point is reached">
+        <With Var="Address" />
+      </Event>
+      <Event Name="IO_READY" Type="Event" Comment="The line, the local IO block and the Modbus client are initialised">
+        <With Var="QO_G" />
+        <With Var="QO_M" />
+      </Event>
+      <Event Name="CNF_G" Type="Event" Comment="The local IO block answered">
+        <With Var="QO_G" />
+        <With Var="IN_G" />
+      </Event>
+      <Event Name="CNF_M" Type="Event" Comment="The Modbus client answered">
+        <With Var="QO_M" />
+        <With Var="IN_M" />
+      </Event>
+      <Event Name="REQ" Type="Event" Comment="Access the point">
+        <With Var="SimValue" />
+        <With Var="Scale" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INIT_IO" Type="Event" Comment="Set up the line, the local IO block and the Modbus client (each only if it is the way)">
+        <With Var="GQI" />
+        <With Var="MQI" />
+        <With Var="IoName" />
+        <With Var="ModbusId" />
+      </Event>
+      <Event Name="INITO" Type="Event" Comment="Initialised: QO says whether the point is reachable">
+        <With Var="QO" />
+      </Event>
+      <Event Name="REQ_G" Type="Event" Comment="Access the point through the local IO block (IX/QX/IW/QW)" />
+      <Event Name="REQ_M" Type="Event" Comment="Access the point through the Modbus client" />
+      <Event Name="CNF" Type="Event" Comment="Done: QO says whether it worked">
+        <With Var="QO" />
+        <With Var="IN" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Address" Type="STRING" Comment="Where the point is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="QO_G" Type="BOOL" Comment="The local IO block works" />
+      <VarDeclaration Name="QO_M" Type="BOOL" Comment="The Modbus client works" />
+      <VarDeclaration Name="SimValue" Type="LREAL" Comment="The value read when the address is 'sim'" />
+      <VarDeclaration Name="IN_G" Type="WORD" Comment="The raw value read through the local IO block" />
+      <VarDeclaration Name="IN_M" Type="WORD" Comment="The raw value read through Modbus" />
+      <VarDeclaration Name="Scale" Type="LREAL" InitialValue="1.0" Comment="Engineering value per raw count" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="GQI" Type="BOOL" Comment="Use the local IO block" />
+      <VarDeclaration Name="MQI" Type="BOOL" Comment="Use the Modbus client" />
+      <VarDeclaration Name="IoName" Type="STRING" Comment="The local IO handle's name (PARAMS of IX/QX/IW/QW)" />
+      <VarDeclaration Name="ModbusId" Type="WSTRING" Comment="The Modbus CLIENT's ID" />
+      <VarDeclaration Name="QO" Type="BOOL" Comment="The point is reachable, the last access worked" />
+      <VarDeclaration Name="IN" Type="LREAL" Comment="The value read (an analog one scaled)" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Backend" Type="USINT" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Init" x="570" y="100">
+        <ECAction Algorithm="Alg_Init" Output="INIT_IO" />
+      </ECState>
+      <ECState Name="Ready" x="990" y="100">
+        <ECAction Algorithm="Alg_Ready" Output="INITO" />
+      </ECState>
+      <ECState Name="ReqG" x="1410" y="100">
+        <ECAction Output="REQ_G" />
+      </ECState>
+      <ECState Name="ReqM" x="150" y="330">
+        <ECAction Output="REQ_M" />
+      </ECState>
+      <ECState Name="Sim" x="570" y="330">
+        <ECAction Algorithm="Alg_Sim" Output="CNF" />
+      </ECState>
+      <ECState Name="None" x="990" y="330">
+        <ECAction Algorithm="Alg_None" Output="CNF" />
+      </ECState>
+      <ECState Name="DoneG" x="1410" y="330">
+        <ECAction Algorithm="Alg_DoneG" Output="CNF" />
+      </ECState>
+      <ECState Name="DoneM" x="150" y="560">
+        <ECAction Algorithm="Alg_DoneM" Output="CNF" />
+      </ECState>
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
+      <ECTransition Source="Init" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Ready" Condition="IO_READY" x="0" y="0" />
+      <ECTransition Source="Ready" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="ReqG" Condition="REQ[Backend = 1]" x="0" y="0" />
+      <ECTransition Source="START" Destination="ReqM" Condition="REQ[Backend = 2]" x="0" y="0" />
+      <ECTransition Source="START" Destination="None" Condition="REQ[Backend = 3]" x="0" y="0" />
+      <ECTransition Source="START" Destination="Sim" Condition="REQ" x="0" y="0" />
+      <ECTransition Source="START" Destination="DoneG" Condition="CNF_G" x="0" y="0" />
+      <ECTransition Source="START" Destination="DoneM" Condition="CNF_M" x="0" y="0" />
+      <ECTransition Source="ReqG" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="ReqM" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Sim" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="None" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="DoneG" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="DoneM" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Init">
+      <ST>Backend := 3;
+IF Address = 'sim' THEN
+  Backend := 0;
+ELSIF LEFT(Address, 7) = 'modbus[' THEN
+  Backend := 2;
+  ModbusId := STRING_TO_WSTRING(Address);
+ELSIF LEN(Address) &gt; 0 THEN
+  Backend := 1;
+  IoName := Address;
+END_IF;
+GQI := Backend = 1;
+MQI := Backend = 2;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Ready">
+      <ST>QO := (Backend = 0) OR ((Backend = 1) AND QO_G) OR ((Backend = 2) AND QO_M);</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Sim">
+      <ST>QO := TRUE;
+IN := SimValue;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_None">
+      <ST>QO := FALSE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_DoneG">
+      <ST>QO := QO_G;
+IN := UINT_TO_LREAL(WORD_TO_UINT(IN_G)) * Scale;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_DoneM">
+      <ST>QO := QO_M;
+IN := UINT_TO_LREAL(WORD_TO_UINT(IN_M)) * Scale;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

@@ -1,0 +1,233 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="IO_RouteAO" Comment="Picks the way an IO block reaches its signal from the Address (a Pi line, a local IO handle, Modbus or simulated) and passes values through that way only. Technical: Backend router for IO_AO; Address: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]' or 'pwm[chip:channel:period_ns]' a Raspberry Pi's line, set up here; 'modbus[...]' a Modbus CLIENT ID; 'sim' simulated; another name a local IO handle set up elsewhere (IX/QX PARAMS); empty: not connected (QO = FALSE)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="Event" Comment="Work out from Address how the point is reached">
+        <With Var="Address" />
+      </Event>
+      <Event Name="IO_READY" Type="Event" Comment="The line, the local IO block and the Modbus client are initialised">
+        <With Var="QO_G" />
+        <With Var="QO_M" />
+      </Event>
+      <Event Name="CNF_G" Type="Event" Comment="The local IO block answered">
+        <With Var="QO_G" />
+      </Event>
+      <Event Name="CNF_M" Type="Event" Comment="The Modbus client answered">
+        <With Var="QO_M" />
+      </Event>
+      <Event Name="REQ" Type="Event" Comment="Access the point">
+        <With Var="OUT" />
+        <With Var="EN" />
+        <With Var="Gain" />
+        <With Var="Bias" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INIT_IO" Type="Event" Comment="Set up the line, the local IO block and the Modbus client (each only if it is the way)">
+        <With Var="GQI" />
+        <With Var="MQI" />
+        <With Var="IoName" />
+        <With Var="ModbusId" />
+        <With Var="LineQI" />
+        <With Var="LineName" />
+        <With Var="ChipNo" />
+        <With Var="LineNo" />
+        <With Var="Period" />
+        <With Var="Root" />
+      </Event>
+      <Event Name="INITO" Type="Event" Comment="Initialised: QO says whether the point is reachable">
+        <With Var="QO" />
+      </Event>
+      <Event Name="REQ_G" Type="Event" Comment="Access the point through the local IO block (IX/QX/IW/QW)">
+        <With Var="Value" />
+      </Event>
+      <Event Name="REQ_M" Type="Event" Comment="Access the point through the Modbus client">
+        <With Var="Value" />
+      </Event>
+      <Event Name="CNF" Type="Event" Comment="Done: QO says whether it worked">
+        <With Var="QO" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Address" Type="STRING" Comment="Where the point is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="QO_G" Type="BOOL" Comment="The local IO block works" />
+      <VarDeclaration Name="QO_M" Type="BOOL" Comment="The Modbus client works" />
+      <VarDeclaration Name="OUT" Type="LREAL" Comment="The value to write" />
+      <VarDeclaration Name="EN" Type="BOOL" Comment="On; FALSE writes 0 (no pulses on a PWM channel)" />
+      <VarDeclaration Name="Gain" Type="LREAL" InitialValue="1.0" Comment="Raw = Bias + OUT * Gain, limited to 0..65535" />
+      <VarDeclaration Name="Bias" Type="LREAL" Comment="Raw = Bias + OUT * Gain, limited to 0..65535" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="GQI" Type="BOOL" Comment="Use the local IO block" />
+      <VarDeclaration Name="MQI" Type="BOOL" Comment="Use the Modbus client" />
+      <VarDeclaration Name="IoName" Type="STRING" Comment="The local IO handle's name (PARAMS of IX/QX/IW/QW)" />
+      <VarDeclaration Name="ModbusId" Type="WSTRING" Comment="The Modbus CLIENT's ID" />
+      <VarDeclaration Name="QO" Type="BOOL" Comment="The point is reachable, the last access worked" />
+      <VarDeclaration Name="LineQI" Type="BOOL" Comment="Set up a Raspberry Pi line here (a gpio[...] or pwm[...] address)" />
+      <VarDeclaration Name="LineName" Type="WSTRING" Comment="The name the line is registered under (the address)" />
+      <VarDeclaration Name="ChipNo" Type="UINT" Comment="The GPIO or PWM chip's number" />
+      <VarDeclaration Name="LineNo" Type="UINT" Comment="The GPIO line's or PWM channel's number" />
+      <VarDeclaration Name="Period" Type="UDINT" Comment="The PWM period in ns" />
+      <VarDeclaration Name="Root" Type="WSTRING" Comment="The sysfs PWM folder (empty: /sys/class/pwm)" />
+      <VarDeclaration Name="Value" Type="WORD" Comment="The raw value to write (0 to 65535 for an analog output)" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Backend" Type="USINT" />
+      <VarDeclaration Name="Raw" Type="LREAL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="150" y="100" />
+      <ECState Name="Init" x="570" y="100">
+        <ECAction Algorithm="Alg_Init" Output="INIT_IO" />
+      </ECState>
+      <ECState Name="Ready" x="990" y="100">
+        <ECAction Algorithm="Alg_Ready" Output="INITO" />
+      </ECState>
+      <ECState Name="ReqG" x="1410" y="100">
+        <ECAction Output="REQ_G" />
+      </ECState>
+      <ECState Name="ReqM" x="150" y="330">
+        <ECAction Algorithm="Alg_ReqM" Output="REQ_M" />
+        <ECAction Output="CNF" />
+      </ECState>
+      <ECState Name="Req" x="570" y="330">
+        <ECAction Algorithm="Alg_Req" />
+      </ECState>
+      <ECState Name="Sim" x="990" y="330">
+        <ECAction Algorithm="Alg_Sim" Output="CNF" />
+      </ECState>
+      <ECState Name="None" x="1410" y="330">
+        <ECAction Algorithm="Alg_None" Output="CNF" />
+      </ECState>
+      <ECState Name="DoneG" x="150" y="560">
+        <ECAction Algorithm="Alg_DoneG" Output="CNF" />
+      </ECState>
+      <ECState Name="DoneM" x="570" y="560">
+        <ECAction Algorithm="Alg_DoneM" />
+      </ECState>
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
+      <ECTransition Source="Init" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Ready" Condition="IO_READY" x="0" y="0" />
+      <ECTransition Source="Ready" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Req" Condition="REQ" x="0" y="0" />
+      <ECTransition Source="Req" Destination="ReqG" Condition="Backend = 1" x="0" y="0" />
+      <ECTransition Source="Req" Destination="ReqM" Condition="Backend = 2" x="0" y="0" />
+      <ECTransition Source="Req" Destination="None" Condition="Backend = 3" x="0" y="0" />
+      <ECTransition Source="Req" Destination="Sim" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="DoneG" Condition="CNF_G" x="0" y="0" />
+      <ECTransition Source="START" Destination="DoneM" Condition="CNF_M" x="0" y="0" />
+      <ECTransition Source="ReqG" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="ReqM" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="Sim" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="None" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="DoneG" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="DoneM" Destination="START" Condition="1" x="0" y="0" />
+    </ECC>
+    <Algorithm Name="Alg_Init">
+      <ST>VAR_TEMP
+  Field : STRING;
+  Length : INT;
+  Cut : INT;
+  Pos : INT;
+  Digit : INT;
+  Number : UDINT;
+END_VAR
+Backend := 3;
+LineQI := FALSE;
+IF Address = 'sim' THEN
+  Backend := 0;
+ELSIF LEFT(Address, 7) = 'modbus[' THEN
+  Backend := 2;
+  ModbusId := STRING_TO_WSTRING(Address);
+ELSIF LEFT(Address, 4) = 'pwm[' THEN
+  Backend := 1;
+  IoName := Address;
+  LineQI := TRUE;
+  LineName := STRING_TO_WSTRING(Address);
+  Length := LEN(Address);
+  Field := MID(Address, Length - 4, 5);
+  Cut := FIND(Field, ':');
+  IF Cut = 0 THEN
+    Cut := FIND(Field, ']');
+  END_IF;
+  Number := 0;
+  FOR Digit := 1 TO Cut - 1 DO
+    Pos := FIND('0123456789', MID(Field, 1, Digit));
+    Number := Number * 10 + INT_TO_UDINT(Pos - 1);
+  END_FOR;
+  ChipNo := UDINT_TO_UINT(Number);
+  Length := LEN(Field);
+  Field := MID(Field, Length - Cut, Cut + 1);
+  Cut := FIND(Field, ':');
+  IF Cut = 0 THEN
+    Cut := FIND(Field, ']');
+  END_IF;
+  Number := 0;
+  FOR Digit := 1 TO Cut - 1 DO
+    Pos := FIND('0123456789', MID(Field, 1, Digit));
+    Number := Number * 10 + INT_TO_UDINT(Pos - 1);
+  END_FOR;
+  LineNo := UDINT_TO_UINT(Number);
+  Length := LEN(Field);
+  Field := MID(Field, Length - Cut, Cut + 1);
+  Cut := FIND(Field, ':');
+  IF Cut = 0 THEN
+    Cut := FIND(Field, ']');
+  END_IF;
+  Number := 0;
+  FOR Digit := 1 TO Cut - 1 DO
+    Pos := FIND('0123456789', MID(Field, 1, Digit));
+    Number := Number * 10 + INT_TO_UDINT(Pos - 1);
+  END_FOR;
+  Period := (Number);
+  Length := LEN(Field);
+  Field := MID(Field, Length - Cut, Cut + 1);
+  Length := LEN(Field);
+  IF Length &gt; 0 THEN
+    Root := STRING_TO_WSTRING(LEFT(Field, Length - 1));
+  END_IF;
+ELSIF LEN(Address) &gt; 0 THEN
+  Backend := 1;
+  IoName := Address;
+END_IF;
+GQI := Backend = 1;
+MQI := Backend = 2;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Ready">
+      <ST>QO := (Backend = 0) OR ((Backend = 1) AND QO_G) OR ((Backend = 2) AND QO_M);</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ReqM">
+      <ST>QO := QO_M;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Req">
+      <ST>IF EN THEN
+  Raw := Bias + OUT * Gain;
+  IF Raw &lt; 0.0 THEN
+    Raw := 0.0;
+  ELSIF Raw &gt; 65535.0 THEN
+    Raw := 65535.0;
+  END_IF;
+  Value := UINT_TO_WORD(LREAL_TO_UINT(Raw));
+ELSE
+  Value := WORD#0;
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Sim">
+      <ST>QO := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_None">
+      <ST>QO := FALSE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_DoneG">
+      <ST>QO := QO_G;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_DoneM">
+      <ST>QO := QO_M;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

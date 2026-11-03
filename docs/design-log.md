@@ -20,6 +20,30 @@ A running log of design considerations made while building, for writing the pape
 
 ## 3 Nov 2026
 
+- **The capping module is built as the filling module, with `Crimp` as its new primitive.** *CIRP*
+  (the demonstrator's line), *Orchestration* (the crimp's planning facts).
+  - What:
+    - `cell/modules/capping.yaml` moves out of `planned/` and its program is generated
+      (`cell/control/CappingModule`), so FORTE is built with it;
+    - its linear axis is filling's: a TB6600 on the same pins, a limit switch at the top, 12.5 mm/s at
+      2 kHz, 0 to 60 mm, the same timeouts (Home 60 s, MoveAxis 30 s); its Pi target is written as
+      filling's (`board: pi5`) for when its Pi comes;
+    - the crimper is one output, `Close`, simulated (Modbus only, no pin) until a crimper is chosen;
+    - `Crimp` closes it for `Duration` (0 to 5 s, 1.5 s) and opens it again (`after`), as `Dispense`
+      runs the pump for a time: a primitive of the module rules, no new function block type;
+    - its planning facts are stoppering's `PressStopper`'s: the head at `CrimpPosition` (40 mm) and
+      kept there while it crimps; `CrimpPosition` is a new term of the vocabulary (0.8), a Position
+      that characterizes Crimping, as `PressPosition` characterizes Pressing;
+    - the composite `Capping` lowers the head to 40 mm, crimps and homes; Resetting and Stopping home
+      the head.
+  - Why: the user asked for capping like filling and stoppering, with cap crimping as a new
+    primitive (the axis and the simulated crimper decided on 1 Nov). A primitive by time needs no
+    sensor on the crimper; a real crimper later is an output on a pin (a valve, a relay) or a servo,
+    and the skill stays.
+  - Instead of: a crimper with a sensor that reports it closed (a postcondition on an input), while
+    no crimper is chosen; keeping the spec planned until its Pi is there (its program now runs
+    against the simulator, so the line has three generated modules).
+
 - **A measurement series is written asynchronously, a state change synchronously.** *Journal*.
   - What: modreg gives the segments of the Measurements series (an axis's position, `Moving`,
     `Homed`) the WriteMode `Asynchronous`; the State, Skills and Log series have none, which is the

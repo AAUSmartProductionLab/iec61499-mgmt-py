@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_FailMerge" Comment="Joins two failure events (with their error codes) into one, because a data input can only be wired once. Technical: Merges two failure events with their error codes into one">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="FAIL_1" Type="Event" Comment="A step failed (Error1)">
+        <With Var="Error1" />
+      </Event>
+      <Event Name="FAIL_2" Type="Event" Comment="A step failed (Error2)">
+        <With Var="Error2" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="FAIL" Type="Event" Comment="One of them failed (Error)">
+        <With Var="Error" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Error1" Type="UINT" Comment="Error code of the first" />
+      <VarDeclaration Name="Error2" Type="UINT" Comment="Error code of the second" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Error" Type="UINT" Comment="Error code of the one that failed" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="FAIL_1">
+      <ECAction Algorithm="FAIL_1" Output="FAIL" />
+    </ECState>
+    <ECState Name="FAIL_2">
+      <ECAction Algorithm="FAIL_2" Output="FAIL" />
+    </ECState>
+    <Algorithm Name="FAIL_1">
+      <ST>Error := Error1;</ST>
+    </Algorithm>
+    <Algorithm Name="FAIL_2">
+      <ST>Error := Error2;</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>
