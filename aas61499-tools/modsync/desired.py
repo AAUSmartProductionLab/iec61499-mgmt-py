@@ -32,6 +32,7 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+import time
 import xml.etree.ElementTree as ET
 
 from iec61499_mgmt.protocol import Client, Command
@@ -90,9 +91,11 @@ class Reading:
 
 
 def read(client: Client, host: str, port: int, module: dict, components: list[dict], resource: str = "RES",
-         record_: dict | None = None) -> Reading:
+         record_: dict | None = None, stats: dict | None = None) -> Reading:
     """Read the running program and compare it with what the AASs describe and, if there is one, with
-    what the record says was built."""
+    what the record says was built. ``stats``, if given, gets the seconds of reading the program
+    (``program_s``), of interpreting the AAS (``aas_s``) and of comparing the two (``compare_s``)."""
+    mark = time.perf_counter()
     snap = read_structure(client, host, port, resource)
     if snap.empty:
         raise NotDescribed(f"{host}:{port} runs no program")
@@ -105,8 +108,15 @@ def read(client: Client, host: str, port: int, module: dict, components: list[di
     package = next((t.partition("::")[0] for t in snap.fbs.values() if "::EQ_" in t or "::SK_" in t), None)
     if package is None or value(MODULE_NAME) is None:
         raise NotDescribed(f"{host}:{port} does not run a module built by the module rules")
-    spec = described(module, components, literal(value(MODULE_NAME)), package, literal(value(MODULE_ROOT)))
+    name, root = literal(value(MODULE_NAME)), literal(value(MODULE_ROOT))
+    if stats is not None:
+        stats["program_s"] = time.perf_counter() - mark
+        mark = time.perf_counter()
+    spec = described(module, components, name, package, root)
     wanted = stated(spec)
+    if stats is not None:
+        stats["aas_s"] = time.perf_counter() - mark
+        mark = time.perf_counter()
     primitives = {n: {"package": package, **{k: v for k, v in s.items() if k != "offered"}}
                   for n, s in wanted["skills"].items()}
     running = structure(snap.fbs, snap.connections, value, primitives)
@@ -120,6 +130,8 @@ def read(client: Client, host: str, port: int, module: dict, components: list[di
             found.built.append(f"{path} is {snap.fbs[path]}, recorded as {typ}")
         elif digest and snap.hashes.get(typ) != digest:
             found.built.append(f"{path}: {typ} has another hash than the one recorded")
+    if stats is not None:
+        stats["compare_s"] = time.perf_counter() - mark
     return Reading(spec, snap, running, found)
 
 
@@ -226,7 +238,7 @@ def amended(boot: str, commands: list[Command]) -> str:
 
 def reconfigure(client: Client, host: str, port: int, module: dict, components: list[dict], deployer=None,
                 force: bool = False, dry_run: bool = False, resource: str = "RES",
-                record_: dict | None = None) -> tuple[list[str], Reading]:
+                record_: dict | None = None, stats: dict | None = None) -> tuple[list[str], Reading]:
     """Bring the running module to what its AAS describes, online; returns what was done (or would
     be, with ``dry_run``) and the module as read afterwards.
 
@@ -234,8 +246,23 @@ def reconfigure(client: Client, host: str, port: int, module: dict, components: 
     when values are to be written while the module runs or is occupied. A new skill touches
     nothing that runs and is created in any state. The change is verified by reading the program
     back against the AAS, then added to the module's boot file (``deployer``: where that file is).
+
+    ``stats``, if given, gets the time of each phase in seconds (``read_s``: the program read and
+    compared with the AAS; ``compile_s``: the commands from the rules and the types asked of FORTE;
+    ``guard_s``; ``apply_s``: the commands sent; ``verify_s``: read and compared again; ``persist_s``:
+    the boot file amended), the number of ``commands`` and the ``bytes`` of their requests.
     """
-    before = read(client, host, port, module, components, resource, record_)
+    stats = {} if stats is None else stats
+    mark = time.perf_counter()
+
+    def phase(name: str) -> None:
+        nonlocal mark
+        now = time.perf_counter()
+        stats[name] = now - mark
+        mark = now
+
+    before = read(client, host, port, module, components, resource, record_, stats.setdefault("read", {}))
+    phase("read_s")
     found = before.differences
     if found.empty:
         return ["the program is what the AAS describes, nothing to do"], before
@@ -248,23 +275,30 @@ def reconfigure(client: Client, host: str, port: int, module: dict, components: 
     drift = Drift(missing=list(app.fbs), missing_connections=links, values=found.values)
     commands = online(app, drift, resource, container=before.snapshot.container)
     done = summary(drift, commands)
+    stats["commands"] = len(commands)
+    stats["bytes"] = sum(len(c.xml(i).encode()) for i, c in enumerate(commands, 1))
+    phase("compile_s")
     if dry_run:
         return done, before
     if found.values and not force:
         guard(client, before.snapshot)
+    phase("guard_s")
     for command in commands:
         client.execute(command)
-    after = read(client, host, port, module, components, resource, record_)
+    phase("apply_s")
+    after = read(client, host, port, module, components, resource, record_, stats.setdefault("verify", {}))
     lacks = [n for n in app.fbs if n not in after.snapshot.fbs]
     if not after.differences.empty or lacks:
         raise RuntimeError("The module differs from its AAS after the change: "
                            + "; ".join([*after.differences.lines(), *lacks][:10]))
     done.append("verified by reading the program back against the AAS")
+    phase("verify_s")
     if deployer is not None:
         deployer.save(amended(deployer.load(), commands))
         done.append("added to the boot file")
     else:
         done.append("not in the boot file (no deployer): a FORTE restart loses the change")
+    phase("persist_s")
     return done, after
 
 
