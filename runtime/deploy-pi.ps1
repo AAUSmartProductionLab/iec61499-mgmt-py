@@ -11,6 +11,9 @@ param(
     # Send the last build (bin/forte-aarch64) instead of building FORTE again: when no block type
     # changed since.
     [switch]$SkipBuild,
+    # Build with only the project's types, not the lab's modules: for an older project with its own
+    # older copies of ModLib's blocks.
+    [switch]$Alone,
     # FORTE's folder on the Pi, below the login's home.
     [string]$Folder = 'forte',
     # Do not ask before FORTE restarts on the Pi.
@@ -38,5 +41,6 @@ if (!$blocks) { throw "Nothing of $name is mapped to that device: map the applic
 $update = @{ Pi = $Pi; Program = $program; Folder = $Folder }
 if ($SkipBuild) { $update.SkipBuild = $true } else { $update.Project = $dir }
 if ($Ide) { $update.Ide = $Ide }
+if ($Alone) { $update.Alone = $true }
 if ($Force) { $update.Force = $true }
 & (Join-Path $PSScriptRoot 'update-pi.ps1') @update

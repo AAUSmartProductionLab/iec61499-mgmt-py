@@ -8,6 +8,8 @@ param(
     [string]$Ide,
     # Send bin/forte-aarch64 as it is, without building.
     [switch]$SkipBuild,
+    # Build with only the project's types, not the lab's modules (build-project.ps1 -Alone).
+    [switch]$Alone,
     # A boot file made in the IDE (right-click the device, Create FORTE Boot-Files): it becomes the
     # Pi's program (boot/forte.fboot, the one before goes to boot/forte.fboot.old) and FORTE starts
     # with it, also after a reboot (a deployment from the IDE is gone then).
@@ -57,6 +59,7 @@ if (!$Force) {
 if ($Project) {
     $build = @{ Project = $Project }
     if ($Ide) { $build.Ide = $Ide }
+    if ($Alone) { $build.Alone = $true }
     & (Join-Path $PSScriptRoot 'build-project.ps1') @build
 }
 # What goes to the Pi, under the names it gets there, so that one scp sends both.
