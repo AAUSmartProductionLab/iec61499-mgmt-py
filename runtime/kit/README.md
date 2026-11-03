@@ -93,31 +93,53 @@ fake-hwclock, which keeps the clock across restarts; without internet it says so
 
 The installer checks the checksum and runs FORTE in a Docker container that starts with the Pi.
 It also gives FORTE the GPIO lines and enables the two PWM channels; reboot once after the first
-install. FORTE then listens on port 61499. Deploy your application from the IDE as usual.
+install. FORTE then listens on port 61499. Put your program on it as below.
 
 Running the installer again replaces FORTE and keeps the program that is on the Pi
 (`~/forte/boot/forte.fboot`). On a lab module's Pi, ask first: the module's program starts again
 when FORTE restarts, and it may move an axis.
 
-### A Pi that already runs FORTE
+## Put your program on the Pi
 
-To update a Pi that has `~/forte` from an earlier install, one command builds and sends it:
+Not with Deploy in the IDE. A deployment first deletes the program that runs, and FORTE crashes
+when that program has GPIO blocks (it then restarts without a program, and sometimes without its
+port). Give FORTE the program as a boot file instead; FORTE starts with it, so nothing is deleted:
+
+1. In the IDE, in the System Explorer, right-click the device (e.g. `FORTE_PI`) and choose
+   **Create FORTE Boot-Files**. Note where it writes `<device>.fboot`.
+2. From the kit folder:
+
+   ```powershell
+   .\update-pi.ps1 -Pi pi@192.168.0.42 -Program C:\path\to\FORTE_PI.fboot
+   ```
+
+That takes about 15 s. FORTE restarts with your program, and it starts with it after every reboot
+too. Watching and forcing values in the IDE work as usual. For every change, make the boot file
+again and run the command again.
+
+When block types changed as well, build and send FORTE and the program in one go:
 
 ```powershell
-.\update-pi.ps1 -Pi pi@192.168.0.42 -Project C:\path\to\MyProject
+.\update-pi.ps1 -Pi pi@192.168.0.42 -Project C:\path\to\MyProject -Program C:\path\to\FORTE_PI.fboot
 ```
 
-It asks once before FORTE restarts (`-Force`: it does not ask). Then it builds as `build-project.ps1`
-does and copies `bin\forte-aarch64` to the Pi. There it checks the checksum, keeps the old binary as
-`~/forte/forte.old`, rebuilds the image and recreates the container. It then waits until FORTE says
-`FORTE is up and running`. `-SkipBuild` sends the last build without building again (without
-`-Project`). If FORTE does not come up, the script prints the command that puts the old binary back.
+The script asks once before FORTE restarts (`-Force`: it does not ask). It keeps what it replaces
+(`~/forte/forte.old`, `~/forte/boot/forte.fboot.old`), and it checks that FORTE comes up, that the
+program loads and that FORTE answers on port 61499 from this PC:
 
-Only FORTE is replaced, not the program. FORTE starts with the program kept on the Pi
-(`~/forte/boot/forte.fboot`), which the last `modsync push` wrote there; a deployment from the IDE
-does not change it. If that program uses a block type your build lacks, FORTE stops loading it at
-that block and the script says so (`Boot file error ... UNSUPPORTED_TYPE`). `-NoProgram` starts
-FORTE without it (the old one is kept as `boot/forte.fboot.old`); then deploy from the IDE.
+- **"uses a block type FORTE lacks"** (`Boot file error ... UNSUPPORTED_TYPE` in the log): the
+  program has a block whose type is not in FORTE, or changed since FORTE was built. Nothing of the
+  program runs. Run again with `-Project`.
+- **"Waiting until port 61499 is free"**: the IDE was connected (watching values) when FORTE
+  stopped, and Linux holds the port for up to a minute. The script waits.
+
+### FORTE alone
+
+`-Project` without `-Program` builds and sends only FORTE; `-SkipBuild` sends the last build
+without building again. FORTE then starts with the program kept on the Pi
+(`~/forte/boot/forte.fboot`), which the last `-Program` or `modsync push` put there. If that program
+uses a block type your build lacks, the script says so. `-NoProgram` starts FORTE without a
+program (the old one is kept as `boot/forte.fboot.old`).
 
 The same by hand. The image copies `forte` in when it is built, so `docker compose restart` alone
 would keep the old binary:
