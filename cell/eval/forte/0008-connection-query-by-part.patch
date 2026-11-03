@@ -1,0 +1,62 @@
+For the CIRP paper's evaluation only (docs/cirp-evaluation.md, Q1), not in the lab's FORTE: FORTE
+3.3.0 answers a management request in one frame whose length field has 16 bits, and cuts off what
+lies beyond 64 KiB; its connection query takes no filter, so the connections of a program of more
+than about 600 cannot be read back. With this, QUERY <Connection Source="X" Destination="*"/>, X an
+instance or a container of them, answers the connections leaving that part only (FORTE's command
+parser already reads the Source; the resource ignored it), and a large program is read part by part.
+Source "*" and both given are answered as before. Applied by cell/eval/forte/build.ps1.
+
+diff --git a/core/src/resource.cpp b/core/src/resource.cpp
+--- a/core/src/resource.cpp
++++ b/core/src/resource.cpp
+@@ -188,6 +188,39 @@
+       return EMGMResponse::Ready;
+     }
+ 
++    // Source names an instance or a container of them and Destination is "*": the connections
++    // leaving that part of the program only. A response travels in one frame of at most 64 KiB, cut
++    // off beyond, which the connections of a large program exceed; it is then read part by part.
++    // Source "*" (all connections), and both given, are answered as before.
++    EMGMResponse queryConnections(std::string &paReqResult, const TNameIdentifier &paSource,
++                                  const TNameIdentifier &paDestination, CFBContainer &paResource) {
++      if (paSource.empty() || !paDestination.empty()) {
++        return queryConnections(paReqResult, paResource);
++      }
++      CFBContainer *part = &paResource;
++      for (StringId name : paSource) {
++        CFBContainer *child = nullptr;
++        for (CFBContainer *it : part->getChildren()) {
++          if (it->getInstanceNameId() == name) {
++            child = it;
++            break;
++          }
++        }
++        if (child == nullptr) {
++          return EMGMResponse::NoSuchObject;
++        }
++        part = child;
++      }
++      if (part->isFB()) {
++        const CFunctionBlock &fb = static_cast<const CFunctionBlock &>(*part);
++        createEOConnectionResponse(fb, paReqResult);
++        createDOConnectionResponse(fb, paReqResult);
++        createAOConnectionResponse(fb, paReqResult);
++        return EMGMResponse::Ready;
++      }
++      return queryConnections(paReqResult, *part);
++    }
++
+     template<class T>
+     void buildQueryTypeRepsonse(T *paTypeEntry, std::string &paReqResult, std::string_view paResponsePrefix) {
+       paReqResult = '<';
+@@ -364,7 +397,9 @@
+           retVal = createGlobalConstTypeResponseMessage(paCommand.mFirstParam.front(), paCommand.mAdditionalParams,
+                                                         paCommand.mAdditionalParams);
+           break;
+-        case EMGMCommandType::QueryConnection: retVal = queryConnections(paCommand.mAdditionalParams, *this); break;
++        case EMGMCommandType::QueryConnection:
++          retVal = queryConnections(paCommand.mAdditionalParams, paCommand.mFirstParam, paCommand.mSecondParam, *this);
++          break;
+         default: retVal = getInternal().getMonitoringHandler().executeMonitoringCommand(paCommand); break;
+       }
+     }
