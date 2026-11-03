@@ -22,4 +22,7 @@ $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $binary).Hash.ToLower()
 # As sha256sum writes it, with a Unix line end.
 [IO.File]::WriteAllText("$binary.sha256", "$hash  forte-aarch64`n")
 Get-ChildItem $out | ForEach-Object { Write-Host ("  {0}  {1:N0} bytes" -f $_.Name, $_.Length) }
-Write-Host 'Commit runtime/bin/forte-aarch64 and runtime/bin/forte-aarch64.sha256.'
+# Not in the kit, which is no checkout.
+if (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $PSScriptRoot) '.git')) {
+    Write-Host 'Commit runtime/bin/forte-aarch64 and runtime/bin/forte-aarch64.sha256.'
+}
