@@ -106,9 +106,18 @@ def test_a_constant_and_a_limit_changed_in_the_aas_are_written_online(delivered)
     found = read(forte, "pi", 61499, module, components).differences
     assert found.online and found.values == {"Dispensing.Execute.Dispense.FlowRate": ("2.0", "1.0"),
                                              "Dispensing.Volume.Upper": ("8.0", "10.0")}
-    done, after = reconfigure(forte, "pi", 61499, module, components)
+    deployer = Recorder()
+    deployer.load = lambda: boot_file(deployment(filling().app))
+    done, after = reconfigure(forte, "pi", 61499, module, components, deployer)
     assert forte.writes == [("Dispensing.Execute.Dispense.FlowRate", "2.0"), ("Dispensing.Volume.Upper", "8.0")]
     assert after.differences.empty and done[-2].startswith("verified")
+    # The boot file writes the new values where it wrote the old ones, and nothing besides.
+    old, saved = deployer.load().splitlines(), deployer.saved[0].splitlines()
+    assert len(saved) == len(old)
+    new = {'Destination="Dispensing.Execute.Dispense.FlowRate"': ('Source="1.0"', 'Source="2.0"'),
+           'Destination="Dispensing.Volume.Upper"': ('Source="10.0"', 'Source="8.0"')}
+    assert [(a, b) for a, b in zip(old, saved) if a != b] == [
+        (a, a.replace(*was)) for a in old for where, was in new.items() if where in a and 'Action="WRITE"' in a]
     # Values are written only while nobody works with the module.
     busy = FakeForte(filling(), state="Execute", occupied=True)
     with pytest.raises(Refused, match="occupied"):
