@@ -9,7 +9,7 @@ import pytest
 import yaml
 
 from iec61499_mgmt.bootfile import boot_file, deployment
-from iec61499_mgmt.protocol import ManagementError, Response
+from iec61499_mgmt.protocol import ManagementError, ProtocolError, Response
 from iec61499_mgmt.sysfile import FlatApplication, load_application
 from modgen import SPECS, library_specs, load, specs, system_file
 from modgen.library import STATES
@@ -17,7 +17,7 @@ from modgen.module import app_name
 from modgen.spec import ModuleSpec
 from modsync import sync
 from modsync.compare import Candidate, expected, expected_values, same
-from modsync.device import literal
+from modsync.device import literal, read_structure
 from modsync.sync import MODULE_STATE, OCCUPIED, Refused, candidates, inspect, push, watch
 
 FILLING = SPECS / "filling.yaml"
@@ -249,6 +249,45 @@ def test_a_program_inside_its_applications_container_is_read_and_changed_inside_
     assert set(forte.fbs) == {f"Filling_pi.{n}" for n in new.app.fbs}
     assert forte.triggered == ["Filling_pi.DoubleDose.Control.INIT"]
     assert inspect(forte, "pi", 61499, [new]).drift.empty
+
+
+class FramedForte(FakeForte):
+    """Answers a connection query as FORTE does: in one frame of ``frame`` bytes, beyond which the
+    answer is cut off and cannot be read; ``by_part``: the query honours its Source (patch 0008)."""
+
+    def __init__(self, cand: Candidate, frame: int, by_part: bool = True):
+        super().__init__(cand)
+        self.frame, self.by_part, self.asked = frame, by_part, []
+
+    def execute(self, c):
+        if c.op != "query_connections":
+            return super().execute(c)
+        self.asked.append(c.source)
+        part = c.source if self.by_part else None
+        found = [{"Source": s, "Destination": d} for s, d in sorted(self.connections)
+                 if part is None or s == part or s.startswith(part + ".")]
+        if sum(len(f'<Connection Source="{x["Source"]}" Destination="{x["Destination"]}"/>\n') for x in found) > self.frame:
+            raise ProtocolError("Invalid management response XML")
+        return response(connections=found)
+
+
+def test_a_program_too_large_for_one_answer_is_read_part_by_part():
+    """FORTE answers in one frame of 64 KiB and cuts off the rest: a large program's connections
+    are read part by part, each instance and container, from a FORTE that answers by part."""
+    whole = FakeForte(filling())
+    each: dict[str, int] = {}
+    for s, d in whole.connections:
+        each[s.rpartition(".")[0]] = each.get(s.rpartition(".")[0], 0) + len(f'<Connection Source="{s}" Destination="{d}"/>\n')
+    frame = sum(each.values()) // 3                                   # a third of the program fits
+    assert max(each.values()) <= frame                                # each instance's do
+    forte = FramedForte(filling(), frame)
+    snap = read_structure(forte, "pi", 61499)
+    assert snap.connections == forte.connections
+    assert forte.asked[0] is None and len(forte.asked) > 3          # the whole first, then by part
+    assert "Dispensing" in forte.asked and any(a and a.startswith("Dispensing.") for a in forte.asked)  # by its parts
+    # A FORTE that answers a part with every connection cannot read the program: said so.
+    with pytest.raises(ProtocolError, match="by part"):
+        read_structure(FramedForte(filling(), frame, by_part=False), "pi", 61499)
 
 
 def test_a_skill_added_before_another_moves_the_init_chain_online():

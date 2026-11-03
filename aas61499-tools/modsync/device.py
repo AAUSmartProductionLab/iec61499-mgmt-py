@@ -57,21 +57,55 @@ def outside(name: str, container_: str) -> str:
     return name[len(container_) + 1:] if container_ and name.startswith(container_ + ".") else name
 
 
+def query_connections(client: Client, resource: str, names: list[str]) -> list[dict]:
+    """The program's connections. FORTE answers a request in one frame of at most 64 KiB and cuts off
+    what lies beyond, which the connections of a large program exceed (about 600 of them): they are
+    then asked for part by part, each instance and container below the resource, and a container by
+    its own parts again if its connections do not fit either (``names``: every instance's, as QUERY
+    FB answers). Asking for a part needs a FORTE whose connection query honours its Source
+    (cell/eval/forte/0008-connection-query-by-part.patch); another refuses it."""
+    try:
+        return client.execute(Command(op="query_connections", resource=resource)).connections
+    except ProtocolError:                # the answer did not fit its frame
+        pass
+    return _by_part(client, resource, [n.split(".") for n in names], [])
+
+
+def _by_part(client: Client, resource: str, paths: list[list[str]], prefix: list[str]) -> list[dict]:
+    found = []
+    for part in sorted({tuple(p[:len(prefix) + 1]) for p in paths if p[:len(prefix)] == prefix and len(p) > len(prefix)}):
+        name = ".".join(part)
+        try:
+            answer = client.execute(Command(op="query_connections", resource=resource, source=name)).connections
+        except ProtocolError:
+            if list(part) in paths:      # an instance, whose connections do not fit
+                raise ProtocolError(f"The connections of {name} do not fit one answer of FORTE (64 KiB), or "
+                                    "FORTE does not answer them by part (FORTE patch 0008)") from None
+            answer = _by_part(client, resource, paths, list(part))
+        else:
+            if any(c["Source"] != name and not c["Source"].startswith(name + ".") for c in answer):
+                raise ProtocolError(f"FORTE answered the query for the connections of {name} with others: it "
+                                    "does not answer by part (FORTE patch 0008), and the program's connections "
+                                    "do not fit one answer (64 KiB)")
+        found += answer
+    return found
+
+
 def read_structure(client: Client, host: str, port: int, resource: str = "RES") -> Snapshot:
     """Instances, their types with hashes, and connections; values are read separately (read_values)."""
     snap = Snapshot(host, port, resource, read_at=datetime.now(timezone.utc).isoformat(timespec="seconds"))
     try:
-        fbs = client.execute(Command(op="query_fbs", resource=resource)).fbs
+        listed = client.execute(Command(op="query_fbs", resource=resource)).fbs
     except ManagementError:              # no such resource: FORTE runs without a program
         return snap
-    fbs = [fb for fb in fbs if fb["Name"] not in RESOURCE_FBS]
+    fbs = [fb for fb in listed if fb["Name"] not in RESOURCE_FBS]
     snap.container = container([fb["Name"] for fb in fbs])
     for fb in fbs:
         name = outside(fb["Name"], snap.container)
         snap.fbs[name] = fb.get("Type", "").partition("#")[0]
         snap.status[name] = fb.get("Status", "")
     snap.connections = {(outside(c["Source"], snap.container), outside(c["Destination"], snap.container))
-                        for c in client.execute(Command(op="query_connections", resource=resource)).connections}
+                        for c in query_connections(client, resource, [fb["Name"] for fb in listed])}
     for typ in sorted(set(snap.fbs.values())):
         types = client.execute(Command(op="query_type", resource=resource, type=typ)).types
         snap.hashes[typ] = types[0]["Name"].partition("#")[2] if types else ""
