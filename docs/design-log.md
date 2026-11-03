@@ -20,6 +20,20 @@ A running log of design considerations made while building, for writing the pape
 
 ## 3 Nov 2026
 
+- **The DMP fork takes upstream's main: WriteMode, AID security and one endpoint class.** *Journal*,
+  *Orchestration* (what the data path of the models runs on).
+  - What: the `lab-modules` branch merges Tristan's main (Java 25, bounded AAS reads, `OpcUaEndpoint`
+    in place of the data source and sink configurations, `AidSecurity`, a WriteMode on a segment's
+    InfluxDB target). Kept from ours: an Operation bound to the one action its Sinks address (an ARSO
+    `Skills/<skill>/Start/Start`), the wait while a connection reconnects, and `overrideHost`, now
+    one of `OpcUaEndpoint`'s defaults. Dropped: our `onlyNoSecurity` check, since `AidSecurity`
+    accepts nosec. Upstream now checks that an Operation's delegation is its own invoke path, so our
+    test of the binding gives the Operation that path.
+  - Why: the user chose to update the fork, so that the measurement series can be written
+    asynchronously, and so that the fork stays close to upstream for the pull requests.
+  - Instead of: the old fork, with a WriteMode in the AAS that it would not read.
+  - Checked: the DMP's Maven tests of every module; pushed to the fork (`lab-modules`, 5382fcdc).
+
 - **The journal paper is about the models; the machinery behind them goes to an orchestration paper
   (decided by the user).** *Journal*, *Orchestration*.
   - What:
