@@ -119,9 +119,12 @@ One command takes your project as it is on disk and puts it on the Pi, from fres
 Save the project in the IDE first. When no block type changed, `-SkipBuild` sends the last build
 and the new program in about 15 s. Watching and forcing values in the IDE work as usual.
 
-Do not use **Deploy** in the IDE on the Pi. A deployment first deletes the program that runs, and
-FORTE crashes when that program has GPIO blocks (it then restarts without a program, and sometimes
-without its port).
+**Deploy** in the IDE works as well, once FORTE is on the Pi: after a change to the application,
+deploy as usual. Only the program `deploy-pi.ps1` put there starts again after a reboot; one
+deployed from the IDE is gone then (FORTE starts with the boot file). Run `deploy-pi.ps1
+-SkipBuild` to make your current program the one the Pi starts with. A new or changed block type
+always needs `deploy-pi.ps1` (or `update-pi.ps1 -Project`): FORTE can only create the types it was
+built with.
 
 The program can also come from the IDE: right-click the device in the System Explorer, **Create
 FORTE Boot-Files**, then `.\update-pi.ps1 -Pi pi@192.168.0.42 -Program C:\path\to\FORTE_PI.fboot`

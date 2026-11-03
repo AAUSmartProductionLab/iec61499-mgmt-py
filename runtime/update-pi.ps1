@@ -10,7 +10,7 @@ param(
     [switch]$SkipBuild,
     # A boot file made in the IDE (right-click the device, Create FORTE Boot-Files): it becomes the
     # Pi's program (boot/forte.fboot, the one before goes to boot/forte.fboot.old) and FORTE starts
-    # with it. Instead of a deployment from the IDE, which deletes the running program first.
+    # with it, also after a reboot (a deployment from the IDE is gone then).
     [string]$Program,
     # Start FORTE without the program on the Pi: boot/forte.fboot is moved to boot/forte.fboot.old,
     # and FORTE waits for a deployment from the IDE.
@@ -130,7 +130,6 @@ switch ($code) {
         if (!$what) { $what = @('its program') }
         "FORTE runs $($what -join ' with ') on $Pi and answers on ${address}:61499."
         if ($binary) { "  The old binary is ~/$Folder/forte.old." }
-        if ($Program) { '  Change the program by running this again with a new boot file, not by Deploy in the IDE.' }
     }
     2 { throw "No folder ~/$Folder on the Pi: install FORTE there first (install-pi.ps1)" }
     3 { throw 'A file on the Pi does not match its checksum; nothing was replaced. Run again.' }

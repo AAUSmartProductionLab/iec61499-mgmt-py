@@ -22,8 +22,7 @@ param(
 #   2. build-project.ps1: FORTE with the project's block types,
 #   3. update-pi.ps1: on the Pi, stop and delete the FORTE container, put the new binary and the
 #      program in place, build the image and run a new container, which starts with the program.
-# Nothing is deployed from the IDE: a deployment deletes the running program first, and FORTE
-# crashes doing so when it has GPIO blocks.
+# FORTE starts with the program, also after a reboot; a deployment from the IDE is gone then.
 $ErrorActionPreference = 'Stop'
 $dir = (Resolve-Path -LiteralPath $Project).Path
 $name = Split-Path -Leaf $dir
