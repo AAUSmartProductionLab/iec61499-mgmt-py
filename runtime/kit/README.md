@@ -108,8 +108,14 @@ To update a Pi that has `~/forte` from an earlier install, one command builds an
 It asks once before FORTE restarts (`-Force`: it does not ask). Then it builds as `build-project.ps1`
 does and copies `bin\forte-aarch64` to the Pi. There it checks the checksum, keeps the old binary as
 `~/forte/forte.old`, rebuilds the image and recreates the container. It then waits until FORTE says
-`FORTE is up and running`. `-SkipBuild` sends the last build without building again. If FORTE does
-not come up, the script prints the command that puts the old binary back.
+`FORTE is up and running`. `-SkipBuild` sends the last build without building again (without
+`-Project`). If FORTE does not come up, the script prints the command that puts the old binary back.
+
+Only FORTE is replaced, not the program. FORTE starts with the program kept on the Pi
+(`~/forte/boot/forte.fboot`), which the last `modsync push` wrote there; a deployment from the IDE
+does not change it. If that program uses a block type your build lacks, FORTE stops loading it at
+that block and the script says so (`Boot file error ... UNSUPPORTED_TYPE`). `-NoProgram` starts
+FORTE without it (the old one is kept as `boot/forte.fboot.old`); then deploy from the IDE.
 
 The same by hand. The image copies `forte` in when it is built, so `docker compose restart` alone
 would keep the old binary:
