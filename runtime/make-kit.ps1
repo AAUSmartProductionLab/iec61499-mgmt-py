@@ -11,7 +11,8 @@ param(
 )
 # A kit for building FORTE with one's own block types without this repository: the build scripts,
 # FBE configurations, FORTE patches and the lab's exported modules (from the last build-modules.ps1),
-# the lab's module projects (projects/) with kit/README.md. It builds the same FORTE as runtime/bin/forte-aarch64 plus the new types.
+# the lab's module projects (projects/) and the lab's FORTE (bin/) with kit/README.md. It builds the same FORTE
+# as runtime/bin/forte-aarch64 plus the new types.
 # For the Pi it holds what install.sh would download: the container files (pi/) and the base
 # images (images/), which kit/install-pi.ps1 copies over SSH; then the Pi needs no internet.
 $ErrorActionPreference = 'Stop'
@@ -21,6 +22,12 @@ New-Item -ItemType Directory -Force -Path $kit | Out-Null
 $files = 'build-project.ps1', 'build-runtime.ps1', 'validate.ps1', 'validate.xml', 'check-project.ps1',
          'package-runtime.ps1', 'update-pi.ps1', 'make-bootfile.ps1', 'deploy-pi.ps1'
 foreach ($file in $files) { Copy-Item -LiteralPath (Join-Path $PSScriptRoot $file) -Destination $kit }
+# The lab's FORTE as committed: install-pi.ps1 sets up a new Pi with it before the first build.
+New-Item -ItemType Directory -Force -Path (Join-Path $kit 'bin') | Out-Null
+$binary = Join-Path $PSScriptRoot 'bin\forte-aarch64'
+$hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $binary).Hash.ToLower()
+if (!(Get-Content -LiteralPath "$binary.sha256" -Raw).StartsWith($hash)) { throw "$binary does not match its .sha256: run package-runtime.ps1" }
+Copy-Item -LiteralPath $binary, "$binary.sha256" -Destination (Join-Path $kit 'bin')
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'kit\README.md'), (Join-Path $PSScriptRoot 'kit\install-pi.ps1') -Destination $kit
 # What goes to the Pi, with Unix line ends whatever the checkout has.
 $deploy = Join-Path (Split-Path -Parent $PSScriptRoot) 'deploy\pi'

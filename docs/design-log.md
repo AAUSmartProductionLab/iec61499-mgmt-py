@@ -20,6 +20,14 @@ A running log of design considerations made while building, for writing the pape
 
 ## 3 Nov 2026
 
+- **The kit carries the lab's FORTE (`bin/forte-aarch64`).** *CIRP* (the demonstrator's tooling).
+  - A new Pi is set up with `install-pi.ps1` straight away; before, it needed a first build of
+    half an hour, as install-pi sends `bin/`. The first `deploy-pi.ps1` replaces it with the
+    project's build. Instead of: build-project before install-pi (one more step to get wrong).
+  - The README now says how to open PowerShell, what to change in the commands, and how to tell
+    a Pi without FORTE (`ssh ... ls forte`), as deploy-pi notices it only after the build.
+  - A fresh unzip to a short folder built in 10 minutes (FillingModule, with the lab's modules).
+
 - **The kit for students: one command, and a README in steps.** *CIRP* (the demonstrator's
   tooling).
   - `deploy-pi.ps1` removes a block of the resource's type (EMB_RES's `START`) that the IDE saved
