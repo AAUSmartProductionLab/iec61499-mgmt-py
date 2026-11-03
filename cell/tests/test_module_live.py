@@ -284,3 +284,17 @@ def test_stoppering_module_homes_and_stoppers(request, tmp_path):
         assert ua.value("Equipment/LinearAxis/ActualPosition") == 0.0
         assert sim.position("Piston") == pytest.approx(0.0, abs=0.05)     # in for as long as out, to a few ms
         assert sim.shoot_through == 0
+
+
+def test_capping_module_homes_and_crimps(request, tmp_path):
+    with running(request, tmp_path, "capping") as (sim, ua):
+        a = str(uuid.uuid4())
+        ready(sim, ua, a)                                     # Resetting: the head finds its limit switch
+        assert ua.call("Skills/Capping/Start", a) == [True, 0]
+        ua.expect("Skills/Capping/State", S["Succeeded"], timeout=20)
+        # Head down to the cap, the crimper closed for its Duration and open again, head up.
+        assert outputs(sim, "LinearAxis.Down", "Crimper.Close") == [
+            ("LinearAxis.Down", True), ("LinearAxis.Down", False), ("Crimper.Close", True), ("Crimper.Close", False)]
+        closed, opened = [t for t, n, _ in sim.trace if n == "Crimper.Close"]
+        assert opened - closed == pytest.approx(1.5, abs=0.3)
+        assert ua.value("Equipment/LinearAxis/ActualPosition") == 0.0
