@@ -36,6 +36,12 @@ A running log of design considerations made while building, for writing the pape
     and DELETE RES, then the program), over the running one; no crash, every IO block `QO` TRUE.
   - The boot file route (`deploy-pi.ps1`) stays: it builds FORTE with the types, and its program
     is the one the Pi starts with after a reboot.
+  - 0007: every deployment still ended in "errors reported from the devices". The IDE queries
+    each type with its declaration's hash; a generic block (`SERVER_2_2`) is FORTE's `GEN_SERVER`,
+    whose entry has no hash (it builds the interface from the name), so FORTE answered
+    `UNSUPPORTED_TYPE`. A type without a hash is not compared now; a real type with a wrong hash is
+    still refused. Not ours: any program with generic communication blocks hits it, and any with
+    IO configuration blocks hits the crash at its second deployment, on FORTE 3.3.0 as released.
 
 - **A program made in the IDE goes onto a Pi as a boot file, not by Deploy.** *Orchestration* (how
   a module's program is replaced).
