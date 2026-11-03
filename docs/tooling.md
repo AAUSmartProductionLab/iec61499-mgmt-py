@@ -160,6 +160,18 @@ scale, on ports 1502/1503), FORTE, and deploys the PC target's application; OPC 
 `--forte` it takes `output/bin/forte.exe`, which is older than the IO blocks of 21 Oct until the
 Windows build is installed again (section 2).
 
+The robot modules run in Python, without FORTE (`module-py/`, [demo-modules.md](demo-modules.md),
+section 3); their robots are simulated, `--speed` makes the jobs quicker:
+
+```powershell
+python -m modpy serve cell/modules/python/loading.yaml cell/modules/python/unloading.yaml --port 4842
+python -m modreg manifest cell/modules/python/loading.yaml --out manifest.json   # their profiles
+```
+
+Both modules are then below `opc.tcp://localhost:4842` (`/Objects/Loading`, `/Objects/Unloading`),
+laid out as a FORTE module's. `--announce` announces the server by mDNS, `--manifest` serves a
+manifest at `:8088/manifest.json`, as on a module's Pi.
+
 ## 5. Deploying to a Raspberry Pi
 
 A fresh Pi (64-bit Raspberry Pi OS or Ubuntu) is set up once, on the Pi, by a user with sudo:
@@ -188,6 +200,20 @@ python -m modsync pull --host 192.168.0.134                      # check what ru
   container `manifest` (busybox httpd), so `modreg serve --discover` finds the module and registers it
   from `http://<Pi>:8088/manifest.json`. A Pi installed before 30 Oct needs `pi.py install` once for
   that container.
+
+**A robot's Pi** runs no FORTE: the robot modules run in Python (`deploy/modpy/`). On the Pi, with
+Docker, in a clone of the repository (it is public), and the manifest made on this PC:
+
+```bash
+python -m modreg manifest cell/modules/python/loading.yaml --out manifest.json   # on this PC; copy it to
+                                                                                # deploy/modpy/manifest/ on the Pi
+docker compose -f deploy/modpy/compose.yaml up -d --build                       # on the Pi
+```
+
+The container (host network) serves the module on port 4840, announces it by mDNS and serves the
+manifest on 8088, so `modreg serve --discover` registers it as it registers a FORTE module. Which
+modules and port: `command:` in `deploy/modpy/compose.yaml` (beside the planar controller, which has
+4840, another `--port`). The robots are simulated until their driver is written.
 
 ## 6. The AASs: building, checking, publishing
 
