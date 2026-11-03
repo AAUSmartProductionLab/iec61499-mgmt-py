@@ -20,6 +20,17 @@ A running log of design considerations made while building, for writing the pape
 
 ## 3 Nov 2026
 
+- **A measurement series is written asynchronously, a state change synchronously.** *Journal*.
+  - What: modreg gives the segments of the Measurements series (an axis's position, `Moving`,
+    `Homed`) the WriteMode `Asynchronous`; the State, Skills and Log series have none, which is the
+    DMP's default, `Synchronous`.
+  - Why: a measurement is sampled while the equipment moves, so its points are batched and the DMP
+    does not wait for InfluxDB at each one; a lost point is followed by the next. A state change or a
+    skill's run happens once and the history is wrong without it, so its write waits for InfluxDB to
+    acknowledge it.
+  - Instead of: one mode for every series; or the mode in the DMP's configuration, away from the AAS
+    that describes the series.
+
 - **The DMP fork takes upstream's main: WriteMode, AID security and one endpoint class.** *Journal*,
   *Orchestration* (what the data path of the models runs on).
   - What: the `lab-modules` branch merges Tristan's main (Java 25, bounded AAS reads, `OpcUaEndpoint`

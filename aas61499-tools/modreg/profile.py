@@ -142,6 +142,10 @@ def meaning(name: str, given: str | None = None) -> str:
 COORDINATES = ((SMC, "Measurements"), (SMC, "Coordinates"))
 # The module's own state, a series of its own.
 MODULE_STATE_POINTS = ("PackMLState", "OccupationState")
+# How the DMP writes a group's rows (the segment's WriteMode): a measurement is sampled while the
+# equipment moves, so its points are batched and a lost one does not hold up the next; a state
+# change (a skill's run, the module's state) waits for InfluxDB to acknowledge it.
+WRITE_MODE = {"Measurements": "Asynchronous"}
 # What a series holds, by its name, else by its group.
 SERIES_ABOUT = {
     "Module": "The module's PackML state and its occupation, as they change",
@@ -752,7 +756,8 @@ class Describer:
                     name=f"{series} ({group})", measurement=f"{group}_{series}".lower(),
                     description=SERIES_ABOUT.get(series, SERIES_ABOUT[group]).format(series=series),
                     fields={name: record_field("xs:decimal", concept=concept, description=title)
-                            for name, (_, concept, title) in points.items()})
+                            for name, (_, concept, title) in points.items()},
+                    write_mode=WRITE_MODE.get(group))
                          for series, points in found.items()}
                 for group, found in self.series().items()}
         if made.get("State"):
