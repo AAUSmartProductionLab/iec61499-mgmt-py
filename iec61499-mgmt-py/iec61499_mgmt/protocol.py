@@ -34,10 +34,14 @@ class Command(Model):
             "start": {"name"}, "stop": {"name"}, "kill": {"name"}, "query_fbs": set(),
             "query_connections": set(), "query_type": {"type"},
         }[self.op]
+        # A connection query may name the part of the program whose connections it asks for (an
+        # instance or a container of them), which FORTE answers only with a patch (Source).
+        optional = {"query_connections": {"source"}}.get(self.op, set())
         present = {k for k in ("name", "type", "source", "destination", "value")
                    if getattr(self, k) is not None}
-        if present != required:
-            raise ValueError(f"{self.op} requires exactly {sorted(required)}")
+        if not required <= present <= required | optional:
+            raise ValueError(f"{self.op} requires exactly {sorted(required)}"
+                             + (f", and may have {sorted(optional)}" if optional else ""))
         return self
 
     def inside(self, container: str) -> "Command":
@@ -68,7 +72,7 @@ class Command(Model):
         elif self.op == "query_fbs":
             ET.SubElement(root, "FB", Name="*", Type="*")
         elif self.op == "query_connections":
-            ET.SubElement(root, "Connection", Source="*", Destination="*")
+            ET.SubElement(root, "Connection", Source=self.source or "*", Destination="*")
         else:
             ET.SubElement(root, "FBType", Name=self.type)
         return ET.tostring(root, encoding="unicode")

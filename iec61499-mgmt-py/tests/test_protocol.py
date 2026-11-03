@@ -146,6 +146,17 @@ def test_recorded_forte3_responses():
             assert response.reason in ("INVALID_STATE", "UNSUPPORTED_TYPE")
 
 
+def test_a_connection_query_may_ask_for_a_part_of_the_program():
+    """All connections, or those leaving one instance or container (a FORTE patch answers it)."""
+    whole = Command(op="query_connections", resource="RES")
+    part = Command(op="query_connections", resource="RES", source="Filling.Dispensing")
+    assert whole.xml(1) == '<Request ID="1" Action="QUERY"><Connection Source="*" Destination="*" /></Request>'
+    assert part.xml(2) == '<Request ID="2" Action="QUERY"><Connection Source="Filling.Dispensing" Destination="*" /></Request>'
+    assert part.inside("Filling") == part                     # a query is not moved into a container
+    with pytest.raises(ValueError, match="may have"):
+        Command(op="query_connections", resource="RES", destination="X.IN")
+
+
 @pytest.mark.parametrize("source", ["PROC.A.PV", "PROC.A.PV.PV"])
 def test_read_value_accepts_exact_and_duplicated_leaf(source):
     """READ accepts the exact source or the duplicated leaf."""
