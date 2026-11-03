@@ -208,4 +208,4 @@ if [ -n "$reboot_needed" ]; then
 elif ! ls /sys/class/pwm/pwmchip* >/dev/null 2>&1; then
     echo "  note        no PWM channels (step pulses, motor speed, servo)"
 fi
-[ -s "$FORTE_DIR/boot/forte.fboot" ] || echo "  next        no program yet: install the tools and run 'modsync push <module> --target pi --host localhost'"
+[ -s "$FORTE_DIR/boot/forte.fboot" ] || echo "  next        no program yet: from the PC run deploy-pi.ps1, or here 'modsync push <module> --target pi --host localhost'"
