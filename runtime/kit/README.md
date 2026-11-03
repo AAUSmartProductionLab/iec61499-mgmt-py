@@ -1,198 +1,182 @@
-# FORTE kit: your own block types on a Raspberry Pi
+# FORTE kit: your 4diac project on a Raspberry Pi
 
-This kit builds 4diac FORTE 3.3.0 for a Raspberry Pi 4 or 5 (64-bit Linux) with the block types
-of your 4diac project compiled in. You need it when you have made new block types (basic,
-simple, composite or service FBs, data types). A FORTE can only create blocks whose types were
-compiled into it; a changed application or new connections need no new FORTE.
+This kit puts your 4diac project on a Raspberry Pi 4 or 5 with one command. It builds the
+Pi's runtime, FORTE, with your block types inside, and sends it to the Pi together with your
+program. After that you work in the 4diac IDE as usual: deploy, watch and force values.
 
-The FORTE it builds is the one the lab's Pis run (same patches, same settings: OPC UA, GPIO,
-PWM), with the lab's module types already in it (`.cache/modules`). So it also runs the lab's
-module programs, and you can install it on a lab Pi.
+## 1. Set up your PC (once)
 
-## What you need, once
+You need:
 
-- **Windows** with PowerShell and **git**.
-- **The 4diac IDE 3.3** (4diac-ide_3.3.x). It must be 3.3: the IDE writes the C++ for your types,
-  and it has to match FORTE 3.3.0.
-- **The 4diac FORTE Build Environment (FBE)** in `C:\4diac-fbe`:
+- **Windows 10 or 11.**
+- **git**: <https://git-scm.com/download/win>.
+- **The 4diac IDE 3.3.** It must be 3.3: other versions do not match this FORTE.
+- **The FORTE build environment** in `C:\4diac-fbe`. Open PowerShell and run:
 
   ```powershell
   git clone https://github.com/eclipse-4diac/4diac-fbe C:\4diac-fbe
   ```
 
-  The first build downloads its compilers, including the cross compiler for the Pi.
-  That takes a while, once.
+Then:
 
-Unzip the kit to a folder whose path has no spaces, for example `C:\forte-kit`. Windows blocks
-scripts that came from a zip; unblock them once:
+1. **Unzip the kit** to `C:\forte-kit`. Use a folder whose path has no spaces.
+2. **Allow the kit's scripts.** In PowerShell:
+
+   ```powershell
+   cd C:\forte-kit
+   Get-ChildItem -Recurse | Unblock-File
+   Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+   ```
+
+   Answer `Y` if PowerShell asks.
+3. **Tell the kit where the IDE is.** Use the path of `4diac-idec.exe`: the one with a **c**,
+   in your IDE folder.
+
+   ```powershell
+   [Environment]::SetEnvironmentVariable('FORDIAC_IDE', 'C:\path\to\4diac-ide\4diac-idec.exe', 'User')
+   ```
+
+   Then close PowerShell and open a new one. The setting is kept from now on.
+
+## 2. Put your project on the Pi
+
+**In the IDE:**
+
+1. In your System, the device for your Pi (e.g. `FORTE_PI`) must have the Pi's address in
+   `MGR_ID`, e.g. `"192.168.0.42:61499"`.
+2. Your application must be mapped to that device's resource (right-click the blocks or the
+   application, **Map to**).
+3. Save everything (**Ctrl+Shift+S**).
+
+**In PowerShell:**
 
 ```powershell
 cd C:\forte-kit
-Get-ChildItem -Recurse | Unblock-File
+.\deploy-pi.ps1 -Pi admin@192.168.0.42 -Project C:\path\to\MyProject
 ```
 
-If PowerShell still refuses to run scripts, start the commands below with
-`powershell -ExecutionPolicy Bypass -File` instead of `.\`.
+- `admin@192.168.0.42` is the Pi's login and address.
+- `C:\path\to\MyProject` is your project folder: the one with `MyProject.sys` and `Type Library`
+  in it. In the IDE: right-click the project, **Properties**, **Location**.
 
-## Build
+The script asks once whether FORTE may restart: type `y`. Then type the Pi's password when it
+asks, twice. The first time takes long, half an hour or more, because the kit downloads and
+builds what FORTE needs. After that it takes two or three minutes.
 
-Tell the kit where the IDE is, then build with your project folder (the folder that holds
-`<Project>.sys` and `Type Library`):
+**It worked** when the last line says:
+
+```
+FORTE runs the new build with the program from MyProject-program.fboot on admin@192.168.0.42 and answers on 192.168.0.42:61499.
+```
+
+FORTE now runs your program, and starts it again whenever the Pi starts.
+
+> On a lab module's Pi, ask first: when FORTE restarts, the module's program starts again, and it
+> may move an axis.
+
+## 3. Working on your project
+
+| You changed ... | Then |
+|---|---|
+| the application: blocks placed, connections, parameters | **Deploy** in the IDE: right-click your Pi's device, **Deploy** |
+| a block type: a new type, its pins, its algorithm | `.\deploy-pi.ps1 ...` as in step 2: FORTE must be built with the new type |
+| nothing, you want to watch or force values | **Monitor** in the IDE, as usual |
+
+**Good to know:** after a reboot, the Pi runs the program that `deploy-pi.ps1` put there, not the
+last one deployed from the IDE. To make your current program the one the Pi starts with:
 
 ```powershell
-$env:FORDIAC_IDE = 'C:\path\to\4diac-ide\4diac-idec.exe'
+.\deploy-pi.ps1 -Pi admin@192.168.0.42 -Project C:\path\to\MyProject -SkipBuild
+```
+
+`-SkipBuild` skips building FORTE (use it only when no block type changed). It takes about 15 s.
+
+## 4. A Pi that has never run FORTE
+
+Do this once, before step 2. The Pi needs SSH turned on, and internet the first time if it has no
+Docker yet.
+
+```powershell
+cd C:\forte-kit
 .\build-project.ps1 -Project C:\path\to\MyProject
+.\install-pi.ps1 -Pi admin@192.168.0.42
 ```
 
-Close your project in the IDE first, or at least save everything: the kit reads the files on disk.
+`install-pi.ps1` asks for the Pi's password and then for its sudo password (often the same).
+Restart the Pi once when it is done. Then put your project on it with `deploy-pi.ps1 ... -SkipBuild`
+(step 2).
 
-This takes four steps:
+## 5. Start from the lab's module projects
 
-1. It fetches the FORTE 3.3.0 source into `fbe\4diac-forte` and applies the patches in
-   `forte-patches`.
-2. The IDE runs without a window. It loads your project, checks every type and the system, and
-   exports the types as C++ to `.cache\modules\<project>`. The log is
-   `.cache\validate-<Project>.log`. A type that is a copy of a FORTE standard block (E_CTU, E_SR,
-   GPIOChip, ...) or of one the kit has (ModLib's) is left out, since FORTE has it already. A
-   project that is a copy of a lab module (the same package, e.g. `filling` in `FillingModule`)
-   replaces the kit's export of that module.
-3. The FBE cross-compiles FORTE with your types and the lab's.
-4. The result is stripped into `bin\forte-aarch64`, with its checksum in `bin\forte-aarch64.sha256`.
+`projects\` has the lab's current module projects: `FillingModule` and `StopperingModule`.
 
-The first build takes long (the compilers, then open62541 and the other libraries). Later builds
-take a minute or two. Several projects: `-Project C:\a\One, C:\b\Two`.
+1. In the IDE: **File > Import > General > Existing Projects into Workspace**, choose
+   `C:\forte-kit\projects\FillingModule`, and tick **Copy projects into workspace**.
+2. Set `MGR_ID` of the device `FORTE_PI` to your Pi's address.
+3. Put it on the Pi as in step 2, with the project in your workspace as `-Project`.
 
-Options:
+An older project of your own works as well. If it has its own older copies of the lab's blocks
+(`SKILL_Core`, `IO_DI`, ...), the build stops and names them; then add `-Alone` to the command.
 
-- `-Alone`: only your types, without the lab's modules. That FORTE cannot run the lab's module
-  programs.
-- `-Config modules-win`: a FORTE for this PC instead, to test with. It is
-  `fbe\build\modules-win\output\bin\forte.exe`. Start it and deploy to `localhost:61499`. GPIO and
-  PWM blocks then only answer `QO = FALSE`.
-- `-Ide <path>`: the IDE, instead of `FORDIAC_IDE`.
+## 6. When something goes wrong
 
-To run only the IDE's checks on a project (nothing is built):
-`.\check-project.ps1 -ProjectDir C:\path\to\MyProject`.
+The scripts say what went wrong. Find the message here:
 
-## Put it on the Pi
+| The message says ... | What to do |
+|---|---|
+| `running scripts is disabled` | Step 1.2 again |
+| `4diac IDE not found` | Step 1.3 again; the file is `4diac-idec.exe`, with a **c** |
+| `has no MyProject.sys` | `-Project` must be the project folder itself (step 2) |
+| `no device has MGR_ID ...` | Set your Pi's address in the device's `MGR_ID` (step 2), and save |
+| `Nothing of ... is mapped to that device` | Map your application to the device's resource, and save |
+| `4diac validation failed` | A type has an error; the IDE counts warnings as errors too. Run `.\check-project.ps1 -ProjectDir C:\path\to\MyProject` for the list, fix them in the IDE, save, try again |
+| `... differs from the one in modlib` | Your project has an older copy of a lab block: add `-Alone` |
+| `uses a block type FORTE lacks` | Run `deploy-pi.ps1` without `-SkipBuild` |
+| `No folder ~/forte on the Pi` | The Pi has no FORTE yet: step 4 |
+| `scp ... failed` or `ssh ... failed` | Check the Pi's address and login, that it is on the network, and that SSH is on |
+| `Removed START from ...` | Not an error: the kit fixed your project. Close the project in the IDE without saving, and open it again |
+| `Waiting until port 61499 is free` | Not an error: the IDE was connected. The script waits up to a minute |
+| `typed subapplication` | Make the program in the IDE (right-click the device, **Create FORTE Boot-Files**), then `.\update-pi.ps1 -Pi admin@192.168.0.42 -Project C:\path\to\MyProject -Program C:\path\to\FORTE_PI.fboot` |
 
-From this PC, over the local network, with the Pi's login and address (SSH enabled on the Pi):
+In the IDE:
 
-```powershell
-.\install-pi.ps1 -Pi pi@192.168.0.42
-```
+| The IDE says ... | What to do |
+|---|---|
+| `Could not connect to device FORTE_PC` (or another device) | Another device in your System has no FORTE running. Deploy only your Pi: right-click its device, **Deploy** |
+| `UNSUPPORTED_TYPE` for one of your own blocks | FORTE on the Pi was built without that version of the type: run `deploy-pi.ps1` (step 2) |
 
-It copies the installer, `bin\forte-aarch64` with its checksum, the container files (`pi\`) and the
-base images (`images\`) to `~/forte-kit` on the Pi with `scp`, and runs the installer there over
-`ssh`. Both come with Windows (the "OpenSSH Client" feature). They ask for the Pi's password,
-and the installer asks for the sudo password.
+Still stuck? Send your teacher the whole PowerShell output.
 
-Nothing is downloaded when the Pi already has Docker, as the lab's Pis do. On a fresh Pi,
-the installer still has to download Docker itself, so that Pi needs internet once. It also tries
-fake-hwclock, which keeps the clock across restarts; without internet it says so and goes on.
+## 7. More, for when you need it
 
-The installer checks the checksum and runs FORTE in a Docker container that starts with the Pi.
-It also gives FORTE the GPIO lines and enables the two PWM channels; reboot once after the first
-install. FORTE then listens on port 61499. Put your project on it with `deploy-pi.ps1`, below.
+**What `deploy-pi.ps1` does:**
 
-Running the installer again replaces FORTE and keeps the program that is on the Pi
-(`~/forte/boot/forte.fboot`). On a lab module's Pi, ask first: the module's program starts again
-when FORTE restarts, and it may move an axis.
-
-## The lab's module projects
-
-`projects\` holds the lab's module projects as they are now: `FillingModule` and
-`StopperingModule`, with their applications, block types and devices. Start from one of them, or
-compare yours with it:
-
-1. In the IDE: **File > Import > General > Existing Projects into Workspace**, select
-   `projects\FillingModule` and tick **Copy projects into workspace**.
-2. Set the device's `MGR_ID` to your Pi's address: in the System, the device `FORTE_PI`, parameter
-   `MGR_ID`, e.g. `"192.168.0.42:61499"`.
-3. Put it on the Pi with `deploy-pi.ps1 -Project <the project in your workspace>` (below).
-
-An older project of your own also builds, also with fewer or older blocks: its block types are
-compiled from its own `Type Library`. If it carries its own older copies of ModLib's blocks, the
-build stops and names them (`... differs from the one in modlib`): build it with `-Alone`, or move
-your application onto the current project.
-
-## Put your project on the Pi
-
-One command takes your project as it is on disk and puts it on the Pi, from fresh:
-
-```powershell
-.\deploy-pi.ps1 -Pi pi@192.168.0.42 -Project C:\path\to\MyProject
-```
-
-1. It makes the program from the project's `.sys`: what is mapped to the device whose `MGR_ID` is
-   the Pi's address (e.g. `FORTE_PI` with `"192.168.0.42:61499"`), with its parameters and
-   connections, as a boot file (`.cache\<Project>-program.fboot`). `-Device <name>` picks the
-   device by name instead.
-2. It builds FORTE with the project's block types, as `build-project.ps1` does.
+1. It reads your project's `.sys` and takes what is mapped to the device whose `MGR_ID` is the Pi's
+   address. It writes that as FORTE's program file (`.cache\MyProject-program.fboot`).
+2. It builds FORTE with your block types and the lab's (`bin\forte-aarch64`).
 3. On the Pi it stops and deletes the FORTE container, puts the new FORTE and the program in
-   place, builds the image and runs a new container. FORTE starts with your program, and again
-   after every reboot.
+   place, builds a new container and starts it.
+4. It checks that FORTE starts, loads the program, and answers on port 61499.
 
-Save the project in the IDE first. When no block type changed, `-SkipBuild` sends the last build
-and the new program in about 15 s. Watching and forcing values in the IDE work as usual.
+What it replaces on the Pi is kept: `~/forte/forte.old` and `~/forte/boot/forte.fboot.old`.
 
-**Deploy** in the IDE works as well, once FORTE is on the Pi: after a change to the application,
-deploy as usual. Only the program `deploy-pi.ps1` put there starts again after a reboot; one
-deployed from the IDE is gone then (FORTE starts with the boot file). Run `deploy-pi.ps1
--SkipBuild` to make your current program the one the Pi starts with. A new or changed block type
-always needs `deploy-pi.ps1` (or `update-pi.ps1 -Project`): FORTE can only create the types it was
-built with.
+**Options:**
 
-The program can also come from the IDE: right-click the device in the System Explorer, **Create
-FORTE Boot-Files**, then `.\update-pi.ps1 -Pi pi@192.168.0.42 -Program C:\path\to\FORTE_PI.fboot`
-(with `-Project` too when block types changed). `deploy-pi.ps1` cannot make the program of a
-typed subapplication; it says so, and then this is the way. `.\make-bootfile.ps1 -Project <folder>
--Device <name>` makes only the program, to look at.
+- `deploy-pi.ps1 -Device FORTE_PI`: take this device, not the one found by its address.
+- `deploy-pi.ps1 -Force`: do not ask before restarting FORTE.
+- `build-project.ps1 -Project ... -Config modules-win`: a FORTE for your PC instead, to test with:
+  `fbe\build\modules-win\output\bin\forte.exe`. Start it and deploy to `localhost:61499`; GPIO and
+  PWM blocks then answer `QO = FALSE`.
+- `make-bootfile.ps1 -Project ... -Device FORTE_PI`: only make the program file, to look at it.
+- `update-pi.ps1 -Pi ... -Project ...`: send only FORTE and keep the program on the Pi;
+  `-NoProgram`: start FORTE without a program; `-Program <file>`: a program file made in the IDE.
+- `check-project.ps1 -ProjectDir ...`: only the IDE's checks, nothing is built.
 
-The scripts ask once before FORTE restarts (`-Force`: they do not ask). They keep what they replace
-(`~/forte/forte.old`, `~/forte/boot/forte.fboot.old`), and it checks that FORTE comes up, that the
-program loads and that FORTE answers on port 61499 from this PC:
+**Where to look:**
 
-- **"uses a block type FORTE lacks"** (`Boot file error ... UNSUPPORTED_TYPE` in the log): the
-  program has a block whose type is not in FORTE, or changed since FORTE was built. Nothing of the
-  program runs. Run again without `-SkipBuild`.
-- **"no device has MGR_ID ..."**: no device in the project has the Pi's address. Set the device's
-  `MGR_ID` in the IDE, or give `-Device`.
-- **"joins ... to a block elsewhere"**: a connection goes to a block mapped to another device; it is
-  left out of this program.
-- **"Waiting until port 61499 is free"**: the IDE was connected (watching values) when FORTE
-  stopped, and Linux holds the port for up to a minute. The script waits.
-
-### FORTE alone
-
-`-Project` without `-Program` builds and sends only FORTE; `-SkipBuild` sends the last build
-without building again. FORTE then starts with the program kept on the Pi
-(`~/forte/boot/forte.fboot`), which the last `-Program` or `modsync push` put there. If that program
-uses a block type your build lacks, the script says so. `-NoProgram` starts FORTE without a
-program (the old one is kept as `boot/forte.fboot.old`).
-
-The same by hand. The image copies `forte` in when it is built, so `docker compose restart` alone
-would keep the old binary:
-
-```powershell
-scp bin\forte-aarch64 pi@192.168.0.42:forte/forte
-ssh pi@192.168.0.42 "cd ~/forte && docker compose up -d --build --force-recreate forte && docker compose ps"
-ssh pi@192.168.0.42 "cd ~/forte && docker compose logs --tail 20 forte"
-```
-
-The log should say `FORTE is up and running`. The program on the Pi is kept and starts again.
-
-## When it goes wrong
-
-- **"4diac IDE not found"**: set `FORDIAC_IDE` to `4diac-idec.exe` (with a `c`, the console version).
-- **"4diac validation failed"** or **"IDE loading/export errors"**: a type does not load, or ST has an
-  error. The IDE treats warnings as errors. Read `.cache\validate-<Project>.log`, or run
-  `check-project.ps1` for a list. Every type must be in your project's `Type Library`.
-- **"has no <Project>.sys"**: `-Project` must be the project folder itself.
-- **"... differs from the one in modlib (the kit's)"**: your project has its own version of a type
-  the kit has as well, changed. Give your version its own name or package, or build with `-Alone`.
-- **The FBE build fails**: the log is `fbe\build\modules-pi\forte.log`. A changed setting has no
-  effect until `fbe\build\modules-pi\forte\build\CMakeCache.txt` is deleted.
-- **"fbe/4diac-forte is at ..."** or **a patch does not apply**: delete `fbe\4diac-forte` and build again.
-- **The Pi refuses to create your block** (unknown type, or a hash mismatch): the Pi's FORTE was
-  built from another version of the type. Build and install again after every change to a type.
+- The IDE's check: `.cache\validate-MyProject.log`.
+- The FORTE build: `fbe\build\modules-pi\forte.log`. After changing a build setting, delete
+  `fbe\build\modules-pi\forte\build\CMakeCache.txt`.
+- If a patch does not apply, or the message names `fbe/4diac-forte`: delete the folder
+  `fbe\4diac-forte` and run again.
+- FORTE's log on the Pi: `ssh admin@192.168.0.42 "cd ~/forte && docker compose logs --tail 50 forte"`.
