@@ -1,0 +1,21 @@
+Fix for FORTE 3.3.0: every deployment from the IDE reported errors when the program had a generic
+communication block (SERVER_2_2, PUBLISH_1). The IDE queries each type with the hash of its
+declaration; FORTE finds the generic entry (GEN_SERVER), which has no hash, so the hashes differed
+and it answered UNSUPPORTED_TYPE. A type without a hash is not compared now; types with one still
+are. Applied by build-runtime.ps1.
+
+diff --git a/core/src/resource.cpp b/core/src/resource.cpp
+index 8d603cb..0e18324 100644
+--- a/core/src/resource.cpp
++++ b/core/src/resource.cpp
+@@ -214,7 +214,9 @@ namespace forte {
+         buildQueryTypeRepsonse(paTypeEntry, paReqResult, paResponsePrefix);
+       } else {
+         // we can only clear paReqResult after this type hash check
+-        if (paTypeHash != paTypeEntry->getTypeHash()) {
++        // A type without a hash (a generic one, GEN_SERVER for SERVER_2_2) cannot be compared: the
++        // IDE sends the hash of its declaration, and a mismatch would fail every deployment.
++        if (!paTypeEntry->getTypeHash().empty() && paTypeHash != paTypeEntry->getTypeHash()) {
+           // the type hash is different return it to the sender for checks
+           buildQueryTypeRepsonse(paTypeEntry, paReqResult, paResponsePrefix);
+           return EMGMResponse::UnsupportedType;
