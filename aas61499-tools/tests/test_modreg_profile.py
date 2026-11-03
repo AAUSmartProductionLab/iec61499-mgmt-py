@@ -582,6 +582,10 @@ def test_equipment_data_points_and_mappings(stoppering, stoppering_aas):
     target = at(series, "Segments", "Live", "InfluxDb2Target")
     assert at(target, "Measurement")["value"] == "measurements_linearaxis"
     assert at(target, "Tags", "asset")["value"] == "StopperingModuleAAS"
+    # A measurement is written without waiting for each point (the DMP batches it); a state change
+    # waits for the database to acknowledge it (no WriteMode: Synchronous, the default).
+    assert at(target, "WriteMode")["value"] == "Asynchronous"
+    assert "WriteMode" not in names(at(data, "State", "Module", "Segments", "Live", "InfluxDb2Target"))
     # Beside the series, where the module and its points are.
     assert names(at(data, "Measurements"))[-1] == "Coordinates"
     # Every field has a source: the property of the interface that publishes it.
