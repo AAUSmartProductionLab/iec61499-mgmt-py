@@ -160,9 +160,9 @@ def test_a_module_running_its_spec_is_identified_and_in_sync():
 
 def test_other_programs_are_not_taken_for_a_module():
     forte = FakeForte(filling())
-    forte.values["Occupation.Module"] = "Capping"
+    forte.values["Occupation.Module"] = "Labelling"            # no module of the line
     st = status(forte)
-    assert not st.identified and "module Capping, which no module spec here describes" in st.summary()
+    assert not st.identified and "module Labelling, which no module spec here describes" in st.summary()
     forte.fbs = {"Led": "eclipse4diac::io::gpiochip::GPIOChip", "Toggle": "iec61499::events::E_SWITCH"}   # pi.py blink
     forte.connections, forte.values = set(), {}
     st = status(forte)
