@@ -1,0 +1,29 @@
+Fix for FORTE 3.3.0: deleting a running IO configuration block (GPIOChip, PWMChip) crashed FORTE.
+~IOConfigFBController calls deInit(nullptr, true), which went on to stopped() and set STATUS(): a
+pure virtual of the derived block, already destroyed in the base destructor, so the call jumped to
+address 0 (SIGSEGV; gdb on the filling Pi, 3 Nov). A deployment from the IDE deletes the running
+resource first, so every redeployment of a program with IO crashed FORTE. When destructing, only the
+controller is stopped and deleted now. Applied by build-runtime.ps1.
+
+diff --git a/core/src/io/configFB/io_configFB_controller.cpp b/core/src/io/configFB/io_configFB_controller.cpp
+index 3d25dd1..28dbecc 100644
+--- a/core/src/io/configFB/io_configFB_controller.cpp
++++ b/core/src/io/configFB/io_configFB_controller.cpp
+@@ -173,8 +173,16 @@ namespace forte::io {
+     }
+ 
+     if (paIsDestructing) {
++      // Called from the destructor: the derived block is gone already, and STATUS() (pure virtual
++      // here) would call nothing. Only the controller is stopped and deleted.
+       mPerformRestart = false;
+-      stopped(paECET);
++      mController->mDelegate = nullptr;
++      if (mController->isAlive()) {
++        mController->end();
++      }
++      delete mController;
++      mController = nullptr;
++      mStarting = false;
+     } else {
+       onStop(paECET);
+     }
