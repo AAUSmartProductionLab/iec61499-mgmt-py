@@ -292,6 +292,29 @@ side wins something:
 Recommendation: C1 and C3 in the paper, C4 as one sentence with its numbers, C2 and C5 only if room
 is left.
 
+### Proposal of 3 Nov: five quantitative experiments (to decide)
+
+**Why.** E1 to E3 are five scenarios with five runs each, on a PC with simulated IO, reported as medians.
+They show that the method works, not how well it works, how it scales, or how often it catches what it
+should. Each experiment below has a baseline, a ground truth that does not come from the method itself,
+and enough runs for intervals (medians with 95 % bootstrap intervals, rates with Wilson intervals).
+
+| # | Question | Varied | Measured | Baseline | Runs | Needs | Effort |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Q1 | How fast does a change take effect, and how does that scale? | change class (parameter, new composite, reorder, structural); composite size (2 to 32 steps, 1 to 4 parallel branches); program size (1 to 20 composites); PC and Pi 5 | activation time from the AAS write to Built, per phase (read back, compare and check, apply, verify, record); management commands and bytes; internal setup time (module unavailable) against external (prepared while it runs), as SMED splits a changeover | full redeployment: a boot file and a restart; for a structural change on the Pi, `deploy-pi.ps1` with its build. On hardware the restart also homes the axis | 30 per cell, in random order | synthetic composites from the module's primitives; per-phase timers in modsync; the Pi at the bench | 1.5 days |
+| Q2 | Does a running skill notice a reconfiguration? | a change made meanwhile, per class, or none | the running skill's step durations and inter-step gaps from FORTE's event timestamps; cycle time | the same skill without a change | 100 cycles each; Mann-Whitney U and the largest deviation | step events with timestamps over OPC UA | 0.5 day |
+| Q3 | Does the program stay what its AAS says? | nine kinds of drift: in the program a value written from the IDE, a connection deleted, a stray instance, a half-created composite, a wrong type version; in the AAS a value, an added step, a reordered flow, a removed skill. Also a reconfiguration cut after command i | detection rate; false alarms on clean runs; class accuracy (a confusion matrix of parameter, flow, structural, record); repair rate; convergence after a cut | a deployment that does not read back (as the IDE's); a comparison with the boot file instead of the running program | 30 per kind, 100 clean; every i of one change | `cell/eval/drift.py`; modsync completing a half-created composite (else it is refused, and counted so) | 1 day, and 1 for completing |
+| Q4 | Are the skills right for the product? | product variants (volume 0.25 to 25 mL, weight required or not, vial or syringe) on module variants (full, no scale, slower pump, moved fill position); all single mutants of the module's skills (a step deleted, swapped, duplicated or inserted, a value beyond its limit, two steps made parallel) | match accuracy (offered, after a reconfiguration, not offered); plan success and time; first-time-right products; the checker's precision and recall | the structural check only (types and connections, what 4diac checks); hand-written sequence rules as in [lindorfer2019user] | about 70 variants and 200 mutants | an oracle that does not use the AAS's constraints: a process model of the filling module (needle depth, liquid in the container, spill, weight) run with each skill | 2 days |
+| Q5, if time | Why in the controller and not in an orchestrator? | Dispensing as a composite in FORTE, or its primitives called one by one over OPC UA | inter-step gap; cycle time and its spread; a safe end (needle out, pump off) after a network cut mid-skill | an external orchestrator, as [lindorfer2019user, albus2025automated] and our earlier work run skills | 100 cycles; 20 cuts | a small orchestrator on modlink; blocking the OPC UA port | 0.5 day and the bench |
+
+**In the paper:** Fig. 4 is Q1, activation time against composite size, online and by redeployment, on
+the PC and the Pi (log scale), with Q2 in one sentence. Table 2 gives the rates of Q3 and Q4. The
+effort (E1) and the planners' times become a sentence each.
+
+**Validity:** the oracle of Q4 must not reuse the capability constraints the checker reads, or Q4
+measures the model against itself. Simulated IO on the PC, one module type and synthetic flows are the
+other limits to state.
+
 ## 5 Discussion and conclusion (300 words)
 
 - **The effort moves into the AAS,** and from there into the module's capabilities. As in
