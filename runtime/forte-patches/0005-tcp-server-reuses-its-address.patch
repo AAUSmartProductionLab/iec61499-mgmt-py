@@ -1,0 +1,24 @@
+Fix for FORTE 3.3.0: the management port (and every TCP server) is opened with SO_REUSEADDR. After
+a crash Docker restarts FORTE within seconds, while the IDE's last connection still holds the port in
+TIME_WAIT; bind() failed and FORTE ran without its port. Applied by build-runtime.ps1.
+
+diff --git a/core/arch/common/src/bsdsocketinterf.cpp b/core/arch/common/src/bsdsocketinterf.cpp
+index 8169f64..6eef567 100644
+--- a/core/arch/common/src/bsdsocketinterf.cpp
++++ b/core/arch/common/src/bsdsocketinterf.cpp
+@@ -64,6 +64,15 @@ namespace forte::arch {
+ #endif
+     stSockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+ 
++#ifdef SO_REUSEADDR
++    // A restarted FORTE takes its port back while a connection of the one before (the IDE's)
++    // still holds it in TIME_WAIT; without this it would run without its port for a minute.
++    int reuse = 1;
++    if (setsockopt(nSocket, SOL_SOCKET, SO_REUSEADDR, (char *) &reuse, sizeof(reuse)) != 0) {
++      DEVLOG_WARNING("CBSDSocketInterface: setsockopt(SO_REUSEADDR) failed: %s\n", strerror(errno));
++    }
++#endif
++
+     if (bind(nSocket, (struct sockaddr *) &stSockAddr, sizeof(struct sockaddr)) != 0) {
+       DEVLOG_ERROR("CBSDSocketInterface: bind() failed: %s\n", strerror(errno));
+       close(nSocket);
