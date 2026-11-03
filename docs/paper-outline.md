@@ -322,17 +322,23 @@ proposal; if space runs out, Fig. 3 goes first.
 
 ## The references
 
-Since 3 Nov, sections 1 to 3 cite 26 keys. With the method's four `\todocite` (PackML, IDTA 02017, the
-process planner, and 4diac, for which `strasser2008framework` is now in the bib), that makes about 30.
+At most 17, decided again on 3 Nov. They are in
+[paper/cirp/references.bib](paper/cirp/references.bib), the file uploaded to Overleaf. It is
+written from the sections' citations, copied out of [paper-references.bib](paper-references.bib),
+which stays the library for the journal paper. The 17, in the order first cited:
 
-- **Sections 1 and 2:** schwoerer2025modular, iec61499, rooker2007zero, koecher2023reference, css2022,
-  schou2018skill, idta02020, dorofeev2021orchestrator, jensen2026service, sidorenko2024composition,
-  bernhard2024leverage, nabizada2026capability, schwoerer2026fond, strasser2008framework,
-  terzimehic2021service, lindorfer2019user, wenger2018connecting, blumhofer2025enhancing,
-  stolze2024proactive, albus2025automated, lepuschitz2011self, huang2026plug, koecher2024smt,
-  nabizada2024workflow.
-- **Only in section 3:** jensen2026ontology, nau2021gtpyhop.
-- **To cut first:** nabizada2024workflow, wenger2018connecting, lepuschitz2011self, css2022.
+- **Our work:** schwoerer2025modular, jensen2026service, schwoerer2026fond, jensen2026ontology,
+  schou2018skill.
+- **Standards and models:** iec61499, idta02020, koecher2023reference.
+- **The closest works:** dorofeev2021orchestrator, terzimehic2021service, lindorfer2019user,
+  huang2026plug, rooker2007zero, blumhofer2025enhancing, albus2025automated, nabizada2026capability.
+- **The planner:** nau2021gtpyhop.
+
+Named in the text without a reference: PackML, 4diac FORTE, IDTA 02017, the process planner.
+Dropped for the count: sidorenko2024composition, wenger2018connecting, stolze2024proactive,
+lepuschitz2011self, koecher2024smt, bernhard2024leverage, nabizada2024workflow, css2022,
+strasser2008framework. The first to swap in, if a reviewer asks: PackML (ISA-TR88.00.02) for
+albus2025automated.
 
 The 17 of 28 Oct were: schwoerer2025modular, jensen2026service, schwoerer2026fond, jensen2026ontology,
 schou2018skill, koecher2023reference, iec61499, dorofeev2021orchestrator, sidorenko2024composition,

@@ -1,8 +1,8 @@
 % Section 3 of the CIRP CMS 2026 paper: concept and method. Draft of 1 Nov 2026.
 %
 % Written from docs/paper-outline.md (section 3) and docs/design-decisions.md; "DD n" in the
-% comments points to the decision a paragraph rests on. Citation keys are those of
-% docs/paper-references.bib. \todocite marks a source still to be added (the paper cites at most 17).
+% comments points to the decision a paragraph rests on. The paper cites at most 17 sources: those of
+% references.bib beside this file (3 Nov); PackML, 4diac FORTE and IDTA 02017 are named, not cited.
 % Budget in the outline: 1,200 words; this draft is longer, so that the authors can cut. Paragraphs
 % marked "% cut first" are the first to go.
 %
@@ -77,7 +77,7 @@ The program of a module follows fixed rules that make a composite skill data rat
 \emph{The shell} is the same in every module. It consists of:
 \begin{itemize}
   \item a block for occupation: only the client that occupies the module may command it;
-  \item a PackML module state machine~\todocite{PackML, ISA-TR88.00.02};
+  \item a PackML module state machine;
   \item one block per equipment item, owning the item's IO points;
   \item one initialisation chain, started by the runtime's resource.
 \end{itemize}
@@ -114,13 +114,13 @@ A composite is made of instances, not a new type, for three reasons:
 \begin{itemize}
   \item Every IEC~61499 runtime creates instances and connections online through the standard
     management commands~\cite{iec61499}. Loading a new block type is optional: 4diac
-    FORTE~\todocite{Eclipse 4diac} does it only when built with its Lua type loader, and never for
+    FORTE does it only when built with its Lua type loader, and never for
     service interface blocks.
   \item Each step stays an instance that can be read back and watched in the IDE.
   \item A type per composite~\cite{dorofeev2021orchestrator} needs a build or a type loader, and its
     parallel steps grow its state machine as $2^n$ states, where the rules add one join block.
     Interpreting a sequence in one generic block, such as a behaviour-tree
-    engine~\cite{sidorenko2024composition}, turns the sequence into data the IDE cannot show.
+    engine, turns the sequence into data the IDE cannot show.
 \end{itemize}
 
 % DD 2.3, 2.9
@@ -167,14 +167,14 @@ its program follows.
 Skills are described in a Skills submodel defined by the resource ontology of~\cite{jensen2026ontology}:
 primitives in their component's AAS, composites in the module's. A skill is a collection of its
 commands, since commands are what a client calls. Each command refers to the action of the module's
-interface description that calls it~\todocite{IDTA 02017 Asset Interfaces Description}. It also has
+Asset Interfaces Description (IDTA 02017) that calls it. It also has
 an Operation of the same name. The Operation's input variables are the parameters, with unit, limits,
 default and meaning; its output variables are the results. A primitive also states its conditions
 (pre- and postcondition, invariant) and its completion (a duration, a timeout).
 
 % DD 3.3
 A composite's Start command holds its flow. The flow is written in the elements that the lab's
-process planner uses for a product's recipe~\todocite{process planner}:
+process planner uses for a product's recipe:
 \begin{itemize}
   \item steps, with their order and the skill each runs;
   \item bindings of a constant or of one of the command's parameters, and outputs;
@@ -281,9 +281,8 @@ them become a parallel block, unless an invariant forbids it. Fig.~\ref{fig:plan
 2.0\,mL; a volume above the limit of one dose is planned as two doses.
 
 % DD 3.9 (one sentence in the paper; the argument goes to the journal paper)
-Nothing planning-specific is added to the AAS, unlike approaches that generate PDDL from conditions
-added to the AAS~\cite{bernhard2024leverage} or from planning submodels per
-component~\cite{nabizada2026capability}. Inside one module the state is a handful of property values,
+Nothing planning-specific is added to the AAS, unlike approaches that generate PDDL from planning
+submodels added to it~\cite{nabizada2026capability}. Inside one module the state is a handful of property values,
 and the standard constraints already say what each capability needs and does. Because the rules
 derive the wiring, a planned flow needs nothing more to become a program.
 

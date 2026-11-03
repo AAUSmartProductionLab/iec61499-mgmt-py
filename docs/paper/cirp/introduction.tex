@@ -5,7 +5,8 @@
 % product, process and resource AAS; translation rules; the three triggers; parameter, flow and
 % structural changes. It claims only what is built (see the outline's notes on the abstract). Budget:
 % about 750 words; with section 2 it fills the first two pages (page 1 also holds the title, the
-% abstract and the keywords). Citation keys are those of docs/paper-references.bib.
+% abstract and the keywords). The paper cites at most 17 sources: those of references.bib beside this
+% file (taken from docs/paper-references.bib, the library for the journal paper as well).
 
 \section{Introduction}
 \label{sec:introduction}
@@ -25,14 +26,14 @@ however, is open.
 
 % P2: where the state of the art leaves it
 Skill-based engineering has made a module's functions explicit: a capability states what a resource
-can do and a skill how it is done~\cite{koecher2023reference,css2022}, and the skills of a station are
+can do and a skill how it is done~\cite{koecher2023reference}, and the skills of a station are
 composed from the primitive skills of its devices~\cite{schou2018skill}. The AAS describes both, in
 standard submodels such as the Capability Description~\cite{idta02020}. Yet the AAS remains a
 description of a program made elsewhere. Compositions of skills are generated at engineering time and
-deployed as new code~\cite{dorofeev2021orchestrator}, or executed by an orchestrator outside the
-controller~\cite{jensen2026service,sidorenko2024composition}. Planners derive process plans from AAS
-models, but they sequence skills that the resources already
-have~\cite{bernhard2024leverage,nabizada2026capability,schwoerer2026fond}. A change of behaviour thus
+deployed as new code~\cite{dorofeev2021orchestrator}, or executed by an engine outside the controller's
+program~\cite{jensen2026service,lindorfer2019user}. Planners derive process plans from AAS models, but
+they sequence skills that the resources already have~\cite{nabizada2026capability,schwoerer2026fond}.
+A change of behaviour thus
 still means the vendor's engineering project, an IDE and a new deployment, while the integrator who
 runs the line typically has only the running program and the AAS.
 
@@ -79,7 +80,7 @@ The contributions are:
   \item the reconciliation of the running program with the AAS: compare, apply online over the
     management protocol, verify by reading back, and record (C4).
 \end{itemize}
-The approach is demonstrated with Eclipse 4diac~\cite{strasser2008framework} on a pharmaceutical
+The approach is demonstrated with Eclipse 4diac on a pharmaceutical
 filling module, with product variants that differ in fill volume, number of doses and inspection by
 weighing, and with the changeover from vials to prefilled syringes.
 
