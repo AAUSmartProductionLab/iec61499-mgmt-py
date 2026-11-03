@@ -20,6 +20,22 @@ A running log of design considerations made while building, for writing the pape
 
 ## 3 Nov 2026
 
+- **A program made in the IDE goes onto a Pi as a boot file, not by Deploy.** *Orchestration* (how
+  a module's program is replaced).
+  - What: `update-pi.ps1 -Program <file.fboot>` (the IDE's Create FORTE Boot-Files) makes it
+    `boot/forte.fboot`, stops FORTE, waits until port 61499 is free and starts FORTE with it; it
+    checks that the program loaded (no `UNSUPPORTED_TYPE`) and that FORTE answers from the PC.
+  - Why: Deploy deletes the running resource first, and FORTE 3.3 crashed doing so on the filling
+    Pi whenever the program held GPIO blocks. After the crash, Docker restarted FORTE within 2 s,
+    and FORTE could not take back its port: it does not set `SO_REUSEADDR`, and the IDE's
+    connection still held the port in TIME_WAIT. A boot file never deletes anything, and it
+    survives a reboot, which a deployment does not.
+  - Instead of: Deploy after a restart into an empty FORTE (two steps, gone at the next reboot);
+    patching FORTE's teardown of GPIO handles (not found yet); `modsync push`, which only takes
+    modgen's modules.
+  - Tested on the filling Pi (.203): the program alone, replacing the running one while a
+    connection held the port, a program with a missing type, and binary and program together.
+
 - **The robot modules run in Python: modpy serves a module spec as FORTE serves a generated
   module.** *CIRP* (the demonstrator's six modules), *Journal* (a module described by the same models,
   whatever runs it), *Orchestration* (the module rules apart from IEC 61499).
