@@ -1,0 +1,23 @@
+Fix for FORTE 3.3.0: a GPIO input line was written when its handle was reset. Deleting a block that
+reads a GPIOChip input (a deployment deletes the running resource first) drops its observer, which
+resets the handle to FALSE, and the controller wrote that to the input line. The write failed, the
+GPIOChip block restarted its controller while the resource was torn down, and FORTE crashed (the
+filling Pi, 3 Nov). An input line is now never written. Applied by build-runtime.ps1.
+
+diff --git a/modules/gpiochip/gpiochip_controller.cpp b/modules/gpiochip/gpiochip_controller.cpp
+index a58f0eb..3b4a372 100644
+--- a/modules/gpiochip/gpiochip_controller.cpp
++++ b/modules/gpiochip/gpiochip_controller.cpp
+@@ -170,6 +170,12 @@ namespace forte::eclipse4diac::io::gpiochip {
+   }
+ 
+   void GPIOChipController::handleChangeEvent(forte::io::IOHandle *) {
++    if (mConfig.mReadWriteMode == Config::Input) {
++      // An input is read, never written. Its handle is reset (set to FALSE) when its observer is
++      // deleted, e.g. when a deployment deletes the running resource; writing the line then fails
++      // and restarts the controller while the resource is torn down.
++      return;
++    }
+     struct gpiohandle_data data{};
+     data.values[0] = mValue;
+     if (ioctl(mFd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &data) == -1) {
