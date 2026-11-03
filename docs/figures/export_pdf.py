@@ -14,6 +14,7 @@ import os
 import re
 import subprocess
 import tempfile
+import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -44,9 +45,20 @@ def export(model: ET.Element, pdf: Path):
     with tempfile.TemporaryDirectory() as tmp:
         f = Path(tmp) / "page.html"
         f.write_text(page, encoding="utf-8")
+        started = time.time()
         subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--allow-file-access-from-files",
                         "--no-pdf-header-footer", "--virtual-time-budget=4000", f"--user-data-dir={tmp}\\profile",
                         f"--print-to-pdf={pdf}", f.as_uri()], check=True, capture_output=True)
+        # Chrome's launcher may return before the PDF is written; the page and the profile in tmp must
+        # outlive the render, so wait for a new PDF whose size has settled.
+        size = -1
+        for _ in range(600):
+            if pdf.exists() and pdf.stat().st_mtime >= started - 1 and pdf.stat().st_size == size > 0:
+                break
+            size = pdf.stat().st_size if pdf.exists() and pdf.stat().st_mtime >= started - 1 else -1
+            time.sleep(0.1)
+        else:
+            raise RuntimeError(f"Chrome wrote no {pdf.name}")
 
 
 def main():
