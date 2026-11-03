@@ -12,7 +12,11 @@ param(
     # The exported CMake module; default: the name the export gives it (from MANIFEST.MF).
     [string]$Module,
     # CMake targets the exported module links to (e.g. forte-modlib: the library compiled once).
-    [string[]]$Link = @()
+    [string[]]$Link = @(),
+    # Without a manifest: the other export folders the FBE compiles with this one. One of the same
+    # CMake module (the same package, e.g. a copy of a lab module) is replaced by this export; a
+    # type one of them has already is not compiled again, and one that differs from it is refused.
+    [string[]]$Besides = @()
 )
 $ErrorActionPreference = 'Stop'
 $cache = Join-Path $PSScriptRoot '.cache'
@@ -57,12 +61,46 @@ if (!$Manifest) {
     $own = @{}
     Get-ChildItem -LiteralPath $forte -Recurse -File | Where-Object $typeHeader |
         ForEach-Object { $own[($_.FullName -replace '^.*[\\/]include[\\/]forte[\\/]', '')] = $true }
+    # The shims stand for blocks FORTE declares elsewhere (GPIOChip, PWMChip, IX, QX, IW, QW).
+    $compat = Join-Path $PSScriptRoot 'forte-compat\include\forte'
+    Get-ChildItem -LiteralPath $compat -Recurse -File | Where-Object $typeHeader |
+        ForEach-Object { $own[$_.FullName.Substring($compat.Length + 1)] = $true }
     $headers = Join-Path $export 'include\forte'
     foreach ($header in Get-ChildItem -LiteralPath $headers -Recurse -File | Where-Object $typeHeader) {
         if ($own[$header.FullName.Substring($headers.Length + 1)]) {
             $short = $header.BaseName -replace '_(fbt|dtp)$', ''
             "FORTE has $short itself: not compiled again"
             $skip += $short
+        }
+    }
+    # The other exports: the same package is replaced; a type they have is compiled once, theirs.
+    $moduleOf = { param($dir) (Select-String -LiteralPath (Join-Path $dir 'CMakeLists.txt') -Pattern '^project\(forte-(\S+)').Matches[0].Groups[1].Value }
+    # The IDE's hash of the type; the file without its header comment where there is none.
+    $typeHash = { param($path)
+        $found = Select-String -LiteralPath $path -Pattern 'TypeHash\s*=\s*"([^"]*)"'
+        if ($found) { $found.Matches[0].Groups[1].Value } else { (Get-Content -Raw -LiteralPath $path) -replace '(?s)^\s*/\*.*?\*/', '' } }
+    $mine = & $moduleOf $export
+    $others = @($Besides | Where-Object { (Test-Path -LiteralPath (Join-Path $_ 'CMakeLists.txt')) -and
+        (Resolve-Path -LiteralPath $_).Path -ne (Resolve-Path -LiteralPath $export).Path })
+    foreach ($other in $others) {
+        if ((& $moduleOf $other) -eq $mine) {
+            "$Project is the package $mine, as $(Split-Path -Leaf $other) is: it replaces that export"
+            Remove-Item -Recurse -Force -LiteralPath $other
+        }
+    }
+    $sources = Join-Path $export 'src'
+    foreach ($source in Get-ChildItem -LiteralPath $sources -Recurse -File | Where-Object { $_.Name -match '_(fbt|dtp)\.cpp$' }) {
+        $short = $source.BaseName -replace '_(fbt|dtp)$', ''
+        if ($skip -contains $short) { continue }
+        foreach ($other in $others | Where-Object { Test-Path -LiteralPath $_ }) {
+            $theirs = Join-Path $other ('src\' + $source.FullName.Substring($sources.Length + 1))
+            if (!(Test-Path -LiteralPath $theirs)) { continue }
+            if ((& $typeHash $source.FullName) -ne (& $typeHash $theirs)) {
+                throw "$short in $Project differs from the one in $(Split-Path -Leaf $other) (the kit's): give it a name or package of its own, or build with -Alone (without the lab's modules)"
+            }
+            "$(Split-Path -Leaf $other) has $short already: not compiled again"
+            $skip += $short
+            break
         }
     }
 }
@@ -95,7 +133,7 @@ foreach (lib forte-events forte-net forte-gpiochip forte-pwmsysfs forte-iostubs)
         endif ()
 endforeach ()
 '@.Replace('__MODULE__', $Module)
-foreach ($target in $Link) {
+foreach ($target in $Link | Where-Object { $_ -ne "forte-$Module" }) {
     Add-Content -LiteralPath (Join-Path $export 'CMakeLists.txt') -Encoding utf8 -Value "target_link_libraries(forte-$Module PUBLIC $target)"
 }
 $exported = @(Get-ChildItem -Path (Join-Path $export 'src') -Recurse -Include '*_fbt.cpp', '*_dtp.cpp')
