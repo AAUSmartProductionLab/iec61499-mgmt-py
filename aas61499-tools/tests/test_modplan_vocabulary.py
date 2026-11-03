@@ -9,8 +9,9 @@ from modgen import load
 from modplan.vocabulary import PPRL, Vocabulary, local
 
 SPECS = Path(__file__).resolve().parents[2] / "cell" / "modules"
-# Primitives that serve no capability: RetractPiston draws the piston in after an abort.
-SERVING_NONE = {"RetractPiston"}
+# Primitives that serve no capability: RetractPiston draws the piston in after an abort; AwaitJob
+# waits for a robot's job to end.
+SERVING_NONE = {"RetractPiston", "AwaitJob"}
 
 
 @pytest.fixture(scope="module")
@@ -18,7 +19,8 @@ def vocabulary() -> Vocabulary:
     return Vocabulary()
 
 
-@pytest.mark.parametrize("spec", ["filling.yaml", "stoppering.yaml", "capping.yaml", "planned/inspection.yaml"])
+@pytest.mark.parametrize("spec", ["filling.yaml", "stoppering.yaml", "capping.yaml", "planned/inspection.yaml",
+                                  "python/loading.yaml", "python/unloading.yaml"])
 def test_every_primitive_realizes_a_capability_of_its_component(vocabulary, spec):
     for name in load(SPECS / spec).skills:
         realized = vocabulary.realized(name)

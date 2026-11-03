@@ -38,7 +38,7 @@ from modsync.compare import Candidate
 from modsync.sync import inspect, relative
 
 try:
-    from . import model, planar, profile as profiles, templates
+    from . import model, planar, profile as profiles, pymodules, templates
     from .ontology import Blueprint, check
     from .projection import project
     from .service import AasServer, Registry, mapped_last, send, serve
@@ -52,6 +52,9 @@ def module_profiles(args) -> list[dict]:
     path = spec_path(args.source)
     spec = load(path)
     target = args.target or next(iter(spec.targets))
+    if pymodules.runs_in_python(path):          # served by modpy: nothing of FORTE's to read
+        opcua = f"opc.tcp://{args.host}:{args.port or 4840}" if args.host else None
+        return pymodules.describe_all(spec, target, opcua, relative(path))
     if not args.host:
         return profiles.describe_all(spec, target, spec_path=relative(path))
     port = args.port or spec.targets[target].port

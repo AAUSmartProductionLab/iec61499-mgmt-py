@@ -20,6 +20,51 @@ A running log of design considerations made while building, for writing the pape
 
 ## 3 Nov 2026
 
+- **The robot modules run in Python: modpy serves a module spec as FORTE serves a generated
+  module.** *CIRP* (the demonstrator's six modules), *Journal* (a module described by the same models,
+  whatever runs it), *Orchestration* (the module rules apart from IEC 61499).
+  - What:
+    - `module-py/` (package `modpy`, a future repository) runs a module spec in Python: the module
+      rules' state machines answering as ModLib's blocks do (occupation, the PackML state manager,
+      the skill state machine; after the planar controller's `statemachines.py`, MIT), and the spec's
+      semantics as modgen compiles them (an item plays a command's phases; a primitive checks its
+      precondition, waits 0.5 s for a held item, is done at once if its postcondition holds, drives
+      its command until the postcondition or `after` with the invariant and the timeout over it, and
+      ends with its stop command; flows of steps; Resetting and Stopping as FORTE's);
+    - its OPC UA server lays the nodes out as FORTE does: namespace 1, `RD_n` and `SD_n` arguments,
+      Byte states, UInt16 ErrorIDs, steps under Execute and Stopping, procedures, the items'
+      inputs; several modules share one server as several share one FORTE;
+    - the loading and unloading specs are in `cell/modules/python/`, in the format of every module
+      spec; the folder keeps modgen from generating them for FORTE, as `planned/` does;
+    - modreg describes them with the Describer of a FORTE module, without the rule set
+      (`modreg/pymodules.py`); a test checks that every node and argument the AAS names is on the
+      Python server, and the AASs follow ARSO;
+    - a skill is a job of the robot program, `AwaitJob` waits for a job to end (the Stopping
+      procedure, a skill's stop flow, Resetting before `Home`); the robot is simulated (`SimPoints`)
+      until its interface is chosen; the vocabulary's skills 0.3: picking up realizes Receiving,
+      putting down Releasing, as the gripper has the container in its custody in between.
+  - Why: the user's choice: a Python process per robot's Pi with the same state machines and
+    occupation as the other modules, the skills selecting programs on the KUKA, several modules on a
+    Pi while there are few. Served node for node as FORTE serves a module, the agents, the DMP,
+    modlink, discovery and the registration service drive and describe it as they do any module.
+  - Instead of: a FORTE module with a Python equipment service between it and the robot (proposed
+    on 1 Nov: two runtimes on the Pi to pass on a job number); a server with a layout of its own, as
+    the planar controller's, with a Describer of its own; a `runtime:` field in the spec, while
+    modgen generates only the specs at the top of `cell/modules`.
+
+- **A robot job ends on its own JobDone, and starts with Start off.** *Orchestration*.
+  - What: the contract with the robot program gains `JobDone`, the number of the job that ended
+    with `Done` (cleared with it); a job's command sets `Job` with `Start` off for 200 ms, then
+    `Start`; its postcondition is `Done AND JobDone = <job>`; `Error` is cleared with `Done` when
+    `Start` falls, `ErrorCode` stays until the next job starts.
+  - Why: a primitive's postcondition is checked before its command, and a primitive whose
+    postcondition already holds is done at once (a move to where the axis is). A `Done` left from the
+    job before, read before the robot has cleared it, would end the next job unstarted. The 200 ms
+    give the robot a falling edge of `Start` between two jobs. `Error` has to be off before the next
+    job's invariant (`NOT Error`) is checked, and why a job failed must stay readable.
+  - Instead of: `Done` alone; a primitive after every job that waits for `Done` to fall (a step more
+    after every job in every flow).
+
 - **The capping module is built as the filling module, with `Crimp` as its new primitive.** *CIRP*
   (the demonstrator's line), *Orchestration* (the crimp's planning facts).
   - What:

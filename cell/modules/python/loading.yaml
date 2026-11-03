@@ -1,0 +1,98 @@
+# Loading module: a KUKA robot (KR C4) takes a container from the tray and places it on a shuttle.
+# Served in Python by modpy (module-py), not generated for FORTE (3 Nov 2026, the user's choice): on
+# the robot's Raspberry Pi a Python process serves the module over OPC UA as a generated module
+# serves it, with the same occupation, module state and skills; each skill is a job of the robot
+# program instead of IEC 61499 blocks (docs/demo-modules.md, section 3). The robot is simulated until
+# its interface is known (step M0); a Pi may serve several modules, each on a port of its own.
+#     python -m modpy serve cell/modules/python/loading.yaml
+module: Loading
+project: LoadingModule
+package: loading
+opcua_root: /Objects/Loading
+modbus: {host: 127.0.0.1, port: 1505, unit: 1, poll_ms: 10}
+
+targets:
+  pi: {host: loading-module.local, user: admin}
+
+equipment:
+  Robot:
+    kind: Robot
+    description: KUKA robot (KR C4) with its gripper on the robot's own IO, switched by the robot program inside its jobs
+    # The contract with the robot program, whatever carries it (docs/demo-modules.md, 3.1). The
+    # module sets Job with Start off, then Start; the robot answers Busy, then Done with JobDone (the
+    # job's number); the module drops Start and the robot clears Done and JobDone.
+    inputs:
+      Ready:     {modbus: d0}                 # the program waits for a job, and the robot may move
+      Busy:      {modbus: d1}                 # a job runs
+      Done:      {modbus: d2}                 # the job ended well
+      JobDone:   {type: LREAL, modbus: i0}    # which job ended with Done; 0 none
+      Error:     {modbus: d3}                 # the job failed, with ErrorCode
+      ErrorCode: {type: LREAL, modbus: i1}
+    outputs:
+      Job:   {type: LREAL, modbus: h0, minimum: 0, maximum: 99}
+      Start: {modbus: c0}
+    # A job: its number for 200 ms with Start off, so that the robot sees Start rise, then Start.
+    commands:
+      Stop: {}
+      Await: {}
+      Home:           [{Job: 1, for: 200ms}, {Job: 1, Start: true}]
+      PickFromTray:   [{Job: 2, for: 200ms}, {Job: 2, Start: true}]
+      PlaceOnShuttle: [{Job: 3, for: 200ms}, {Job: 3, Start: true}]
+    # Seconds per job (modpy's SimPoints).
+    sim: {robot: {seconds: {1: 2.0, 2: 3.0, 3: 3.0}}}
+
+skills:
+  Home:
+    description: The robot to its home pose (job 1)
+    equipment: Robot
+    command: Home
+    precondition: Ready AND NOT Busy
+    postcondition: Done AND JobDone = 1
+    invariant: NOT Error
+    timeout: 60s
+  PickFromTray:
+    description: The gripper takes the next container from the tray (job 2; the robot program counts the slots)
+    equipment: Robot
+    command: PickFromTray
+    precondition: Ready AND NOT Busy
+    postcondition: Done AND JobDone = 2
+    invariant: NOT Error
+    timeout: 60s
+  PlaceOnShuttle:
+    description: The container onto the shuttle at the transfer point (job 3)
+    equipment: Robot
+    command: PlaceOnShuttle
+    precondition: Ready AND NOT Busy
+    postcondition: Done AND JobDone = 3
+    invariant: NOT Error
+    timeout: 60s
+  AwaitJob:
+    description: Wait until the robot has ended the job it runs; a module stopped during a job lets the robot finish it
+    equipment: Robot
+    command: Await
+    postcondition: NOT Busy
+    timeout: 120s
+
+composites:
+  Loading:
+    description: A container from the tray onto the shuttle, then the robot home
+    execute: [PickFromTray, PlaceOnShuttle, Home]
+    stop: [AwaitJob]
+
+procedures:
+  Resetting: [AwaitJob, Home]
+  Stopping: [AwaitJob]
+# Stopping waits for the skills to stop, and a skill stopped during a job waits for the robot to
+# finish it (AwaitJob): as long as that may take.
+stop_timeout: 120s
+
+# Where a shuttle stands to be served (as filling.yaml says). Placeholders.
+points:
+  Transfer: {meaning: TransferPoint, location: {y: 120.0, rz: -90.0}, description: Where a shuttle stands for the robot to place the container on it}
+
+capabilities:
+  Loading:
+    description: Take a container from the tray and place it on a shuttle
+    properties:
+      ContainerType: {values: [vial, syringe, cartridge]}
+      GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
