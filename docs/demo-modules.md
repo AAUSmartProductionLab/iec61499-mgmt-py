@@ -71,6 +71,23 @@ demo does not need it.
 
 ## 3. Loading and unloading: the robot modules
 
+**Decided (3 Nov, yours): the robot modules run in Python.** Each robot has a Raspberry Pi that runs
+a Python process: an OPC UA server with the same occupation, module state and skills as every other
+module, its skills selecting jobs of the robot program instead of being IEC 61499 blocks. Several
+modules may share a Pi for a while (the planar controller and the robots), each on a port of its own
+or together in one server.
+
+**Built (3 Nov): `module-py/` (`modpy`).** It runs a module spec as the generated program runs it on
+FORTE (the module rules' state machines, the primitives, flows and procedures with their semantics)
+and serves it node for node as FORTE does (namespace 1, `RD_n`/`SD_n` arguments, steps and
+procedures). The agents, the DMP, modlink and discovery drive it as any module; modreg describes it
+from its spec (`modreg/pymodules.py`), without the rule set. The specs are in
+`cell/modules/python/`; the robots are simulated until their interface is chosen (3.2):
+
+    python -m modpy serve cell/modules/python/loading.yaml cell/modules/python/unloading.yaml --port 4840
+
+This replaces FORTE plus an equipment service for the robots (section 2 stays for the cameras).
+
 ### 3.1 The robot's side: one program, a job number
 
 The robot runs one program that waits for a job and runs it (decided 1 Nov; the second of the ways you
@@ -89,18 +106,28 @@ The contract between the module and the robot program, the same whatever carries
 | `Ready` | from the robot | BOOL | The program runs and waits for a job, and the robot may move (mode, drives) |
 | `Busy` | from the robot | BOOL | A job runs |
 | `Done` | from the robot | BOOL | The job ended well; cleared when `Start` falls |
-| `Error` | from the robot | BOOL | The job failed, with `ErrorCode` (a number) |
+| `JobDone` | from the robot | number | Which job ended with `Done`; cleared with it (3 Nov) |
+| `Error` | from the robot | BOOL | The job failed, with `ErrorCode`; cleared when `Start` falls |
+| `ErrorCode` | from the robot | number | Why the last job failed; kept until the next job starts |
 
 **The handshake:**
-1. The module sets `Job`, then `Start`.
-2. The robot answers `Busy`, then `Done` (or `Error`).
-3. The module drops `Start`, and the robot clears `Done`.
+1. The module sets `Job` with `Start` off (200 ms), then `Start`.
+2. The robot answers `Busy`, then `Done` with `JobDone` (or `Error` with `ErrorCode`).
+3. The module drops `Start`, and the robot clears `Done`, `JobDone` and `Error`.
+
+`JobDone` (added 3 Nov): a skill's postcondition is checked before its command, and a skill whose
+postcondition already holds is done at once (a move to where the axis is). A `Done` left from the
+job before, read before the robot has cleared it, would so end the next job unstarted; `Done AND
+JobDone = 3` holds only for job 3. The 200 ms with `Start` off give the robot a falling edge between
+two jobs.
 
 This is the usual handshake between a PLC and a robot, and it fits a primitive as `modgen` has them: a
-command that sets `Job` and `Start`, the postcondition `Done`, the invariant `NOT Error` (a broken
-invariant ends the skill), a timeout. The robot keeps its own safety: the Pi starts jobs only in the
+command that sets `Job` and then `Start`, the postcondition `Done AND JobDone = <job>`, the
+invariant `NOT Error` (a broken invariant ends the skill), a timeout. The robot keeps its own safety: the Pi starts jobs only in the
 operating mode the operator chose, and moves nothing itself. A module stopped during a job lets the
-robot finish it (decided 1 Nov); the robot's own stop stays for emergencies.
+robot finish it (decided 1 Nov); the robot's own stop stays for emergencies. In the specs that is
+`AwaitJob` (the command `Await` sets nothing, until `NOT Busy`): the Stopping procedure and each
+module level skill's stop flow, and Resetting before `Home`.
 
 For the demo the robot program counts the tray's slots itself. A slot as a parameter of the job comes
 later (the skill's `arg` written into a point).
@@ -133,22 +160,22 @@ What to check on Monday 2 Nov (step M0):
 start with: no licence and no wiring. Digital IO is the fallback that always works, but it is the
 wiring you want to avoid.
 
-With the service in between, the module's program and AAS do not change with the interface; only the
-service does. If the controller speaks OPC UA, FORTE could later reach it directly (an `opc_ua[...]`
-backend for IO points in `modgen.library`) and the service would go. The demo does not need that.
+With modpy the interface is a driver of the module (a `Points` in `modpy/points.py`): the module's
+skills and AAS do not change with it, only the driver does. `SimPoints` stands in for the robot until
+then.
 
 ### 3.3 The two modules
 
 | Module | Components | Primitives (one per job) | Composite |
 | --- | --- | --- | --- |
-| Loading | Robot (the gripper is on the robot's IO, switched inside its jobs) | `Home`, `PickFromTray`, `PlaceOnShuttle` | `Loading`: pick, place, home |
-| Unloading | Robot | `Home`, `PickFromShuttle`, `PlaceInTray` | `Unloading`: pick, place, home |
+| Loading | Robot (the gripper is on the robot's IO, switched inside its jobs) | `Home`, `PickFromTray`, `PlaceOnShuttle`; `AwaitJob` | `Loading`: pick, place, home |
+| Unloading | Robot | `Home`, `PickFromShuttle`, `PlaceInTray`; `AwaitJob` | `Unloading`: pick, place, home |
 
-Each spec (`cell/modules/loading.yaml`, `unloading.yaml`) names:
-- the robot's points, with a Modbus address for the service and the simulator;
-- the jobs as commands (`PickFromTray: {Job: 2, Start: true}`);
+Each spec (`cell/modules/python/loading.yaml`, `unloading.yaml`) names:
+- the robot's points (their Modbus addresses unused so far);
+- the jobs as commands (`PickFromTray: [{Job: 2, for: 200ms}, {Job: 2, Start: true}]`);
 - the transfer point where a shuttle stands;
-- the capability.
+- the capability: picking up realizes Receiving, putting down Releasing (the vocabulary's skills 0.3).
 
 Loading is where a product's custody begins ([agents.md](agents.md), section 6). The loading module
 releases the vial to the shuttle (Releasing) and the shuttle receives it (Receiving); unloading is the
@@ -156,9 +183,10 @@ reverse.
 
 ### 3.4 In simulation
 
-The simulator answers the contract as the robot would: `Busy` for the job's time, then `Done`. So the
-line runs with six modules on the PC before a robot is connected. A stand-in controller (an EKI or OPC
-UA server in Python) tests the robot service without the robot.
+modpy's `SimPoints` answers the contract as the robot would: `Busy` for the job's time, then `Done`
+with `JobDone` (`--speed` makes the jobs quicker). So the line runs with six modules on the PC before a
+robot is connected. A stand-in controller (an EKI or OPC UA server in Python) tests a robot driver
+without the robot.
 
 ## 4. Capping
 
@@ -257,7 +285,7 @@ So the new modules need nothing for the BT controller that the filling module do
 | M0 | The KR C4s: option packages (Ethernet KRL, OPC UA, DeviceConnector), KSS version, IO modules and free channels (section 3.2) | You, at the robots, Monday 2 Nov | The interface of 3.2 is chosen |
 | M1 | The equipment service: its base shared with the simulator, a container in `deploy/pi`; a Pi target with pins and a local Modbus server tried on a Pi | – | One program on a Pi has a point on the service and one on a pin |
 | M2 | Capping: the spec moved to `cell/modules`, the program generated and run with the simulator (done 3 Nov); then on its Pi | A Pi 5, a TB6600, a stepper, a switch; you at the bench for the axis | `Capping` runs on the Pi with the axis moving and the crimper simulated |
-| M3 | Loading and unloading: the contract with your program, the specs, the simulator's robot; in the agents, loading as the step that starts custody ([agents.md](agents.md), A1) | Your robot program's job numbers | The line in simulation takes a vial from loading to unloading |
+| M3 | Loading and unloading: the contract with your program, the specs, the simulator's robot (done 3 Nov, in modpy); in the agents, loading as the step that starts custody ([agents.md](agents.md), A1) | Your robot program's job numbers | The line in simulation takes a vial from loading to unloading |
 | M4 | The robot service over the chosen interface, with a stand-in controller in the tests; then on each robot | M0; you at the robot | `Loading` moves the robot, started by the agents |
 | M5 | Inspection: the spec, the camera service, the store in the lab stack, the camera's HTTP interface in its AAS | The cameras | Each camera's image is in the store, with its number in the skill's results |
 | M6 | The six modules in the line scenario with the agents (A1, A7) | M2 to M5 in simulation | The three products' orders run end to end in simulation |

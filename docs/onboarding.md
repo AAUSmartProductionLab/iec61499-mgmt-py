@@ -42,6 +42,7 @@ nothing is split yet). In short:
 | `deploy/` | The Pi: FORTE in Docker, `pi.py` (install, module, log); the lab's AAS stack on this PC: BaSyx, the DMP, InfluxDB, Mosquitto, Prosody (`aas/compose.yaml`, `aas.py`) |
 | `cell/` | Module specs, the generated projects (`cell/control/`), simulator, the example line's AASs (`cell/examples/`), the paper's evaluation (`cell/eval/`) |
 | `aas-model/`, `aas-camel-dmp/`, `iec61499-opcua-hmi/`, `basyx-aas-web-ui/`, `planar-controller/` | Submodules: the lab's pydantic AAS model (the user's fork, branch `lab-ppr-models`); the DMP that runs an AAS's mappings (Operations to OPC UA methods, values to InfluxDB); the HMI with `modlink`; the BaSyx web UI fork with the process planner and the skill editor; the planar table's controller (Python, OPC UA like a module) |
+| `module-py/` | `modpy`: a module run in Python from its spec, served over OPC UA node for node as a generated module on FORTE; the robot modules (`cell/modules/python`), their robots simulated ([demo-modules.md](demo-modules.md), section 3) |
 | `line-agents/` | `lineagents`: the line's agents (SPADE, XMPP, VDI/VDE 2193): resource agents per module and per shuttle, an order agent that starts a product agent per unit ordered, the manager that starts them from the AAS server ([agents.md](agents.md)) |
 | `ontology/`, `docs/` | Ontologies (ARSO and others); working documents |
 | `aaspire/` | The documentation site (MkDocs) for a reader who was not there: a page and a figure per part; `cd aaspire; python -m mkdocs serve` |
@@ -242,7 +243,8 @@ of agents.md (A1: MoveToPosition on the planar controller, loading and unloading
 Pi; A3: a planned skill in a bid). The other four modules of the line (capping, inspection, loading
 and unloading with the KUKA robots) are planned in [demo-modules.md](demo-modules.md) (1 Nov), steps
 M0 to M6; capping's program is generated and runs against the simulator since 3 Nov (M2 but its
-Pi). The centralized orchestrator is the colleagues' to build (1 Nov); ours is to keep what both
+Pi), and the loading and unloading modules run in Python (modpy, 3 Nov; M3 but the agents' custody),
+their robots simulated until the robots' interface is known. The centralized orchestrator is the colleagues' to build (1 Nov); ours is to keep what both
 share compatible.
 
 **Waiting for the user** (do not decide these yourself): the go for the two Pis above; the eleven open
