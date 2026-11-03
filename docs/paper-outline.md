@@ -12,9 +12,9 @@ capability model, planning, agents) is kept for the journal papers, in
 
 **3 Nov:** the paper's main file is on Overleaf (Elsevier CRC template, `elsarticle` 5p with `ecrc`),
 with the title "Asset Administration Shell-driven reconfiguration of skill-based IEC 61499 devices" and
-an abstract that frames the work in the product, process and resource AASs. Sections 1 and 2 are
-drafted in LaTeX in those terms ([paper/cirp/introduction.tex](paper/cirp/introduction.tex),
-[paper/cirp/related-work.tex](paper/cirp/related-work.tex)). The page budget is now: introduction and
+an abstract that frames the work in the product, process and resource AASs. Since 3 Nov the whole paper
+is one file, [paper/cirp/paper.tex](paper/cirp/paper.tex), pasted into Overleaf as it is: no comments,
+one line per paragraph, its 17 sources in [paper/cirp/references.bib](paper/cirp/references.bib). The page budget is now: introduction and
 related work two pages and a little more; architecture and method at least two; evaluation one;
 conclusion and references the last. The scope is wider again than on 28 Oct: the skill and product
 hierarchies, both routes to a new skill (handcrafted, or planned from a product's requirement), the
@@ -63,7 +63,7 @@ figures and tables.
 
 ## 1 Introduction
 
-Drafted on 3 Nov in [paper/cirp/introduction.tex](paper/cirp/introduction.tex), in seven paragraphs:
+Drafted on 3 Nov, now in [paper/cirp/paper.tex](paper/cirp/paper.tex) and condensed to four paragraphs the same day (structure paragraph cut, contributions inline). The draft had seven:
 the setting and what IEC 61499 and the AAS promise; where the state of the art leaves it; our earlier
 work; the approach in the abstract's terms (the three AASs, the module's fixed design, the translation
 rules); the two routes to a new skill and the one path every change takes; the contributions C1 to
@@ -87,7 +87,7 @@ C4; the structure. The outline of 28 Oct it was written from:
 
 ## 2 Related work and gap
 
-Drafted on 3 Nov in [paper/cirp/related-work.tex](paper/cirp/related-work.tex), from the full texts
+Drafted on 3 Nov, now in [paper/cirp/paper.tex](paper/cirp/paper.tex), from the full texts
 of the eight papers in `Papers-cirp-cms` and `Downloads/AAS-IEC61499-Paper` (not in the repository):
 the four strands below, the gap, and Table 1. What the full texts changed:
 
@@ -151,9 +151,10 @@ abstracts only.
 
 ## 3 Concept and method
 
-Drafted in LaTeX on 1 Nov: [paper/cirp/method.tex](paper/cirp/method.tex), with the design
-considerations below written in, about 2,000 words to cut down to the budget. Sources still to add are
-marked `\todocite`.
+Drafted in LaTeX on 1 Nov; rewritten on 3 Nov against the related work and condensed to about 1,450
+words, now in [paper/cirp/paper.tex](paper/cirp/paper.tex). Fig. 1 was redrawn the same day, generic
+and flat (no use case, little text; 206 by 65 mm instead of 256 by 138); Fig. 3 is the page
+product-to-process.
 
 ### 3.1 Concept (200 words, Fig. 1)
 
@@ -306,7 +307,7 @@ is left.
 Drawn on 1 Nov, in [paper/cirp/figures](paper/cirp/figures). The diagrams are the pages of
 [figures/cirp-figures.drawio](figures/cirp-figures.drawio), exported by
 `python docs/figures/export_pdf.py docs/figures/cirp-figures.drawio docs/paper/cirp/figures`;
-the evaluation's charts are in [paper/cirp/figures-evaluation.tex](paper/cirp/figures-evaluation.tex).
+the evaluation's charts (`effort.pdf`, `downtime.pdf`) are drawn by `cell/eval/figures.py`.
 The skill hierarchy was folded into Fig. 1 on 1 Nov. The evaluation's figures follow section 4's
 proposal; if space runs out, Fig. 3 goes first.
 

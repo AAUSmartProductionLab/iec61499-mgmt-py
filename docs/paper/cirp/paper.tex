@@ -1,0 +1,158 @@
+\documentclass[5p,times,procedia]{elsarticle}
+\usepackage{float}
+\usepackage{ecrc}
+\volume{00}
+\firstpage{1}
+\journalname{Procedia CIRP}
+\runauth{M.B. Jensen et al.}
+\jid{procir}
+\jnltitlelogo{Procedia CIRP}
+\usepackage{amssymb}
+\usepackage[figuresright]{rotating}
+\usepackage[bookmarks=false]{hyperref}
+\hypersetup{colorlinks, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+\begin{document}
+\begin{frontmatter}
+
+\dochead{60th CIRP Conference on Manufacturing Systems (CIRP CMS 2027)}%
+
+\title{Asset Administration Shell-driven reconfiguration of skill-based IEC 61499 devices}
+
+\author[a]{Martin B. Jensen\corref{cor1}}
+\author[a]{Tristan Schwörer}
+\author[a]{Casper Schou}
+
+\address[a]{Aalborg University, Fibigerstræde 14, Aalborg 9220, Denmark}
+
+\cortext[cor1]{* Corresponding author. {\it E-mail address:martinbj@mp.aau.dk}}
+
+\begin{abstract}
+IEC 61499 enables online reconfiguration of control applications, and the Asset Administration Shell (AAS) describes assets in a standardized way, yet how AAS content can drive such reconfiguration remains open. Following the product-process-resource paradigm, the product AAS specifies required processes and their parameters, the process AAS binds the product's procedure to modules and their skills, and the resource AAS describes the skills, their interfaces and which of them are deployed. Primitive skills are implemented once as function blocks, and translation rules map a composite skill's flow, drawn in Business Process Model and Notation (BPMN), to a subapplication of their instances and its parameters to values. A new skill is handcrafted or planned from the module's capability description. Every change, from a product changeover, a resource edit or an operator's BPMN edit, is checked against the skills' preconditions and effects and the product's requirement, applied online via IEC 61499 management commands where its class allows, verified by reading the program back, and recorded in the resource AAS. On a pharmaceutical filling cell with Eclipse 4diac, changes are evaluated for activation time, management commands and disturbance against full redeployment, and for AAS--runtime consistency.
+\end{abstract}
+
+\begin{keyword}
+Asset Administration Shell; IEC 61499; skill-based engineering; reconfiguration; product changeover; pharmaceutical manufacturing
+\end{keyword}
+\end{frontmatter}
+
+\section{Introduction}
+\label{sec:introduction}
+
+Pharmaceutical production is moving from large batches on dedicated lines to small batches and personalised products, made on lines assembled from modules~\cite{schwoerer2025modular}. Changeovers become frequent, and a new product may need behaviour that no module has yet: a vial is filled with the needle at a fixed depth, a prefilled syringe from the bottom of its barrel, the needle rising while the pump doses. IEC~61499 suits such changes, as its management commands create, connect and parameterise function blocks in a running device~\cite{iec61499} without stopping the parts that do not change~\cite{rooker2007zero}. Each module also comes with an Asset Administration Shell (AAS), the standardised digital twin of what it is, what it can do and how it is called. How the AAS can drive the reconfiguration of the control program, however, is open.
+
+Skill-based engineering separates what a resource can do, its capability, from how it is done, its skill~\cite{koecher2023reference}, and composes a station's skills from its devices' primitives~\cite{schou2018skill}. The AAS describes both, for instance in the Capability Description~\cite{idta02020}. Yet it describes a program made elsewhere: compositions are generated at engineering time as new code~\cite{dorofeev2021orchestrator} or executed by an engine outside the controller's program~\cite{jensen2026service,lindorfer2019user}, and planners sequence skills that the resources already have~\cite{nabizada2026capability,schwoerer2026fond}. A new behaviour thus still needs the vendor's engineering project, an IDE and a redeployment, while the integrator who runs the line has only the running program and the AAS. Our earlier work orchestrated modules from their AASs~\cite{jensen2026service} and planned line-level policies from them~\cite{schwoerer2026fond}, taking a module's skills as given. This paper turns to the module itself.
+
+We make the AAS the desired state of the module's IEC~61499 program, in a framework that follows the product--process--resource paradigm. The product's AAS states the processes it requires and their parameters, the process AAS binds the product's procedure to modules and their skills, and the module's resource AAS describes its skills, their interfaces and which of them its program carries out. The program follows a fixed design: a shell with an occupation, which lets one client at a time command the module, and a PackML state machine; primitive skills as function block types, implemented once; and composite skills as subapplications of their instances, all with one skill state machine. Translation rules map a composite's flow to the event and data connections of its subapplication and infer all wiring from the flow. A new composite is handcrafted in a skill editor, or planned from the pre- and postconditions of the module's capabilities when a product requires a capability the module lacks. Either way it is checked against the primitives' conditions and the product's requirement, applied online through management commands where its change class allows, verified by reading the program back, and recorded in the AAS.
+
+The contributions are (C1) a module architecture for IEC~61499 in which composite skills are networks of instances, mapped to and from the AAS by rules; (C2) an AAS model that joins a product's required processes, the module's composite skills and its components' primitives through capabilities derived from the skills; (C3) two routes to a new skill, handcrafted or planned, both checked before deployment; and (C4) the reconciliation of the running program with the AAS. They are demonstrated with Eclipse 4diac on a pharmaceutical filling module.
+
+\section{Related work}
+\label{sec:related}
+
+Four lines of work meet here (Table~\ref{tab:related}): composing skills on controllers, the AAS as a source for control, online reconfiguration of IEC~61499, and planning from capabilities.
+
+\emph{Composing skills on controllers.} Dorofeev et al. generate a composite skill as IEC~61499 code from a given orchestration sequence and from skill interfaces modelled as adapters~\cite{dorofeev2021orchestrator}. This cut the engineering effort in 4diac by a factor of 2.7 to 5.5, but yields one basic function block whose state machine grows to $2^n$ states for $n$ parallel skills; keeping the skill descriptions in the AAS is their future work. Terzimehić et al. compute the services' deployment with SMT from a recipe, the plant topology and component models, and generate an IEC~61499 application~\cite{terzimehic2021service}. Lindorfer and Froschauer validate BPMN skill sequences against a rule set before an external workflow engine runs them over OPC~UA~\cite{lindorfer2019user}. In all three, a composition is made at engineering time, deployed as new code or interpreted outside the controller, and never read back.
+
+\emph{The AAS as a source for control.} In capability-based approaches, the AAS describes offered capabilities with their constraints and skills with their OPC~UA endpoints, and a product's features are matched against them~\cite{blumhofer2025enhancing}; how a skill is composed stays inside the machine. Stolze et al. run the bidding of the I4.0 language as BPMN workflows of a proactive AAS, so that a product selects resources by their capabilities~\cite{stolze2024proactive}. Albus et al. derive a bill of process from a product's CAD model, match it against the resources' capabilities, rebalance the line and let agents orchestrate the resources' skills~\cite{albus2025automated}, noting that new processes otherwise need manual integration into the control system. These select, parameterise or call existing behaviour; none describes behaviour to be built in the controller.
+
+\emph{Changing IEC~61499 programs online.} The management commands of IEC~61499 create, connect, parameterise and delete function blocks in a running device~\cite{iec61499}, and reconfiguration services keep the rest of an application running while a part changes~\cite{rooker2007zero}. Closest to this paper, Huang et al. map the Module Type Package (MTP) onto IEC~61499 and turn an MTP file, compared with what runs, into management commands, changing a packaging demonstrator's orchestration in at most 96\,ms~\cite{huang2026plug}. The orchestration is still redrawn by hand, the MTP describes services rather than a product's need, and the result is not checked against the file afterwards.
+
+\emph{Planning from capabilities.} PDDL is generated from capability models in the AAS~\cite{nabizada2026capability}, and policies planned from distributed AAS descriptions run as behaviour trees~\cite{schwoerer2026fond}. Like recipe-driven deployment~\cite{terzimehic2021service} and product-driven line balancing~\cite{albus2025automated}, they sequence or assign skills that exist; none turns a plan into a new skill of the resource.
+
+\emph{Gap.} No approach makes the AAS the desired state of a module's IEC~61499 program, so that a new skill, handcrafted or planned, is checked against its primitives' conditions and the product's requirement, created online, verified by reading the program back, and recorded.
+
+\begin{table}[t]
+\centering
+\caption{The closest works. AAS: the AAS describes the new behaviour; 61499: it runs in the controller's IEC~61499 program; Online: it is changed online; Check: it is checked before deployment; Read back: the running program is compared with its description. \checkmark~yes, (\checkmark)~in part, --~no.}
+\label{tab:related}
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{@{}llccccc@{}}
+\hline
+Work & New behaviour from & AAS & 61499 & Online & Check & Read back \\
+\hline
+\cite{dorofeev2021orchestrator} & a given sequence & -- & \checkmark & -- & -- & -- \\
+\cite{terzimehic2021service} & recipe, SMT & -- & \checkmark & -- & (\checkmark) & -- \\
+\cite{lindorfer2019user} & BPMN by the user & -- & -- & -- & \checkmark & -- \\
+\cite{huang2026plug} & MTP file & -- & \checkmark & \checkmark & -- & (\checkmark) \\
+\cite{blumhofer2025enhancing} & product features & \checkmark & -- & -- & (\checkmark) & -- \\
+\cite{stolze2024proactive} & bidding & \checkmark & -- & -- & -- & -- \\
+\cite{albus2025automated} & CAD model & -- & -- & -- & (\checkmark) & -- \\
+Ours & AAS, written or planned & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Architecture and method}
+\label{sec:method}
+
+\subsection{The AAS as the desired state}
+\label{sec:concept}
+
+The approach follows the product--process--resource paradigm with an AAS for each (Fig.~\ref{fig:concept}). A product's AAS states the processes it requires, each with a required capability and its parameters. The process AAS binds the product's procedure to the line, each step to a module and one of its skills. A module's resource AAS describes its skills, their interfaces, the capabilities they offer and which of them its IEC~61499 program carries out; it is that program's desired state. The AAS is the source because every module comes with it and every client reads it~\cite{jensen2026service}, whereas code generators start from engineering models~\cite{dorofeev2021orchestrator,terzimehic2021service} that an integrator seldom has. The program is changed only over the management protocol and operated only over OPC~UA, and only between products. Behaviour has three levels, as device primitives, skills and tasks do in~\cite{schou2018skill}: components offer primitive skills, a module composes them, and the line, outside this paper, orchestrates the modules.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/pipeline.pdf}
+\caption{The AAS as the desired state of a module's IEC~61499 program, on three levels. (1)~A product requires a capability C with parameters p, and (2)~matching answers offered, not offered, or offered after a reconfiguration. (3)~A new skill S$'$ is handcrafted or planned and enters the module's AAS as Described. (4)~The reconciler applies it online, reads the program back and records it as Built. (5)~The orchestrator calls the skills over OPC~UA. Gold: change over the management protocol; blue: operation; green: a step runs a primitive.}
+\label{fig:concept}
+\end{figure*}
+
+\subsection{Module architecture}
+\label{sec:architecture}
+
+The program follows fixed rules that make a composite skill data rather than code (Fig.~\ref{fig:mapping}). \emph{The shell} is the same in every module and never changes online: an occupation block lets one client at a time command the module, a PackML state machine gives the module's state, one block per equipment item owns its IO and enforces one holder, break before make and all off on release, and one chain initialises all blocks. The control components in~\cite{dorofeev2021orchestrator} likewise combine an occupation with a PackML-based state, while in the MTP every service runs a 16-state machine~\cite{huang2026plug}; here PackML runs once, for the module. \emph{A primitive skill} is a block type built into the runtime once; it commands one equipment item until a sensor condition holds or a time has passed. \emph{Every skill} has the same small state machine (Idle, Running, Stopping, Succeeded, Failed, Aborted) and the same OPC~UA methods (Start, Stop, Abort, Reset), and is called, runs and ends like a node of a behaviour tree; its parameters are the arguments of Start, range-checked before anything moves.
+
+\emph{A composite skill} has no type of its own. It is a subapplication of instances: a block for its state machine and methods, a latch per parameter, and an instance of a primitive per step, named like the step and holding its constants. Steps are chained by their success events; a parallel block adds a join, a decision a comparison and a merge. The rules derive all wiring from the flow. Instances are used because every IEC~61499 runtime creates them online through management commands~\cite{iec61499}, while a new type needs a build or a type loader, and because a generated type grows to $2^n$ states for $n$ parallel branches~\cite{dorofeev2021orchestrator}, where a join grows linearly, like the rendezvous blocks generated in~\cite{terzimehic2021service}. A new composite touches nothing that runs: blocks reach the equipment and the occupation over the runtime's local publish/subscribe channels, so a new composite needs one connection only, at the end of the initialisation chain. Where reconfiguration services keep the rest of an application running while a part changes~\cite{rooker2007zero}, zero downtime holds here by construction.
+
+What may change online follows, in three classes much like the levels of connections and parameters, instances, and types in~\cite{huang2026plug}. A \emph{parameter} change (a default, a limit, a step's constant) is written online while the module is neither executing nor occupied. A \emph{flow} change that adds a composite is made online in any state; reordering or removing a composite deletes instances that a running skill may hold, and needs a restart. A \emph{structural} change (a new primitive or IO) needs a build.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/aas-to-blocks.pdf}
+\caption{A composite skill in the AAS and the blocks it becomes, joined by name: (1)~the skill gives its control block, (2)~a parameter a latch, (3)~a step an instance of its primitive's type, (4)~a bound value an input's value, (5)~a bound parameter a connection, and (6)~the order of the steps the chain of their events.}
+\label{fig:mapping}
+\end{figure}
+
+\subsection{Skills and products in the AAS}
+\label{sec:aas}
+
+Skills are described in a Skills submodel, as in~\cite{blumhofer2025enhancing}, where the AAS gives each skill's interface and conditions but leaves its composition inside the machine. Here the composition is described too: primitives are in their component's AAS, composites in the module's, and a composite's steps refer to the components' primitives. A skill's commands are Operations whose inputs are its parameters, with unit, limits, default and meaning, and whose outputs are its results; each refers to the action of the Asset Interfaces Description (IDTA 02017) that calls it. A composite's Start command holds its flow in the elements of a product's procedure: steps with their skill, bindings of constants and parameters, parallel blocks, decisions and conditional steps. Both kinds of flow are drawn in BPMN, as in~\cite{lindorfer2019user}, but kept block-structured, so that every flow maps to blocks. Translation rules join the AAS and the program by name: a skill is the subapplication of that name, a step the instance, a parameter the latch. Three things are thus inferred rather than described: a composite's wiring from its flow, a running program's skills from reading it back, and the capability a skill offers from its steps.
+
+The offered capabilities in the module's Capability Description~\cite{idta02020} are derived from its skills. A skill offers the capability its primitives contribute to, with ranges from its parameters' meanings and limits, and a composite that repeats a step offers what it reaches when run through the module's states: two doses of 0.5--10\,mL offer 1--20\,mL. The product side uses the same references (Fig.~\ref{fig:product}). A process step requires a capability with its parameters, and matching answers offered, not offered, or offered after a reconfiguration, by a skill that is \emph{Described} but not yet \emph{Built}. The process AAS then binds the step to the module and the skill. Albus et al. match a product's requirements against capabilities to assign existing skills~\cite{albus2025automated}; here the third answer leads to a new skill.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/product-to-process.pdf}
+\caption{From a product's need to a new skill: (1)~the product requires Filling of 2.0\,mL, and (2)~the module offers Filling for 0.5--10\,mL; (3)~the module plans PlannedFilling from its components' capabilities and (4)~builds it online; (5)~the process AAS binds the step to the module and the skill.}
+\label{fig:product}
+\end{figure}
+
+\subsection{Two routes to a new skill, and the check}
+\label{sec:authoring}
+
+A new composite enters the AAS as Described, by one of two routes. \emph{Handcrafted}, it is drawn in the skill editor, a web application on the AAS server, as a flow of the module's primitives; filling a syringe from the bottom was written so. \emph{Planned}, it is derived when a requirement is not offered, from the module's Capability Description~\cite{idta02020}. Besides the offered capabilities, this holds one capability set per component, each capability realized by a primitive and constrained by pre- and postconditions and invariants: for dosing, the needle must be at the fill position or deeper before and while it runs, and the content grows by the volume dosed. The planner combines hierarchical task networks with goal regression~\cite{nau2021gtpyhop}. Stated compositions are tried first; otherwise each goal is reached by a component capability whose postcondition achieves it, after that capability's own precondition, ending in the module's rest state. The plan is lifted to a partial order, steps on different components becoming a parallel block unless an invariant forbids it, and a volume above one dose becomes two doses. Unlike PDDL generated from planning submodels~\cite{nabizada2026capability}, nothing planning-specific is added to the AAS: within one module the state is a handful of values that the standard constraints already cover.
+
+Every flow, handcrafted or planned, is then checked. It is run through the module's capability model, and a condition that fails is reported with its step and a step that would make it hold, such as a dose without the needle in the vial, or weighing while the axis moves. Where Lindorfer and Froschauer check rules written by a tool expert~\cite{lindorfer2019user}, the rules here are the capabilities' conditions, already in the AAS. The capability that the flow offers is then derived and matched against the requirement, and only a skill that fits is offered to the product.
+
+\subsection{Reconciling the running program}
+\label{sec:reconcile}
+
+Let $\Pi$ be the running program and $A$ the module's AAS. The reconciler reads $\Pi$ back over the management protocol, which reports every instance, connection, type hash and value, and parses it by the rules into skills, steps, constants and types, $\mathit{read}(\Pi)$; the AAS gives the same structure, $\mathit{desc}(A)$. The module is verified when
+\begin{equation}
+\mathit{read}(\Pi) = \mathit{desc}(A).
+\label{eq:verify}
+\end{equation}
+Otherwise the differences are sorted into the three classes. The reconciler checks that the steps name primitives the module has and that the values lie within their limits, applies what the class allows online by management commands, and refuses the rest as needing a restart or a build. It then reads the program back to evaluate Eq.~(\ref{eq:verify}) again, adds the change to the boot file, and marks the skill Built in the AAS, where clients find it by reference. Huang et al. compare the runtime with the MTP file before sending commands~\cite{huang2026plug}; reading back afterwards also reveals a command that was lost or refused. As the commands that create a composite come from the generator's own function, a program changed online equals one generated with the skill.
+
+\section{Evaluation}
+\label{sec:evaluation}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+\bibliographystyle{elsarticle-num}
+\bibliography{references}
+
+\end{document}
