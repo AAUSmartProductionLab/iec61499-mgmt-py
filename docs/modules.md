@@ -17,7 +17,7 @@ process component (the filling pump, the stoppering piston). The line is six mod
 | Loading | Kuka robot, gripper | planned (1 Nov): a module on the robot's own Raspberry Pi that starts the robot's jobs ([demo-modules.md](demo-modules.md)) |
 | Filling | filling pump, linear axis (and a simulated scale) | generated, runs on FORTE with the simulator |
 | Stoppering | stoppering piston, linear axis | generated, runs on FORTE with the simulator |
-| Capping | cap crimper, linear axis | planned: `cell/modules/planned/capping.yaml`, no program; built as filling, the crimper simulated ([demo-modules.md](demo-modules.md)) |
+| Capping | cap crimper, linear axis | generated (3 Nov), runs on FORTE with the simulator; built as filling, the crimper simulated, its Pi to come ([demo-modules.md](demo-modules.md)) |
 | Inspection | top camera, side camera | planned: `cell/modules/planned/inspection.yaml`, no program; the cameras in a Python service, the images to a store ([demo-modules.md](demo-modules.md)) |
 | Unloading | Kuka robot, gripper | planned (1 Nov): as loading ([demo-modules.md](demo-modules.md)) |
 

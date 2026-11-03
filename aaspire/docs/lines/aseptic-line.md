@@ -20,7 +20,7 @@ A planar motor table carries the containers on shuttles between the modules:
 | --- | --- | --- |
 | Filling | Doses a volume through a needle on a linear axis: a stepper motor through a TB6600 driver, a pump, a scale (simulated) | runs on its Raspberry Pi 5, the axis moving |
 | Stoppering | Brings its head down onto the container with a linear axis; a small actuator presses the stopper in | runs on FORTE with simulated IO; its Raspberry Pi 5 named, its runtime and wiring next |
-| Capping | Crimps a cap: a linear axis like filling's, the crimper simulated | planned |
+| Capping | Crimps a cap: a linear axis like filling's, the crimper simulated | runs on FORTE with simulated IO; its Raspberry Pi 5 to come |
 | Inspection | A camera, triggered over OPC UA; the images to a store beside the AAS server | planned |
 | Loading, unloading | A KUKA robot each, behind a Raspberry Pi that starts the robot's jobs | planned |
 
@@ -31,8 +31,8 @@ and the process of each on the line.
 
 | Folder | Holds |
 | --- | --- |
-| `modules/` | The module specs (`filling.yaml`, `stoppering.yaml`; `planned/`: capping, inspection) |
-| `control/` | The generated 4diac projects (`FillingModule`, `StopperingModule`), with the layouts arranged in the IDE |
+| `modules/` | The module specs (`filling.yaml`, `stoppering.yaml`, `capping.yaml`; `planned/`: inspection) |
+| `control/` | The generated 4diac projects (`FillingModule`, `StopperingModule`, `CappingModule`), with the layouts arranged in the IDE |
 | `sim/` | `module_sim.py`: a module's IO simulated over Modbus (axes, steppers, a servo); `run_module.py`: simulator, FORTE and the module at once; `module_ua.py`: a small OPC UA client |
 | `examples/` | `example_line.py`: every AAS of the line built by modreg (the line, the planar table and its shuttles, the four modules and their components, the products, a process each), each process checked (`plan_check.py`), published with `--publish`; `precedence/`: the Production Sequence 4.0 examples; `describe.py`: the class diagrams |
 | `eval/` | The paper's evaluation: `scenarios.py` (plug a module in; change a value; a written skill; a planned skill; the changeover to the syringe, each online and by a restart), `planners.py`, `figures.py`, `effort.py`, `results/` |

@@ -11,7 +11,7 @@ stands behind the equipment's IO points:
 
 | Module | Behind its points | New for it |
 | --- | --- | --- |
-| Capping | A stepper axis on the Pi's pins, as filling's; the crimper simulated | A spec and a Pi |
+| Capping | A stepper axis on the Pi's pins, as filling's; the crimper simulated | A Pi (the spec and its program since 3 Nov) |
 | Inspection | A USB camera and its evaluation, in Python on the Pi | Python beside FORTE (section 2); an image store on the server |
 | Loading, Unloading | A KUKA robot each, running a program written by hand | Python beside FORTE, talking to the robot controller over the network |
 
@@ -167,8 +167,11 @@ UA server in Python) tests the robot service without the robot.
 - it runs on a stepper through a TB6600, with a limit switch, and is homed the same way;
 - the crimper's `Close` is simulated (`sim`) for now, its time given by `Duration`.
 
-`cell/modules/planned/capping.yaml` already has these components and skills. It moves to
-`cell/modules` with a Pi target written as filling's (pins, PWM channel, `board: pi5`).
+**Done (3 Nov):** the spec is `cell/modules/capping.yaml`, with a Pi target written as filling's
+(pins, PWM channel, `board: pi5`). Its program is generated (`cell/control/CappingModule`) and runs on
+FORTE against the simulator (`test_capping_module_homes_and_crimps`). The new primitive is `Crimp`:
+the crimper's `Close` for `Duration`, with the head at `CrimpPosition` and kept there, as stoppering's
+`PressStopper` needs the press at `PressPosition`. Next: its Pi.
 
 The hardware: a Pi 5, a TB6600, a stepper on a stage and a limit switch. A real crimper later is an
 output on a pin (a valve or a relay) or a servo; the skill stays.
@@ -253,7 +256,7 @@ So the new modules need nothing for the BT controller that the filling module do
 | --- | --- | --- | --- |
 | M0 | The KR C4s: option packages (Ethernet KRL, OPC UA, DeviceConnector), KSS version, IO modules and free channels (section 3.2) | You, at the robots, Monday 2 Nov | The interface of 3.2 is chosen |
 | M1 | The equipment service: its base shared with the simulator, a container in `deploy/pi`; a Pi target with pins and a local Modbus server tried on a Pi | – | One program on a Pi has a point on the service and one on a pin |
-| M2 | Capping: the spec moved to `cell/modules`, the program generated and run with the simulator; then on its Pi | A Pi 5, a TB6600, a stepper, a switch; you at the bench for the axis | `Capping` runs on the Pi with the axis moving and the crimper simulated |
+| M2 | Capping: the spec moved to `cell/modules`, the program generated and run with the simulator (done 3 Nov); then on its Pi | A Pi 5, a TB6600, a stepper, a switch; you at the bench for the axis | `Capping` runs on the Pi with the axis moving and the crimper simulated |
 | M3 | Loading and unloading: the contract with your program, the specs, the simulator's robot; in the agents, loading as the step that starts custody ([agents.md](agents.md), A1) | Your robot program's job numbers | The line in simulation takes a vial from loading to unloading |
 | M4 | The robot service over the chosen interface, with a stand-in controller in the tests; then on each robot | M0; you at the robot | `Loading` moves the robot, started by the agents |
 | M5 | Inspection: the spec, the camera service, the store in the lab stack, the camera's HTTP interface in its AAS | The cameras | Each camera's image is in the store, with its number in the skill's results |
