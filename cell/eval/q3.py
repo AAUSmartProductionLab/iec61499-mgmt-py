@@ -191,8 +191,7 @@ def another(literal_: str) -> str:
     if text in ("TRUE", "FALSE"):
         return "FALSE" if text == "TRUE" else "TRUE"
     if text.upper().startswith(("T#", "TIME#")):
-        ms = q1.literal(text)[1]
-        return f"T#{ms // 1000 + 1}s" if ms % 1000 == 0 else f"T#{ms + 1}ms"
+        return f"T#{int(q1.literal(text)[1]) + 1}ms"     # an integer: FORTE's TIME takes no fraction
     if len(text) >= 2 and text[0] == text[-1] and text[0] in "'\"":
         return f"{text[:-1]}x{text[-1]}"
     prefix, _, bare = text.rpartition("#")
