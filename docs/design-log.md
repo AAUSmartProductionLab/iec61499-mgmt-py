@@ -18,6 +18,28 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 4 Nov 2026
+
+- **A skill that a cut change left half there is completed, not created again.** *CIRP* (Q3), *Journal*.
+  - Found by a trial for Q3 on the tests' fake FORTE, a new skill's 165 commands cut after each: cut
+    after the connections but before the blocks were started and INIT fired, the reconciler read the
+    program as what the AAS describes (it looked neither at whether instances run nor at whether the
+    skill was initialised); halfway through the connections, reading crashed (KeyError); later, the
+    half-connected skill was refused as a changed binding; before that, it created the skill's blocks
+    again, which FORTE refuses (INVALID_STATE).
+  - The user's choice (of: complete it; detect and refuse; roll back and create anew): a described
+    skill with an instance never started (IDLE) or its OPC UA method not opened (`UaStart.QO` FALSE)
+    is compared with what the rules build of it, the program read without it, and the skill completed:
+    the instances it lacks created, all its values written, the connections it lacks made, what has
+    not run started, INIT fired once at its entry. An instance of another type, or one the skill does
+    not have, is refused (deleting online is further work). A skill that cannot be read as one, its
+    parts missing, is reported (a restart) instead of crashing the reading.
+  - The reconciler waits until a created skill's INIT has opened its OPC UA method before it
+    verifies, so verified includes initialised. Q1's runs (commit `4ab503c`) were made before.
+  - The tests' fake FORTE refuses a name it has, reports a created instance IDLE until it is
+    started, and opens a skill's method at INIT, as FORTE does; offline, every one of the 164 cuts
+    now converges.
+
 ## 3 Nov 2026
 
 - **Reading a large program back: by part, on a FORTE of the evaluation's own.** *CIRP*, *Journal*.

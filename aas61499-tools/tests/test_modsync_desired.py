@@ -154,6 +154,31 @@ def test_a_skill_that_is_described_and_not_built_is_created_online(delivered, wi
     assert not any("$e" in line for line in saved)
 
 
+def test_a_change_cut_after_any_of_its_commands_is_completed_by_the_next(with_double_dose):
+    """A reconfiguration cut after its i-th command (a crash, a lost connection) leaves part of the
+    skill in the program; the next one completes it, from every i: the program is then the
+    generator's with the skill, every instance running, its OPC UA method open."""
+    module, components = with_double_dose
+    whole = FakeForte(filling())
+    sent = []
+    execute = whole.execute
+    whole.execute = lambda c: (sent.append(c), execute(c))[1]
+    reconfigure(whole, "pi", 61499, module, components)
+    change = [c for c in sent if c.op not in ("query_fbs", "query_connections", "query_type", "read")]
+    new = composed().app
+    for i in range(1, len(change)):
+        forte = FakeForte(filling())
+        for c in change[:i]:
+            forte.execute(c)
+        found = read(forte, "pi", 61499, module, components).differences
+        assert found.create == ["DoubleDose"] and found.online and "part of it" in found.partial["DoubleDose"], (i, found.lines())
+        done, after = reconfigure(forte, "pi", 61499, module, components)
+        assert after.differences.empty and done[0].startswith("complete DoubleDose: "), (i, done)
+        assert forte.fbs == new.fbs and forte.connections == set(new.event_connections + new.data_connections), i
+        assert set(forte.status.values()) == {"RUNNING"} and forte.values["DoubleDose.UaStart.QO"] == "TRUE", i
+        assert forte.triggered[-1] == "DoubleDose.Control.INIT", i
+
+
 def test_what_was_built_is_recorded(with_double_dose, delivered_record):
     """The AAS says the skill is built now (Deployment); the record outside it says which blocks it is."""
     module, components = with_double_dose
