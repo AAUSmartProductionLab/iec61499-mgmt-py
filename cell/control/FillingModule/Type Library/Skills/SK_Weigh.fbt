@@ -62,7 +62,7 @@
     <FB Name="Run" Type="modlib::SKILL_Run" x="3755" y="150" Comment="One run (SKILL_Run, the same in every primitive): waits for the equipment, checks the contract's precondition, sends the command and watches the conditions until the skill is done.">
       <Attribute Name="GroupName" Type="STRING" Value="Execution" />
     </FB>
-    <FB Name="Port" Type="filling::EP_Scale" x="990" y="150" Comment="The equipment as this skill sees it (EP_): its state in, the command out.">
+    <FB Name="Port" Type="filling::EP_Scale" x="990" y="150" Comment="The equipment as this skill sees it (EP_): its state in (to the contract), the commands from the run (over the adapter AEquipment).">
       <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
     </FB>
     <EventConnections>
@@ -84,7 +84,10 @@
       <Connection Source="UaStart.INITO" Destination="PubResults.INIT">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="PubResults.INITO" Destination="Port.INIT">
+      <Connection Source="PubResults.INITO" Destination="Run.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Run.INITO" Destination="Port.INIT">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Port.INITO" Destination="INITO">
@@ -114,12 +117,6 @@
       <Connection Source="Run.DONE" Destination="PubResults.REQ">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Contract.STARTO" Destination="Run.START">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Contract.SAMPLEO" Destination="Run.SAMPLE">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
       <Connection Source="Control.HALT_SEQ" Destination="Run.HALT">
         <Attribute Name="Visible" Value="false" />
       </Connection>
@@ -139,12 +136,6 @@
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Port.STATE" Destination="Contract.SAMPLE">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Run.CMD" Destination="Port.SEND">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Port.PLAYED" Destination="Run.PLAYED">
         <Attribute Name="Visible" Value="false" />
       </Connection>
     </EventConnections>
@@ -203,30 +194,6 @@
       <Connection Source="Contract.R_Weight" Destination="R_Weight">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Contract.Pre" Destination="Run.Pre">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Contract.Post" Destination="Run.Post">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Contract.Timed" Destination="Run.Timed">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Contract.RunTime" Destination="Run.RunTime">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Contract.Command" Destination="Run.Command">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Contract.Arg" Destination="Run.Arg">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Contract.StopCommand" Destination="Run.StopCommand">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Contract.Inv" Destination="Run.Inv">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
       <Connection Source="Holder" Destination="Run.Holder">
         <Attribute Name="Visible" Value="false" />
       </Connection>
@@ -242,21 +209,20 @@
       <Connection Source="Port.Weight" Destination="Contract.Weight">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Port.EqHolder" Destination="Run.EqHolder">
+      <Connection Source="Port.EqHolder" Destination="Contract.EqHolder">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Run.EquipmentFree" Destination="Control.EquipmentFree">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Run.C_Holder" Destination="Port.Holder">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Run.C_Command" Destination="Port.Command">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
-      <Connection Source="Run.C_Release" Destination="Port.Release">
-        <Attribute Name="Visible" Value="false" />
-      </Connection>
     </DataConnections>
+    <AdapterConnections>
+      <Connection Source="Contract.Run" Destination="Run.Contract">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Run.Equipment" Destination="Port.Skill">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </AdapterConnections>
   </FBNetwork>
 </FBType>

@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_NoEquipment" Comment="Stands in for the equipment of a primitive that has none (one that only waits): plays every command at once. Technical: Stands in for the equipment of a primitive that has none: answers every SEND with PLAYED at once">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs />
+    <EventOutputs />
+    <InputVars />
+    <OutputVars />
+    <Sockets>
+      <AdapterDeclaration Name="Skill" Type="modlib::AEquipment" Comment="The run's commands (AEquipment): each is played at once" />
+    </Sockets>
+  </InterfaceList>
+  <BasicFB>
+    <ECC>
+      <ECState Name="Wait" x="365" y="0" />
+      <ECState Name="Played" x="0" y="1260">
+        <ECAction Output="Skill.PLAYED" />
+      </ECState>
+      <ECTransition Source="Wait" Destination="Played" Condition="Skill.SEND" x="505" y="710" />
+      <ECTransition Source="Played" Destination="Wait" Condition="1" x="985" y="870" />
+    </ECC>
+  </BasicFB>
+</FBType>

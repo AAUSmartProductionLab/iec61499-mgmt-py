@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EP_Scale" Comment="The equipment as its skills see it, the same in every skill that uses it: plays a command (its output values, phase by phase) on the equipment's command channel, and gives the equipment's newest state. Technical: Scale as its skills see it: SEND(Holder, Command, Arg, Release) plays a command on its command channel (PLAYED when all phases are out); STATE gives its inputs and holder">
+<FBType Name="EP_Scale" Comment="The equipment as its skills see it, the same in every skill that uses it: plays a command (its output values, phase by phase) on the equipment's command channel, and gives the equipment's newest state. Technical: Scale as its skills see it: a command on the socket Skill (AEquipment: SEND, PLAYED when all phases are out) goes out on its command channel; STATE gives its inputs and holder">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="filling" />
@@ -8,11 +8,6 @@
       <Event Name="INIT" Type="EInit" Comment="Initialise: name the equipment's channels and listen to its state">
         <With Var="Module" />
       </Event>
-      <Event Name="SEND" Type="Event" Comment="Play a command: its output values, phase by phase, to the equipment">
-        <With Var="Holder" />
-        <With Var="Command" />
-        <With Var="Release" />
-      </Event>
     </EventInputs>
     <EventOutputs>
       <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
@@ -20,18 +15,17 @@
         <With Var="Weight" />
         <With Var="EqHolder" />
       </Event>
-      <Event Name="PLAYED" Type="Event" Comment="All phases of the command were sent" />
     </EventOutputs>
     <InputVars>
       <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
-      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who sends the command" />
-      <VarDeclaration Name="Command" Type="USINT" Comment="The command's code" />
-      <VarDeclaration Name="Release" Type="BOOL" Comment="Give up the equipment after the command" />
     </InputVars>
     <OutputVars>
       <VarDeclaration Name="Weight" Type="LREAL" Comment="Scale: Weight (g), an input" />
       <VarDeclaration Name="EqHolder" Type="WSTRING" Comment="Who holds the equipment now (empty: free)" />
     </OutputVars>
+    <Sockets>
+      <AdapterDeclaration Name="Skill" Type="modlib::AEquipment" x="-2600" y="1000" Comment="From a skill's run (AEquipment): the commands to play, PLAYED back" />
+    </Sockets>
   </InterfaceList>
   <FBNetwork>
     <Group Name="StateIn" Comment="The equipment's state in: its inputs and who holds it, from its state channel" x="1000" y="1000" width="5390" height="1580" locked="false" />
@@ -72,7 +66,7 @@
       <Connection Source="EqView.CNF" Destination="STATE">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="SEND" Destination="Driver.PLAY">
+      <Connection Source="Skill.SEND" Destination="Driver.PLAY">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Driver.OUT" Destination="EqCmd.REQ">
@@ -87,7 +81,7 @@
       <Connection Source="PhaseT.EO" Destination="Driver.PHASE_T">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Driver.PLAYED" Destination="PLAYED">
+      <Connection Source="Driver.PLAYED" Destination="Skill.PLAYED">
         <Attribute Name="Visible" Value="false" />
       </Connection>
     </EventConnections>
@@ -113,13 +107,13 @@
       <Connection Source="EqView.Holder" Destination="EqHolder">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Holder" Destination="Driver.Holder">
+      <Connection Source="Skill.Holder" Destination="Driver.Holder">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Command" Destination="Driver.Command">
+      <Connection Source="Skill.Command" Destination="Driver.Command">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Release" Destination="Driver.Release">
+      <Connection Source="Skill.Release" Destination="Driver.Release">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Driver.O_Holder" Destination="EqCmd.SD_1">

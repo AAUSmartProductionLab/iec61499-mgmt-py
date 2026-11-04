@@ -296,7 +296,8 @@ def test_every_state_machine_is_laid_out_as_the_ide_draws_it(project):
         for t in ecc.findall("ECTransition"):
             assert (t.get("x"), t.get("y")) != ("0", "0"), (path.name, t.get("Source"), t.get("Destination"))
             cond = t.get("Condition")
-            assert cond == "1" or cond.startswith("[") or cond.split("[")[0] in events, (path.name, cond)
+            head = cond.split("[")[0]
+            assert cond == "1" or cond.startswith("[") or head in events or "." in head, (path.name, cond)  # Plug.EVENT
 
 
 def test_who_may_command_the_module_is_decided_in_front_of_its_state_machine():
@@ -398,14 +399,17 @@ def code_of(path):
 def test_open_loop_skill_ends_by_time_and_passes_its_argument(tmp_path):
     types = servo(tmp_path)
     _, code = code_of(types / "Skills" / "Contract" / "SC_MoveArm.fbt")
-    assert "Timed := TRUE;\nRunTime := MUL_TIME(T#1s, Settle);" in code
-    assert "Arg := Angle;" in code and "Post := FALSE;" in code
+    assert "Run.Timed := TRUE;\nRun.RunTime := MUL_TIME(T#1s, Settle);" in code
+    assert "Run.Arg := Angle;" in code and "Run.Post := FALSE;" in code
     assert "N_Angle := Arg;" in code_of(types / "Equipment" / "Commands" / "EC_Arm.fbt")[1]
+    port = ET.parse(types / "Equipment" / "Ports" / "EP_Arm.fbt").getroot()    # the argument over the adapter
+    assert ("Skill.Arg", "Driver.Arg") in {(c.get("Source"), c.get("Destination")) for c in port.iter("Connection")}
     skill = ET.parse(types / "Skills" / "SK_MoveArm.fbt").getroot()
-    assert ("Run.C_Arg", "Port.Arg") in {(c.get("Source"), c.get("Destination")) for c in skill.iter("Connection")}
+    links = {(c.get("Source"), c.get("Destination")) for c in skill.find("FBNetwork/AdapterConnections")}
+    assert links == {("Contract.Run", "Run.Contract"), ("Run.Equipment", "Port.Skill")}
     # A press of a fixed time: no argument, and a final command that takes time itself.
     _, code = st("StopperingModule", "Skills/Contract", "SC_PressStopper")
-    assert "RunTime := MUL_TIME(T#1s, 3.0);" in code and "StopCommand := 3;" in code    # Back, when it ends
+    assert "Run.RunTime := MUL_TIME(T#1s, 3.0);" in code and "Run.StopCommand := 3;" in code    # Back, when it ends
 
 
 def test_the_command_table_is_in_the_skills_not_in_the_equipment_io():

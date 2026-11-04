@@ -11,6 +11,7 @@ Sizes are IDE units (``layout``: a text row is about 100 units high, a character
 from __future__ import annotations
 
 from collections import defaultdict
+import re
 
 from .layout import CHAR, PIN_ROW
 
@@ -145,7 +146,8 @@ def place_transitions(ecc) -> None:
 def condition(text: str, events: set[str]) -> str:
     """A condition as the IDE writes it: a guard without an event in brackets (``[Accepted]``)."""
     head = text.split("[", 1)[0].strip()
-    if text == "1" or head in events or text.startswith("["):
+    adapter_event = bool(re.fullmatch(r"[A-Za-z_]\w*\.[A-Za-z_]\w*", head))   # Plug.EVENT, Socket.EVENT
+    if text == "1" or head in events or adapter_event or text.startswith("["):
         return text
     return f"[{text}]"
 

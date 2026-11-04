@@ -13,7 +13,7 @@ added online need no connections to the module level or the equipment:
 """
 from __future__ import annotations
 
-from .fbxml import STD, Basic, Composite, Project, Simple
+from .fbxml import STD, Adapter, Basic, Composite, Project, Simple
 
 LIB = "modlib"
 # Error codes returned by OPC UA methods and skills.
@@ -955,25 +955,53 @@ def make_skill_run(p: Project):
         b.trans(s, "Idle", "1")
     b.write()
 
-    # The composite: the logic with its two timers, so a primitive needs no timer of its own.
-    outer_ei = {k: v for k, v in ei.items() if k not in ("TIMER", "WAIT_OVER")}
-    outer_eo = {k: v for k, v in eo.items() if k not in ("TIMER_START", "TIMER_STOP", "WAIT_START", "WAIT_STOP")}
-    outer_ov = {k: v for k, v in ov.items() if k != "TimerDT"}
+    # The two adapters a primitive's blocks are joined by, each one connection instead of many.
+    contract = {"START": ["Pre", "Post", "Timed", "RunTime", "Command", "Arg", "StopCommand"],
+                "SAMPLE": ["Post", "Inv", "EqHolder"]}
+    Adapter(p, LIB, "AContract",
+            "What a skill primitive's contract (SC_, the plug) tells its run (SKILL_Run, the socket): at START what "
+            "to do and whether it may start, at SAMPLE whether the newest state of the equipment ends the run",
+            {}, contract, {}, {v: iv[v] for vs in contract.values() for v in vs if v in iv} | {"Inv": "BOOL"},
+            folder="Skills/Adapters").write()
+    equipment = {"SEND": ["Holder", "Command", "Arg", "Release"]}
+    Adapter(p, LIB, "AEquipment",
+            "What a skill's run (SKILL_Run, the plug) sends its equipment's port (EP_, the socket): SEND a command; "
+            "PLAYED comes back when all its phases are out",
+            {"PLAYED": []}, equipment, {},
+            {"Holder": "WSTRING", "Command": "USINT", "Arg": "LREAL", "Release": "BOOL"}, folder="Skills/Adapters").write()
+
+    # The composite: the logic with its two timers, so a primitive needs no timer of its own; the
+    # contract plugs into its socket, its plug goes to the equipment.
     c = Composite(p, LIB, "SKILL_Run",
-                  "One run of a skill primitive, the same for every primitive: what the skill is comes in as values "
-                  "from its contract (SC_): Pre, Post, Inv, Timed, RunTime, Command, Arg, StopCommand",
-                  outer_ei, outer_eo, iv, outer_ov, folder="Skills")
+                  "One run of a skill primitive, the same for every primitive: what the skill is comes in from its "
+                  "contract (socket Contract, AContract); the command goes out to the equipment (plug Equipment, "
+                  "AEquipment)",
+                  {"INIT": (["Holder", "ReleaseAfter"], "EInit"), "HALT": [], "ABORT": []},
+                  {"INITO": ([], "EInit"), "DONE": [], "FAILED": ["ErrorID"], "HALTED": ["ErrorID"],
+                   "EQ_FREE": ["EquipmentFree"]},
+                  {"Holder": "WSTRING", "ReleaseAfter": "BOOL"},
+                  {"ErrorID": "UINT", "EquipmentFree": "BOOL"}, folder="Skills")
+    c.adapters(sockets={"Contract": q("AContract")}, plugs={"Equipment": q("AEquipment")})
     c.fb("Logic", q("SKILL_RunLogic"))
     c.fb("Timer", STD["E_DELAY"])
     c.fb("WaitT", STD["E_DELAY"], DT="T#500ms")      # how long a run waits for another holder's release
-    for ev in outer_ei:
-        c.ev(ev, f"Logic.{ev}")
-    for v in iv:
+    c.ev("INIT", "INITO")                              # nothing to set up: Holder and ReleaseAfter are kept
+    for v in ["Holder", "ReleaseAfter"]:
         c.da(v, f"Logic.{v}")
-    for ev in outer_eo:
+    for ev in ["HALT", "ABORT"]:
+        c.ev(ev, f"Logic.{ev}")
+    for ev in contract:
+        c.ev(f"Contract.{ev}", f"Logic.{ev}")
+    for v in dict.fromkeys(v for vs in contract.values() for v in vs):    # Post comes with both, once
+        c.da(f"Contract.{v}", f"Logic.{v}")
+    for ev in ["DONE", "FAILED", "HALTED", "EQ_FREE"]:
         c.ev(f"Logic.{ev}", ev)
-    for v in outer_ov:
-        c.da(f"Logic.{v}", v)
+    c.da("Logic.ErrorID", "ErrorID")
+    c.da("Logic.EquipmentFree", "EquipmentFree")
+    c.ev("Logic.CMD", "Equipment.SEND")
+    for v in ["Holder", "Command", "Arg", "Release"]:
+        c.da(f"Logic.C_{v}", f"Equipment.{v}")
+    c.ev("Equipment.PLAYED", "Logic.PLAYED")
     c.ev("Logic.TIMER_START", "Timer.START")
     c.da("Logic.TimerDT", "Timer.DT")
     c.ev("Logic.TIMER_STOP", "Timer.STOP")
@@ -984,6 +1012,16 @@ def make_skill_run(p: Project):
     c.group("OneRun", "One run: the contract's values in, the command out, until the end condition or the timer",
             ["Logic", "Timer", "WaitT"], dx=7000, dy=4200)
     c.write()
+
+    # For a primitive without equipment (it only waits): every command is played at once.
+    b = Basic(p, LIB, "SKILL_NoEquipment", "Stands in for the equipment of a primitive that has none: answers "
+              "every SEND with PLAYED at once", {}, {}, None, None, None, folder="Skills/Base")
+    b.adapters(sockets={"Skill": q("AEquipment")})
+    b.state("Wait")
+    b.state("Played", None, "Skill.PLAYED")
+    b.trans("Wait", "Played", "Skill.SEND")
+    b.trans("Played", "Wait", "1")
+    b.write()
 
 
 # Types a skill parameter can have, with the widest range (the default Lower and Upper; MIN and MAX

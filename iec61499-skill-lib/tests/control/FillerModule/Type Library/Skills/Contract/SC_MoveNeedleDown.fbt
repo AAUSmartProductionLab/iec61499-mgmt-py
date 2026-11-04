@@ -17,24 +17,12 @@
         <With Var="AtTop" />
         <With Var="AtBottom" />
         <With Var="Position" />
+        <With Var="EqHolder" />
       </Event>
     </EventInputs>
     <EventOutputs>
       <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
         <With Var="IdParams" />
-      </Event>
-      <Event Name="STARTO" Type="Event" Comment="What the skill does in this run, and whether it may start">
-        <With Var="Pre" />
-        <With Var="Post" />
-        <With Var="Timed" />
-        <With Var="RunTime" />
-        <With Var="Command" />
-        <With Var="Arg" />
-        <With Var="StopCommand" />
-      </Event>
-      <Event Name="SAMPLEO" Type="Event" Comment="Post, Inv and the results for the newest state">
-        <With Var="Post" />
-        <With Var="Inv" />
       </Event>
     </EventOutputs>
     <InputVars>
@@ -45,56 +33,59 @@
       <VarDeclaration Name="AtTop" Type="BOOL" Comment="NeedleAxis: AtTop, an input" />
       <VarDeclaration Name="AtBottom" Type="BOOL" Comment="NeedleAxis: AtBottom, an input" />
       <VarDeclaration Name="Position" Type="LREAL" Comment="NeedleAxis: Position (mm), an input" />
+      <VarDeclaration Name="EqHolder" Type="WSTRING" Comment="Who holds the equipment now (empty: free), passed on to the run" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="Pre" Type="BOOL" Comment="The precondition holds: the run may start" />
-      <VarDeclaration Name="Post" Type="BOOL" Comment="The postcondition holds: the skill is done" />
-      <VarDeclaration Name="Inv" Type="BOOL" Comment="The invariant holds: the run may go on" />
-      <VarDeclaration Name="Timed" Type="BOOL" Comment="The skill ends after RunTime (TRUE), or when Post holds (FALSE)" />
-      <VarDeclaration Name="RunTime" Type="TIME" Comment="How long it runs (Timed), or may take before it fails with Timeout (3)" />
-      <VarDeclaration Name="Command" Type="USINT" Comment="The command's code to send while it runs" />
-      <VarDeclaration Name="Arg" Type="LREAL" Comment="The command's argument (e.g. a position)" />
-      <VarDeclaration Name="StopCommand" Type="USINT" Comment="The command's code to send when it is done or halted" />
       <VarDeclaration Name="IdParams" Type="WSTRING" Comment="OPC UA ID of the published parameters" />
     </OutputVars>
+    <Plugs>
+      <AdapterDeclaration Name="Run" Type="modlib::AContract" Comment="To the run (AContract): what the skill does and when it is done" />
+    </Plugs>
   </InterfaceList>
   <BasicFB>
     <ECC>
-      <ECState Name="Wait" x="2220" y="0" />
+      <ECState Name="Wait" x="1968" y="0" />
       <ECState Name="Init" x="0" y="1260">
         <ECAction Algorithm="Alg_Init" Output="INITO" />
       </ECState>
       <ECState Name="Start" x="1765" y="1260">
         <ECAction Algorithm="Alg_Start" />
       </ECState>
-      <ECState Name="Started" x="1648" y="2520">
-        <ECAction Algorithm="Alg_Evaluate" Output="STARTO" />
+      <ECState Name="Started" x="220" y="2520">
+        <ECAction Algorithm="Alg_Evaluate" Output="Run.START" />
       </ECState>
       <ECState Name="Sample" x="3295" y="1260">
-        <ECAction Algorithm="Alg_Evaluate" Output="SAMPLEO" />
+        <ECAction Algorithm="Alg_Sample" />
       </ECState>
-      <ECTransition Source="Wait" Destination="Init" Condition="INIT" x="1446" y="710" />
-      <ECTransition Source="Init" Destination="Wait" Condition="1" x="1926" y="870" />
-      <ECTransition Source="Wait" Destination="Start" Condition="START" x="2270" y="710" />
-      <ECTransition Source="Start" Destination="Started" Condition="1" x="2270" y="1970" />
-      <ECTransition Source="Started" Destination="Wait" Condition="1" x="3760" y="1340" />
-      <ECTransition Source="Wait" Destination="Sample" Condition="SAMPLE" x="3184" y="710" />
-      <ECTransition Source="Sample" Destination="Wait" Condition="1" x="3664" y="870" />
+      <ECState Name="Judge" x="2480" y="2520">
+        <ECAction Algorithm="Alg_Evaluate" Output="Run.SAMPLE" />
+      </ECState>
+      <ECTransition Source="Wait" Destination="Init" Condition="INIT" x="1320" y="710" />
+      <ECTransition Source="Init" Destination="Wait" Condition="1" x="1800" y="870" />
+      <ECTransition Source="Wait" Destination="Start" Condition="START" x="2144" y="710" />
+      <ECTransition Source="Start" Destination="Started" Condition="1" x="1590" y="1970" />
+      <ECTransition Source="Started" Destination="Wait" Condition="1" x="2954" y="1340" />
+      <ECTransition Source="Wait" Destination="Sample" Condition="SAMPLE" x="2932" y="710" />
+      <ECTransition Source="Sample" Destination="Judge" Condition="1" x="3496" y="1970" />
+      <ECTransition Source="Judge" Destination="Wait" Condition="1" x="1273" y="1340" />
     </ECC>
     <Algorithm Name="Alg_Init">
       <ST>IdParams := CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, UaPath)), "/Parameters/Distance"), "]");</ST>
     </Algorithm>
     <Algorithm Name="Alg_Start">
-      <ST>Timed := FALSE;
-RunTime := Timeout;
-Command := 1;
-Arg := 0.0;
-StopCommand := 0;</ST>
+      <ST>Run.Timed := FALSE;
+Run.RunTime := Timeout;
+Run.Command := 1;
+Run.Arg := 0.0;
+Run.StopCommand := 0;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Evaluate">
-      <ST>Pre := NOT (AtTop AND AtBottom);
-Post := (Position &gt;= Distance) OR AtBottom;
-Inv := NOT (AtTop AND AtBottom);</ST>
+      <ST>Run.Pre := NOT (AtTop AND AtBottom);
+Run.Post := (Position &gt;= Distance) OR AtBottom;
+Run.Inv := NOT (AtTop AND AtBottom);</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Sample">
+      <ST>Run.EqHolder := EqHolder;</ST>
     </Algorithm>
   </BasicFB>
 </FBType>
