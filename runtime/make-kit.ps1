@@ -7,7 +7,7 @@ param(
     # Leave out the base images (alpine, busybox for arm64); the Pi then pulls them from Docker Hub.
     [switch]$NoImages,
     # The lab's module projects (cell/control) that go into projects/, as committed, to start from.
-    [string[]]$Projects = @('FillingModule', 'StopperingModule')
+    [string[]]$Projects = @('FillingModule', 'StopperingModule', 'CappingModule')
 )
 # A kit for building FORTE with one's own block types without this repository: the build scripts,
 # FBE configurations, FORTE patches and the lab's exported modules (from the last build-modules.ps1),

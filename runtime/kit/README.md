@@ -134,8 +134,8 @@ type changed.
 
 ## 5. Start from the lab's module projects
 
-The folder `C:\forte-kit\projects` has the lab's current module projects: `FillingModule` and
-`StopperingModule`.
+The folder `C:\forte-kit\projects` has the lab's current module projects: `FillingModule`,
+`StopperingModule` and `CappingModule`.
 
 1. In the IDE: **File > Import > General > Existing Projects into Workspace**. Choose
    `C:\forte-kit\projects\FillingModule` and tick **Copy projects into workspace**.
