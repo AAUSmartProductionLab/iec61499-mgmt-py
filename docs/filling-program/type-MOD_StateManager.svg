@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="482" height="335" viewBox="-404 -120 1929 1340" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-404" y="-120" width="1929" height="1340" fill="#ffffff"/>
+<rect x="0" y="620" width="1405" height="480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="1405" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="550" width="1315" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="702" y="620" font-size="58" text-anchor="middle" fill="#1f2430">MOD_StateManager</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="10,155 42,175 10,195" fill="#b5452b"/>
+<text x="55" y="195" font-size="58" text-anchor="start" fill="#1f2430">RESETTING_DONE</text>
+<polygon points="10,255 42,275 10,295" fill="#b5452b"/>
+<text x="55" y="295" font-size="58" text-anchor="start" fill="#1f2430">RESETTING_FAILED</text>
+<polygon points="10,355 42,375 10,395" fill="#b5452b"/>
+<text x="55" y="395" font-size="58" text-anchor="start" fill="#1f2430">STOPPING_DONE</text>
+<polygon points="10,455 42,475 10,495" fill="#b5452b"/>
+<text x="55" y="495" font-size="58" text-anchor="start" fill="#1f2430">STOPPING_FAILED</text>
+<polygon points="1363,55 1395,75 1363,95" fill="#b5452b"/>
+<text x="1350" y="95" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="1363,155 1395,175 1363,195" fill="#b5452b"/>
+<text x="1350" y="195" font-size="58" text-anchor="end" fill="#1f2430">RUN_RESETTING</text>
+<polygon points="1363,255 1395,275 1363,295" fill="#b5452b"/>
+<text x="1350" y="295" font-size="58" text-anchor="end" fill="#1f2430">RUN_STOPPING</text>
+<rect x="12" y="684" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="720" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="12" y="784" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="820" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="12" y="884" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="920" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="12" y="984" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="55" y="1020" font-size="58" text-anchor="start" fill="#1f2430">StopTimeout</text>
+<line x1="-40" y1="75" x2="-40" y2="1000" stroke="#6b7280" stroke-width="4"/>
+<rect x="-50" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="690" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="790" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="890" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="990" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="-88" y="718" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-88" y="818" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-88" y="918" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<text x="-88" y="1018" font-size="50" text-anchor="end" fill="#6b7280">TIME</text>
+</svg>

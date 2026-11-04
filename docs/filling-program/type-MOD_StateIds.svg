@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="360" viewBox="-404 -120 1678 1440" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-404" y="-120" width="1678" height="1440" fill="#ffffff"/>
+<rect x="0" y="220" width="870" height="980" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="870" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="150" width="780" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="435" y="220" font-size="58" text-anchor="middle" fill="#1f2430">MOD_StateIds</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="828,55 860,75 828,95" fill="#b5452b"/>
+<text x="815" y="95" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<rect x="12" y="284" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="320" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="12" y="384" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="420" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="826" y="284" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="815" y="320" font-size="58" text-anchor="end" fill="#1f2430">IdReset</text>
+<rect x="826" y="384" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="815" y="420" font-size="58" text-anchor="end" fill="#1f2430">IdStart</text>
+<rect x="826" y="484" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="815" y="520" font-size="58" text-anchor="end" fill="#1f2430">IdStop</text>
+<rect x="826" y="584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="815" y="620" font-size="58" text-anchor="end" fill="#1f2430">IdAbort</text>
+<rect x="826" y="684" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="815" y="720" font-size="58" text-anchor="end" fill="#1f2430">IdClear</text>
+<rect x="826" y="784" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="815" y="820" font-size="58" text-anchor="end" fill="#1f2430">IdPub</text>
+<rect x="826" y="884" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="815" y="920" font-size="58" text-anchor="end" fill="#1f2430">IdState</text>
+<rect x="826" y="984" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="815" y="1020" font-size="58" text-anchor="end" fill="#1f2430">IdQuery</text>
+<rect x="826" y="1084" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="815" y="1120" font-size="58" text-anchor="end" fill="#1f2430">IdAct</text>
+<line x1="-40" y1="75" x2="-40" y2="400" stroke="#6b7280" stroke-width="4"/>
+<rect x="-50" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="290" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="-88" y="318" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-88" y="418" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<line x1="910" y1="75" x2="910" y2="1100" stroke="#6b7280" stroke-width="4"/>
+<rect x="900" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="900" y="290" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="900" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="900" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="900" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="900" y="690" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="900" y="790" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="900" y="890" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="900" y="990" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="900" y="1090" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="958" y="318" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="958" y="418" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="958" y="518" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="958" y="618" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="958" y="718" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="958" y="818" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="958" y="918" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="958" y="1018" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="958" y="1118" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+</svg>

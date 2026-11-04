@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="430" height="210" viewBox="-348 -120 1718 840" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-348" y="-120" width="1718" height="840" fill="#ffffff"/>
+<rect x="0" y="320" width="1050" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="1050" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="250" width="960" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="525" y="320" font-size="58" text-anchor="middle" fill="#1f2430">SKILL_FailMerge</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">FAIL_1</text>
+<polygon points="10,155 42,175 10,195" fill="#b5452b"/>
+<text x="55" y="195" font-size="58" text-anchor="start" fill="#1f2430">FAIL_2</text>
+<polygon points="1008,55 1040,75 1008,95" fill="#b5452b"/>
+<text x="995" y="95" font-size="58" text-anchor="end" fill="#1f2430">FAIL</text>
+<rect x="12" y="384" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="55" y="420" font-size="58" text-anchor="start" fill="#1f2430">Error1</text>
+<rect x="12" y="484" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="55" y="520" font-size="58" text-anchor="start" fill="#1f2430">Error2</text>
+<rect x="1006" y="384" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="995" y="420" font-size="58" text-anchor="end" fill="#1f2430">Error</text>
+<line x1="-40" y1="75" x2="-40" y2="400" stroke="#6b7280" stroke-width="4"/>
+<rect x="-50" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-68" y1="175" x2="-68" y2="500" stroke="#6b7280" stroke-width="4"/>
+<rect x="-78" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-78" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="-116" y="418" font-size="50" text-anchor="end" fill="#6b7280">UINT</text>
+<text x="-116" y="518" font-size="50" text-anchor="end" fill="#6b7280">UINT</text>
+<line x1="1090" y1="75" x2="1090" y2="400" stroke="#6b7280" stroke-width="4"/>
+<rect x="1080" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1080" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="1138" y="418" font-size="50" text-anchor="start" fill="#6b7280">UINT</text>
+</svg>

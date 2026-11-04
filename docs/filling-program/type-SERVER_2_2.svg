@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="404" height="260" viewBox="-432 -120 1614 1040" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-432" y="-120" width="1614" height="1040" fill="#ffffff"/>
+<rect x="0" y="320" width="750" height="480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="750" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="250" width="660" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="375" y="320" font-size="58" text-anchor="middle" fill="#1f2430">SERVER_2_2</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="10,155 42,175 10,195" fill="#b5452b"/>
+<text x="55" y="195" font-size="58" text-anchor="start" fill="#1f2430">RSP</text>
+<polygon points="708,55 740,75 708,95" fill="#b5452b"/>
+<text x="695" y="95" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="708,155 740,175 708,195" fill="#b5452b"/>
+<text x="695" y="195" font-size="58" text-anchor="end" fill="#1f2430">IND</text>
+<rect x="12" y="384" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="420" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="12" y="484" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="520" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="12" y="584" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="55" y="620" font-size="58" text-anchor="start" fill="#1f2430">SD_1</text>
+<rect x="12" y="684" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="55" y="720" font-size="58" text-anchor="start" fill="#1f2430">SD_2</text>
+<rect x="706" y="384" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="695" y="420" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="706" y="484" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="695" y="520" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="706" y="584" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="695" y="620" font-size="58" text-anchor="end" fill="#1f2430">RD_1</text>
+<rect x="706" y="684" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="695" y="720" font-size="58" text-anchor="end" fill="#1f2430">RD_2</text>
+<line x1="-40" y1="75" x2="-40" y2="500" stroke="#6b7280" stroke-width="4"/>
+<rect x="-50" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-68" y1="175" x2="-68" y2="700" stroke="#6b7280" stroke-width="4"/>
+<rect x="-78" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-78" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-78" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-78" y="690" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="-116" y="418" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<text x="-116" y="518" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-116" y="618" font-size="50" text-anchor="end" fill="#6b7280">ANY</text>
+<text x="-116" y="718" font-size="50" text-anchor="end" fill="#6b7280">ANY</text>
+<line x1="790" y1="75" x2="790" y2="500" stroke="#6b7280" stroke-width="4"/>
+<rect x="780" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="780" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="780" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="818" y1="175" x2="818" y2="700" stroke="#6b7280" stroke-width="4"/>
+<rect x="808" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="808" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="808" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="808" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="808" y="690" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="866" y="418" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="866" y="518" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="866" y="618" font-size="50" text-anchor="start" fill="#6b7280">ANY</text>
+<text x="866" y="718" font-size="50" text-anchor="start" fill="#6b7280">ANY</text>
+</svg>

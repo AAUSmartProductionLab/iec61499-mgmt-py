@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="464" height="235" viewBox="-432 -120 1854 940" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-432" y="-120" width="1854" height="940" fill="#ffffff"/>
+<rect x="0" y="320" width="990" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="990" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="250" width="900" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="495" y="320" font-size="58" text-anchor="middle" fill="#1f2430">MOD_OwnerLatch</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="10,155 42,175 10,195" fill="#b5452b"/>
+<text x="55" y="195" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="948,55 980,75 948,95" fill="#b5452b"/>
+<text x="935" y="95" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="948,155 980,175 948,195" fill="#b5452b"/>
+<text x="935" y="195" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="12" y="384" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="420" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="12" y="484" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="520" font-size="58" text-anchor="start" fill="#1f2430">Received</text>
+<rect x="946" y="384" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="935" y="420" font-size="58" text-anchor="end" fill="#1f2430">IdSub</text>
+<rect x="946" y="484" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="935" y="520" font-size="58" text-anchor="end" fill="#1f2430">IdQuery</text>
+<rect x="946" y="584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="935" y="620" font-size="58" text-anchor="end" fill="#1f2430">Owner</text>
+<line x1="-40" y1="75" x2="-40" y2="400" stroke="#6b7280" stroke-width="4"/>
+<rect x="-50" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-68" y1="175" x2="-68" y2="500" stroke="#6b7280" stroke-width="4"/>
+<rect x="-78" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-78" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="-116" y="418" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-116" y="518" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<line x1="1030" y1="75" x2="1030" y2="500" stroke="#6b7280" stroke-width="4"/>
+<rect x="1020" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1020" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1020" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="1058" y1="175" x2="1058" y2="600" stroke="#6b7280" stroke-width="4"/>
+<rect x="1048" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1048" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="1106" y="418" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="1106" y="518" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="1106" y="618" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+</svg>

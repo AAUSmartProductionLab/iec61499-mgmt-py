@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="494" height="285" viewBox="-376 -120 1977 1140" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-376" y="-120" width="1977" height="1140" fill="#ffffff"/>
+<rect x="0" y="420" width="1225" height="480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="1225" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="350" width="1135" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="612" y="420" font-size="58" text-anchor="middle" fill="#1f2430">SKILL_Param_BOOL</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="10,155 42,175 10,195" fill="#b5452b"/>
+<text x="55" y="195" font-size="58" text-anchor="start" fill="#1f2430">CHECK</text>
+<polygon points="10,255 42,275 10,295" fill="#b5452b"/>
+<text x="55" y="295" font-size="58" text-anchor="start" fill="#1f2430">LATCH</text>
+<polygon points="1183,55 1215,75 1183,95" fill="#b5452b"/>
+<text x="1170" y="95" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="1183,155 1215,175 1183,195" fill="#b5452b"/>
+<text x="1170" y="195" font-size="58" text-anchor="end" fill="#1f2430">CHECKED</text>
+<polygon points="1183,255 1215,275 1183,295" fill="#b5452b"/>
+<text x="1170" y="295" font-size="58" text-anchor="end" fill="#1f2430">LATCHED</text>
+<rect x="12" y="484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="520" font-size="58" text-anchor="start" fill="#1f2430">Default</text>
+<rect x="12" y="584" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="620" font-size="58" text-anchor="start" fill="#1f2430">Requested</text>
+<rect x="12" y="684" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="720" font-size="58" text-anchor="start" fill="#1f2430">PreviousInRange</text>
+<rect x="12" y="784" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="820" font-size="58" text-anchor="start" fill="#1f2430">CalledByClient</text>
+<rect x="1181" y="484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="1170" y="520" font-size="58" text-anchor="end" fill="#1f2430">Value</text>
+<rect x="1181" y="584" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="1170" y="620" font-size="58" text-anchor="end" fill="#1f2430">AllInRange</text>
+<line x1="-40" y1="75" x2="-40" y2="500" stroke="#6b7280" stroke-width="4"/>
+<rect x="-50" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-68" y1="175" x2="-68" y2="700" stroke="#6b7280" stroke-width="4"/>
+<rect x="-78" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-78" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-78" y="690" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-96" y1="275" x2="-96" y2="800" stroke="#6b7280" stroke-width="4"/>
+<rect x="-106" y="265" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-106" y="790" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-106" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="-144" y="518" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<text x="-144" y="618" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<text x="-144" y="718" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<text x="-144" y="818" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<line x1="1265" y1="75" x2="1265" y2="500" stroke="#6b7280" stroke-width="4"/>
+<rect x="1255" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1255" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="1293" y1="175" x2="1293" y2="600" stroke="#6b7280" stroke-width="4"/>
+<rect x="1283" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1283" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="1321" y1="275" x2="1321" y2="500" stroke="#6b7280" stroke-width="4"/>
+<rect x="1311" y="265" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1311" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="1369" y="518" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="1369" y="618" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+</svg>
