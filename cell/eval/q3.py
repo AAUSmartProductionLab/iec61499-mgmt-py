@@ -105,7 +105,8 @@ def drifts(spec: ModuleSpec, boot: str, record_: dict, rng: random.Random) -> li
     out = [{"kind": "P1", "port": b, "was": html.unescape(a)} for kind, a, b in entries if kind == "write"]
     out += [{"kind": "P2", "source": a, "destination": b} for kind, a, b in entries if kind == "connect"]
     types = sorted({t for kind, a, t in entries if kind == "fb" and a != "RES" and "::SERVER" not in t
-                    and "::PUBLISH" not in t and "::SUBSCRIBE" not in t})
+                    and "::PUBLISH" not in t and "::SUBSCRIBE" not in t
+                    and "SKILL_Join" not in t})       # FORTE refuses a parallel block's join alone (NO_SUCH_OBJECT)
     inits = sorted(a for kind, a, b in entries if kind == "connect" and a.endswith(".INITO") and b.endswith(".INIT"))
     p3 = [(t, place, linked) for t in types for place in ("", *sorted(spec.composites)) for linked in (False, True)]
     out += [{"kind": "P3", "type": t, "place": place, "linked": rng.choice(inits) if linked else None,
@@ -120,8 +121,11 @@ def drifts(spec: ModuleSpec, boot: str, record_: dict, rng: random.Random) -> li
                     out.append({"kind": "A1", "skill": name, "path": list(path), "port": p, "was": v})
         for p, decl in data["parameters"].items():
             for key in ("default", "minimum", "maximum"):
-                if isinstance(decl.get(key), (int, float)) and not isinstance(decl.get(key), bool):
-                    out.append({"kind": "A1", "skill": name, "parameter": p, "key": key, "was": decl[key]})
+                if not isinstance(decl.get(key), (int, float)) or isinstance(decl.get(key), bool):
+                    continue
+                if key == "minimum" and not decl.get("default", decl[key]) > decl[key]:
+                    continue                   # a minimum is raised toward the default: no room, no change
+                out.append({"kind": "A1", "skill": name, "parameter": p, "key": key, "was": decl[key]})
     a2 = [{"kind": "A2", "skill": name, "at": p, "step": s} for name, comp in spec.composites.items()
           for p in range(len(comp.execute) + 1) for s in PARAMETERLESS]
     out += rng.sample(a2, min(SAMPLED["A2"], len(a2)))
@@ -143,8 +147,8 @@ def described(drift: dict, base: ModuleSpec) -> ModuleSpec:
                 decl = data["parameters"][drift["parameter"]]
                 if drift["key"] == "default":
                     decl["default"] = round((drift["was"] + decl["maximum"]) / 2, 3) if decl.get("maximum") else other(drift["was"])
-                elif drift["key"] == "minimum":
-                    decl["minimum"] = other(drift["was"])
+                elif drift["key"] == "minimum":            # raised: lowered, it may leave the primitive's range
+                    decl["minimum"] = round((drift["was"] + decl["default"]) / 2, 3)
                 else:
                     decl["maximum"] = max(other(drift["was"]), decl.get("default") or 0)
             else:
@@ -187,7 +191,8 @@ def another(literal_: str) -> str:
     if text in ("TRUE", "FALSE"):
         return "FALSE" if text == "TRUE" else "TRUE"
     if text.upper().startswith(("T#", "TIME#")):
-        return f"T#{q1.literal(text)[1] + 1}ms"
+        ms = q1.literal(text)[1]
+        return f"T#{ms // 1000 + 1}s" if ms % 1000 == 0 else f"T#{ms + 1}ms"
     if len(text) >= 2 and text[0] == text[-1] and text[0] in "'\"":
         return f"{text[:-1]}x{text[-1]}"
     prefix, _, bare = text.rpartition("#")
