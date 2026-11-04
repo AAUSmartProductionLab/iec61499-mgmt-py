@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="434" height="435" viewBox="-432 -120 1735 1740" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-432" y="-120" width="1735" height="1740" fill="#ffffff"/>
+<rect x="0" y="620" width="955" height="880" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="955" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="550" width="865" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="478" y="620" font-size="58" text-anchor="middle" fill="#1f2430">SK_Crimp</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="10,155 42,175 10,195" fill="#b5452b"/>
+<text x="55" y="195" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="10,255 42,275 10,295" fill="#b5452b"/>
+<text x="55" y="295" font-size="58" text-anchor="start" fill="#1f2430">HALT</text>
+<polygon points="10,355 42,375 10,395" fill="#b5452b"/>
+<text x="55" y="395" font-size="58" text-anchor="start" fill="#1f2430">ABORT</text>
+<polygon points="10,455 42,475 10,495" fill="#b5452b"/>
+<text x="55" y="495" font-size="58" text-anchor="start" fill="#1f2430">RESET</text>
+<polygon points="913,55 945,75 913,95" fill="#b5452b"/>
+<text x="900" y="95" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="913,155 945,175 913,195" fill="#b5452b"/>
+<text x="900" y="195" font-size="58" text-anchor="end" fill="#1f2430">SUCCESS</text>
+<polygon points="913,255 945,275 913,295" fill="#b5452b"/>
+<text x="900" y="295" font-size="58" text-anchor="end" fill="#1f2430">FAILURE</text>
+<rect x="12" y="684" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="720" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="12" y="784" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="820" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="12" y="884" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="920" font-size="58" text-anchor="start" fill="#1f2430">UaPath</text>
+<rect x="12" y="984" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="1020" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="12" y="1084" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="1120" font-size="58" text-anchor="start" fill="#1f2430">Methods</text>
+<rect x="12" y="1184" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="1220" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
+<rect x="12" y="1284" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="1320" font-size="58" text-anchor="start" fill="#1f2430">ReleaseAfter</text>
+<rect x="12" y="1384" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="55" y="1420" font-size="58" text-anchor="start" fill="#1f2430">Duration</text>
+<rect x="911" y="684" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="900" y="720" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+<rect x="911" y="784" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="900" y="820" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
+<line x1="-40" y1="75" x2="-40" y2="1400" stroke="#6b7280" stroke-width="4"/>
+<rect x="-50" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="690" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="790" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="890" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="990" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="1090" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="1190" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="1290" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="1390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-68" y1="175" x2="-68" y2="1400" stroke="#6b7280" stroke-width="4"/>
+<rect x="-78" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-78" y="1390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="-116" y="718" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-116" y="818" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-116" y="918" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-116" y="1018" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<text x="-116" y="1118" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<text x="-116" y="1218" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-116" y="1318" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<text x="-116" y="1418" font-size="50" text-anchor="end" fill="#6b7280">LREAL</text>
+<line x1="995" y1="275" x2="995" y2="800" stroke="#6b7280" stroke-width="4"/>
+<rect x="985" y="265" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="985" y="790" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="1043" y="718" font-size="50" text-anchor="start" fill="#6b7280">USINT</text>
+<text x="1043" y="818" font-size="50" text-anchor="start" fill="#6b7280">UINT</text>
+</svg>
