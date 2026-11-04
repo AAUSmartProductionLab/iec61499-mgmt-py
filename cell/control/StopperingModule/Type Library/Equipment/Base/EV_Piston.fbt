@@ -1,30 +1,47 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="EV_Piston" Comment="Unpacks the equipment's state channel into named values (its inputs and who holds it) for a skill. Technical: Typed view of Piston's state channel (inputs and holder)">
+<FBType Name="EV_Piston" Comment="Names the equipment's two channels, and unpacks its state channel into named values (its inputs and who holds it) for a skill. Technical: Names Piston's channels; typed view of its state channel (inputs and holder)">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="stoppering" />
   <InterfaceList>
     <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Name the equipment's channels">
+        <With Var="Module" />
+      </Event>
       <Event Name="REQ" Type="Event" Comment="The equipment's state arrived">
         <With Var="I_Holder" />
       </Event>
     </EventInputs>
     <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="IdState and IdCmd are set">
+        <With Var="IdState" />
+        <With Var="IdCmd" />
+      </Event>
       <Event Name="CNF" Type="Event" Comment="The values below are updated">
         <With Var="Holder" />
       </Event>
     </EventOutputs>
     <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
       <VarDeclaration Name="I_Holder" Type="WSTRING" Comment="Holder as read or received" />
     </InputVars>
     <OutputVars>
       <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who holds the equipment (empty: free)" />
+      <VarDeclaration Name="IdState" Type="WSTRING" Comment="Local channel of the equipment's state" />
+      <VarDeclaration Name="IdCmd" Type="WSTRING" Comment="Local channel of the equipment's commands" />
     </OutputVars>
   </InterfaceList>
   <SimpleFB>
+    <ECState Name="INIT">
+      <ECAction Algorithm="INIT" Output="INITO" />
+    </ECState>
     <ECState Name="REQ">
       <ECAction Algorithm="REQ" Output="CNF" />
     </ECState>
+    <Algorithm Name="INIT">
+      <ST>IdState := CONCAT(CONCAT("loc[", Module), "/Piston/state]");
+IdCmd := CONCAT(CONCAT("loc[", Module), "/Piston/cmd]");</ST>
+    </Algorithm>
     <Algorithm Name="REQ">
       <ST>Holder := I_Holder;</ST>
     </Algorithm>

@@ -204,6 +204,12 @@
     "exported": false
   },
   {
+    "type": "modlib::MOD_StateGate",
+    "kind": "BasicFB",
+    "file": "Module/Base/MOD_StateGate.fbt",
+    "exported": false
+  },
+  {
     "type": "modlib::MOD_StateLogic",
     "kind": "BasicFB",
     "file": "Module/Base/MOD_StateLogic.fbt",
@@ -237,6 +243,18 @@
     "type": "modlib::SKILL_Core",
     "kind": "CompositeFB",
     "file": "Skills/SKILL_Core.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_RunLogic",
+    "kind": "BasicFB",
+    "file": "Skills/Base/SKILL_RunLogic.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Run",
+    "kind": "CompositeFB",
+    "file": "Skills/SKILL_Run.fbt",
     "exported": false
   },
   {
@@ -330,6 +348,12 @@
     "exported": true
   },
   {
+    "type": "stoppering::EP_LinearAxis",
+    "kind": "CompositeFB",
+    "file": "Equipment/Ports/EP_LinearAxis.fbt",
+    "exported": true
+  },
+  {
     "type": "stoppering::EL_Piston",
     "kind": "BasicFB",
     "file": "Equipment/Base/EL_Piston.fbt",
@@ -354,9 +378,15 @@
     "exported": true
   },
   {
-    "type": "stoppering::SL_Home",
+    "type": "stoppering::EP_Piston",
+    "kind": "CompositeFB",
+    "file": "Equipment/Ports/EP_Piston.fbt",
+    "exported": true
+  },
+  {
+    "type": "stoppering::SC_Home",
     "kind": "BasicFB",
-    "file": "Skills/Logic/SL_Home.fbt",
+    "file": "Skills/Contract/SC_Home.fbt",
     "exported": true
   },
   {
@@ -366,9 +396,9 @@
     "exported": true
   },
   {
-    "type": "stoppering::SL_MoveAxis",
+    "type": "stoppering::SC_MoveAxis",
     "kind": "BasicFB",
-    "file": "Skills/Logic/SL_MoveAxis.fbt",
+    "file": "Skills/Contract/SC_MoveAxis.fbt",
     "exported": true
   },
   {
@@ -378,9 +408,9 @@
     "exported": true
   },
   {
-    "type": "stoppering::SL_PressStopper",
+    "type": "stoppering::SC_PressStopper",
     "kind": "BasicFB",
-    "file": "Skills/Logic/SL_PressStopper.fbt",
+    "file": "Skills/Contract/SC_PressStopper.fbt",
     "exported": true
   },
   {
@@ -390,9 +420,9 @@
     "exported": true
   },
   {
-    "type": "stoppering::SL_RetractPiston",
+    "type": "stoppering::SC_RetractPiston",
     "kind": "BasicFB",
-    "file": "Skills/Logic/SL_RetractPiston.fbt",
+    "file": "Skills/Contract/SC_RetractPiston.fbt",
     "exported": true
   },
   {

@@ -37,6 +37,7 @@
     <FB Name="Stop" Type="iec61499::net::SERVER_2_1" x="1830" y="2500" Comment="The OPC UA method Module/Stop(Session)." />
     <FB Name="Abort" Type="iec61499::net::SERVER_2_1" x="4460" y="2500" Comment="The OPC UA method Module/Abort(Session)." />
     <FB Name="Clear" Type="iec61499::net::SERVER_2_1" x="7110" y="2500" Comment="The OPC UA method Module/Clear(Session)." />
+    <FB Name="Gate" Type="modlib::MOD_StateGate" x="13305" y="1000" Comment="Decides the commands: only from the owner, only in a state PackML allows them in; answers at once." />
     <FB Name="Logic" Type="modlib::MOD_StateLogic" x="10080" y="2500" Comment="The PackML state machine." />
     <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="1830" y="4900" Comment="Writes Module/State to OPC UA." />
     <FB Name="PubState" Type="iec61499::net::PUBLISH_1" x="4220" y="4900" Comment="Tells every block the module state, on the state channel.">
@@ -93,43 +94,61 @@
       <Connection Source="SubAct.INITO" Destination="INITO">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Owner.CHG" Destination="Logic.OWNER_CHG">
+      <Connection Source="Owner.CHG" Destination="Gate.OWNER_CHG">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Reset.IND" Destination="Logic.RESET_REQ">
+      <Connection Source="Reset.IND" Destination="Gate.RESET_REQ">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.RESET_RSP" Destination="Reset.RSP">
+      <Connection Source="Gate.RESET_RSP" Destination="Reset.RSP">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Start.IND" Destination="Logic.START_REQ">
+      <Connection Source="Gate.GO_RESET" Destination="Logic.RESET">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.START_RSP" Destination="Start.RSP">
+      <Connection Source="Start.IND" Destination="Gate.START_REQ">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Stop.IND" Destination="Logic.STOP_REQ">
+      <Connection Source="Gate.START_RSP" Destination="Start.RSP">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.STOP_RSP" Destination="Stop.RSP">
+      <Connection Source="Gate.GO_START" Destination="Logic.START">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Abort.IND" Destination="Logic.ABORT_REQ">
+      <Connection Source="Stop.IND" Destination="Gate.STOP_REQ">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.ABORT_RSP" Destination="Abort.RSP">
+      <Connection Source="Gate.STOP_RSP" Destination="Stop.RSP">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Clear.IND" Destination="Logic.CLEAR_REQ">
+      <Connection Source="Gate.GO_STOP" Destination="Logic.STOP">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.CLEAR_RSP" Destination="Clear.RSP">
+      <Connection Source="Abort.IND" Destination="Gate.ABORT_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Gate.ABORT_RSP" Destination="Abort.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Gate.GO_ABORT" Destination="Logic.ABORT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Clear.IND" Destination="Gate.CLEAR_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Gate.CLEAR_RSP" Destination="Clear.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Gate.GO_CLEAR" Destination="Logic.CLEAR">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Logic.CNF" Destination="PubUa.REQ">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Logic.CNF" Destination="PubState.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.CNF" Destination="Gate.STATE_CHG">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="SubQuery.IND" Destination="PubState.REQ">
@@ -200,67 +219,67 @@
       <Connection Source="StopTimeout" Destination="Wd.DT">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Owner.Owner" Destination="Logic.Owner">
+      <Connection Source="Owner.Owner" Destination="Gate.Owner">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Ids.IdReset" Destination="Reset.ID">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Reset.RD_1" Destination="Logic.ResetSession">
+      <Connection Source="Reset.RD_1" Destination="Gate.ResetSession">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.Accepted" Destination="Reset.SD_1">
+      <Connection Source="Gate.Accepted" Destination="Reset.SD_1">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.ErrorID" Destination="Reset.SD_2">
+      <Connection Source="Gate.ErrorID" Destination="Reset.SD_2">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Ids.IdStart" Destination="Start.ID">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Start.RD_1" Destination="Logic.StartSession">
+      <Connection Source="Start.RD_1" Destination="Gate.StartSession">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.Accepted" Destination="Start.SD_1">
+      <Connection Source="Gate.Accepted" Destination="Start.SD_1">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.ErrorID" Destination="Start.SD_2">
+      <Connection Source="Gate.ErrorID" Destination="Start.SD_2">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Ids.IdStop" Destination="Stop.ID">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Stop.RD_1" Destination="Logic.StopSession">
+      <Connection Source="Stop.RD_1" Destination="Gate.StopSession">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.Accepted" Destination="Stop.SD_1">
+      <Connection Source="Gate.Accepted" Destination="Stop.SD_1">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.ErrorID" Destination="Stop.SD_2">
+      <Connection Source="Gate.ErrorID" Destination="Stop.SD_2">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Ids.IdAbort" Destination="Abort.ID">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Abort.RD_1" Destination="Logic.AbortSession">
+      <Connection Source="Abort.RD_1" Destination="Gate.AbortSession">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.Accepted" Destination="Abort.SD_1">
+      <Connection Source="Gate.Accepted" Destination="Abort.SD_1">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.ErrorID" Destination="Abort.SD_2">
+      <Connection Source="Gate.ErrorID" Destination="Abort.SD_2">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Ids.IdClear" Destination="Clear.ID">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Clear.RD_1" Destination="Logic.ClearSession">
+      <Connection Source="Clear.RD_1" Destination="Gate.ClearSession">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.Accepted" Destination="Clear.SD_1">
+      <Connection Source="Gate.Accepted" Destination="Clear.SD_1">
         <Attribute Name="Visible" Value="false" />
       </Connection>
-      <Connection Source="Logic.ErrorID" Destination="Clear.SD_2">
+      <Connection Source="Gate.ErrorID" Destination="Clear.SD_2">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Ids.IdPub" Destination="PubUa.ID">
@@ -279,6 +298,9 @@
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="Logic.State" Destination="PubState.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.State" Destination="Gate.State">
         <Attribute Name="Visible" Value="false" />
       </Connection>
       <Connection Source="SubAct.RD_1" Destination="Count.Delta">

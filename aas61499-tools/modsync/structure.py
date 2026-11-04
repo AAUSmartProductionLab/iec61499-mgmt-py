@@ -79,7 +79,8 @@ def read_primitives(folder: str | Path) -> dict[str, dict]:
         timeout = inputs["Timeout"].get("InitialValue") if "Timeout" in inputs else None
         found[root.get("Name")[len("SK_"):]] = {
             "package": info.get("packageName") if info is not None else "",
-            "equipment": literal(written.get(("Logic", "Equipment"))),
+            "equipment": next((fb.get("Type").rpartition("::EP_")[2] for fb in root.findall("FBNetwork/FB")
+                               if fb.get("Name") == "Port" and "::EP_" in fb.get("Type", "")), None),
             "parameters": {n: declared(v.get("Type"), v.get("InitialValue"), written.get((f"Par_{n}", "Lower")),
                                        written.get((f"Par_{n}", "Upper")))
                            for n, v in inputs.items() if n not in STANDARD},

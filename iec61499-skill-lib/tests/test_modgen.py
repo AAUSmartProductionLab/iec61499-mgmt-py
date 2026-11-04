@@ -299,6 +299,23 @@ def test_every_state_machine_is_laid_out_as_the_ide_draws_it(project):
             assert cond == "1" or cond.startswith("[") or cond.split("[")[0] in events, (path.name, cond)
 
 
+def test_who_may_command_the_module_is_decided_in_front_of_its_state_machine():
+    """MOD_StateGate answers Reset, Start, Stop, Abort and Clear (owner only, only where PackML allows
+    the command, decided on the published state); MOD_StateLogic takes only the accepted commands."""
+    logic, _ = st(LIBRARY_PROJECT, "Module/Base", "MOD_StateLogic")
+    events = {e.get("Name") for e in logic.iterfind("InterfaceList/EventInputs/Event")}
+    assert {"RESET", "START", "STOP", "ABORT", "CLEAR"} <= events and "RESET_REQ" not in events
+    transitions = {(t.get("Source"), t.get("Destination"), t.get("Condition")) for t in logic.iter("ECTransition")}
+    assert len(transitions) <= 25
+    assert {("Execute", "Stopping", "STOP"), ("StopProcW", "Aborting", "ABORT"), ("Aborted", "Clearing", "CLEAR")} <= transitions
+    _, code = st(LIBRARY_PROJECT, "Module/Base", "MOD_StateGate")
+    assert "Accepted := Owned AND ((State = 4) OR (State = 6) OR (State = 15));" in code      # Stop
+    assert "Accepted := Owned AND ((State = 2) OR (State = 4) OR (State = 6) OR (State = 7) OR (State = 15));" in code
+    manager, _ = st(LIBRARY_PROJECT, "Module", "MOD_StateManager")
+    wired = {(c.get("Source"), c.get("Destination")) for c in manager.iter("Connection")}
+    assert {("Stop.IND", "Gate.STOP_REQ"), ("Gate.GO_STOP", "Logic.STOP"), ("Logic.CNF", "Gate.STATE_CHG")} <= wired
+
+
 def test_who_may_command_a_skill_is_decided_in_front_of_its_state_machine():
     """SKILL_Gate answers a client's call and turns the module's state into commands; SKILL_Control
     then sees only START, HALT, ABORT and RESET, the same whoever gives them, so each of its states
@@ -320,14 +337,22 @@ def test_who_may_command_a_skill_is_decided_in_front_of_its_state_machine():
             ("Control.PUB", "Gate.SKILL_CHG"), ("Gate.STOP_RSP", "UaStop.RSP")} <= wired
 
 
-def test_skill_logic_carries_contract_range_and_lock():
-    root, code = st("FillerModule", "Skills/Logic", "SL_MoveNeedleDown")
-    conditions = {t.get("Condition") for t in root.iter("ECTransition")}
-    assert "SAMPLE[(Position >= Distance) OR AtBottom]" in conditions
+def test_a_primitives_own_part_is_its_contract_the_run_is_the_same_for_all():
+    """SC_<Skill> says what the skill is (conditions, command, time); SKILL_Run, the same for every
+    primitive, runs it: the lock, the end condition, the closing command."""
+    _, code = st("FillerModule", "Skills/Contract", "SC_MoveNeedleDown")
+    assert "Post := (Position >= Distance) OR AtBottom;" in code
+    assert "Pre := NOT (AtTop AND AtBottom);" in code and "Inv := NOT (AtTop AND AtBottom);" in code
+    assert "IdParams := " in code and "/Parameters/Distance" in code          # SC_ names its OPC UA variables
+    run, code = st(LIBRARY_PROJECT, "Skills/Base", "SKILL_RunLogic")
+    conditions = {t.get("Condition") for t in run.iter("ECTransition")}
+    assert {"SAMPLE[Post AND NOT Timed]", "SAMPLE[NOT Inv]", "[NOT Pre]", "TIMER[Timed]"} <= conditions
     assert 'SAMPLE[(EqHolder <> "") AND (EqHolder <> Holder)]' in conditions  # lost the equipment
     assert "C_Holder := Holder;" in code
-    assert "IdParams := " in code and "/Parameters/Distance" in code          # SL_ names its OPC UA variables
     skill, _ = st("FillerModule", "Skills", "SK_MoveNeedleDown")
+    blocks = {fb.get("Name"): fb.get("Type") for fb in skill.iter("FB")}
+    assert blocks["Run"] == "modlib::SKILL_Run" and blocks["Port"] == "filler::EP_NeedleAxis"
+    assert not {"Logic", "EqState", "EqView", "Driver", "EqCmd", "Timer"} & set(blocks)
     latch = next(fb for fb in skill.iter("FB") if fb.get("Name") == "Par_Distance")
     assert latch.get("Type") == "modlib::SKILL_Param_LREAL"
     assert {p.get("Name"): p.get("Value") for p in latch.iter("Parameter")} == {"Lower": "0.0", "Upper": "50.0"}
@@ -372,15 +397,15 @@ def code_of(path):
 
 def test_open_loop_skill_ends_by_time_and_passes_its_argument(tmp_path):
     types = servo(tmp_path)
-    root, code = code_of(types / "Skills" / "Logic" / "SL_MoveArm.fbt")
-    assert "TimerDT := MUL_TIME(T#1s, Settle);" in code
-    assert "C_Arg := Angle;" in code
-    conditions = {(t.get("Source"), t.get("Condition")) for t in root.iter("ECTransition")}
-    assert ("Running", "TIMER") in conditions
+    _, code = code_of(types / "Skills" / "Contract" / "SC_MoveArm.fbt")
+    assert "Timed := TRUE;\nRunTime := MUL_TIME(T#1s, Settle);" in code
+    assert "Arg := Angle;" in code and "Post := FALSE;" in code
     assert "N_Angle := Arg;" in code_of(types / "Equipment" / "Commands" / "EC_Arm.fbt")[1]
+    skill = ET.parse(types / "Skills" / "SK_MoveArm.fbt").getroot()
+    assert ("Run.C_Arg", "Port.Arg") in {(c.get("Source"), c.get("Destination")) for c in skill.iter("Connection")}
     # A press of a fixed time: no argument, and a final command that takes time itself.
-    _, code = st("StopperingModule", "Skills/Logic", "SL_PressStopper")
-    assert "TimerDT := MUL_TIME(T#1s, 3.0);" in code and "C_Command := 3;" in code       # Back, when it ends
+    _, code = st("StopperingModule", "Skills/Contract", "SC_PressStopper")
+    assert "RunTime := MUL_TIME(T#1s, 3.0);" in code and "StopCommand := 3;" in code    # Back, when it ends
 
 
 def test_the_command_table_is_in_the_skills_not_in_the_equipment_io():
@@ -392,11 +417,13 @@ def test_the_command_table_is_in_the_skills_not_in_the_equipment_io():
     logic, code = st("StopperingModule", "Equipment/Base", "EL_Piston")
     assert "Command" not in code and "Phase" not in code and "3000" not in code
     assert "N_Extend := C_Extend;" in code and "O_Extend := O_Extend AND N_Extend;" in code   # break before make
+    port, _ = st("FillingModule", "Equipment/Ports", "EP_LinearAxis")      # in every skill of the axis
+    assert {fb.get("Name"): fb.get("Type") for fb in port.iter("FB")}["Driver"] == "filling::EC_LinearAxis"
     skill, _ = st("FillingModule", "Skills", "SK_Home")
-    assert {fb.get("Name"): fb.get("Type") for fb in skill.iter("FB")}["Driver"] == "filling::EC_LinearAxis"
+    assert {fb.get("Name"): fb.get("Type") for fb in skill.iter("FB")}["Port"] == "filling::EP_LinearAxis"
     assert ("Ending", "EndDone", "PLAYED[Outcome = 1]") in {
         (x.get("Source"), x.get("Destination"), x.get("Condition"))
-        for x in st("FillingModule", "Skills/Logic", "SL_Home")[0].iter("ECTransition")}
+        for x in st(LIBRARY_PROJECT, "Skills/Base", "SKILL_RunLogic")[0].iter("ECTransition")}
 
 
 def test_an_axis_with_a_position_moves_itself_to_where_it_is_told():

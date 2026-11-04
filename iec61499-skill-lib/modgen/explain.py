@@ -29,8 +29,9 @@ LIBRARY = {
                         "Resetting and Stopping procedures and publishes the state for clients and for every block.",
     "MOD_StateIds": "Builds the OPC UA addresses (Module/Reset ... Module/State) and the local channel names of the "
                     "state manager.",
-    "MOD_StateLogic": "The PackML state machine itself: accepts a command only from the owner and only where PackML "
-                      "allows it; while Stopping it waits until no skill runs any more.",
+    "MOD_StateLogic": "The PackML state machine itself: Reset, Start, Stop, Abort and Clear take it from state to "
+                      "state (MOD_StateGate has already checked who sent them, and that PackML allows them now); "
+                      "while Stopping it waits until no skill runs any more.",
     "MOD_ActivityCount": "Counts the skills that are running: every skill says +1 when it starts and -1 when it ends.",
     "MOD_OwnerView": "Tells the block it sits in who occupies the module, and asks for it once at start.",
     "MOD_OwnerLatch": "Keeps the last owner heard on the owner channel.",
@@ -44,6 +45,15 @@ LIBRARY = {
     "SKILL_Control": "The skill's state machine inside SKILL_Core: what Start, Stop, Abort and Reset do in each state. "
                      "A client's command reaches it only once SKILL_Gate has accepted it, so here a command is the "
                      "same from a client or from a parent.",
+    "MOD_StateGate": "The module's front desk inside MOD_StateManager: answers Reset, Start, Stop, Abort or Clear at "
+                     "once (only from the module's owner, only in a state PackML allows it in) and passes an accepted "
+                     "command on to MOD_StateLogic.",
+    "SKILL_Run": "One run of a skill primitive, the same for every primitive: waits until the equipment is free, checks "
+                 "the precondition, sends the command, then watches the conditions (or a timer) until the skill is "
+                 "done, has failed or has timed out, and sends the closing command. What the skill is comes in from its "
+                 "contract (SC_).",
+    "SKILL_RunLogic": "The state machine of SKILL_Run: the precondition, waiting for the equipment, the command, the "
+                      "end condition, the timeout, the closing command.",
     "SKILL_Gate": "The front desk of a skill, inside SKILL_Core: answers a client's Start, Stop, Abort or Reset at "
                   "once (only the module's owner; Start only with the module in Execute, the skill not running, the "
                   "values in range and the equipment free) and passes an accepted command on to SKILL_Control, as a "
@@ -73,18 +83,21 @@ LIBRARY_PREFIX = {
 MODULE_PREFIX = {
     "SK_": "A skill primitive: one action of one piece of equipment (move the axis, run the pump, weigh). It can be "
            "called on its own over OPC UA, or be a step of a bigger skill. Inside: SKILL_Core (state machine and "
-           "OPC UA methods), a parameter block per parameter, SL_ (what this skill does and when it is done) and EC_ "
-           "(the equipment's command table), and the blocks that talk to the equipment over local channels.",
-    "SL_": "What a skill primitive does: wait until the equipment is free, check the precondition, send the command, "
-           "then watch the equipment's signals (or a timer) until the skill is done, has failed or has timed out, "
-           "and send the closing command.",
+           "OPC UA methods), a parameter block per parameter, SC_ (its contract: what this skill does and when it is "
+           "done), SKILL_Run (one run, the same for every primitive) and EP_ (the equipment as the skill sees it).",
+    "SC_": "The contract of a skill primitive, the only part that is its own: which command it sends (and with what "
+           "argument, and which when it ends), how long it may run, and three conditions on the equipment's signals "
+           "and its parameters: when it may start, when it is done, what must hold while it runs.",
+    "EP_": "The equipment as its skills see it, the same in every skill that uses it: plays a command (its output "
+           "values, phase by phase) on the equipment's command channel, and gives the equipment's newest state.",
     "EQ_": "An equipment block: the only block that touches this equipment's pins. Skills send it what to switch "
            "over a local channel; it switches the outputs (off first, then on), reads the inputs every cycle and "
            "reports them to the skills and to OPC UA. One skill holds it at a time; on release or when the module "
            "aborts it switches everything off.",
     "EL_": "The logic of an equipment block: one holder at a time, outputs switched off before new ones go on, all off "
            "on release or abort, inputs reported when they change.",
-    "EV_": "Unpacks the equipment's state channel into named values (its inputs and who holds it) for a skill.",
+    "EV_": "Names the equipment's two channels, and unpacks its state channel into named values (its inputs and who "
+           "holds it) for a skill.",
     "EC_": "The equipment's command table: turns a command's name (Up, Down, Run, ...) into the output values to "
            "switch, phase by phase with their times.",
 }
@@ -108,20 +121,28 @@ def type_comment(name: str, technical: str | None) -> str:
 INSIDE = {
     "SK_": {
         "Control": "The skill's state machine (SKILL_Core): checks a client's Start, publishes State and ErrorID, "
-                   "offers Stop, Abort and Reset over OPC UA, and starts Logic when the run may begin.",
-        "Logic": "What this skill does (its SL_ type): waits for the equipment, checks the precondition, sends the "
-                 "command and watches the signals until the skill is done.",
+                   "offers Stop, Abort and Reset over OPC UA, and starts the run when it may begin.",
+        "Contract": "What this skill is (its SC_ type): the command it sends, how long it may run, and when it may "
+                    "start, is done, and must stop.",
+        "Run": "One run (SKILL_Run, the same in every primitive): waits for the equipment, checks the contract's "
+               "precondition, sends the command and watches the conditions until the skill is done.",
+        "Port": "The equipment as this skill sees it (EP_): its state in, the command out.",
         "UaStart": "The OPC UA method Start: a client's call arrives here with its session id and the parameters; "
                    "Control's answer (Accepted, ErrorID) goes back to the client.",
         "PubParams": "Writes the parameter values of the current run to OPC UA (Parameters/...).",
         "PubResults": "Writes the skill's results to OPC UA (Results/...) when a run succeeds.",
-        "EqState": "Listens to the equipment's state channel: its inputs and who holds it.",
-        "EqView": "Unpacks the equipment's state into named values for Logic.",
+    },
+    "SKILL_Run": {
+        "Logic": "The run's state machine (SKILL_RunLogic).",
+        "Timer": "Ends a skill that runs for a time, or fails a skill that takes longer than its timeout.",
         "WaitT": "Waits up to half a second for the equipment to become free before giving up (Busy).",
-        "Driver": "The equipment's command table (EC_): turns Logic's command into output values, phase by phase.",
+    },
+    "EP_": {
+        "EqView": "Names the equipment's channels, and unpacks its state into named values.",
+        "EqState": "Listens to the equipment's state channel: its inputs and who holds it.",
+        "Driver": "The equipment's command table (EC_): turns a command into output values, phase by phase.",
         "PhaseT": "Times the phases of a command.",
         "EqCmd": "Sends the output values and the holder's name to the equipment block on its command channel.",
-        "Timer": "Ends a skill that runs for a time, or fails a skill that takes longer than its timeout.",
     },
     "EQ_": {
         "Logic": "The equipment's logic (EL_): takes commands from one holder at a time, switches the outputs (off "
@@ -151,6 +172,7 @@ INSIDE = {
         "Stop": "The OPC UA method Module/Stop(Session).",
         "Abort": "The OPC UA method Module/Abort(Session).",
         "Clear": "The OPC UA method Module/Clear(Session).",
+        "Gate": "Decides the commands: only from the owner, only in a state PackML allows them in; answers at once.",
         "Logic": "The PackML state machine.",
         "PubUa": "Writes Module/State to OPC UA.",
         "PubState": "Tells every block the module state, on the state channel.",

@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SC_MoveAxis" Comment="The contract of a skill primitive, the only part that is its own: which command it sends (and with what argument, and which when it ends), how long it may run, and three conditions on the equipment's signals and its parameters: when it may start, when it is done, what must hold while it runs. Technical: MoveAxis: Precondition Homed; LinearAxis.MoveTo until NOT Moving AND ABS(ActualPosition - Position) &lt; 0.001; Invariant TRUE">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="filling" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise: name the OPC UA variables of the parameters and results">
+        <With Var="UaRoot" />
+        <With Var="UaPath" />
+      </Event>
+      <Event Name="START" Type="Event" Comment="A run starts, with the parameters: say what the skill does">
+        <With Var="Position" />
+        <With Var="Timeout" />
+      </Event>
+      <Event Name="SAMPLE" Type="Event" Comment="The equipment's newest state arrived">
+        <With Var="ActualPosition" />
+        <With Var="Homed" />
+        <With Var="Moving" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
+        <With Var="IdParams" />
+      </Event>
+      <Event Name="STARTO" Type="Event" Comment="What the skill does in this run, and whether it may start">
+        <With Var="Pre" />
+        <With Var="Post" />
+        <With Var="Timed" />
+        <With Var="RunTime" />
+        <With Var="Command" />
+        <With Var="Arg" />
+        <With Var="StopCommand" />
+      </Event>
+      <Event Name="SAMPLEO" Type="Event" Comment="Post, Inv and the results for the newest state">
+        <With Var="Post" />
+        <With Var="Inv" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaPath" Type="WSTRING" Comment="This skill's OPC UA folder below UaRoot, e.g. /Skills/Dispensing" />
+      <VarDeclaration Name="Position" Type="LREAL" Comment="Parameter Position mm, 0.0 to 60.0: Where to move to" />
+      <VarDeclaration Name="Timeout" Type="TIME" Comment="How long the run may take before it fails with Timeout (3)" />
+      <VarDeclaration Name="ActualPosition" Type="LREAL" Comment="LinearAxis: ActualPosition (mm), worked out by the equipment" />
+      <VarDeclaration Name="Homed" Type="BOOL" Comment="LinearAxis: Homed, worked out by the equipment" />
+      <VarDeclaration Name="Moving" Type="BOOL" Comment="LinearAxis: Moving, worked out by the equipment" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Pre" Type="BOOL" Comment="The precondition holds: the run may start" />
+      <VarDeclaration Name="Post" Type="BOOL" Comment="The postcondition holds: the skill is done" />
+      <VarDeclaration Name="Inv" Type="BOOL" Comment="The invariant holds: the run may go on" />
+      <VarDeclaration Name="Timed" Type="BOOL" Comment="The skill ends after RunTime (TRUE), or when Post holds (FALSE)" />
+      <VarDeclaration Name="RunTime" Type="TIME" Comment="How long it runs (Timed), or may take before it fails with Timeout (3)" />
+      <VarDeclaration Name="Command" Type="USINT" Comment="The command's code to send while it runs" />
+      <VarDeclaration Name="Arg" Type="LREAL" Comment="The command's argument (e.g. a position)" />
+      <VarDeclaration Name="StopCommand" Type="USINT" Comment="The command's code to send when it is done or halted" />
+      <VarDeclaration Name="IdParams" Type="WSTRING" Comment="OPC UA ID of the published parameters" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <ECC>
+      <ECState Name="Wait" x="2220" y="0" />
+      <ECState Name="Init" x="0" y="1260">
+        <ECAction Algorithm="Alg_Init" Output="INITO" />
+      </ECState>
+      <ECState Name="Start" x="1765" y="1260">
+        <ECAction Algorithm="Alg_Start" />
+      </ECState>
+      <ECState Name="Started" x="1648" y="2520">
+        <ECAction Algorithm="Alg_Evaluate" Output="STARTO" />
+      </ECState>
+      <ECState Name="Sample" x="3295" y="1260">
+        <ECAction Algorithm="Alg_Evaluate" Output="SAMPLEO" />
+      </ECState>
+      <ECTransition Source="Wait" Destination="Init" Condition="INIT" x="1446" y="710" />
+      <ECTransition Source="Init" Destination="Wait" Condition="1" x="1926" y="870" />
+      <ECTransition Source="Wait" Destination="Start" Condition="START" x="2270" y="710" />
+      <ECTransition Source="Start" Destination="Started" Condition="1" x="2270" y="1970" />
+      <ECTransition Source="Started" Destination="Wait" Condition="1" x="3760" y="1340" />
+      <ECTransition Source="Wait" Destination="Sample" Condition="SAMPLE" x="3184" y="710" />
+      <ECTransition Source="Sample" Destination="Wait" Condition="1" x="3664" y="870" />
+    </ECC>
+    <Algorithm Name="Alg_Init">
+      <ST>IdParams := CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, UaPath)), "/Parameters/Position"), "]");</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Start">
+      <ST>Timed := FALSE;
+RunTime := Timeout;
+Command := 3;
+Arg := Position;
+StopCommand := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Evaluate">
+      <ST>Pre := Homed;
+Post := NOT Moving AND ABS(ActualPosition - Position) &lt; 0.001;
+Inv := TRUE;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

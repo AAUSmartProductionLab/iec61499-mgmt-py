@@ -20,6 +20,32 @@ A running log of design considerations made while building, for writing the pape
 
 ## 4 Nov 2026
 
+- **A skill primitive is its contract; the run and the equipment port are shared.** *Journal* (how
+  much has to be engineered per skill), *CIRP* (a new primitive is a small, checkable piece).
+  - Before, each primitive had its own basic type `SL_<Skill>` of 23 states and 41 transitions, of
+    which only five things were its own (precondition, postcondition, invariant, the command with its
+    argument and time, the closing command and results), and five blocks to reach its equipment
+    (`EqState`, `EqView`, `Driver`, `PhaseT`, `EqCmd`) wired the same way in every primitive of that
+    equipment: 13 blocks and 68 connections for a primitive without parameters.
+  - Now: `SC_<Skill>`, the contract, a basic type of 5 states whose two algorithms are those five
+    things in ST (`Pre := Homed; Post := NOT Moving AND ...; Command := 3; Arg := Position; ...`);
+    `SKILL_Run` in the library, one run of any primitive (the old `SL_` state machine, its conditions
+    and constants as inputs, with its two timers); `EP_<Item>`, the equipment as a skill sees it, one
+    type per equipment (state in, command out, the command table inside). A primitive is now
+    `Control`, `UaStart` and its parameter blocks, `Contract`, `Run` and `Port`: 7 blocks for MoveAxis
+    instead of 13. `EV_` also names the equipment's channels, which `SL_` used to.
+  - The interface of `SK_<Skill>` (rule set 2, section 2) and the behaviour are unchanged; FORTE has to
+    be built again (new types). Chosen instead of one contract block of library comparisons
+    (`SKILL_Condition_*`), which would make a primitive need no type at all but cannot express
+    `ABS(ActualPosition - Position) < 0.001` without a block per operator; that is the next step if
+    primitives are to be made online.
+  - Found while building FORTE: the 4diac IDE 3.3 export cannot give a value to an input of a
+    composite inside a composite (the C++ has no such member), so the port takes the item's name from
+    its type (`EP_<Item>`, which names the channels), and `modsync` reads a primitive's equipment from
+    the port's type instead of the old `Logic.Equipment` value. And a parameter may not take one of
+    the contract's names (Capping's `Crimp` has a `Duration`): the contract's time is `RunTime`, and
+    the spec refuses such names.
+
 - **Who may command a skill is decided in front of its state machine (SKILL_Gate).** *Journal*
   (the skill's behaviour as a readable state machine), *CIRP* (the same skill interface, unchanged).
   - `SKILL_Control` had 25 states and 101 transitions: each of its 7 waiting states had to take each
@@ -34,6 +60,10 @@ A running log of design considerations made while building, for writing the pape
   - The behaviour seen from outside is the same: the methods, answers, error codes and states. Chosen
     instead of keeping one block with a better drawing only: the transitions were many because the
     one block mixed two questions (may this caller do this now? what does the skill do?).
+  - The module's PackML state machine had the same pattern (18 states, 87 transitions). Now
+    `MOD_StateGate` (11 states, 20 transitions) decides Reset, Start, Stop, Abort and Clear on the
+    state `MOD_StateLogic` publishes, and `MOD_StateLogic` takes only the accepted commands: 13
+    states, 24 transitions. `Module.Logic.State`, which the tools read, is where it was.
 
 - **Every ECC is laid out as the IDE draws it: states in rows, each condition between its states.**
   *Journal* (a generated program a person can read and change in the IDE).
