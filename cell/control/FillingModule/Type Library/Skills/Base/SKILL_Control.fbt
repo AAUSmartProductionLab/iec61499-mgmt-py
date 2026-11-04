@@ -127,87 +127,87 @@
     </InternalVars>
     <ECC>
       <ECState Name="START" x="150" y="100" />
-      <ECState Name="Init" x="570" y="100">
+      <ECState Name="Init" x="-240" y="-880">
         <ECAction Algorithm="Alg_Init" Output="INITO" />
       </ECState>
-      <ECState Name="Idle" x="990" y="100">
+      <ECState Name="Idle" x="-1600" y="-1280">
         <ECAction Algorithm="Alg_Idle" Output="PUB" />
       </ECState>
-      <ECState Name="Running" x="1410" y="100">
+      <ECState Name="Running" x="1920" y="-1200">
         <ECAction Algorithm="Alg_Running" Output="PUB" />
       </ECState>
-      <ECState Name="Stopping" x="150" y="330">
+      <ECState Name="Stopping" x="-2480" y="-240">
         <ECAction Algorithm="Alg_Stopping" Output="PUB" />
       </ECState>
-      <ECState Name="StopProc" x="570" y="330">
+      <ECState Name="StopProc" x="2160" y="80">
         <ECAction Algorithm="Alg_StopProc" Output="PUB" />
       </ECState>
-      <ECState Name="Succeeded" x="990" y="330">
+      <ECState Name="Succeeded" x="-2240" y="1200">
         <ECAction Algorithm="Alg_Succeeded" Output="PUB" />
         <ECAction Output="TO_IDLE_START" />
       </ECState>
-      <ECState Name="Failed" x="1410" y="330">
+      <ECState Name="Failed" x="2080" y="-240">
         <ECAction Algorithm="Alg_Failed" Output="PUB" />
       </ECState>
       <ECState Name="Aborted" x="150" y="560">
         <ECAction Algorithm="Alg_Aborted" Output="PUB" />
       </ECState>
-      <ECState Name="GoUa" x="570" y="560">
+      <ECState Name="GoUa" x="-960" y="-2400">
         <ECAction Algorithm="Alg_GoUa" Output="ACT" />
         <ECAction Output="TO_IDLE_STOP" />
         <ECAction Output="RUN" />
       </ECState>
-      <ECState Name="GoParent" x="990" y="560">
+      <ECState Name="GoParent" x="1920" y="3440">
         <ECAction Algorithm="Alg_GoParent" Output="ACT" />
         <ECAction Output="TO_IDLE_STOP" />
         <ECAction Output="RUN" />
       </ECState>
-      <ECState Name="Halt" x="1410" y="560">
+      <ECState Name="Halt" x="2720" y="-2240">
         <ECAction Output="HALT_SEQ" />
       </ECState>
       <ECState Name="RunStop" x="150" y="790">
         <ECAction Output="RUN_STOPPING" />
       </ECState>
-      <ECState Name="Succeed" x="570" y="790">
+      <ECState Name="Succeed" x="3440" y="2320">
         <ECAction Algorithm="Alg_Succeed" Output="ACT" />
         <ECAction Output="RELEASE" />
         <ECAction Output="SUCCESS" />
       </ECState>
-      <ECState Name="Fail" x="990" y="790">
+      <ECState Name="Fail" x="3440" y="1520">
         <ECAction Algorithm="Alg_Fail" Output="ACT" />
         <ECAction Output="RELEASE" />
         <ECAction Output="FAILURE" />
       </ECState>
-      <ECState Name="Interrupted" x="1410" y="790">
+      <ECState Name="Interrupted" x="3200" y="480">
         <ECAction Algorithm="Alg_Interrupted" Output="ACT" />
         <ECAction Output="RELEASE" />
         <ECAction Output="FAILURE" />
       </ECState>
       <ECState Name="AbortChk" x="150" y="1020" />
-      <ECState Name="AbortActive" x="570" y="1020">
+      <ECState Name="AbortActive" x="-1520" y="2800">
         <ECAction Algorithm="Alg_AbortActive" Output="ABORT_SEQ" />
         <ECAction Output="ACT" />
         <ECAction Output="RELEASE" />
       </ECState>
-      <ECState Name="AbortIdle" x="990" y="1020">
+      <ECState Name="AbortIdle" x="1280" y="2880">
         <ECAction Output="ABORT_SEQ" />
       </ECState>
-      <ECState Name="StartRefused" x="1410" y="1020">
+      <ECState Name="StartRefused" x="3040" y="-640">
         <ECAction Algorithm="Alg_StartRefused" Output="FAILURE" />
       </ECState>
-      <ECState Name="ResetOk" x="150" y="1250">
+      <ECState Name="ResetOk" x="640" y="-2400">
         <ECAction Output="RESET_SEQ" />
       </ECState>
-      <ECState Name="ChkStart" x="570" y="1250">
+      <ECState Name="ChkStart" x="2720" y="3200">
         <ECAction Algorithm="Alg_ChkStart" Output="START_RSP" />
       </ECState>
-      <ECState Name="ChkStop" x="990" y="1250">
+      <ECState Name="ChkStop" x="-2400" y="3440">
         <ECAction Algorithm="Alg_ChkStop" Output="STOP_RSP" />
       </ECState>
-      <ECState Name="ChkAbort" x="1410" y="1250">
+      <ECState Name="ChkAbort" x="-2320" y="-2880">
         <ECAction Algorithm="Alg_ChkAbort" Output="ABORT_RSP" />
       </ECState>
-      <ECState Name="ChkReset" x="150" y="1480">
+      <ECState Name="ChkReset" x="720" y="4000">
         <ECAction Algorithm="Alg_ChkReset" Output="RESET_RSP" />
       </ECState>
       <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
