@@ -261,6 +261,9 @@ KINDS = {
         "ReleaseAfter": "Give up the equipment when the run ends (FALSE: the next step keeps it)",
     },
     "SKILL_Run": {
+        "Contract": "From the skill's contract (AContract): what to do, and when it is done",
+        "Equipment": "To the equipment's port (AEquipment): the commands, PLAYED back",
+        "INIT": "Initialise: take Holder and ReleaseAfter",
         "START": "Start the run with what the contract says (Pre first)",
         "SAMPLE": "The equipment's newest state, as the contract judges it (Post, Inv, EqHolder)",
         "HALT": "Stop the run (ErrorID Interrupted)",
@@ -294,7 +297,24 @@ KINDS = {
         "C_Arg": "Sent with the command: its argument (e.g. a position)",
         "C_Release": "Sent with the command: give up the equipment after it",
     },
+    "AContract": {
+        "START": "A run starts: what to do (Command, Arg, RunTime, StopCommand) and whether it may (Pre)",
+        "SAMPLE": "The equipment's newest state, judged: is the skill done (Post), may it go on (Inv)",
+        "EqHolder": "Who holds the equipment now (empty: free)",
+    },
+    "AEquipment": {
+        "SEND": "Send a command to the equipment: its output values, phase by phase",
+        "PLAYED": "All phases of the command were sent",
+        "Holder": "Who sends the command",
+        "Command": "The command's code",
+        "Arg": "The command's argument (e.g. a position)",
+        "Release": "Give up the equipment after the command",
+    },
+    "SKILL_NoEquipment": {"Skill": "The run's commands (AEquipment): each is played at once"},
     "SC_": {
+        "Run": "To the run (AContract): what the skill does and when it is done",
+        "RESULTS": "The results for the newest state (R_...)",
+        "EqHolder": "Who holds the equipment now (empty: free), passed on to the run",
         "INIT": "Initialise: name the OPC UA variables of the parameters and results",
         "START": "A run starts, with the parameters: say what the skill does",
         "STARTO": "What the skill does in this run, and whether it may start",
@@ -312,6 +332,7 @@ KINDS = {
         "IdResults": "OPC UA ID of the published results",
     },
     "EP_": {
+        "Skill": "From a skill's run (AEquipment): the commands to play, PLAYED back",
         "INIT": "Initialise: name the equipment's channels and listen to its state",
         "SEND": "Play a command: its output values, phase by phase, to the equipment",
         "PLAYED": "All phases of the command were sent",
@@ -437,7 +458,7 @@ def annotate(root, domain_: dict[str, str]):
     if iface is None:
         return
     for el in iface.iter():
-        if el.tag in ("Event", "VarDeclaration") and not el.get("Comment"):
+        if el.tag in ("Event", "VarDeclaration", "AdapterDeclaration") and not el.get("Comment"):
             text = comment(name, el.get("Name"), domain_)
             if text:
                 el.set("Comment", text)

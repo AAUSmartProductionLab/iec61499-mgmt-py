@@ -199,9 +199,9 @@ def interface(root, inputs, outputs, iv=None, ov=None, sub=False):
     return iface
 
 
-def connections(net, events, data):
-    """Add event and data connection lists to a network."""
-    for tag, pairs in [("EventConnections", events), ("DataConnections", data)]:
+def connections(net, events, data, adapters=()):
+    """Add event, data and adapter connection lists to a network."""
+    for tag, pairs in [("EventConnections", events), ("DataConnections", data), ("AdapterConnections", adapters)]:
         if pairs:                                         # as the IDE saves it: no empty lists
             group = elem(net, tag)
             for s, d in pairs:
@@ -397,6 +397,28 @@ class FB(TypeFile):
         self.header(project, "FBType", name, comment, package, folder)
         interface(self.root, ei, eo, iv, ov)
 
+    def adapters(self, sockets=None, plugs=None):
+        """Declare the block's sockets and plugs ({name: adapter type}): an adapter is one connection that
+        carries a bundle of events and data, its plug on the block that sends the adapter's outputs."""
+        iface = self.root.find("InterfaceList")
+        for tag, declared in [("Sockets", sockets or {}), ("Plugs", plugs or {})]:
+            if declared:
+                group = elem(iface, tag)
+                for name, typ in declared.items():
+                    elem(group, "AdapterDeclaration", Name=name, Type=typ)
+        return self
+
+
+class Adapter(TypeFile):
+    """Adapter type: the events and data one connection carries. Its outputs go from the block with
+    the plug to the block with the socket, its inputs back."""
+    ext = ".adp"
+    kind = "AdapterType"
+
+    def __init__(self, project, package, name, comment, ei, eo, iv=None, ov=None, folder=""):
+        self.header(project, "AdapterType", name, comment, package, folder)
+        interface(self.root, ei, eo, iv, ov)
+
 
 class Basic(FB):
     """Basic FB built from ECC states, transitions and ST algorithms; the first state is initial."""
@@ -464,7 +486,7 @@ class Wiring:
     """FB instances and connections collected for one network (a composite type's or a subapp's)."""
 
     def __init__(self):
-        self.fbs, self.events, self.data, self.groups = [], [], [], []
+        self.fbs, self.events, self.data, self.groups, self.links = [], [], [], [], []
 
     def group(self, name, comment, members, cols=8, dx=4600, dy=3400):
         """Show ``members`` together in a titled group (see :func:`arrange`); groups stack in the order given."""
@@ -483,6 +505,10 @@ class Wiring:
         """Add data connections from ``source`` to each destination."""
         self.data += [(source, d) for d in destinations]
 
+    def ad(self, plug, socket):
+        """Add an adapter connection from a plug to a socket (``Block.Plug`` -> ``Block.Socket``)."""
+        self.links.append((plug, socket))
+
     def chain(self, event, names, last):
         """Chain INIT through ``names`` (INITO -> INIT), starting at ``event`` and ending at ``last``."""
         self.ev(event, names[0] + ".INIT")
@@ -494,7 +520,7 @@ class Wiring:
         """Write the instances in one row (no overlapping blocks) and the connections, then the groups."""
         for i, (name, typ, params) in enumerate(self.fbs):
             fb(net, name, typ, x + i * dx, y, **params)
-        connections(net, self.events, self.data)
+        connections(net, self.events, self.data, self.links)
         order = {"FB": 0, "SubApp": 1}                  # FBs ahead of subapps already in the network
         net[:] = sorted(net, key=lambda e: order.get(e.tag, 2))
         arrange(net, self.groups)
@@ -529,4 +555,18 @@ class Composite(FB, Wiring):
         # As the systems are laid out: blocks by their size in a grid inside their groups.
         from .layout import Sizer, relayout
         relayout(self.net, Sizer(self.project.types))
+        self.place_adapters()
         return super().write()
+
+    def place_adapters(self):
+        """Inside the network the IDE draws the type's own sockets as blocks at the left, its plugs at
+        the right, each where its declaration says."""
+        boxes = [(float(g.get("x")), float(g.get("x")) + float(g.get("width", 0))) for g in self.net.findall("Group")]
+        boxes += [(float(f.get("x")), float(f.get("x")) + 3000) for f in self.net.findall("FB")
+                  if f.find("Attribute[@Name='GroupName']") is None]
+        left, right = (min(b[0] for b in boxes), max(b[1] for b in boxes)) if boxes else (0, 3000)
+        iface = self.root.find("InterfaceList")
+        for tag, x in [("Sockets", left - 3600), ("Plugs", right + 800)]:
+            for i, decl in enumerate(iface.findall(f"{tag}/AdapterDeclaration")):
+                decl.set("x", str(round(x)))
+                decl.set("y", str(1000 + i * 1600))

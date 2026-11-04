@@ -252,9 +252,27 @@
     "exported": true
   },
   {
+    "type": "modlib::AContract",
+    "kind": "AdapterType",
+    "file": "Skills/Adapters/AContract.adp",
+    "exported": true
+  },
+  {
+    "type": "modlib::AEquipment",
+    "kind": "AdapterType",
+    "file": "Skills/Adapters/AEquipment.adp",
+    "exported": true
+  },
+  {
     "type": "modlib::SKILL_Run",
     "kind": "CompositeFB",
     "file": "Skills/SKILL_Run.fbt",
+    "exported": true
+  },
+  {
+    "type": "modlib::SKILL_NoEquipment",
+    "kind": "BasicFB",
+    "file": "Skills/Base/SKILL_NoEquipment.fbt",
     "exported": true
   },
   {

@@ -72,7 +72,9 @@ def pins(iface, events_in: str, events_out: str) -> tuple[list[str], list[str], 
     names = lambda path: [e.get("Name") for e in iface.findall(path)]  # noqa: E731
     ei, eo = names(f"{events_in}/*"), names(f"{events_out}/*")
     di, do = names("InputVars/VarDeclaration"), names("OutputVars/VarDeclaration")
-    return ei + di, eo + do, max(1, max(len(ei), len(eo)) + max(len(di), len(do)))
+    si, po = names("Sockets/AdapterDeclaration"), names("Plugs/AdapterDeclaration")   # below the data pins
+    return (ei + di + si, eo + do + po,
+            max(1, max(len(ei), len(eo)) + max(len(di), len(do)) + max(len(si), len(po))))
 
 
 def longest(texts) -> int:

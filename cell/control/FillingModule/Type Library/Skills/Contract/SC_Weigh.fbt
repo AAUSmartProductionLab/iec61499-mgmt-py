@@ -12,25 +12,14 @@
       <Event Name="START" Type="Event" Comment="A run starts, with the parameters: say what the skill does" />
       <Event Name="SAMPLE" Type="Event" Comment="The equipment's newest state arrived">
         <With Var="Weight" />
+        <With Var="EqHolder" />
       </Event>
     </EventInputs>
     <EventOutputs>
       <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
         <With Var="IdResults" />
       </Event>
-      <Event Name="STARTO" Type="Event" Comment="What the skill does in this run, and whether it may start">
-        <With Var="Pre" />
-        <With Var="Post" />
-        <With Var="Timed" />
-        <With Var="RunTime" />
-        <With Var="Command" />
-        <With Var="Arg" />
-        <With Var="StopCommand" />
-        <With Var="R_Weight" />
-      </Event>
-      <Event Name="SAMPLEO" Type="Event" Comment="Post, Inv and the results for the newest state">
-        <With Var="Post" />
-        <With Var="Inv" />
+      <Event Name="RESULTS" Type="Event" Comment="The results for the newest state (R_...)">
         <With Var="R_Weight" />
       </Event>
     </EventOutputs>
@@ -38,58 +27,63 @@
       <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
       <VarDeclaration Name="UaPath" Type="WSTRING" Comment="This skill's OPC UA folder below UaRoot, e.g. /Skills/Dispensing" />
       <VarDeclaration Name="Weight" Type="LREAL" Comment="Scale: Weight (g), an input" />
+      <VarDeclaration Name="EqHolder" Type="WSTRING" Comment="Who holds the equipment now (empty: free), passed on to the run" />
     </InputVars>
     <OutputVars>
-      <VarDeclaration Name="Pre" Type="BOOL" Comment="The precondition holds: the run may start" />
-      <VarDeclaration Name="Post" Type="BOOL" Comment="The postcondition holds: the skill is done" />
-      <VarDeclaration Name="Inv" Type="BOOL" Comment="The invariant holds: the run may go on" />
-      <VarDeclaration Name="Timed" Type="BOOL" Comment="The skill ends after RunTime (TRUE), or when Post holds (FALSE)" />
-      <VarDeclaration Name="RunTime" Type="TIME" Comment="How long it runs (Timed), or may take before it fails with Timeout (3)" />
-      <VarDeclaration Name="Command" Type="USINT" Comment="The command's code to send while it runs" />
-      <VarDeclaration Name="Arg" Type="LREAL" Comment="The command's argument (e.g. a position)" />
-      <VarDeclaration Name="StopCommand" Type="USINT" Comment="The command's code to send when it is done or halted" />
       <VarDeclaration Name="R_Weight" Type="LREAL" Comment="Result: Weight" />
       <VarDeclaration Name="IdResults" Type="WSTRING" Comment="OPC UA ID of the published results" />
     </OutputVars>
+    <Plugs>
+      <AdapterDeclaration Name="Run" Type="modlib::AContract" Comment="To the run (AContract): what the skill does and when it is done" />
+    </Plugs>
   </InterfaceList>
   <BasicFB>
     <ECC>
-      <ECState Name="Wait" x="2220" y="0" />
+      <ECState Name="Wait" x="1968" y="0" />
       <ECState Name="Init" x="0" y="1260">
         <ECAction Algorithm="Alg_Init" Output="INITO" />
       </ECState>
       <ECState Name="Start" x="1765" y="1260">
         <ECAction Algorithm="Alg_Start" />
       </ECState>
-      <ECState Name="Started" x="1648" y="2520">
-        <ECAction Algorithm="Alg_Evaluate" Output="STARTO" />
+      <ECState Name="Started" x="220" y="2520">
+        <ECAction Algorithm="Alg_Evaluate" Output="Run.START" />
+        <ECAction Output="RESULTS" />
       </ECState>
       <ECState Name="Sample" x="3295" y="1260">
-        <ECAction Algorithm="Alg_Evaluate" Output="SAMPLEO" />
+        <ECAction Algorithm="Alg_Sample" />
       </ECState>
-      <ECTransition Source="Wait" Destination="Init" Condition="INIT" x="1446" y="710" />
-      <ECTransition Source="Init" Destination="Wait" Condition="1" x="1926" y="870" />
-      <ECTransition Source="Wait" Destination="Start" Condition="START" x="2270" y="710" />
-      <ECTransition Source="Start" Destination="Started" Condition="1" x="2270" y="1970" />
-      <ECTransition Source="Started" Destination="Wait" Condition="1" x="3760" y="1340" />
-      <ECTransition Source="Wait" Destination="Sample" Condition="SAMPLE" x="3184" y="710" />
-      <ECTransition Source="Sample" Destination="Wait" Condition="1" x="3664" y="870" />
+      <ECState Name="Judge" x="2480" y="2520">
+        <ECAction Algorithm="Alg_Evaluate" Output="Run.SAMPLE" />
+        <ECAction Output="RESULTS" />
+      </ECState>
+      <ECTransition Source="Wait" Destination="Init" Condition="INIT" x="1320" y="710" />
+      <ECTransition Source="Init" Destination="Wait" Condition="1" x="1800" y="870" />
+      <ECTransition Source="Wait" Destination="Start" Condition="START" x="2144" y="710" />
+      <ECTransition Source="Start" Destination="Started" Condition="1" x="1590" y="1995" />
+      <ECTransition Source="Started" Destination="Wait" Condition="1" x="2954" y="1365" />
+      <ECTransition Source="Wait" Destination="Sample" Condition="SAMPLE" x="2932" y="710" />
+      <ECTransition Source="Sample" Destination="Judge" Condition="1" x="3496" y="1995" />
+      <ECTransition Source="Judge" Destination="Wait" Condition="1" x="1273" y="1365" />
     </ECC>
     <Algorithm Name="Alg_Init">
       <ST>IdResults := CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, UaPath)), "/Results/Weight"), "]");</ST>
     </Algorithm>
     <Algorithm Name="Alg_Start">
-      <ST>Timed := TRUE;
-RunTime := MUL_TIME(T#1s, 0.2);
-Command := 2;
-Arg := 0.0;
-StopCommand := 0;</ST>
+      <ST>Run.Timed := TRUE;
+Run.RunTime := MUL_TIME(T#1s, 0.2);
+Run.Command := 2;
+Run.Arg := 0.0;
+Run.StopCommand := 0;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Evaluate">
-      <ST>Pre := TRUE;
-Post := FALSE;
-Inv := TRUE;
+      <ST>Run.Pre := TRUE;
+Run.Post := FALSE;
+Run.Inv := TRUE;
 R_Weight := Weight;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Sample">
+      <ST>Run.EqHolder := EqHolder;</ST>
     </Algorithm>
   </BasicFB>
 </FBType>

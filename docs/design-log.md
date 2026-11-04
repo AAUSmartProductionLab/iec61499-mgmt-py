@@ -20,6 +20,24 @@ A running log of design considerations made while building, for writing the pape
 
 ## 4 Nov 2026
 
+- **Adapters join a primitive's contract, run and port: one connection each.** *Journal* (how much a
+  person wires per primitive).
+  - The contract told the run eight values with two events, and the run and the port exchanged a
+    command of four values, two events and the holder: 16 single wires in every primitive, the same
+    every time. Now `AContract` (contract's plug `Run` into the run's socket `Contract`) and
+    `AEquipment` (the run's plug `Equipment` into the port's socket `Skill`) carry them, and the
+    contract writes `Run.Post := AtHome;` instead of having outputs of its own. The stopper feeder
+    is 44 connections instead of 56. A primitive without equipment gets `SKILL_NoEquipment` as its
+    port, which plays every command at once.
+  - Only inside the generated types: the application has no adapter, so the boot file, the reading
+    of a running program (`modsync`) and the module rules are unchanged. Chosen instead of an
+    adapter between a module level skill and its steps (the 4diac skills example's `IAS_Skill`),
+    which would take the most wires out of a sequence but needs adapter connections created online,
+    flattened from the system and read back by `modsync`: the next step if wanted. The equipment's
+    signals stay single wires from the port to the contract, because they differ per equipment and
+    an adapter type is fixed. The IDE export names an adapter `_adp`: `runtime/validate.ps1` counts
+    those too.
+
 - **A skill primitive is its contract; the run and the equipment port are shared.** *Journal* (how
   much has to be engineered per skill), *CIRP* (a new primitive is a small, checkable piece).
   - Before, each primitive had its own basic type `SL_<Skill>` of 23 states and 41 transitions, of

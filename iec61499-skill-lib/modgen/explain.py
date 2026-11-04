@@ -52,6 +52,13 @@ LIBRARY = {
                  "the precondition, sends the command, then watches the conditions (or a timer) until the skill is "
                  "done, has failed or has timed out, and sends the closing command. What the skill is comes in from its "
                  "contract (SC_).",
+    "AContract": "An adapter: one connection from a primitive's contract (SC_, the plug) to its run (SKILL_Run, the "
+                 "socket) that carries what the contract says: at the start what to do and whether it may start, at "
+                 "each new state of the equipment whether it is done and may go on.",
+    "AEquipment": "An adapter: one connection from a skill's run (the plug) to its equipment's port (EP_, the "
+                  "socket) that carries a command out and the word that it was played back.",
+    "SKILL_NoEquipment": "Stands in for the equipment of a primitive that has none (one that only waits): plays "
+                         "every command at once.",
     "SKILL_RunLogic": "The state machine of SKILL_Run: the precondition, waiting for the equipment, the command, the "
                       "end condition, the timeout, the closing command.",
     "SKILL_Gate": "The front desk of a skill, inside SKILL_Core: answers a client's Start, Stop, Abort or Reset at "
@@ -126,7 +133,8 @@ INSIDE = {
                     "start, is done, and must stop.",
         "Run": "One run (SKILL_Run, the same in every primitive): waits for the equipment, checks the contract's "
                "precondition, sends the command and watches the conditions until the skill is done.",
-        "Port": "The equipment as this skill sees it (EP_): its state in, the command out.",
+        "Port": "The equipment as this skill sees it (EP_): its state in (to the contract), the commands from the run "
+                "(over the adapter AEquipment).",
         "UaStart": "The OPC UA method Start: a client's call arrives here with its session id and the parameters; "
                    "Control's answer (Accepted, ErrorID) goes back to the client.",
         "PubParams": "Writes the parameter values of the current run to OPC UA (Parameters/...).",

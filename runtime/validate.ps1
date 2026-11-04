@@ -57,7 +57,7 @@ if (!$Manifest) {
     $forte = Join-Path $PSScriptRoot 'fbe\4diac-forte'
     if (!(Test-Path -LiteralPath $forte)) { throw "No FORTE source in $forte; run build-runtime.ps1 -FetchOnly" }
     # -Include does not filter together with -LiteralPath in Windows PowerShell 5.1.
-    $typeHeader = { $_.Name -match '_(fbt|dtp)\.h$' }
+    $typeHeader = { $_.Name -match '_(fbt|dtp|adp)\.h$' }
     $own = @{}
     Get-ChildItem -LiteralPath $forte -Recurse -File | Where-Object $typeHeader |
         ForEach-Object { $own[($_.FullName -replace '^.*[\\/]include[\\/]forte[\\/]', '')] = $true }
@@ -68,7 +68,7 @@ if (!$Manifest) {
     $headers = Join-Path $export 'include\forte'
     foreach ($header in Get-ChildItem -LiteralPath $headers -Recurse -File | Where-Object $typeHeader) {
         if ($own[$header.FullName.Substring($headers.Length + 1)]) {
-            $short = $header.BaseName -replace '_(fbt|dtp)$', ''
+            $short = $header.BaseName -replace '_(fbt|dtp|adp)$', ''
             "FORTE has $short itself: not compiled again"
             $skip += $short
         }
@@ -89,8 +89,8 @@ if (!$Manifest) {
         }
     }
     $sources = Join-Path $export 'src'
-    foreach ($source in Get-ChildItem -LiteralPath $sources -Recurse -File | Where-Object { $_.Name -match '_(fbt|dtp)\.cpp$' }) {
-        $short = $source.BaseName -replace '_(fbt|dtp)$', ''
+    foreach ($source in Get-ChildItem -LiteralPath $sources -Recurse -File | Where-Object { $_.Name -match '_(fbt|dtp|adp)\.cpp$' }) {
+        $short = $source.BaseName -replace '_(fbt|dtp|adp)$', ''
         if ($skip -contains $short) { continue }
         foreach ($other in $others | Where-Object { Test-Path -LiteralPath $_ }) {
             $theirs = Join-Path $other ('src\' + $source.FullName.Substring($sources.Length + 1))
@@ -107,7 +107,7 @@ if (!$Manifest) {
 foreach ($short in $skip) {
     Get-ChildItem -LiteralPath $export -Recurse -File -Filter "$($short)_*" | Remove-Item -Force
     foreach ($list in Get-ChildItem -LiteralPath $export -Recurse -Filter 'CMakeLists.txt') {
-        $lines = Get-Content -LiteralPath $list.FullName | Where-Object { $_ -notmatch "\b$($short)_(fbt|dtp)\.(cpp|h)\b" }
+        $lines = Get-Content -LiteralPath $list.FullName | Where-Object { $_ -notmatch "\b$($short)_(fbt|dtp|adp)\.(cpp|h)\b" }
         Set-Content -LiteralPath $list.FullName -Value $lines -Encoding utf8
     }
 }
@@ -136,7 +136,7 @@ endforeach ()
 foreach ($target in $Link | Where-Object { $_ -ne "forte-$Module" }) {
     Add-Content -LiteralPath (Join-Path $export 'CMakeLists.txt') -Encoding utf8 -Value "target_link_libraries(forte-$Module PUBLIC $target)"
 }
-$exported = @(Get-ChildItem -Path (Join-Path $export 'src') -Recurse -Include '*_fbt.cpp', '*_dtp.cpp')
+$exported = @(Get-ChildItem -Path (Join-Path $export 'src') -Recurse -Include '*_fbt.cpp', '*_dtp.cpp', '*_adp.cpp')
 $expected = if ($Manifest) { @($typeList | Where-Object { $_.exported }).Count } else { $exported.Count }
 if ($exported.Count -ne $expected) { throw "Expected $expected exported types, got $($exported.Count)" }
 # Keep the throwaway IDE workspace only when something failed (for its .metadata/.log).
