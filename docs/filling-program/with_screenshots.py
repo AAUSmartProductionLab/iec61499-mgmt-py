@@ -45,10 +45,9 @@ SCREENSHOTS = {
 }
 
 PICTURES_OLD = """**The pictures** are in [filling-program/](filling-program/). They are drawn from the program's
-files by [filling-program/draw_blocks.py](filling-program/draw_blocks.py), with the positions,
-groups and sizes the 4diac IDE uses, so they look as the program looks in the IDE; they are not
-screenshots of it. Open one on its own to see it full size. After the program is regenerated, draw
-them again (section 13). The same document with screenshots of the IDE, where there are some, is
+files with the positions, groups and sizes the 4diac IDE uses, so they look as the program looks in
+the IDE; they are not screenshots of it. Open one on its own to see it full size. The same document
+with screenshots of the IDE, where there are some, is
 [filling-program-screenshots.md](filling-program-screenshots.md).
 """
 PICTURES_NEW = """**This is the version with screenshots.** The text is that of
@@ -57,10 +56,7 @@ PICTURES_NEW = """**This is the version with screenshots.** The text is that of
 what the IDE shows. The other pictures are the drawings of [filling-program/](filling-program/),
 made from the program's files with the IDE's positions, groups and sizes. Open a picture on its own
 to see it full size. The screenshots of `MOD_StateManager`, `SKILL_Core` and the primitives' insides
-were taken before these types changed on 4 Nov 2026, so their drawings are shown until they are
-taken again. This file is made from filling-program.md by
-[filling-program/with_screenshots.py](filling-program/with_screenshots.py) (section 13): change
-filling-program.md, not this file.
+were taken before these types changed, so their drawings are shown until they are taken again.
 """
 
 LEGEND_OLD = "![How to read a block in the pictures](filling-program/legend.svg)\n"
@@ -73,14 +69,6 @@ from the application, a pin on the outside is named after that block: inside the
 (an `IO_DO`), its input `INIT` is labelled `Out_Down.INIT`.
 """
 
-REDRAW_ADD = """
-The screenshots in `docs/figures/4diac_figs` are taken by hand in the IDE; after the program changes,
-take them again under the same names. This file is made again with
-
-```powershell
-python docs/filling-program/with_screenshots.py
-```
-"""
 
 
 def screenshots(drawing: str) -> str:
@@ -108,7 +96,6 @@ def main() -> None:
     for png in {png for shots, _ in SCREENSHOTS.values() for png, _ in shots}:
         if not (DOCS / SHOTS / png).exists():
             raise SystemExit(f"screenshot missing: {SHOTS}/{png}")
-    text = text.rstrip("\n") + "\n" + REDRAW_ADD
     TARGET.write_text(text, encoding="utf-8", newline="\n")
     print(f"wrote {TARGET.relative_to(DOCS.parent)}")
 

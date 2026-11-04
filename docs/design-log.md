@@ -20,6 +20,27 @@ A running log of design considerations made while building, for writing the pape
 
 ## 4 Nov 2026
 
+- **Students make the real modules' new blocks by hand, by copying the nearest type.** *CIRP* (the
+  effort of a new skill by hand in 4diac: what a person makes per primitive and per piece of
+  equipment, without the generator).
+  - The students build the stoppering and capping modules' new equipment and primitives in the
+    4diac IDE and FORTE with the kit (`build-project.ps1`, `deploy-pi.ps1`), never with `modgen`.
+    So the filling guide (`docs/filling-program.md`) now says nothing about the generator; its
+    section 10 makes a stopper feeder and its primitive block by block, and section 11 builds and
+    deploys them with the kit. The generator's side of the guide went to
+    `docs/filling-program/maintaining.md`, which the students' zip leaves out.
+  - The way of working is to copy the nearest type with the IDE (copy, paste, a new name; *Change
+    Type* for the blocks inside) and change only one's own part, rather than to make types from
+    nothing. It works because what modgen makes is regular: `EL_` and `EC_` have the same state
+    machine in every piece of equipment without a position (`EL_Piston` and the feeder's `EL_Feeder`
+    differ only in their pins' names), and the stoppering `SK_Home` has the same 5 blocks and 44
+    connections as `SK_FeedStopper`. The guide counts what is one's own: for a primitive on
+    equipment that exists, the contract's two algorithms (8 lines for the feeder) and 5 of the 44
+    connections in `SK_`; for a piece of equipment, its pins (one IO block each, the pins' names in
+    the algorithms) and its command table. That count shows how much of a hand-made skill is reuse,
+    next to the paper's count of user actions.
+  - The kit now carries the capping project too (`make-kit.ps1 -Projects`).
+
 - **Adapters join a primitive's contract, run and port: one connection each.** *Journal* (how much a
   person wires per primitive).
   - The contract told the run eight values with two events, and the run and the port exchanged a

@@ -1,31 +1,33 @@
 # The filling program, block by block
 
-What every function block of the filling module's IEC 61499 program does, in plain words: what a
-client can call over OPC UA, which blocks a call reaches, how a command ends up on the Raspberry Pi's
-pins, and where the values the module shows come from. Written on 28 Oct 2026 for anyone who opens
-the program in the 4diac IDE (`cell/control/FillingModule`) or operates the module. Extended on
-4 Nov 2026 for students: every block type of the program explained one by one, in everyday words and
-with a picture (sections 6 to 8), what the stoppering module has instead (section 9), and what you
-add for a new piece of equipment with its own pins and a primitive that uses it (section 10). Later
-the same day the program itself got simpler, and this document with it: a gate in front of each
-state machine (sections 7.5, 7.6), one run shared by every primitive (7.7), so that a primitive's
-own part is a small contract (8.5), and one port per piece of equipment (8.1), joined by two
-adapters (6.6, 7.7).
+What every function block of the lab's IEC 61499 module programs does, in plain words, with the
+filling module as the example: what a client can call over OPC UA, which blocks a call reaches, how
+a command ends up on the Raspberry Pi's pins, and where the values the module shows come from. It is
+written for students who make new function blocks by hand in the 4diac IDE for the real stoppering
+and capping modules: new skill primitives, and new equipment with its pins.
 
-The same descriptions are in the program itself: every block type and every block instance has a
-comment (in the IDE: hover over a block, or select it and look at *Properties > Comment*). They are
-written by the generator (`iec61499-skill-lib/modgen/explain.py`), so they stay when the program is
-regenerated, and they do not change a type's hash: a program with new comments runs on the FORTE
-that is already on the Pi.
+**What you make, and what you reuse.** Most of a module program is the same in every module and is
+already there: who may command the module, its state, the skill's checks and state machine, the run
+that every primitive shares, and the blocks for the pins (section 7). You never change those types.
+You put blocks of them into yours and give them values. What you make yourself is small:
 
-How to build a new skill or a new piece of equipment is in [building-skills.md](building-skills.md).
-The rules every module follows are in [module-rules.md](module-rules.md); the hardware in
-[modules.md](modules.md).
+| You add | Types you make | What is your own in them |
+| --- | --- | --- |
+| A skill primitive, on equipment that is there | 2: `SK_<Skill>` and its contract `SC_<Skill>` | Two short algorithms in the contract (8 lines for the feeder of section 10), and the 5 connections to the contract in `SK_` (of 44) |
+| A piece of equipment | 5: `EQ_<Item>`, `EL_<Item>`, `EC_<Item>`, `EV_<Item>`, `EP_<Item>` | Its pins: one IO block per pin, the pins' names in the algorithms, and its command table. The state machines are the same in every piece of equipment without a position, so you copy them |
+
+You make each new type as a copy of a type that is nearly the same, and change only your own part.
+Section 10 does that step by step for a new stopper feeder and its primitive. Section 11 builds
+FORTE with your types and puts them on your PC and on the module's Pi.
 
 **New to IEC 61499?** Read sections 1, 2 and 6 first: they say what the program is made of and how
-to read the pictures. Then section 4 follows one call through the blocks, and sections 7 and 8
-explain each block on its own; look a block up there when you meet it. How to build the program
-and run it, on the PC or on the Pi, is in section 11.
+to read the pictures. Then section 4 follows one call through the blocks. Sections 7 and 8 explain
+each block on its own: look a block up there when you meet it. Section 9 says what the stoppering
+and capping modules have instead of the filling module's own blocks.
+
+**The program explains itself too.** Every block type, pin and block in the program has a comment.
+In the IDE, hover over a block, or select it and look at *Properties > Comment*. Give your own
+types, pins and blocks one as well (section 12).
 
 **This is the version with screenshots.** The text is that of
 [filling-program.md](filling-program.md); where there is a screenshot of the 4diac IDE (in
@@ -33,10 +35,10 @@ and run it, on the PC or on the Pi, is in section 11.
 what the IDE shows. The other pictures are the drawings of [filling-program/](filling-program/),
 made from the program's files with the IDE's positions, groups and sizes. Open a picture on its own
 to see it full size. The screenshots of `MOD_StateManager`, `SKILL_Core` and the primitives' insides
-were taken before these types changed on 4 Nov 2026, so their drawings are shown until they are
-taken again. This file is made from filling-program.md by
-[filling-program/with_screenshots.py](filling-program/with_screenshots.py) (section 13): change
-filling-program.md, not this file.
+were taken before these types changed, so their drawings are shown until they are taken again.
+
+The rules every module follows are in [module-rules.md](module-rules.md), and the lab's modules and
+their hardware in [modules.md](modules.md).
 
 ## Contents
 
@@ -123,33 +125,34 @@ filling-program.md, not this file.
   - [8.7 The subapplications: procedures and the module level skill](#87-the-subapplications-procedures-and-the-module-level-skill)
     - [`Resetting` and `Stopping`: the procedures](#resetting-and-stopping-the-procedures)
     - [`Dispensing`: the module level skill](#dispensing-the-module-level-skill)
-- [9. What is different in the stoppering module](#9-what-is-different-in-the-stoppering-module)
+- [9. The stoppering and capping modules](#9-the-stoppering-and-capping-modules)
   - [9.1 The same name is not the same type](#91-the-same-name-is-not-the-same-type)
   - [9.2 The piston instead of the pump and the scale](#92-the-piston-instead-of-the-pump-and-the-scale)
   - [9.3 Its primitives](#93-its-primitives)
-- [10. A new piece of equipment with its pins, and a primitive that uses it](#10-a-new-piece-of-equipment-with-its-pins-and-a-primitive-that-uses-it)
+  - [9.4 The capping module: the crimper](#94-the-capping-module-the-crimper)
+- [10. By hand: a new piece of equipment with its pins, and a primitive that uses it](#10-by-hand-a-new-piece-of-equipment-with-its-pins-and-a-primitive-that-uses-it)
   - [10.1 The example: a stopper feeder](#101-the-example-a-stopper-feeder)
-  - [10.2 What you write: two entries in the spec](#102-what-you-write-two-entries-in-the-spec)
-  - [10.3 What the generator makes of it](#103-what-the-generator-makes-of-it)
-  - [10.4 Build, test, put it on the Pi](#104-build-test-put-it-on-the-pi)
-  - [10.5 By hand, block by block](#105-by-hand-block-by-block)
+  - [10.2 What is reused, and what you make](#102-what-is-reused-and-what-you-make)
     - [What is already there](#what-is-already-there)
+    - [How much of each new type is your own](#how-much-of-each-new-type-is-your-own)
+    - [Copy, then change](#copy-then-change)
+  - [10.3 Step 1: the command table `EC_Feeder`](#103-step-1-the-command-table-ec_feeder)
+  - [10.4 Step 2: the rules `EL_Feeder`](#104-step-2-the-rules-el_feeder)
+  - [10.5 Step 3: the report form `EV_Feeder`](#105-step-3-the-report-form-ev_feeder)
+  - [10.6 Step 4: the equipment block `EQ_Feeder`](#106-step-4-the-equipment-block-eq_feeder)
+  - [10.7 Step 5: the port `EP_Feeder`](#107-step-5-the-port-ep_feeder)
+  - [10.8 Step 6: the contract `SC_FeedStopper`](#108-step-6-the-contract-sc_feedstopper)
+  - [10.9 Step 7: the primitive `SK_FeedStopper`](#109-step-7-the-primitive-sk_feedstopper)
     - [What a primitive connects to](#what-a-primitive-connects-to)
-    - [Which blocks never change](#which-blocks-never-change)
-    - [Step 1: the contract `SC_FeedStopper`](#step-1-the-contract-sc_feedstopper)
-    - [Step 2: the composite type `SK_FeedStopper`](#step-2-the-composite-type-sk_feedstopper)
-    - [Step 3: into the application](#step-3-into-the-application)
-    - [Step 4: build it](#step-4-build-it)
-- [11. Building the program and putting it on the Pi](#11-building-the-program-and-putting-it-on-the-pi)
+  - [10.10 Step 8: into the application](#1010-step-8-into-the-application)
+  - [10.11 Other equipment: what changes](#1011-other-equipment-what-changes)
+- [11. Building it, and putting it on the PC and the Pi](#11-building-it-and-putting-it-on-the-pc-and-the-pi)
   - [11.1 What you need](#111-what-you-need)
-  - [11.2 Change the spec, not the program](#112-change-the-spec-not-the-program)
-  - [11.3 Generate the program and check it](#113-generate-the-program-and-check-it)
-  - [11.4 Does it need a new FORTE?](#114-does-it-need-a-new-forte)
-  - [11.5 Try it on the PC](#115-try-it-on-the-pc)
-  - [11.6 Put it on the Pi](#116-put-it-on-the-pi)
-  - [11.7 Check that the Pi runs what the spec says](#117-check-that-the-pi-runs-what-the-spec-says)
-- [12. Where the descriptions are in 4diac](#12-where-the-descriptions-are-in-4diac)
-- [13. Drawing the pictures again](#13-drawing-the-pictures-again)
+  - [11.2 Open the project, and check it](#112-open-the-project-and-check-it)
+  - [11.3 Does it need a new FORTE?](#113-does-it-need-a-new-forte)
+  - [11.4 Try it on the PC](#114-try-it-on-the-pc)
+  - [11.5 Put it on the Pi](#115-put-it-on-the-pi)
+- [12. Comments: where the descriptions are, and yours](#12-comments-where-the-descriptions-are-and-yours)
 
 ## 1. The whole program in one picture
 
@@ -501,8 +504,8 @@ from the application, a pin on the outside is named after that block: inside the
 - **Values.** Text left of an input pin is a value set on that pin (a *parameter*): `"Filling"`,
   `TRUE`, `T#500ms`. Text in quotes is a string.
 - **Connections are hidden.** The program has hundreds of connections; drawn as lines they would fill
-  the screen. So the generator hides every one, and the IDE writes a small label at each connected
-  pin instead, naming the other end: `Control.START_REQ` is the pin `START_REQ` of the block
+  the screen. So they are hidden, and the IDE writes a small label at each connected pin
+  instead, naming the other end: `Control.START_REQ` is the pin `START_REQ` of the block
   `Control`. A label with a number (`×2`) means the pin is connected to that many pins. A label
   without a dot (`INIT`, `Module`) is a pin on the outside of the network you are looking into: of
   the composite type, or of the subapplication.
@@ -515,8 +518,8 @@ from the application, a pin on the outside is named after that block: inside the
   (section 6.6).
 - **State machines** (the pictures named `ecc-`) show each state as a blue box with its actions to
   the right (the algorithm, then the event it sends) and each transition as a curve through its
-  condition. The initial state has a double frame and is at the top; the pictures use the places the
-  generator gives the states, so they look as the IDE's *ECC* tab shows them.
+  condition. The initial state has a double frame and is at the top; the pictures use the states'
+  places in the type files, so they look as the IDE's *ECC* tab shows them.
 
 ### 6.5 Who made a type
 
@@ -525,8 +528,8 @@ The IDE writes a type with a prefix that says where it comes from:
 | Prefix | Where the type comes from | The same in every module? |
 | --- | --- | --- |
 | `iec61499::events`, `iec61499::net`, `eclipse4diac::io` | The 4diac standard library, built into FORTE | Yes |
-| `modlib::` | The lab's module library ModLib (`iec61499-skill-lib/ModLib`), generated once for all modules | Yes |
-| `filling::` | Generated for the filling module from its spec (`cell/modules/filling.yaml`) | No: the stoppering module has `stoppering::` |
+| `modlib::` | The lab's module library ModLib, in every module's project: you use it, you never change it | Yes |
+| `filling::` | The filling module's own types | No: the stoppering module has `stoppering::`, the capping module `capping::`. Your new types go into the package of the module you work on |
 
 The start of a type's name says what it is for: `MOD_` the module level, `SKILL_` the parts every
 skill shares, `IO_` a pin, `SK_` a skill primitive, `SC_` its contract (the part that is its own),
@@ -534,8 +537,8 @@ skill shares, `IO_` a pin, `SK_` a skill primitive, `SC_` its contract (the part
 for a skill, `EC_` its command table.
 
 **Section 7** explains the types that are the same in every module: you never change them for a new
-module, you only give them values. **Section 8** explains the filling module's own types: they are
-made from its spec, and another module has others (section 9).
+module, you only give them values. **Section 8** explains the filling module's own types: another
+module has others (section 9), and the types you make are of this kind (section 10).
 
 ### 6.6 Adapters: one plug, one socket
 
@@ -564,7 +567,9 @@ application itself has none, so nothing changes for what runs or is created onli
 ## 7. The blocks that are always there
 
 These come from the 4diac standard library and from ModLib. They are the same in the filling,
-stoppering and capping modules, and in any module the generator makes.
+stoppering and capping modules, and in any other module. You never change them: you put blocks of
+them into your own types and give them values. Because the same type runs in every module, a
+change to one would change all of them.
 
 ### 7.1 Timers and the start signal
 
@@ -653,7 +658,7 @@ the number of inputs: `SERVER_2_1` (the session only), `SERVER_2_2` (one paramet
 
 ![CLIENT_1_0](filling-program/type-CLIENT_1_0.svg) ![CLIENT_0_1](filling-program/type-CLIENT_0_1.svg)
 
-Used only inside the IO blocks (section 7.8), for the PC target, whose pins are registers of the
+Used only inside the IO blocks (section 7.9), for the PC target, whose pins are registers of the
 Modbus simulator. `CLIENT_1_0` writes one value (`SD_1`) to a Modbus coil or register, `CLIENT_0_1`
 reads one (`RD_1`). The `ID` names the server and the address, for example
 `modbus[127.0.0.1:1502:1:10:d0:]`. On the Pi they stay switched off (`QI` FALSE).
@@ -818,7 +823,7 @@ and `RUN_STOPPING` are wired to the subapplications `Resetting.START` and `Stopp
 Every command must come from the owner (otherwise `[FALSE, 5]`), and in a state where it is not
 allowed the answer is `[FALSE, 4]` (NotReady). That is decided in front of the state machine, by
 `MOD_StateGate` (below): `MOD_StateLogic` itself only takes the accepted commands, `RESET`, `START`,
-`STOP`, `ABORT` and `CLEAR`, from state to state (13 states, 24 transitions; it had 87):
+`STOP`, `ABORT` and `CLEAR`, from state to state (13 states, 24 transitions):
 
 ![The state machine of MOD_StateLogic](filling-program/ecc-MOD_StateLogic.svg)
 
@@ -901,8 +906,8 @@ Its events, in plain words:
 | `PubRelease` | `PUBLISH_1` | When a run ends, says on `loc[Filling/release]` that `Holder` gives up its equipment. Only switched on with `ReleaseAll` (a module level skill); a primitive gives its equipment up with its last command instead |
 
 Two questions are kept apart here: *may this caller do this now?* (`Gate`) and *what does the skill
-do?* (`Control`). Until 4 Nov 2026 one block answered both, and its state machine had 101
-transitions, because every state had to take every request and every check had to find its way back.
+do?* (`Control`). One block for both would need a state machine in which every state takes every
+request and every check finds its way back; kept apart, each stays small enough to read.
 
 #### `SKILL_Gate` (basic): the front desk's decision
 
@@ -1029,13 +1034,11 @@ bottom:
 
 ![The state machine of SKILL_RunLogic](filling-program/ecc-SKILL_RunLogic.svg)
 
-Until 4 Nov 2026 every primitive had this state machine as a type of its own (`SL_<Skill>`, 23
-states), with its five own things written into it. Now there is one, and a primitive brings only
-its contract.
+There is one `SKILL_Run` for every primitive: a primitive brings only its contract.
 
 #### `SKILL_NoEquipment` (basic): for a primitive without equipment
 
-A primitive that only waits (the spec allows one without `equipment:`) has no port: this block sits
+A primitive that only waits, with no equipment, has no port: this block sits
 in its place and answers every `SEND` on its socket `Skill` with `PLAYED` at once. None of the lab's
 modules has such a primitive.
 
@@ -1078,8 +1081,8 @@ For skills whose steps run side by side or depend on a decision (rule set 2,
 [module-rules.md](module-rules.md), section 3). A `Join` waits until every branch is done (`DONE`);
 if one fails, it says `HALT` to the others and `FAILED` once all have ended. A `Condition` compares
 `Operand` with `Expected` (`Operator` `eq`, `ne`, `gt`, `gte`, `lt`, `lte`) and answers `YES` or
-`NO`. A `Merge` is where the two branches of a decision meet again. The filling program does not use
-them yet; the syringe's `BottomUpFilling` (`cell/eval/scenarios.py`) does.
+`NO`. A `Merge` is where the two branches of a decision meet again. The lab's module programs do not
+use them yet.
 
 ### 7.9 The IO blocks: one pin each
 
@@ -1142,8 +1145,7 @@ raw value into `IN` with `Scale`.
 
 ## 8. The filling module's own blocks
 
-These types are made by the generator from the filling module's spec, `cell/modules/filling.yaml`,
-in the package `filling::`. They come in two families:
+These are the filling module's own types, in the package `filling::`. They come in two families:
 
 - **a piece of equipment** gets five types: `EQ_<Item>`, `EL_<Item>`, `EC_<Item>`, `EV_<Item>`,
   `EP_<Item>` (the axis, the pump, the scale: sections 8.1 to 8.4);
@@ -1273,8 +1275,8 @@ How it runs: every tick of `Cycle`, `In_AtHome` reads the switch and `Logic` get
 5. **Reporting.** It sends its state when something changed, at least once a second, and every
    0.2 s while it moves.
 
-The speed, 12.5 mm/s, is written into this type from the spec. Another speed means a regenerated
-type, not another value on the block: that is why the stoppering module has its own (section 9).
+The speed, 12.5 mm/s, is written into this type's algorithms. Another speed means another type,
+not another value on the block: that is why the stoppering module has its own (section 9).
 
 #### `EC_LinearAxis` (basic): the axis's command table
 
@@ -1340,8 +1342,8 @@ it while it "dispenses" (by time).
 ![EV_Pump](filling-program/type-EV_Pump.svg) ![EP_Pump](filling-program/type-EP_Pump.svg)
 
 `EL_Pump` only keeps the holder. `EC_Pump` has two commands, 0 `Idle` and 1 `Run`, with no outputs
-to switch. `EV_Pump` gives only `Holder`, and so `EP_Pump`'s `STATE` gives only `EqHolder`. When a pump is wired, its outputs are added to the spec
-(section 10 shows how) and the four types are generated again; the spec of `Dispense` stays as it is.
+to switch. `EV_Pump` gives only `Holder`, and so `EP_Pump`'s `STATE` gives only `EqHolder`. When a pump is wired, its outputs go into
+its five types (section 10 shows how, for a feeder); `SK_Dispense` and its contract stay as they are.
 
 ### 8.4 The scale
 
@@ -1425,7 +1427,7 @@ with `Run.`:
 | `Alg_Evaluate` | when a run starts, and at every new state of the equipment | `Pre`: may it start? `Post`: is it done? `Inv`: may it go on? And the results | `Run.Pre := TRUE; Run.Post := AtHome; Run.Inv := TRUE;` | `Run.Pre := Homed; Run.Post := NOT Moving AND ABS(ActualPosition - Position) < 0.001; Run.Inv := TRUE;` |
 
 `Command` and `StopCommand` are the command's number in the equipment's cheat sheet (`EC_`): the
-commands in the order of the spec, so for the axis `Stop` 0, `Up` 1, `Down` 2, `MoveTo` 3. Its inputs
+commands in the order of its table, so for the axis `Stop` 0, `Up` 1, `Down` 2, `MoveTo` 3. Its inputs
 are the parameters (with `START`), `Timeout` for a skill a sensor ends, and the equipment's signals
 the conditions use and who holds it (with `SAMPLE`). Two more algorithms are the same in every
 contract: `Alg_Init` names the OPC UA variables of its parameters and results, `Alg_Sample` passes on
@@ -1437,7 +1439,7 @@ states: a start (`Start`, then `Started`, which sends `Run.START`) and a new sta
 
 The *precondition* must hold for the skill to start; the *postcondition* says when it is done; the
 *invariant* must hold all the while it runs. The closing command is the equipment's safe command
-(all off) unless the spec gives another (`stop:`). What `Run` does with them is in section 7.7.
+(all off) unless the contract gives another (`Run.StopCommand`). What `Run` does with them is in section 7.7.
 
 ### 8.6 The five filling primitives
 
@@ -1555,32 +1557,38 @@ into one `FAILED` (section 7.8).
 
 `Stop` holds one step, `Home`, with the holder `Dispensing`.
 
-## 9. What is different in the stoppering module
+## 9. The stoppering and capping modules
 
-The stoppering module (`cell/modules/stoppering.yaml`, the project `cell/control/StopperingModule`,
-the Pi 5 at 192.168.0.134) is built in the same way. Everything in section 7 is the same, block for
-block. What section 8 describes is generated again from the stoppering spec, in the package
-`stoppering::`: some types are like the filling ones, others are new.
+The stoppering module (the project `cell/control/StopperingModule`, its Pi 5 at 192.168.0.134) and
+the capping module (`cell/control/CappingModule`, its Pi at `capping-module.local`) are built in
+the same way as the filling module. Everything in section 7 is the same, block for block. Their own
+types, what section 8 describes for the filling module, are in their own packages, `stoppering::`
+and `capping::`: some are like the filling ones, others are new.
 
-| | Filling | Stoppering |
-| --- | --- | --- |
-| Module name, OPC UA folder | `Filling`, `/Objects/Filling` | `Stoppering`, `/Objects/Stoppering` |
-| Equipment | `LinearAxis` (the needle), `Pump`, `Scale` | `LinearAxis` (the head), `Piston` |
-| The axis | 12.5 mm/s, PWM 2 kHz | 20 mm/s (assumed until measured), PWM 1 kHz |
-| Primitives | `Home` (60 s), `MoveAxis` (30 s), `Dispense`, `Tare`, `Weigh` | `Home` (8 s), `MoveAxis` (8 s), `PressStopper`, `RetractPiston` |
-| Module level skill | `Dispensing`: NeedleDown (40 mm), Dispense, Home, Weigh; parameter Volume, result Weight | `Stoppering`: HeadDown (40 mm), PressStopper, Home; no parameters, no results |
-| Resetting | Home, Tare | RetractPiston, Home (the piston in before the head moves) |
-| Stopping | Home | Home |
+| | Filling | Stoppering | Capping |
+| --- | --- | --- | --- |
+| Module name, OPC UA folder | `Filling`, `/Objects/Filling` | `Stoppering`, `/Objects/Stoppering` | `Capping`, `/Objects/Capping` |
+| Equipment | `LinearAxis` (the needle), `Pump`, `Scale` | `LinearAxis` (the head), `Piston` | `LinearAxis` (the crimping head), `Crimper` |
+| The axis | 12.5 mm/s, PWM 2 kHz | 20 mm/s (assumed until measured), PWM 1 kHz | 12.5 mm/s, PWM 2 kHz |
+| Primitives | `Home` (60 s), `MoveAxis` (30 s), `Dispense`, `Tare`, `Weigh` | `Home` (8 s), `MoveAxis` (8 s), `PressStopper`, `RetractPiston` | `Home` (60 s), `MoveAxis` (30 s), `Crimp` |
+| Module level skill | `Dispensing`: NeedleDown (40 mm), Dispense, Home, Weigh; parameter Volume, result Weight | `Stoppering`: HeadDown (40 mm), PressStopper, Home; no parameters, no results | `Capping`: HeadDown (40 mm), Crimp, Home; no parameters, no results |
+| Resetting | Home, Tare | RetractPiston, Home (the piston in before the head moves) | Home |
+| Stopping | Home | Home | Home |
+| Not real yet | The pump has no pins; the scale is simulated | The piston has no sensor (only times); the axis's speed is assumed | The crimper has no pin yet (`'sim'` on the Pi) |
+
+The last row is where your work starts: a sensor for the piston, the crimper's pin, a new piece of
+equipment. Section 10 shows how.
 
 ![The application Stoppering_pi](filling-program/stoppering-app-Stoppering_pi.svg)
 
 ### 9.1 The same name is not the same type
 
 Both modules have an `EL_LinearAxis`, but `filling::EL_LinearAxis` counts the position at 12.5 mm/s
-and `stoppering::EL_LinearAxis` at 20 mm/s: the speed is written into the type (section 8.2).
-`SK_Home` differs in its default timeout (60 s and 8 s). Because the packages differ, both can be
-built into one FORTE. So never copy a module's `EQ_`, `EL_`, `EP_`, `EV_`, `EC_`, `SK_` or `SC_` types into
-another module by hand: write the other module's spec and let the generator make its own.
+and `stoppering::EL_LinearAxis` at 20 mm/s: the speed is written into the type's algorithms
+(section 8.2). `SK_Home` differs in its default timeout (60 s and 8 s). Because the packages
+differ, both can be built into one FORTE. So copy types within the project of the module you work
+on: its own types are there already, in its package. A type copied from another module's project
+brings that module's package, speeds and times with it.
 
 ### 9.2 The piston instead of the pump and the scale
 
@@ -1608,14 +1616,39 @@ so `PhaseT` is never used there.
 
 ![SK_PressStopper](filling-program/stoppering-type-SK_PressStopper.svg)
 
-`PressStopper` extends the piston for 3 s and then closes with `Back` (its spec says `stop: Back`)
-instead of the safe command, also when it is stopped halfway: so it ends with the piston back in. An
-abort switches everything off at once; `RetractPiston` retracts the piston for 3 s afterwards (it is
-the first step of Resetting). Both are open loop: no sensor
-says where the piston is, only the time. `Home` and `MoveAxis` are the filling ones with the head's
+`PressStopper` extends the piston for 3 s and then closes with `Back` (its contract says
+`Run.StopCommand := 3;`) instead of the safe command, also when it is stopped halfway: so it ends
+with the piston back in. An abort switches everything off at once; `RetractPiston` retracts the
+piston for 3 s afterwards (it is the first step of Resetting). Both are open loop: no sensor says
+where the piston is, only the time. `Home` and `MoveAxis` are the filling ones with the head's
 timeouts.
 
-## 10. A new piece of equipment with its pins, and a primitive that uses it
+### 9.4 The capping module: the crimper
+
+![The application Capping_pi](filling-program/capping-app-Capping_pi.svg)
+
+The crimper closes a crimping head around the cap. It is the piston's simpler cousin: one output,
+`Close`, and no sensor. Its pin is not chosen yet: in `Capping_pi` its address is `'sim'` (the
+output goes nowhere), in `Capping` the simulator's coil.
+
+![EQ_Crimper](filling-program/capping-type-EQ_Crimper.svg)
+
+![Inside EQ_Crimper](filling-program/capping-inside-EQ_Crimper.svg)
+
+`EQ_Crimper` has one output block (`Out_Close`, an `IO_DO`), `SubCmd` a `SUBSCRIBE_3` (holder,
+release, Close) and `PubState` a `PUBLISH_1` (the holder). Its command table, `EC_Crimper`: 0 `Open`
+(everything off, the safe command), 1 `Close`.
+
+![SK_Crimp](filling-program/capping-type-SK_Crimp.svg)
+
+`Crimp` closes the crimper for `Duration` seconds (a parameter, 0 to 5 s, default 1.5) and then
+opens it: a timed primitive like `Dispense`, with `Run.Timed := TRUE;
+Run.RunTime := MUL_TIME(T#1s, Duration);` and `Run.Command := 1;` in its contract `SC_Crimp`. With
+one parameter, `SK_Crimp` has `UaStart` as a `SERVER_2_2`, `Par_Duration` and `PubParams`, as
+`SK_MoveAxis` has. When the crimper gets its pin, only `Close_Address` in `Capping_pi` changes; a
+sensor on it (closed, open) means a new input in its five types (section 10).
+
+## 10. By hand: a new piece of equipment with its pins, and a primitive that uses it
 
 ### 10.1 The example: a stopper feeder
 
@@ -1625,199 +1658,408 @@ reed switch at its front end, `Advanced`, that closes when the cylinder is fully
 primitive `FeedStopper`: push until the switch closes, and fail if that takes longer than 2 s.
 
 For the example the pins are GPIO 22 (Advance, Pi pin 15), GPIO 25 (Retract, pin 22) and GPIO 24
-(Advanced, pin 18), which the stoppering spec does not use yet (it uses 23, 17, 27, 18, 5 and 6), and
-the simulator's coils `c4`, `c5` and input `d1`. Check them against the real wiring first.
+(Advanced, pin 18), which the stoppering module does not use yet (it uses 23, 17, 27, 18, 5 and 6).
+Check them against the real wiring first.
 
-### 10.2 What you write: two entries in the spec
+You make seven types, in the stoppering module's project, from the bottom up: a type can only use
+types that are already there.
 
-In `cell/modules/stoppering.yaml`, below the `Piston`, the equipment:
+| Step | Type | What it is | Copied from |
+| --- | --- | --- | --- |
+| 1 | `EC_Feeder` (basic) | The command table: which outputs each command switches on | `EC_Piston` |
+| 2 | `EL_Feeder` (basic) | The rules: one holder, off before on, all off on release or abort, the switch reported | `EL_Piston` |
+| 3 | `EV_Feeder` (simple) | The report form: the channels' names, the state by name | `EV_Piston` |
+| 4 | `EQ_Feeder` (composite) | The equipment block: the pins, the rules, the channels | `EQ_Piston` |
+| 5 | `EP_Feeder` (composite) | The port, inside every skill of the feeder | `EP_Piston` |
+| 6 | `SC_FeedStopper` (basic) | The primitive's contract | `SC_Home` |
+| 7 | `SK_FeedStopper` (composite) | The primitive | `SK_Home` |
 
-```yaml
-  Feeder:
-    kind: StopperFeeder
-    description: Small air cylinder that pushes the next stopper under the head, with a switch at its front end
-    inputs:
-      Advanced: {modbus: d1, gpio: {line: 24, bias: pull_up, active_low: true}}   # pin 18, reed switch at the front
-    outputs:
-      Advance: {modbus: c4, gpio: 22}                              # pin 15, valve coil: out
-      Retract: {modbus: c5, gpio: 25}                              # pin 22, valve coil: in
-    commands:
-      Stop: {}
-      Advance: [Advance]
-      Retract: [Retract]
-    sim: {axis: {forward: Advance, backward: Retract, travel_s: 0.5, start: 0.0, switches: {Advanced: 1.0}}}
-```
+Step 8 puts `Feeder` and `FeedStopper` into the two applications. Section 11 builds FORTE with
+them and tries them out.
 
-- `inputs` and `outputs`: one line per pin. `modbus` is the pin on the PC (the simulator's register),
-  `gpio` the pin on the Pi. A switch to ground needs the pull-up and reads inverted, as the axis's
-  limit switch. A number (a pressure, a speed) would be `type: LREAL` and become an `IO_AI` or
-  `IO_AO`.
-- `commands`: what a skill may ask for, by name, and the outputs each switches on. The first is the
-  safe one (everything off), used to close every skill.
-- `sim`: how the PC's simulator moves it: the cylinder goes out in 0.5 s while `Advance` is on, and
-  `Advanced` closes at the front.
-
-And under `skills:`, the primitive:
-
-```yaml
-  FeedStopper:
-    description: Push the next stopper under the head, until the cylinder's front switch closes
-    equipment: Feeder
-    command: Advance
-    postcondition: Advanced
-    timeout: 2s
-```
-
-`postcondition` makes it a skill a sensor ends (with a timeout); `after: 0.5` instead would make it
-a timed one. The other fields (parameters, precondition, invariant, results) are in
-[building-skills.md](building-skills.md), section 3.1.
-
-### 10.3 What the generator makes of it
-
-Run `python -m modgen`. It writes seven new types into `cell/control/StopperingModule`, and puts two
-new blocks into both applications (`Stoppering` for the PC, `Stoppering_pi` for the Pi): `Feeder`
-comes after the other equipment in the start-up chain, `FeedStopper` after the other primitives.
-
-| New | What it is |
-| --- | --- |
-| `EQ_Feeder` | The equipment block; in the application as `Feeder`, with `Advanced_Address 'gpio[0:24:pull_up:active_low]'`, `Advance_Address 'gpio[0:22]'`, `Retract_Address 'gpio[0:25]'` (in `Stoppering` the simulator's registers) |
-| `EL_Feeder` | Its rules: one holder, off before on, all off on release or abort, the switch reported when it changes |
-| `EC_Feeder` | Its command table: 0 Stop, 1 Advance, 2 Retract |
-| `EV_Feeder` | Its report form: `Advanced`, `Holder`; and the names of its two channels |
-| `EP_Feeder` | Its service hatch, for every skill that uses it: a command on its socket `Skill` (`AEquipment`), `STATE` with `Advanced` and who holds it |
-| `SK_FeedStopper` | The primitive; in the application as `FeedStopper`, with `UaPath "/Skills/FeedStopper"` and `Holder "FeedStopper"` |
-| `SC_FeedStopper` | Its contract: `Run.Timed := FALSE; Run.RunTime := Timeout; Run.Command := 1; Run.Arg := 0.0; Run.StopCommand := 0;` and `Run.Pre := TRUE; Run.Post := Advanced; Run.Inv := TRUE;`: Advance until the switch says Advanced, 2 s at most, then both coils off |
-
-These are the pictures of what it generated (drawn from a copy of the spec with the two entries
-above; the repository's spec does not have them):
-
-![EQ_Feeder](filling-program/example-type-EQ_Feeder.svg)
-
-![Inside EQ_Feeder](filling-program/example-inside-EQ_Feeder.svg)
-
-![Inside EP_Feeder](filling-program/example-inside-EP_Feeder.svg)
-
-![SC_FeedStopper](filling-program/example-type-SC_FeedStopper.svg)
-
-![Inside SK_FeedStopper](filling-program/example-inside-SK_FeedStopper.svg)
-
-How the sizes inside follow from the spec, for any new equipment:
-
-| Part of `EQ_<Item>` | For the feeder | The rule |
-| --- | --- | --- |
-| `In_<input>` | `In_Advanced` (`IO_DI`) | One per input: `IO_DI` for a BOOL, `IO_AI` for an LREAL |
-| `Out_<output>` | `Out_Advance`, `Out_Retract` (`IO_DO`) | One per output: `IO_DO` for a BOOL, `IO_AO` for an LREAL (an analog value or PWM) |
-| Inputs of the block | `Advanced_Address`, `Advanced_Sim`, `Advance_Address`, `Retract_Address` | `<pin>_Address` per pin; `<input>_Sim` per input; `<input>_Scale` per LREAL input; `<output>_Gain` and `_Bias` per LREAL output |
-| `SubCmd` (and `EqCmd` in `EP_`) | `SUBSCRIBE_4` (`PUBLISH_4`): holder, release, Advance, Retract | 2, plus one per output, plus one per LREAL output (its "enabled"), plus two with a position (Move, Goal) |
-| `PubState` (and `EqState` in `EP_`) | `PUBLISH_2` (`SUBSCRIBE_2`): Advanced, holder | One per input, plus three with a position (ActualPosition, Homed, Moving), plus the holder |
-| `PubUa` | `PUBLISH_1`: `Equipment/Feeder/Advanced` | One per input (and the position values); none without inputs |
-| `MoveT` | none | Only with a `position:` in the spec |
-
-And for any new primitive: `UaStart` is `SERVER_2_<1 + parameters>`, there is one `Par_<p>` per
-parameter and a `PubParams` (`PUBLISH_<parameters>`) if it has any, a `PubResults` if it has results,
-and a `Timeout` input if a sensor ends it. `FeedStopper` has no parameters: `SERVER_2_1`, no `Par_`,
-no `PubParams`. Everything else in `SK_FeedStopper` (`Control`, `Run`, `Port`) is the same as in
-every other primitive, or every other primitive of the feeder.
-
-### 10.4 Build, test, put it on the Pi
-
-New block types mean a new FORTE: FORTE can only create blocks of the types it was built with
-([building-skills.md](building-skills.md), section 1). The steps, as in section 11 for the filling
-module:
-
-1. `python -m modgen`: generate (section 10.3). A layout you arranged in the IDE is kept; the new
-   blocks get a free place in their group.
-2. `runtime/build-modules.ps1`: the IDE exports the types as C++ and FORTE for Windows is built with
-   them.
-3. Test on the PC: `python cell/sim/run_module.py cell/modules/stoppering.yaml --opcua-port 4841
-   --mgmt-port 61500 --forte <the new forte.exe>` starts the simulator (which now moves the feeder),
-   FORTE and the PC application. Then, with an OPC UA client: `Occupation/Occupy("me")`,
-   `Module/Reset("me")`, `Module/Start("me")`, `Skills/FeedStopper/Start("me")`, and watch
-   `Skills/FeedStopper/State` go 1 Running, 3 Succeeded, 0 Idle, and `Equipment/Feeder/Advanced` go
-   TRUE.
-4. FORTE for the Pi: `runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate`, then
-   `runtime/package-runtime.ps1`; commit `runtime/bin/forte-aarch64` and its `.sha256`.
-5. On the Pi, with someone at the module (the program starts and may move the head):
-   `python deploy/pi.py install --spec cell/modules/stoppering.yaml`, then
-   `python deploy/pi.py module --spec cell/modules/stoppering.yaml`.
-6. Check that the module is what its spec says: `python -m modsync pull --spec
-   cell/modules/stoppering.yaml --target pi`.
-
-To use the feeder in the module's sequence, add it as a step, and a second primitive to pull it back
-(for example `RetractFeeder`: `command: Retract`, `after: 0.5`):
-`execute: [FeedStopper, {MoveAxis: {Position: 40.0}, as: HeadDown}, PressStopper, Home, RetractFeeder]`.
-A changed sequence alone needs no new FORTE ([building-skills.md](building-skills.md), section 2); a
-new primitive does.
-
-### 10.5 By hand, block by block
-
-Use the spec and the generator for real work: the next `python -m modgen` writes the program again
-from the spec, and a primitive that is not in the spec is gone. Building one by hand is still the
-best way to learn what a primitive is made of. Below is `FeedStopper` exactly as the generator
-makes it, so you can build it in the 4diac IDE and compare.
+### 10.2 What is reused, and what you make
 
 #### What is already there
 
-You do not make these; a new primitive only uses them.
+You do not make these; your new types only use them.
 
-| What | Where it comes from | What the primitive does with it |
+| What | Where it comes from | What your new types do with it |
 | --- | --- | --- |
 | `SKILL_Core` (with `SKILL_Gate`, `SKILL_Control`, `MOD_OwnerView`, `MOD_StateView` inside) | ModLib, the same in every module (section 7.6) | The front desk and the skill's state machine; its OPC UA methods Stop, Abort, Reset; State and ErrorID |
 | `SKILL_Run` (with `SKILL_RunLogic` and two timers inside) | ModLib (section 7.7) | One run: the lock, the command, the end condition, the timeout, the closing command |
 | `AContract`, `AEquipment` | ModLib (section 7.7) | The two adapters: contract to run, run to port |
 | `SKILL_Param_<type>` | ModLib (section 7.8) | One per parameter: the range check and the value of the run |
-| `SERVER_2_n`, `PUBLISH_n` | FORTE (section 7) | The Start method, the published parameters and results. FORTE makes any `n` from the name |
-| `EQ_Feeder`, `EL_Feeder` | Made with the equipment (section 10.3) | Nothing directly: the port talks to it over two channels |
-| `EP_Feeder` (with `EC_Feeder`, `EV_Feeder` inside) | Made with the equipment, for its skills (section 8.1) | Used as it is: the commands come in on its socket, the equipment's state goes out |
+| `IO_DI`, `IO_DO`, `IO_AI`, `IO_AO` | ModLib (section 7.9) | One per pin of the equipment: the Pi's GPIO, PWM, Modbus or simulated, chosen by the address |
+| `MOD_StateView` | ModLib (section 7.5) | In the equipment block: everything off when the module aborts |
+| `E_CYCLE`, `E_DELAY`, `SERVER_2_n`, `PUBLISH_n`, `SUBSCRIBE_n` | FORTE (section 7) | The cycle, the timers, the Start method, the channels. FORTE makes any `n` from the name |
 | `Occupation`, `Module` | The module level (sections 7.4, 7.5) | Nothing directly: `SKILL_Core` listens to the owner and the module state |
 
-So for a primitive on equipment that already exists, the only new types are `SK_<Skill>` and its
-contract `SC_<Skill>`, and the contract is the only one with anything of the primitive's own in it.
+#### How much of each new type is your own
 
-#### What a primitive connects to
+| Type | Made of | The same in every one: keep it as copied | Your own |
+| --- | --- | --- | --- |
+| `EC_Feeder` | 6 states, 8 transitions, 3 algorithms | The state machine, `Alg_Play`, `Alg_Next`, the events and the inputs | One output per output pin (`N_<output>`), and the table in `Alg_Send` |
+| `EL_Feeder` | 18 states, 31 transitions, 13 algorithms | The state machine (the same in `EL_Piston`, `EL_Crimper` and every piece of equipment without a position), 6 of the algorithms, the events | Two pins and one internal variable per input and per output, and one line per pin in the 7 algorithms that handle the pins |
+| `EV_Feeder` | 2 algorithms | The holder and the channel ids | The item's name in the two ids, and one line per input |
+| `EQ_Feeder` | 10 blocks, 22 event and 26 data connections | 7 blocks (`Logic`, `Cycle`, `Mode`, `SubCmd`, `SubRelease`, `PubState`, `PubUa`) and their wiring | One IO block per pin with its wires, and the sizes of `SubCmd`, `PubState`, `PubUa` |
+| `EP_Feeder` | 5 blocks, 12 event and 15 data connections | The 5 blocks and every event connection | The sizes of `EqState` and `EqCmd`, one wire per pin, one output per input |
+| `SC_FeedStopper` | 6 states, 8 transitions, 4 algorithms | The state machine, `Alg_Init`, `Alg_Sample`, the plug `Run` | `Alg_Start` and `Alg_Evaluate` (8 lines), one input per signal the conditions use |
+| `SK_FeedStopper` | 5 blocks, 44 connections | 4 blocks (`Control`, `UaStart`, `Run`, and `Port` for every skill of the feeder) and 39 connections | The `Contract` block and its 5 connections |
 
-A primitive has **no wires to anything in the application**. It reaches everything else through
-its outside pins, OPC UA and local channels, and its port builds the channel names itself at `INIT`
-from `Module` (the port is made for one piece of equipment, so it knows its name).
+The equipment is the larger job, but most of it is the pins. A primitive on equipment that is
+there already is two types, and its own part is the contract.
 
-| It talks to | How | Through which block inside `SK_` |
+#### Copy, then change
+
+Make every new type as a copy of the type the table in 10.1 names, and change only what is your own:
+
+1. In the IDE's *System Explorer*, open the project's *Type Library* and select the type to copy
+   (for step 1, `EC_Piston` in `Equipment/Commands`).
+2. *Copy* (Ctrl+C), select the same folder, *Paste* (Ctrl+V). The IDE asks for the new name:
+   `EC_Feeder`. The copy is a type of its own, with everything the old one has, in the same package
+   (`stoppering::`). Keep the package as it is.
+3. Open the copy and change it as the step says. A pin is renamed in the *Interface* tab; an
+   algorithm does not follow a renamed pin, so change its name in the algorithms' text too.
+4. Inside a composite copy, the blocks still have the old types (the copied `EQ_Piston` has an
+   `EL_Piston` inside). Right-click such a block, *Change Type*, and choose the new one. Connections
+   to pins the new type does not have are shown as errors: delete them and draw the new ones.
+
+A type made from nothing instead: *File > New > Type*, with the template *Basic*, *Simple* or
+*Composite*. Save often (Ctrl+S), and check the project before you build (section 11.2).
+
+**Sizes of `PUBLISH`, `SUBSCRIBE` and `SERVER`.** The project declares every size it uses in
+*Type Library/Generic* (`PUBLISH_4`, `SUBSCRIBE_5`, ...), so the IDE knows its pins. FORTE makes
+any size from the name. When you need a size that is not there (the feeder's port needs
+`SUBSCRIBE_2`), copy the next smaller one (`SUBSCRIBE_1`) as `SUBSCRIBE_2` and add the output
+`RD_2` of type `ANY`, with the event `IND` (its *With*, as `RD_1` has). For `PUBLISH_n` it is the
+input `SD_n` with `REQ`; for `SERVER_2_n` the output `RD_n` with `IND`.
+
+### 10.3 Step 1: the command table `EC_Feeder`
+
+![EC_Feeder](filling-program/example-type-EC_Feeder.svg)
+
+Copy `EC_Piston` as `EC_Feeder`. The piston's outputs are `N_Retract` and `N_Extend`; rename them
+to the feeder's outputs, `N_Advance` and `N_Retract`, and keep them in the order of the
+equipment's output pins, as everywhere else in the equipment's types.
+
+| Pin | Kind | Type | With | Keep or change |
+| --- | --- | --- | --- | --- |
+| `PLAY` | event in | | `Holder`, `Command`, `Release` | Keep |
+| `PHASE_T` | event in | | – | Keep |
+| `OUT` | event out | | `O_Holder`, `O_Release`, one `N_<output>` per output | Change the `N_` |
+| `PHASE_START` | event out | | `PhaseDT` | Keep |
+| `PHASE_STOP`, `PLAYED` | events out | | – | Keep |
+| `Holder` | data in | `WSTRING` | | Keep |
+| `Command` | data in | `USINT` | | Keep |
+| `Release` | data in | `BOOL` | | Keep |
+| `O_Holder`, `O_Release`, `PhaseDT` | data out | `WSTRING`, `BOOL`, `TIME` | | Keep |
+| `N_Advance`, `N_Retract` | data out | `BOOL` | | **Your own**: one per output pin |
+
+The internal variables `Phase` (`USINT`) and `Timed` (`BOOL`), the state machine and the
+algorithms `Alg_Play` (`Phase := 0;`) and `Alg_Next` (`Phase := Phase + 1;`) stay as copied.
+
+![The state machine of EC_Feeder](filling-program/example-ecc-EC_Feeder.svg)
+
+`Alg_Send` is the table itself. It switches everything off, then on what the command wants. The
+numbers are the commands in order: 0 is always the safe one (everything off), here 1 `Advance` and
+2 `Retract`.
+
+```
+N_Advance := FALSE;
+N_Retract := FALSE;
+Timed := FALSE;
+PhaseDT := T#0ms;
+IF Command = 1 THEN
+  N_Advance := TRUE;
+ELSIF Command = 2 THEN
+  N_Retract := TRUE;
+END_IF;
+O_Holder := Holder;
+O_Release := Release AND NOT Timed;
+```
+
+A command with **timed phases** (the piston's `Back`: Retract on for 3 s, then everything off)
+sets `Timed` and `PhaseDT` in its first phase. The port's timer then sends `PHASE_T`, and
+`Alg_Send` runs again with `Phase` 1. That is how `EC_Piston` has it:
+
+```
+ELSIF Command = 3 THEN
+  IF Phase = 0 THEN
+    N_Retract := TRUE;
+    PhaseDT := T#3000ms;
+    Timed := TRUE;
+  ELSE
+  END_IF;
+```
+
+The release goes out only with the last phase (`Release AND NOT Timed`), so the equipment is given
+up when the command has really ended.
+
+### 10.4 Step 2: the rules `EL_Feeder`
+
+![EL_Feeder](filling-program/example-type-EL_Feeder.svg)
+
+Copy `EL_Piston` as `EL_Feeder`. The state machine is the same in every piece of equipment without
+a position, so it stays exactly as copied; what changes is the pins and one line per pin in the
+algorithms. The piston has no input; the feeder has one, `Advanced`, so you add its pins.
+
+| Pin | Kind | Type | With | Keep or change |
+| --- | --- | --- | --- | --- |
+| `INIT` | event in | | `Module`, `Name`, `UaRoot` | Keep |
+| `CMD` | event in | | `C_Holder`, `C_Release`, one `C_<output>` per output | Change the `C_` |
+| `RELEASE` | event in | | `R_Holder` | Keep |
+| `SAMPLE` | event in | | one `I_<input>` per input (none for the piston) | Change |
+| `REFRESH`, `DRIVEN` | events in | | – | Keep |
+| `MOD_CHG` | event in | | `ModuleState` | Keep |
+| `INITO` | event out | | `IdCmd`, `IdRelease`, `IdState`, `IdPub` | Keep |
+| `DRIVE` | event out | | one `O_<output>` per output | Change |
+| `STATE` | event out | | one `<input>` per input, `Holder` | Change |
+| `Module`, `Name`, `UaRoot`, `C_Holder`, `R_Holder` | data in | `WSTRING` | | Keep |
+| `C_Release` | data in | `BOOL` | | Keep |
+| `ModuleState` | data in | `USINT` | | Keep |
+| `C_Advance`, `C_Retract` | data in | `BOOL` | | **Your own**: what a command wants, per output |
+| `I_Advanced` | data in | `BOOL` | | **Your own**: the input as read, per input |
+| `IdCmd`, `IdRelease`, `IdState`, `IdPub`, `Holder` | data out | `WSTRING` | | Keep |
+| `O_Advance`, `O_Retract` | data out | `BOOL` | | **Your own**: what to write, per output |
+| `Advanced` | data out | `BOOL` | | **Your own**: the input for the skills, per input |
+
+The internal variables: keep `Publish` (`BOOL`), `Beat` (`USINT`), `LastHolder` (`WSTRING`),
+`Pending` and `OffPending` (`BOOL`); yours are `N_<output>` per output (the next value: `N_Advance`,
+`N_Retract`) and `L_<input>` per input (the last value reported: `L_Advanced`), all `BOOL`.
+
+The algorithms. The six not shown are the same in every piece of equipment: `Alg_QueueB` and
+`Alg_QueueM` (`Pending := TRUE;`), `Alg_OffB` and `Alg_OffM` (`OffPending := TRUE;`),
+`Alg_CmdPend` (`Pending := FALSE;`), `Alg_Report` (`LastHolder := Holder; Beat := 0;`).
+
+```
+Alg_Init:     IdCmd := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/cmd]");
+              IdRelease := CONCAT(CONCAT("loc[", Module), "/release]");
+              IdState := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/state]");
+              IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", UaRoot), "/Equipment/"), Name), "/Advanced"), "]");
+                                       (one path per input, separated by ";"; the piston has IdPub := "";)
+
+Alg_Sample:   Advanced := I_Advanced;                                       (one line per input)
+              Publish := (Advanced <> L_Advanced) OR (Holder <> LastHolder) OR (Beat >= 20);
+                                       (one "(<input> <> L_<input>) OR" per input)
+              Beat := Beat + 1;
+
+Alg_Publish:  L_Advanced := Advanced;                                       (one line per input)
+              LastHolder := Holder;
+              Beat := 0;
+
+Alg_Cmd:      Holder := C_Holder;
+              N_Advance := C_Advance;                                       (one line per output)
+              N_Retract := C_Retract;
+              IF C_Release THEN
+                Holder := "";
+              END_IF;
+
+Alg_Off:      N_Advance := FALSE;                                           (one line per output)
+              N_Retract := FALSE;
+              Holder := "";
+              OffPending := FALSE;
+
+Alg_Break:    O_Advance := O_Advance AND N_Advance;                         (one line per output)
+              O_Retract := O_Retract AND N_Retract;
+
+Alg_Make:     O_Advance := N_Advance;                                       (one line per output)
+              O_Retract := N_Retract;
+```
+
+`Alg_Break` is "off before on": an output stays on only if the new command wants it on too. The
+outputs are written (`DRIVE`, then `DRIVEN` when the IO blocks are done), and only then does
+`Alg_Make` switch the new ones on. With several inputs, `IdPub` names one path per input,
+separated by `;` and in the order of the inputs on `STATE`; the axis's `Alg_Init` has four
+(`/AtHome;`, `/ActualPosition;`, `/Homed;`, `/Moving`).
+
+The state machine, as copied:
+
+![The state machine of EL_Feeder](filling-program/example-ecc-EL_Feeder.svg)
+
+| State | Actions | |
 | --- | --- | --- |
-| Its parent (the application, or a module level skill it is a step of) | Outside pins: `INIT`/`INITO` (the start-up chain), `START`, `HALT`, `ABORT`, `RESET` in; `SUCCESS`, `FAILURE` out; the values `Module`, `UaRoot`, `UaPath`, `UaEnable`, `Methods`, `Holder`, `ReleaseAfter`, `Timeout`, one per parameter | `Control`, `Contract`, `Run` |
-| OPC UA clients | Methods `<UaRoot><UaPath>/Start`, `/Stop`, `/Abort`, `/Reset`; variables `State`, `ErrorID`, `Parameters/...`, `Results/...` | `UaStart`; `Control` (its `UaStop`, `UaAbort`, `UaReset`, `PubState`); `PubParams`; `PubResults` |
-| The owner and the module state | `loc[<Module>/owner]`, `loc[<Module>/state]` | inside `Control` (`Owner`, `Mode`) |
-| The activity count | `loc[<Module>/activity]` | inside `Control` (`Act`) |
-| The equipment | `loc[<Module>/<Equipment>/state]` in, `loc[<Module>/<Equipment>/cmd]` out | `Port` |
+| `START` (initial) | – | Waits |
+| `Init` | `Alg_Init` → `INITO` | Names the channels |
+| `Sample` | `Alg_Sample` | An input was read: report it? |
+| `Publish` | `Alg_Publish` → `STATE` | Yes: report |
+| `Refresh` | → `DRIVE` | Write the outputs again (every cycle) |
+| `Cmd` | `Alg_Cmd` | A command from the holder (or anyone, when free) |
+| `Off` | `Alg_Off` | Released, or the module aborts: all off, free |
+| `Break` | `Alg_Break` → `DRIVE` | Off what the new values do not want |
+| `BreakW` | – | Wait until written |
+| `Make` | `Alg_Make` → `DRIVE` | On the new values |
+| `MakeW` | – | Wait until written |
+| `QueueB`, `QueueM` | `Alg_QueueB`, `Alg_QueueM` | A command came while writing: keep it for later |
+| `OffB`, `OffM` | `Alg_OffB`, `Alg_OffM` | A release or abort came while writing: keep it for later |
+| `Settled` | – | Written: anything kept? |
+| `CmdPend` | `Alg_CmdPend` | Take the kept command |
+| `Report` | `Alg_Report` → `STATE` | Report the new state |
 
-#### Which blocks never change
+| From | To | Condition |
+| --- | --- | --- |
+| `START` | `Init` | `INIT` |
+| `START` | `Sample` | `SAMPLE` |
+| `START` | `Refresh` | `REFRESH` |
+| `START` | `Cmd` | `CMD[(Holder = "") OR (C_Holder = Holder)]` |
+| `START` | `Off` | `RELEASE[(R_Holder = Holder) AND (Holder <> "")]` |
+| `START` | `Off` | `MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]` |
+| `Init`, `Publish`, `Refresh`, `Report` | `START` | `1` |
+| `Sample` | `Publish` | `[Publish]` |
+| `Sample` | `START` | `1` |
+| `Cmd`, `Off` | `Break` | `1` |
+| `Break` | `BreakW` | `1` |
+| `BreakW` | `Make` | `DRIVEN` |
+| `BreakW` | `QueueB` | `CMD` |
+| `BreakW` | `OffB` | `RELEASE[(R_Holder = Holder) AND (Holder <> "")]` |
+| `BreakW` | `OffB` | `MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]` |
+| `QueueB`, `OffB` | `BreakW` | `1` |
+| `Make` | `MakeW` | `1` |
+| `MakeW` | `Settled` | `DRIVEN` |
+| `MakeW` | `QueueM` | `CMD` |
+| `MakeW` | `OffM` | `RELEASE[(R_Holder = Holder) AND (Holder <> "")]` |
+| `MakeW` | `OffM` | `MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]` |
+| `QueueM`, `OffM` | `MakeW` | `1` |
+| `Settled` | `Off` | `[OffPending]` |
+| `Settled` | `CmdPend` | `[Pending]` |
+| `Settled` | `Report` | `1` |
+| `CmdPend` | `Cmd` | `[(Holder = "") OR (C_Holder = Holder)]` |
+| `CmdPend` | `Report` | `1` |
 
-`SK_FeedStopper` has five blocks. Only one of them, `Contract`, is the primitive's own; the others
-are the same in every primitive, or the same in every primitive of the same equipment, or sized by
-the number of parameters and results.
+The order of a state's transitions matters: the first whose condition holds is taken, so
+`[Publish]` comes before `1`. ModuleState 8 is Aborting, 9 Aborted.
 
-| Block | Type | Values | Changes with |
+Equipment **with a position** (the axis) has more: a `MoveTo` command, the time a move takes, and
+`ActualPosition`, `Homed`, `Moving`. Copy the axis's types (`EL_LinearAxis` and the others) for
+that; the speed is written into its algorithms (section 8.2).
+
+### 10.5 Step 3: the report form `EV_Feeder`
+
+![EV_Feeder](filling-program/example-type-EV_Feeder.svg)
+
+Copy `EV_Piston` as `EV_Feeder`. A simple type: one algorithm per event, no states.
+
+| Pin | Kind | Type | With | Keep or change |
+| --- | --- | --- | --- | --- |
+| `INIT` | event in | | `Module` | Keep |
+| `REQ` | event in | | one `I_<input>` per input, `I_Holder` | Add `I_Advanced` |
+| `INITO` | event out | | `IdState`, `IdCmd` | Keep |
+| `CNF` | event out | | one `<input>` per input, `Holder` | Add `Advanced` |
+| `Module`, `I_Holder` | data in | `WSTRING` | | Keep |
+| `I_Advanced` | data in | `BOOL` | | **Your own** |
+| `Holder`, `IdState`, `IdCmd` | data out | `WSTRING` | | Keep |
+| `Advanced` | data out | `BOOL` | | **Your own** |
+
+```
+INIT:  IdState := CONCAT(CONCAT("loc[", Module), "/Feeder/state]");
+       IdCmd := CONCAT(CONCAT("loc[", Module), "/Feeder/cmd]");
+REQ:   Advanced := I_Advanced;            (one line per input)
+       Holder := I_Holder;
+```
+
+The item's name, `Feeder`, is written into the two ids: it must be the name of the equipment block
+in the application (step 8), because the equipment builds its own channel names from that name.
+
+### 10.6 Step 4: the equipment block `EQ_Feeder`
+
+![EQ_Feeder](filling-program/example-type-EQ_Feeder.svg)
+
+Copy `EQ_Piston` as `EQ_Feeder`. Its interface: `INIT` (with every data input) and `INITO`, and the
+data inputs
+
+| Pin | Type | Initial value | Keep or change |
 | --- | --- | --- | --- |
-| `Control` | `modlib::SKILL_Core` | – | **Never** |
-| `Run` | `modlib::SKILL_Run` | – | **Never** |
-| `Port` | `stoppering::EP_Feeder` | – | The equipment (the same in every skill of the feeder) |
-| `UaStart` | `iec61499::net::SERVER_2_1` | – | The parameters: `SERVER_2_<1 + parameters>` |
-| `Par_<p>`, `PubParams`, `PubResults` | `modlib::SKILL_Param_<type>`, `iec61499::net::PUBLISH_n` | `Lower`, `Upper` | The parameters and results (FeedStopper has none) |
-| `Contract` | `stoppering::SC_FeedStopper` | – | **The primitive itself** |
+| `Module`, `UaRoot` | `WSTRING` | | Keep |
+| `Name` | `WSTRING` | `"Feeder"` | Change: the item's name |
+| `UaEnable` | `BOOL` | | Keep |
+| `CycleTime` | `TIME` | `T#50ms` | Keep |
+| `Advanced_Address`, `Advance_Address`, `Retract_Address` | `STRING` | | **Your own**: one per pin, `<pin>_Address` |
+| `Advanced_Sim` | `BOOL` | `FALSE` | **Your own**: one per input, its value when simulated |
 
-#### Step 1: the contract `SC_FeedStopper`
+An `LREAL` input also has `<input>_Scale` (the value per raw count); an `LREAL` output `<output>_Gain`
+and `<output>_Bias`.
 
-In the IDE: *File > New > Type*, template *Basic*, name `SC_FeedStopper`, in the folder
-`Type Library/Skills/Contract`. Its interface:
+![Inside EQ_Feeder](filling-program/example-inside-EQ_Feeder.svg)
 
-| Pin | Kind | Type | With |
+| Block | Type | Values | Keep or change |
 | --- | --- | --- | --- |
-| `INIT` | event in | | – (with `UaRoot`, `UaPath` when the skill has parameters or results) |
-| `START` | event in | | `Timeout` (and the parameters, if any) |
-| `SAMPLE` | event in | | `Advanced` (the equipment's signals the conditions use) and `EqHolder` |
-| `INITO` | event out | | – (`IdParams`, `IdResults` when it has them) |
-| `Timeout` | data in | `TIME` | |
-| `Advanced` | data in | `BOOL` | |
-| `EqHolder` | data in | `WSTRING` | |
-| `Run` | plug | `modlib::AContract` | (section 7.7) |
+| `Logic` | `stoppering::EL_Feeder` | | *Change Type* to your step 2 |
+| `Cycle` | `iec61499::events::E_CYCLE` | | Keep |
+| `Mode` | `modlib::MOD_StateView` | | Keep |
+| `SubCmd` | `iec61499::net::SUBSCRIBE_4` | `QI` TRUE | Size: 2 + one per output (the holder, the release, the outputs) |
+| `SubRelease` | `iec61499::net::SUBSCRIBE_1` | `QI` TRUE | Keep |
+| `PubState` | `iec61499::net::PUBLISH_2` | `QI` TRUE | Size: one per input + 1 (the holder): the piston's `PUBLISH_1` becomes `PUBLISH_2` |
+| `PubUa` | `iec61499::net::PUBLISH_1` | | Size: one per input. New: the piston has no input, so no `PubUa` |
+| `In_Advanced` | `modlib::IO_DI` | | New: one `In_<input>` per input (`IO_AI` for an `LREAL`) |
+| `Out_Advance`, `Out_Retract` | `modlib::IO_DO` | | The piston's `Out_Retract`, `Out_Extend`, renamed: one `Out_<output>` per output (`IO_AO` for an `LREAL`) |
+
+Put them in the groups `Core` (`Logic`, `Cycle`, `Mode`), `Channels` (`SubCmd`, `SubRelease`,
+`PubState`, `PubUa`), `Inputs` and `Outputs`. The connections:
+
+| What | Connections |
+| --- | --- |
+| The start-up chain | `INIT` → `Logic.INIT`; `Logic.INITO` → `Mode.INIT` → ... each `INITO` to the next `INIT`: `Mode`, `SubCmd`, `SubRelease`, `PubState`, `PubUa`, then each `In_`, then each `Out_`; the last `Out_.INITO` → `Cycle.START` and → `INITO` |
+| Names and channels | `Module` → `Logic.Module` and `Mode.Module`; `Name` → `Logic.Name`; `UaRoot` → `Logic.UaRoot`; `Logic.IdCmd` → `SubCmd.ID`; `Logic.IdRelease` → `SubRelease.ID`; `Logic.IdState` → `PubState.ID`; `Logic.IdPub` → `PubUa.ID`; `UaEnable` → `PubUa.QI`; `CycleTime` → `Cycle.DT` |
+| Commands in | `SubCmd.IND` → `Logic.CMD`; `SubCmd.RD_1` → `Logic.C_Holder`; `SubCmd.RD_2` → `Logic.C_Release`; `SubCmd.RD_3` → `Logic.C_Advance`; `SubCmd.RD_4` → `Logic.C_Retract` (one `RD_` per output, in order); `SubRelease.IND` → `Logic.RELEASE`; `SubRelease.RD_1` → `Logic.R_Holder`; `Mode.CHG` → `Logic.MOD_CHG`; `Mode.State` → `Logic.ModuleState` |
+| Reading the inputs | `Cycle.EO` → `Logic.REFRESH` and → `In_Advanced.REQ`; `In_Advanced.CNF` → `Logic.SAMPLE`. With several inputs, one after the other: `Cycle.EO` → the first `In_.REQ`, each `CNF` → the next `REQ`, the last `CNF` → `Logic.SAMPLE`. Without inputs: `Cycle.EO` → `Logic.SAMPLE` |
+| Per input | `Advanced_Address` → `In_Advanced.Address`; `Advanced_Sim` → `In_Advanced.SimValue`; `In_Advanced.IN` → `Logic.I_Advanced`; `Logic.Advanced` → `PubState.SD_1` and → `PubUa.SD_1` (the k-th input on `SD_k`) |
+| Reporting | `Logic.Holder` → `PubState.SD_2` (the last `SD_`); `Logic.STATE` → `PubState.REQ` and → `PubUa.REQ` |
+| Writing the outputs | `Logic.DRIVE` → `Out_Advance.REQ`; `Out_Advance.CNF` → `Out_Retract.REQ`; `Out_Retract.CNF` → `Logic.DRIVEN` (one after the other, the last back to `Logic`) |
+| Per output | `Advance_Address` → `Out_Advance.Address`; `Logic.O_Advance` → `Out_Advance.OUT`; the same for `Retract`. An `IO_AO` also gets `<output>_Gain` → `Gain`, `<output>_Bias` → `Bias`, and its "enabled" from `Logic` → `EN` |
+
+### 10.7 Step 5: the port `EP_Feeder`
+
+![EP_Feeder](filling-program/example-type-EP_Feeder.svg)
+
+Copy `EP_Piston` as `EP_Feeder`. Its interface: `INIT` (with `Module`) and `INITO`; `STATE` (with
+one output per input and `EqHolder`); the data input `Module` (`WSTRING`); the data outputs
+`Advanced` (`BOOL`, **your own**: one per input) and `EqHolder` (`WSTRING`); and the socket
+`Skill` of the adapter type `modlib::AEquipment`, as copied.
+
+![Inside EP_Feeder](filling-program/example-inside-EP_Feeder.svg)
+
+| Block | Type | Values | Keep or change |
+| --- | --- | --- | --- |
+| `EqView` | `stoppering::EV_Feeder` | | *Change Type* to your step 3 |
+| `EqState` | `iec61499::net::SUBSCRIBE_2` | `QI` TRUE | Size: the same as `PubState` in `EQ_` (one per input + the holder). The piston's is `SUBSCRIBE_1` |
+| `Driver` | `stoppering::EC_Feeder` | | *Change Type* to your step 1 |
+| `PhaseT` | `iec61499::events::E_DELAY` | | Keep |
+| `EqCmd` | `iec61499::net::PUBLISH_4` | `QI` TRUE | Size: the same as `SubCmd` in `EQ_` |
+
+In the groups `StateIn` (`EqView`, `EqState`) and `CommandOut` (`Driver`, `PhaseT`, `EqCmd`). The
+connections:
+
+| What | Connections |
+| --- | --- |
+| The start-up chain | `INIT` → `EqView.INIT`; `EqView.INITO` → `EqState.INIT`; `EqState.INITO` → `EqCmd.INIT`; `EqCmd.INITO` → `INITO` |
+| The channels | `Module` → `EqView.Module`; `EqView.IdState` → `EqState.ID`; `EqView.IdCmd` → `EqCmd.ID` |
+| The state, in | `EqState.IND` → `EqView.REQ`; `EqState.RD_1` → `EqView.I_Advanced` (one per input, in order); `EqState.RD_2` → `EqView.I_Holder` (the last); `EqView.CNF` → `STATE`; `EqView.Advanced` → `Advanced`; `EqView.Holder` → `EqHolder` |
+| The command, out | `Skill.SEND` → `Driver.PLAY`; `Skill.Holder` → `Driver.Holder`; `Skill.Command` → `Driver.Command`; `Skill.Release` → `Driver.Release`; `Driver.OUT` → `EqCmd.REQ`; `Driver.O_Holder` → `EqCmd.SD_1`; `Driver.O_Release` → `EqCmd.SD_2`; `Driver.N_Advance` → `EqCmd.SD_3`; `Driver.N_Retract` → `EqCmd.SD_4` (one per output, in order); `Driver.PLAYED` → `Skill.PLAYED` |
+| Phases | `Driver.PHASE_START` → `PhaseT.START`; `Driver.PHASE_STOP` → `PhaseT.STOP`; `PhaseT.EO` → `Driver.PHASE_T`; `Driver.PhaseDT` → `PhaseT.DT` |
+
+`Skill.SEND`, `Skill.Holder` and the others are the pins of the socket: inside a composite, a
+socket of the type is a block of its own at the edge of the network (section 6.6). `Skill.Arg` is
+only used by equipment with a position.
+
+The equipment is done. Check the project now (section 11.2) before you go on: a mistake is easier
+to find in one type than in seven.
+
+### 10.8 Step 6: the contract `SC_FeedStopper`
+
+![SC_FeedStopper](filling-program/example-type-SC_FeedStopper.svg)
+
+Copy the stoppering module's `SC_Home` (in `Skills/Contract`) as `SC_FeedStopper`. Home is also a
+skill a sensor ends, without parameters: only the signal and the conditions change.
+
+| Pin | Kind | Type | With | Keep or change |
+| --- | --- | --- | --- | --- |
+| `INIT` | event in | | – (with `UaRoot`, `UaPath` when the skill has parameters or results) | Keep |
+| `START` | event in | | `Timeout` (and the parameters, if any) | Keep |
+| `SAMPLE` | event in | | `Advanced` (the equipment's signals the conditions use) and `EqHolder` | `AtHome` becomes `Advanced` |
+| `INITO` | event out | | – (`IdParams`, `IdResults` when it has them) | Keep |
+| `Timeout` | data in | `TIME` | | Keep |
+| `Advanced` | data in | `BOOL` | | **Your own**: rename `AtHome` |
+| `EqHolder` | data in | `WSTRING` | | Keep |
+| `Run` | plug | `modlib::AContract` | (section 7.7) | Keep |
 
 Everything it says goes out on the plug `Run`, so it has no data outputs of its own (a primitive
 with results has `R_<result>` outputs and an event `RESULTS` with them). The two algorithms
@@ -1835,13 +2077,17 @@ Alg_Evaluate:  Run.Pre := TRUE;             (it may always start)
                Run.Inv := TRUE;             (nothing else must hold while it runs)
 ```
 
-and one more that is the same in every contract: `Alg_Sample`, `Run.EqHolder := EqHolder;` (who
-holds the equipment now, for the run). A timed primitive (like `Dispense`) has `Run.Timed := TRUE;
+`Alg_Start` is the same as Home's: Home's `Up` is command 1 of the axis, as `Advance` is of the
+feeder. Only `Run.Post := AtHome;` becomes `Run.Post := Advanced;`. One more algorithm is the same
+in every contract: `Alg_Sample`, `Run.EqHolder := EqHolder;` (who holds the equipment now, for the
+run). A timed primitive (like `Dispense`, or capping's `Crimp`) has `Run.Timed := TRUE;
 Run.RunTime := MUL_TIME(T#1s, <seconds>);` and `Run.Post := FALSE;`, and no `Timeout` input. A
-result is one more line in `Alg_Evaluate` (`R_Weight := Weight;`).
+result is one more line in `Alg_Evaluate` (`R_Weight := Weight;`). A primitive that must end with
+another command than the safe one sets `Run.StopCommand` to it (stoppering's `PressStopper`: 3,
+`Back`).
 
-The state machine (*ECC* tab), the same in every contract: six states and eight transitions, in
-this order.
+The state machine (*ECC* tab) is the same in every contract, so it stays as copied: six states and
+eight transitions, in this order.
 
 | State | Actions |
 | --- | --- |
@@ -1865,10 +2111,19 @@ this order.
 
 ![The state machine of SC_FeedStopper](filling-program/example-ecc-SC_FeedStopper.svg)
 
-#### Step 2: the composite type `SK_FeedStopper`
+### 10.9 Step 7: the primitive `SK_FeedStopper`
 
-*File > New > Type*, template *Composite*, name `SK_FeedStopper`, in `Type Library/Skills`. Its
-interface:
+Copy the stoppering module's `SK_Home` (in `Skills`) as `SK_FeedStopper`. Then:
+
+1. In its interface, give `Timeout` the initial value `T#2000ms` (Home's is `T#8000ms`).
+2. Inside, *Change Type* of `Contract` to `SC_FeedStopper`, and of `Port` to `EP_Feeder`.
+3. The connection `Port.AtHome` → `Contract.AtHome` is now an error: delete it, and connect
+   `Port.Advanced` → `Contract.Advanced`.
+
+That is all of a new primitive. The rest of this step says what you copied, so you can check it,
+or build it from nothing.
+
+![Inside SK_FeedStopper](filling-program/example-inside-SK_FeedStopper.svg)
 
 | Pin | Kind | Type | With |
 | --- | --- | --- | --- |
@@ -1883,11 +2138,23 @@ interface:
 | `State` | data out | `USINT` | |
 | `ErrorID` | data out | `UINT` | |
 
-Put the five blocks into its network, with their values, in three groups as the generator does:
-`SkillControl` (`Control`, `UaStart`, and `Par_`, `PubParams`, `PubResults` when there are any),
-`Execution` (`Contract`, `Run`) and `Equipment` (`Port`). Then the 44 connections (22 event, 20
-data, 2 adapter), by what they do. Only the row marked *own* depends on the primitive; every other
-row is the same in every primitive:
+Only one of its five blocks, `Contract`, is the primitive's own; the others are the same in every
+primitive, or the same in every primitive of the same equipment, or sized by the number of
+parameters and results.
+
+| Block | Type | Values | Changes with |
+| --- | --- | --- | --- |
+| `Control` | `modlib::SKILL_Core` | – | **Never** |
+| `Run` | `modlib::SKILL_Run` | – | **Never** |
+| `Port` | `stoppering::EP_Feeder` | – | The equipment (the same in every skill of the feeder) |
+| `UaStart` | `iec61499::net::SERVER_2_1` | – | The parameters: `SERVER_2_<1 + parameters>` |
+| `Par_<p>`, `PubParams`, `PubResults` | `modlib::SKILL_Param_<type>`, `iec61499::net::PUBLISH_n` | `Lower`, `Upper` | The parameters and results (FeedStopper has none) |
+| `Contract` | `stoppering::SC_FeedStopper` | – | **The primitive itself** |
+
+They are in three groups: `SkillControl` (`Control`, `UaStart`, and `Par_`, `PubParams`,
+`PubResults` when there are any), `Execution` (`Contract`, `Run`) and `Equipment` (`Port`). The 44
+connections (22 event, 20 data, 2 adapter), by what they do. Only the row marked *own* depends on
+the primitive; every other row is the same in every primitive:
 
 | What | Connections |
 | --- | --- |
@@ -1902,222 +2169,197 @@ The two adapter connections replace 16 single wires: the eight values and two ev
 contract to the run, and the command (its values and its two events) and the holder between the run
 and the port.
 
-**With parameters** there is more between `UaStart` and the contract (as in `SK_MoveAxis`,
-section 8.6): `UaStart.IND` goes to the first `Par_<p>.CHECK` instead of `Control.START_REQ`; each
-`Par_` hands on to the next (`CHECKED` → `CHECK`, `AllInRange` → `PreviousInRange`, `LATCHED` →
-`LATCH`); the last one's `CHECKED` → `Control.START_REQ` and `AllInRange` → `Control.ParamsInRange`;
-`Control.RUN` → the first `LATCH`; the last `LATCHED` → `Contract.START` (instead of `Control.RUN`)
-and `PubParams.REQ`. Each parameter also needs `UaStart.RD_<k + 1>` → `Par_<p>.Requested`,
+**With parameters**, copy a primitive with as many (`SK_MoveAxis` has one, filling's `SK_Dispense`
+two, capping's `SK_Crimp` one). There is more between `UaStart` and the contract: `UaStart.IND`
+goes to the first `Par_<p>.CHECK` instead of `Control.START_REQ`; each `Par_` hands on to the next
+(`CHECKED` → `CHECK`, `AllInRange` → `PreviousInRange`, `LATCHED` → `LATCH`); the last one's
+`CHECKED` → `Control.START_REQ` and `AllInRange` → `Control.ParamsInRange`; `Control.RUN` → the
+first `LATCH`; the last `LATCHED` → `Contract.START` (instead of `Control.RUN`) and
+`PubParams.REQ`. Each parameter also needs `UaStart.RD_<k + 1>` → `Par_<p>.Requested`,
 `Control.CalledByClient` → `Par_<p>.CalledByClient`, the outside input `<p>` → `Par_<p>.Default`,
-`Par_<p>.Value` → `Contract.<p>` and → `PubParams.SD_<k>`; and `Contract.IdParams` → `PubParams.ID`,
-`UaEnable` → `PubParams.QI`, `PubParams.INITO` → `PubParams.REQ` (publish the defaults once), with
-`UaRoot` and `UaPath` → `Contract`. Results go `Run.DONE` → `PubResults.REQ`, `Contract.R_<r>` →
-`PubResults.SD_<k>` and → the outside output `R_<r>`, with `Contract.IdResults` → `PubResults.ID`
-and `UaEnable` → `PubResults.QI`. In the start-up chain the `Par_` blocks, `PubParams` and
-`PubResults` come after `UaStart`, before `Run`.
+`Par_<p>.Value` → `Contract.<p>` and → `PubParams.SD_<k>`; and `Contract.IdParams` →
+`PubParams.ID`, `UaEnable` → `PubParams.QI`, `PubParams.INITO` → `PubParams.REQ` (publish the
+defaults once), with `UaRoot` and `UaPath` → `Contract`. Results go `Run.DONE` → `PubResults.REQ`,
+`Contract.R_<r>` → `PubResults.SD_<k>` and → the outside output `R_<r>`, with `Contract.IdResults`
+→ `PubResults.ID` and `UaEnable` → `PubResults.QI`. In the start-up chain the `Par_` blocks,
+`PubParams` and `PubResults` come after `UaStart`, before `Run`.
 
 A primitive **without equipment** (one that only waits) has `modlib::SKILL_NoEquipment` as its
 `Port`: `Run.Equipment` → `Port.Skill` as above, and nothing from the port to the contract.
 
-#### Step 3: into the application
+#### What a primitive connects to
 
-In `Stoppering_pi` (and `Stoppering`, the PC's application), in the group `SkillPrimitives`, add a
-block `FeedStopper` of type `SK_FeedStopper` with the values `Module "Stoppering"`,
-`UaRoot "/Objects/Stoppering"`, `UaPath "/Skills/FeedStopper"`, `UaEnable TRUE`, `Methods TRUE`,
-`Holder "FeedStopper"`; `ReleaseAfter` and `Timeout` keep their initial values. Put it into the
-start-up chain after `RetractPiston`: replace `RetractPiston.INITO` → `Resetting.INIT` by
-`RetractPiston.INITO` → `FeedStopper.INIT` and `FeedStopper.INITO` → `Resetting.INIT`. That is all:
-no other wire, because it finds the equipment, the owner and the module state over the channels.
+A primitive has **no wires to anything in the application** but its start-up chain. It reaches
+everything else through its outside pins, OPC UA and local channels, and its port builds the
+channel names itself at `INIT` from `Module` (the port is made for one piece of equipment, so it
+knows its name).
 
-#### Step 4: build it
+| It talks to | How | Through which block inside `SK_` |
+| --- | --- | --- |
+| Its parent (the application, or a module level skill it is a step of) | Outside pins: `INIT`/`INITO` (the start-up chain), `START`, `HALT`, `ABORT`, `RESET` in; `SUCCESS`, `FAILURE` out; the values `Module`, `UaRoot`, `UaPath`, `UaEnable`, `Methods`, `Holder`, `ReleaseAfter`, `Timeout`, one per parameter | `Control`, `Contract`, `Run` |
+| OPC UA clients | Methods `<UaRoot><UaPath>/Start`, `/Stop`, `/Abort`, `/Reset`; variables `State`, `ErrorID`, `Parameters/...`, `Results/...` | `UaStart`; `Control` (its `UaStop`, `UaAbort`, `UaReset`, `PubState`); `PubParams`; `PubResults` |
+| The owner and the module state | `loc[<Module>/owner]`, `loc[<Module>/state]` | inside `Control` (`Owner`, `Mode`) |
+| The activity count | `loc[<Module>/activity]` | inside `Control` (`Act`) |
+| The equipment | `loc[<Module>/<Equipment>/state]` in, `loc[<Module>/<Equipment>/cmd]` out | `Port` |
 
-New types need a new FORTE: export and build as in section 11.4, try it on the PC (11.5), then the
-Pi (11.6). To keep it, add the two entries of section 10.2 to the spec as well; the generator then
-makes the same types and the next `python -m modgen` does not remove it.
+### 10.10 Step 8: into the application
 
-## 11. Building the program and putting it on the Pi
+Both applications get the two new blocks: `Stoppering` (the PC, `FORTE_PC`) and `Stoppering_pi`
+(the Pi, `FORTE_PI`). They differ only in the pins' addresses.
 
-The filling program is not drawn by hand: a generator writes it from a short description of the
-module, the *spec*. So "building" it means: change the spec, let the generator write the program,
-build a FORTE that knows its block types, try it on the PC, then put it on the Pi. Every command
-below is run from the repository's root in PowerShell. In more detail: [building-skills.md](building-skills.md)
-(section 5) and [tooling.md](tooling.md) (sections 1, 2, 4 and 5).
+1. **The equipment.** In the group `EquipmentIO`, add a block `Feeder` of type `EQ_Feeder` (the
+   name must be the one written into `EV_Feeder`, step 3), with `Module "Stoppering"`,
+   `UaRoot "/Objects/Stoppering"`, `UaEnable TRUE`, and the addresses. In `Stoppering_pi`:
+   `Advanced_Address 'gpio[0:24:pull_up:active_low]'` (a switch to ground needs the pull-up, and
+   reads inverted, like the axis's limit switch), `Advance_Address 'gpio[0:22]'`,
+   `Retract_Address 'gpio[0:25]'`. In `Stoppering`, for a try on the PC: `'sim'` for all three
+   (section 11.4). Put it into the start-up chain after the other equipment: replace
+   `Piston.INITO` → `Home.INIT` by `Piston.INITO` → `Feeder.INIT` and `Feeder.INITO` → `Home.INIT`.
+2. **The primitive.** In the group `SkillPrimitives`, add a block `FeedStopper` of type
+   `SK_FeedStopper` with `Module "Stoppering"`, `UaRoot "/Objects/Stoppering"`,
+   `UaPath "/Skills/FeedStopper"`, `UaEnable TRUE`, `Methods TRUE`, `Holder "FeedStopper"`;
+   `ReleaseAfter` and `Timeout` keep their initial values. Put it into the start-up chain after the
+   other primitives: replace `RetractPiston.INITO` → `Resetting.INIT` by `RetractPiston.INITO` →
+   `FeedStopper.INIT` and `FeedStopper.INITO` → `Resetting.INIT`.
+3. **Map** the two blocks: in `Stoppering` to `FORTE_PC`, in `Stoppering_pi` to `FORTE_PI`
+   (right-click, *Map to*). Save everything (Ctrl+Shift+S).
+
+No other wire: the primitive finds the equipment, the owner and the module state over the channels
+(section 2). To use the feeder in the module's sequence, add a `FeedStopper` block as a step of
+`Stoppering.Execute`, with `Methods FALSE`, `Holder "Stoppering"` and `ReleaseAfter FALSE`, and
+chain it as the other steps are (section 8.7 shows the same for Dispensing). A second primitive,
+`RetractFeeder` (`Run.Command := 2;`, timed, `after` 0.5 s), would pull it back at the end.
+
+### 10.11 Other equipment: what changes
+
+| The equipment has | Then |
+| --- | --- |
+| Only outputs (the piston, the crimper) | No `In_`, no `PubUa`; `PubState` and `EqState` carry only the holder; `IdPub := "";`; `Cycle.EO` → `Logic.SAMPLE` |
+| An analog input (a weight, a pressure) | `IO_AI` instead of `IO_DI`; the pins are `LREAL`; an input `<input>_Scale` on `EQ_` → `In_.Scale`. Filling's `EQ_Scale` has one |
+| An analog output or PWM (a speed, a step pulse) | `IO_AO` instead of `IO_DO`; the outputs are `LREAL`; `<output>_Gain` and `_Bias` on `EQ_`; and one more value on the command channel, whether it is enabled. Copy the axis's types, whose `Step` is one |
+| A position it counts (an axis) | Copy the axis's types: `MoveTo`, the move's timer `MoveT`, `ActualPosition`, `Homed`, `Moving`, and `Skill.Arg` in the port |
+| A command in timed phases | `Timed` and `PhaseDT` in `Alg_Send` (step 1); nothing else changes |
+| More inputs or outputs | One more of each pin, line and wire, in the order of the pins, and larger `SubCmd`/`EqCmd` and `PubState`/`EqState` |
+
+And for a primitive: `UaStart` is `SERVER_2_<1 + parameters>`, there is one `Par_<p>` per
+parameter and a `PubParams` (`PUBLISH_<parameters>`) if it has any, a `PubResults` if it has
+results, and a `Timeout` input if a sensor ends it. `Control`, `Run` and `Port` are the same as in
+every other primitive, or every other primitive of the same equipment.
+
+## 11. Building it, and putting it on the PC and the Pi
+
+FORTE is a compiled program, and it can only create blocks of the types it was built with (section
+6.1: the cookie cutters are built in). So your new types need a FORTE built with them. The lab's
+**FORTE kit** does that: your teacher gives you `forte-kit.zip`, and its README
+([runtime/kit/README.md](../runtime/kit/README.md)) is the guide to it. Every command below is run
+in PowerShell, in `C:\forte-kit`.
 
 ```
- cell/modules/filling.yaml        the spec: equipment, pins, skills, sequences
-        │  python -m modgen
+ your project: the module's .sys and its Type Library with your types
+        │  .\check-project.ps1                     the IDE's checks, nothing built
+        │  .\build-project.ps1 -Config modules-win
         ▼
- cell/control/FillingModule       the 4diac project: types (.fbt) and the system (.sys)
-        │  runtime/build-modules.ps1
+ forte.exe on your PC  ──  Deploy from the IDE to FORTE_PC   try it, without the hardware
+        │  .\deploy-pi.ps1
         ▼
- forte.exe (PC)  ──  python cell/sim/run_module.py   the program on the PC, with a simulated module
-        │  runtime/build-modules.ps1 -Config pi/modules-pi, runtime/package-runtime.ps1
-        ▼
- runtime/bin/forte-aarch64 (Pi)  ──  python deploy/pi.py install / module   the program on the Pi
+ FORTE with your types on the module's Pi, with your program   only with someone at the module
 ```
 
 ### 11.1 What you need
 
-- **Python** (3.11 is used here) with the repository's packages, installed once
-  ([onboarding.md](onboarding.md)):
-  `python -m venv .venv; .venv/Scripts/python.exe -m pip install -e ".[test,registration,opcua,planning,agents]"`.
-  With the `.venv` active, `python` below is that one.
-- **The 4diac IDE 3.3**, to look at the program (and, headless, to export the types as C++;
-  `runtime/validate.ps1` names the path it expects).
-- **The 4diac FORTE Build Environment** in `C:\4diac-fbe`: the compilers for the PC, and the cross
-  compiler for the Pi. Only needed when FORTE must be built again (section 11.4).
-- **For the Pi**: this PC's SSH key on the Pi, and the Pi set up once with `runtime/install.sh`
-  ([tooling.md](tooling.md), section 5).
+- **The 4diac IDE 3.3** (not 3.4: another version does not match the lab's FORTE).
+- **The kit**, with your PC set up once as its README says (section 1 there): git, the FORTE Build
+  Environment in `C:\4diac-fbe`, and `FORDIAC_IDE` set to the IDE.
+- **An OPC UA client**, to call the module's methods and watch its variables, for example UaExpert.
+- **For the Pi**: its address and login, and the teacher's go.
 
-### 11.2 Change the spec, not the program
+### 11.2 Open the project, and check it
 
-Everything the program is made of comes from [cell/modules/filling.yaml](../cell/modules/filling.yaml):
-the equipment and its pins, the primitives with their parameters and limits, and the module level
-skill Dispensing with its steps. To change the program, change the spec. A change made to the XML or
-in the IDE is lost the next time the generator runs (the layout you arranged in the IDE is the
-exception: it is kept).
+In the IDE: *File > Import > General > Existing Projects into Workspace*, choose the module's project
+folder (`cell/control/StopperingModule` or `cell/control/CappingModule`), and tick *Copy projects
+into workspace*. Open its system (`StopperingModule.sys`). It has two applications, `Stoppering` for
+`FORTE_PC` (your PC) and `Stoppering_pi` for `FORTE_PI` (the module's Pi): the same blocks, other
+pin addresses.
 
-### 11.3 Generate the program and check it
+Before you build, let the IDE check every type and the system (the project folder is the one with
+`StopperingModule.sys` in it; in the IDE: right-click the project, *Properties*, *Resource*,
+*Location*):
 
 ```powershell
-git status                                                     # a modified .sys is your IDE layout: it is kept
-python -m modgen                                               # writes cell/control/FillingModule (and the other modules)
-python -m pytest -q iec61499-skill-lib/tests/test_modgen.py    # the generator's tests
-runtime/check-project.ps1 -ProjectDir cell/control/FillingModule   # the IDE's own checks, headless
+.\check-project.ps1 -ProjectDir C:\path\to\StopperingModule
 ```
 
-The check should report 0 errors and 0 application collisions. To look at the result, open the
-project in the 4diac IDE: *File > Import > Existing Projects*, choose `cell/control/FillingModule`,
-then open the system `FillingModule.sys` and the application `Filling` (the PC) or `Filling_pi`
-(the Pi). The two applications differ only in their IO addresses (section 8.2).
+It must report no errors: the build counts the IDE's warnings as errors too.
 
-### 11.4 Does it need a new FORTE?
-
-FORTE is a compiled program, and it can only create blocks of the types it was built with (section
-6.1: the cookie cutters are built in). So:
+### 11.3 Does it need a new FORTE?
 
 | You changed | New FORTE? |
 | --- | --- |
-| A value: a parameter's default or limits, a step's constant, a time-out | No |
-| A module level skill (Dispensing's steps, a new sequence of existing primitives) | No |
-| A comment or a description | No |
-| A primitive (new or changed) | Yes |
-| A piece of equipment, its pins or its commands (new or changed) | Yes |
-| Anything in ModLib (`modgen/library.py`) | Yes |
+| A value on a block: an address, a parameter's default or limits, a step's constant, a time-out | No: *Deploy* from the IDE |
+| The application: blocks added, connected, a new sequence of primitives that are there | No: *Deploy* from the IDE |
+| A comment | No |
+| A type: a new one, its pins, its algorithms, its state machine, its network | Yes |
 
-If it does, build FORTE for the PC:
+### 11.4 Try it on the PC
 
-```powershell
-runtime/build-modules.ps1      # runs modgen, exports every type as C++ with the IDE, builds forte.exe
-```
+1. **Build FORTE for the PC** with your types:
 
-It prints where the new `forte.exe` is (usually
-`runtime/fbe/build/modules-win/forte/build/forte/forte.exe`).
+   ```powershell
+   .\build-project.ps1 -Project C:\path\to\StopperingModule -Config modules-win
+   ```
 
-### 11.5 Try it on the PC
+   The first build takes half an hour or more; after that a few minutes. The result is
+   `C:\forte-kit\fbe\build\modules-win\output\bin\forte.exe`.
+2. **Start it**: `& C:\forte-kit\fbe\build\modules-win\output\bin\forte.exe`. It waits for a
+   program on `localhost:61499` and serves OPC UA at `opc.tcp://localhost:4840`.
+3. **Make the PC's pins simulated.** Your PC has no module, so in the application `Stoppering` set
+   every pin's address to `'sim'`: an input then gives its `_Sim` value, an output goes nowhere.
+   Give the axis's `AtHome_Sim` TRUE, so that Resetting's `Home` succeeds at once.
+4. **Deploy**: right-click the device `FORTE_PC`, *Deploy*.
+5. **Call it** with the OPC UA client, with a session id of your own, say `"me"`, below
+   `/Objects/Stoppering`: `Occupation/Occupy("me")`, `Module/Reset("me")` (wait until
+   `Module/State` is 4, Idle), `Module/Start("me")` (6, Execute), then
+   `Skills/FeedStopper/Start("me")`. With `Advanced_Sim` FALSE the switch never closes: `State` goes
+   1 (Running), then 4 (Failed) after 2 s with `ErrorID` 3 (Timeout). With `Advanced_Sim` TRUE (set
+   it, deploy again) it is done at once: 3 (Succeeded), then 0 (Idle).
+   `Equipment/Feeder/Advanced` shows the switch.
 
-```powershell
-python cell/sim/run_module.py cell/modules/filling.yaml --forte runtime/fbe/build/modules-win/forte/build/forte/forte.exe
-```
+You can watch any pin while it runs: in the *System Explorer*, right-click the system, *Monitor
+System*; then right-click a block or a pin in the application, *Watch*. Section 4 follows these
+calls through the blocks.
 
-This starts three things: a simulator of the module's hardware (the axis with its switch, the pump
-and the scale, over Modbus), FORTE, and the application `Filling` in it. The module is then at
-`opc.tcp://localhost:4840`, below `/Objects/Filling`. With any OPC UA client (UaExpert, or the HMI,
-[tooling.md](tooling.md) section 3) call, with a session id of your own, say `"me"`:
+### 11.5 Put it on the Pi
 
-1. `Occupation/Occupy("me")`: the module is yours.
-2. `Module/Reset("me")`: Resetting homes the needle and tares the scale; `Module/State` goes 15,
-   then 4 (Idle).
-3. `Module/Start("me")`: `Module/State` 6 (Execute).
-4. `Skills/Dispensing/Start("me", 2.0)`: watch `Skills/Dispensing/State` go 1 (Running), 3
-   (Succeeded), 0 (Idle), and read the weight in `Skills/Dispensing/Results/Weight`.
+**Only with someone at the module, and the teacher's go**: once the program runs, a Reset or a
+skill moves the head and the piston.
 
-Section 4 follows these calls through the blocks. With `--no-deploy` FORTE starts empty, and you can
-deploy the application from the IDE yourself. The automatic tests of a module on the PC are in
-`cell/tests` ([tooling.md](tooling.md), section 1).
+1. In the IDE: the device `FORTE_PI` has the Pi's address in `MGR_ID` (the stoppering Pi
+   `"192.168.0.134:61499"`, the capping Pi `"capping-module.local:61499"`), and `Stoppering_pi` is
+   mapped to it. Save.
+2. In PowerShell:
 
-### 11.6 Put it on the Pi
+   ```powershell
+   .\deploy-pi.ps1 -Pi <login>@192.168.0.134 -Project C:\path\to\StopperingModule
+   ```
 
-The Pi needs its own FORTE (for its processor, aarch64) only when section 11.4 said "yes":
+   It makes the Pi's program from `Stoppering_pi`, builds FORTE for the Pi with your types, and
+   restarts FORTE on the Pi with both. It asks before it restarts FORTE.
 
-```powershell
-runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate   # FORTE for the Pi, from the exports of 11.4
-runtime/package-runtime.ps1                                     # into runtime/bin/forte-aarch64, with its checksum
-```
+After this the module is Stopped and free: occupy, reset and start it as on the PC, at
+`opc.tcp://192.168.0.134:4840`. When only the application changed (section 11.3), *Deploy* from the
+IDE, or `.\deploy-pi.ps1 ... -SkipBuild` to make it the program the Pi starts with. What went wrong,
+and what to do, is in the kit's README (section 6 there).
 
-Commit `runtime/bin/forte-aarch64` and `runtime/bin/forte-aarch64.sha256` with the change.
+## 12. Comments: where the descriptions are, and yours
 
-Then, **only with someone at the module**: once the program runs, a Reset or a skill moves the
-needle.
-
-```powershell
-python deploy/pi.py install    # only with a new FORTE: copies it to the Pi and restarts its container
-python deploy/pi.py module     # the application Filling_pi as the Pi's boot file, FORTE restarted
-python deploy/pi.py status     # is it running?
-```
-
-`deploy/pi.py` takes the Pi's address (192.168.0.203) and login from the spec's `pi` target; without
-`--spec` it is the filling module. After this the module is Stopped and free: occupy, reset and
-start it as in section 11.5, at `opc.tcp://192.168.0.203:4840`.
-
-### 11.7 Check that the Pi runs what the spec says
-
-```powershell
-python -m modsync pull --spec cell/modules/filling.yaml --target pi   # differences between the Pi and the spec
-python -m modsync verify aas --host 192.168.0.203                     # is the module what its AAS describes?
-```
-
-`pull` lists every difference between what runs on the Pi and what the spec says; after a fresh
-deployment there should be none.
-
-## 12. Where the descriptions are in 4diac
-
-- **A block in a network**: its comment is drawn with it, and shown in *Properties > Comment*.
-  It says the block's role in this program: where its OPC UA nodes are, which channels it uses, what
+- **A block in a network**: its comment is drawn with it, and shown in *Properties > Comment*. It
+  says the block's role in this program: where its OPC UA nodes are, which channels it uses, what
   it is handed.
 - **A block type**: its comment (in the type's *Properties*, and as the tooltip in the palette)
   begins with what it is for in plain words; after "Technical:" comes a short technical summary.
-- **A pin**: every input and output of the generated types has a comment of its own.
+- **A pin**: every input and output of the module's types has a comment of its own, in the type's
+  *Interface* tab.
 
-To change a description, change `iec61499-skill-lib/modgen/explain.py` (the plain words) or the
-spec (`cell/modules/filling.yaml`: an equipment's or a skill's `description`) and regenerate
-(`python -m modgen`). A comment typed in the IDE is lost at the next generation.
-
-## 13. Drawing the pictures again
-
-The pictures are drawn from the program's files, so they go out of date when the program is
-regenerated or its layout is changed in the IDE. From the repository's root:
-
-```powershell
-python docs/filling-program/draw_blocks.py
-```
-
-draws every `type-`, `inside-`, `ecc-` (the state machine of a basic type, as the IDE lays it out)
-and `app-` picture of the filling module again, `legend.svg`, and the map of the local channels
-(`channels-Filling_pi.svg`).
-The `stoppering-` pictures come from
-`python docs/filling-program/draw_blocks.py --project cell/control/StopperingModule --app Stoppering_pi --out <folder>`,
-copied from there with the prefix; the `example-` pictures from a copy of the stoppering spec with
-the two entries of section 10.2, generated into a folder of its own and drawn the same way.
-
-The contents at the top are made from the headings. After a heading changed, make them again, and
-then the version with screenshots ([filling-program-screenshots.md](filling-program-screenshots.md)):
-
-```powershell
-python docs/filling-program/toc.py
-python docs/filling-program/with_screenshots.py
-```
-
-The zip for students (this document, the version with screenshots, the pictures, the two 4diac
-projects and their specs, with a README) is made with
-
-```powershell
-python docs/filling-program/student_zip.py filling-program-for-students.zip
-```
-
-The screenshots in `docs/figures/4diac_figs` are taken by hand in the IDE; after the program changes,
-take them again under the same names. This file is made again with
-
-```powershell
-python docs/filling-program/with_screenshots.py
-```
+A copied type keeps the comments of the type it was copied from: change them to say what yours does
+(the feeder, not the piston), and give your blocks in the application a comment too. A comment does
+not change a type's hash, so a changed comment needs no new FORTE.
