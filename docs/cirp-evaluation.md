@@ -330,3 +330,7 @@ rate; every missed drift listed with its element, and looked at.
   Of the 132 values of the filling module's program, the 5 IO addresses are not in the AAS (the
   rebuilt spec has no pins, PWM channels or Modbus registers), on both targets; everything else is,
   so the audit compares those against the module's boot file. R1 now asks the audit for nothing.
+- *Second pilot (4 Nov, 30 runs, `cell/eval/results/q3-2026-11-04T0950.jsonl`, commit `5472b1c`).*
+  All 30 counted. The audit detected, located and sorted every drift as its kind calls for, and the
+  reconciler removed it (P1, P4, A1) or refused it (P2, P3, P5, A2 to A4); no false alarm. The reading
+  before a change detected every kind but P1, the values, which only the audit reads (by design).
