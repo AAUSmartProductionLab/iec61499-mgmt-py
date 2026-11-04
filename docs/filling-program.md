@@ -2063,3 +2063,10 @@ then the version with screenshots ([filling-program-screenshots.md](filling-prog
 python docs/filling-program/toc.py
 python docs/filling-program/with_screenshots.py
 ```
+
+The zip for students (this document, the version with screenshots, the pictures, the two 4diac
+projects and their specs, with a README) is made with
+
+```powershell
+python docs/filling-program/student_zip.py filling-program-for-students.zip
+```
