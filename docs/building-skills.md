@@ -214,18 +214,20 @@ Then regenerate, rebuild FORTE (section 5), and deploy the new program.
 `SK_<Skill>` always holds the same blocks (see [filling-program.md](filling-program.md), section 8.5):
 `Control` (`SKILL_Core`), `UaStart`, one `Par_<p>` per parameter, `PubParams`, `Contract`
 (`SC_<Skill>`), `Run` (`SKILL_Run`, the same in every primitive), `Port` (`EP_<Item>`, the same in
-every primitive of that equipment), and `PubResults` if it has results. What a new primitive changes:
+every primitive of that equipment), and `PubResults` if it has results. The contract, the run and the
+port are joined by two adapters (`AContract`, `AEquipment`: one connection each). What a new
+primitive changes:
 
 | In the spec | Changes in the blocks |
 | --- | --- |
 | Its parameters | The number of `Par_<p>` blocks; the size of `UaStart` (`SERVER_2_<1 + parameters>`) and of `PubParams` (`PUBLISH_<parameters>`); one input each on `SK_` and `SC_` |
 | Its results | `R_<r>` outputs on `SC_` (`R_<r> := <input>;`), and `PubResults` |
 | Its equipment | Which `EP_<Item>` it uses, and the equipment's signals its conditions read (inputs of `SC_`) |
-| `command`, `arg`, `stop` | `SC_`'s `Alg_Start`: `Command`, `Arg`, `StopCommand` (the commands' numbers in the order of the spec) |
-| `precondition` | `SC_`'s `Alg_Evaluate`: `Pre :=` (a start is refused when it does not hold) |
-| `postcondition` | `SC_`'s `Alg_Evaluate`: `Post :=` (it is done when it holds; done at once if it already holds), and `Timed := FALSE; RunTime := Timeout;` with a `Timeout` input |
-| `after` | `SC_`'s `Alg_Start`: `Timed := TRUE; RunTime := MUL_TIME(T#1s, <after>);` |
-| `invariant` | `SC_`'s `Alg_Evaluate`: `Inv :=` (its loss stops it with 2) |
+| `command`, `arg`, `stop` | `SC_`'s `Alg_Start`: `Run.Command`, `Run.Arg`, `Run.StopCommand` (the commands' numbers in the order of the spec) |
+| `precondition` | `SC_`'s `Alg_Evaluate`: `Run.Pre :=` (a start is refused when it does not hold) |
+| `postcondition` | `SC_`'s `Alg_Evaluate`: `Run.Post :=` (it is done when it holds; done at once if it already holds), and `Run.Timed := FALSE; Run.RunTime := Timeout;` with a `Timeout` input |
+| `after` | `SC_`'s `Alg_Start`: `Run.Timed := TRUE; Run.RunTime := MUL_TIME(T#1s, <after>);` |
+| `invariant` | `SC_`'s `Alg_Evaluate`: `Run.Inv :=` (its loss stops it with 2) |
 
 Everything else is in `SKILL_Run` and the same in every primitive: waiting for the equipment (0.5 s,
 then Busy), noticing that the equipment was taken away (Lost), the timeout, halting and aborting,
@@ -247,7 +249,7 @@ and the closing command. The five filling primitives side by side:
 Copy a primitive of the same kind (one ended by a sensor or one ended by a time) and change only
 what the table in 3.2 lists: make `SK_Prime` from `SK_Dispense` (*Save As* in the type's editor),
 make `SC_Prime` from `SC_Dispense`, and in `SC_Prime` change the inputs (`Duration` instead of
-`Volume` and `FlowRate`), the line `RunTime := MUL_TIME(T#1s, Duration);` in `Alg_Start`, and the
+`Volume` and `FlowRate`), the line `Run.RunTime := MUL_TIME(T#1s, Duration);` in `Alg_Start`, and the
 `IdParams` text in `Alg_Init` (`.../Parameters/Duration`). In `SK_Prime` keep one parameter block,
 use `SERVER_2_2` and `PUBLISH_1`, and wire `Par_Duration` as `Par_Volume` was. Keep the block names: the
 tools find a skill's parts by them. Then export and rebuild FORTE (section 5).

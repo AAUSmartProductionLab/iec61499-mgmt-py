@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1831" height="740" viewBox="233 880 9157 3700" font-family="Segoe UI, Helvetica, Arial, sans-serif">
-<rect x="233" y="880" width="9157" height="3700" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1825" height="740" viewBox="265 880 9125 3700" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="265" y="880" width="9125" height="3700" fill="#ffffff"/>
 <rect x="1000" y="1000" width="5390" height="1480" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
 <text x="1100" y="1140" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">StateIn</text>
 <text x="1100" y="1305" font-size="52" text-anchor="start" fill="#6b7280">The equipment's state in: its inputs and who holds it, from its state channel</text>
@@ -110,8 +110,8 @@
 <text x="2845" y="4080" font-size="58" text-anchor="end" fill="#1f2430">O_Release</text>
 <rect x="2856" y="4144" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
 <text x="2845" y="4180" font-size="58" text-anchor="end" fill="#1f2430">PhaseDT</text>
-<rect x="1797" y="3397" width="168" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1881" y="3452" font-size="48" text-anchor="middle" fill="#6b7280">SEND</text>
+<rect x="1636" y="3397" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1801" y="3452" font-size="48" text-anchor="middle" fill="#6b7280">Skill.SEND</text>
 <rect x="2925" y="3397" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="3076" y="3452" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.REQ</text>
 <rect x="2925" y="3497" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
@@ -120,14 +120,14 @@
 <text x="3103" y="3652" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.STOP</text>
 <rect x="1663" y="3497" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="1814" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.EO</text>
-<rect x="2925" y="3697" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3036" y="3752" font-size="48" text-anchor="middle" fill="#6b7280">PLAYED</text>
-<rect x="1744" y="3922" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1854" y="3977" font-size="48" text-anchor="middle" fill="#6b7280">Holder</text>
-<rect x="1717" y="4022" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1841" y="4077" font-size="48" text-anchor="middle" fill="#6b7280">Command</text>
-<rect x="1717" y="4122" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1841" y="4177" font-size="48" text-anchor="middle" fill="#6b7280">Release</text>
+<rect x="2925" y="3697" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3116" y="3752" font-size="48" text-anchor="middle" fill="#6b7280">Skill.PLAYED</text>
+<rect x="1582" y="3922" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1774" y="3977" font-size="48" text-anchor="middle" fill="#6b7280">Skill.Holder</text>
+<rect x="1556" y="4022" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1760" y="4077" font-size="48" text-anchor="middle" fill="#6b7280">Skill.Command</text>
+<rect x="1556" y="4122" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1760" y="4177" font-size="48" text-anchor="middle" fill="#6b7280">Skill.Release</text>
 <rect x="2925" y="3922" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="3089" y="3977" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_1</text>
 <rect x="2925" y="4022" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
@@ -193,34 +193,22 @@
 <rect x="6475" y="4022" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="6720" y="4077" font-size="48" text-anchor="middle" fill="#6b7280">Driver.O_Release</text>
 <text x="6960" y="3777" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
-<rect x="353" y="1000" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
-<polygon points="373,1020 403,1040 373,1060" fill="#b5452b"/>
-<text x="418" y="1060" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
-<rect x="353" y="1100" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
-<polygon points="373,1120 403,1140 373,1160" fill="#b5452b"/>
-<text x="418" y="1160" font-size="58" text-anchor="start" fill="#1f2430">SEND</text>
-<rect x="353" y="1260" width="347" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
-<rect x="373" y="1284" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="418" y="1320" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
-<rect x="353" y="1360" width="347" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
-<rect x="373" y="1384" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="418" y="1420" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
-<rect x="353" y="1460" width="347" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
-<rect x="373" y="1484" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="418" y="1520" font-size="58" text-anchor="start" fill="#1f2430">Command</text>
-<rect x="353" y="1560" width="347" height="80" rx="12" fill="#ffffff" stroke="#2e8540" stroke-width="5"/>
-<rect x="373" y="1584" width="30" height="30" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="418" y="1620" font-size="58" text-anchor="start" fill="#1f2430">Release</text>
+<rect x="385" y="1000" width="315" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="405,1020 435,1040 405,1060" fill="#b5452b"/>
+<text x="450" y="1060" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<rect x="385" y="1160" width="315" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="405" y="1184" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="450" y="1220" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="385" y="1260" width="315" height="80" rx="12" fill="#ffffff" stroke="#c0761a" stroke-width="5"/>
+<rect x="401" y="1278" width="38" height="44" rx="8" fill="#ffffff" stroke="#c0761a" stroke-width="6"/>
+<text x="450" y="1320" font-size="58" text-anchor="start" fill="#1f2430">Skill</text>
 <rect x="8890" y="1000" width="380" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
 <polygon points="9220,1020 9250,1040 9220,1060" fill="#b5452b"/>
 <text x="9205" y="1060" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
 <rect x="8890" y="1100" width="380" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
 <polygon points="9220,1120 9250,1140 9220,1160" fill="#b5452b"/>
 <text x="9205" y="1160" font-size="58" text-anchor="end" fill="#1f2430">STATE</text>
-<rect x="8890" y="1200" width="380" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
-<polygon points="9220,1220 9250,1240 9220,1260" fill="#b5452b"/>
-<text x="9205" y="1260" font-size="58" text-anchor="end" fill="#1f2430">PLAYED</text>
-<rect x="8890" y="1360" width="380" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
-<rect x="9220" y="1384" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="9205" y="1420" font-size="58" text-anchor="end" fill="#1f2430">EqHolder</text>
+<rect x="8890" y="1260" width="380" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="9220" y="1284" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="9205" y="1320" font-size="58" text-anchor="end" fill="#1f2430">EqHolder</text>
 </svg>

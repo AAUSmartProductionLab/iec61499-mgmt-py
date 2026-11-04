@@ -9,7 +9,8 @@ with a picture (sections 6 to 8), what the stoppering module has instead (sectio
 add for a new piece of equipment with its own pins and a primitive that uses it (section 10). Later
 the same day the program itself got simpler, and this document with it: a gate in front of each
 state machine (sections 7.5, 7.6), one run shared by every primitive (7.7), so that a primitive's
-own part is a small contract (8.5), and one port per piece of equipment (8.1).
+own part is a small contract (8.5), and one port per piece of equipment (8.1), joined by two
+adapters (6.6, 7.7).
 
 The same descriptions are in the program itself: every block type and every block instance has a
 comment (in the IDE: hover over a block, or select it and look at *Properties > Comment*). They are
@@ -52,6 +53,7 @@ them again (section 13). The same document with screenshots of the IDE, where th
   - [6.3 The start-up chain](#63-the-start-up-chain)
   - [6.4 How the IDE shows the program, and so the pictures](#64-how-the-ide-shows-the-program-and-so-the-pictures)
   - [6.5 Who made a type](#65-who-made-a-type)
+  - [6.6 Adapters: one plug, one socket](#66-adapters-one-plug-one-socket)
 - [7. The blocks that are always there](#7-the-blocks-that-are-always-there)
   - [7.1 Timers and the start signal](#71-timers-and-the-start-signal)
     - [`E_DELAY`: a kitchen timer](#e_delay-a-kitchen-timer)
@@ -82,9 +84,12 @@ them again (section 13). The same document with screenshots of the IDE, where th
     - [`SKILL_Core` (composite)](#skill_core-composite)
     - [`SKILL_Gate` (basic): the front desk's decision](#skill_gate-basic-the-front-desks-decision)
     - [`SKILL_Control` (basic): the skill's state machine](#skill_control-basic-the-skills-state-machine)
-  - [7.7 What every primitive shares: `SKILL_Run`](#77-what-every-primitive-shares-skill_run)
+  - [7.7 What every primitive shares: `SKILL_Run` and its two adapters](#77-what-every-primitive-shares-skill_run-and-its-two-adapters)
+    - [`AContract` (adapter): what the contract tells the run](#acontract-adapter-what-the-contract-tells-the-run)
+    - [`AEquipment` (adapter): what the run sends the equipment](#aequipment-adapter-what-the-run-sends-the-equipment)
     - [`SKILL_Run` (composite)](#skill_run-composite)
     - [`SKILL_RunLogic` (basic): the cook's routine](#skill_runlogic-basic-the-cooks-routine)
+    - [`SKILL_NoEquipment` (basic): for a primitive without equipment](#skill_noequipment-basic-for-a-primitive-without-equipment)
   - [7.8 Parameters and failures](#78-parameters-and-failures)
     - [`SKILL_Param_LREAL` (and `_BOOL`, `_INT`, `_DINT`, `_UINT`): a door check with a memory](#skill_param_lreal-and-_bool-_int-_dint-_uint-a-door-check-with-a-memory)
     - [`SKILL_FailMerge` (simple): a funnel](#skill_failmerge-simple-a-funnel)
@@ -472,6 +477,13 @@ A skill added while the module runs is put at the end of the chain.
   right (outputs) edge of its network, as the IDE draws them.
 - **Groups** are the grey frames with a title and a comment. They only keep blocks together for the
   reader; they change nothing in the program.
+- **Plugs and sockets** (orange, below the data pins: a filled tab on the right is a plug, an open
+  notch on the left a socket) are adapters: one connection that carries a bundle of events and data
+  (section 6.6).
+- **State machines** (the pictures named `ecc-`) show each state as a blue box with its actions to
+  the right (the algorithm, then the event it sends) and each transition as a curve through its
+  condition. The initial state has a double frame and is at the top; the pictures use the places the
+  generator gives the states, so they look as the IDE's *ECC* tab shows them.
 
 ### 6.5 Who made a type
 
@@ -491,6 +503,30 @@ for a skill, `EC_` its command table.
 **Section 7** explains the types that are the same in every module: you never change them for a new
 module, you only give them values. **Section 8** explains the filling module's own types: they are
 made from its spec, and another module has others (section 9).
+
+### 6.6 Adapters: one plug, one socket
+
+Some blocks talk to each other with a whole bundle of events and data: "start, with these seven
+values", "here is the newest state, with these three", "done". Wiring each of those as its own
+connection gives a dozen thin wires between two blocks. An **adapter** bundles them into one, like a
+multi-pin connector on a cable: one block has the **plug**, the other the **socket**, and one
+connection joins them.
+
+- An adapter type (a file `.adp`, the prefix `A`) lists what the connection carries: its outputs go
+  from the plug to the socket, its inputs come back.
+- A block declares its plugs and sockets below its data pins. In the pictures a plug is a filled
+  orange tab on the right, a socket an open orange notch on the left; the label at it names the
+  other end, as for any connection.
+- Inside a basic block, the adapter's events and data are used with the adapter's name in front:
+  an action `Run.START` sends the event `START` out of the plug `Run`, `Run.Pre := Homed;` sets the
+  value that goes with it, and a transition on `Skill.SEND` waits for the event `SEND` at the
+  socket `Skill`.
+- Inside a composite, the type's own plugs and sockets appear as blocks of their own (at the edge of
+  the network), whose pins are wired to the blocks inside like any other.
+
+The program uses two adapters, both inside every skill primitive (section 7.7): `AContract`, from
+the primitive's contract to its run, and `AEquipment`, from the run to the equipment's port. The
+application itself has none, so nothing changes for what runs or is created online.
 
 ## 7. The blocks that are always there
 
@@ -665,6 +701,8 @@ works in every module.
 
 #### `MOD_OccupationLogic` (basic)
 
+![The state machine of MOD_OccupationLogic](filling-program/ecc-MOD_OccupationLogic.svg)
+
 ![MOD_OccupationLogic](filling-program/type-MOD_OccupationLogic.svg)
 
 The whole rule in two sentences: `Occupy` is accepted when the session id is not empty and the
@@ -757,7 +795,10 @@ allowed the answer is `[FALSE, 4]` (NotReady). That is decided in front of the s
 
 It answers each of the five methods at once, `[Accepted, ErrorID]`: only the owner (5), only in a
 state the table above allows (4). It decides on the state `MOD_StateLogic` publishes (`STATE_CHG`),
-and passes an accepted command on (`GO_RESET`, `GO_START`, ...).
+and passes an accepted command on (`GO_RESET`, `GO_START`, ...). Each method has a check state
+(`Chk...`, which answers) and a go state (`Go...`, which passes it on):
+
+![The state machine of MOD_StateGate](filling-program/ecc-MOD_StateGate.svg)
 
 #### `MOD_StateIds` (simple)
 
@@ -877,35 +918,64 @@ out, the initial state at the top:
 
 ![The state machine of SKILL_Control](filling-program/ecc-SKILL_Control.svg)
 
-### 7.7 What every primitive shares: `SKILL_Run`
+### 7.7 What every primitive shares: `SKILL_Run` and its two adapters
 
 The cook in the kitchen: every recipe is different, but the way a cook works is always the same.
 Wait until the stove is free, check that the ingredients are there, turn the stove on, watch the pot
 until the dish is done (or the time is up, or something boils over), turn the stove off, and only
 then say "done". `SKILL_Run` is that cook. What the recipe is (which stove, how hot, done when)
-comes in as values from the primitive's contract (`SC_<Skill>`, section 8.5).
+comes in from the primitive's contract (`SC_<Skill>`, section 8.5) on one adapter, and the cook's
+orders go out to the stove (the equipment's port) on another.
+
+```
+ SC_<Skill> (the contract) ═══ AContract ═══► SKILL_Run (the run) ═══ AEquipment ═══► EP_<Item> (the port)
+   plug Run                                  socket Contract     plug Equipment            socket Skill
+   START: what to do, may it start?                              SEND: a command ──►
+   SAMPLE: is it done? may it go on?                             ◄── PLAYED
+```
+
+#### `AContract` (adapter): what the contract tells the run
+
+![AContract](filling-program/type-AContract.svg)
+
+| Event (plug to socket) | With | Means |
+| --- | --- | --- |
+| `START` | `Pre`, `Post`, `Timed`, `RunTime`, `Command`, `Arg`, `StopCommand` | A run starts: whether it may (`Pre`), whether it is already done (`Post`), what to send (`Command`, `Arg`), for how long (`RunTime`: the time a timed skill runs, or the timeout of one a sensor ends; `Timed` says which), and what to send at the end (`StopCommand`) |
+| `SAMPLE` | `Post`, `Inv`, `EqHolder` | The equipment's newest state, judged: is the skill done, may it go on, and who holds the equipment now |
+
+#### `AEquipment` (adapter): what the run sends the equipment
+
+![AEquipment](filling-program/type-AEquipment.svg)
+
+| Event | With | Means |
+| --- | --- | --- |
+| `SEND` (plug to socket) | `Holder`, `Command`, `Arg`, `Release` | Play this command for this holder; give the equipment up after it if `Release` |
+| `PLAYED` (socket to plug) | | All phases of the command are out |
 
 #### `SKILL_Run` (composite)
 
 ![SKILL_Run](filling-program/type-SKILL_Run.svg)
 
+Its socket `Contract` (`AContract`) takes what the contract says; its plug `Equipment`
+(`AEquipment`) goes to the equipment's port. Besides them:
+
 | In | With | Means |
 | --- | --- | --- |
-| `START` | `Holder`, `ReleaseAfter`, and from the contract `Pre`, `Post`, `Timed`, `RunTime`, `Command`, `Arg`, `StopCommand` | A run starts |
-| `SAMPLE` | `Holder`, and from the contract `Post`, `Inv`; from the equipment `EqHolder` | The equipment's newest state, as the contract judges it |
+| `INIT` | `Holder`, `ReleaseAfter` | Start-up: the name it holds the equipment under, and whether to give it up at the end |
 | `HALT`, `ABORT` | | Stop the run; abort it (all off) |
-| `PLAYED` | | The equipment port has sent the whole command |
 
 | Out | With | Means |
 | --- | --- | --- |
-| `CMD` | `C_Holder`, `C_Command`, `C_Arg`, `C_Release` | Send this command to the equipment port |
-| `DONE`, `FAILED`, `HALTED` | `ErrorID` | How the run ended, once its last command was sent |
+| `DONE`, `FAILED`, `HALTED` | `ErrorID` | How the run ended, once its last command was played |
 | `EQ_FREE` | `EquipmentFree` | Whether the equipment is free for this skill (for the Start check) |
 
 ![Inside SKILL_Run](filling-program/inside-SKILL_Run.svg)
 
 Inside: `Logic` (`SKILL_RunLogic`, below), `Timer` (the run's time, or its time-out) and `WaitT`
-(waits up to 0.5 s for another holder to let go).
+(waits up to 0.5 s for another holder to let go). The socket's events and values go to `Logic`'s
+pins of the same name (`Contract.START` → `Logic.START`, `Contract.Pre` → `Logic.Pre`, ...), and
+`Logic`'s command goes out on the plug (`Logic.CMD` → `Equipment.SEND`, `Logic.C_Holder` →
+`Equipment.Holder`, ...; `Equipment.PLAYED` → `Logic.PLAYED`).
 
 #### `SKILL_RunLogic` (basic): the cook's routine
 
@@ -921,11 +991,20 @@ Inside: `Logic` (`SKILL_RunLogic`, below), `Timer` (the run's time, or its time-
    an abort). Only when the port says `PLAYED` does it report `DONE`, `FAILED` or `HALTED`, so a
    command with timed phases (stoppering's `Back`) has really ended.
 
+22 states and 40 transitions; drawn as the IDE lays it out, the start at the top, the end at the
+bottom:
+
 ![The state machine of SKILL_RunLogic](filling-program/ecc-SKILL_RunLogic.svg)
 
 Until 4 Nov 2026 every primitive had this state machine as a type of its own (`SL_<Skill>`, 23
 states), with its five own things written into it. Now there is one, and a primitive brings only
 its contract.
+
+#### `SKILL_NoEquipment` (basic): for a primitive without equipment
+
+A primitive that only waits (the spec allows one without `equipment:`) has no port: this block sits
+in its place and answers every `SEND` on its socket `Skill` with `PLAYED` at once. None of the lab's
+modules has such a primitive.
 
 ### 7.8 Parameters and failures
 
@@ -1014,6 +1093,8 @@ or `Bus`, or answers itself (simulated, or not connected), and `CNF` comes back.
 
 #### `IO_RouteDI`, `IO_RouteDO`, `IO_RouteAI`, `IO_RouteAO` (basic): the switchboard
 
+![The state machine of IO_RouteDO](filling-program/ecc-IO_RouteDO.svg)
+
 ![IO_RouteDO](filling-program/type-IO_RouteDO.svg)
 
 Inside each IO block. At start-up it takes the address apart (`gpio[chip:line:...]`,
@@ -1043,9 +1124,10 @@ Think of a machine in a workshop with one operator:
   and reads its gauges (its input pins). It is the block you see in the application.
 - `EL_<Item>` is **the operator's rules**, inside the `EQ_` block: one customer at a time; let go of
   a button before pressing another; everything off when the customer leaves or the alarm goes.
-- `EP_<Item>` is **the service hatch** customers use: you hand in an order ("Up"), and you can see
-  the machine's gauges and who is using it. It sits inside every skill that uses the equipment, the
-  same in each. Inside it are the other two:
+- `EP_<Item>` is **the service hatch** customers use: you hand in an order ("Up") through its socket
+  `Skill` (the adapter `AEquipment`, section 7.7), and you can see the machine's gauges and who is
+  using it. It sits inside every skill that uses the equipment, the same in each. Inside it are the
+  other two:
 - `EC_<Item>`, **the cheat sheet**: "Up means: Enable on, Step at 50 %". It is on the customers'
   side of the hatch, not in the equipment, so the equipment block only ever hears "switch these
   outputs", whatever they mean;
@@ -1058,9 +1140,9 @@ How a skill and its equipment talk, here `MoveAxis` and the axis:
  SK_MoveAxis (the skill)                        EQ_LinearAxis (the equipment)
  Contract (SC_MoveAxis): command 3 (MoveTo), argument 40
  Run (SKILL_Run): sends it
-   │ holder, command 3, argument 40
+   ║ AEquipment (one adapter connection): holder, command 3, argument 40
    ▼
- Port (EP_LinearAxis)
+ Port (EP_LinearAxis), at its socket Skill
    Driver (EC_LinearAxis): the values to send
      │ holder, release, Enable, Down, Step, ...
      ▼
@@ -1126,6 +1208,8 @@ How it runs: every tick of `Cycle`, `In_AtHome` reads the switch and `Logic` get
 
 #### `EL_LinearAxis` (basic): the axis's rules
 
+![The state machine of EL_LinearAxis](filling-program/ecc-EL_LinearAxis.svg)
+
 ![EL_LinearAxis](filling-program/type-EL_LinearAxis.svg)
 
 1. **One holder at a time.** A command is taken only when nobody holds the axis or its sender
@@ -1165,6 +1249,8 @@ send. A command may have several timed phases: then the table asks for a timer (
 plays the next phase when it ends (`PHASE_T`), and says `PLAYED` after the last. The axis's
 commands have one phase each. The release is sent only with the last phase.
 
+![The state machine of EC_LinearAxis](filling-program/ecc-EC_LinearAxis.svg)
+
 #### `EV_LinearAxis` (simple): the axis's report form
 
 ![EV_LinearAxis](filling-program/type-EV_LinearAxis.svg)
@@ -1178,9 +1264,9 @@ with their names (`AtHome`, ...).
 
 ![EP_LinearAxis](filling-program/type-EP_LinearAxis.svg)
 
-What every skill of the axis uses to reach it, the same in `Home` and `MoveAxis`: `SEND` (with
-`Holder`, `Command`, `Arg` and `Release`) plays a command and answers `PLAYED` when all its phases
-are out; `STATE` gives the axis's newest state (`AtHome`, `ActualPosition`, `Homed`, `Moving`, and
+What every skill of the axis uses to reach it, the same in `Home` and `MoveAxis`: on its socket
+`Skill` (`AEquipment`), `SEND` (with `Holder`, `Command`, `Arg` and `Release`) plays a command and
+`PLAYED` answers when all its phases are out; `STATE` gives the axis's newest state (`AtHome`, `ActualPosition`, `Homed`, `Moving`, and
 who holds it, `EqHolder`). At `INIT` (with `Module`) it names the channels and
 starts listening.
 
@@ -1270,27 +1356,39 @@ value is the default. Its events are those a parent needs: `INIT`, `START` (with
 A client's Start, step by step: the call arrives at `UaStart`; the parameter blocks check the values
 (Home has none, so `UaStart.IND` goes straight to `Control.START_REQ`); `Control` answers through
 `UaStart` and, when it accepts, fires `RUN`; the parameter blocks take the values for the run and
-start `Contract`, which says what to do (`STARTO`); `Run` does it, through `Port`. A parent's `START`
-goes to `Control.START` and from there the same way, with the defaults. Each new state of the
-equipment goes from `Port` (`STATE`) through `Contract` (`SAMPLE`: is it done? is it still safe?) to
-`Run`.
+start `Contract`, which says what to do (`Run.START`, over the adapter `AContract`); `Run` does it,
+sending the command to `Port` over the adapter `AEquipment`. A parent's `START` goes to
+`Control.START` and from there the same way, with the defaults. Each new state of the equipment goes
+from `Port` (`STATE`) to `Contract`, which judges it (`Run.SAMPLE`: is it done? may it go on?) for
+`Run`. Three blocks, two adapter connections:
+
+```
+ Contract (SC_Home) ══ AContract ══► Run (SKILL_Run) ══ AEquipment ══► Port (EP_LinearAxis)
+        ▲                                                                   │
+        └──────────── STATE: AtHome, ..., who holds it ─────────────────────┘
+```
 
 #### `SC_<Skill>` (basic): the recipe card
 
 ![SC_Home](filling-program/type-SC_Home.svg)
 
-Everything that makes a primitive this primitive is in two small algorithms, in Structured Text:
+Everything that makes a primitive this primitive is in two small algorithms, in Structured Text.
+What they say goes to the run over the plug `Run` (the adapter `AContract`), so each line starts
+with `Run.`:
 
 | Algorithm | Runs | Says | `SC_Home` | `SC_MoveAxis` |
 | --- | --- | --- | --- | --- |
-| `Alg_Start` | when a run starts | `Timed`: does a time end it (TRUE) or a sensor (FALSE)? `RunTime`: that time, or the timeout. `Command`, `Arg`: what to send. `StopCommand`: what to send at the end | `Timed := FALSE; RunTime := Timeout; Command := 1; Arg := 0.0; StopCommand := 0;` | `Timed := FALSE; RunTime := Timeout; Command := 3; Arg := Position; StopCommand := 0;` |
-| `Alg_Evaluate` | when a run starts, and at every new state of the equipment | `Pre`: may it start? `Post`: is it done? `Inv`: may it go on? And the results | `Pre := TRUE; Post := AtHome; Inv := TRUE;` | `Pre := Homed; Post := NOT Moving AND ABS(ActualPosition - Position) < 0.001; Inv := TRUE;` |
+| `Alg_Start` | when a run starts | `Timed`: does a time end it (TRUE) or a sensor (FALSE)? `RunTime`: that time, or the timeout. `Command`, `Arg`: what to send. `StopCommand`: what to send at the end | `Run.Timed := FALSE; Run.RunTime := Timeout; Run.Command := 1; Run.Arg := 0.0; Run.StopCommand := 0;` | `Run.Timed := FALSE; Run.RunTime := Timeout; Run.Command := 3; Run.Arg := Position; Run.StopCommand := 0;` |
+| `Alg_Evaluate` | when a run starts, and at every new state of the equipment | `Pre`: may it start? `Post`: is it done? `Inv`: may it go on? And the results | `Run.Pre := TRUE; Run.Post := AtHome; Run.Inv := TRUE;` | `Run.Pre := Homed; Run.Post := NOT Moving AND ABS(ActualPosition - Position) < 0.001; Run.Inv := TRUE;` |
 
 `Command` and `StopCommand` are the command's number in the equipment's cheat sheet (`EC_`): the
 commands in the order of the spec, so for the axis `Stop` 0, `Up` 1, `Down` 2, `MoveTo` 3. Its inputs
 are the parameters (with `START`), `Timeout` for a skill a sensor ends, and the equipment's signals
-the conditions use (with `SAMPLE`); a third algorithm, `Alg_Init`, names the OPC UA variables of its
-parameters and results. Its state machine is always the same five states:
+the conditions use and who holds it (with `SAMPLE`). Two more algorithms are the same in every
+contract: `Alg_Init` names the OPC UA variables of its parameters and results, `Alg_Sample` passes on
+who holds the equipment (`Run.EqHolder := EqHolder;`). Its state machine is always the same six
+states: a start (`Start`, then `Started`, which sends `Run.START`) and a new state of the equipment
+(`Sample`, then `Judge`, which sends `Run.SAMPLE`):
 
 ![The state machine of SC_MoveAxis](filling-program/ecc-SC_MoveAxis.svg)
 
@@ -1338,7 +1436,7 @@ position. Timeout 30 s. It has one parameter, so `UaStart` is a `SERVER_2_2`, wi
 ![Inside SK_Dispense](filling-program/inside-SK_Dispense.svg)
 
 It holds the pump with `Run` for Volume / FlowRate seconds (2 mL at 1 mL/s: 2 s), then sends `Idle`:
-`Timed := TRUE; RunTime := MUL_TIME(T#1s, Volume / FlowRate);`. Two parameters, so `SERVER_2_3`,
+`Run.Timed := TRUE; Run.RunTime := MUL_TIME(T#1s, Volume / FlowRate);`. Two parameters, so `SERVER_2_3`,
 `Par_Volume` and `Par_FlowRate` (checked one after the other) and `PubParams` (`PUBLISH_2`). It has
 no timeout: the time ends it. In Dispensing, FlowRate is the constant 1.0 and Volume comes from
 Dispensing's own parameter.
@@ -1543,9 +1641,9 @@ comes after the other equipment in the start-up chain, `FeedStopper` after the o
 | `EL_Feeder` | Its rules: one holder, off before on, all off on release or abort, the switch reported when it changes |
 | `EC_Feeder` | Its command table: 0 Stop, 1 Advance, 2 Retract |
 | `EV_Feeder` | Its report form: `Advanced`, `Holder`; and the names of its two channels |
-| `EP_Feeder` | Its service hatch, for every skill that uses it: `SEND` a command, `STATE` with `Advanced` and who holds it |
+| `EP_Feeder` | Its service hatch, for every skill that uses it: a command on its socket `Skill` (`AEquipment`), `STATE` with `Advanced` and who holds it |
 | `SK_FeedStopper` | The primitive; in the application as `FeedStopper`, with `UaPath "/Skills/FeedStopper"` and `Holder "FeedStopper"` |
-| `SC_FeedStopper` | Its contract: `Timed := FALSE; RunTime := Timeout; Command := 1; Arg := 0.0; StopCommand := 0;` and `Pre := TRUE; Post := Advanced; Inv := TRUE;`: Advance until the switch says Advanced, 2 s at most, then both coils off |
+| `SC_FeedStopper` | Its contract: `Run.Timed := FALSE; Run.RunTime := Timeout; Run.Command := 1; Run.Arg := 0.0; Run.StopCommand := 0;` and `Run.Pre := TRUE; Run.Post := Advanced; Run.Inv := TRUE;`: Advance until the switch says Advanced, 2 s at most, then both coils off |
 
 These are the pictures of what it generated (drawn from a copy of the spec with the two entries
 above; the repository's spec does not have them):
@@ -1623,10 +1721,11 @@ You do not make these; a new primitive only uses them.
 | --- | --- | --- |
 | `SKILL_Core` (with `SKILL_Gate`, `SKILL_Control`, `MOD_OwnerView`, `MOD_StateView` inside) | ModLib, the same in every module (section 7.6) | The front desk and the skill's state machine; its OPC UA methods Stop, Abort, Reset; State and ErrorID |
 | `SKILL_Run` (with `SKILL_RunLogic` and two timers inside) | ModLib (section 7.7) | One run: the lock, the command, the end condition, the timeout, the closing command |
+| `AContract`, `AEquipment` | ModLib (section 7.7) | The two adapters: contract to run, run to port |
 | `SKILL_Param_<type>` | ModLib (section 7.8) | One per parameter: the range check and the value of the run |
 | `SERVER_2_n`, `PUBLISH_n` | FORTE (section 7) | The Start method, the published parameters and results. FORTE makes any `n` from the name |
 | `EQ_Feeder`, `EL_Feeder` | Made with the equipment (section 10.3) | Nothing directly: the port talks to it over two channels |
-| `EP_Feeder` (with `EC_Feeder`, `EV_Feeder` inside) | Made with the equipment, for its skills (section 8.1) | Used as it is: the command out, the equipment's state in |
+| `EP_Feeder` (with `EC_Feeder`, `EV_Feeder` inside) | Made with the equipment, for its skills (section 8.1) | Used as it is: the commands come in on its socket, the equipment's state goes out |
 | `Occupation`, `Module` | The module level (sections 7.4, 7.5) | Nothing directly: `SKILL_Core` listens to the owner and the module state |
 
 So for a primitive on equipment that already exists, the only new types are `SK_<Skill>` and its
@@ -1670,36 +1769,35 @@ In the IDE: *File > New > Type*, template *Basic*, name `SC_FeedStopper`, in the
 | --- | --- | --- | --- |
 | `INIT` | event in | | – (with `UaRoot`, `UaPath` when the skill has parameters or results) |
 | `START` | event in | | `Timeout` (and the parameters, if any) |
-| `SAMPLE` | event in | | `Advanced` (the equipment's signals the conditions use) |
+| `SAMPLE` | event in | | `Advanced` (the equipment's signals the conditions use) and `EqHolder` |
 | `INITO` | event out | | – (`IdParams`, `IdResults` when it has them) |
-| `STARTO` | event out | | `Pre`, `Post`, `Timed`, `RunTime`, `Command`, `Arg`, `StopCommand` (and the results) |
-| `SAMPLEO` | event out | | `Post`, `Inv` (and the results) |
 | `Timeout` | data in | `TIME` | |
 | `Advanced` | data in | `BOOL` | |
-| `Pre`, `Post`, `Inv`, `Timed` | data out | `BOOL` | |
-| `RunTime` | data out | `TIME` | |
-| `Command`, `StopCommand` | data out | `USINT` | |
-| `Arg` | data out | `LREAL` | |
+| `EqHolder` | data in | `WSTRING` | |
+| `Run` | plug | `modlib::AContract` | (section 7.7) |
 
-The two algorithms (*Algorithms* tab, language ST) are all that is FeedStopper's own:
+Everything it says goes out on the plug `Run`, so it has no data outputs of its own (a primitive
+with results has `R_<result>` outputs and an event `RESULTS` with them). The two algorithms
+(*Algorithms* tab, language ST) are all that is FeedStopper's own:
 
 ```
-Alg_Start:     Timed := FALSE;          (a sensor ends it, not a time)
-               RunTime := Timeout;     (so RunTime is how long it may take)
-               Command := 1;            (Advance: the commands of EC_Feeder are Stop 0, Advance 1, Retract 2)
-               Arg := 0.0;              (Advance takes no argument)
-               StopCommand := 0;        (Stop when it is done: both coils off)
+Alg_Start:     Run.Timed := FALSE;          (a sensor ends it, not a time)
+               Run.RunTime := Timeout;      (so RunTime is how long it may take)
+               Run.Command := 1;            (Advance: the commands of EC_Feeder are Stop 0, Advance 1, Retract 2)
+               Run.Arg := 0.0;              (Advance takes no argument)
+               Run.StopCommand := 0;        (Stop when it is done: both coils off)
 
-Alg_Evaluate:  Pre := TRUE;             (it may always start)
-               Post := Advanced;        (done when the front switch closes)
-               Inv := TRUE;             (nothing else must hold while it runs)
+Alg_Evaluate:  Run.Pre := TRUE;             (it may always start)
+               Run.Post := Advanced;        (done when the front switch closes)
+               Run.Inv := TRUE;             (nothing else must hold while it runs)
 ```
 
-A timed primitive (like `Dispense`) has `Timed := TRUE; RunTime := MUL_TIME(T#1s, <seconds>);` and
-`Post := FALSE;`, and no `Timeout` input. A result is one more line in `Alg_Evaluate`
-(`R_Weight := Weight;`) and an output `R_<result>`.
+and one more that is the same in every contract: `Alg_Sample`, `Run.EqHolder := EqHolder;` (who
+holds the equipment now, for the run). A timed primitive (like `Dispense`) has `Run.Timed := TRUE;
+Run.RunTime := MUL_TIME(T#1s, <seconds>);` and `Run.Post := FALSE;`, and no `Timeout` input. A
+result is one more line in `Alg_Evaluate` (`R_Weight := Weight;`).
 
-The state machine (*ECC* tab), the same in every contract: five states and seven transitions, in
+The state machine (*ECC* tab), the same in every contract: six states and eight transitions, in
 this order.
 
 | State | Actions |
@@ -1707,8 +1805,9 @@ this order.
 | `Wait` (the first, initial) | – |
 | `Init` | → `INITO` (with `Alg_Init` first when it has parameters or results) |
 | `Start` | `Alg_Start` |
-| `Started` | `Alg_Evaluate` → `STARTO` |
-| `Sample` | `Alg_Evaluate` → `SAMPLEO` |
+| `Started` | `Alg_Evaluate` → `Run.START` |
+| `Sample` | `Alg_Sample` |
+| `Judge` | `Alg_Evaluate` → `Run.SAMPLE` |
 
 | From | To | Condition |
 | --- | --- | --- |
@@ -1718,7 +1817,10 @@ this order.
 | `Start` | `Started` | `1` |
 | `Started` | `Wait` | `1` |
 | `Wait` | `Sample` | `SAMPLE` |
-| `Sample` | `Wait` | `1` |
+| `Sample` | `Judge` | `1` |
+| `Judge` | `Wait` | `1` |
+
+![The state machine of SC_FeedStopper](filling-program/example-ecc-SC_FeedStopper.svg)
 
 #### Step 2: the composite type `SK_FeedStopper`
 
@@ -1740,19 +1842,22 @@ interface:
 
 Put the five blocks into its network, with their values, in three groups as the generator does:
 `SkillControl` (`Control`, `UaStart`, and `Par_`, `PubParams`, `PubResults` when there are any),
-`Execution` (`Contract`, `Run`) and `Equipment` (`Port`). Then the 56 connections (25 event, 31
-data), by what they do. Only the two rows marked *own* depend on the primitive; every other row is
-the same in every primitive:
+`Execution` (`Contract`, `Run`) and `Equipment` (`Port`). Then the 44 connections (22 event, 20
+data, 2 adapter), by what they do. Only the row marked *own* depends on the primitive; every other
+row is the same in every primitive:
 
 | What | Connections |
 | --- | --- |
-| The start-up chain (the order matters: `Control` makes the Start method's id that `UaStart` needs; the contract names the OPC UA variables before `PubParams` and `PubResults` start) | `INIT` → `Control.INIT`; `Control.INITO` → `Contract.INIT`; `Contract.INITO` → `UaStart.INIT`; `UaStart.INITO` → `Port.INIT`; `Port.INITO` → `INITO` |
+| The two adapters | `Contract.Run` → `Run.Contract` (the contract's plug into the run's socket); `Run.Equipment` → `Port.Skill` (the run's plug into the port's socket). In the IDE: drag from the plug to the socket |
+| The start-up chain (the order matters: `Control` makes the Start method's id that `UaStart` needs; the contract names the OPC UA variables before `PubParams` and `PubResults` start) | `INIT` → `Control.INIT`; `Control.INITO` → `Contract.INIT`; `Contract.INITO` → `UaStart.INIT`; `UaStart.INITO` → `Run.INIT`; `Run.INITO` → `Port.INIT`; `Port.INITO` → `INITO` |
 | The outside to `Control` and back | `Module`, `UaRoot`, `UaPath`, `UaEnable`, `Methods` → the inputs of the same name on `Control`; `Methods` → `UaStart.QI`; `START`, `HALT`, `ABORT`, `RESET` → `Control` (same names); `Control.SUCCESS` → `SUCCESS`; `Control.FAILURE` → `FAILURE`; `Control.State` → `State`; `Control.ErrorID` → `ErrorID` |
 | The Start method | `Control.StartMethodId` → `UaStart.ID`; `UaStart.IND` → `Control.START_REQ`; `UaStart.RD_1` → `Control.Session`; `Control.START_RSP` → `UaStart.RSP`; `Control.Accepted` → `UaStart.SD_1`; `Control.StartError` → `UaStart.SD_2` |
-| The contract, *own* | `Control.RUN` → `Contract.START`; `Timeout` → `Contract.Timeout`; `Port.STATE` → `Contract.SAMPLE`; `Port.Advanced` → `Contract.Advanced` (one per signal the conditions use) |
-| The contract to the run | `Contract.STARTO` → `Run.START`; `Contract.SAMPLEO` → `Run.SAMPLE`; `Contract.Pre`, `Post`, `Inv`, `Timed`, `RunTime`, `Command`, `Arg`, `StopCommand` → the inputs of the same name on `Run`; `Holder`, `ReleaseAfter` → `Run` (same names) |
-| `Control` and the run | `Control.HALT_SEQ` → `Run.HALT`; `Control.ABORT_SEQ` → `Run.ABORT`; `Run.DONE` → `Control.EXECUTE_DONE`; `Run.FAILED` and `Run.HALTED` → `Control.EXECUTE_FAILED`; `Run.ErrorID` → `Control.ExecuteError`; `Run.EquipmentFree` → `Control.EquipmentFree`; and `Control.RUN_STOPPING` → `Control.STOPPING_DONE` (a primitive has no stop procedure) |
-| The run and the port, *own* (only the equipment) | `Module` → `Port.Module`; `Run.CMD` → `Port.SEND`; `Run.C_Holder`, `C_Command`, `C_Release` → `Port.Holder`, `Command`, `Release` (and `C_Arg` → `Port.Arg` on equipment whose commands take one, like the axis); `Port.PLAYED` → `Run.PLAYED`; `Port.EqHolder` → `Run.EqHolder` |
+| The contract, *own* | `Control.RUN` → `Contract.START`; `Timeout` → `Contract.Timeout`; `Port.STATE` → `Contract.SAMPLE`; `Port.Advanced` → `Contract.Advanced` (one per signal the conditions use); `Port.EqHolder` → `Contract.EqHolder` |
+| `Control`, the run and the port | `Holder`, `ReleaseAfter` → `Run` (same names); `Module` → `Port.Module`; `Control.HALT_SEQ` → `Run.HALT`; `Control.ABORT_SEQ` → `Run.ABORT`; `Run.DONE` → `Control.EXECUTE_DONE`; `Run.FAILED` and `Run.HALTED` → `Control.EXECUTE_FAILED`; `Run.ErrorID` → `Control.ExecuteError`; `Run.EquipmentFree` → `Control.EquipmentFree`; and `Control.RUN_STOPPING` → `Control.STOPPING_DONE` (a primitive has no stop procedure) |
+
+The two adapter connections replace 16 single wires: the eight values and two events from the
+contract to the run, and the command (its values and its two events) and the holder between the run
+and the port.
 
 **With parameters** there is more between `UaStart` and the contract (as in `SK_MoveAxis`,
 section 8.6): `UaStart.IND` goes to the first `Par_<p>.CHECK` instead of `Control.START_REQ`; each
@@ -1766,10 +1871,10 @@ and `PubParams.REQ`. Each parameter also needs `UaStart.RD_<k + 1>` → `Par_<p>
 `UaRoot` and `UaPath` → `Contract`. Results go `Run.DONE` → `PubResults.REQ`, `Contract.R_<r>` →
 `PubResults.SD_<k>` and → the outside output `R_<r>`, with `Contract.IdResults` → `PubResults.ID`
 and `UaEnable` → `PubResults.QI`. In the start-up chain the `Par_` blocks, `PubParams` and
-`PubResults` come after `UaStart`, before `Port`.
+`PubResults` come after `UaStart`, before `Run`.
 
-A primitive **without equipment** (one that only waits) has no `Port`: `Run.CMD` goes straight back
-to `Run.PLAYED`.
+A primitive **without equipment** (one that only waits) has `modlib::SKILL_NoEquipment` as its
+`Port`: `Run.Equipment` → `Port.Skill` as above, and nothing from the port to the contract.
 
 #### Step 3: into the application
 
