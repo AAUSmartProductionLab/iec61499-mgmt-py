@@ -208,11 +208,26 @@ def main() -> None:
             md.append(f"| {c['steps']} | {c['program']} | {len(o)} | {fmt(ci([x['d0_s'] for x in o]))} | "
                       f"{fmt(ci(diff), 1000, 1)} | {fmt(ci(rel), 1, 2)} | {sorted({x['d1_clock'] for x in o})} |")
 
-    # Fits.
+    # Fits: each phase on what drives it, and the activation time on both at once.
     md += ["", "## Fits", ""]
-    if len(set(xs_cmd)) > 1:
-        a0, b0, r2 = fit(xs_cmd, ys_act)
-        md.append(f"- Activation time on commands (set A): {a0 * 1000:.1f} ms + {b0 * 1000:.3f} ms per command, R² = {r2:.3f}")
+    flows = [r["out"] for r in ok if r["cell"]["set"] in "AB"]
+    if len({x["commands"] for x in flows}) > 1:
+        a0, b0, r2 = fit([x["commands"] for x in flows], [x["apply_s"] for x in flows])
+        md.append(f"- Apply phase on commands (sets A, B): {a0 * 1000:.2f} ms + {b0 * 1000:.4f} ms per command, R² = {r2:.3f}")
+    if len({x["connections_before"] for x in flows}) > 1:
+        a0, b0, r2 = fit([x["connections_before"] for x in flows], [x["read_s"] + x["verify_s"] for x in flows])
+        md.append(f"- Read and verify phases on the program's connections before the change: {a0 * 1000:.1f} ms + "
+                  f"{b0 * 1000:.4f} ms per connection, R² = {r2:.3f} (reading part by part from about 600 on)")
+        x = np.array([[1.0, f["commands"], f["connections_before"]] for f in flows])
+        y = np.array([f["t_act_s"] for f in flows])
+        coef, *_ = np.linalg.lstsq(x, y, rcond=None)
+        pred = x @ coef
+        r2 = 1 - float(((y - pred) ** 2).sum()) / float(((y - y.mean()) ** 2).sum())
+        md.append(f"- Activation time on both: {coef[0] * 1000:.1f} ms + {coef[1] * 1000:.4f} ms per command + "
+                  f"{coef[2] * 1000:.4f} ms per connection of the program, R² = {r2:.3f}")
+    if flows:
+        worst = max(flows, key=lambda f: f["t_act_s"])
+        md.append(f"- The slowest activation of all {len(flows)} runs: {worst['t_act_s']:.3f} s")
     if len(set(xs_inst)) > 1:
         a0, b0, r2 = fit(xs_inst, ys_read)
         md.append(f"- Read phase on the program's instances: {a0 * 1000:.1f} ms + {b0 * 1000:.3f} ms per instance, R² = {r2:.3f}")
@@ -278,9 +293,13 @@ def figure(by_cell, cells, restart, folder: Path) -> None:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from matplotlib.ticker import FixedLocator, FuncFormatter, NullLocator
     plt.rcParams.update({"font.family": "Arial", "font.size": 7, "axes.linewidth": 0.6})
-    fig, ax = plt.subplots(figsize=(3.4, 2.1))
-    colors = {1: "#5B963B", 5: "#2A918B", 10: "#6C91B2", 20: "#252B2D"}
+    fig, ax = plt.subplots(figsize=(3.4, 2.2))
+    # The program's size is a magnitude: one hue, light to dark, and a marker of its own for each size
+    # (the light step is pale on white, so the shape carries it too).
+    shades = {1: "#86CFC6", 5: "#3A9C92", 10: "#1C6560", 20: "#0B2F2C"}
+    markers = {1: "o", 5: "s", 10: "^", 20: "D"}
     for m in (1, 5, 10, 20):
         xs, ys, lo, hi = [], [], [], []
         for n in (1, 2, 4, 8, 16, 32):
@@ -289,16 +308,28 @@ def figure(by_cell, cells, restart, folder: Path) -> None:
                 c = ci([r["out"]["t_act_s"] for r in rs])
                 xs.append(n), ys.append(c[0]), lo.append(c[0] - c[1] if not np.isnan(c[1]) else 0), hi.append(c[2] - c[0] if not np.isnan(c[2]) else 0)
         if xs:
-            ax.errorbar(xs, ys, yerr=[lo, hi], marker="o", ms=2.5, lw=1, capsize=1.5, color=colors[m], label=f"online, {m} composites")
-        if ("flow", m) in restart:
-            ax.axhline(restart[("flow", m)][0], color=colors[m], lw=0.8, ls="--")
+            ax.errorbar(xs, ys, yerr=[lo, hi], marker=markers[m], ms=3.2, lw=1.2, capsize=1.5, color=shades[m],
+                        markeredgecolor=shades[20] if m == 1 else shades[m], markeredgewidth=0.5,
+                        label=f"{m} composite{'s' if m > 1 else ''}")
+    flows = [v[0] for (change, _), v in restart.items() if change == "flow"]
+    if flows:
+        level = float(np.median(flows))
+        ax.axhline(level, color="#5E676B", lw=0.9, ls=(0, (4, 2)))
+        ax.text(1.0, level * 1.13, f"Unavailable by a restart: {level:.1f} s, at every program size", fontsize=6,
+                color="#3E4447")
     ax.set_xscale("log", base=2)
     ax.set_yscale("log")
     ax.set_xticks([1, 2, 4, 8, 16, 32], ["1", "2", "4", "8", "16", "32"])
+    ax.yaxis.set_major_locator(FixedLocator([0.03, 0.1, 0.3, 1, 3]))
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
+    ax.yaxis.set_minor_locator(NullLocator())
+    ax.set_ylim(0.025, 6.5)
     ax.set_xlabel("Steps of the new composite")
     ax.set_ylabel("Seconds")
-    ax.legend(frameon=False, fontsize=6, loc="center right")
-    ax.text(1, max((v[0] for v in restart.values()), default=1) * 1.08, "dashed: unavailable by a restart", fontsize=6, color="#6E777B")
+    ax.grid(axis="y", color="#E4E7E8", lw=0.5)
+    ax.set_axisbelow(True)
+    ax.legend(title="Activated online, in a program of", frameon=False, fontsize=6, title_fontsize=6,
+              loc="upper left", bbox_to_anchor=(0.0, 0.84), alignment="left")
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
     fig.tight_layout(pad=0.3)
