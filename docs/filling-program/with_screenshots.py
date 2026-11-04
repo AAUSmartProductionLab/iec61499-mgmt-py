@@ -61,7 +61,7 @@ PICTURES_OLD = """**The pictures** are in [filling-program/](filling-program/). 
 files by [filling-program/draw_blocks.py](filling-program/draw_blocks.py), with the positions,
 groups and sizes the 4diac IDE uses, so they look as the program looks in the IDE; they are not
 screenshots of it. Open one on its own to see it full size. After the program is regenerated, draw
-them again (section 12). The same document with screenshots of the IDE, where there are some, is
+them again (section 13). The same document with screenshots of the IDE, where there are some, is
 [filling-program-screenshots.md](filling-program-screenshots.md).
 """
 PICTURES_NEW = """**This is the version with screenshots.** The text is that of
@@ -70,7 +70,7 @@ PICTURES_NEW = """**This is the version with screenshots.** The text is that of
 what the IDE shows. The other pictures are the drawings of [filling-program/](filling-program/),
 made from the program's files with the IDE's positions, groups and sizes. Open a picture on its own
 to see it full size. This file is made from filling-program.md by
-[filling-program/with_screenshots.py](filling-program/with_screenshots.py) (section 12): change
+[filling-program/with_screenshots.py](filling-program/with_screenshots.py) (section 13): change
 filling-program.md, not this file.
 """
 
