@@ -225,6 +225,23 @@ def test_drift_outside_the_skills_is_found_block_by_block(delivered):
     boot = boot_file(deployment(filling().app))
     found = read(forte, "pi", 61499, module, components, audit=True, boot=boot).differences
     assert list(found.values) == ["Scale.Weight_Address"]
+    # One the program built from the AAS has no value for at all (the axis's pins): found all the same.
+    forte = FakeForte(filling())
+    run(forte, op="write", destination="LinearAxis.Down_Address", value="'other'")
+    found = read(forte, "pi", 61499, module, components, audit=True, boot=boot).differences
+    assert list(found.values) == ["LinearAxis.Down_Address"]
+    # The module's OPC UA root, which the reading identifies the module by: the boot file's is the one
+    # to hold, so the change is written back, and no other block takes it over.
+    forte = FakeForte(filling())
+    run(forte, op="write", destination="Occupation.UaRoot", value="'/Objects/Other'")
+    found = read(forte, "pi", 61499, module, components, audit=True, boot=boot).differences
+    assert list(found.values) == ["Occupation.UaRoot"]
+    deployer = Recorder()
+    deployer.load = lambda: boot
+    before = dict(forte.values)
+    done, after = reconfigure(forte, "pi", 61499, module, components, deployer, audit=True)
+    assert after.differences.empty and forte.values["Occupation.UaRoot"] == "/Objects/Filling"
+    assert {p for p in forte.values if forte.values[p] != before[p]} == {"Occupation.UaRoot"}
 
 
 def test_what_was_built_is_recorded(with_double_dose, delivered_record):
