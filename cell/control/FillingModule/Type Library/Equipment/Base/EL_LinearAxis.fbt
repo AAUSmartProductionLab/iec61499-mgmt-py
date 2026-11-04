@@ -115,96 +115,96 @@
       <VarDeclaration Name="Uncounted" Type="BOOL" />
     </InternalVars>
     <ECC>
-      <ECState Name="START" x="150" y="100" />
-      <ECState Name="Init" x="570" y="100">
+      <ECState Name="START" x="3682" y="0" />
+      <ECState Name="Init" x="0" y="1260">
         <ECAction Algorithm="Alg_Init" Output="INITO" />
       </ECState>
-      <ECState Name="Sample" x="990" y="100">
+      <ECState Name="Sample" x="1765" y="1260">
         <ECAction Algorithm="Alg_Sample" />
       </ECState>
-      <ECState Name="Publish" x="1410" y="100">
+      <ECState Name="Publish" x="2250" y="2520">
         <ECAction Algorithm="Alg_Publish" Output="STATE" />
       </ECState>
-      <ECState Name="Refresh" x="150" y="330">
+      <ECState Name="Refresh" x="3385" y="1260">
         <ECAction Output="DRIVE" />
       </ECState>
-      <ECState Name="Cmd" x="570" y="330">
+      <ECState Name="Cmd" x="4825" y="1260">
         <ECAction Algorithm="Alg_Cmd" Output="MOVE_STOP" />
       </ECState>
-      <ECState Name="Off" x="990" y="330">
+      <ECState Name="Off" x="2412" y="8820">
         <ECAction Algorithm="Alg_Off" Output="MOVE_STOP" />
       </ECState>
-      <ECState Name="Break" x="1410" y="330">
+      <ECState Name="Break" x="4285" y="2520">
         <ECAction Algorithm="Alg_Break" Output="DRIVE" />
       </ECState>
-      <ECState Name="Make" x="150" y="560">
+      <ECState Name="Make" x="1782" y="5040">
         <ECAction Algorithm="Alg_Make" Output="DRIVE" />
       </ECState>
-      <ECState Name="BreakW" x="570" y="560" />
-      <ECState Name="MakeW" x="990" y="560" />
-      <ECState Name="QueueB" x="1410" y="560">
+      <ECState Name="BreakW" x="3660" y="3780" />
+      <ECState Name="MakeW" x="3682" y="6300" />
+      <ECState Name="QueueB" x="3548" y="5040">
         <ECAction Algorithm="Alg_QueueB" />
       </ECState>
-      <ECState Name="OffB" x="150" y="790">
+      <ECState Name="OffB" x="5168" y="5040">
         <ECAction Algorithm="Alg_OffB" />
       </ECState>
-      <ECState Name="QueueM" x="570" y="790">
+      <ECState Name="QueueM" x="2108" y="7560">
         <ECAction Algorithm="Alg_QueueM" />
       </ECState>
-      <ECState Name="OffM" x="990" y="790">
+      <ECState Name="OffM" x="3728" y="7560">
         <ECAction Algorithm="Alg_OffM" />
       </ECState>
-      <ECState Name="CmdPend" x="1410" y="790">
+      <ECState Name="CmdPend" x="4268" y="8820">
         <ECAction Algorithm="Alg_CmdPend" />
       </ECState>
-      <ECState Name="Settled" x="150" y="1020" />
-      <ECState Name="MoveGo" x="570" y="1020">
+      <ECState Name="Settled" x="5168" y="7560" />
+      <ECState Name="MoveGo" x="3110" y="10080">
         <ECAction Algorithm="Alg_MoveGo" Output="MOVE_START" />
       </ECState>
-      <ECState Name="MoveEnd" x="990" y="1020">
+      <ECState Name="MoveEnd" x="6680" y="1260">
         <ECAction Algorithm="Alg_MoveEnd" />
       </ECState>
-      <ECState Name="Report" x="1410" y="1020">
+      <ECState Name="Report" x="3222" y="11340">
         <ECAction Algorithm="Alg_Report" Output="STATE" />
       </ECState>
-      <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
-      <ECTransition Source="START" Destination="Sample" Condition="SAMPLE" x="0" y="0" />
-      <ECTransition Source="START" Destination="Refresh" Condition="REFRESH" x="0" y="0" />
-      <ECTransition Source="START" Destination="Cmd" Condition="CMD[(Holder = &quot;&quot;) OR (C_Holder = Holder)]" x="0" y="0" />
-      <ECTransition Source="START" Destination="Off" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="0" y="0" />
-      <ECTransition Source="START" Destination="Off" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
-      <ECTransition Source="START" Destination="MoveEnd" Condition="MOVE_T[Moving AND NOT MoveStart]" x="0" y="0" />
-      <ECTransition Source="MoveEnd" Destination="Break" Condition="1" x="0" y="0" />
-      <ECTransition Source="Init" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="Sample" Destination="Publish" Condition="Publish" x="0" y="0" />
-      <ECTransition Source="Sample" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="Publish" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="Refresh" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="Cmd" Destination="Break" Condition="1" x="0" y="0" />
-      <ECTransition Source="Off" Destination="Break" Condition="1" x="0" y="0" />
-      <ECTransition Source="Break" Destination="BreakW" Condition="1" x="0" y="0" />
-      <ECTransition Source="BreakW" Destination="Make" Condition="DRIVEN" x="0" y="0" />
-      <ECTransition Source="Make" Destination="MakeW" Condition="1" x="0" y="0" />
-      <ECTransition Source="MakeW" Destination="Settled" Condition="DRIVEN" x="0" y="0" />
-      <ECTransition Source="BreakW" Destination="QueueB" Condition="CMD" x="0" y="0" />
-      <ECTransition Source="BreakW" Destination="OffB" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="0" y="0" />
-      <ECTransition Source="BreakW" Destination="OffB" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
-      <ECTransition Source="QueueB" Destination="BreakW" Condition="1" x="0" y="0" />
-      <ECTransition Source="OffB" Destination="BreakW" Condition="1" x="0" y="0" />
-      <ECTransition Source="MakeW" Destination="QueueM" Condition="CMD" x="0" y="0" />
-      <ECTransition Source="MakeW" Destination="OffM" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="0" y="0" />
-      <ECTransition Source="MakeW" Destination="OffM" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
-      <ECTransition Source="QueueM" Destination="MakeW" Condition="1" x="0" y="0" />
-      <ECTransition Source="OffM" Destination="MakeW" Condition="1" x="0" y="0" />
-      <ECTransition Source="Settled" Destination="Off" Condition="OffPending" x="0" y="0" />
-      <ECTransition Source="Settled" Destination="CmdPend" Condition="Pending" x="0" y="0" />
-      <ECTransition Source="CmdPend" Destination="Cmd" Condition="(Holder = &quot;&quot;) OR (C_Holder = Holder)" x="0" y="0" />
-      <ECTransition Source="CmdPend" Destination="MoveGo" Condition="MoveStart" x="0" y="0" />
-      <ECTransition Source="Settled" Destination="MoveGo" Condition="MoveStart" x="0" y="0" />
-      <ECTransition Source="MoveGo" Destination="Report" Condition="1" x="0" y="0" />
-      <ECTransition Source="CmdPend" Destination="Report" Condition="1" x="0" y="0" />
-      <ECTransition Source="Settled" Destination="Report" Condition="1" x="0" y="0" />
-      <ECTransition Source="Report" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="2188" y="710" />
+      <ECTransition Source="START" Destination="Sample" Condition="SAMPLE" x="3035" y="710" />
+      <ECTransition Source="START" Destination="Refresh" Condition="REFRESH" x="3800" y="710" />
+      <ECTransition Source="START" Destination="Cmd" Condition="CMD[(Holder = &quot;&quot;) OR (C_Holder = Holder)]" x="4624" y="710" />
+      <ECTransition Source="START" Destination="Off" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="4817" y="4490" />
+      <ECTransition Source="START" Destination="Off" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="2017" y="4490" />
+      <ECTransition Source="START" Destination="MoveEnd" Condition="MOVE_T[Moving AND NOT MoveStart]" x="5515" y="710" />
+      <ECTransition Source="MoveEnd" Destination="Break" Condition="1" x="6024" y="1970" />
+      <ECTransition Source="Init" Destination="START" Condition="1" x="2668" y="870" />
+      <ECTransition Source="Sample" Destination="Publish" Condition="[Publish]" x="2571" y="1970" />
+      <ECTransition Source="Sample" Destination="START" Condition="1" x="3515" y="870" />
+      <ECTransition Source="Publish" Destination="START" Condition="1" x="5281" y="1340" />
+      <ECTransition Source="Refresh" Destination="START" Condition="1" x="4280" y="870" />
+      <ECTransition Source="Cmd" Destination="Break" Condition="1" x="5132" y="1970" />
+      <ECTransition Source="Off" Destination="Break" Condition="1" x="2026" y="5750" />
+      <ECTransition Source="Break" Destination="BreakW" Condition="1" x="4354" y="3230" />
+      <ECTransition Source="BreakW" Destination="Make" Condition="DRIVEN" x="3080" y="4490" />
+      <ECTransition Source="Make" Destination="MakeW" Condition="1" x="3080" y="5750" />
+      <ECTransition Source="MakeW" Destination="Settled" Condition="DRIVEN" x="4610" y="7010" />
+      <ECTransition Source="BreakW" Destination="QueueB" Condition="CMD" x="3926" y="4490" />
+      <ECTransition Source="BreakW" Destination="OffB" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="5172" y="4650" />
+      <ECTransition Source="BreakW" Destination="OffB" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="4212" y="4330" />
+      <ECTransition Source="QueueB" Destination="BreakW" Condition="1" x="4406" y="4650" />
+      <ECTransition Source="OffB" Destination="BreakW" Condition="1" x="5652" y="4810" />
+      <ECTransition Source="MakeW" Destination="QueueM" Condition="CMD" x="3206" y="7010" />
+      <ECTransition Source="MakeW" Destination="OffM" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="3971" y="7010" />
+      <ECTransition Source="MakeW" Destination="OffM" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="4451" y="7170" />
+      <ECTransition Source="QueueM" Destination="MakeW" Condition="1" x="3686" y="7170" />
+      <ECTransition Source="OffM" Destination="MakeW" Condition="1" x="3491" y="6850" />
+      <ECTransition Source="Settled" Destination="Off" Condition="[OffPending]" x="4182" y="8270" />
+      <ECTransition Source="Settled" Destination="CmdPend" Condition="[Pending]" x="5074" y="8270" />
+      <ECTransition Source="CmdPend" Destination="Cmd" Condition="[(Holder = &quot;&quot;) OR (C_Holder = Holder)]" x="7488" y="5120" />
+      <ECTransition Source="CmdPend" Destination="MoveGo" Condition="[MoveStart]" x="4309" y="9530" />
+      <ECTransition Source="Settled" Destination="MoveGo" Condition="[MoveStart]" x="2210" y="8900" />
+      <ECTransition Source="MoveGo" Destination="Report" Condition="1" x="3845" y="10790" />
+      <ECTransition Source="CmdPend" Destination="Report" Condition="1" x="7209" y="10160" />
+      <ECTransition Source="Settled" Destination="Report" Condition="1" x="1710" y="9530" />
+      <ECTransition Source="Report" Destination="START" Condition="1" x="7244" y="5750" />
     </ECC>
     <Algorithm Name="Alg_Init">
       <ST>IdCmd := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/cmd]");

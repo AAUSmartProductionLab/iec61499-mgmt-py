@@ -20,6 +20,22 @@ A running log of design considerations made while building, for writing the pape
 
 ## 4 Nov 2026
 
+- **Every ECC is laid out as the IDE draws it: states in rows, each condition between its states.**
+  *Journal* (a generated program a person can read and change in the IDE).
+  - Before, the generator put the states on a grid narrower than a state is drawn, and every
+    transition at 0,0. The IDE draws a transition as a curve through its condition's place, so all
+    101 transitions of `SKILL_Control` met in one point and the states lay on each other: unreadable.
+  - Now (`modgen/ecc.py`) the states go in rows by how many transitions they are from the initial
+    state, ordered by where they are reached from, sized as the IDE draws a state (its name, then
+    one row per action); each condition is halfway between its two states, moved aside where several
+    would land on one place. A guard without an event is written in brackets (`[Accepted]`), as the
+    IDE writes it, so opening a type in the IDE no longer changes it.
+  - An ECC somebody arranged in the IDE is kept as long as it is the same state machine (states and
+    transitions); one that changed is laid out anew. Chosen instead of always keeping the old places
+    (a new state would land on the others) and of never keeping them (the IDE arrangement of
+    `IO_RouteAO` would be lost). Tried and dropped: taking transitions over several rows round the
+    outside, which drew long loops across the picture.
+
 - **The audit takes the module's identity and its IO wiring from the boot file.** *CIRP* (Q3).
   - Found by Q3's first full run: the module's name and OPC UA root are not in the AAS, and the reading
     took them from the running program; when the occupation's root or name changed in the program,

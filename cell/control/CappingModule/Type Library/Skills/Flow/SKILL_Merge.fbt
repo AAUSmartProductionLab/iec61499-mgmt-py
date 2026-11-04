@@ -16,17 +16,17 @@
   </InterfaceList>
   <BasicFB>
     <ECC>
-      <ECState Name="START" x="150" y="100" />
-      <ECState Name="One" x="570" y="100">
+      <ECState Name="START" x="612" y="0" />
+      <ECState Name="One" x="0" y="1260">
         <ECAction Output="EO" />
       </ECState>
-      <ECState Name="Two" x="990" y="100">
+      <ECState Name="Two" x="1125" y="1260">
         <ECAction Output="EO" />
       </ECState>
-      <ECTransition Source="START" Destination="One" Condition="EI1" x="0" y="0" />
-      <ECTransition Source="START" Destination="Two" Condition="EI2" x="0" y="0" />
-      <ECTransition Source="One" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="Two" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="One" Condition="EI1" x="494" y="710" />
+      <ECTransition Source="START" Destination="Two" Condition="EI2" x="1056" y="710" />
+      <ECTransition Source="One" Destination="START" Condition="1" x="974" y="870" />
+      <ECTransition Source="Two" Destination="START" Condition="1" x="1536" y="870" />
     </ECC>
   </BasicFB>
 </FBType>

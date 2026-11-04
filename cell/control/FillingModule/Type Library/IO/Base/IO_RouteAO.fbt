@@ -110,23 +110,23 @@
       <ECState Name="DoneM" x="-1280" y="880">
         <ECAction Algorithm="Alg_DoneM" />
       </ECState>
-      <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
-      <ECTransition Source="Init" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="START" Destination="Ready" Condition="IO_READY" x="0" y="0" />
-      <ECTransition Source="Ready" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="START" Destination="Req" Condition="REQ" x="0" y="0" />
-      <ECTransition Source="Req" Destination="ReqG" Condition="Backend = 1" x="0" y="0" />
-      <ECTransition Source="Req" Destination="ReqM" Condition="Backend = 2" x="0" y="0" />
-      <ECTransition Source="Req" Destination="None" Condition="Backend = 3" x="0" y="0" />
-      <ECTransition Source="Req" Destination="Sim" Condition="1" x="0" y="0" />
-      <ECTransition Source="START" Destination="DoneG" Condition="CNF_G" x="0" y="0" />
-      <ECTransition Source="START" Destination="DoneM" Condition="CNF_M" x="0" y="0" />
-      <ECTransition Source="ReqG" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="ReqM" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="Sim" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="None" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="DoneG" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="DoneM" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="-630" y="-400" />
+      <ECTransition Source="Init" Destination="START" Condition="1" x="-150" y="-240" />
+      <ECTransition Source="START" Destination="Ready" Condition="IO_READY" x="-310" y="-960" />
+      <ECTransition Source="Ready" Destination="START" Condition="1" x="170" y="-800" />
+      <ECTransition Source="START" Destination="Req" Condition="REQ" x="964" y="-240" />
+      <ECTransition Source="Req" Destination="ReqG" Condition="[Backend = 1]" x="1634" y="0" />
+      <ECTransition Source="Req" Destination="ReqM" Condition="[Backend = 2]" x="1069" y="985" />
+      <ECTransition Source="Req" Destination="None" Condition="[Backend = 3]" x="1846" y="320" />
+      <ECTransition Source="Req" Destination="Sim" Condition="1" x="2304" y="600" />
+      <ECTransition Source="START" Destination="DoneG" Condition="CNF_G" x="1068" y="-600" />
+      <ECTransition Source="START" Destination="DoneM" Condition="CNF_M" x="-351" y="-40" />
+      <ECTransition Source="ReqG" Destination="START" Condition="1" x="832" y="-800" />
+      <ECTransition Source="ReqM" Destination="START" Condition="1" x="268" y="185" />
+      <ECTransition Source="Sim" Destination="START" Condition="1" x="1022" y="-360" />
+      <ECTransition Source="None" Destination="START" Condition="1" x="1525" y="-320" />
+      <ECTransition Source="DoneG" Destination="START" Condition="1" x="1548" y="-440" />
+      <ECTransition Source="DoneM" Destination="START" Condition="1" x="129" y="120" />
     </ECC>
     <Algorithm Name="Alg_Init">
       <ST>VAR_TEMP

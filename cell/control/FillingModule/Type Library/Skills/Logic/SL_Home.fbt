@@ -77,112 +77,112 @@
       <VarDeclaration Name="Outcome" Type="USINT" />
     </InternalVars>
     <ECC>
-      <ECState Name="Idle" x="150" y="100" />
-      <ECState Name="Init" x="570" y="100">
+      <ECState Name="Idle" x="7465" y="0" />
+      <ECState Name="Init" x="5542" y="1260">
         <ECAction Algorithm="Alg_Init" Output="INITO" />
       </ECState>
-      <ECState Name="Check" x="990" y="100" />
-      <ECState Name="Reject" x="1410" y="100">
+      <ECState Name="Check" x="7308" y="1260" />
+      <ECState Name="Reject" x="4345" y="2520">
         <ECAction Algorithm="Alg_Reject" Output="FAILED" />
       </ECState>
-      <ECState Name="Sample" x="150" y="330">
+      <ECState Name="Sample" x="8332" y="1260">
         <ECAction Algorithm="Alg_Sample" Output="EQ_FREE" />
       </ECState>
-      <ECState Name="Busy" x="570" y="330">
+      <ECState Name="Busy" x="0" y="5140">
         <ECAction Algorithm="Alg_Busy" Output="FAILED" />
       </ECState>
-      <ECState Name="WaitFree" x="990" y="330">
+      <ECState Name="WaitFree" x="6335" y="2520">
         <ECAction Output="WAIT_START" />
       </ECState>
-      <ECState Name="WaitW" x="1410" y="330" />
-      <ECState Name="Recheck" x="150" y="560">
+      <ECState Name="WaitW" x="6885" y="3880" />
+      <ECState Name="Recheck" x="1810" y="5140">
         <ECAction Output="WAIT_STOP" />
       </ECState>
-      <ECState Name="AlreadyDone" x="570" y="560">
+      <ECState Name="AlreadyDone" x="8045" y="2520">
         <ECAction Output="DONE" />
       </ECState>
-      <ECState Name="Run" x="990" y="560">
+      <ECState Name="Run" x="9620" y="2520">
         <ECAction Algorithm="Alg_Run" Output="CMD" />
         <ECAction Output="TIMER_START" />
       </ECState>
-      <ECState Name="RunSample" x="1410" y="560">
+      <ECState Name="RunSample" x="3430" y="5140">
         <ECAction Algorithm="Alg_RunSample" Output="EQ_FREE" />
       </ECState>
-      <ECState Name="Unsafe" x="150" y="790">
+      <ECState Name="Unsafe" x="5735" y="5140">
         <ECAction Algorithm="Alg_Unsafe" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
       </ECState>
-      <ECState Name="Lost" x="570" y="790">
+      <ECState Name="Lost" x="7905" y="5140">
         <ECAction Algorithm="Alg_Lost" Output="TIMER_STOP" />
         <ECAction Output="FAILED" />
       </ECState>
-      <ECState Name="Done" x="990" y="790">
+      <ECState Name="Done" x="9895" y="5140">
         <ECAction Algorithm="Alg_Done" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
       </ECState>
-      <ECState Name="TimedOut" x="1410" y="790">
+      <ECState Name="TimedOut" x="11885" y="5140">
         <ECAction Algorithm="Alg_TimedOut" Output="CMD" />
       </ECState>
-      <ECState Name="Halt" x="150" y="1020">
+      <ECState Name="Halt" x="13920" y="5140">
         <ECAction Algorithm="Alg_Halt" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
       </ECState>
-      <ECState Name="Abort" x="570" y="1020">
+      <ECState Name="Abort" x="9188" y="7760">
         <ECAction Algorithm="Alg_Abort" Output="CMD" />
         <ECAction Output="TIMER_STOP" />
       </ECState>
-      <ECState Name="Ending" x="990" y="1020" />
-      <ECState Name="EndDone" x="1410" y="1020">
+      <ECState Name="Ending" x="7420" y="6500" />
+      <ECState Name="EndDone" x="4642" y="7760">
         <ECAction Output="DONE" />
       </ECState>
-      <ECState Name="EndFailed" x="150" y="1250">
+      <ECState Name="EndFailed" x="6038" y="7760">
         <ECAction Output="FAILED" />
       </ECState>
-      <ECState Name="EndHalted" x="570" y="1250">
+      <ECState Name="EndHalted" x="7612" y="7760">
         <ECAction Output="HALTED" />
       </ECState>
-      <ECState Name="Running" x="990" y="1250" />
-      <ECTransition Source="Idle" Destination="Init" Condition="INIT" x="0" y="0" />
-      <ECTransition Source="Init" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="Idle" Destination="Check" Condition="START" x="0" y="0" />
-      <ECTransition Source="Check" Destination="Reject" Condition="NOT (TRUE)" x="0" y="0" />
-      <ECTransition Source="Idle" Destination="Sample" Condition="SAMPLE" x="0" y="0" />
-      <ECTransition Source="Sample" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="Check" Destination="WaitFree" Condition="(EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder)" x="0" y="0" />
-      <ECTransition Source="WaitFree" Destination="WaitW" Condition="1" x="0" y="0" />
-      <ECTransition Source="WaitW" Destination="Recheck" Condition="SAMPLE[NOT ((EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder))]" x="0" y="0" />
-      <ECTransition Source="WaitW" Destination="Busy" Condition="WAIT_OVER" x="0" y="0" />
-      <ECTransition Source="WaitW" Destination="Idle" Condition="HALT" x="0" y="0" />
-      <ECTransition Source="WaitW" Destination="Idle" Condition="ABORT" x="0" y="0" />
-      <ECTransition Source="Recheck" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="Check" Destination="AlreadyDone" Condition="AtHome" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Unsafe" Condition="SAMPLE[NOT (TRUE)]" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Lost" Condition="SAMPLE[(EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder)]" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Done" Condition="SAMPLE[AtHome]" x="0" y="0" />
-      <ECTransition Source="Running" Destination="TimedOut" Condition="TIMER" x="0" y="0" />
-      <ECTransition Source="Running" Destination="RunSample" Condition="SAMPLE" x="0" y="0" />
-      <ECTransition Source="RunSample" Destination="Running" Condition="1" x="0" y="0" />
-      <ECTransition Source="Busy" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="Lost" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="AlreadyDone" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="Unsafe" Destination="Ending" Condition="1" x="0" y="0" />
-      <ECTransition Source="Done" Destination="Ending" Condition="1" x="0" y="0" />
-      <ECTransition Source="Halt" Destination="Ending" Condition="1" x="0" y="0" />
-      <ECTransition Source="Abort" Destination="Ending" Condition="1" x="0" y="0" />
-      <ECTransition Source="TimedOut" Destination="Ending" Condition="1" x="0" y="0" />
-      <ECTransition Source="Ending" Destination="EndDone" Condition="PLAYED[Outcome = 1]" x="0" y="0" />
-      <ECTransition Source="Ending" Destination="EndFailed" Condition="PLAYED[Outcome = 2]" x="0" y="0" />
-      <ECTransition Source="Ending" Destination="EndHalted" Condition="PLAYED[Outcome = 3]" x="0" y="0" />
-      <ECTransition Source="Ending" Destination="Idle" Condition="PLAYED" x="0" y="0" />
-      <ECTransition Source="Ending" Destination="Abort" Condition="ABORT" x="0" y="0" />
-      <ECTransition Source="EndDone" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="EndFailed" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="EndHalted" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="Check" Destination="Run" Condition="1" x="0" y="0" />
-      <ECTransition Source="Run" Destination="Running" Condition="1" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Halt" Condition="HALT" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Abort" Condition="ABORT" x="0" y="0" />
-      <ECTransition Source="Reject" Destination="Idle" Condition="1" x="0" y="0" />
+      <ECState Name="Running" x="7910" y="3880" />
+      <ECTransition Source="Idle" Destination="Init" Condition="INIT" x="6840" y="710" />
+      <ECTransition Source="Init" Destination="Idle" Condition="1" x="7320" y="870" />
+      <ECTransition Source="Idle" Destination="Check" Condition="START" x="7538" y="710" />
+      <ECTransition Source="Check" Destination="Reject" Condition="[NOT (TRUE)]" x="6230" y="1970" />
+      <ECTransition Source="Idle" Destination="Sample" Condition="SAMPLE" x="8302" y="710" />
+      <ECTransition Source="Sample" Destination="Idle" Condition="1" x="8782" y="870" />
+      <ECTransition Source="Check" Destination="WaitFree" Condition="[(EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder)]" x="7155" y="1970" />
+      <ECTransition Source="WaitFree" Destination="WaitW" Condition="1" x="6944" y="3280" />
+      <ECTransition Source="WaitW" Destination="Recheck" Condition="SAMPLE[NOT ((EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder))]" x="4659" y="4590" />
+      <ECTransition Source="WaitW" Destination="Busy" Condition="WAIT_OVER" x="3801" y="4590" />
+      <ECTransition Source="WaitW" Destination="Idle" Condition="HALT" x="8726" y="2020" />
+      <ECTransition Source="WaitW" Destination="Idle" Condition="ABORT" x="5926" y="2020" />
+      <ECTransition Source="Recheck" Destination="Check" Condition="1" x="7250" y="3440" />
+      <ECTransition Source="Check" Destination="AlreadyDone" Condition="[AtHome]" x="7976" y="1970" />
+      <ECTransition Source="Running" Destination="Unsafe" Condition="SAMPLE[NOT (TRUE)]" x="7294" y="4615" />
+      <ECTransition Source="Running" Destination="Lost" Condition="SAMPLE[(EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder)]" x="8334" y="4615" />
+      <ECTransition Source="Running" Destination="Done" Condition="SAMPLE[AtHome]" x="9329" y="4615" />
+      <ECTransition Source="Running" Destination="TimedOut" Condition="TIMER" x="10335" y="4590" />
+      <ECTransition Source="Running" Destination="RunSample" Condition="SAMPLE" x="6175" y="4590" />
+      <ECTransition Source="RunSample" Destination="Running" Condition="1" x="6655" y="4750" />
+      <ECTransition Source="Busy" Destination="Idle" Condition="1" x="2180" y="2650" />
+      <ECTransition Source="Lost" Destination="Idle" Condition="1" x="10478" y="2675" />
+      <ECTransition Source="AlreadyDone" Destination="Idle" Condition="1" x="5644" y="1340" />
+      <ECTransition Source="Unsafe" Destination="Ending" Condition="1" x="7038" y="5925" />
+      <ECTransition Source="Done" Destination="Ending" Condition="1" x="9072" y="5925" />
+      <ECTransition Source="Halt" Destination="Ending" Condition="1" x="11085" y="5925" />
+      <ECTransition Source="Abort" Destination="Ending" Condition="1" x="8742" y="7235" />
+      <ECTransition Source="TimedOut" Destination="Ending" Condition="1" x="10079" y="5900" />
+      <ECTransition Source="Ending" Destination="EndDone" Condition="PLAYED[Outcome = 1]" x="6297" y="7210" />
+      <ECTransition Source="Ending" Destination="EndFailed" Condition="PLAYED[Outcome = 2]" x="7040" y="7210" />
+      <ECTransition Source="Ending" Destination="EndHalted" Condition="PLAYED[Outcome = 3]" x="7827" y="7210" />
+      <ECTransition Source="Ending" Destination="Idle" Condition="PLAYED" x="10505" y="3330" />
+      <ECTransition Source="Ending" Destination="Abort" Condition="ABORT" x="9222" y="7395" />
+      <ECTransition Source="EndDone" Destination="Idle" Condition="1" x="3397" y="3960" />
+      <ECTransition Source="EndFailed" Destination="Idle" Condition="1" x="10440" y="3960" />
+      <ECTransition Source="EndHalted" Destination="Idle" Condition="1" x="4427" y="3960" />
+      <ECTransition Source="Check" Destination="Run" Condition="1" x="9336" y="2155" />
+      <ECTransition Source="Run" Destination="Running" Condition="1" x="9180" y="3305" />
+      <ECTransition Source="Running" Destination="Halt" Condition="HALT" x="11341" y="4615" />
+      <ECTransition Source="Running" Destination="Abort" Condition="ABORT" x="12898" y="5925" />
+      <ECTransition Source="Reject" Destination="Idle" Condition="1" x="2398" y="1340" />
     </ECC>
     <Algorithm Name="Alg_Init">
       <ST>IdEqState := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Equipment), "/state]");

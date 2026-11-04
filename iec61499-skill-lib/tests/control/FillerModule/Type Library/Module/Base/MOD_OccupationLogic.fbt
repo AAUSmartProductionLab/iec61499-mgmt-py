@@ -40,24 +40,24 @@
   </InterfaceList>
   <BasicFB>
     <ECC>
-      <ECState Name="START" x="150" y="100" />
-      <ECState Name="Occupy" x="570" y="100">
+      <ECState Name="START" x="2355" y="0" />
+      <ECState Name="Occupy" x="0" y="1260">
         <ECAction Algorithm="Alg_Occupy" Output="OCCUPY_RSP" />
         <ECAction Output="CHG" />
       </ECState>
-      <ECState Name="Release" x="990" y="100">
+      <ECState Name="Release" x="2170" y="1260">
         <ECAction Algorithm="Alg_Release" Output="RELEASE_RSP" />
         <ECAction Output="CHG" />
       </ECState>
-      <ECState Name="Query" x="1410" y="100">
+      <ECState Name="Query" x="4475" y="1260">
         <ECAction Output="CHG" />
       </ECState>
-      <ECTransition Source="START" Destination="Occupy" Condition="OCCUPY_REQ" x="0" y="0" />
-      <ECTransition Source="Occupy" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="START" Destination="Release" Condition="RELEASE_REQ" x="0" y="0" />
-      <ECTransition Source="Release" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="START" Destination="Query" Condition="QUERY_REQ" x="0" y="0" />
-      <ECTransition Source="Query" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Occupy" Condition="OCCUPY_REQ" x="1626" y="735" />
+      <ECTransition Source="Occupy" Destination="START" Condition="1" x="2106" y="895" />
+      <ECTransition Source="START" Destination="Release" Condition="RELEASE_REQ" x="2745" y="735" />
+      <ECTransition Source="Release" Destination="START" Condition="1" x="3225" y="895" />
+      <ECTransition Source="START" Destination="Query" Condition="QUERY_REQ" x="3636" y="710" />
+      <ECTransition Source="Query" Destination="START" Condition="1" x="4116" y="870" />
     </ECC>
     <Algorithm Name="Alg_Occupy">
       <ST>IF (OccupySession &lt;&gt; "") AND ((Owner = "") OR (Owner = OccupySession)) THEN
