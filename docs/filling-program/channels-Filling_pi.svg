@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3758" height="903" viewBox="659 -276 18789 4517" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="659" y="-276" width="18789" height="4517" fill="#ffffff"/>
+<rect x="1960" y="0" width="1280" height="620" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<text x="2600" y="150" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Occupation</text>
+<rect x="3460" y="0" width="1280" height="620" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<text x="4100" y="150" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Module</text>
+<rect x="4960" y="0" width="1280" height="620" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<text x="5600" y="150" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Home ×5</text>
+<text x="5600" y="250" font-size="44" text-anchor="middle" fill="#6b7280">Home</text>
+<text x="5600" y="320" font-size="44" text-anchor="middle" fill="#6b7280">Resetting.Home</text>
+<text x="5600" y="390" font-size="44" text-anchor="middle" fill="#6b7280">Stopping.Home</text>
+<text x="5600" y="460" font-size="44" text-anchor="middle" fill="#6b7280">Dispensing.Execute.Home</text>
+<text x="5600" y="530" font-size="44" text-anchor="middle" fill="#6b7280">Dispensing.Stop.Home</text>
+<rect x="6460" y="0" width="1280" height="620" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<text x="7100" y="150" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">MoveAxis ×2</text>
+<text x="7100" y="250" font-size="44" text-anchor="middle" fill="#6b7280">MoveAxis</text>
+<text x="7100" y="320" font-size="44" text-anchor="middle" fill="#6b7280">Dispensing.Execute.NeedleDown</text>
+<rect x="7960" y="0" width="1280" height="620" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<text x="8600" y="150" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Dispense ×2</text>
+<text x="8600" y="250" font-size="44" text-anchor="middle" fill="#6b7280">Dispense</text>
+<text x="8600" y="320" font-size="44" text-anchor="middle" fill="#6b7280">Dispensing.Execute.Dispense</text>
+<rect x="9460" y="0" width="1280" height="620" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<text x="10100" y="150" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Tare ×2</text>
+<text x="10100" y="250" font-size="44" text-anchor="middle" fill="#6b7280">Tare</text>
+<text x="10100" y="320" font-size="44" text-anchor="middle" fill="#6b7280">Resetting.Tare</text>
+<rect x="10960" y="0" width="1280" height="620" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<text x="11600" y="150" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Weigh ×2</text>
+<text x="11600" y="250" font-size="44" text-anchor="middle" fill="#6b7280">Weigh</text>
+<text x="11600" y="320" font-size="44" text-anchor="middle" fill="#6b7280">Dispensing.Execute.Weigh</text>
+<rect x="12460" y="0" width="1280" height="620" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<text x="13100" y="150" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Dispensing</text>
+<text x="13100" y="250" font-size="44" text-anchor="middle" fill="#6b7280">Dispensing.Control</text>
+<rect x="13960" y="0" width="1280" height="620" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<text x="14600" y="150" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">LinearAxis</text>
+<rect x="15460" y="0" width="1280" height="620" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<text x="16100" y="150" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Pump</text>
+<rect x="16960" y="0" width="1280" height="620" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<text x="17600" y="150" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Scale</text>
+<line x1="1900" y1="900" x2="18300" y2="900" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="920" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/owner]</text>
+<text x="18360" y="920" font-size="54" text-anchor="start" fill="#6b7280">who occupies the module</text>
+<line x1="1900" y1="1160" x2="18300" y2="1160" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="1180" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/owner/query]</text>
+<text x="18360" y="1180" font-size="54" text-anchor="start" fill="#6b7280">"tell me the owner"</text>
+<line x1="1900" y1="1420" x2="18300" y2="1420" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="1440" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/state]</text>
+<text x="18360" y="1440" font-size="54" text-anchor="start" fill="#6b7280">the module's PackML state</text>
+<line x1="1900" y1="1680" x2="18300" y2="1680" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="1700" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/state/query]</text>
+<text x="18360" y="1700" font-size="54" text-anchor="start" fill="#6b7280">"tell me the state"</text>
+<line x1="1900" y1="1940" x2="18300" y2="1940" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="1960" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/activity]</text>
+<text x="18360" y="1960" font-size="54" text-anchor="start" fill="#6b7280">+1 a skill starts, -1 it ends</text>
+<line x1="1900" y1="2200" x2="18300" y2="2200" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="2220" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/release]</text>
+<text x="18360" y="2220" font-size="54" text-anchor="start" fill="#6b7280">a holder gives up all it holds</text>
+<line x1="1900" y1="2460" x2="18300" y2="2460" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="2480" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/LinearAxis/cmd]</text>
+<text x="18360" y="2480" font-size="54" text-anchor="start" fill="#6b7280">the holder and the output values</text>
+<line x1="1900" y1="2720" x2="18300" y2="2720" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="2740" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/LinearAxis/state]</text>
+<text x="18360" y="2740" font-size="54" text-anchor="start" fill="#6b7280">the inputs and who holds it</text>
+<line x1="1900" y1="2980" x2="18300" y2="2980" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="3000" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/Pump/cmd]</text>
+<text x="18360" y="3000" font-size="54" text-anchor="start" fill="#6b7280">the holder and the output values</text>
+<line x1="1900" y1="3240" x2="18300" y2="3240" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="3260" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/Pump/state]</text>
+<text x="18360" y="3260" font-size="54" text-anchor="start" fill="#6b7280">the inputs and who holds it</text>
+<line x1="1900" y1="3500" x2="18300" y2="3500" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="3520" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/Scale/cmd]</text>
+<text x="18360" y="3520" font-size="54" text-anchor="start" fill="#6b7280">the holder and the output values</text>
+<line x1="1900" y1="3760" x2="18300" y2="3760" stroke="#9aa3b5" stroke-width="10"/>
+<text x="1840" y="3780" font-size="60" text-anchor="end" fill="#1f2430" font-weight="bold">loc[Filling/Scale/state]</text>
+<text x="18360" y="3780" font-size="54" text-anchor="start" fill="#6b7280">the inputs and who holds it</text>
+<line x1="1960" y1="-60" x2="4740" y2="-60" stroke="#6b7280" stroke-width="6"/>
+<text x="3350" y="-100" font-size="56" text-anchor="middle" fill="#6b7280">module level</text>
+<line x1="13960" y1="-60" x2="18240" y2="-60" stroke="#6b7280" stroke-width="6"/>
+<text x="16100" y="-100" font-size="56" text-anchor="middle" fill="#6b7280">equipment blocks</text>
+<line x1="4960" y1="-60" x2="13740" y2="-60" stroke="#6b7280" stroke-width="6"/>
+<text x="9350" y="-100" font-size="56" text-anchor="middle" fill="#6b7280">skills: each with its SKILL_Core; a primitive also with its port (EP_) to its equipment</text>
+<line x1="2600" y1="620" x2="2600" y2="1160" stroke="#c9ced8" stroke-width="6"/>
+<polygon points="2555,805 2645,805 2600,888" fill="#b5452b"/>
+<polygon points="2555,1148 2645,1148 2600,1065" fill="#2563a8"/>
+<line x1="4100" y1="620" x2="4100" y2="1940" stroke="#c9ced8" stroke-width="6"/>
+<polygon points="4055,888 4145,888 4100,805" fill="#2563a8"/>
+<polygon points="4055,1065 4145,1065 4100,1148" fill="#b5452b"/>
+<polygon points="4055,1325 4145,1325 4100,1408" fill="#b5452b"/>
+<polygon points="4055,1668 4145,1668 4100,1585" fill="#2563a8"/>
+<polygon points="4055,1928 4145,1928 4100,1845" fill="#2563a8"/>
+<line x1="5600" y1="620" x2="5600" y2="2720" stroke="#c9ced8" stroke-width="6"/>
+<polygon points="5555,888 5645,888 5600,805" fill="#2563a8"/>
+<polygon points="5555,1065 5645,1065 5600,1148" fill="#b5452b"/>
+<polygon points="5555,1408 5645,1408 5600,1325" fill="#2563a8"/>
+<polygon points="5555,1585 5645,1585 5600,1668" fill="#b5452b"/>
+<polygon points="5555,1845 5645,1845 5600,1928" fill="#b5452b"/>
+<polygon points="5555,2365 5645,2365 5600,2448" fill="#b5452b"/>
+<polygon points="5555,2708 5645,2708 5600,2625" fill="#2563a8"/>
+<line x1="7100" y1="620" x2="7100" y2="2720" stroke="#c9ced8" stroke-width="6"/>
+<polygon points="7055,888 7145,888 7100,805" fill="#2563a8"/>
+<polygon points="7055,1065 7145,1065 7100,1148" fill="#b5452b"/>
+<polygon points="7055,1408 7145,1408 7100,1325" fill="#2563a8"/>
+<polygon points="7055,1585 7145,1585 7100,1668" fill="#b5452b"/>
+<polygon points="7055,1845 7145,1845 7100,1928" fill="#b5452b"/>
+<polygon points="7055,2365 7145,2365 7100,2448" fill="#b5452b"/>
+<polygon points="7055,2708 7145,2708 7100,2625" fill="#2563a8"/>
+<line x1="8600" y1="620" x2="8600" y2="3240" stroke="#c9ced8" stroke-width="6"/>
+<polygon points="8555,888 8645,888 8600,805" fill="#2563a8"/>
+<polygon points="8555,1065 8645,1065 8600,1148" fill="#b5452b"/>
+<polygon points="8555,1408 8645,1408 8600,1325" fill="#2563a8"/>
+<polygon points="8555,1585 8645,1585 8600,1668" fill="#b5452b"/>
+<polygon points="8555,1845 8645,1845 8600,1928" fill="#b5452b"/>
+<polygon points="8555,2885 8645,2885 8600,2968" fill="#b5452b"/>
+<polygon points="8555,3228 8645,3228 8600,3145" fill="#2563a8"/>
+<line x1="10100" y1="620" x2="10100" y2="3760" stroke="#c9ced8" stroke-width="6"/>
+<polygon points="10055,888 10145,888 10100,805" fill="#2563a8"/>
+<polygon points="10055,1065 10145,1065 10100,1148" fill="#b5452b"/>
+<polygon points="10055,1408 10145,1408 10100,1325" fill="#2563a8"/>
+<polygon points="10055,1585 10145,1585 10100,1668" fill="#b5452b"/>
+<polygon points="10055,1845 10145,1845 10100,1928" fill="#b5452b"/>
+<polygon points="10055,3405 10145,3405 10100,3488" fill="#b5452b"/>
+<polygon points="10055,3748 10145,3748 10100,3665" fill="#2563a8"/>
+<line x1="11600" y1="620" x2="11600" y2="3760" stroke="#c9ced8" stroke-width="6"/>
+<polygon points="11555,888 11645,888 11600,805" fill="#2563a8"/>
+<polygon points="11555,1065 11645,1065 11600,1148" fill="#b5452b"/>
+<polygon points="11555,1408 11645,1408 11600,1325" fill="#2563a8"/>
+<polygon points="11555,1585 11645,1585 11600,1668" fill="#b5452b"/>
+<polygon points="11555,1845 11645,1845 11600,1928" fill="#b5452b"/>
+<polygon points="11555,3405 11645,3405 11600,3488" fill="#b5452b"/>
+<polygon points="11555,3748 11645,3748 11600,3665" fill="#2563a8"/>
+<line x1="13100" y1="620" x2="13100" y2="2200" stroke="#c9ced8" stroke-width="6"/>
+<polygon points="13055,888 13145,888 13100,805" fill="#2563a8"/>
+<polygon points="13055,1065 13145,1065 13100,1148" fill="#b5452b"/>
+<polygon points="13055,1408 13145,1408 13100,1325" fill="#2563a8"/>
+<polygon points="13055,1585 13145,1585 13100,1668" fill="#b5452b"/>
+<polygon points="13055,1845 13145,1845 13100,1928" fill="#b5452b"/>
+<polygon points="13055,2105 13145,2105 13100,2188" fill="#b5452b"/>
+<line x1="14600" y1="620" x2="14600" y2="2720" stroke="#c9ced8" stroke-width="6"/>
+<polygon points="14555,1408 14645,1408 14600,1325" fill="#2563a8"/>
+<polygon points="14555,1585 14645,1585 14600,1668" fill="#b5452b"/>
+<polygon points="14555,2188 14645,2188 14600,2105" fill="#2563a8"/>
+<polygon points="14555,2448 14645,2448 14600,2365" fill="#2563a8"/>
+<polygon points="14555,2625 14645,2625 14600,2708" fill="#b5452b"/>
+<line x1="16100" y1="620" x2="16100" y2="3240" stroke="#c9ced8" stroke-width="6"/>
+<polygon points="16055,1408 16145,1408 16100,1325" fill="#2563a8"/>
+<polygon points="16055,1585 16145,1585 16100,1668" fill="#b5452b"/>
+<polygon points="16055,2188 16145,2188 16100,2105" fill="#2563a8"/>
+<polygon points="16055,2968 16145,2968 16100,2885" fill="#2563a8"/>
+<polygon points="16055,3145 16145,3145 16100,3228" fill="#b5452b"/>
+<line x1="17600" y1="620" x2="17600" y2="3760" stroke="#c9ced8" stroke-width="6"/>
+<polygon points="17555,1408 17645,1408 17600,1325" fill="#2563a8"/>
+<polygon points="17555,1585 17645,1585 17600,1668" fill="#b5452b"/>
+<polygon points="17555,2188 17645,2188 17600,2105" fill="#2563a8"/>
+<polygon points="17555,3488 17645,3488 17600,3405" fill="#2563a8"/>
+<polygon points="17555,3665 17645,3665 17600,3748" fill="#b5452b"/>
+<polygon points="1900,4040 1990,4040 1945,4120" fill="#b5452b"/>
+<text x="2020" y="4105" font-size="54" text-anchor="start" fill="#b5452b">writes (PUBLISH)</text>
+<polygon points="2800,4120 2890,4120 2845,4040" fill="#2563a8"/>
+<text x="2920" y="4105" font-size="54" text-anchor="start" fill="#2563a8">reads (SUBSCRIBE)</text>
+</svg>
