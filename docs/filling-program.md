@@ -114,7 +114,14 @@ them again (section 13). The same document with screenshots of the IDE, where th
   - [10.2 What you write: two entries in the spec](#102-what-you-write-two-entries-in-the-spec)
   - [10.3 What the generator makes of it](#103-what-the-generator-makes-of-it)
   - [10.4 Build, test, put it on the Pi](#104-build-test-put-it-on-the-pi)
-  - [10.5 And by hand?](#105-and-by-hand)
+  - [10.5 By hand, block by block](#105-by-hand-block-by-block)
+    - [What is already there](#what-is-already-there)
+    - [What a primitive connects to](#what-a-primitive-connects-to)
+    - [Which blocks never change](#which-blocks-never-change)
+    - [Step 1: the basic type `SL_FeedStopper`](#step-1-the-basic-type-sl_feedstopper)
+    - [Step 2: the composite type `SK_FeedStopper`](#step-2-the-composite-type-sk_feedstopper)
+    - [Step 3: into the application](#step-3-into-the-application)
+    - [Step 4: build it](#step-4-build-it)
 - [11. Building the program and putting it on the Pi](#11-building-the-program-and-putting-it-on-the-pi)
   - [11.1 What you need](#111-what-you-need)
   - [11.2 Change the spec, not the program](#112-change-the-spec-not-the-program)
@@ -1478,13 +1485,249 @@ To use the feeder in the module's sequence, add it as a step, and a second primi
 A changed sequence alone needs no new FORTE ([building-skills.md](building-skills.md), section 2); a
 new primitive does.
 
-### 10.5 And by hand?
+### 10.5 By hand, block by block
 
-You could build the six types in the IDE, but nothing that exists is a good copy: the piston has
-outputs and no input, the scale an input and no outputs, the axis has a position. You would have to
-write `EL_Feeder`'s rules, size every channel block as in the table above and keep every block's
-name, because the tools (`modsync`) find a module's parts by them. Use the spec and the generator;
-what is inside, if you need it, is in [building-skills.md](building-skills.md), section 4.2.
+Use the spec and the generator for real work: the next `python -m modgen` writes the program again
+from the spec, and a primitive that is not in the spec is gone. Building one by hand is still the
+best way to learn what a primitive is made of. Below is `FeedStopper` exactly as the generator
+makes it, so you can build it in the 4diac IDE and compare.
+
+#### What is already there
+
+You do not make these; a new primitive only uses them.
+
+| What | Where it comes from | What the primitive does with it |
+| --- | --- | --- |
+| `SKILL_Core` (with `SKILL_Control`, `MOD_OwnerView`, `MOD_StateView` inside) | ModLib, the same in every module (section 7.6) | The skill's state machine and its OPC UA methods Stop, Abort, Reset; State and ErrorID |
+| `SKILL_Param_<type>` | ModLib (section 7.7) | One per parameter: the range check and the value of the run |
+| `E_DELAY`, `SERVER_2_n`, `PUBLISH_n`, `SUBSCRIBE_n` | FORTE (section 7) | Timers, the Start method, the channels. FORTE makes any `n` from the name |
+| `EQ_Feeder`, `EL_Feeder` | Made with the equipment (section 10.3) | Nothing directly: it talks to the equipment block over two channels |
+| `EC_Feeder`, `EV_Feeder` | Made with the equipment, for its skills | Used inside the primitive: the command table and the typed view of the state |
+| `Occupation`, `Module` | The module level (sections 7.4, 7.5) | Nothing directly: `SKILL_Core` listens to the owner and the module state |
+
+So for a primitive on equipment that already exists, the only new types are `SK_<Skill>` and
+`SL_<Skill>`.
+
+#### What a primitive connects to
+
+A primitive has **no wires to anything in the application**. It reaches everything else through
+its outside pins, OPC UA and local channels, and it builds the channel names itself at `INIT` from
+`Module` and `Equipment`.
+
+| It talks to | How | Through which block inside `SK_` |
+| --- | --- | --- |
+| Its parent (the application, or a module level skill it is a step of) | Outside pins: `INIT`/`INITO` (the start-up chain), `START`, `HALT`, `ABORT`, `RESET` in; `SUCCESS`, `FAILURE` out; the values `Module`, `UaRoot`, `UaPath`, `UaEnable`, `Methods`, `Holder`, `ReleaseAfter`, `Timeout`, one per parameter | `Control`, `Logic` |
+| OPC UA clients | Methods `<UaRoot><UaPath>/Start`, `/Stop`, `/Abort`, `/Reset`; variables `State`, `ErrorID`, `Parameters/...`, `Results/...` | `UaStart`; `Control` (its `UaStop`, `UaAbort`, `UaReset`, `PubState`); `PubParams`; `PubResults` |
+| The owner and the module state | `loc[<Module>/owner]`, `loc[<Module>/state]` | inside `Control` (`Owner`, `Mode`) |
+| The activity count | `loc[<Module>/activity]` | inside `Control` (`Act`) |
+| The equipment | `loc[<Module>/<Equipment>/state]` in, `loc[<Module>/<Equipment>/cmd]` out | `EqState`, `EqCmd` |
+
+#### Which blocks never change
+
+`SK_FeedStopper` has ten blocks. Only one of them, `Logic`, is the primitive's own; the others are
+the same in every primitive, or the same in every primitive of the same equipment, or sized by the
+number of parameters and results.
+
+| Block | Type | Values | Changes with |
+| --- | --- | --- | --- |
+| `Control` | `modlib::SKILL_Core` | – | **Never** |
+| `Timer` | `iec61499::events::E_DELAY` | – | **Never** (the run's time-out, or its time) |
+| `WaitT` | `iec61499::events::E_DELAY` | `DT T#500ms` | **Never** (how long to wait for the equipment to be free) |
+| `PhaseT` | `iec61499::events::E_DELAY` | – | **Never** (the command's timed phases) |
+| `UaStart` | `iec61499::net::SERVER_2_1` | – | The parameters: `SERVER_2_<1 + parameters>` |
+| `Par_<p>` | `modlib::SKILL_Param_<type>` | `Lower`, `Upper` | The parameters: one each (FeedStopper has none) |
+| `PubParams` | `iec61499::net::PUBLISH_<parameters>` | – | The parameters (none here) |
+| `PubResults` | `iec61499::net::PUBLISH_<results>` | – | The results (none here) |
+| `EqState` | `iec61499::net::SUBSCRIBE_2` | `QI TRUE` | The equipment: one value per input, and the holder |
+| `EqView` | `stoppering::EV_Feeder` | – | The equipment |
+| `Driver` | `stoppering::EC_Feeder` | – | The equipment |
+| `EqCmd` | `iec61499::net::PUBLISH_4` | `QI TRUE` | The equipment: holder, release, one value per output |
+| `Logic` | `stoppering::SL_FeedStopper` | `Equipment "Feeder"` | **The primitive itself** |
+
+The blocks of the Equipment group (`EqState`, `EqView`, `Driver`, `PhaseT`, `EqCmd`) and their
+wiring are the same in every primitive of an equipment: compare the Equipment groups of `SK_Home`
+and `SK_MoveAxis`, both on the axis
+([screenshot](figures/4diac_figs/home_equipment.png),
+[screenshot](figures/4diac_figs/move_axis_equipment.png)).
+
+#### Step 1: the basic type `SL_FeedStopper`
+
+In the IDE: *File > New > Type*, template *Basic*, name `SL_FeedStopper`, in the folder
+`Type Library/Skills/Logic`. Its interface (`Equipment` is the name of the equipment, it makes the
+channel names):
+
+| Pin | Kind | Type | With |
+| --- | --- | --- | --- |
+| `INIT` | event in | | `Module`, `Equipment`, `Holder`, `ReleaseAfter`, `Timeout` |
+| `START`, `HALT`, `ABORT`, `TIMER`, `WAIT_OVER`, `PLAYED` | events in | | – |
+| `SAMPLE` | event in | | `Advanced`, `EqHolder` (the inputs the skill uses, and the holder) |
+| `INITO` | event out | | `IdEqState`, `IdEqCmd` |
+| `DONE`, `TIMER_STOP`, `WAIT_START`, `WAIT_STOP` | events out | | – |
+| `FAILED`, `HALTED` | events out | | `ErrorID` |
+| `TIMER_START` | event out | | `TimerDT` |
+| `CMD` | event out | | `C_Holder`, `C_Command`, `C_Arg`, `C_Release` |
+| `EQ_FREE` | event out | | `EquipmentFree` |
+| `Module`, `Equipment`, `Holder`, `EqHolder` | data in | `WSTRING` | |
+| `ReleaseAfter`, `Advanced` | data in | `BOOL` | |
+| `Timeout` | data in | `TIME` | |
+| `ErrorID` | data out | `UINT` | |
+| `TimerDT` | data out | `TIME` | |
+| `IdEqState`, `IdEqCmd`, `C_Holder` | data out | `WSTRING` | |
+| `C_Command` | data out | `USINT` | |
+| `C_Arg` | data out | `LREAL` | |
+| `C_Release`, `EquipmentFree` | data out | `BOOL` | |
+| `Outcome` | internal variable | `USINT` | (how the run ended: 1 done, 2 failed, 3 halted, 0 aborted) |
+
+**The algorithms** (*Algorithms* tab, language ST). `C_Command` is the command's number in
+`EC_Feeder`: the commands in the order of the spec, so `Stop` 0, `Advance` 1, `Retract` 2.
+
+| Algorithm | ST |
+| --- | --- |
+| `Alg_Init` | `IdEqState := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Equipment), "/state]");` and the same with `"/cmd]"` for `IdEqCmd` |
+| `Alg_Sample`, `Alg_RunSample` | `EquipmentFree := (EqHolder = "") OR (EqHolder = Holder);` |
+| `Alg_Reject` | `ErrorID := 1;` (PreconditionViolated) |
+| `Alg_Busy`, `Alg_Lost` | `ErrorID := 6;` (Busy) |
+| `Alg_Run` | `C_Holder := Holder; C_Command := 1; C_Arg := 0.0; C_Release := FALSE; TimerDT := Timeout;` |
+| `Alg_Done` | `C_Holder := Holder; C_Command := 0; C_Arg := 0.0; C_Release := ReleaseAfter; Outcome := 1;` |
+| `Alg_Unsafe` | as `Alg_Done`, with `ErrorID := 2; Outcome := 2;` |
+| `Alg_TimedOut` | as `Alg_Done`, with `ErrorID := 3; Outcome := 2;` |
+| `Alg_Halt` | as `Alg_Done`, with `ErrorID := 7; Outcome := 3;` |
+| `Alg_Abort` | as `Alg_Done`, with `C_Release := TRUE; Outcome := 0;` (an abort always gives the equipment up) |
+
+**The states** (*ECC* tab): 23 states. Each action is an algorithm, then an output event; a state
+with two output events has two actions.
+
+| State | Actions | What it is |
+| --- | --- | --- |
+| `Idle` (the first, initial) | – | Waiting |
+| `Init` | `Alg_Init` → `INITO` | Names the two channels |
+| `Sample` | `Alg_Sample` → `EQ_FREE` | A new equipment state while idle: keeps `EquipmentFree` up to date for `Control`'s Start check |
+| `Check` | – | A start: decide |
+| `Reject` | `Alg_Reject` → `FAILED` | Precondition does not hold |
+| `WaitFree`, `WaitW`, `Recheck` | → `WAIT_START`; –; → `WAIT_STOP` | Another holder: wait up to 0.5 s for it to let go |
+| `Busy` | `Alg_Busy` → `FAILED` | It did not let go |
+| `AlreadyDone` | → `DONE` | The postcondition already holds: succeed without moving |
+| `Run` | `Alg_Run` → `CMD`; → `TIMER_START` | Send the command, start the time-out |
+| `Running` | – | Waiting for the end condition |
+| `RunSample` | `Alg_RunSample` → `EQ_FREE` | A new equipment state that ends nothing |
+| `Done`, `Unsafe`, `TimedOut`, `Halt`, `Abort` | the algorithm of the same name → `CMD` (and → `TIMER_STOP`, except `TimedOut`) | The ways a run ends: send the closing command |
+| `Lost` | `Alg_Lost` → `TIMER_STOP`; → `FAILED` | Someone else took the equipment |
+| `Ending` | – | Wait until `Driver` has played the closing command |
+| `EndDone`, `EndFailed`, `EndHalted` | → `DONE`; → `FAILED`; → `HALTED` | Tell `Control` how it ended |
+
+**The transitions**, in this order. Where several leave the same state, the IDE tries them by
+priority, the small number at the start of each transition, in the order you draw them: draw them
+as listed.
+
+| From | To | Condition |
+| --- | --- | --- |
+| `Idle` | `Init` | `INIT` |
+| `Init` | `Idle` | `1` |
+| `Idle` | `Check` | `START` |
+| `Check` | `Reject` | `NOT (TRUE)`: the precondition (FeedStopper has none) |
+| `Idle` | `Sample` | `SAMPLE` |
+| `Sample` | `Idle` | `1` |
+| `Check` | `WaitFree` | `(EqHolder <> "") AND (EqHolder <> Holder)` |
+| `WaitFree` | `WaitW` | `1` |
+| `WaitW` | `Recheck` | `SAMPLE[NOT ((EqHolder <> "") AND (EqHolder <> Holder))]` |
+| `WaitW` | `Busy` | `WAIT_OVER` |
+| `WaitW` | `Idle` | `HALT`, and a second one `ABORT` |
+| `Recheck` | `Check` | `1` |
+| `Check` | `AlreadyDone` | `Advanced`: the postcondition |
+| `Running` | `Unsafe` | `SAMPLE[NOT (TRUE)]`: the invariant (none) |
+| `Running` | `Lost` | `SAMPLE[(EqHolder <> "") AND (EqHolder <> Holder)]` |
+| `Running` | `Done` | `SAMPLE[Advanced]`: the postcondition |
+| `Running` | `TimedOut` | `TIMER` |
+| `Running` | `RunSample` | `SAMPLE` |
+| `RunSample` | `Running` | `1` |
+| `Busy`, `Lost`, `AlreadyDone` | `Idle` | `1` |
+| `Unsafe`, `Done`, `Halt`, `Abort`, `TimedOut` | `Ending` | `1` |
+| `Ending` | `EndDone`, `EndFailed`, `EndHalted` | `PLAYED[Outcome = 1]`, `PLAYED[Outcome = 2]`, `PLAYED[Outcome = 3]` |
+| `Ending` | `Idle` | `PLAYED` (an abort: nothing to report) |
+| `Ending` | `Abort` | `ABORT` |
+| `EndDone`, `EndFailed`, `EndHalted` | `Idle` | `1` |
+| `Check` | `Run` | `1` |
+| `Run` | `Running` | `1` |
+| `Running` | `Halt` | `HALT` |
+| `Running` | `Abort` | `ABORT` |
+| `Reject` | `Idle` | `1` |
+
+A tidy way to place the states: `Idle`, `Init` and `Sample` in the top row; the start path
+(`Check`, `Reject`, `WaitFree`, `WaitW`, `Recheck`, `Busy`, `AlreadyDone`, `Run`) in the second;
+`Running` and `RunSample` in the middle; the five ends and `Lost` below them; `Ending` and the three
+`End...` states at the bottom.
+
+**Only five things in all of this are FeedStopper's own**: the precondition (`Check` → `Reject`),
+the postcondition (`Check` → `AlreadyDone` and `Running` → `Done`), the invariant (`Running` →
+`Unsafe`), `Alg_Run` (which command, its argument, the time) and `Alg_Done` (the closing command,
+and the results). Everything else is the same in every primitive. A primitive that ends after a
+time instead of on a sensor (like `Dispense`) has no `Timeout` input and no `AlreadyDone` or
+`TimedOut`: `Running` → `Done` is `TIMER`, and `Alg_Run` sets `TimerDT := MUL_TIME(T#1s, <seconds>);`.
+Its parameters are data inputs `WITH START`.
+
+#### Step 2: the composite type `SK_FeedStopper`
+
+*File > New > Type*, template *Composite*, name `SK_FeedStopper`, in `Type Library/Skills`. Its
+interface:
+
+| Pin | Kind | Type | With |
+| --- | --- | --- | --- |
+| `INIT` | event in | | every data input |
+| `START`, `HALT`, `ABORT`, `RESET` | events in | | – (`START` with the parameters, if any) |
+| `INITO`, `SUCCESS` | events out | | – (`SUCCESS` with the results, if any) |
+| `FAILURE` | event out | | `ErrorID` |
+| `Module`, `UaRoot`, `UaPath`, `Holder` | data in | `WSTRING` | |
+| `UaEnable`, `Methods` | data in | `BOOL` | |
+| `ReleaseAfter` | data in | `BOOL`, initial value `TRUE` | |
+| `Timeout` | data in | `TIME`, initial value `T#2000ms` | |
+| `State` | data out | `USINT` | |
+| `ErrorID` | data out | `UINT` | |
+
+Put the ten blocks of the table above into its network, with their values, in three groups as the
+generator does: `SkillControl` (`Control`, `UaStart`, and `Par_`, `PubParams`, `PubResults` when
+there are any), `Execution` (`Logic`, `Timer`, `WaitT`) and `Equipment` (`EqState`, `EqView`,
+`Driver`, `PhaseT`, `EqCmd`). Then the 68 connections (35 event, 33 data), by what they do:
+
+| What | Connections |
+| --- | --- |
+| The start-up chain (the order matters: `Control` makes the Start method's id that `UaStart` needs, `Logic` the channel names `EqState` and `EqCmd` need) | `INIT` → `Control.INIT`; `Control.INITO` → `Logic.INIT`; `Logic.INITO` → `UaStart.INIT`; `UaStart.INITO` → `EqState.INIT`; `EqState.INITO` → `EqCmd.INIT`; `EqCmd.INITO` → `INITO` |
+| The outside to `Control` and back | `Module`, `UaRoot`, `UaPath`, `UaEnable`, `Methods` → the inputs of the same name on `Control`; `Methods` → `UaStart.QI`; `START`, `HALT`, `ABORT`, `RESET` → `Control` (same names); `Control.SUCCESS` → `SUCCESS`; `Control.FAILURE` → `FAILURE`; `Control.State` → `State`; `Control.ErrorID` → `ErrorID` |
+| The Start method | `Control.StartMethodId` → `UaStart.ID`; `UaStart.IND` → `Control.START_REQ`; `UaStart.RD_1` → `Control.Session`; `Control.START_RSP` → `UaStart.RSP`; `Control.Accepted` → `UaStart.SD_1`; `Control.StartError` → `UaStart.SD_2` |
+| The outside to `Logic` | `Module`, `Holder`, `ReleaseAfter`, `Timeout` → the inputs of the same name on `Logic` |
+| `Control` and `Logic` | `Control.RUN` → `Logic.START`; `Control.HALT_SEQ` → `Logic.HALT`; `Control.ABORT_SEQ` → `Logic.ABORT`; `Logic.DONE` → `Control.EXECUTE_DONE`; `Logic.FAILED` and `Logic.HALTED` → `Control.EXECUTE_FAILED`; `Logic.ErrorID` → `Control.ExecuteError`; `Logic.EquipmentFree` → `Control.EquipmentFree`; and `Control.RUN_STOPPING` → `Control.STOPPING_DONE` (a primitive has no stop procedure) |
+| The equipment's state in | `Logic.IdEqState` → `EqState.ID`; `EqState.IND` → `EqView.REQ`; `EqState.RD_1` → `EqView.I_Advanced`; `EqState.RD_2` → `EqView.I_Holder`; `EqView.CNF` → `Logic.SAMPLE`; `EqView.Advanced` → `Logic.Advanced`; `EqView.Holder` → `Logic.EqHolder` |
+| The command out | `Logic.IdEqCmd` → `EqCmd.ID`; `Logic.CMD` → `Driver.PLAY`; `Logic.C_Holder`, `C_Command`, `C_Release` → `Driver.Holder`, `Command`, `Release` (and `C_Arg` → `Driver.Arg` on equipment whose commands take one, like the axis); `Driver.OUT` → `EqCmd.REQ`; `Driver.O_Holder`, `O_Release`, `N_Advance`, `N_Retract` → `EqCmd.SD_1` to `SD_4`; `Driver.PHASE_START` → `PhaseT.START`; `Driver.PHASE_STOP` → `PhaseT.STOP`; `Driver.PhaseDT` → `PhaseT.DT`; `PhaseT.EO` → `Driver.PHASE_T`; `Driver.PLAYED` → `Logic.PLAYED` |
+| The timers | `Logic.WAIT_START` → `WaitT.START`; `Logic.WAIT_STOP` → `WaitT.STOP`; `WaitT.EO` → `Logic.WAIT_OVER`; `Logic.TIMER_START` → `Timer.START`; `Logic.TIMER_STOP` → `Timer.STOP`; `Logic.TimerDT` → `Timer.DT`; `Timer.EO` → `Logic.TIMER` |
+
+**With parameters** there is more between `UaStart` and `Control` (as in
+[`SK_MoveAxis`](figures/4diac_figs/move_axis.png)): `UaStart.IND` goes to the first
+`Par_<p>.CHECK` instead of `Control.START_REQ`; each `Par_` hands on to the next (`CHECKED` →
+`CHECK`, `AllInRange` → `PreviousInRange`, `LATCHED` → `LATCH`); the last one's `CHECKED` →
+`Control.START_REQ` and `AllInRange` → `Control.ParamsInRange`; `Control.RUN` → the first `LATCH`;
+the last `LATCHED` → `Logic.START` and `PubParams.REQ`. Each parameter also needs
+`UaStart.RD_<k + 1>` → `Par_<p>.Requested`, `Control.CalledByClient` → `Par_<p>.CalledByClient`,
+the outside input `<p>` → `Par_<p>.Default`, `Par_<p>.Value` → `Logic.<p>` and → `PubParams.SD_<k>`;
+and `Logic.IdParams` → `PubParams.ID`, `UaEnable` → `PubParams.QI`, `PubParams.INITO` →
+`PubParams.REQ` (publish the defaults once), with `UaRoot` and `UaPath` → `Logic`. Results go
+`Logic.DONE` → `PubResults.REQ`, `Logic.R_<r>` → `PubResults.SD_<k>` and → the outside output
+`R_<r>`, with `Logic.IdResults` → `PubResults.ID` and `UaEnable` → `PubResults.QI`. In the start-up
+chain the `Par_` blocks, `PubParams` and `PubResults` come after `UaStart`, before `EqState`.
+
+#### Step 3: into the application
+
+In `Stoppering_pi` (and `Stoppering`, the PC's application), in the group `SkillPrimitives`, add a
+block `FeedStopper` of type `SK_FeedStopper` with the values `Module "Stoppering"`,
+`UaRoot "/Objects/Stoppering"`, `UaPath "/Skills/FeedStopper"`, `UaEnable TRUE`, `Methods TRUE`,
+`Holder "FeedStopper"`; `ReleaseAfter` and `Timeout` keep their initial values. Put it into the
+start-up chain after `RetractPiston`: replace `RetractPiston.INITO` → `Resetting.INIT` by
+`RetractPiston.INITO` → `FeedStopper.INIT` and `FeedStopper.INITO` → `Resetting.INIT`. That is all: no other wire, because it finds the equipment, the owner and the module
+state over the channels.
+
+#### Step 4: build it
+
+New types need a new FORTE: export and build as in section 11.4, try it on the PC (11.5), then the
+Pi (11.6). To keep it, add the two entries of section 10.2 to the spec as well; the generator then
+makes the same types and the next `python -m modgen` does not remove it.
 
 ## 11. Building the program and putting it on the Pi
 

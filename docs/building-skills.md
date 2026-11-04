@@ -251,6 +251,9 @@ make `SL_Prime` from `SL_Dispense`, and in `SL_Prime` change the inputs (`Durati
 `SERVER_2_2` and `PUBLISH_1`, and wire `Par_Duration` as `Par_Volume` was. Keep the block names: the
 tools find a skill's parts by them. Then export and rebuild FORTE (section 5).
 
+Every block, value and connection of a primitive, and its whole ECC, are listed one by one in
+[filling-program.md](filling-program.md), section 10.5, for the example `FeedStopper`.
+
 ## 4. A piece of equipment
 
 An equipment block is the only block that touches its pins. It does not know what they mean: the
