@@ -210,7 +210,7 @@ Then regenerate, rebuild FORTE (section 5), and deploy the new program.
 
 ### 3.2 What the generator makes, and what differs between primitives
 
-`SK_<Skill>` always holds the same blocks (see [filling-program.md](filling-program.md), section 6):
+`SK_<Skill>` always holds the same blocks (see [filling-program.md](filling-program.md), section 8.5):
 `Control` (`SKILL_Core`), `UaStart`, one `Par_<p>` per parameter, `PubParams`, `Logic`
 (`SL_<Skill>`), `EqState`, `EqView` (`EV_<Item>`), `WaitT`, `Driver` (`EC_<Item>`), `PhaseT`,
 `EqCmd`, `Timer`, and `PubResults` if it has results. What a new primitive changes:
