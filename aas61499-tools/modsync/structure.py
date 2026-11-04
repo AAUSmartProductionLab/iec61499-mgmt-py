@@ -98,13 +98,22 @@ def structure(fbs: dict[str, str], connections, value: Callable[[str], str | Non
     primitive = f"{package}::SK_"
     driven = {d: s for s, d in connections}
 
-    # Rule 1.5: one INIT chain from the boot event; it gives the order things were declared in.
-    order, at = [], driven_by(connections, BOOT)
-    while at:
+    # Rule 1.5: one INIT chain from the boot event; it gives the order things were declared in. Where
+    # an INITO leads to more than one INIT (a block linked in beside the chain), every branch is
+    # followed, depth first, so that one stray link does not hide the rest of the chain.
+    def inits(port: str) -> list[str]:
+        return sorted(d for s, d in connections if s == port and d.endswith(".INIT"))
+
+    order, todo, seen = [], inits(BOOT) or [p for p in [driven_by(connections, BOOT)] if p], set()
+    while todo:
+        at = todo.pop(0)
+        if at in seen:
+            continue
+        seen.add(at)
         top = at.partition(".")[0]
         if top not in order:
             order.append(top)
-        at = driven_by(connections, at[:-len(".INIT")] + ".INITO", ".INIT")
+        todo[0:0] = inits(at[:-len(".INIT")] + ".INITO")
 
     def step(name: str) -> dict:
         skill = fbs[name][len(primitive):]

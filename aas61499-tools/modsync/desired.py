@@ -32,6 +32,8 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+import hashlib
+import html
 import re
 import time
 import xml.etree.ElementTree as ET
@@ -42,8 +44,8 @@ from modgen.fbxml import connections as wire, fb
 from modgen.module import module_skill
 from modgen.spec import ModuleSpec, Parameter
 
-from .compare import Drift, init_link, owner
-from .device import BOOT, Snapshot, literal, read_structure, read_values
+from .compare import Drift, expected, expected_values, init_link, owner
+from .device import BOOT, Snapshot, literal, outside, read_structure, read_values
 from .structure import driven_by, shape, stated, structure, walk
 # What the AAS says, where it is, and what it describes: re-exported, so ``desired`` stays the one
 # name a caller needs.
@@ -93,10 +95,15 @@ class Reading:
 
 
 def read(client: Client, host: str, port: int, module: dict, components: list[dict], resource: str = "RES",
-         record_: dict | None = None, stats: dict | None = None) -> Reading:
+         record_: dict | None = None, stats: dict | None = None, audit: bool = False,
+         boot: str | None = None) -> Reading:
     """Read the running program and compare it with what the AASs describe and, if there is one, with
-    what the record says was built. ``stats``, if given, gets the seconds of reading the program
-    (``program_s``), of interpreting the AAS (``aas_s``) and of comparing the two (``compare_s``)."""
+    what the record says was built: as skills (their steps, bindings and parameters), and block by
+    block against the program the generator builds from the AAS (instances, types, connections,
+    instances running; with ``audit``, also every value it writes, one request each, the IO addresses
+    against the deployed ``boot`` file). ``stats``, if
+    given, gets the seconds of reading the program (``program_s``), of interpreting the AAS
+    (``aas_s``) and of comparing the two (``compare_s``)."""
     mark = time.perf_counter()
     snap = read_structure(client, host, port, resource)
     if snap.empty:
@@ -126,7 +133,13 @@ def read(client: Client, host: str, port: int, module: dict, components: list[di
     partial = {s: why for s in spec.composites if (why := partly(spec, snap, s, value))}
     running = structure(*without(snap.fbs, snap.connections, partial), value, primitives)
     found = differences(wanted, running, spec)
+    # A skill the program has all of, running, that the skills were not read from is not to be
+    # created: the INIT chain does not reach it, or its blocks do not make a skill (a restart).
+    for s in [s for s in found.create if s not in partial and any(n.startswith(s + ".") for n in snap.fbs)]:
+        found.create.remove(s)
+        found.restart.append(f"{s}: in the program, but not reached by the INIT chain from START or not read as a skill")
     found.partial = {s: why for s, why in partial.items() if s in found.create}
+    blockwise(spec, snap, value, found, audit, boot)
     for path, typ, digest in instances(record_):
         if path.split(".")[0] in found.create:
             continue                                      # of a skill that is still to be built
@@ -139,6 +152,87 @@ def read(client: Client, host: str, port: int, module: dict, components: list[di
     if stats is not None:
         stats["compare_s"] = time.perf_counter() - mark
     return Reading(spec, snap, running, found)
+
+
+_GENERATED: dict[str, FlatApplication] = {}
+
+
+def generated(spec: ModuleSpec) -> FlatApplication:
+    """The program the generator builds from ``spec`` for the target the AAS was made for (its one
+    target); kept for the next reading of the same AAS (the one after a change, its verification)."""
+    target = next(iter(spec.targets))
+    key = hashlib.sha256(f"{target}\n{spec!r}".encode()).hexdigest()
+    if key not in _GENERATED:
+        if len(_GENERATED) >= 8:
+            _GENERATED.clear()
+        _GENERATED[key] = expected(spec, target)
+    return _GENERATED[key]
+
+
+def blockwise(spec: ModuleSpec, snap: Snapshot, value, found: Differences, audit: bool, boot: str | None = None) -> None:
+    """The program against the one the generator builds from the AAS, block by block: an instance more
+    or missing or of another type, one not running, a connection more or missing (a restart; one line
+    for each top-level part), and with ``audit`` every value the generator writes (written online),
+    the equipment's IO addresses as the deployed ``boot`` file writes them (the AAS does not describe
+    them; left out without it). What the skills as read do not hold is found so too: a stray instance,
+    wiring outside the flow, a value outside the skills. Skills to be created or completed are left
+    to that."""
+    app = generated(spec)
+    skip = set(found.create)
+    inside = lambda n: any(n == s or n.startswith(s + ".") for s in skip)          # noqa: E731
+    top = lambda n: n.partition(".")[0]                                             # noqa: E731
+    want = {n: t for n, t in app.fbs.items() if not inside(n)}
+    have = {n: t for n, t in snap.fbs.items() if not inside(n)}
+    lines: dict[str, list[str]] = {}
+
+    def note(name: str, line: str) -> None:
+        lines.setdefault(top(name), []).append(line)
+
+    for n in sorted(have.keys() - want.keys()):
+        note(n, f"{n} ({have[n]}) is not described")
+    for n in sorted(want.keys() - have.keys()):
+        note(n, f"{n} ({want[n]}) is missing")
+    for n in sorted(want.keys() & have.keys()):
+        if want[n] != have[n]:
+            note(n, f"{n} is {have[n]}, described as {want[n]}")
+        elif snap.status.get(n, "RUNNING") != "RUNNING":
+            note(n, f"{n} is {snap.status[n]}")
+    links = {(s, d) for s, d in app.event_connections + app.data_connections if not inside(owner(s)) and not inside(owner(d))}
+    running = {(s, d) for s, d in snap.connections if not inside(owner(s)) and not inside(owner(d))}
+    for s, d in sorted(running - links):
+        note(owner(s), f"{s} -> {d} is not described")
+    for s, d in sorted(links - running):
+        note(owner(s), f"{s} -> {d} is missing")
+    for part, found_ in sorted(lines.items()):
+        found.restart.append(f"{part}: block by block, {len(found_)} "
+                             f"difference{'s' if len(found_) > 1 else ''}: {'; '.join(found_[:4])}"
+                             + ("; ..." if len(found_) > 4 else ""))
+    if audit:
+        deployed = written(boot, snap.container) if boot else {}
+        for port, want_value in expected_values(spec, app).items():
+            if inside(owner(port)) or port in found.values or owner(port) not in have:
+                continue
+            if wiring(port, app):                  # not in the AAS: as the deployed boot file has it, if given
+                if port not in deployed:
+                    continue
+                want_value = deployed[port]
+            if literal(value(port)) != literal(want_value):
+                found.values[port] = (want_value, value(port))
+
+
+def wiring(port: str, app: FlatApplication) -> bool:
+    """An equipment item's IO address (``<item>.<signal>_Address``: a pin, a PWM channel, a Modbus
+    register): the target's wiring, which the AAS does not describe."""
+    return port.endswith("_Address") and app.fbs.get(owner(port), "").partition("::")[2].startswith("EQ_")
+
+
+def written(boot: str, container: str) -> dict[str, str]:
+    """The values a boot file writes, by port as read from FORTE (without the application's container)."""
+    found = {}
+    for line in boot.splitlines():
+        if 'Action="WRITE"' in line and (m := re.search(r'<Connection Source="([^"]*)" Destination="([^"]*)"', line)):
+            found[outside(m.group(2), container)] = html.unescape(m.group(1))
+    return found
 
 
 def differences(wanted: dict, running: dict, spec: ModuleSpec) -> Differences:
@@ -331,7 +425,7 @@ def amended(boot: str, commands: list[Command]) -> str:
 
 def reconfigure(client: Client, host: str, port: int, module: dict, components: list[dict], deployer=None,
                 force: bool = False, dry_run: bool = False, resource: str = "RES",
-                record_: dict | None = None, stats: dict | None = None) -> tuple[list[str], Reading]:
+                record_: dict | None = None, stats: dict | None = None, audit: bool = False) -> tuple[list[str], Reading]:
     """Bring the running module to what its AAS describes, online; returns what was done (or would
     be, with ``dry_run``) and the module as read afterwards.
 
@@ -347,6 +441,7 @@ def reconfigure(client: Client, host: str, port: int, module: dict, components: 
     """
     stats = {} if stats is None else stats
     mark = time.perf_counter()
+    boot = deployer.load() if audit and deployer is not None else None
 
     def phase(name: str) -> None:
         nonlocal mark
@@ -354,7 +449,7 @@ def reconfigure(client: Client, host: str, port: int, module: dict, components: 
         stats[name] = now - mark
         mark = now
 
-    before = read(client, host, port, module, components, resource, record_, stats.setdefault("read", {}))
+    before = read(client, host, port, module, components, resource, record_, stats.setdefault("read", {}), audit, boot)
     phase("read_s")
     found = before.differences
     if found.empty:
@@ -393,7 +488,7 @@ def reconfigure(client: Client, host: str, port: int, module: dict, components: 
     if skills:
         initialised(client, snap, skills)          # their INIT chain runs after its trigger
     phase("apply_s")
-    after = read(client, host, port, module, components, resource, record_, stats.setdefault("verify", {}))
+    after = read(client, host, port, module, components, resource, record_, stats.setdefault("verify", {}), audit, boot)
     lacks = [n for n in app.fbs if n not in after.snapshot.fbs]
     if not after.differences.empty or lacks:
         raise RuntimeError("The module differs from its AAS after the change: "

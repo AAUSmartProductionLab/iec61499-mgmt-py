@@ -20,6 +20,24 @@ A running log of design considerations made while building, for writing the pape
 
 ## 4 Nov 2026
 
+- **The reconciler compares the program block by block as well, and audits every value on request.**
+  *CIRP* (Q3), *Journal*.
+  - Found by Q3's pilot: reading the program only as skills (steps, bindings, parameters) misses drift
+    outside that model: a value outside the skills (the OPC UA root path of a skill's blocks), wiring
+    outside a flow (the abort wiring), a stray instance. A stray linked into the INIT chain beside a
+    skill also made the reading follow it and lose the rest of the chain: four complete skills were
+    taken for missing, "completed" and initialised again.
+  - Now the INIT chain is followed into every branch; a skill the program has all of, running, that
+    was not read as one is a restart, never completed; and the program is compared with the one the
+    generator builds from the AAS, instance by instance and connection by connection, with their run
+    states (from what is read anyway), and with `audit` value by value (one READ each).
+  - The equipment's IO addresses (pins, PWM channels, Modbus registers) are not in the AAS: the spec
+    rebuilt from it lacks them, 5 of the filling module's 132 values, on both targets; everything else
+    round-trips. The audit compares them with the module's boot file, the record of its wiring.
+  - Instead of: auditing every value in every reading (about 400 requests for five skills, a second
+    more per reading over the Pi's network); or describing the IO wiring in the AAS (for the journal
+    paper).
+
 - **A skill that a cut change left half there is completed, not created again.** *CIRP* (Q3), *Journal*.
   - Found by a trial for Q3 on the tests' fake FORTE, a new skill's 165 commands cut after each: cut
     after the connections but before the blocks were started and INIT fired, the reconciler read the

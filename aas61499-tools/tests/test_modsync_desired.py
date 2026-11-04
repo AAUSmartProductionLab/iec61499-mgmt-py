@@ -21,6 +21,7 @@ from modsync.desired import at, described, instances, read, reconfigure, record,
 from modsync.structure import stated                                         # noqa: E402
 from modsync.sync import Refused                                             # noqa: E402
 from iec61499_mgmt.bootfile import boot_file, deployment                     # noqa: E402
+from iec61499_mgmt.protocol import Command                                   # noqa: E402
 from test_modsync import FakeForte, Recorder, composed, filling              # noqa: E402
 
 FILLING = SPECS / "filling.yaml"
@@ -177,6 +178,53 @@ def test_a_change_cut_after_any_of_its_commands_is_completed_by_the_next(with_do
         assert forte.fbs == new.fbs and forte.connections == set(new.event_connections + new.data_connections), i
         assert set(forte.status.values()) == {"RUNNING"} and forte.values["DoubleDose.UaStart.QO"] == "TRUE", i
         assert forte.triggered[-1] == "DoubleDose.Control.INIT", i
+
+
+def test_drift_outside_the_skills_is_found_block_by_block(delivered):
+    """A stray instance, wiring outside a skill's flow, a value outside the skills: the skills as read
+    do not hold them, the program compared block by block with the generator's does."""
+    module, components = delivered
+    run = lambda forte, **kw: forte.execute(Command(resource="RES", **kw))           # noqa: E731
+    # A stray instance in a skill, and a connection of the abort wiring deleted: restarts, both named.
+    forte = FakeForte(filling())
+    run(forte, op="create_fb", name="Dispensing.Stray", type="filling::SK_Home")
+    run(forte, op="start", name="Dispensing.Stray")
+    abort = next(c for c in sorted(forte.connections) if c[0].endswith(".ABORT_SEQ"))
+    run(forte, op="disconnect", source=abort[0], destination=abort[1])
+    found = read(forte, "pi", 61499, module, components).differences
+    assert not found.create and not found.values
+    assert any("Dispensing.Stray (filling::SK_Home) is not described" in line for line in found.restart)
+    assert any(f"{abort[0]} -> {abort[1]} is missing" in line for line in found.restart)
+    with pytest.raises(Refused):
+        reconfigure(forte, "pi", 61499, module, components)
+    # A stray linked into the INIT chain beside a skill: the skills are still read, nothing is created
+    # or initialised again, the link is named.
+    forte = FakeForte(filling())
+    entry = next(s for s, d in forte.connections if d == "Dispensing.Control.INIT")
+    run(forte, op="create_fb", name="Dispensing.Stray", type="filling::SK_Home")
+    run(forte, op="start", name="Dispensing.Stray")
+    run(forte, op="connect", source=entry, destination="Dispensing.Stray.INIT")
+    found = read(forte, "pi", 61499, module, components).differences
+    assert not found.create and any(f"{entry} -> Dispensing.Stray.INIT is not described" in line for line in found.restart)
+    with pytest.raises(Refused):
+        reconfigure(forte, "pi", 61499, module, components)
+    assert forte.triggered == []
+    # A value outside the skills (where the skill's OPC UA nodes are): the audit finds it, writes it back.
+    forte = FakeForte(filling())
+    run(forte, op="write", destination="Dispensing.Control.UaRoot", value="'/Objects/Other'")
+    assert read(forte, "pi", 61499, module, components).differences.empty
+    found = read(forte, "pi", 61499, module, components, audit=True).differences
+    assert list(found.values) == ["Dispensing.Control.UaRoot"]
+    done, after = reconfigure(forte, "pi", 61499, module, components, audit=True)
+    assert after.differences.empty and forte.values["Dispensing.Control.UaRoot"] == "/Objects/Filling"
+    # An IO address, the target's wiring, which the AAS does not describe: compared with the deployed
+    # boot file when there is one.
+    forte = FakeForte(filling())
+    run(forte, op="write", destination="Scale.Weight_Address", value="'other'")
+    assert read(forte, "pi", 61499, module, components, audit=True).differences.empty
+    boot = boot_file(deployment(filling().app))
+    found = read(forte, "pi", 61499, module, components, audit=True, boot=boot).differences
+    assert list(found.values) == ["Scale.Weight_Address"]
 
 
 def test_what_was_built_is_recorded(with_double_dose, delivered_record):
