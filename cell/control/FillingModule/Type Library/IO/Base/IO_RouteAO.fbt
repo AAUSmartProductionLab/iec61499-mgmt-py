@@ -81,33 +81,33 @@
       <VarDeclaration Name="Raw" Type="LREAL" />
     </InternalVars>
     <ECC>
-      <ECState Name="START" x="150" y="100" />
-      <ECState Name="Init" x="570" y="100">
+      <ECState Name="START" x="0" y="-1120" />
+      <ECState Name="Init" x="-2000" y="160">
         <ECAction Algorithm="Alg_Init" Output="INIT_IO" />
       </ECState>
-      <ECState Name="Ready" x="990" y="100">
+      <ECState Name="Ready" x="-1360" y="-960">
         <ECAction Algorithm="Alg_Ready" Output="INITO" />
       </ECState>
-      <ECState Name="ReqG" x="1410" y="100">
+      <ECState Name="ReqG" x="1200" y="-640">
         <ECAction Output="REQ_G" />
       </ECState>
-      <ECState Name="ReqM" x="150" y="330">
+      <ECState Name="ReqM" x="-160" y="1280">
         <ECAction Algorithm="Alg_ReqM" Output="REQ_M" />
         <ECAction Output="CNF" />
       </ECState>
-      <ECState Name="Req" x="570" y="330">
+      <ECState Name="Req" x="1440" y="480">
         <ECAction Algorithm="Alg_Req" />
       </ECState>
-      <ECState Name="Sim" x="990" y="330">
+      <ECState Name="Sim" x="1440" y="240">
         <ECAction Algorithm="Alg_Sim" Output="CNF" />
       </ECState>
-      <ECState Name="None" x="1410" y="330">
+      <ECState Name="None" x="1440" y="0">
         <ECAction Algorithm="Alg_None" Output="CNF" />
       </ECState>
-      <ECState Name="DoneG" x="1410" y="330">
+      <ECState Name="DoneG" x="1440" y="-240">
         <ECAction Algorithm="Alg_DoneG" Output="CNF" />
       </ECState>
-      <ECState Name="DoneM" x="150" y="560">
+      <ECState Name="DoneM" x="-1280" y="880">
         <ECAction Algorithm="Alg_DoneM" />
       </ECState>
       <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
