@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="442" height="165" viewBox="305 -206 2209 826" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="305" y="-206" width="2209" height="826" fill="#ffffff"/>
+<text x="1485" y="-28" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">E_DELAY</text>
+<rect x="1200" y="320" width="570" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1200" y="0" width="570" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1245" y="250" width="480" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="1485" y="320" font-size="58" text-anchor="middle" fill="#1f2430">E_DELAY</text>
+<polygon points="1210,55 1242,75 1210,95" fill="#b5452b"/>
+<text x="1255" y="95" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="1210,155 1242,175 1210,195" fill="#b5452b"/>
+<text x="1255" y="195" font-size="58" text-anchor="start" fill="#1f2430">STOP</text>
+<polygon points="1728,55 1760,75 1728,95" fill="#b5452b"/>
+<text x="1715" y="95" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
+<rect x="1212" y="384" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="1255" y="420" font-size="58" text-anchor="start" fill="#1f2430">DT</text>
+<rect x="1061" y="37" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1118" y="92" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="1007" y="137" width="168" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1091" y="192" font-size="48" text-anchor="middle" fill="#6b7280">STOP</text>
+<rect x="1795" y="37" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1852" y="92" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="1061" y="362" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1118" y="417" font-size="48" text-anchor="middle" fill="#6b7280">DT</text>
+<rect x="425" y="-86" width="282" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="445,-66 475,-46 445,-26" fill="#b5452b"/>
+<text x="490" y="-26" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<rect x="425" y="14" width="282" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="445,34 475,54 445,74" fill="#b5452b"/>
+<text x="490" y="74" font-size="58" text-anchor="start" fill="#1f2430">STOP</text>
+<rect x="425" y="174" width="282" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
+<rect x="445" y="198" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="490" y="234" font-size="58" text-anchor="start" fill="#1f2430">DT</text>
+<rect x="2209" y="-86" width="185" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="2344,-66 2374,-46 2344,-26" fill="#b5452b"/>
+<text x="2329" y="-26" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
+</svg>

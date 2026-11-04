@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1297" height="232" viewBox="719 -106 5189 926" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="719" y="-106" width="5189" height="926" fill="#ffffff"/>
+<text x="2925" y="72" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Fail1</text>
+<rect x="2400" y="420" width="1050" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2400" y="100" width="1050" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2445" y="350" width="960" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2925" y="420" font-size="58" text-anchor="middle" fill="#1f2430">SKILL_FailMerge</text>
+<polygon points="2410,155 2442,175 2410,195" fill="#b5452b"/>
+<text x="2455" y="195" font-size="58" text-anchor="start" fill="#1f2430">FAIL_1</text>
+<polygon points="2410,255 2442,275 2410,295" fill="#b5452b"/>
+<text x="2455" y="295" font-size="58" text-anchor="start" fill="#1f2430">FAIL_2</text>
+<polygon points="3408,155 3440,175 3408,195" fill="#b5452b"/>
+<text x="3395" y="195" font-size="58" text-anchor="end" fill="#1f2430">FAIL</text>
+<rect x="2412" y="484" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2455" y="520" font-size="58" text-anchor="start" fill="#1f2430">Error1</text>
+<rect x="2412" y="584" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2455" y="620" font-size="58" text-anchor="start" fill="#1f2430">Error2</text>
+<rect x="3406" y="484" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3395" y="520" font-size="58" text-anchor="end" fill="#1f2430">Error</text>
+<rect x="1831" y="137" width="544" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2103" y="192" font-size="48" text-anchor="middle" fill="#6b7280">NeedleDown.FAILURE</text>
+<text x="1791" y="193" font-size="50" text-anchor="end" fill="#6b7280">connection (hidden): the other end</text>
+<rect x="3475" y="137" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3532" y="192" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<text x="3629" y="193" font-size="50" text-anchor="start" fill="#6b7280">connected to two pins</text>
+<text x="2370" y="617" font-size="48" text-anchor="end" fill="#0f6b6b">0</text>
+<text x="2270" y="618" font-size="50" text-anchor="end" fill="#0f6b6b">a value set on the pin (a parameter)</text>
+<text x="4500" y="72" font-size="50" text-anchor="start" fill="#1f2430">instance name: this block in the program</text>
+<text x="4500" y="293" font-size="50" text-anchor="start" fill="#1f2430">event pins (triangles): "now do this"</text>
+<text x="4500" y="420" font-size="50" text-anchor="start" fill="#1f2430">type: what kind of block it is</text>
+<text x="4500" y="518" font-size="50" text-anchor="start" fill="#1f2430">data pins (squares): green BOOL, blue numbers,</text>
+<text x="4500" y="618" font-size="50" text-anchor="start" fill="#1f2430">purple text (STRING, WSTRING), grey ANY</text>
+</svg>

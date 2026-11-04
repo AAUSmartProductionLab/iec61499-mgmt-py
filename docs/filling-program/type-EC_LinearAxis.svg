@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="442" height="435" viewBox="-404 -120 1766 1740" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-404" y="-120" width="1766" height="1740" fill="#ffffff"/>
+<rect x="0" y="520" width="930" height="980" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="930" height="480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="450" width="840" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="465" y="520" font-size="58" text-anchor="middle" fill="#1f2430">EC_LinearAxis</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">PLAY</text>
+<polygon points="10,155 42,175 10,195" fill="#b5452b"/>
+<text x="55" y="195" font-size="58" text-anchor="start" fill="#1f2430">PHASE_T</text>
+<polygon points="888,55 920,75 888,95" fill="#b5452b"/>
+<text x="875" y="95" font-size="58" text-anchor="end" fill="#1f2430">OUT</text>
+<polygon points="888,155 920,175 888,195" fill="#b5452b"/>
+<text x="875" y="195" font-size="58" text-anchor="end" fill="#1f2430">PHASE_START</text>
+<polygon points="888,255 920,275 888,295" fill="#b5452b"/>
+<text x="875" y="295" font-size="58" text-anchor="end" fill="#1f2430">PHASE_STOP</text>
+<polygon points="888,355 920,375 888,395" fill="#b5452b"/>
+<text x="875" y="395" font-size="58" text-anchor="end" fill="#1f2430">PLAYED</text>
+<rect x="12" y="584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="620" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
+<rect x="12" y="684" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="55" y="720" font-size="58" text-anchor="start" fill="#1f2430">Command</text>
+<rect x="12" y="784" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="55" y="820" font-size="58" text-anchor="start" fill="#1f2430">Arg</text>
+<rect x="12" y="884" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="920" font-size="58" text-anchor="start" fill="#1f2430">Release</text>
+<rect x="886" y="584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="875" y="620" font-size="58" text-anchor="end" fill="#1f2430">O_Holder</text>
+<rect x="886" y="684" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="875" y="720" font-size="58" text-anchor="end" fill="#1f2430">O_Release</text>
+<rect x="886" y="784" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="875" y="820" font-size="58" text-anchor="end" fill="#1f2430">N_Enable</text>
+<rect x="886" y="884" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="875" y="920" font-size="58" text-anchor="end" fill="#1f2430">N_Down</text>
+<rect x="886" y="984" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="875" y="1020" font-size="58" text-anchor="end" fill="#1f2430">N_Step</text>
+<rect x="886" y="1084" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="875" y="1120" font-size="58" text-anchor="end" fill="#1f2430">NE_Step</text>
+<rect x="886" y="1184" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="875" y="1220" font-size="58" text-anchor="end" fill="#1f2430">N_Move</text>
+<rect x="886" y="1284" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="875" y="1320" font-size="58" text-anchor="end" fill="#1f2430">N_Goal</text>
+<rect x="886" y="1384" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="875" y="1420" font-size="58" text-anchor="end" fill="#1f2430">PhaseDT</text>
+<line x1="-40" y1="75" x2="-40" y2="900" stroke="#6b7280" stroke-width="4"/>
+<rect x="-50" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="690" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="790" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="890" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="-88" y="618" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-88" y="718" font-size="50" text-anchor="end" fill="#6b7280">USINT</text>
+<text x="-88" y="818" font-size="50" text-anchor="end" fill="#6b7280">LREAL</text>
+<text x="-88" y="918" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<line x1="970" y1="75" x2="970" y2="1300" stroke="#6b7280" stroke-width="4"/>
+<rect x="960" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="960" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="960" y="690" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="960" y="790" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="960" y="890" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="960" y="990" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="960" y="1090" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="960" y="1190" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="960" y="1290" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="998" y1="175" x2="998" y2="1400" stroke="#6b7280" stroke-width="4"/>
+<rect x="988" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="988" y="1390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="1046" y="618" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="1046" y="718" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="1046" y="818" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="1046" y="918" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="1046" y="1018" font-size="50" text-anchor="start" fill="#6b7280">LREAL</text>
+<text x="1046" y="1118" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="1046" y="1218" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="1046" y="1318" font-size="50" text-anchor="start" fill="#6b7280">LREAL</text>
+<text x="1046" y="1418" font-size="50" text-anchor="start" fill="#6b7280">TIME</text>
+</svg>

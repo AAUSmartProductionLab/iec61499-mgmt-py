@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="238" height="160" viewBox="-120 -120 950 640" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-120" y="-120" width="950" height="640" fill="#ffffff"/>
+<rect x="0" y="220" width="510" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="510" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="150" width="420" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="255" y="220" font-size="58" text-anchor="middle" fill="#1f2430">E_T_FF</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">CLK</text>
+<polygon points="468,55 500,75 468,95" fill="#b5452b"/>
+<text x="455" y="95" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
+<rect x="466" y="284" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="455" y="320" font-size="58" text-anchor="end" fill="#1f2430">Q</text>
+<line x1="550" y1="75" x2="550" y2="300" stroke="#6b7280" stroke-width="4"/>
+<rect x="540" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="540" y="290" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="598" y="318" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+</svg>

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="370" height="435" viewBox="-404 -120 1479 1740" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-404" y="-120" width="1479" height="1740" fill="#ffffff"/>
+<rect x="0" y="220" width="955" height="1280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="955" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="150" width="865" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="478" y="220" font-size="58" text-anchor="middle" fill="#1f2430">EQ_LinearAxis</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="913,55 945,75 913,95" fill="#b5452b"/>
+<text x="900" y="95" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<rect x="12" y="284" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="320" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="12" y="384" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="420" font-size="58" text-anchor="start" fill="#1f2430">Name</text>
+<rect x="12" y="484" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="520" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="12" y="584" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="620" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="12" y="684" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="55" y="720" font-size="58" text-anchor="start" fill="#1f2430">CycleTime</text>
+<rect x="12" y="784" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="820" font-size="58" text-anchor="start" fill="#1f2430">AtHome_Address</text>
+<rect x="12" y="884" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="920" font-size="58" text-anchor="start" fill="#1f2430">AtHome_Sim</text>
+<rect x="12" y="984" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="1020" font-size="58" text-anchor="start" fill="#1f2430">Enable_Address</text>
+<rect x="12" y="1084" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="1120" font-size="58" text-anchor="start" fill="#1f2430">Down_Address</text>
+<rect x="12" y="1184" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="1220" font-size="58" text-anchor="start" fill="#1f2430">Step_Address</text>
+<rect x="12" y="1284" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="55" y="1320" font-size="58" text-anchor="start" fill="#1f2430">Step_Gain</text>
+<rect x="12" y="1384" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="55" y="1420" font-size="58" text-anchor="start" fill="#1f2430">Step_Bias</text>
+<line x1="-40" y1="75" x2="-40" y2="1400" stroke="#6b7280" stroke-width="4"/>
+<rect x="-50" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="290" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="690" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="790" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="890" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="990" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="1090" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="1190" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="1290" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="1390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="-88" y="318" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-88" y="418" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-88" y="518" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-88" y="618" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<text x="-88" y="718" font-size="50" text-anchor="end" fill="#6b7280">TIME</text>
+<text x="-88" y="818" font-size="50" text-anchor="end" fill="#6b7280">STRING</text>
+<text x="-88" y="918" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<text x="-88" y="1018" font-size="50" text-anchor="end" fill="#6b7280">STRING</text>
+<text x="-88" y="1118" font-size="50" text-anchor="end" fill="#6b7280">STRING</text>
+<text x="-88" y="1218" font-size="50" text-anchor="end" fill="#6b7280">STRING</text>
+<text x="-88" y="1318" font-size="50" text-anchor="end" fill="#6b7280">LREAL</text>
+<text x="-88" y="1418" font-size="50" text-anchor="end" fill="#6b7280">LREAL</text>
+</svg>

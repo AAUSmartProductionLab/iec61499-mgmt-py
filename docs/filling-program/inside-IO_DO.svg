@@ -1,0 +1,257 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1993" height="445" viewBox="696 894 9963 2226" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="696" y="894" width="9963" height="2226" fill="#ffffff"/>
+<text x="2200" y="1072" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Route</text>
+<rect x="1790" y="1720" width="820" height="1280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1790" y="1100" width="820" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1835" y="1650" width="730" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2200" y="1720" font-size="58" text-anchor="middle" fill="#1f2430">IO_RouteDO</text>
+<polygon points="1800,1155 1832,1175 1800,1195" fill="#b5452b"/>
+<text x="1845" y="1195" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="1800,1255 1832,1275 1800,1295" fill="#b5452b"/>
+<text x="1845" y="1295" font-size="58" text-anchor="start" fill="#1f2430">IO_READY</text>
+<polygon points="1800,1355 1832,1375 1800,1395" fill="#b5452b"/>
+<text x="1845" y="1395" font-size="58" text-anchor="start" fill="#1f2430">CNF_G</text>
+<polygon points="1800,1455 1832,1475 1800,1495" fill="#b5452b"/>
+<text x="1845" y="1495" font-size="58" text-anchor="start" fill="#1f2430">CNF_M</text>
+<polygon points="1800,1555 1832,1575 1800,1595" fill="#b5452b"/>
+<text x="1845" y="1595" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="2568,1155 2600,1175 2568,1195" fill="#b5452b"/>
+<text x="2555" y="1195" font-size="58" text-anchor="end" fill="#1f2430">INIT_IO</text>
+<polygon points="2568,1255 2600,1275 2568,1295" fill="#b5452b"/>
+<text x="2555" y="1295" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="2568,1355 2600,1375 2568,1395" fill="#b5452b"/>
+<text x="2555" y="1395" font-size="58" text-anchor="end" fill="#1f2430">REQ_G</text>
+<polygon points="2568,1455 2600,1475 2568,1495" fill="#b5452b"/>
+<text x="2555" y="1495" font-size="58" text-anchor="end" fill="#1f2430">REQ_M</text>
+<polygon points="2568,1555 2600,1575 2568,1595" fill="#b5452b"/>
+<text x="2555" y="1595" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="1802" y="1784" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="1845" y="1820" font-size="58" text-anchor="start" fill="#1f2430">Address</text>
+<rect x="1802" y="1884" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="1845" y="1920" font-size="58" text-anchor="start" fill="#1f2430">QO_G</text>
+<rect x="1802" y="1984" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="1845" y="2020" font-size="58" text-anchor="start" fill="#1f2430">QO_M</text>
+<rect x="1802" y="2084" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="1845" y="2120" font-size="58" text-anchor="start" fill="#1f2430">OUT</text>
+<rect x="2566" y="1784" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2555" y="1820" font-size="58" text-anchor="end" fill="#1f2430">GQI</text>
+<rect x="2566" y="1884" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2555" y="1920" font-size="58" text-anchor="end" fill="#1f2430">MQI</text>
+<rect x="2566" y="1984" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2555" y="2020" font-size="58" text-anchor="end" fill="#1f2430">IoName</text>
+<rect x="2566" y="2084" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2555" y="2120" font-size="58" text-anchor="end" fill="#1f2430">ModbusId</text>
+<rect x="2566" y="2184" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2555" y="2220" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="2566" y="2284" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2555" y="2320" font-size="58" text-anchor="end" fill="#1f2430">LineQI</text>
+<rect x="2566" y="2384" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2555" y="2420" font-size="58" text-anchor="end" fill="#1f2430">LineName</text>
+<rect x="2566" y="2484" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2555" y="2520" font-size="58" text-anchor="end" fill="#1f2430">ChipNo</text>
+<rect x="2566" y="2584" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2555" y="2620" font-size="58" text-anchor="end" fill="#1f2430">LineNo</text>
+<rect x="2566" y="2684" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2555" y="2720" font-size="58" text-anchor="end" fill="#1f2430">LineBias</text>
+<rect x="2566" y="2784" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2555" y="2820" font-size="58" text-anchor="end" fill="#1f2430">LineLow</text>
+<rect x="2566" y="2884" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2555" y="2920" font-size="58" text-anchor="end" fill="#1f2430">Value</text>
+<rect x="1597" y="1137" width="168" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1681" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">INIT</text>
+<rect x="2635" y="1137" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2786" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">Line.INIT</text>
+<rect x="1463" y="1237" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1614" y="1292" font-size="48" text-anchor="middle" fill="#6b7280">Bus.INITO</text>
+<rect x="2635" y="1237" width="194" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2732" y="1292" font-size="48" text-anchor="middle" fill="#6b7280">INITO</text>
+<rect x="1624" y="1537" width="141" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1695" y="1592" font-size="48" text-anchor="middle" fill="#6b7280">REQ</text>
+<rect x="2635" y="1337" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2786" y="1392" font-size="48" text-anchor="middle" fill="#6b7280">Local.REQ</text>
+<rect x="2635" y="1437" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2759" y="1492" font-size="48" text-anchor="middle" fill="#6b7280">Bus.REQ</text>
+<rect x="1463" y="1337" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1614" y="1392" font-size="48" text-anchor="middle" fill="#6b7280">Local.CNF</text>
+<rect x="1517" y="1437" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1641" y="1492" font-size="48" text-anchor="middle" fill="#6b7280">Bus.CNF</text>
+<rect x="2635" y="1537" width="141" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2705" y="1592" font-size="48" text-anchor="middle" fill="#6b7280">CNF</text>
+<rect x="2635" y="2262" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2759" y="2317" font-size="48" text-anchor="middle" fill="#6b7280">Line.QI</text>
+<rect x="2635" y="2362" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2799" y="2417" font-size="48" text-anchor="middle" fill="#6b7280">Line.VALUE</text>
+<rect x="2635" y="2462" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2867" y="2517" font-size="48" text-anchor="middle" fill="#6b7280">Line.ChipNumber</text>
+<rect x="2635" y="2562" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2867" y="2617" font-size="48" text-anchor="middle" fill="#6b7280">Line.LineNumber</text>
+<rect x="2635" y="2662" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2840" y="2717" font-size="48" text-anchor="middle" fill="#6b7280">Line.BiasMode</text>
+<rect x="2635" y="2762" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2853" y="2817" font-size="48" text-anchor="middle" fill="#6b7280">Line.ActiveLow</text>
+<rect x="1517" y="1762" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1641" y="1817" font-size="48" text-anchor="middle" fill="#6b7280">Address</text>
+<rect x="2635" y="1962" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2826" y="2017" font-size="48" text-anchor="middle" fill="#6b7280">Local.PARAMS</text>
+<rect x="2635" y="2062" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2746" y="2117" font-size="48" text-anchor="middle" fill="#6b7280">Bus.ID</text>
+<rect x="2635" y="1762" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2773" y="1817" font-size="48" text-anchor="middle" fill="#6b7280">Local.QI</text>
+<rect x="2635" y="1862" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2746" y="1917" font-size="48" text-anchor="middle" fill="#6b7280">Bus.QI</text>
+<rect x="1490" y="1862" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1627" y="1917" font-size="48" text-anchor="middle" fill="#6b7280">Local.QO</text>
+<rect x="1544" y="1962" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1654" y="2017" font-size="48" text-anchor="middle" fill="#6b7280">Bus.QO</text>
+<rect x="2635" y="2162" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2692" y="2217" font-size="48" text-anchor="middle" fill="#6b7280">QO</text>
+<rect x="1624" y="2062" width="141" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1695" y="2117" font-size="48" text-anchor="middle" fill="#6b7280">OUT</text>
+<rect x="2635" y="2862" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2692" y="2917" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<text x="4748" y="1072" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Line</text>
+<rect x="4270" y="1420" width="955" height="780" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4270" y="1100" width="955" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4315" y="1350" width="865" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="4748" y="1420" font-size="58" text-anchor="middle" fill="#1f2430">GPIOChip</text>
+<polygon points="4280,1155 4312,1175 4280,1195" fill="#b5452b"/>
+<text x="4325" y="1195" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="5183,1155 5215,1175 5183,1195" fill="#b5452b"/>
+<text x="5170" y="1195" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="5183,1255 5215,1275 5183,1295" fill="#b5452b"/>
+<text x="5170" y="1295" font-size="58" text-anchor="end" fill="#1f2430">IND</text>
+<rect x="4282" y="1484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="4325" y="1520" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="4282" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="4325" y="1620" font-size="58" text-anchor="start" fill="#1f2430">VALUE</text>
+<rect x="4282" y="1684" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="4325" y="1720" font-size="58" text-anchor="start" fill="#1f2430">ChipNumber</text>
+<rect x="4282" y="1784" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="4325" y="1820" font-size="58" text-anchor="start" fill="#1f2430">LineNumber</text>
+<rect x="4282" y="1884" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="4325" y="1920" font-size="58" text-anchor="start" fill="#1f2430">ReadWriteMode</text>
+<rect x="4282" y="1984" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="4325" y="2020" font-size="58" text-anchor="start" fill="#1f2430">BiasMode</text>
+<rect x="4282" y="2084" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="4325" y="2120" font-size="58" text-anchor="start" fill="#1f2430">ActiveLow</text>
+<rect x="5181" y="1484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5170" y="1520" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="5181" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5170" y="1620" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="3836" y="1137" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4040" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">Route.INIT_IO</text>
+<rect x="5250" y="1137" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5414" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">Local.INIT</text>
+<rect x="3862" y="1462" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4054" y="1517" font-size="48" text-anchor="middle" fill="#6b7280">Route.LineQI</text>
+<rect x="3809" y="1562" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4027" y="1617" font-size="48" text-anchor="middle" fill="#6b7280">Route.LineName</text>
+<rect x="3862" y="1662" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4054" y="1717" font-size="48" text-anchor="middle" fill="#6b7280">Route.ChipNo</text>
+<rect x="3862" y="1762" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4054" y="1817" font-size="48" text-anchor="middle" fill="#6b7280">Route.LineNo</text>
+<rect x="3809" y="1962" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4027" y="2017" font-size="48" text-anchor="middle" fill="#6b7280">Route.LineBias</text>
+<rect x="3836" y="2062" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4040" y="2117" font-size="48" text-anchor="middle" fill="#6b7280">Route.LineLow</text>
+<text x="4240" y="1917" font-size="48" text-anchor="end" fill="#0f6b6b">1</text>
+<text x="6925" y="1072" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Local</text>
+<rect x="6605" y="1420" width="640" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="6605" y="1100" width="640" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="6650" y="1350" width="550" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="6925" y="1420" font-size="58" text-anchor="middle" fill="#1f2430">QX</text>
+<polygon points="6615,1155 6647,1175 6615,1195" fill="#b5452b"/>
+<text x="6660" y="1195" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="6615,1255 6647,1275 6615,1295" fill="#b5452b"/>
+<text x="6660" y="1295" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="7203,1155 7235,1175 7203,1195" fill="#b5452b"/>
+<text x="7190" y="1195" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="7203,1255 7235,1275 7203,1295" fill="#b5452b"/>
+<text x="7190" y="1295" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="6617" y="1484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="6660" y="1520" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="6617" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="6660" y="1620" font-size="58" text-anchor="start" fill="#1f2430">PARAMS</text>
+<rect x="6617" y="1684" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="6660" y="1720" font-size="58" text-anchor="start" fill="#1f2430">OUT</text>
+<rect x="7201" y="1484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="7190" y="1520" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="7201" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="7190" y="1620" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="6251" y="1137" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6416" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">Line.INITO</text>
+<rect x="7270" y="1137" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7408" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">Bus.INIT</text>
+<rect x="6224" y="1237" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6402" y="1292" font-size="48" text-anchor="middle" fill="#6b7280">Route.REQ_G</text>
+<rect x="7270" y="1237" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7448" y="1292" font-size="48" text-anchor="middle" fill="#6b7280">Route.CNF_G</text>
+<rect x="6197" y="1562" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6389" y="1617" font-size="48" text-anchor="middle" fill="#6b7280">Route.IoName</text>
+<rect x="6278" y="1462" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6429" y="1517" font-size="48" text-anchor="middle" fill="#6b7280">Route.GQI</text>
+<rect x="7270" y="1462" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7434" y="1517" font-size="48" text-anchor="middle" fill="#6b7280">Route.QO_G</text>
+<rect x="6224" y="1662" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6402" y="1717" font-size="48" text-anchor="middle" fill="#6b7280">Route.Value</text>
+<text x="9120" y="1072" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Bus</text>
+<rect x="8745" y="1420" width="750" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="8745" y="1100" width="750" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="8790" y="1350" width="660" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="9120" y="1420" font-size="58" text-anchor="middle" fill="#1f2430">CLIENT_1_0</text>
+<polygon points="8755,1155 8787,1175 8755,1195" fill="#b5452b"/>
+<text x="8800" y="1195" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="8755,1255 8787,1275 8755,1295" fill="#b5452b"/>
+<text x="8800" y="1295" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="9453,1155 9485,1175 9453,1195" fill="#b5452b"/>
+<text x="9440" y="1195" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="9453,1255 9485,1275 9453,1295" fill="#b5452b"/>
+<text x="9440" y="1295" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="8757" y="1484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="8800" y="1520" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="8757" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="8800" y="1620" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="8757" y="1684" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="8800" y="1720" font-size="58" text-anchor="start" fill="#1f2430">SD_1</text>
+<rect x="9451" y="1484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="9440" y="1520" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="9451" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="9440" y="1620" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="8364" y="1137" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8542" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">Local.INITO</text>
+<rect x="9520" y="1137" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="9738" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">Route.IO_READY</text>
+<rect x="8364" y="1237" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8542" y="1292" font-size="48" text-anchor="middle" fill="#6b7280">Route.REQ_M</text>
+<rect x="9520" y="1237" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="9698" y="1292" font-size="48" text-anchor="middle" fill="#6b7280">Route.CNF_M</text>
+<rect x="8284" y="1562" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8502" y="1617" font-size="48" text-anchor="middle" fill="#6b7280">Route.ModbusId</text>
+<rect x="8418" y="1462" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8569" y="1517" font-size="48" text-anchor="middle" fill="#6b7280">Route.MQI</text>
+<rect x="9520" y="1462" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="9684" y="1517" font-size="48" text-anchor="middle" fill="#6b7280">Route.QO_M</text>
+<rect x="8364" y="1662" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8542" y="1717" font-size="48" text-anchor="middle" fill="#6b7280">Route.Value</text>
+<rect x="816" y="1014" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="836,1034 866,1054 836,1074" fill="#b5452b"/>
+<text x="881" y="1074" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<rect x="816" y="1114" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="836,1134 866,1154 836,1174" fill="#b5452b"/>
+<text x="881" y="1174" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<rect x="816" y="1274" width="347" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="836" y="1298" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="881" y="1334" font-size="58" text-anchor="start" fill="#1f2430">Address</text>
+<rect x="816" y="1374" width="347" height="80" rx="12" fill="#ffffff" stroke="#2e8540" stroke-width="5"/>
+<rect x="836" y="1398" width="30" height="30" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="881" y="1434" font-size="58" text-anchor="start" fill="#1f2430">OUT</text>
+<rect x="10256" y="1014" width="282" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="10489,1034 10519,1054 10489,1074" fill="#b5452b"/>
+<text x="10474" y="1074" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<rect x="10256" y="1114" width="282" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="10489,1134 10519,1154 10489,1174" fill="#b5452b"/>
+<text x="10474" y="1174" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="10256" y="1274" width="282" height="80" rx="12" fill="#ffffff" stroke="#2e8540" stroke-width="5"/>
+<rect x="10489" y="1298" width="30" height="30" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="10474" y="1334" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+</svg>

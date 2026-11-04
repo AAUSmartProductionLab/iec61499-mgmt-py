@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="262" height="160" viewBox="-120 -120 1050 640" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-120" y="-120" width="1050" height="640" fill="#ffffff"/>
+<rect x="0" y="320" width="810" height="80" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="250" width="720" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="405" y="320" font-size="58" text-anchor="middle" fill="#1f2430">SKILL_Merge</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">EI1</text>
+<polygon points="10,155 42,175 10,195" fill="#b5452b"/>
+<text x="55" y="195" font-size="58" text-anchor="start" fill="#1f2430">EI2</text>
+<polygon points="768,55 800,75 768,95" fill="#b5452b"/>
+<text x="755" y="95" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
+</svg>

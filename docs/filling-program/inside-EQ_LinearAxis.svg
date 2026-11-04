@@ -1,0 +1,624 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2567" height="1856" viewBox="5 880 12837 9280" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="5" y="880" width="12837" height="9280" fill="#ffffff"/>
+<rect x="1000" y="1000" width="7105" height="3180" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="1100" y="1140" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Core</text>
+<text x="1100" y="1305" font-size="52" text-anchor="start" fill="#6b7280">One holder at a time, break before make, all off on release or abort; scanned every CycleTime</text>
+<rect x="1000" y="4480" width="7930" height="3580" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="1100" y="4620" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Channels</text>
+<text x="1100" y="4785" font-size="52" text-anchor="start" fill="#6b7280">Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA</text>
+<rect x="9230" y="4480" width="2910" height="1380" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="9330" y="4620" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Inputs</text>
+<text x="9330" y="4785" font-size="52" text-anchor="start" fill="#6b7280">The equipment's sensors: read every cycle, one block per IO point</text>
+<rect x="1000" y="8360" width="7850" height="1680" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="1100" y="8500" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Outputs</text>
+<text x="1100" y="8665" font-size="52" text-anchor="start" fill="#6b7280">The equipment's actuators: written on a change and every cycle, one block per IO point</text>
+<text x="2562" y="1552" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Logic</text>
+<rect x="1950" y="2500" width="1225" height="1480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1950" y="1580" width="1225" height="880" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1995" y="2430" width="1135" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2562" y="2500" font-size="58" text-anchor="middle" fill="#1f2430">EL_LinearAxis</text>
+<polygon points="1960,1635 1992,1655 1960,1675" fill="#b5452b"/>
+<text x="2005" y="1675" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="1960,1735 1992,1755 1960,1775" fill="#b5452b"/>
+<text x="2005" y="1775" font-size="58" text-anchor="start" fill="#1f2430">CMD</text>
+<polygon points="1960,1835 1992,1855 1960,1875" fill="#b5452b"/>
+<text x="2005" y="1875" font-size="58" text-anchor="start" fill="#1f2430">RELEASE</text>
+<polygon points="1960,1935 1992,1955 1960,1975" fill="#b5452b"/>
+<text x="2005" y="1975" font-size="58" text-anchor="start" fill="#1f2430">SAMPLE</text>
+<polygon points="1960,2035 1992,2055 1960,2075" fill="#b5452b"/>
+<text x="2005" y="2075" font-size="58" text-anchor="start" fill="#1f2430">REFRESH</text>
+<polygon points="1960,2135 1992,2155 1960,2175" fill="#b5452b"/>
+<text x="2005" y="2175" font-size="58" text-anchor="start" fill="#1f2430">DRIVEN</text>
+<polygon points="1960,2235 1992,2255 1960,2275" fill="#b5452b"/>
+<text x="2005" y="2275" font-size="58" text-anchor="start" fill="#1f2430">MOD_CHG</text>
+<polygon points="1960,2335 1992,2355 1960,2375" fill="#b5452b"/>
+<text x="2005" y="2375" font-size="58" text-anchor="start" fill="#1f2430">MOVE_T</text>
+<polygon points="3133,1635 3165,1655 3133,1675" fill="#b5452b"/>
+<text x="3120" y="1675" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="3133,1735 3165,1755 3133,1775" fill="#b5452b"/>
+<text x="3120" y="1775" font-size="58" text-anchor="end" fill="#1f2430">DRIVE</text>
+<polygon points="3133,1835 3165,1855 3133,1875" fill="#b5452b"/>
+<text x="3120" y="1875" font-size="58" text-anchor="end" fill="#1f2430">STATE</text>
+<polygon points="3133,1935 3165,1955 3133,1975" fill="#b5452b"/>
+<text x="3120" y="1975" font-size="58" text-anchor="end" fill="#1f2430">MOVE_START</text>
+<polygon points="3133,2035 3165,2055 3133,2075" fill="#b5452b"/>
+<text x="3120" y="2075" font-size="58" text-anchor="end" fill="#1f2430">MOVE_STOP</text>
+<rect x="1962" y="2564" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="2600" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="1962" y="2664" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="2700" font-size="58" text-anchor="start" fill="#1f2430">Name</text>
+<rect x="1962" y="2764" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="2800" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="1962" y="2864" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="2900" font-size="58" text-anchor="start" fill="#1f2430">C_Holder</text>
+<rect x="1962" y="2964" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2005" y="3000" font-size="58" text-anchor="start" fill="#1f2430">C_Release</text>
+<rect x="1962" y="3064" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2005" y="3100" font-size="58" text-anchor="start" fill="#1f2430">C_Enable</text>
+<rect x="1962" y="3164" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2005" y="3200" font-size="58" text-anchor="start" fill="#1f2430">C_Down</text>
+<rect x="1962" y="3264" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2005" y="3300" font-size="58" text-anchor="start" fill="#1f2430">C_Step</text>
+<rect x="1962" y="3364" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2005" y="3400" font-size="58" text-anchor="start" fill="#1f2430">CE_Step</text>
+<rect x="1962" y="3464" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2005" y="3500" font-size="58" text-anchor="start" fill="#1f2430">C_Move</text>
+<rect x="1962" y="3564" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2005" y="3600" font-size="58" text-anchor="start" fill="#1f2430">C_Goal</text>
+<rect x="1962" y="3664" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="3700" font-size="58" text-anchor="start" fill="#1f2430">R_Holder</text>
+<rect x="1962" y="3764" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2005" y="3800" font-size="58" text-anchor="start" fill="#1f2430">I_AtHome</text>
+<rect x="1962" y="3864" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2005" y="3900" font-size="58" text-anchor="start" fill="#1f2430">ModuleState</text>
+<rect x="3131" y="2564" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="3120" y="2600" font-size="58" text-anchor="end" fill="#1f2430">IdCmd</text>
+<rect x="3131" y="2664" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="3120" y="2700" font-size="58" text-anchor="end" fill="#1f2430">IdRelease</text>
+<rect x="3131" y="2764" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="3120" y="2800" font-size="58" text-anchor="end" fill="#1f2430">IdState</text>
+<rect x="3131" y="2864" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="3120" y="2900" font-size="58" text-anchor="end" fill="#1f2430">IdPub</text>
+<rect x="3131" y="2964" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="3120" y="3000" font-size="58" text-anchor="end" fill="#1f2430">O_Enable</text>
+<rect x="3131" y="3064" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="3120" y="3100" font-size="58" text-anchor="end" fill="#1f2430">O_Down</text>
+<rect x="3131" y="3164" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3120" y="3200" font-size="58" text-anchor="end" fill="#1f2430">O_Step</text>
+<rect x="3131" y="3264" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="3120" y="3300" font-size="58" text-anchor="end" fill="#1f2430">E_Step</text>
+<rect x="3131" y="3364" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="3120" y="3400" font-size="58" text-anchor="end" fill="#1f2430">AtHome</text>
+<rect x="3131" y="3464" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3120" y="3500" font-size="58" text-anchor="end" fill="#1f2430">ActualPosition</text>
+<rect x="3131" y="3564" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="3120" y="3600" font-size="58" text-anchor="end" fill="#1f2430">Homed</text>
+<rect x="3131" y="3664" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="3120" y="3700" font-size="58" text-anchor="end" fill="#1f2430">Moving</text>
+<rect x="3131" y="3764" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="3120" y="3800" font-size="58" text-anchor="end" fill="#1f2430">Holder</text>
+<rect x="3131" y="3864" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3120" y="3900" font-size="58" text-anchor="end" fill="#1f2430">MoveDT</text>
+<rect x="3200" y="1917" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3378" y="1972" font-size="48" text-anchor="middle" fill="#6b7280">MoveT.START</text>
+<rect x="3200" y="2017" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3364" y="2072" font-size="48" text-anchor="middle" fill="#6b7280">MoveT.STOP</text>
+<rect x="1650" y="2317" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1787" y="2372" font-size="48" text-anchor="middle" fill="#6b7280">MoveT.EO</text>
+<rect x="1757" y="1617" width="168" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1841" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">INIT</text>
+<rect x="3200" y="1617" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3351" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">Mode.INIT</text>
+<rect x="1596" y="1717" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1761" y="1772" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.IND</text>
+<rect x="1489" y="1817" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1707" y="1872" font-size="48" text-anchor="middle" fill="#6b7280">SubRelease.IND</text>
+<rect x="1650" y="2217" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1787" y="2272" font-size="48" text-anchor="middle" fill="#6b7280">Mode.CHG</text>
+<rect x="1650" y="2017" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1787" y="2072" font-size="48" text-anchor="middle" fill="#6b7280">Cycle.EO</text>
+<rect x="1516" y="1917" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1720" y="1972" font-size="48" text-anchor="middle" fill="#6b7280">In_AtHome.CNF</text>
+<rect x="3200" y="1817" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3257" y="1872" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="3200" y="1717" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3418" y="1772" font-size="48" text-anchor="middle" fill="#6b7280">Out_Enable.REQ</text>
+<rect x="1542" y="2117" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1734" y="2172" font-size="48" text-anchor="middle" fill="#6b7280">Out_Step.CNF</text>
+<rect x="3200" y="3842" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3338" y="3897" font-size="48" text-anchor="middle" fill="#6b7280">MoveT.DT</text>
+<rect x="1704" y="2542" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1814" y="2597" font-size="48" text-anchor="middle" fill="#6b7280">Module</text>
+<rect x="1757" y="2642" width="168" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1841" y="2697" font-size="48" text-anchor="middle" fill="#6b7280">Name</text>
+<rect x="1704" y="2742" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1814" y="2797" font-size="48" text-anchor="middle" fill="#6b7280">UaRoot</text>
+<rect x="3200" y="2542" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3351" y="2597" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.ID</text>
+<rect x="3200" y="2642" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3405" y="2697" font-size="48" text-anchor="middle" fill="#6b7280">SubRelease.ID</text>
+<rect x="3200" y="2742" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3378" y="2797" font-size="48" text-anchor="middle" fill="#6b7280">PubState.ID</text>
+<rect x="3200" y="2842" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3338" y="2897" font-size="48" text-anchor="middle" fill="#6b7280">PubUa.ID</text>
+<rect x="1569" y="2842" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="2897" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_1</text>
+<rect x="1569" y="2942" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="2997" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_2</text>
+<rect x="1569" y="3042" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="3097" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_3</text>
+<rect x="1569" y="3142" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="3197" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_4</text>
+<rect x="1569" y="3242" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="3297" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_5</text>
+<rect x="1569" y="3342" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="3397" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_6</text>
+<rect x="1569" y="3442" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="3497" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_7</text>
+<rect x="1569" y="3542" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="3597" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_8</text>
+<rect x="1462" y="3642" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1693" y="3697" font-size="48" text-anchor="middle" fill="#6b7280">SubRelease.RD_1</text>
+<rect x="1596" y="3842" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1761" y="3897" font-size="48" text-anchor="middle" fill="#6b7280">Mode.State</text>
+<rect x="1542" y="3742" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1734" y="3797" font-size="48" text-anchor="middle" fill="#6b7280">In_AtHome.IN</text>
+<rect x="3200" y="3342" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3257" y="3397" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="3200" y="3442" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3257" y="3497" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="3200" y="3542" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3257" y="3597" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="3200" y="3642" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3257" y="3697" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="3200" y="3742" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3405" y="3797" font-size="48" text-anchor="middle" fill="#6b7280">PubState.SD_5</text>
+<rect x="3200" y="2942" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3418" y="2997" font-size="48" text-anchor="middle" fill="#6b7280">Out_Enable.OUT</text>
+<rect x="3200" y="3042" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3391" y="3097" font-size="48" text-anchor="middle" fill="#6b7280">Out_Down.OUT</text>
+<rect x="3200" y="3142" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3391" y="3197" font-size="48" text-anchor="middle" fill="#6b7280">Out_Step.OUT</text>
+<rect x="3200" y="3242" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3378" y="3297" font-size="48" text-anchor="middle" fill="#6b7280">Out_Step.EN</text>
+<text x="5240" y="1552" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Cycle</text>
+<rect x="4955" y="1900" width="570" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4955" y="1580" width="570" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="5000" y="1830" width="480" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="5240" y="1900" font-size="58" text-anchor="middle" fill="#1f2430">E_CYCLE</text>
+<polygon points="4965,1635 4997,1655 4965,1675" fill="#b5452b"/>
+<text x="5010" y="1675" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="4965,1735 4997,1755 4965,1775" fill="#b5452b"/>
+<text x="5010" y="1775" font-size="58" text-anchor="start" fill="#1f2430">STOP</text>
+<polygon points="5483,1635 5515,1655 5483,1675" fill="#b5452b"/>
+<text x="5470" y="1675" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
+<rect x="4967" y="1964" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5010" y="2000" font-size="58" text-anchor="start" fill="#1f2430">DT</text>
+<rect x="4494" y="1617" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4712" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">Out_Step.INITO</text>
+<rect x="5550" y="1617" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5607" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="4628" y="1942" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4779" y="1997" font-size="48" text-anchor="middle" fill="#6b7280">CycleTime</text>
+<text x="6990" y="1552" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">MoveT</text>
+<rect x="6705" y="1900" width="570" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="6705" y="1580" width="570" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="6750" y="1830" width="480" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="6990" y="1900" font-size="58" text-anchor="middle" fill="#1f2430">E_DELAY</text>
+<polygon points="6715,1635 6747,1655 6715,1675" fill="#b5452b"/>
+<text x="6760" y="1675" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="6715,1735 6747,1755 6715,1775" fill="#b5452b"/>
+<text x="6760" y="1775" font-size="58" text-anchor="start" fill="#1f2430">STOP</text>
+<polygon points="7233,1635 7265,1655 7233,1675" fill="#b5452b"/>
+<text x="7220" y="1675" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
+<rect x="6717" y="1964" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="6760" y="2000" font-size="58" text-anchor="start" fill="#1f2430">DT</text>
+<rect x="6190" y="1617" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6435" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">Logic.MOVE_START</text>
+<rect x="6217" y="1717" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6448" y="1772" font-size="48" text-anchor="middle" fill="#6b7280">Logic.MOVE_STOP</text>
+<rect x="7300" y="1617" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7491" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">Logic.MOVE_T</text>
+<rect x="6297" y="1942" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6489" y="1997" font-size="48" text-anchor="middle" fill="#6b7280">Logic.MoveDT</text>
+<text x="2415" y="5032" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Mode</text>
+<rect x="1950" y="5380" width="930" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1950" y="5060" width="930" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1995" y="5310" width="840" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2415" y="5380" font-size="58" text-anchor="middle" fill="#1f2430">MOD_StateView</text>
+<polygon points="1960,5115 1992,5135 1960,5155" fill="#b5452b"/>
+<text x="2005" y="5155" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="2838,5115 2870,5135 2838,5155" fill="#b5452b"/>
+<text x="2825" y="5155" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="2838,5215 2870,5235 2838,5255" fill="#b5452b"/>
+<text x="2825" y="5255" font-size="58" text-anchor="end" fill="#1f2430">CHG</text>
+<rect x="1962" y="5444" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="5480" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="2836" y="5444" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2825" y="5480" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+<rect x="1569" y="5097" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="5152" font-size="48" text-anchor="middle" fill="#6b7280">Logic.INITO</text>
+<rect x="2905" y="5097" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3083" y="5152" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.INIT</text>
+<rect x="2905" y="5197" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3110" y="5252" font-size="48" text-anchor="middle" fill="#6b7280">Logic.MOD_CHG</text>
+<rect x="1704" y="5422" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1814" y="5477" font-size="48" text-anchor="middle" fill="#6b7280">Module</text>
+<rect x="2905" y="5422" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3163" y="5477" font-size="48" text-anchor="middle" fill="#6b7280">Logic.ModuleState</text>
+<text x="4905" y="5032" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">SubCmd</text>
+<rect x="4500" y="5380" width="810" height="1080" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4500" y="5060" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4545" y="5310" width="720" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="4905" y="5380" font-size="58" text-anchor="middle" fill="#1f2430">SUBSCRIBE_8</text>
+<polygon points="4510,5115 4542,5135 4510,5155" fill="#b5452b"/>
+<text x="4555" y="5155" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="4510,5215 4542,5235 4510,5255" fill="#b5452b"/>
+<text x="4555" y="5255" font-size="58" text-anchor="start" fill="#1f2430">RSP</text>
+<polygon points="5268,5115 5300,5135 5268,5155" fill="#b5452b"/>
+<text x="5255" y="5155" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="5268,5215 5300,5235 5268,5255" fill="#b5452b"/>
+<text x="5255" y="5255" font-size="58" text-anchor="end" fill="#1f2430">IND</text>
+<rect x="4512" y="5444" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="4555" y="5480" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="4512" y="5544" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="4555" y="5580" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="5266" y="5444" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5255" y="5480" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="5266" y="5544" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5255" y="5580" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="5266" y="5644" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="5680" font-size="58" text-anchor="end" fill="#1f2430">RD_1</text>
+<rect x="5266" y="5744" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="5780" font-size="58" text-anchor="end" fill="#1f2430">RD_2</text>
+<rect x="5266" y="5844" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="5880" font-size="58" text-anchor="end" fill="#1f2430">RD_3</text>
+<rect x="5266" y="5944" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="5980" font-size="58" text-anchor="end" fill="#1f2430">RD_4</text>
+<rect x="5266" y="6044" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="6080" font-size="58" text-anchor="end" fill="#1f2430">RD_5</text>
+<rect x="5266" y="6144" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="6180" font-size="58" text-anchor="end" fill="#1f2430">RD_6</text>
+<rect x="5266" y="6244" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="6280" font-size="58" text-anchor="end" fill="#1f2430">RD_7</text>
+<rect x="5266" y="6344" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="6380" font-size="58" text-anchor="end" fill="#1f2430">RD_8</text>
+<rect x="4146" y="5097" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4311" y="5152" font-size="48" text-anchor="middle" fill="#6b7280">Mode.INITO</text>
+<rect x="5335" y="5097" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5567" y="5152" font-size="48" text-anchor="middle" fill="#6b7280">SubRelease.INIT</text>
+<rect x="5335" y="5197" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5486" y="5252" font-size="48" text-anchor="middle" fill="#6b7280">Logic.CMD</text>
+<rect x="4119" y="5522" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4297" y="5577" font-size="48" text-anchor="middle" fill="#6b7280">Logic.IdCmd</text>
+<rect x="5335" y="5622" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5553" y="5677" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Holder</text>
+<rect x="5335" y="5722" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5567" y="5777" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Release</text>
+<rect x="5335" y="5822" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5553" y="5877" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Enable</text>
+<rect x="5335" y="5922" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5526" y="5977" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Down</text>
+<rect x="5335" y="6022" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5526" y="6077" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Step</text>
+<rect x="5335" y="6122" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5540" y="6177" font-size="48" text-anchor="middle" fill="#6b7280">Logic.CE_Step</text>
+<rect x="5335" y="6222" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5526" y="6277" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Move</text>
+<rect x="5335" y="6322" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5526" y="6377" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Goal</text>
+<text x="4470" y="5477" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="7615" y="5032" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">SubRelease</text>
+<rect x="7210" y="5380" width="810" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="7210" y="5060" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="7255" y="5310" width="720" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="7615" y="5380" font-size="58" text-anchor="middle" fill="#1f2430">SUBSCRIBE_1</text>
+<polygon points="7220,5115 7252,5135 7220,5155" fill="#b5452b"/>
+<text x="7265" y="5155" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="7220,5215 7252,5235 7220,5255" fill="#b5452b"/>
+<text x="7265" y="5255" font-size="58" text-anchor="start" fill="#1f2430">RSP</text>
+<polygon points="7978,5115 8010,5135 7978,5155" fill="#b5452b"/>
+<text x="7965" y="5155" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="7978,5215 8010,5235 7978,5255" fill="#b5452b"/>
+<text x="7965" y="5255" font-size="58" text-anchor="end" fill="#1f2430">IND</text>
+<rect x="7222" y="5444" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="7265" y="5480" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="7222" y="5544" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="7265" y="5580" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="7976" y="5444" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="7965" y="5480" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="7976" y="5544" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="7965" y="5580" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="7976" y="5644" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="7965" y="5680" font-size="58" text-anchor="end" fill="#1f2430">RD_1</text>
+<rect x="6802" y="5097" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6994" y="5152" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.INITO</text>
+<rect x="8045" y="5097" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8250" y="5152" font-size="48" text-anchor="middle" fill="#6b7280">PubState.INIT</text>
+<rect x="8045" y="5197" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8250" y="5252" font-size="48" text-anchor="middle" fill="#6b7280">Logic.RELEASE</text>
+<rect x="6722" y="5522" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6953" y="5577" font-size="48" text-anchor="middle" fill="#6b7280">Logic.IdRelease</text>
+<rect x="8045" y="5622" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8263" y="5677" font-size="48" text-anchor="middle" fill="#6b7280">Logic.R_Holder</text>
+<text x="7180" y="5477" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="2495" y="6732" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">PubState</text>
+<rect x="2150" y="7080" width="690" height="780" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2150" y="6760" width="690" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2195" y="7010" width="600" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2495" y="7080" font-size="58" text-anchor="middle" fill="#1f2430">PUBLISH_5</text>
+<polygon points="2160,6815 2192,6835 2160,6855" fill="#b5452b"/>
+<text x="2205" y="6855" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="2160,6915 2192,6935 2160,6955" fill="#b5452b"/>
+<text x="2205" y="6955" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="2798,6815 2830,6835 2798,6855" fill="#b5452b"/>
+<text x="2785" y="6855" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="2798,6915 2830,6935 2798,6955" fill="#b5452b"/>
+<text x="2785" y="6955" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="2162" y="7144" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2205" y="7180" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="2162" y="7244" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2205" y="7280" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="2162" y="7344" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="2205" y="7380" font-size="58" text-anchor="start" fill="#1f2430">SD_1</text>
+<rect x="2162" y="7444" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="2205" y="7480" font-size="58" text-anchor="start" fill="#1f2430">SD_2</text>
+<rect x="2162" y="7544" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="2205" y="7580" font-size="58" text-anchor="start" fill="#1f2430">SD_3</text>
+<rect x="2162" y="7644" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="2205" y="7680" font-size="58" text-anchor="start" fill="#1f2430">SD_4</text>
+<rect x="2162" y="7744" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="2205" y="7780" font-size="58" text-anchor="start" fill="#1f2430">SD_5</text>
+<rect x="2796" y="7144" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2785" y="7180" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="2796" y="7244" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2785" y="7280" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="1635" y="6797" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1880" y="6852" font-size="48" text-anchor="middle" fill="#6b7280">SubRelease.INITO</text>
+<rect x="2865" y="6797" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3029" y="6852" font-size="48" text-anchor="middle" fill="#6b7280">PubUa.INIT</text>
+<rect x="1769" y="6897" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1947" y="6952" font-size="48" text-anchor="middle" fill="#6b7280">Logic.STATE</text>
+<rect x="1716" y="7222" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1920" y="7277" font-size="48" text-anchor="middle" fill="#6b7280">Logic.IdState</text>
+<rect x="1742" y="7322" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1934" y="7377" font-size="48" text-anchor="middle" fill="#6b7280">Logic.AtHome</text>
+<rect x="1527" y="7422" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1826" y="7477" font-size="48" text-anchor="middle" fill="#6b7280">Logic.ActualPosition</text>
+<rect x="1769" y="7522" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1947" y="7577" font-size="48" text-anchor="middle" fill="#6b7280">Logic.Homed</text>
+<rect x="1742" y="7622" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1934" y="7677" font-size="48" text-anchor="middle" fill="#6b7280">Logic.Moving</text>
+<rect x="1742" y="7722" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1934" y="7777" font-size="48" text-anchor="middle" fill="#6b7280">Logic.Holder</text>
+<text x="2120" y="7177" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="5205" y="6732" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">PubUa</text>
+<rect x="4860" y="7080" width="690" height="680" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4860" y="6760" width="690" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4905" y="7010" width="600" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="5205" y="7080" font-size="58" text-anchor="middle" fill="#1f2430">PUBLISH_4</text>
+<polygon points="4870,6815 4902,6835 4870,6855" fill="#b5452b"/>
+<text x="4915" y="6855" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="4870,6915 4902,6935 4870,6955" fill="#b5452b"/>
+<text x="4915" y="6955" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="5508,6815 5540,6835 5508,6855" fill="#b5452b"/>
+<text x="5495" y="6855" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="5508,6915 5540,6935 5508,6955" fill="#b5452b"/>
+<text x="5495" y="6955" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="4872" y="7144" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="4915" y="7180" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="4872" y="7244" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="4915" y="7280" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="4872" y="7344" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="4915" y="7380" font-size="58" text-anchor="start" fill="#1f2430">SD_1</text>
+<rect x="4872" y="7444" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="4915" y="7480" font-size="58" text-anchor="start" fill="#1f2430">SD_2</text>
+<rect x="4872" y="7544" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="4915" y="7580" font-size="58" text-anchor="start" fill="#1f2430">SD_3</text>
+<rect x="4872" y="7644" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="4915" y="7680" font-size="58" text-anchor="start" fill="#1f2430">SD_4</text>
+<rect x="5506" y="7144" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5495" y="7180" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="5506" y="7244" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5495" y="7280" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="4399" y="6797" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4617" y="6852" font-size="48" text-anchor="middle" fill="#6b7280">PubState.INITO</text>
+<rect x="5575" y="6797" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5793" y="6852" font-size="48" text-anchor="middle" fill="#6b7280">In_AtHome.INIT</text>
+<rect x="4479" y="6897" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4657" y="6952" font-size="48" text-anchor="middle" fill="#6b7280">Logic.STATE</text>
+<rect x="4479" y="7222" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4657" y="7277" font-size="48" text-anchor="middle" fill="#6b7280">Logic.IdPub</text>
+<rect x="4560" y="7122" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4697" y="7177" font-size="48" text-anchor="middle" fill="#6b7280">UaEnable</text>
+<rect x="4452" y="7322" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4644" y="7377" font-size="48" text-anchor="middle" fill="#6b7280">Logic.AtHome</text>
+<rect x="4237" y="7422" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4536" y="7477" font-size="48" text-anchor="middle" fill="#6b7280">Logic.ActualPosition</text>
+<rect x="4479" y="7522" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4657" y="7577" font-size="48" text-anchor="middle" fill="#6b7280">Logic.Homed</text>
+<rect x="4452" y="7622" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4644" y="7677" font-size="48" text-anchor="middle" fill="#6b7280">Logic.Moving</text>
+<text x="10845" y="5032" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">In_AtHome</text>
+<rect x="10500" y="5380" width="690" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="10500" y="5060" width="690" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="10545" y="5310" width="600" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="10845" y="5380" font-size="58" text-anchor="middle" fill="#1f2430">IO_DI</text>
+<polygon points="10510,5115 10542,5135 10510,5155" fill="#b5452b"/>
+<text x="10555" y="5155" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="10510,5215 10542,5235 10510,5255" fill="#b5452b"/>
+<text x="10555" y="5255" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="11148,5115 11180,5135 11148,5155" fill="#b5452b"/>
+<text x="11135" y="5155" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="11148,5215 11180,5235 11148,5255" fill="#b5452b"/>
+<text x="11135" y="5255" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="10512" y="5444" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="10555" y="5480" font-size="58" text-anchor="start" fill="#1f2430">Address</text>
+<rect x="10512" y="5544" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="10555" y="5580" font-size="58" text-anchor="start" fill="#1f2430">SimValue</text>
+<rect x="11146" y="5444" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="11135" y="5480" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="11146" y="5544" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="11135" y="5580" font-size="58" text-anchor="end" fill="#1f2430">IN</text>
+<rect x="10119" y="5097" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10297" y="5152" font-size="48" text-anchor="middle" fill="#6b7280">PubUa.INITO</text>
+<rect x="11215" y="5097" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="11447" y="5152" font-size="48" text-anchor="middle" fill="#6b7280">Out_Enable.INIT</text>
+<rect x="10200" y="5197" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10337" y="5252" font-size="48" text-anchor="middle" fill="#6b7280">Cycle.EO</text>
+<rect x="11215" y="5197" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="11406" y="5252" font-size="48" text-anchor="middle" fill="#6b7280">Logic.SAMPLE</text>
+<rect x="10039" y="5422" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10257" y="5477" font-size="48" text-anchor="middle" fill="#6b7280">AtHome_Address</text>
+<rect x="10146" y="5522" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10311" y="5577" font-size="48" text-anchor="middle" fill="#6b7280">AtHome_Sim</text>
+<rect x="11215" y="5522" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="11433" y="5577" font-size="48" text-anchor="middle" fill="#6b7280">Logic.I_AtHome</text>
+<text x="2645" y="8912" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Out_Enable</text>
+<rect x="2270" y="9260" width="750" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2270" y="8940" width="750" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2315" y="9190" width="660" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2645" y="9260" font-size="58" text-anchor="middle" fill="#1f2430">IO_DO</text>
+<polygon points="2280,8995 2312,9015 2280,9035" fill="#b5452b"/>
+<text x="2325" y="9035" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="2280,9095 2312,9115 2280,9135" fill="#b5452b"/>
+<text x="2325" y="9135" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="2978,8995 3010,9015 2978,9035" fill="#b5452b"/>
+<text x="2965" y="9035" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="2978,9095 3010,9115 2978,9135" fill="#b5452b"/>
+<text x="2965" y="9135" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="2282" y="9324" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2325" y="9360" font-size="58" text-anchor="start" fill="#1f2430">Address</text>
+<rect x="2282" y="9424" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2325" y="9460" font-size="58" text-anchor="start" fill="#1f2430">OUT</text>
+<rect x="2976" y="9324" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2965" y="9360" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="1782" y="8977" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2013" y="9032" font-size="48" text-anchor="middle" fill="#6b7280">In_AtHome.INITO</text>
+<rect x="3045" y="8977" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3250" y="9032" font-size="48" text-anchor="middle" fill="#6b7280">Out_Down.INIT</text>
+<rect x="1889" y="9077" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2067" y="9132" font-size="48" text-anchor="middle" fill="#6b7280">Logic.DRIVE</text>
+<rect x="3045" y="9077" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3236" y="9132" font-size="48" text-anchor="middle" fill="#6b7280">Out_Down.REQ</text>
+<rect x="1809" y="9302" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2027" y="9357" font-size="48" text-anchor="middle" fill="#6b7280">Enable_Address</text>
+<rect x="1809" y="9402" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2027" y="9457" font-size="48" text-anchor="middle" fill="#6b7280">Logic.O_Enable</text>
+<text x="5200" y="8912" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Out_Down</text>
+<rect x="4880" y="9260" width="640" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4880" y="8940" width="640" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4925" y="9190" width="550" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="5200" y="9260" font-size="58" text-anchor="middle" fill="#1f2430">IO_DO</text>
+<polygon points="4890,8995 4922,9015 4890,9035" fill="#b5452b"/>
+<text x="4935" y="9035" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="4890,9095 4922,9115 4890,9135" fill="#b5452b"/>
+<text x="4935" y="9135" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="5478,8995 5510,9015 5478,9035" fill="#b5452b"/>
+<text x="5465" y="9035" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="5478,9095 5510,9115 5478,9135" fill="#b5452b"/>
+<text x="5465" y="9135" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="4892" y="9324" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="4935" y="9360" font-size="58" text-anchor="start" fill="#1f2430">Address</text>
+<rect x="4892" y="9424" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="4935" y="9460" font-size="58" text-anchor="start" fill="#1f2430">OUT</text>
+<rect x="5476" y="9324" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5465" y="9360" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="4365" y="8977" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4610" y="9032" font-size="48" text-anchor="middle" fill="#6b7280">Out_Enable.INITO</text>
+<rect x="5545" y="8977" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5750" y="9032" font-size="48" text-anchor="middle" fill="#6b7280">Out_Step.INIT</text>
+<rect x="4419" y="9077" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4637" y="9132" font-size="48" text-anchor="middle" fill="#6b7280">Out_Enable.CNF</text>
+<rect x="5545" y="9077" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5736" y="9132" font-size="48" text-anchor="middle" fill="#6b7280">Out_Step.REQ</text>
+<rect x="4472" y="9302" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4664" y="9357" font-size="48" text-anchor="middle" fill="#6b7280">Down_Address</text>
+<rect x="4472" y="9402" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4664" y="9457" font-size="48" text-anchor="middle" fill="#6b7280">Logic.O_Down</text>
+<text x="7700" y="8912" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Out_Step</text>
+<rect x="7380" y="9260" width="640" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="7380" y="8940" width="640" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="7425" y="9190" width="550" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="7700" y="9260" font-size="58" text-anchor="middle" fill="#1f2430">IO_AO</text>
+<polygon points="7390,8995 7422,9015 7390,9035" fill="#b5452b"/>
+<text x="7435" y="9035" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="7390,9095 7422,9115 7390,9135" fill="#b5452b"/>
+<text x="7435" y="9135" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="7978,8995 8010,9015 7978,9035" fill="#b5452b"/>
+<text x="7965" y="9035" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="7978,9095 8010,9115 7978,9135" fill="#b5452b"/>
+<text x="7965" y="9135" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="7392" y="9324" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="7435" y="9360" font-size="58" text-anchor="start" fill="#1f2430">Address</text>
+<rect x="7392" y="9424" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="7435" y="9460" font-size="58" text-anchor="start" fill="#1f2430">OUT</text>
+<rect x="7392" y="9524" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="7435" y="9560" font-size="58" text-anchor="start" fill="#1f2430">EN</text>
+<rect x="7392" y="9624" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="7435" y="9660" font-size="58" text-anchor="start" fill="#1f2430">Gain</text>
+<rect x="7392" y="9724" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="7435" y="9760" font-size="58" text-anchor="start" fill="#1f2430">Bias</text>
+<rect x="7976" y="9324" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="7965" y="9360" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="6919" y="8977" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7137" y="9032" font-size="48" text-anchor="middle" fill="#6b7280">Out_Down.INITO</text>
+<rect x="8045" y="8977" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8102" y="9032" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="6972" y="9077" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7164" y="9132" font-size="48" text-anchor="middle" fill="#6b7280">Out_Down.CNF</text>
+<rect x="8045" y="9077" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8236" y="9132" font-size="48" text-anchor="middle" fill="#6b7280">Logic.DRIVEN</text>
+<rect x="6972" y="9302" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7164" y="9357" font-size="48" text-anchor="middle" fill="#6b7280">Step_Address</text>
+<rect x="6972" y="9402" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7164" y="9457" font-size="48" text-anchor="middle" fill="#6b7280">Logic.O_Step</text>
+<rect x="6972" y="9502" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7164" y="9557" font-size="48" text-anchor="middle" fill="#6b7280">Logic.E_Step</text>
+<rect x="7053" y="9602" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7204" y="9657" font-size="48" text-anchor="middle" fill="#6b7280">Step_Gain</text>
+<rect x="7053" y="9702" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7204" y="9757" font-size="48" text-anchor="middle" fill="#6b7280">Step_Bias</text>
+<rect x="125" y="1000" width="575" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="145,1020 175,1040 145,1060" fill="#b5452b"/>
+<text x="190" y="1060" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<rect x="125" y="1160" width="575" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="145" y="1184" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="190" y="1220" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="125" y="1260" width="575" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="145" y="1284" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="190" y="1320" font-size="58" text-anchor="start" fill="#1f2430">Name</text>
+<rect x="125" y="1360" width="575" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="145" y="1384" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="190" y="1420" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="125" y="1460" width="575" height="80" rx="12" fill="#ffffff" stroke="#2e8540" stroke-width="5"/>
+<rect x="145" y="1484" width="30" height="30" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="190" y="1520" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="125" y="1560" width="575" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
+<rect x="145" y="1584" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="190" y="1620" font-size="58" text-anchor="start" fill="#1f2430">CycleTime</text>
+<rect x="125" y="1660" width="575" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="145" y="1684" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="190" y="1720" font-size="58" text-anchor="start" fill="#1f2430">AtHome_Address</text>
+<rect x="125" y="1760" width="575" height="80" rx="12" fill="#ffffff" stroke="#2e8540" stroke-width="5"/>
+<rect x="145" y="1784" width="30" height="30" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="190" y="1820" font-size="58" text-anchor="start" fill="#1f2430">AtHome_Sim</text>
+<rect x="125" y="1860" width="575" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="145" y="1884" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="190" y="1920" font-size="58" text-anchor="start" fill="#1f2430">Enable_Address</text>
+<rect x="125" y="1960" width="575" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="145" y="1984" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="190" y="2020" font-size="58" text-anchor="start" fill="#1f2430">Down_Address</text>
+<rect x="125" y="2060" width="575" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="145" y="2084" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="190" y="2120" font-size="58" text-anchor="start" fill="#1f2430">Step_Address</text>
+<rect x="125" y="2160" width="575" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
+<rect x="145" y="2184" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="190" y="2220" font-size="58" text-anchor="start" fill="#1f2430">Step_Gain</text>
+<rect x="125" y="2260" width="575" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
+<rect x="145" y="2284" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="190" y="2320" font-size="58" text-anchor="start" fill="#1f2430">Step_Bias</text>
+<rect x="12440" y="1000" width="282" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="12672,1020 12702,1040 12672,1060" fill="#b5452b"/>
+<text x="12657" y="1060" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+</svg>

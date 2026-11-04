@@ -1,0 +1,518 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2480" height="2493" viewBox="880 880 12400 12463" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="880" y="880" width="12400" height="12463" fill="#ffffff"/>
+<rect x="1000" y="1000" width="7093" height="2993" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="1100" y="1140" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">ModuleLevel</text>
+<text x="1100" y="1305" font-size="52" text-anchor="start" fill="#6b7280">Module level: occupation, PackML state manager, start-up and the target's IO lines</text>
+<rect x="1000" y="4100" width="2500" height="2493" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="1100" y="4240" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">ModuleLevelSkills</text>
+<text x="1100" y="4405" font-size="52" text-anchor="start" fill="#6b7280">Module level skills: Control, Sequences (Execute, Stop) of</text>
+<text x="1100" y="4515" font-size="52" text-anchor="start" fill="#6b7280">skill primitives and Release; OPC UA /Skills/&lt;name&gt;</text>
+<rect x="4000" y="4400" width="3193" height="2123" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="4100" y="4540" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Procedures</text>
+<text x="4100" y="4705" font-size="52" text-anchor="start" fill="#6b7280">Procedures the module state manager runs while Resetting and Stopping</text>
+<rect x="1000" y="6800" width="5920" height="6423" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="1100" y="6940" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">SkillPrimitives</text>
+<text x="1100" y="7105" font-size="52" text-anchor="start" fill="#6b7280">Skill primitives: one equipment command until a sensor or a time; OPC UA /Skills/&lt;name&gt;</text>
+<rect x="7220" y="6900" width="5940" height="3200" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="7320" y="7040" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">EquipmentIO</text>
+<text x="7320" y="7205" font-size="52" text-anchor="start" fill="#6b7280">Equipment IO: the only owners of the IO points; skills send them output values over local channels</text>
+<text x="2605" y="2095" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Occupation</text>
+<rect x="2110" y="2343" width="990" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2110" y="2123" width="990" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2155" y="2273" width="900" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2605" y="2343" font-size="58" text-anchor="middle" fill="#1f2430">MOD_Occupation</text>
+<polygon points="2120,2178 2152,2198 2120,2218" fill="#b5452b"/>
+<text x="2165" y="2218" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="3058,2178 3090,2198 3058,2218" fill="#b5452b"/>
+<text x="3045" y="2218" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<rect x="2122" y="2407" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2165" y="2443" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="2122" y="2507" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2165" y="2543" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="2122" y="2607" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2165" y="2643" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="3125" y="2160" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3303" y="2215" font-size="48" text-anchor="middle" fill="#6b7280">Module.INIT</text>
+<text x="2080" y="2440" font-size="48" text-anchor="end" fill="#0f6b6b">"Filling"</text>
+<text x="2080" y="2540" font-size="48" text-anchor="end" fill="#0f6b6b">"/Objects/Filling"</text>
+<text x="2080" y="2640" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="6312" y="1795" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Module</text>
+<rect x="5610" y="2443" width="1405" height="480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="5610" y="1823" width="1405" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="5655" y="2373" width="1315" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="6312" y="2443" font-size="58" text-anchor="middle" fill="#1f2430">MOD_StateManager</text>
+<polygon points="5620,1878 5652,1898 5620,1918" fill="#b5452b"/>
+<text x="5665" y="1918" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="5620,1978 5652,1998 5620,2018" fill="#b5452b"/>
+<text x="5665" y="2018" font-size="58" text-anchor="start" fill="#1f2430">RESETTING_DONE</text>
+<polygon points="5620,2078 5652,2098 5620,2118" fill="#b5452b"/>
+<text x="5665" y="2118" font-size="58" text-anchor="start" fill="#1f2430">RESETTING_FAILED</text>
+<polygon points="5620,2178 5652,2198 5620,2218" fill="#b5452b"/>
+<text x="5665" y="2218" font-size="58" text-anchor="start" fill="#1f2430">STOPPING_DONE</text>
+<polygon points="5620,2278 5652,2298 5620,2318" fill="#b5452b"/>
+<text x="5665" y="2318" font-size="58" text-anchor="start" fill="#1f2430">STOPPING_FAILED</text>
+<polygon points="6973,1878 7005,1898 6973,1918" fill="#b5452b"/>
+<text x="6960" y="1918" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="6973,1978 7005,1998 6973,2018" fill="#b5452b"/>
+<text x="6960" y="2018" font-size="58" text-anchor="end" fill="#1f2430">RUN_RESETTING</text>
+<polygon points="6973,2078 7005,2098 6973,2118" fill="#b5452b"/>
+<text x="6960" y="2118" font-size="58" text-anchor="end" fill="#1f2430">RUN_STOPPING</text>
+<rect x="5622" y="2507" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5665" y="2543" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="5622" y="2607" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5665" y="2643" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="5622" y="2707" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5665" y="2743" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="5622" y="2807" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5665" y="2843" font-size="58" text-anchor="start" fill="#1f2430">StopTimeout</text>
+<rect x="7040" y="1960" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7272" y="2015" font-size="48" text-anchor="middle" fill="#6b7280">Resetting.START</text>
+<rect x="5149" y="1960" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5367" y="2015" font-size="48" text-anchor="middle" fill="#6b7280">Resetting.DONE</text>
+<rect x="5095" y="2060" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5340" y="2115" font-size="48" text-anchor="middle" fill="#6b7280">Resetting.FAILED</text>
+<rect x="7040" y="2060" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7258" y="2115" font-size="48" text-anchor="middle" fill="#6b7280">Stopping.START</text>
+<rect x="5176" y="2160" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5380" y="2215" font-size="48" text-anchor="middle" fill="#6b7280">Stopping.DONE</text>
+<rect x="5122" y="2260" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5353" y="2315" font-size="48" text-anchor="middle" fill="#6b7280">Stopping.FAILED</text>
+<rect x="5095" y="1860" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5340" y="1915" font-size="48" text-anchor="middle" fill="#6b7280">Occupation.INITO</text>
+<rect x="7040" y="1860" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7272" y="1915" font-size="48" text-anchor="middle" fill="#6b7280">LinearAxis.INIT</text>
+<text x="5580" y="2540" font-size="48" text-anchor="end" fill="#0f6b6b">"Filling"</text>
+<text x="5580" y="2640" font-size="48" text-anchor="end" fill="#0f6b6b">"/Objects/Filling"</text>
+<text x="5580" y="2740" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="5580" y="2840" font-size="48" text-anchor="end" fill="#0f6b6b">T#10000ms</text>
+<text x="9398" y="7795" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">LinearAxis</text>
+<rect x="8920" y="8043" width="955" height="1280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="8920" y="7823" width="955" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="8965" y="7973" width="865" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="9398" y="8043" font-size="58" text-anchor="middle" fill="#1f2430">EQ_LinearAxis</text>
+<polygon points="8930,7878 8962,7898 8930,7918" fill="#b5452b"/>
+<text x="8975" y="7918" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="9833,7878 9865,7898 9833,7918" fill="#b5452b"/>
+<text x="9820" y="7918" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<rect x="8932" y="8107" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="8975" y="8143" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="8932" y="8207" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="8975" y="8243" font-size="58" text-anchor="start" fill="#1f2430">Name</text>
+<rect x="8932" y="8307" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="8975" y="8343" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="8932" y="8407" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="8975" y="8443" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="8932" y="8507" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="8975" y="8543" font-size="58" text-anchor="start" fill="#1f2430">CycleTime</text>
+<rect x="8932" y="8607" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="8975" y="8643" font-size="58" text-anchor="start" fill="#1f2430">AtHome_Address</text>
+<rect x="8932" y="8707" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="8975" y="8743" font-size="58" text-anchor="start" fill="#1f2430">AtHome_Sim</text>
+<rect x="8932" y="8807" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="8975" y="8843" font-size="58" text-anchor="start" fill="#1f2430">Enable_Address</text>
+<rect x="8932" y="8907" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="8975" y="8943" font-size="58" text-anchor="start" fill="#1f2430">Down_Address</text>
+<rect x="8932" y="9007" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="8975" y="9043" font-size="58" text-anchor="start" fill="#1f2430">Step_Address</text>
+<rect x="8932" y="9107" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="8975" y="9143" font-size="58" text-anchor="start" fill="#1f2430">Step_Gain</text>
+<rect x="8932" y="9207" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="8975" y="9243" font-size="58" text-anchor="start" fill="#1f2430">Step_Bias</text>
+<rect x="8512" y="7860" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8704" y="7915" font-size="48" text-anchor="middle" fill="#6b7280">Module.INITO</text>
+<rect x="9900" y="7860" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10051" y="7915" font-size="48" text-anchor="middle" fill="#6b7280">Pump.INIT</text>
+<text x="8890" y="8140" font-size="48" text-anchor="end" fill="#0f6b6b">"Filling"</text>
+<text x="8890" y="8340" font-size="48" text-anchor="end" fill="#0f6b6b">"/Objects/Filling"</text>
+<text x="8890" y="8440" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="8890" y="8640" font-size="48" text-anchor="end" fill="#0f6b6b">'gpio[0:23:pull_up:active_low]'</text>
+<text x="8890" y="8840" font-size="48" text-anchor="end" fill="#0f6b6b">'gpio[0:17:active_low]'</text>
+<text x="8890" y="8940" font-size="48" text-anchor="end" fill="#0f6b6b">'gpio[0:27]'</text>
+<text x="8890" y="9040" font-size="48" text-anchor="end" fill="#0f6b6b">'pwm[0:2:500000:/hostsys/class/pwm]'</text>
+<text x="11860" y="7595" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Pump</text>
+<rect x="11495" y="7843" width="730" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="11495" y="7623" width="730" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="11540" y="7773" width="640" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="11860" y="7843" font-size="58" text-anchor="middle" fill="#1f2430">EQ_Pump</text>
+<polygon points="11505,7678 11537,7698 11505,7718" fill="#b5452b"/>
+<text x="11550" y="7718" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="12183,7678 12215,7698 12183,7718" fill="#b5452b"/>
+<text x="12170" y="7718" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<rect x="11507" y="7907" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="11550" y="7943" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="11507" y="8007" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="11550" y="8043" font-size="58" text-anchor="start" fill="#1f2430">Name</text>
+<rect x="11507" y="8107" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="11550" y="8143" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="11507" y="8207" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="11550" y="8243" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="11507" y="8307" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="11550" y="8343" font-size="58" text-anchor="start" fill="#1f2430">CycleTime</text>
+<rect x="10980" y="7660" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="11225" y="7715" font-size="48" text-anchor="middle" fill="#6b7280">LinearAxis.INITO</text>
+<rect x="12250" y="7660" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="12414" y="7715" font-size="48" text-anchor="middle" fill="#6b7280">Scale.INIT</text>
+<text x="11465" y="7940" font-size="48" text-anchor="end" fill="#0f6b6b">"Filling"</text>
+<text x="11465" y="8140" font-size="48" text-anchor="end" fill="#0f6b6b">"/Objects/Filling"</text>
+<text x="11465" y="8240" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="11972" y="8595" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Scale</text>
+<rect x="11495" y="8843" width="955" height="880" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="11495" y="8623" width="955" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="11540" y="8773" width="865" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="11972" y="8843" font-size="58" text-anchor="middle" fill="#1f2430">EQ_Scale</text>
+<polygon points="11505,8678 11537,8698 11505,8718" fill="#b5452b"/>
+<text x="11550" y="8718" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="12408,8678 12440,8698 12408,8718" fill="#b5452b"/>
+<text x="12395" y="8718" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<rect x="11507" y="8907" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="11550" y="8943" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="11507" y="9007" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="11550" y="9043" font-size="58" text-anchor="start" fill="#1f2430">Name</text>
+<rect x="11507" y="9107" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="11550" y="9143" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="11507" y="9207" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="11550" y="9243" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="11507" y="9307" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="11550" y="9343" font-size="58" text-anchor="start" fill="#1f2430">CycleTime</text>
+<rect x="11507" y="9407" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="11550" y="9443" font-size="58" text-anchor="start" fill="#1f2430">Weight_Address</text>
+<rect x="11507" y="9507" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="11550" y="9543" font-size="58" text-anchor="start" fill="#1f2430">Weight_Sim</text>
+<rect x="11507" y="9607" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="11550" y="9643" font-size="58" text-anchor="start" fill="#1f2430">Weight_Scale</text>
+<rect x="11141" y="8660" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="11306" y="8715" font-size="48" text-anchor="middle" fill="#6b7280">Pump.INITO</text>
+<rect x="12475" y="8660" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="12626" y="8715" font-size="48" text-anchor="middle" fill="#6b7280">Home.INIT</text>
+<text x="11465" y="8940" font-size="48" text-anchor="end" fill="#0f6b6b">"Filling"</text>
+<text x="11465" y="9140" font-size="48" text-anchor="end" fill="#0f6b6b">"/Objects/Filling"</text>
+<text x="11465" y="9240" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="11465" y="9440" font-size="48" text-anchor="end" fill="#0f6b6b">'sim'</text>
+<text x="2838" y="7595" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Home</text>
+<rect x="2360" y="8243" width="955" height="880" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2360" y="7623" width="955" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2405" y="8173" width="865" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2838" y="8243" font-size="58" text-anchor="middle" fill="#1f2430">SK_Home</text>
+<polygon points="2370,7678 2402,7698 2370,7718" fill="#b5452b"/>
+<text x="2415" y="7718" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="2370,7778 2402,7798 2370,7818" fill="#b5452b"/>
+<text x="2415" y="7818" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="2370,7878 2402,7898 2370,7918" fill="#b5452b"/>
+<text x="2415" y="7918" font-size="58" text-anchor="start" fill="#1f2430">HALT</text>
+<polygon points="2370,7978 2402,7998 2370,8018" fill="#b5452b"/>
+<text x="2415" y="8018" font-size="58" text-anchor="start" fill="#1f2430">ABORT</text>
+<polygon points="2370,8078 2402,8098 2370,8118" fill="#b5452b"/>
+<text x="2415" y="8118" font-size="58" text-anchor="start" fill="#1f2430">RESET</text>
+<polygon points="3273,7678 3305,7698 3273,7718" fill="#b5452b"/>
+<text x="3260" y="7718" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="3273,7778 3305,7798 3273,7818" fill="#b5452b"/>
+<text x="3260" y="7818" font-size="58" text-anchor="end" fill="#1f2430">SUCCESS</text>
+<polygon points="3273,7878 3305,7898 3273,7918" fill="#b5452b"/>
+<text x="3260" y="7918" font-size="58" text-anchor="end" fill="#1f2430">FAILURE</text>
+<rect x="2372" y="8307" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="8343" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="2372" y="8407" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="8443" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="2372" y="8507" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="8543" font-size="58" text-anchor="start" fill="#1f2430">UaPath</text>
+<rect x="2372" y="8607" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2415" y="8643" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="2372" y="8707" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2415" y="8743" font-size="58" text-anchor="start" fill="#1f2430">Methods</text>
+<rect x="2372" y="8807" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="8843" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
+<rect x="2372" y="8907" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2415" y="8943" font-size="58" text-anchor="start" fill="#1f2430">ReleaseAfter</text>
+<rect x="2372" y="9007" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2415" y="9043" font-size="58" text-anchor="start" fill="#1f2430">Timeout</text>
+<rect x="3271" y="8307" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3260" y="8343" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+<rect x="3271" y="8407" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3260" y="8443" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
+<rect x="1979" y="7660" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2157" y="7715" font-size="48" text-anchor="middle" fill="#6b7280">Scale.INITO</text>
+<rect x="3340" y="7660" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3545" y="7715" font-size="48" text-anchor="middle" fill="#6b7280">MoveAxis.INIT</text>
+<text x="2330" y="8340" font-size="48" text-anchor="end" fill="#0f6b6b">"Filling"</text>
+<text x="2330" y="8440" font-size="48" text-anchor="end" fill="#0f6b6b">"/Objects/Filling"</text>
+<text x="2330" y="8540" font-size="48" text-anchor="end" fill="#0f6b6b">"/Skills/Home"</text>
+<text x="2330" y="8640" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="2330" y="8740" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="2330" y="8840" font-size="48" text-anchor="end" fill="#0f6b6b">"Home"</text>
+<text x="2330" y="8940" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="5572" y="7595" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">MoveAxis</text>
+<rect x="5095" y="8243" width="955" height="980" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="5095" y="7623" width="955" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="5140" y="8173" width="865" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="5572" y="8243" font-size="58" text-anchor="middle" fill="#1f2430">SK_MoveAxis</text>
+<polygon points="5105,7678 5137,7698 5105,7718" fill="#b5452b"/>
+<text x="5150" y="7718" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="5105,7778 5137,7798 5105,7818" fill="#b5452b"/>
+<text x="5150" y="7818" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="5105,7878 5137,7898 5105,7918" fill="#b5452b"/>
+<text x="5150" y="7918" font-size="58" text-anchor="start" fill="#1f2430">HALT</text>
+<polygon points="5105,7978 5137,7998 5105,8018" fill="#b5452b"/>
+<text x="5150" y="8018" font-size="58" text-anchor="start" fill="#1f2430">ABORT</text>
+<polygon points="5105,8078 5137,8098 5105,8118" fill="#b5452b"/>
+<text x="5150" y="8118" font-size="58" text-anchor="start" fill="#1f2430">RESET</text>
+<polygon points="6008,7678 6040,7698 6008,7718" fill="#b5452b"/>
+<text x="5995" y="7718" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="6008,7778 6040,7798 6008,7818" fill="#b5452b"/>
+<text x="5995" y="7818" font-size="58" text-anchor="end" fill="#1f2430">SUCCESS</text>
+<polygon points="6008,7878 6040,7898 6008,7918" fill="#b5452b"/>
+<text x="5995" y="7918" font-size="58" text-anchor="end" fill="#1f2430">FAILURE</text>
+<rect x="5107" y="8307" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5150" y="8343" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="5107" y="8407" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5150" y="8443" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="5107" y="8507" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5150" y="8543" font-size="58" text-anchor="start" fill="#1f2430">UaPath</text>
+<rect x="5107" y="8607" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5150" y="8643" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="5107" y="8707" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5150" y="8743" font-size="58" text-anchor="start" fill="#1f2430">Methods</text>
+<rect x="5107" y="8807" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5150" y="8843" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
+<rect x="5107" y="8907" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5150" y="8943" font-size="58" text-anchor="start" fill="#1f2430">ReleaseAfter</text>
+<rect x="5107" y="9007" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5150" y="9043" font-size="58" text-anchor="start" fill="#1f2430">Timeout</text>
+<rect x="5107" y="9107" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5150" y="9143" font-size="58" text-anchor="start" fill="#1f2430">Position</text>
+<rect x="6006" y="8307" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5995" y="8343" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+<rect x="6006" y="8407" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5995" y="8443" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
+<rect x="4741" y="7660" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4906" y="7715" font-size="48" text-anchor="middle" fill="#6b7280">Home.INITO</text>
+<rect x="6075" y="7660" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6280" y="7715" font-size="48" text-anchor="middle" fill="#6b7280">Dispense.INIT</text>
+<text x="5065" y="8340" font-size="48" text-anchor="end" fill="#0f6b6b">"Filling"</text>
+<text x="5065" y="8440" font-size="48" text-anchor="end" fill="#0f6b6b">"/Objects/Filling"</text>
+<text x="5065" y="8540" font-size="48" text-anchor="end" fill="#0f6b6b">"/Skills/MoveAxis"</text>
+<text x="5065" y="8640" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="5065" y="8740" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="5065" y="8840" font-size="48" text-anchor="end" fill="#0f6b6b">"MoveAxis"</text>
+<text x="5065" y="8940" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="2838" y="11395" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Dispense</text>
+<rect x="2360" y="12043" width="955" height="980" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2360" y="11423" width="955" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2405" y="11973" width="865" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2838" y="12043" font-size="58" text-anchor="middle" fill="#1f2430">SK_Dispense</text>
+<polygon points="2370,11478 2402,11498 2370,11518" fill="#b5452b"/>
+<text x="2415" y="11518" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="2370,11578 2402,11598 2370,11618" fill="#b5452b"/>
+<text x="2415" y="11618" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="2370,11678 2402,11698 2370,11718" fill="#b5452b"/>
+<text x="2415" y="11718" font-size="58" text-anchor="start" fill="#1f2430">HALT</text>
+<polygon points="2370,11778 2402,11798 2370,11818" fill="#b5452b"/>
+<text x="2415" y="11818" font-size="58" text-anchor="start" fill="#1f2430">ABORT</text>
+<polygon points="2370,11878 2402,11898 2370,11918" fill="#b5452b"/>
+<text x="2415" y="11918" font-size="58" text-anchor="start" fill="#1f2430">RESET</text>
+<polygon points="3273,11478 3305,11498 3273,11518" fill="#b5452b"/>
+<text x="3260" y="11518" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="3273,11578 3305,11598 3273,11618" fill="#b5452b"/>
+<text x="3260" y="11618" font-size="58" text-anchor="end" fill="#1f2430">SUCCESS</text>
+<polygon points="3273,11678 3305,11698 3273,11718" fill="#b5452b"/>
+<text x="3260" y="11718" font-size="58" text-anchor="end" fill="#1f2430">FAILURE</text>
+<rect x="2372" y="12107" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="12143" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="2372" y="12207" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="12243" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="2372" y="12307" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="12343" font-size="58" text-anchor="start" fill="#1f2430">UaPath</text>
+<rect x="2372" y="12407" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2415" y="12443" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="2372" y="12507" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2415" y="12543" font-size="58" text-anchor="start" fill="#1f2430">Methods</text>
+<rect x="2372" y="12607" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="12643" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
+<rect x="2372" y="12707" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2415" y="12743" font-size="58" text-anchor="start" fill="#1f2430">ReleaseAfter</text>
+<rect x="2372" y="12807" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2415" y="12843" font-size="58" text-anchor="start" fill="#1f2430">Volume</text>
+<rect x="2372" y="12907" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2415" y="12943" font-size="58" text-anchor="start" fill="#1f2430">FlowRate</text>
+<rect x="3271" y="12107" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3260" y="12143" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+<rect x="3271" y="12207" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3260" y="12243" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
+<rect x="1899" y="11460" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2117" y="11515" font-size="48" text-anchor="middle" fill="#6b7280">MoveAxis.INITO</text>
+<rect x="3340" y="11460" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3491" y="11515" font-size="48" text-anchor="middle" fill="#6b7280">Tare.INIT</text>
+<text x="2330" y="12140" font-size="48" text-anchor="end" fill="#0f6b6b">"Filling"</text>
+<text x="2330" y="12240" font-size="48" text-anchor="end" fill="#0f6b6b">"/Objects/Filling"</text>
+<text x="2330" y="12340" font-size="48" text-anchor="end" fill="#0f6b6b">"/Skills/Dispense"</text>
+<text x="2330" y="12440" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="2330" y="12540" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="2330" y="12640" font-size="48" text-anchor="end" fill="#0f6b6b">"Dispense"</text>
+<text x="2330" y="12740" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="5658" y="9495" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Tare</text>
+<rect x="5180" y="10143" width="955" height="780" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="5180" y="9523" width="955" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="5225" y="10073" width="865" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="5658" y="10143" font-size="58" text-anchor="middle" fill="#1f2430">SK_Tare</text>
+<polygon points="5190,9578 5222,9598 5190,9618" fill="#b5452b"/>
+<text x="5235" y="9618" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="5190,9678 5222,9698 5190,9718" fill="#b5452b"/>
+<text x="5235" y="9718" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="5190,9778 5222,9798 5190,9818" fill="#b5452b"/>
+<text x="5235" y="9818" font-size="58" text-anchor="start" fill="#1f2430">HALT</text>
+<polygon points="5190,9878 5222,9898 5190,9918" fill="#b5452b"/>
+<text x="5235" y="9918" font-size="58" text-anchor="start" fill="#1f2430">ABORT</text>
+<polygon points="5190,9978 5222,9998 5190,10018" fill="#b5452b"/>
+<text x="5235" y="10018" font-size="58" text-anchor="start" fill="#1f2430">RESET</text>
+<polygon points="6093,9578 6125,9598 6093,9618" fill="#b5452b"/>
+<text x="6080" y="9618" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="6093,9678 6125,9698 6093,9718" fill="#b5452b"/>
+<text x="6080" y="9718" font-size="58" text-anchor="end" fill="#1f2430">SUCCESS</text>
+<polygon points="6093,9778 6125,9798 6093,9818" fill="#b5452b"/>
+<text x="6080" y="9818" font-size="58" text-anchor="end" fill="#1f2430">FAILURE</text>
+<rect x="5192" y="10207" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5235" y="10243" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="5192" y="10307" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5235" y="10343" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="5192" y="10407" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5235" y="10443" font-size="58" text-anchor="start" fill="#1f2430">UaPath</text>
+<rect x="5192" y="10507" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5235" y="10543" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="5192" y="10607" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5235" y="10643" font-size="58" text-anchor="start" fill="#1f2430">Methods</text>
+<rect x="5192" y="10707" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5235" y="10743" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
+<rect x="5192" y="10807" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5235" y="10843" font-size="58" text-anchor="start" fill="#1f2430">ReleaseAfter</text>
+<rect x="6091" y="10207" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="6080" y="10243" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+<rect x="6091" y="10307" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="6080" y="10343" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
+<rect x="4719" y="9560" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4937" y="9615" font-size="48" text-anchor="middle" fill="#6b7280">Dispense.INITO</text>
+<rect x="6160" y="9560" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6324" y="9615" font-size="48" text-anchor="middle" fill="#6b7280">Weigh.INIT</text>
+<text x="5150" y="10240" font-size="48" text-anchor="end" fill="#0f6b6b">"Filling"</text>
+<text x="5150" y="10340" font-size="48" text-anchor="end" fill="#0f6b6b">"/Objects/Filling"</text>
+<text x="5150" y="10440" font-size="48" text-anchor="end" fill="#0f6b6b">"/Skills/Tare"</text>
+<text x="5150" y="10540" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="5150" y="10640" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="5150" y="10740" font-size="48" text-anchor="end" fill="#0f6b6b">"Tare"</text>
+<text x="5150" y="10840" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="2860" y="9495" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Weigh</text>
+<rect x="2360" y="10143" width="1000" height="780" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2360" y="9523" width="1000" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2405" y="10073" width="910" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2860" y="10143" font-size="58" text-anchor="middle" fill="#1f2430">SK_Weigh</text>
+<polygon points="2370,9578 2402,9598 2370,9618" fill="#b5452b"/>
+<text x="2415" y="9618" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="2370,9678 2402,9698 2370,9718" fill="#b5452b"/>
+<text x="2415" y="9718" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="2370,9778 2402,9798 2370,9818" fill="#b5452b"/>
+<text x="2415" y="9818" font-size="58" text-anchor="start" fill="#1f2430">HALT</text>
+<polygon points="2370,9878 2402,9898 2370,9918" fill="#b5452b"/>
+<text x="2415" y="9918" font-size="58" text-anchor="start" fill="#1f2430">ABORT</text>
+<polygon points="2370,9978 2402,9998 2370,10018" fill="#b5452b"/>
+<text x="2415" y="10018" font-size="58" text-anchor="start" fill="#1f2430">RESET</text>
+<polygon points="3318,9578 3350,9598 3318,9618" fill="#b5452b"/>
+<text x="3305" y="9618" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="3318,9678 3350,9698 3318,9718" fill="#b5452b"/>
+<text x="3305" y="9718" font-size="58" text-anchor="end" fill="#1f2430">SUCCESS</text>
+<polygon points="3318,9778 3350,9798 3318,9818" fill="#b5452b"/>
+<text x="3305" y="9818" font-size="58" text-anchor="end" fill="#1f2430">FAILURE</text>
+<rect x="2372" y="10207" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="10243" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="2372" y="10307" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="10343" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="2372" y="10407" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="10443" font-size="58" text-anchor="start" fill="#1f2430">UaPath</text>
+<rect x="2372" y="10507" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2415" y="10543" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="2372" y="10607" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2415" y="10643" font-size="58" text-anchor="start" fill="#1f2430">Methods</text>
+<rect x="2372" y="10707" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2415" y="10743" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
+<rect x="2372" y="10807" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2415" y="10843" font-size="58" text-anchor="start" fill="#1f2430">ReleaseAfter</text>
+<rect x="3316" y="10207" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3305" y="10243" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+<rect x="3316" y="10307" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3305" y="10343" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
+<rect x="3316" y="10407" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3305" y="10443" font-size="58" text-anchor="end" fill="#1f2430">R_Weight</text>
+<rect x="2006" y="9560" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2171" y="9615" font-size="48" text-anchor="middle" fill="#6b7280">Tare.INITO</text>
+<rect x="3385" y="9560" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3603" y="9615" font-size="48" text-anchor="middle" fill="#6b7280">Resetting.INIT</text>
+<text x="2330" y="10240" font-size="48" text-anchor="end" fill="#0f6b6b">"Filling"</text>
+<text x="2330" y="10340" font-size="48" text-anchor="end" fill="#0f6b6b">"/Objects/Filling"</text>
+<text x="2330" y="10440" font-size="48" text-anchor="end" fill="#0f6b6b">"/Skills/Weigh"</text>
+<text x="2330" y="10540" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="2330" y="10640" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="2330" y="10740" font-size="48" text-anchor="end" fill="#0f6b6b">"Weigh"</text>
+<text x="2330" y="10840" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="5545" y="5695" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Resetting</text>
+<rect x="5200" y="6143" width="690" height="180" rx="30" fill="#fbf3dc" stroke="#9a7618" stroke-width="6"/>
+<rect x="5200" y="5723" width="690" height="380" rx="30" fill="#fbf3dc" stroke="#9a7618" stroke-width="6"/>
+<rect x="5245" y="6073" width="600" height="100" rx="0" fill="#f3e6bd" stroke="#9a7618" stroke-width="5"/>
+<text x="5545" y="6143" font-size="58" text-anchor="middle" fill="#1f2430">subapplication</text>
+<polygon points="5210,5778 5242,5798 5210,5818" fill="#b5452b"/>
+<text x="5255" y="5818" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="5210,5878 5242,5898 5210,5918" fill="#b5452b"/>
+<text x="5255" y="5918" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="5848,5778 5880,5798 5848,5818" fill="#b5452b"/>
+<text x="5835" y="5818" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="5848,5878 5880,5898 5848,5918" fill="#b5452b"/>
+<text x="5835" y="5918" font-size="58" text-anchor="end" fill="#1f2430">DONE</text>
+<polygon points="5848,5978 5880,5998 5848,6018" fill="#b5452b"/>
+<text x="5835" y="6018" font-size="58" text-anchor="end" fill="#1f2430">FAILED</text>
+<rect x="5846" y="6207" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5835" y="6243" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
+<rect x="4577" y="5860" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4876" y="5915" font-size="48" text-anchor="middle" fill="#6b7280">Module.RUN_RESETTING</text>
+<rect x="5915" y="5860" width="624" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6227" y="5915" font-size="48" text-anchor="middle" fill="#6b7280">Module.RESETTING_DONE</text>
+<rect x="5915" y="5960" width="678" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6254" y="6015" font-size="48" text-anchor="middle" fill="#6b7280">Module.RESETTING_FAILED</text>
+<rect x="4819" y="5760" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4997" y="5815" font-size="48" text-anchor="middle" fill="#6b7280">Weigh.INITO</text>
+<rect x="5915" y="5760" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6120" y="5815" font-size="48" text-anchor="middle" fill="#6b7280">Stopping.INIT</text>
+<text x="5520" y="4895" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Stopping</text>
+<rect x="5200" y="5343" width="640" height="180" rx="30" fill="#fbf3dc" stroke="#9a7618" stroke-width="6"/>
+<rect x="5200" y="4923" width="640" height="380" rx="30" fill="#fbf3dc" stroke="#9a7618" stroke-width="6"/>
+<rect x="5245" y="5273" width="550" height="100" rx="0" fill="#f3e6bd" stroke="#9a7618" stroke-width="5"/>
+<text x="5520" y="5343" font-size="58" text-anchor="middle" fill="#1f2430">subapplication</text>
+<polygon points="5210,4978 5242,4998 5210,5018" fill="#b5452b"/>
+<text x="5255" y="5018" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="5210,5078 5242,5098 5210,5118" fill="#b5452b"/>
+<text x="5255" y="5118" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="5798,4978 5830,4998 5798,5018" fill="#b5452b"/>
+<text x="5785" y="5018" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="5798,5078 5830,5098 5798,5118" fill="#b5452b"/>
+<text x="5785" y="5118" font-size="58" text-anchor="end" fill="#1f2430">DONE</text>
+<polygon points="5798,5178 5830,5198 5798,5218" fill="#b5452b"/>
+<text x="5785" y="5218" font-size="58" text-anchor="end" fill="#1f2430">FAILED</text>
+<rect x="5796" y="5407" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5785" y="5443" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
+<rect x="4604" y="5060" width="571" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4890" y="5115" font-size="48" text-anchor="middle" fill="#6b7280">Module.RUN_STOPPING</text>
+<rect x="5865" y="5060" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6164" y="5115" font-size="48" text-anchor="middle" fill="#6b7280">Module.STOPPING_DONE</text>
+<rect x="5865" y="5160" width="651" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6191" y="5215" font-size="48" text-anchor="middle" fill="#6b7280">Module.STOPPING_FAILED</text>
+<rect x="4712" y="4960" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4943" y="5015" font-size="48" text-anchor="middle" fill="#6b7280">Resetting.INITO</text>
+<rect x="5865" y="4960" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6097" y="5015" font-size="48" text-anchor="middle" fill="#6b7280">Dispensing.INIT</text>
+<text x="2285" y="5205" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Dispensing</text>
+<rect x="1910" y="5453" width="750" height="80" rx="30" fill="#fbf3dc" stroke="#9a7618" stroke-width="6"/>
+<rect x="1910" y="5233" width="750" height="180" rx="30" fill="#fbf3dc" stroke="#9a7618" stroke-width="6"/>
+<rect x="1955" y="5383" width="660" height="100" rx="0" fill="#f3e6bd" stroke="#9a7618" stroke-width="5"/>
+<text x="2285" y="5453" font-size="58" text-anchor="middle" fill="#1f2430">subapplication</text>
+<polygon points="1920,5288 1952,5308 1920,5328" fill="#b5452b"/>
+<text x="1965" y="5328" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="2618,5288 2650,5308 2618,5328" fill="#b5452b"/>
+<text x="2605" y="5328" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<rect x="1449" y="5270" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1667" y="5325" font-size="48" text-anchor="middle" fill="#6b7280">Stopping.INITO</text>
+</svg>

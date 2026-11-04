@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1505" height="205" viewBox="634 894 7527 1026" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="634" y="894" width="7527" height="1026" fill="#ffffff"/>
+<text x="2245" y="1072" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Latch</text>
+<rect x="1750" y="1420" width="990" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1750" y="1100" width="990" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1795" y="1350" width="900" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2245" y="1420" font-size="58" text-anchor="middle" fill="#1f2430">MOD_StateLatch</text>
+<polygon points="1760,1155 1792,1175 1760,1195" fill="#b5452b"/>
+<text x="1805" y="1195" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="1760,1255 1792,1275 1760,1295" fill="#b5452b"/>
+<text x="1805" y="1295" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="2698,1155 2730,1175 2698,1195" fill="#b5452b"/>
+<text x="2685" y="1195" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="2698,1255 2730,1275 2698,1295" fill="#b5452b"/>
+<text x="2685" y="1295" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="1762" y="1484" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="1805" y="1520" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="1762" y="1584" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="1805" y="1620" font-size="58" text-anchor="start" fill="#1f2430">Received</text>
+<rect x="2696" y="1484" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2685" y="1520" font-size="58" text-anchor="end" fill="#1f2430">IdSub</text>
+<rect x="2696" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2685" y="1620" font-size="58" text-anchor="end" fill="#1f2430">IdQuery</text>
+<rect x="2696" y="1684" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2685" y="1720" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+<rect x="1557" y="1137" width="168" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1641" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">INIT</text>
+<rect x="2765" y="1137" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2943" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">Listen.INIT</text>
+<rect x="1396" y="1237" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1561" y="1292" font-size="48" text-anchor="middle" fill="#6b7280">Listen.IND</text>
+<rect x="2765" y="1237" width="141" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2835" y="1292" font-size="48" text-anchor="middle" fill="#6b7280">CHG</text>
+<rect x="1504" y="1462" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1614" y="1517" font-size="48" text-anchor="middle" fill="#6b7280">Module</text>
+<rect x="2765" y="1462" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2916" y="1517" font-size="48" text-anchor="middle" fill="#6b7280">Listen.ID</text>
+<rect x="2765" y="1562" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2903" y="1617" font-size="48" text-anchor="middle" fill="#6b7280">Query.ID</text>
+<rect x="1369" y="1562" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1547" y="1617" font-size="48" text-anchor="middle" fill="#6b7280">Listen.RD_1</text>
+<rect x="2765" y="1662" width="194" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2862" y="1717" font-size="48" text-anchor="middle" fill="#6b7280">State</text>
+<text x="4645" y="1072" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Listen</text>
+<rect x="4240" y="1420" width="810" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4240" y="1100" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4285" y="1350" width="720" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="4645" y="1420" font-size="58" text-anchor="middle" fill="#1f2430">SUBSCRIBE_1</text>
+<polygon points="4250,1155 4282,1175 4250,1195" fill="#b5452b"/>
+<text x="4295" y="1195" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="4250,1255 4282,1275 4250,1295" fill="#b5452b"/>
+<text x="4295" y="1295" font-size="58" text-anchor="start" fill="#1f2430">RSP</text>
+<polygon points="5008,1155 5040,1175 5008,1195" fill="#b5452b"/>
+<text x="4995" y="1195" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="5008,1255 5040,1275 5008,1295" fill="#b5452b"/>
+<text x="4995" y="1295" font-size="58" text-anchor="end" fill="#1f2430">IND</text>
+<rect x="4252" y="1484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="4295" y="1520" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="4252" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="4295" y="1620" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="5006" y="1484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="4995" y="1520" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="5006" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="4995" y="1620" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="5006" y="1684" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="4995" y="1720" font-size="58" text-anchor="end" fill="#1f2430">RD_1</text>
+<rect x="3859" y="1137" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4037" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">Latch.INITO</text>
+<rect x="5075" y="1137" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5239" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">Query.INIT</text>
+<rect x="5075" y="1237" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5226" y="1292" font-size="48" text-anchor="middle" fill="#6b7280">Latch.REQ</text>
+<rect x="3859" y="1562" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4037" y="1617" font-size="48" text-anchor="middle" fill="#6b7280">Latch.IdSub</text>
+<rect x="5075" y="1662" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5293" y="1717" font-size="48" text-anchor="middle" fill="#6b7280">Latch.Received</text>
+<text x="4210" y="1517" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="6975" y="1072" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Query</text>
+<rect x="6630" y="1420" width="690" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="6630" y="1100" width="690" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="6675" y="1350" width="600" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="6975" y="1420" font-size="58" text-anchor="middle" fill="#1f2430">PUBLISH_0</text>
+<polygon points="6640,1155 6672,1175 6640,1195" fill="#b5452b"/>
+<text x="6685" y="1195" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="6640,1255 6672,1275 6640,1295" fill="#b5452b"/>
+<text x="6685" y="1295" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="7278,1155 7310,1175 7278,1195" fill="#b5452b"/>
+<text x="7265" y="1195" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="7278,1255 7310,1275 7278,1295" fill="#b5452b"/>
+<text x="7265" y="1295" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="6642" y="1484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="6685" y="1520" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="6642" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="6685" y="1620" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="7276" y="1484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="7265" y="1520" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="7276" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="7265" y="1620" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="6222" y="1137" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6414" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">Listen.INITO</text>
+<rect x="6249" y="1237" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6427" y="1292" font-size="48" text-anchor="middle" fill="#6b7280">Query.INITO</text>
+<rect x="7345" y="1137" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7402" y="1192" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="6196" y="1562" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6400" y="1617" font-size="48" text-anchor="middle" fill="#6b7280">Latch.IdQuery</text>
+<text x="6600" y="1517" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<rect x="754" y="1014" width="315" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="774,1034 804,1054 774,1074" fill="#b5452b"/>
+<text x="819" y="1074" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<rect x="754" y="1174" width="315" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="774" y="1198" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="819" y="1234" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="7759" y="1014" width="282" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="7991,1034 8021,1054 7991,1074" fill="#b5452b"/>
+<text x="7976" y="1074" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<rect x="7759" y="1114" width="282" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="7991,1134 8021,1154 7991,1174" fill="#b5452b"/>
+<text x="7976" y="1174" font-size="58" text-anchor="end" fill="#1f2430">CHG</text>
+<rect x="7759" y="1274" width="282" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
+<rect x="7991" y="1298" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="7976" y="1334" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+</svg>

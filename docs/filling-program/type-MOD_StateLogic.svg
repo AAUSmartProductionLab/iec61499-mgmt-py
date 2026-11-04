@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="616" height="585" viewBox="-572 -120 2465 2340" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-572" y="-120" width="2465" height="2340" fill="#ffffff"/>
+<rect x="0" y="1320" width="1405" height="780" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="1405" height="1280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="1250" width="1315" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="702" y="1320" font-size="58" text-anchor="middle" fill="#1f2430">MOD_StateLogic</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">RESET_REQ</text>
+<polygon points="10,155 42,175 10,195" fill="#b5452b"/>
+<text x="55" y="195" font-size="58" text-anchor="start" fill="#1f2430">START_REQ</text>
+<polygon points="10,255 42,275 10,295" fill="#b5452b"/>
+<text x="55" y="295" font-size="58" text-anchor="start" fill="#1f2430">STOP_REQ</text>
+<polygon points="10,355 42,375 10,395" fill="#b5452b"/>
+<text x="55" y="395" font-size="58" text-anchor="start" fill="#1f2430">ABORT_REQ</text>
+<polygon points="10,455 42,475 10,495" fill="#b5452b"/>
+<text x="55" y="495" font-size="58" text-anchor="start" fill="#1f2430">CLEAR_REQ</text>
+<polygon points="10,555 42,575 10,595" fill="#b5452b"/>
+<text x="55" y="595" font-size="58" text-anchor="start" fill="#1f2430">OWNER_CHG</text>
+<polygon points="10,655 42,675 10,695" fill="#b5452b"/>
+<text x="55" y="695" font-size="58" text-anchor="start" fill="#1f2430">ACT</text>
+<polygon points="10,755 42,775 10,795" fill="#b5452b"/>
+<text x="55" y="795" font-size="58" text-anchor="start" fill="#1f2430">RESETTING_DONE</text>
+<polygon points="10,855 42,875 10,895" fill="#b5452b"/>
+<text x="55" y="895" font-size="58" text-anchor="start" fill="#1f2430">RESETTING_FAILED</text>
+<polygon points="10,955 42,975 10,995" fill="#b5452b"/>
+<text x="55" y="995" font-size="58" text-anchor="start" fill="#1f2430">STOPPING_DONE</text>
+<polygon points="10,1055 42,1075 10,1095" fill="#b5452b"/>
+<text x="55" y="1095" font-size="58" text-anchor="start" fill="#1f2430">STOPPING_FAILED</text>
+<polygon points="10,1155 42,1175 10,1195" fill="#b5452b"/>
+<text x="55" y="1195" font-size="58" text-anchor="start" fill="#1f2430">STOP_TIMEOUT</text>
+<polygon points="1363,55 1395,75 1363,95" fill="#b5452b"/>
+<text x="1350" y="95" font-size="58" text-anchor="end" fill="#1f2430">RESET_RSP</text>
+<polygon points="1363,155 1395,175 1363,195" fill="#b5452b"/>
+<text x="1350" y="195" font-size="58" text-anchor="end" fill="#1f2430">START_RSP</text>
+<polygon points="1363,255 1395,275 1363,295" fill="#b5452b"/>
+<text x="1350" y="295" font-size="58" text-anchor="end" fill="#1f2430">STOP_RSP</text>
+<polygon points="1363,355 1395,375 1363,395" fill="#b5452b"/>
+<text x="1350" y="395" font-size="58" text-anchor="end" fill="#1f2430">ABORT_RSP</text>
+<polygon points="1363,455 1395,475 1363,495" fill="#b5452b"/>
+<text x="1350" y="495" font-size="58" text-anchor="end" fill="#1f2430">CLEAR_RSP</text>
+<polygon points="1363,555 1395,575 1363,595" fill="#b5452b"/>
+<text x="1350" y="595" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<polygon points="1363,655 1395,675 1363,695" fill="#b5452b"/>
+<text x="1350" y="695" font-size="58" text-anchor="end" fill="#1f2430">RUN_RESETTING</text>
+<polygon points="1363,755 1395,775 1363,795" fill="#b5452b"/>
+<text x="1350" y="795" font-size="58" text-anchor="end" fill="#1f2430">RUN_STOPPING</text>
+<polygon points="1363,855 1395,875 1363,895" fill="#b5452b"/>
+<text x="1350" y="895" font-size="58" text-anchor="end" fill="#1f2430">WD_START</text>
+<polygon points="1363,955 1395,975 1363,995" fill="#b5452b"/>
+<text x="1350" y="995" font-size="58" text-anchor="end" fill="#1f2430">WD_STOP</text>
+<rect x="12" y="1384" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="1420" font-size="58" text-anchor="start" fill="#1f2430">ResetSession</text>
+<rect x="12" y="1484" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="1520" font-size="58" text-anchor="start" fill="#1f2430">StartSession</text>
+<rect x="12" y="1584" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="1620" font-size="58" text-anchor="start" fill="#1f2430">StopSession</text>
+<rect x="12" y="1684" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="1720" font-size="58" text-anchor="start" fill="#1f2430">AbortSession</text>
+<rect x="12" y="1784" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="1820" font-size="58" text-anchor="start" fill="#1f2430">ClearSession</text>
+<rect x="12" y="1884" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="55" y="1920" font-size="58" text-anchor="start" fill="#1f2430">Owner</text>
+<rect x="12" y="1984" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="2020" font-size="58" text-anchor="start" fill="#1f2430">AllIdle</text>
+<rect x="1361" y="1384" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="1350" y="1420" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+<rect x="1361" y="1484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="1350" y="1520" font-size="58" text-anchor="end" fill="#1f2430">Accepted</text>
+<rect x="1361" y="1584" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="1350" y="1620" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
+<line x1="-40" y1="75" x2="-40" y2="1400" stroke="#6b7280" stroke-width="4"/>
+<rect x="-50" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="1390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-68" y1="175" x2="-68" y2="1500" stroke="#6b7280" stroke-width="4"/>
+<rect x="-78" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-78" y="1490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-96" y1="275" x2="-96" y2="1600" stroke="#6b7280" stroke-width="4"/>
+<rect x="-106" y="265" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-106" y="1590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-124" y1="375" x2="-124" y2="1700" stroke="#6b7280" stroke-width="4"/>
+<rect x="-134" y="365" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-134" y="1690" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-152" y1="475" x2="-152" y2="1800" stroke="#6b7280" stroke-width="4"/>
+<rect x="-162" y="465" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-162" y="1790" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-180" y1="575" x2="-180" y2="1900" stroke="#6b7280" stroke-width="4"/>
+<rect x="-190" y="565" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-190" y="1890" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-208" y1="675" x2="-208" y2="2000" stroke="#6b7280" stroke-width="4"/>
+<rect x="-218" y="665" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-218" y="1990" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="-256" y="1418" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-256" y="1518" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-256" y="1618" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-256" y="1718" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-256" y="1818" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-256" y="1918" font-size="50" text-anchor="end" fill="#6b7280">WSTRING</text>
+<text x="-256" y="2018" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<line x1="1445" y1="75" x2="1445" y2="1600" stroke="#6b7280" stroke-width="4"/>
+<rect x="1435" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1435" y="1490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1435" y="1590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="1473" y1="175" x2="1473" y2="1600" stroke="#6b7280" stroke-width="4"/>
+<rect x="1463" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1463" y="1490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1463" y="1590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="1501" y1="275" x2="1501" y2="1600" stroke="#6b7280" stroke-width="4"/>
+<rect x="1491" y="265" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1491" y="1490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1491" y="1590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="1529" y1="375" x2="1529" y2="1600" stroke="#6b7280" stroke-width="4"/>
+<rect x="1519" y="365" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1519" y="1490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1519" y="1590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="1557" y1="475" x2="1557" y2="1600" stroke="#6b7280" stroke-width="4"/>
+<rect x="1547" y="465" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1547" y="1490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1547" y="1590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="1585" y1="575" x2="1585" y2="1400" stroke="#6b7280" stroke-width="4"/>
+<rect x="1575" y="565" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="1575" y="1390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="1633" y="1418" font-size="50" text-anchor="start" fill="#6b7280">USINT</text>
+<text x="1633" y="1518" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="1633" y="1618" font-size="50" text-anchor="start" fill="#6b7280">UINT</text>
+</svg>
