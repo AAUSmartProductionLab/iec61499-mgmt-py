@@ -64,10 +64,12 @@ def main() -> None:
     # Per kind: the drift as the oracle sees it, and what the reconciler made of it.
     md += ["", "## Per kind", "",
            "Drift: the oracle finds the program differs from what the AAS describes (P5: the record, by "
-           "construction). Of those: detected, located (a reported line names the element), sorted as "
-           "the kind calls for, and removed online (value, create) or refused (restart, record).", "",
-           "| Kind | What | Runs | Drift | Detected | Located | Class as expected | Removed or refused | Baseline detects |",
-           "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+           "construction). Of those: detected by the reading the reconciler makes before every change, and "
+           "by its audit (also every value; the IO addresses against the deployed boot file); of the audit's: "
+           "located (a reported line names the element), sorted as the kind calls for, and removed online "
+           "(value, create) or refused (restart, record).", "",
+           "| Kind | What | Runs | Drift | Detected, reading | Detected, audit | Located | Class as expected | Removed or refused | Baseline detects |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     missed, alarms = [], []
     for kind in KINDS:
         rs = by_kind.get(kind, [])
@@ -75,13 +77,14 @@ def main() -> None:
             continue
         drift = [o for o in rs if o["oracle_differs"]]
         quiet = [o for o in rs if not o["oracle_differs"]]
+        seen = [o for o in drift if o["read"].get("detected")]
         hit = [o for o in drift if o.get("detected")]
         missed += [(kind, o) for o in drift if not o.get("detected")]
         alarms += [(kind, o) for o in quiet if o.get("detected")]
         expected = EXPECTED[kind]
-        right = [o for o in hit if expected in o["read"]["classes"]]
+        right = [o for o in hit if expected in o["audit"]["classes"]]
         handled = [o for o in hit if (o.get("removed") if expected in ONLINE else o.get("outcome") == "refused")]
-        md.append(f"| {kind} | {NAMES[kind]} | {len(rs)} | {len(drift)} | {rate(len(hit), len(drift))} | "
+        md.append(f"| {kind} | {NAMES[kind]} | {len(rs)} | {len(drift)} | {rate(len(seen), len(drift))} | {rate(len(hit), len(drift))} | "
                   f"{rate(sum(bool(o.get('located')) for o in hit), len(hit))} | {rate(len(right), len(hit))} | "
                   f"{rate(len(handled), len(hit))} | {rate(sum(bool(o.get('baseline_detects')) for o in drift), len(drift))} |")
     quiet_all = [o for kind in KINDS for o in by_kind.get(kind, []) if not o["oracle_differs"]]
@@ -89,12 +92,12 @@ def main() -> None:
                f"nothing): {rate(len(alarms), len(quiet_all))}."]
 
     # The confusion matrix: the kind of drift against the classes the reconciler reported.
-    md += ["", "## Kind of drift and the classes reported (detected drifts; a run may report several)", "",
+    md += ["", "## Kind of drift and the classes the audit reported (a run may report several)", "",
            "| Kind | Expected | " + " | ".join(CLASSES) + " |", "| --- | --- | " + " | ".join("---" for _ in CLASSES) + " |"]
     for kind in KINDS:
         rs = [o for o in by_kind.get(kind, []) if o["oracle_differs"]]
         if rs:
-            count = Counter(c for o in rs for c in o["read"]["classes"])
+            count = Counter(c for o in rs for c in o["audit"]["classes"])
             md.append(f"| {kind} | {EXPECTED[kind]} | " + " | ".join(str(count.get(c, 0)) for c in CLASSES) + " |")
 
     # The outcomes of the attempt to remove the drift.
@@ -124,7 +127,7 @@ def main() -> None:
         md.append(f"  - {kind} {d}: the oracle saw {json.dumps(o.get('oracle'))[:160]}")
     if alarms:
         md += ["", f"## False alarms ({len(alarms)})", ""] + [
-            f"- {k} {o['drift']}: {o['read'].get('lines')}" for k, o in alarms[:40]]
+            f"- {k} {o['drift']}: {o['audit'].get('lines')}" for k, o in alarms[:40]]
 
     # The cut changes one by one.
     cuts = sorted(by_kind.get("P4", []), key=lambda o: o["drift"]["cut"])
@@ -134,7 +137,7 @@ def main() -> None:
                "| --- | --- | --- | --- | --- | --- |"]
         groups: list[list] = []
         for o in cuts:
-            key = (",".join(o["read"]["classes"]), o.get("outcome"), o.get("new_skill_ran"))
+            key = (",".join(o["audit"]["classes"]), o.get("outcome"), o.get("new_skill_ran"))
             if groups and groups[-1][2] == key:
                 groups[-1][1] = o["drift"]["cut"]
                 groups[-1][3].append(o.get("dispensing_ran"))

@@ -284,7 +284,13 @@ def walk_elements(node):
             yield from walk_elements(v)
 
 
-def run_one(bench, drift: dict, base: ModuleSpec, boots: dict, record_: dict) -> dict:
+def reading(found, drift: dict) -> dict:
+    """What a reading reports: its classes, its lines, and whether they name the drifted element."""
+    return {"classes": classes(found), "lines": found.lines()[:12], "partial": found.partial,
+            "detected": not found.empty, "located": located(found.lines(), element(drift))}
+
+
+def run_one(bench, drift: dict, base: ModuleSpec, boots: dict, record_: dict, work: Path) -> dict:
     kind = drift["kind"]
     spec = described(drift, base)
     module, components = q1.delivered_spec(base)
@@ -299,11 +305,11 @@ def run_one(bench, drift: dict, base: ModuleSpec, boots: dict, record_: dict) ->
     out, checks = {"drift": drift}, {}
     bench.start(boots["base"])
     q1.between_orders(bench)
-    # R1: the program before the drift is the generator's, and the reconciler reads nothing.
+    # R1: the program before the drift is the generator's, and the reconciler's audit finds nothing.
     base_module, base_components = q1.delivered_spec(base)
     before = q1.program_is(bench, boots["base"], running=True)
     checks["R1"] = q1.same(before) and read(bench.client, bench.host, bench.port, base_module, base_components,
-                                            record_=record_).differences.empty
+                                            record_=record_, audit=True, boot=boots["base"]).differences.empty
     # R2: the drift is made.
     try:
         if kind == "P4":
@@ -321,20 +327,23 @@ def run_one(bench, drift: dict, base: ModuleSpec, boots: dict, record_: dict) ->
     oracle = q1.program_is(bench, generated, running=True)
     out["oracle_differs"] = not q1.same(oracle) or kind == "P5"
     out["oracle"] = {k: v for k, v in oracle.items() if v and k != "compared"}
-    # What the reconciler reads.
-    try:
-        found = read(bench.client, bench.host, bench.port, module, components, record_=reading_record).differences
-        out["read"] = {"classes": classes(found), "lines": found.lines()[:12], "partial": found.partial}
-        out["detected"] = not found.empty
-        out["located"] = located(found.lines(), element(drift))
-    except Exception as exc:                                    # noqa: BLE001 (the reading failed: recorded)
-        out["read"] = {"classes": ["error"], "error": f"{type(exc).__name__}: {exc}"[:300]}
-        out["detected"], out["located"] = None, False
+    # What the reconciler reads: as before every change, and as an audit (every value; the IO
+    # addresses against the deployed boot file).
+    for key, audit in (("read", False), ("audit", True)):
+        try:
+            out[key] = reading(read(bench.client, bench.host, bench.port, module, components, record_=reading_record,
+                                    audit=audit, boot=boots["base"] if audit else None).differences, drift)
+        except Exception as exc:                                # noqa: BLE001 (the reading failed: recorded)
+            out[key] = {"classes": ["error"], "error": f"{type(exc).__name__}: {exc}"[:300], "detected": None,
+                        "located": False}
+    out["detected"], out["located"] = out["audit"]["detected"], out["audit"]["located"]
     # The baseline: the AAS against the boot file that was deployed, not the running program.
     out["baseline_detects"] = q1.boot_set(boots["base"]) != q1.boot_set(generated)
-    # What the reconciler does with it.
+    # What the reconciler does with it, with the audit and the module's boot file.
+    deployer = q1.deployer_with(work / f"deploy{time.monotonic_ns()}", boots["base"])
     try:
-        done, after = reconfigure(bench.client, bench.host, bench.port, module, components, record_=reading_record)
+        done, after = reconfigure(bench.client, bench.host, bench.port, module, components, deployer=deployer,
+                                  record_=reading_record, audit=True)
         out["done"] = done[:8]
         again = q1.program_is(bench, generated, running=True)
         out["removed"] = after.differences.empty and q1.same(again) and kind != "P5"
@@ -348,7 +357,7 @@ def run_one(bench, drift: dict, base: ModuleSpec, boots: dict, record_: dict) ->
     if kind == "P4" and out["outcome"] == "removed":
         out["new_skill_ran"], out["dispensing_ran"] = runs(bench, drift["cut"] % 10 == 0)
     bench.stop()
-    q1.logged(out, checks, bench.forte_dir)
+    q1.logged(out, checks, bench, bench.marker)
     checks["R3"] = checks.pop("V10")
     return {"out": out, "checks": checks}
 
@@ -421,7 +430,7 @@ def main() -> None:
                 started = time.perf_counter()
                 row = {"index": i, "time": datetime.now().isoformat(), **env}
                 try:
-                    row.update(run_one(bench, drift, base, boots, record_))
+                    row.update(run_one(bench, drift, base, boots, record_, Path(tmp)))
                     row["ok"] = all(row["checks"].values())
                     if not row["ok"]:
                         row["failure"] = "check"
@@ -434,7 +443,7 @@ def main() -> None:
                     f.write(json.dumps(row, default=str) + "\n")
                 o = row["out"]
                 print(f"{i + 1}/{len(order)} {drift['kind']}: {'ok' if row['ok'] else row.get('failure')} "
-                      f"detected={o.get('detected')} class={o.get('read', {}).get('classes')} outcome={o.get('outcome')} "
+                      f"read={o.get('read', {}).get('classes')} audit={o.get('audit', {}).get('classes')} outcome={o.get('outcome')} "
                       f"run={row['run_s']:.1f}s{' ' + row['error'][:100] if row.get('error') else ''}", flush=True)
         finally:
             bench.stop()
