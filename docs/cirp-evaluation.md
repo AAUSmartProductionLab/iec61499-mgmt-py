@@ -334,3 +334,15 @@ rate; every missed drift listed with its element, and looked at.
   All 30 counted. The audit detected, located and sorted every drift as its kind calls for, and the
   reconciler removed it (P1, P4, A1) or refused it (P2, P3, P5, A2 to A4); no false alarm. The reading
   before a change detected every kind but P1, the values, which only the audit reads (by design).
+- *First full run (4 Nov, 1,259 runs, `cell/eval/results/q3-2026-11-04T1004.jsonl`; not counted, it
+  led to the changes below).* 1,256 runs passed R1 to R3; no false alarm in 101. P2 to P5 and A2 to A4
+  were detected, located and handled in every run. P1: the reading found 42 of 411 values (the ones the
+  skills hold), the audit 407; of these, 397 were written back, 8 refused as a restart by design (whether
+  a skill is offered, where its results are published: the skill model's structure), and 2 spread to the
+  whole program: the module's name and OPC UA root, which the reading took from the program (fixed,
+  design log). The audit missed the linear axis's 4 IO addresses, for which the program built from the
+  AAS has no value (fixed). A1: 5 of 34 edits lowered a parameter's minimum below what the dosing
+  primitive takes; the reconciler refused that AAS as describing a skill the module cannot carry out (the
+  check, a case for Q4), so A1 now raises a minimum toward the default, a valid change. Not made: 2
+  stray joins, which FORTE refuses to create alone (left out of P3's types), and 1 time value (now
+  written in seconds, as the boot file writes it). The runs that count are those of the second full run.
