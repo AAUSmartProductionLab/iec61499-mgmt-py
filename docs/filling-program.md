@@ -3,7 +3,10 @@
 What every function block of the filling module's IEC 61499 program does, in plain words: what a
 client can call over OPC UA, which blocks a call reaches, how a command ends up on the Raspberry Pi's
 pins, and where the values the module shows come from. Written on 28 Oct 2026 for anyone who opens
-the program in the 4diac IDE (`cell/control/FillingModule`) or operates the module.
+the program in the 4diac IDE (`cell/control/FillingModule`) or operates the module. Extended on
+4 Nov 2026 for students: every block type of the program explained one by one, in everyday words and
+with a picture (sections 6 to 8), what the stoppering module has instead (section 9), and what you
+add for a new piece of equipment with its own pins and a primitive that uses it (section 10).
 
 The same descriptions are in the program itself: every block type and every block instance has a
 comment (in the IDE: hover over a block, or select it and look at *Properties > Comment*). They are
@@ -14,6 +17,16 @@ that is already on the Pi.
 How to build a new skill or a new piece of equipment is in [building-skills.md](building-skills.md).
 The rules every module follows are in [module-rules.md](module-rules.md); the hardware in
 [modules.md](modules.md).
+
+**New to IEC 61499?** Read sections 1, 2 and 6 first: they say what the program is made of and how
+to read the pictures. Then section 4 follows one call through the blocks, and sections 7 and 8
+explain each block on its own; look a block up there when you meet it.
+
+**The pictures** are in [filling-program/](filling-program/). They are drawn from the program's
+files by [filling-program/draw_blocks.py](filling-program/draw_blocks.py), with the positions,
+groups and sizes the 4diac IDE uses, so they look as the program looks in the IDE; they are not
+screenshots of it. Open one on its own to see it full size. After the program is regenerated, draw
+them again (section 12).
 
 ## 1. The whole program in one picture
 
@@ -55,6 +68,13 @@ Four layers, top to bottom:
    the hardware's pins; it does what the skill holding it says.
 4. **IO**: one block per pin, which knows how to reach the pin (a Pi GPIO line, a PWM channel, a
    Modbus register, or simulated).
+
+This is the application `Filling_pi` as the IDE shows it. The grey frames are groups: they only
+keep the blocks in order, they do nothing. The yellow blocks are subapplications (a folder of
+blocks, section 6.1). The small labels at the pins name what each pin is connected to (section 6.4).
+
+![The application Filling_pi in the 4diac IDE: five groups with the module level, the module level
+skills, the procedures, the skill primitives and the equipment](filling-program/app-Filling_pi.svg)
 
 ## 2. Two kinds of wire
 
@@ -269,94 +289,799 @@ The steps inside Dispensing and the procedures are blocks of the same primitive 
 offered ones, each with its own name, OPC UA variables and constants: a primitive can be used in
 several places at once.
 
-## 6. Inside the block types
+Each of these blocks, its type and the blocks inside it are explained with pictures in sections 7
+(the types every module has) and 8 (the filling module's own types and the subapplications).
 
-A block type is either **basic** (a state machine with small programs, in Structured Text) or
-**composite** (a network of other blocks). The composites below are listed with the blocks inside
-them. Types named `modlib::...` are the library's and the same in every module; `filling::...` are
-the filling module's own.
+## 6. Before the blocks: a few words, and how to read the pictures
 
-### `MOD_Occupation` (composite): who may command
+### 6.1 Types and blocks
+
+A **block type** is like a cookie cutter, and a **block** (also called an instance) is one cookie
+made with it. The type says what pins the block has and what it does; each block has its own name,
+its own values and its own memory. `SK_Home` is a type. The filling program has five blocks of that
+type: `Home` (offered on its own), `Resetting.Home`, `Stopping.Home`, `Dispensing.Execute.Home` and
+`Dispensing.Stop.Home`. Each of them runs on its own and has its own OPC UA folder.
+
+There are five kinds of type, and you meet all of them in this program:
+
+| Kind | What it is | In everyday words | Examples |
+| --- | --- | --- | --- |
+| **Basic** | A state machine (the IDE calls it the ECC) with small programs in Structured Text | A flow chart: "in this state, when that event comes, do this" | `SKILL_Control`, `SL_Home`, `EL_LinearAxis` |
+| **Simple** | One small program per event, no states | A calculator: values in, values out | `EV_LinearAxis`, `SKILL_Param_LREAL`, `MOD_ActivityCount` |
+| **Composite** | A network of other blocks, closed into one block | A box of parts with plugs on the outside | `SK_Home`, `EQ_LinearAxis`, `SKILL_Core`, `IO_DO` |
+| **Service** | Built into FORTE in C++: talks to the world outside the program (the network, OPC UA, the pins, the clock) | A socket in the wall | `E_DELAY`, `PUBLISH_1`, `SERVER_2_1`, `QX`, `GPIOChip` |
+| **Subapplication** | A network of blocks in the application that is drawn as one block, but has no type of its own | A folder | `Dispensing`, `Resetting`, `Stopping` |
+
+### 6.2 Events and data
+
+A block has two kinds of pin:
+
+- **Event pins** (top, triangles) carry a short "now!": like a doorbell. In IEC 61499 a block does
+  nothing until an event arrives. `INIT` means "set yourself up", `START` "begin", `DONE` "I am
+  finished".
+- **Data pins** (bottom, squares) carry values: like the note that comes with the doorbell. Each
+  event says which data it brings along (its *WITH*): when `INIT` arrives, the block takes the values
+  on `Module`, `UaRoot` and the others at that moment. In the type pictures the thin lines on the
+  outside show which data goes with which event.
+
+The data types: `BOOL` is TRUE or FALSE (green in the pictures); `INT`, `UINT`, `USINT` and `DINT`
+are whole numbers (U: no minus sign), `LREAL` a number with decimals, `TIME` a time such as
+`T#500ms` (blue); `STRING` and `WSTRING` are text (purple); `ANY` is a pin of a generic block that
+takes any type (grey).
+
+### 6.3 The start-up chain
+
+Every block must be set up once before it works: told its name, its addresses, and given the
+chance to create its OPC UA nodes and open its channels. The program does that like a row of
+dominoes: each block's `INITO` ("I am set up") is wired to the next block's `INIT`. The first domino
+is the resource's `START` block (section 7.1). In `Filling_pi` the order is `Occupation`, `Module`,
+`LinearAxis`, `Pump`, `Scale`, `Home`, `MoveAxis`, `Dispense`, `Tare`, `Weigh`, `Resetting`,
+`Stopping`, `Dispensing`. Inside a composite block the chain goes on through its parts the same way.
+A skill added while the module runs is put at the end of the chain.
+
+### 6.4 How the IDE shows the program, and so the pictures
+
+![How to read a block in the pictures](filling-program/legend.svg)
+
+- **Name and type.** Above a block is its name (the block in this program); in the narrow band in
+  its middle is its type (what kind of block it is). A yellow block is a subapplication.
+- **Values.** Text left of an input pin is a value set on that pin (a *parameter*): `"Filling"`,
+  `TRUE`, `T#500ms`. Text in quotes is a string.
+- **Connections are hidden.** The program has hundreds of connections; drawn as lines they would fill
+  the screen. So the generator hides every one, and the IDE writes a small label at each connected
+  pin instead, naming the other end: `Control.START_REQ` is the pin `START_REQ` of the block
+  `Control`. A label with a number (`×2`) means the pin is connected to that many pins. A label
+  without a dot (`INIT`, `Module`) is a pin on the outside of the network you are looking into: of
+  the composite type, or of the subapplication.
+- **The outside pins** of a composite type or subapplication are drawn at the left (inputs) and
+  right (outputs) edge of its network, as the IDE draws them.
+- **Groups** are the grey frames with a title and a comment. They only keep blocks together for the
+  reader; they change nothing in the program.
+
+### 6.5 Who made a type
+
+The IDE writes a type with a prefix that says where it comes from:
+
+| Prefix | Where the type comes from | The same in every module? |
+| --- | --- | --- |
+| `iec61499::events`, `iec61499::net`, `eclipse4diac::io` | The 4diac standard library, built into FORTE | Yes |
+| `modlib::` | The lab's module library ModLib (`iec61499-skill-lib/ModLib`), generated once for all modules | Yes |
+| `filling::` | Generated for the filling module from its spec (`cell/modules/filling.yaml`) | No: the stoppering module has `stoppering::` |
+
+The start of a type's name says what it is for: `MOD_` the module level, `SKILL_` the parts every
+skill shares, `IO_` a pin, `SK_` a skill primitive, `SL_` the logic of a primitive, `EQ_` a piece of
+equipment, `EL_` its logic, `EV_` its state for a skill, `EC_` its command table.
+
+**Section 7** explains the types that are the same in every module: you never change them for a new
+module, you only give them values. **Section 8** explains the filling module's own types: they are
+made from its spec, and another module has others (section 9).
+
+## 7. The blocks that are always there
+
+These come from the 4diac standard library and from ModLib. They are the same in the filling,
+stoppering and capping modules, and in any module the generator makes.
+
+### 7.1 Timers and the start signal
+
+#### `E_DELAY`: a kitchen timer
+
+![E_DELAY](filling-program/type-E_DELAY.svg)
+
+`START` starts the timer for the time on `DT`; when that time has passed, `EO` fires once. `STOP`
+cancels it. Whenever something in the program must wait, an `E_DELAY` does the waiting:
+
+- `WaitT` in a primitive: waits up to 0.5 s for the equipment to become free;
+- `Timer` in a primitive: how long a timed skill runs, or the timeout of a skill a sensor ends;
+- `PhaseT` in a primitive: how long a phase of a command lasts (stoppering's `Back`, section 9.2);
+- `MoveT` in the axis: how long a move to a position takes;
+- `ToIdle` in every skill: 1.5 s after success the skill shows Idle again;
+- `Wd` in the state manager: the watchdog, how long Stopping may take (`StopTimeout`, 10 s).
+
+#### `E_CYCLE`: a metronome
+
+![E_CYCLE](filling-program/type-E_CYCLE.svg)
+
+After `START`, `EO` fires again and again, every `DT`, until `STOP`. Inside it is only an `E_DELAY`
+whose end starts it again:
+
+![Inside E_CYCLE](filling-program/inside-E_CYCLE.svg)
+
+Every equipment block has one (`Cycle`, every 50 ms): on each tick it reads its inputs and writes its
+outputs again.
+
+#### `E_RESTART`: the power-on signal
+
+![E_RESTART](filling-program/type-E_RESTART.svg)
+
+It has no inputs. It fires `COLD` when FORTE starts, `WARM` when it restarts, and `STOP` when the
+resource is stopped. The resource the program runs in (`EMB_RES`) has one, named `START`, and the
+system file wires `START.COLD` and `START.WARM` to `Occupation.INIT`: the first domino of the
+start-up chain (section 6.3). You see it in the IDE in the device's resource, not in the
+application.
+
+#### `E_CTU`, `E_T_FF`: in the library, not used
+
+![E_CTU](filling-program/type-E_CTU.svg) ![E_T_FF](filling-program/type-E_T_FF.svg)
+
+They come with the standard library. `E_CTU` counts events (`CU` counts one up, `R` back to 0;
+`Q` is TRUE once the count `CV` reaches `PV`). `E_T_FF` flips `Q` between TRUE and FALSE on every
+`CLK`. The filling program uses neither.
+
+### 7.2 Talking: local channels, OPC UA and Modbus
+
+#### `PUBLISH_n` and `SUBSCRIBE_n`: send and receive
+
+![PUBLISH_1](filling-program/type-PUBLISH_1.svg) ![SUBSCRIBE_1](filling-program/type-SUBSCRIBE_1.svg)
+
+A `PUBLISH` sends its values `SD_1` to `SD_n` to the address on `ID`, each time `REQ` arrives. A
+`SUBSCRIBE` listens on its `ID`; when something arrives it fires `IND`, with the values on `RD_1` to
+`RD_n`. `n` is how many values: the program has `PUBLISH_0`, `_1`, `_2`, `_4`, `_5`, `_8` and
+`SUBSCRIBE_0`, `_1`, `_2`, `_5`, `_8` (4diac makes them from one template, for any `n`). `QI` must be
+TRUE for the block to work: the program sets it FALSE to switch a block off (for example the OPC UA
+ones when `UaEnable` is FALSE).
+
+What the `ID` says:
+
+- `loc[Filling/owner]`: a **local channel** inside FORTE (section 2). Think of a notice board in
+  the hallway: any block can pin up a note (publish), and every block that looks at that board
+  (subscribes) reads it. Publisher and subscribers must agree on how many values there are and of
+  which type. A subscriber only hears what is sent after it started listening; that is why the
+  blocks that need the owner or the module state ask for it once when they start (the `query`
+  channels, sections 7.4 and 7.5).
+- `opc_ua[WRITE;/Objects/Filling/Module/State]`: write OPC UA **variables** that a client (the HMI,
+  UaExpert) can read. One path per value, separated by `;`. FORTE creates the variables if they are
+  not there yet.
+
+#### `SERVER_2_n`: an OPC UA method, like a phone line
+
+![SERVER_2_2](filling-program/type-SERVER_2_2.svg)
+
+With an `ID` such as `opc_ua[CREATE_METHOD;/Objects/Filling/Module/Reset]` it creates that method
+in FORTE's OPC UA server when it is set up. When a client calls the method, `IND` fires with the
+call's arguments on `RD_1` to `RD_n`. In this program `RD_1` is always the caller's session id and
+the others are the skill's parameters. The program decides, then sends `RSP` with `SD_1` (Accepted)
+and `SD_2` (ErrorID): that is the answer the client gets back. The 2 is the number of answers, `n`
+the number of inputs: `SERVER_2_1` (the session only), `SERVER_2_2` (one parameter), `SERVER_2_3`
+(two).
+
+#### `CLIENT_1_0` and `CLIENT_0_1`: Modbus
+
+![CLIENT_1_0](filling-program/type-CLIENT_1_0.svg) ![CLIENT_0_1](filling-program/type-CLIENT_0_1.svg)
+
+Used only inside the IO blocks (section 7.7), for the PC target, whose pins are registers of the
+Modbus simulator. `CLIENT_1_0` writes one value (`SD_1`) to a Modbus coil or register, `CLIENT_0_1`
+reads one (`RD_1`). The `ID` names the server and the address, for example
+`modbus[127.0.0.1:1502:1:10:d0:]`. On the Pi they stay switched off (`QI` FALSE).
+
+### 7.3 Pins: FORTE's own IO blocks
+
+#### `IX`, `QX`, `IW`, `QW`
+
+![IX](filling-program/type-IX.svg) ![QX](filling-program/type-QX.svg)
+![IW](filling-program/type-IW.svg) ![QW](filling-program/type-QW.svg)
+
+FORTE's blocks for one IO point, named as in a PLC: `I` input, `Q` output, `X` a bit (TRUE or
+FALSE), `W` a word (a number from 0 to 65535). `IX` reads a bit, `QX` writes one, `IW` reads a word,
+`QW` writes one. `PARAMS` names the point; the IO blocks give it the name a `GPIOChip` or `PWMChip`
+registered (below). They are only used inside the IO blocks (`Local`).
+
+#### `GPIOChip`: set up one Raspberry Pi pin
+
+![GPIOChip](filling-program/type-GPIOChip.svg)
+
+When it is set up, it opens one line (`LineNumber`) of a GPIO chip (`ChipNumber`) of the Pi: as an
+input or an output (`ReadWriteMode`), with the pull-up or pull-down resistor on or off
+(`BiasMode`), and inverted or not (`ActiveLow`: TRUE means "on" is a low voltage). It registers the
+line under the name on `VALUE`; an `IX` or `QX` with that name then reads or writes it. Inside
+`IO_DI` and `IO_DO` (`Line`).
+
+#### `PWMChip`: set up one PWM channel
+
+![PWMChip](filling-program/type-PWMChip.svg)
+
+PWM switches a pin on and off very fast; the share of the time it is on is the *duty*. When it is
+set up, `PWMChip` opens one channel (`ChipNumber`, `Channel`) with its period (`PeriodNs`: 500 000
+ns is 2 kHz), in the folder `SysfsRoot` (in the Pi's container the Pi's `/sys/class/pwm` is passed
+in as `/hostsys/class/pwm`), and registers it as `VALUE`. A `QW` with that name then sets the duty:
+0 is off, 65535 always on. Inside `IO_AO` (`Line`). The axis's step pulses come from one: every
+period is one step of the motor.
+
+### 7.4 Who may command: `MOD_Occupation`
+
+Think of the key to a shared lab machine: whoever holds the key may use the machine; everyone else
+waits until it is handed back. The key here is a session id, a text the client makes up.
+
+#### `MOD_Occupation` (composite)
+
+![MOD_Occupation](filling-program/type-MOD_Occupation.svg)
+
+Its inputs are the module's name (`Module`, `"Filling"`), its OPC UA folder (`UaRoot`,
+`"/Objects/Filling"`) and whether to use OPC UA at all (`UaEnable`). It offers the methods
+`Occupation/Occupy(Session)` and `Occupation/Release(Session)`, remembers the owner, publishes
+`Occupation/Occupied` (never the session id itself: it works like a password) and tells every block
+of the module who the owner is, on `loc[Filling/owner]`.
+
+![Inside MOD_Occupation](filling-program/inside-MOD_Occupation.svg)
 
 | Inside | Type | What it does |
 | --- | --- | --- |
-| `Ids` | `MOD_OccupationIds` | Builds the OPC UA addresses (`/Objects/Filling/Occupation/...`) and channel names from the module's name |
+| `Ids` | `MOD_OccupationIds` | Builds the addresses below from the module's name and OPC UA folder |
 | `Occupy`, `Release` | `SERVER_2_1` | The two OPC UA methods (one input: the session; two answers: Accepted, ErrorID) |
-| `Logic` | `MOD_OccupationLogic` | Decides: occupy when free or by the owner, release only by the owner |
-| `PubOwner` | `PUBLISH_1` | Tells every block the owner on `loc[Filling/owner]` |
-| `SubQuery` | `SUBSCRIBE_0` | Answers a block that asks for the owner at start-up |
+| `Logic` | `MOD_OccupationLogic` | Decides who may occupy and release |
+| `PubOwner` | `PUBLISH_1` | Tells every block the owner, on `loc[Filling/owner]` |
+| `SubQuery` | `SUBSCRIBE_0` | Hears a block that asks for the owner (on `loc[Filling/owner/query]`) |
 | `PubUa` | `PUBLISH_1` | Writes `Occupation/Occupied` |
 
-### `MOD_StateManager` (composite): the module's PackML state
+How it runs: at start-up `Ids` builds the addresses, the methods are created and `Occupied` is
+written once (FALSE). A call of `Occupy` goes `Occupy.IND → Logic.OCCUPY_REQ`; `Logic` answers on
+`OCCUPY_RSP → Occupy.RSP` (back to the client) and, when something changed, fires `CHG`:
+`PubOwner` and `PubUa` send the new owner and `Occupied`. When a block that starts later asks
+(`SubQuery.IND → Logic.QUERY_REQ`), `CHG` fires once more, so the owner is sent again.
+
+#### `MOD_OccupationIds` (simple)
+
+![MOD_OccupationIds](filling-program/type-MOD_OccupationIds.svg)
+
+Builds the five addresses once, at start-up: `opc_ua[CREATE_METHOD;/Objects/Filling/Occupation/Occupy]`,
+the same for `Release`, `opc_ua[WRITE;/Objects/Filling/Occupation/Occupied]`, `loc[Filling/owner]`
+and `loc[Filling/owner/query]`. Because they are built from `Module` and `UaRoot`, the same block
+works in every module.
+
+#### `MOD_OccupationLogic` (basic)
+
+![MOD_OccupationLogic](filling-program/type-MOD_OccupationLogic.svg)
+
+The whole rule in two sentences: `Occupy` is accepted when the session id is not empty and the
+module is free or already held by that same session; `Release` is accepted only from the owner.
+Otherwise the answer is `[FALSE, 5]` (NotPermitted). Its state machine waits in `START`; each request
+moves it to a state that runs one small program, answers and goes back. Note that releasing does not
+stop skills that are running: stop the module first.
+
+#### `MOD_OwnerView` (composite) and `MOD_OwnerLatch` (simple): the ear for the owner
+
+![MOD_OwnerView](filling-program/type-MOD_OwnerView.svg) ![MOD_OwnerLatch](filling-program/type-MOD_OwnerLatch.svg)
+
+Every block that must know the owner has a `MOD_OwnerView` inside (`Owner` in `SKILL_Core` and in
+`MOD_StateManager`). It gives the owner on its output `Owner` and fires `CHG` when it changes.
+
+![Inside MOD_OwnerView](filling-program/inside-MOD_OwnerView.svg)
+
+Inside: `Latch` (a `MOD_OwnerLatch`) builds the two channel names and keeps the last owner heard;
+`Listen` (`SUBSCRIBE_1`) listens on `loc[Filling/owner]`; `Query` (`PUBLISH_0`) sends one empty
+message on `loc[Filling/owner/query]` at start-up, which means "who is the owner?". The occupation
+then sends the owner again (above). Without the question, a skill added while the module runs would
+not know the owner until it changed.
+
+### 7.5 The module's state: `MOD_StateManager`
+
+The module's state is like the main switch and the traffic light of a machine together: it says
+whether the module may work now. The states and their numbers are those of PackML, a standard for
+machine states.
+
+#### `MOD_StateManager` (composite)
+
+![MOD_StateManager](filling-program/type-MOD_StateManager.svg)
+
+Inputs: `Module`, `UaRoot`, `UaEnable`, and `StopTimeout` (`T#10s`: how long Stopping may wait for
+the skills). It offers `Module/Reset`, `Start`, `Stop`, `Abort` and `Clear` (each with the session
+id), publishes `Module/State` and `loc[Filling/state]`, and runs the two procedures: `RUN_RESETTING`
+and `RUN_STOPPING` are wired to the subapplications `Resetting.START` and `Stopping.START`, and their
+`DONE` and `FAILED` come back on `RESETTING_DONE` and the others.
+
+![Inside MOD_StateManager](filling-program/inside-MOD_StateManager.svg)
 
 | Inside | Type | What it does |
 | --- | --- | --- |
-| `Ids` | `MOD_StateIds` | The OPC UA addresses (`/Objects/Filling/Module/...`) and channel names |
-| `Owner` | `MOD_OwnerView` | Knows the owner (only the owner may change the state) |
+| `Ids` | `MOD_StateIds` | Builds the addresses (`/Objects/Filling/Module/...`) and channel names |
+| `Owner` | `MOD_OwnerView` | Knows the owner: only the owner may change the state |
 | `Reset`, `Start`, `Stop`, `Abort`, `Clear` | `SERVER_2_1` | The five OPC UA methods |
-| `Logic` | `MOD_StateLogic` | The PackML state machine: which command is allowed in which state; starts the procedures and waits for them |
+| `Logic` | `MOD_StateLogic` | The PackML state machine |
 | `PubUa`, `PubState` | `PUBLISH_1` | Write the state to `Module/State` and to `loc[Filling/state]` |
-| `SubQuery` | `SUBSCRIBE_0` | Answers a block that asks for the state at start-up |
-| `SubAct`, `Count` | `SUBSCRIBE_1`, `MOD_ActivityCount` | Hear the skills' +1 and -1 and count how many run |
-| `Wd` | `E_DELAY` | Gives up waiting for the skills after `StopTimeout`: the module aborts |
+| `SubQuery` | `SUBSCRIBE_0` | Hears a block that asks for the state; `PubState` then sends it again |
+| `SubAct`, `Count` | `SUBSCRIBE_1`, `MOD_ActivityCount` | Hear the skills' +1 and -1 on `loc[Filling/activity]` and count how many run |
+| `Wd` | `E_DELAY` | The watchdog: when the skills have not stopped after `StopTimeout`, the module aborts |
 
-### `SKILL_Core` (composite): what every skill shares
+#### `MOD_StateLogic` (basic): the PackML state machine
 
-Used in every primitive (as `Control`) and as `Control` of every module level skill.
+![MOD_StateLogic](filling-program/type-MOD_StateLogic.svg)
+
+```
+ Stopped (2) ──Reset──► Resetting (15) ──procedure done──► Idle (4) ──Start──► Starting (3) ──► Execute (6)
+                            │ procedure failed
+                            ▼
+                         Aborting (8)
+
+ Resetting, Idle or Execute ──Stop──► Stopping (7) ──no skill runs any more──► Stopping procedure
+                                         │                                        │ done
+                                         │ StopTimeout, or the procedure failed    ▼
+                                         ▼                                     Stopped (2)
+                                      Aborting (8)
+
+ any state but Aborted ──Abort──► Aborting (8) ──► Aborted (9) ──Clear──► Clearing (1) ──► Stopped (2)
+```
+
+| Command | Accepted only in | What happens |
+| --- | --- | --- |
+| Reset | Stopped | Resetting: runs the Resetting procedure (home, tare). Idle when it is done, Aborting if it fails |
+| Start | Idle | Starting, at once Execute. Only now may skills be started |
+| Stop | Resetting, Idle, Execute | Stopping: every skill a client started stops; when none runs any more (the count is 0) the Stopping procedure runs (home), then Stopped. If the skills still run after `StopTimeout`, or the procedure fails: Aborting |
+| Abort | every state but Aborted | Aborting, at once Aborted. Every skill aborts and every piece of equipment switches all off |
+| Clear | Aborted | Clearing, at once Stopped |
+
+Every command must come from the owner (otherwise `[FALSE, 5]`), and in a state where it is not
+allowed the answer is `[FALSE, 4]` (NotReady). The states named `Chk...` in its state machine
+check a command and answer it; a small variable (`Here`) remembers where the machine was, so that a
+refused command takes it back there.
+
+#### `MOD_StateIds` (simple)
+
+![MOD_StateIds](filling-program/type-MOD_StateIds.svg)
+
+Builds the nine addresses at start-up: the five methods `opc_ua[CREATE_METHOD;/Objects/Filling/Module/Reset]`
+and the others, `opc_ua[WRITE;/Objects/Filling/Module/State]`, and the channels `loc[Filling/state]`,
+`loc[Filling/state/query]` and `loc[Filling/activity]`.
+
+#### `MOD_ActivityCount` (simple): a tally counter at the door
+
+![MOD_ActivityCount](filling-program/type-MOD_ActivityCount.svg)
+
+Every skill says +1 on the activity channel when it starts and -1 when it ends. This block adds them
+up (`Active`, never below 0) and says `AllIdle` when the count is 0. Stopping waits for that.
+
+#### `MOD_StateView` (composite) and `MOD_StateLatch` (simple): the ear for the module state
+
+![MOD_StateView](filling-program/type-MOD_StateView.svg) ![MOD_StateLatch](filling-program/type-MOD_StateLatch.svg)
+
+Built exactly like `MOD_OwnerView` (section 7.4), for the module state: it listens on
+`loc[Filling/state]`, asks once on `loc[Filling/state/query]`, and gives `State` with `CHG`. Every
+skill has one (`Mode` in `SKILL_Core`: may it start, must it stop?) and every piece of equipment
+(`Mode` in `EQ_...`: everything off when the module aborts).
+
+![Inside MOD_StateView](filling-program/inside-MOD_StateView.svg)
+
+### 7.6 What every skill shares: `SKILL_Core`
+
+Think of the front desk of a workshop: it takes the customer's order, checks that the customer may
+order and that the workshop is open, says yes or no, keeps the status board up to date, and only
+then hands the job to the people who do the work. Every skill has one, whatever it does: each
+primitive as `Control` inside its `SK_` block, and each module level skill as its `Control` block.
+
+#### `SKILL_Core` (composite)
+
+![SKILL_Core](filling-program/type-SKILL_Core.svg)
+
+The inputs set once at start-up: `Module`, `UaRoot`, `UaPath` (the skill's folder below `UaRoot`,
+such as `/Skills/Dispensing`), `UaEnable`, `Methods` (offer Start, Stop, Abort and Reset over OPC UA:
+TRUE when the skill is offered on its own, FALSE for a step that its parent runs), `Holder` (the name
+the equipment is held under) and `ReleaseAll` (TRUE for a module level skill: give up everything held
+under `Holder` when a run ends).
+
+Its events, in plain words:
+
+| In | Means | Out | Means |
+| --- | --- | --- | --- |
+| `START_REQ` | A client called Start (the parameters are already checked) | `START_RSP` | The answer to the client |
+| `START`, `HALT`, `ABORT`, `RESET` | The same, from a parent (a step in a sequence): no session check | `RUN` | Go: the parameters are taken and the work starts |
+| `EXECUTE_DONE`, `EXECUTE_FAILED` | The work ended well, or failed (`ExecuteError`) | `HALT_SEQ`, `ABORT_SEQ`, `RESET_SEQ` | Stop, abort or reset the work |
+| `STOPPING_DONE` | The stop sequence ended | `RUN_STOPPING` | Run the stop sequence |
+| | | `SUCCESS`, `FAILURE` | Tell the parent how the run ended |
+
+![Inside SKILL_Core](filling-program/inside-SKILL_Core.svg)
 
 | Inside | Type | What it does |
 | --- | --- | --- |
-| `Control` | `SKILL_Control` | The skill's state machine: what Start, Stop, Abort and Reset do in each state; the checks of a client's command; the answer |
-| `Owner` | `MOD_OwnerView` | Knows the owner (from `loc[Filling/owner]`) |
-| `Mode` | `MOD_StateView` | Knows the module state: start only in Execute; stop when the module stops |
-| `UaStop`, `UaAbort`, `UaReset` | `SERVER_2_1` | The OPC UA methods Stop, Abort, Reset (the Start method is outside, because it carries the skill's own parameters) |
+| `Control` | `SKILL_Control` | The skill's state machine (below) |
+| `Owner` | `MOD_OwnerView` | Knows the owner (only the owner may command the skill over OPC UA) |
+| `Mode` | `MOD_StateView` | Knows the module state: start only in Execute; stop or abort with the module |
+| `UaStop`, `UaAbort`, `UaReset` | `SERVER_2_1` | The OPC UA methods Stop, Abort, Reset. The Start method is outside `SKILL_Core`, because its size follows the skill's parameters |
 | `PubState` | `PUBLISH_2` | Writes `State` and `ErrorID` |
-| `Act` | `PUBLISH_1` | Says +1 / -1 on the activity channel |
-| `ToIdle` | `E_DELAY` | Returns a succeeded skill to Idle after 1.5 s |
-| `PubRelease` | `PUBLISH_1` | Says on the release channel that the skill gives up its equipment, when a run ends |
+| `Act` | `PUBLISH_1` | Says +1 or -1 on the activity channel |
+| `ToIdle` | `E_DELAY` | Brings a succeeded skill back to Idle after 1.5 s |
+| `PubRelease` | `PUBLISH_1` | When a run ends, says on `loc[Filling/release]` that `Holder` gives up its equipment. Only switched on with `ReleaseAll` (a module level skill); a primitive gives its equipment up with its last command instead |
 
-### `SK_<Skill>` (composite): a skill primitive
+#### `SKILL_Control` (basic): the skill's state machine
 
-`SK_Home`, `SK_MoveAxis`, `SK_Dispense`, `SK_Tare`, `SK_Weigh`. All are built alike; `SK_Dispense`
-as the example:
+![SKILL_Control](filling-program/type-SKILL_Control.svg)
+
+```
+ Idle (0) ──Start──► Running (1) ──work done──► Succeeded (3) ──1.5 s later──► Idle (0)
+                        │    └──work failed──► Failed (4): stays so until the next Start
+                        │
+                        └──Stop──► Stopping (2): the work ends, the stop sequence runs ──► Failed (4), error 7
+
+ any state but Aborted ──Abort──► Aborted (5) ──Reset, or the module is cleared──► Idle (0)
+```
+
+A client's Start is checked in this order; the first that fails gives the answer:
+
+| Check | If it fails |
+| --- | --- |
+| The caller holds the occupation | `[FALSE, 5]` NotPermitted |
+| The module is in Execute | `[FALSE, 4]` NotReady |
+| The skill does not run (not Running or Stopping) | `[FALSE, 6]` Busy |
+| The skill is not Aborted | `[FALSE, 4]` NotReady (Reset it first) |
+| Every parameter is within its limits | `[FALSE, 8]` OutOfRange |
+| Its equipment is free, or held by this skill | `[FALSE, 6]` Busy |
+
+Stop is accepted only while Running, Abort in every state but Aborted, Reset only in Aborted; each
+only from the owner (5) and otherwise 4. A parent's `START` needs no checks (the parent was
+checked); from Aborted it fails at once with 4. The skill also follows the module: when the module
+aborts, the skill aborts; when the module is cleared or stopped, an aborted skill becomes Idle; and
+when the module stops, a skill a client started stops (a step is stopped by its parent instead).
+Every start says +1 on the activity channel and every end -1.
+
+### 7.7 Parameters and failures
+
+#### `SKILL_Param_LREAL` (and `_BOOL`, `_INT`, `_DINT`, `_UINT`): a door check with a memory
+
+![SKILL_Param_LREAL](filling-program/type-SKILL_Param_LREAL.svg)
+
+One block per parameter of a skill. Like a door check that compares a value with the allowed range
+and then remembers it for the whole run:
+
+- `INIT`: the value is the default (`Default`).
+- `CHECK`: is the value the client asks for (`Requested`) between `Lower` and `Upper`? `AllInRange`
+  is TRUE only if this one and all checked before it (`PreviousInRange`) are.
+- `LATCH`: take the value for this run. If a client started the skill (`CalledByClient`), its value;
+  if a parent did, `Default`. A step gets its value from its parent through `Default`: a constant
+  (`NeedleDown`'s Position 40) or a wire from the parent's own parameter (`Dispense`'s Volume).
+
+With several parameters the blocks are chained: `CHECKED → next CHECK`, `AllInRange → next
+PreviousInRange`, and the last one's `AllInRange` goes to `Control.ParamsInRange`; then `LATCHED →
+next LATCH`, and the last `LATCHED` publishes the values and starts the work. `_BOOL` has no limits.
+
+#### `SKILL_FailMerge` (simple): a funnel
+
+![SKILL_FailMerge](filling-program/type-SKILL_FailMerge.svg)
+
+Joins two failures into one: `FAIL_1` (with `Error1`) or `FAIL_2` (with `Error2`) gives `FAIL` with
+that error code. It is needed because a data input can take only one wire: four steps cannot all
+wire their `ErrorID` to one pin. In `Dispensing.Execute`, `Fail1` joins `NeedleDown` and
+`Dispense`, `Fail2` joins `Fail1` and `Home`, `Fail3` joins `Fail2` and `Weigh`; in `Resetting`,
+`Fail1` joins `Home` and `Tare`.
+
+#### `SKILL_Join2` to `SKILL_Join4`, `SKILL_Merge`, `SKILL_Condition_LREAL`, `SKILL_Condition_BOOL`: for later
+
+![SKILL_Join2](filling-program/type-SKILL_Join2.svg) ![SKILL_Merge](filling-program/type-SKILL_Merge.svg)
+![SKILL_Condition_LREAL](filling-program/type-SKILL_Condition_LREAL.svg)
+
+For skills whose steps run side by side or depend on a decision (rule set 2,
+[module-rules.md](module-rules.md), section 3). A `Join` waits until every branch is done (`DONE`);
+if one fails, it says `HALT` to the others and `FAILED` once all have ended. A `Condition` compares
+`Operand` with `Expected` (`Operator` `eq`, `ne`, `gt`, `gte`, `lt`, `lte`) and answers `YES` or
+`NO`. A `Merge` is where the two branches of a decision meet again. The filling program does not use
+them yet; the syringe's `BottomUpFilling` (`cell/eval/scenarios.py`) does.
+
+### 7.8 The IO blocks: one pin each
+
+Think of a travel plug adapter. The equipment block plugs into an IO block in the same way whether
+the pin is a GPIO line on the Pi, a register of the Modbus simulator on the PC, or only simulated.
+Only the address changes, so the same equipment type runs on every target.
+
+#### `IO_DI`, `IO_DO`, `IO_AI`, `IO_AO` (composite)
+
+![IO_DI](filling-program/type-IO_DI.svg) ![IO_DO](filling-program/type-IO_DO.svg)
+![IO_AI](filling-program/type-IO_AI.svg) ![IO_AO](filling-program/type-IO_AO.svg)
+
+`D` digital (TRUE or FALSE), `A` analog (a number), `I` input, `O` output. Each has `INIT` with
+`Address` (set up the pin) and `REQ` (read the pin, or write `OUT` to it); `QO` says whether the pin
+can be reached and the last access worked, and an input gives its value on `IN`. The extras:
+`IO_DI` and `IO_AI` have `SimValue` (the value when simulated), `IO_AI` has `Scale` (the value per
+raw count: the scale's 0.001 g), and `IO_AO` has `EN` (FALSE writes 0), `Gain` and `Bias`: it writes
+`Bias + OUT × Gain`, kept between 0 and 65535. The axis's `Step` has the gain 655.35, so 50 % becomes
+32 767, half of 65 535: the pin is on for half of each period.
+
+| Address | Meaning |
+| --- | --- |
+| `gpio[0:23:pull_up:active_low]` | Raspberry Pi GPIO chip 0, line 23, with the pull-up on, read inverted |
+| `gpio[0:17:active_low]` | Line 17 as an output, written inverted |
+| `pwm[0:2:500000:/hostsys/class/pwm]` | PWM chip 0, channel 2, period 500 000 ns (2 kHz), in the folder the container passes in |
+| `modbus[127.0.0.1:1502:1:10:d0:]` | A Modbus register of the simulator on the PC |
+| `sim` | Simulated: an input gives `SimValue`, an output goes nowhere |
+| another name | An IO point set up somewhere else in FORTE, read or written by that name |
+| empty | Not connected: `QO` is FALSE |
+
+![Inside IO_DO](filling-program/inside-IO_DO.svg)
 
 | Inside | Type | What it does |
 | --- | --- | --- |
-| `Control` | `SKILL_Core` | The state machine and the Stop/Abort/Reset methods (above) |
-| `UaStart` | `SERVER_2_3` | The OPC UA method `Start(Session, Volume, FlowRate)`; its size follows the number of parameters (`SERVER_2_1` for Home, which has none) |
-| `Par_Volume`, `Par_FlowRate` | `SKILL_Param_LREAL` | One per parameter: the default (the block's input of that name), the range check, the value held for the run |
-| `PubParams` | `PUBLISH_2` | Writes `Parameters/Volume` and `Parameters/FlowRate` |
-| `Logic` | `SL_Dispense` | What this skill does (below) |
-| `EqState`, `EqView` | `SUBSCRIBE_1`, `EV_Pump` | Hear the equipment's state channel and unpack it (inputs, holder) |
+| `Route` | `IO_RouteDO` (`IO_RouteDI`, `IO_RouteAI`, `IO_RouteAO`) | Reads the address and decides which way the value goes (below) |
+| `Line` | `GPIOChip` (in `IO_DI`, `IO_DO`), `PWMChip` (in `IO_AO`); `IO_AI` has none | Sets up the Pi line or PWM channel when the address names one |
+| `Local` | `QX` (`IX`, `IW`, `QW`) | Reads or writes the point by its name |
+| `Bus` | `CLIENT_1_0` (`CLIENT_0_1` for inputs) | Reads or writes the Modbus register |
+
+How it runs: at start-up `Route` reads the address and switches on only the part that is needed (the
+others get `QI` FALSE); then `Line`, `Local` and `Bus` are set up in turn and `Route` reports
+whether the pin is reachable (`INITO` with `QO`). On each `REQ`, `Route` passes the value to `Local`
+or `Bus`, or answers itself (simulated, or not connected), and `CNF` comes back.
+
+#### `IO_RouteDI`, `IO_RouteDO`, `IO_RouteAI`, `IO_RouteAO` (basic): the switchboard
+
+![IO_RouteDO](filling-program/type-IO_RouteDO.svg)
+
+Inside each IO block. At start-up it takes the address apart (`gpio[chip:line:...]`,
+`pwm[chip:channel:period:folder]`, `modbus[...]`, `sim`, a name, or empty) into the numbers the
+`Line` block needs, and remembers which way the pin is reached. Then it passes every value that way
+only. `IO_RouteAO` also turns `OUT` into the raw value with `Gain` and `Bias`, and `IO_RouteAI` the
+raw value into `IN` with `Scale`.
+
+## 8. The filling module's own blocks
+
+These types are made by the generator from the filling module's spec, `cell/modules/filling.yaml`,
+in the package `filling::`. They come in two families:
+
+- **a piece of equipment** gets four types: `EQ_<Item>`, `EL_<Item>`, `EV_<Item>`, `EC_<Item>`
+  (the axis, the pump, the scale: sections 8.1 to 8.4);
+- **a skill primitive** gets two: `SK_<Skill>` and `SL_<Skill>` (Home, MoveAxis, Dispense, Tare,
+  Weigh: sections 8.5 and 8.6).
+
+The module level skill (Dispensing) and the procedures (Resetting, Stopping) have no types of their
+own: they are subapplications of blocks of these types (section 8.7).
+
+### 8.1 Equipment: four types for each piece
+
+Think of a machine in a workshop with one operator:
+
+- `EQ_<Item>` is **the operator**: the only one who touches the machine's buttons (its output pins)
+  and reads its gauges (its input pins). It is the block you see in the application.
+- `EL_<Item>` is **the operator's rules**, inside the `EQ_` block: one customer at a time; let go of
+  a button before pressing another; everything off when the customer leaves or the alarm goes.
+- `EC_<Item>` is **the cheat sheet** the customer carries: "Up means: Enable on, Step at 50 %". It
+  sits inside every skill that uses the equipment, not in the equipment, so the equipment block only
+  ever hears "switch these outputs", whatever they mean.
+- `EV_<Item>` is **the report form**, also inside every skill that uses it: it unpacks what the
+  operator reports into values with names.
+
+How a skill and its equipment talk, here `MoveAxis` and the axis:
+
+```
+ SK_MoveAxis (the skill)                        EQ_LinearAxis (the equipment)
+ Logic (SL_MoveAxis): "move to 40 mm"
+   │ command 3, argument 40
+   ▼
+ Driver (EC_LinearAxis): the values to send
+   │ holder, release, Enable, Down, Step, ...
+   ▼
+ EqCmd ═════ loc[Filling/LinearAxis/cmd] ═════► SubCmd
+                                                  ▼
+                                                Logic (EL_LinearAxis): one holder, off before on
+                                                  ▼
+                                                Out_Enable, Out_Down, Out_Step ──► GPIO17, GPIO27, GPIO18
+                                                In_AtHome ◄── GPIO23
+                                                  ▼
+ EqState ◄══ loc[Filling/LinearAxis/state] ════ PubState: AtHome, ActualPosition, Homed, Moving, holder
+   ▼
+ EqView (EV_LinearAxis): the values by name
+   ▼
+ Logic: "not moving, and at 40 mm: done"
+```
+
+**Holding.** One skill at a time holds a piece of equipment, under a name (its `Holder`): `MoveAxis`
+when it runs on its own, `Dispensing` for every step of Dispensing, `Procedures/Resetting` for the
+steps of Resetting. The equipment takes commands only from its holder, or from anyone when it is
+free; it reports the holder on its state channel, so the other skills can see it is taken. It is
+free again when the holder's last command says so (`release`), when a module level skill says so on
+`loc[Filling/release]`, or when the module aborts.
+
+### 8.2 The linear axis: the needle's lift
+
+The hardware: a stepper motor behind a TB6600 driver, which needs three outputs (`Enable` on GPIO17,
+active low; `Down` on GPIO27; `Step`, pulses from PWM on GPIO18) and has one input, the limit switch
+at the top (`AtHome` on GPIO23). Each pulse is a small step: 160 pulses per mm, so at 2 kHz the
+needle moves 12.5 mm/s. There is no sensor for the position: the axis counts the time it moves.
+
+#### `EQ_LinearAxis` (composite)
+
+![EQ_LinearAxis](filling-program/type-EQ_LinearAxis.svg)
+
+Its inputs: `Module`, `Name` (`"LinearAxis"`: its channels and OPC UA folder), `UaRoot`, `UaEnable`,
+`CycleTime` (50 ms: how often the switch is read), and for each pin its address: `AtHome_Address`
+(with `AtHome_Sim`, its value when simulated), `Enable_Address`, `Down_Address`, `Step_Address`
+(with `Step_Gain` 655.35 and `Step_Bias` 0). In `Filling_pi` the addresses are the Pi's pins, in
+`Filling` the simulator's registers; that is the only difference between the two applications.
+
+![Inside EQ_LinearAxis](filling-program/inside-EQ_LinearAxis.svg)
+
+| Inside | Type | What it does |
+| --- | --- | --- |
+| `Logic` | `EL_LinearAxis` | The rules (below) |
+| `SubCmd` | `SUBSCRIBE_8` | Hears the commands on `loc[Filling/LinearAxis/cmd]`: holder, release, Enable, Down, Step, Step enabled, Move, Goal |
+| `SubRelease` | `SUBSCRIBE_1` | Hears `loc[Filling/release]` |
+| `Mode` | `MOD_StateView` | Knows the module state (all off when the module aborts) |
+| `Cycle` | `E_CYCLE` | Ticks every 50 ms: read the switch, write the outputs again |
+| `MoveT` | `E_DELAY` | Times a move to a position |
+| `In_AtHome` | `IO_DI` | The limit switch |
+| `Out_Enable`, `Out_Down` | `IO_DO` | The driver's enable and direction |
+| `Out_Step` | `IO_AO` | The step pulses: 50 % while it moves |
+| `PubState` | `PUBLISH_5` | Writes AtHome, ActualPosition, Homed, Moving and the holder on `loc[Filling/LinearAxis/state]` |
+| `PubUa` | `PUBLISH_4` | Writes the same four values (not the holder) to `Equipment/LinearAxis/...` over OPC UA |
+
+How it runs: every tick of `Cycle`, `In_AtHome` reads the switch and `Logic` gets the value
+(`SAMPLE`); `Logic` also writes its outputs again (`REFRESH`). When `Logic` switches outputs
+(`DRIVE`), the three output blocks write one after the other (`Out_Enable`, then `Out_Down`, then
+`Out_Step`) and the last one says `DRIVEN`.
+
+#### `EL_LinearAxis` (basic): the axis's rules
+
+![EL_LinearAxis](filling-program/type-EL_LinearAxis.svg)
+
+1. **One holder at a time.** A command is taken only when nobody holds the axis or its sender
+   already does. Any other is ignored; that skill sees the holder on the state channel and waits, or
+   fails with Busy.
+2. **Off before on** ("break before make"). For a new command the axis first switches off what the
+   new command does not want on, writes that, and only then switches the new values on. The motor
+   never gets a new direction while it is still being driven the old way. A command that arrives
+   while the outputs are being written waits its turn.
+3. **The position, by counting time.** While moving, `ActualPosition` is where the move began plus
+   12.5 mm/s times the time since. At the switch it is 0 and the axis is `Homed`. For a move to a
+   position (`MoveTo`, only when homed) it works out the direction and the time the move takes (the
+   distance divided by 12.5 mm/s), switches Enable, Down (when going down) and Step on, and starts
+   `MoveT`; when `MoveT` ends, the axis is at the goal and everything goes off. When a skill drives
+   the axis with plain `Up` or `Down` instead (Home uses `Up`), the axis cannot count, so it is no
+   longer `Homed` until it reaches the switch.
+4. **Everything off** when its holder gives it up and when the module aborts.
+5. **Reporting.** It sends its state when something changed, at least once a second, and every
+   0.2 s while it moves.
+
+The speed, 12.5 mm/s, is written into this type from the spec. Another speed means a regenerated
+type, not another value on the block: that is why the stoppering module has its own (section 9).
+
+#### `EC_LinearAxis` (basic): the axis's command table
+
+![EC_LinearAxis](filling-program/type-EC_LinearAxis.svg)
+
+| Number | Command | Outputs |
+| --- | --- | --- |
+| 0 | Stop | Everything off (the safe command, always the first) |
+| 1 | Up | Enable on, Step 50 % |
+| 2 | Down | Enable on, Down on, Step 50 % |
+| 3 | MoveTo | Move to the position given as the argument (the axis works out the direction itself) |
+
+`PLAY` (with `Holder`, `Command`, `Arg` and `Release`) plays a command; `OUT` gives the values to
+send. A command may have several timed phases: then the table asks for a timer (`PHASE_START`),
+plays the next phase when it ends (`PHASE_T`), and says `PLAYED` after the last. The axis's
+commands have one phase each. The release is sent only with the last phase.
+
+#### `EV_LinearAxis` (simple): the axis's report form
+
+![EV_LinearAxis](filling-program/type-EV_LinearAxis.svg)
+
+`REQ` with the values as they arrived on the state channel (`I_AtHome`, `I_ActualPosition`,
+`I_Homed`, `I_Moving`, `I_Holder`) gives them on `CNF` with their names (`AtHome`, ...).
+
+### 8.3 The pump
+
+No pump is wired yet, so the pump has no pins. It is there all the same, so that `Dispense` can hold
+it while it "dispenses" (by time).
+
+![EQ_Pump](filling-program/type-EQ_Pump.svg)
+
+![Inside EQ_Pump](filling-program/inside-EQ_Pump.svg)
+
+`EQ_Pump` has the same parts as the axis without the pins: `Logic` (`EL_Pump`), `SubCmd`
+(`SUBSCRIBE_2`: only the holder and the release), `SubRelease`, `Mode`, `Cycle` and `PubState`
+(`PUBLISH_1`: only the holder). It has no `PubUa`, because there is no input to show.
+
+![EL_Pump](filling-program/type-EL_Pump.svg) ![EC_Pump](filling-program/type-EC_Pump.svg)
+![EV_Pump](filling-program/type-EV_Pump.svg)
+
+`EL_Pump` only keeps the holder. `EC_Pump` has two commands, 0 `Idle` and 1 `Run`, with no outputs
+to switch. `EV_Pump` gives only `Holder`. When a pump is wired, its outputs are added to the spec
+(section 10 shows how) and the four types are generated again; the spec of `Dispense` stays as it is.
+
+### 8.4 The scale
+
+The hardware has no scale yet: its weight is simulated.
+
+![EQ_Scale](filling-program/type-EQ_Scale.svg)
+
+![Inside EQ_Scale](filling-program/inside-EQ_Scale.svg)
+
+`EQ_Scale` has one input, `Weight`, read by `In_Weight` (an `IO_AI`). In `Filling_pi` its address
+is `sim`, so it always gives `Weight_Sim`, 2.0 g; in `Filling` it reads the simulator's register
+times `Weight_Scale` (0.001 g per count). `PubState` (`PUBLISH_2`) sends Weight and the holder,
+`PubUa` (`PUBLISH_1`) writes `Equipment/Scale/Weight`.
+
+![EL_Scale](filling-program/type-EL_Scale.svg) ![EC_Scale](filling-program/type-EC_Scale.svg)
+![EV_Scale](filling-program/type-EV_Scale.svg)
+
+`EL_Scale` keeps the holder and reports the weight when it changes. `EC_Scale` has 0 `Idle`, 1
+`Tare` and 2 `Measure`, but the scale has no outputs: taring and measuring only hold the scale for a
+time (2 s and 0.2 s). Taring does not zero anything yet. `EV_Scale` gives `Weight` and `Holder`.
+
+### 8.5 A skill primitive: two types
+
+A primitive is **one command to one piece of equipment, until a sensor says it is done or a time has
+passed**. `SK_<Skill>` is the whole job (the front desk, the recipe, the line to the equipment);
+`SL_<Skill>` is the recipe itself.
+
+#### `SK_<Skill>` (composite), with `SK_Home` as the example
+
+![SK_Home](filling-program/type-SK_Home.svg)
+
+**The inputs of a primitive block** (what you set on a block of this type): `Module` (the module's
+name, for the channel names), `UaRoot` and `UaPath` (where its OPC UA variables go), `UaEnable`
+(publish them at all), `Methods` (offer Start, Stop, Abort and Reset over OPC UA: TRUE when it is
+offered on its own, FALSE as a step), `Holder` (the name it holds the equipment under),
+`ReleaseAfter` (give the equipment up when it ends: TRUE on its own, FALSE as a step, so the next
+step keeps it), `Timeout` (only a skill a sensor ends has one), and one input per parameter, whose
+value is the default. Its events are those a parent needs: `INIT`, `START` (with the parameters),
+`HALT`, `ABORT`, `RESET`; `SUCCESS` (with the results) and `FAILURE` (with `ErrorID`).
+
+![Inside SK_Home](filling-program/inside-SK_Home.svg)
+
+| Inside | Type | What it does |
+| --- | --- | --- |
+| `Control` | `SKILL_Core` | The front desk: checks a Start, the state machine, the methods Stop, Abort and Reset (section 7.6) |
+| `UaStart` | `SERVER_2_1` (`SERVER_2_<1 + parameters>`) | The OPC UA method `Start(Session, parameters)` |
+| `Par_<p>` | `SKILL_Param_...` | One per parameter (Home has none; MoveAxis has `Par_Position`) |
+| `PubParams` | `PUBLISH_<parameters>` | Writes `Parameters/...` (Home has none) |
+| `Logic` | `SL_Home` | The recipe (below) |
+| `EqState`, `EqView` | `SUBSCRIBE_n`, `EV_LinearAxis` | Hear the equipment's state channel and unpack it |
 | `WaitT` | `E_DELAY` | Waits up to 0.5 s for the equipment to become free |
-| `Driver` | `EC_Pump` | The equipment's command table: turns `Run` into output values |
+| `Driver` | `EC_LinearAxis` | The cheat sheet: turns `Logic`'s command number into output values |
 | `PhaseT` | `E_DELAY` | Times a command made of phases |
-| `EqCmd` | `PUBLISH_2` | Sends the holder and the output values on `loc[Filling/Pump/cmd]` |
-| `Timer` | `E_DELAY` | Ends a timed skill (here: after Volume / FlowRate) or fails a skill after its timeout |
+| `EqCmd` | `PUBLISH_n` | Sends the holder and the output values on `loc[Filling/LinearAxis/cmd]` |
+| `Timer` | `E_DELAY` | Ends a timed skill, or fails a skill after its timeout |
 | `PubResults` (only `SK_Weigh`) | `PUBLISH_1` | Writes `Results/Weight` |
 
-**The inputs of a primitive block** (what you set on an instance): `Module` (the module's name, for
-the channel names), `UaRoot` and `UaPath` (where its OPC UA variables go), `UaEnable` (publish them
-at all), `Methods` (offer Start/Stop/Abort/Reset over OPC UA: TRUE when offered on its own, FALSE as
-a step), `Holder` (the name it holds the equipment under), `ReleaseAfter` (give the equipment up when
-it ends: TRUE on its own, FALSE as a step), `Timeout` (for a skill a sensor ends), and one input per
-parameter, whose value is the default.
+A client's Start, step by step: the call arrives at `UaStart`; the parameter blocks check the values
+(Home has none, so `UaStart.IND` goes straight to `Control.START_REQ`); `Control` answers through
+`UaStart` and, when it accepts, fires `RUN`; the parameter blocks take the values for the run and
+start `Logic`. A parent's `START` goes to `Control.START` and from there the same way, with the
+defaults.
 
-### `SL_<Skill>` (basic): what a primitive does
+#### `SL_<Skill>` (basic): the recipe
 
-The heart of a primitive. Its state machine, the same pattern for every primitive:
+![SL_Home](filling-program/type-SL_Home.svg)
 
-1. **Start**: check the precondition (Reject with 1 PreconditionViolated if it does not hold); if
-   the end condition holds already, succeed at once without moving (AlreadyDone: Home when the needle
-   is at the switch).
-2. **Wait for the equipment**: if another holder has it, wait up to 0.5 s, then fail with 6 Busy.
-3. **Run**: send the command (with its argument), start the timer (the time it ends after, or its
-   timeout).
-4. **Watch**: on every new state of the equipment, check the end condition (a sensor:
-   `AtHome`; or "not moving and at the position"), the invariant (Unsafe: 2 InvariantViolated), and
-   that nobody took the equipment away (Lost).
-5. **End**: send the closing command (the equipment's safe command, or the skill's own `stop`
-   command), then report done, failed or halted.
+The same pattern for every primitive; only the conditions, the command and the time differ:
+
+```
+ START ──► Check ──precondition does not hold───────────────────────► FAILED, error 1
+             ├──another skill holds the equipment──► wait up to 0.5 s ──freed──► Check again
+             │                                                └──still held──► FAILED, error 6
+             ├──the end condition holds already─────────────────────► DONE at once (nothing moves)
+             └──else: send the command, start the Timer──────────────► Running
+
+ Running ──end condition holds (a sensor skill), or the Timer ends (a timed skill)──► Done
+         ──the Timer ends (a sensor skill: its timeout)─────────────────────────────► TimedOut, error 3
+         ──the invariant stops holding──────────────────────────────────────────────► Unsafe, error 2
+         ──another skill now holds the equipment───────────────────────────────────► FAILED, error 6
+         ──HALT─────────────────────────────────────────────────────────────────────► Halt, error 7
+         ──ABORT────────────────────────────────────────────────────────────────────► Abort
+
+ Done, TimedOut, Unsafe, Halt, Abort: send the closing command, wait until it is played,
+ then DONE, FAILED or HALTED (after Abort nothing: the parent aborted it)
+```
+
+The *precondition* must hold for the skill to start; the *end condition* (postcondition) says when
+it is done; the *invariant* must hold all the while it runs. The *closing command* is the
+equipment's safe command (all off) unless the spec gives another (`stop:`); it carries the release
+when `ReleaseAfter` is TRUE, and always after an abort. Every time the equipment's state arrives
+(`SAMPLE`), `Logic` also updates `EquipmentFree`, which `Control` checks before it accepts a Start.
+
+### 8.6 The five filling primitives
 
 | Primitive | Precondition | Command (equipment) | Ends when | Timeout | Parameters | Results |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -366,70 +1091,303 @@ The heart of a primitive. Its state machine, the same pattern for every primitiv
 | `Tare` | – | `Tare` (Scale) | after 2 s (time) | – | – | – |
 | `Weigh` | – | `Measure` (Scale) | after 0.2 s (time) | – | – | Weight (the scale's input) |
 
-### `EC_<Item>` (basic): the command table of a piece of equipment
+#### `SK_Home`, `SL_Home`: needle up to the switch
 
-Turns a command's name into the output values to switch. `EC_LinearAxis`: Stop = everything off;
-Up = Enable on, Step 50 %; Down = Enable on, Down on, Step 50 %; MoveTo = "move to the position in
-the argument" (the axis works out the direction itself). A command may have several timed phases
-(the stoppering piston's `Back`: Retract on for 3 s, then off). It sits in each skill, not in the
-equipment, so the equipment block stays the same whatever the outputs mean.
+The pictures are in section 8.5. It drives the axis `Up` until the limit switch closes; then the
+position is 0 and known (`Homed`). If the needle is at the switch already, it is done at once. If the
+switch never closes, the timeout (60 s) stops the motor and the skill fails with 3. It is used five
+times: on its own, as the first step of Resetting, as Stopping, as the third step of Dispensing, and
+as Dispensing's stop sequence.
 
-### `EV_<Item>` (basic): the equipment's state, unpacked
+#### `SK_MoveAxis`, `SL_MoveAxis`: needle to a position
 
-Turns what arrives on `loc[Filling/<Item>/state]` into named values for the skill's `Logic`
-(`AtHome`, `ActualPosition`, `Homed`, `Moving`, `Weight`, and who holds it).
+![SK_MoveAxis](filling-program/type-SK_MoveAxis.svg) ![SL_MoveAxis](filling-program/type-SL_MoveAxis.svg)
 
-### `EQ_<Item>` (composite): a piece of equipment
+![Inside SK_MoveAxis](filling-program/inside-SK_MoveAxis.svg)
 
-`EQ_LinearAxis` as the example:
+It needs the axis homed (otherwise it fails at once with 1, PreconditionViolated). It sends `MoveTo`
+with the position (0 to 60 mm, measured down from the switch); the axis itself times the move, and
+the skill only waits until the axis reports that it no longer moves and is within 0.001 mm of the
+position. Timeout 30 s. It has one parameter, so `UaStart` is a `SERVER_2_2`, with `Par_Position` and
+`PubParams` (`PUBLISH_1`). In Dispensing it is the step `NeedleDown`, with the constant Position 40.
 
-| Inside | Type | What it does |
+#### `SK_Dispense`, `SL_Dispense`: dispense a volume
+
+![SK_Dispense](filling-program/type-SK_Dispense.svg) ![SL_Dispense](filling-program/type-SL_Dispense.svg)
+
+![Inside SK_Dispense](filling-program/inside-SK_Dispense.svg)
+
+It holds the pump with `Run` for Volume / FlowRate seconds (2 mL at 1 mL/s: 2 s), then sends `Idle`.
+Two parameters, so `SERVER_2_3`, `Par_Volume` and `Par_FlowRate` (checked one after the other) and
+`PubParams` (`PUBLISH_2`). It has no timeout: the time ends it. In Dispensing, FlowRate is the
+constant 1.0 and Volume comes from Dispensing's own parameter.
+
+#### `SK_Tare`, `SL_Tare`: tare the scale
+
+![SK_Tare](filling-program/type-SK_Tare.svg) ![SL_Tare](filling-program/type-SL_Tare.svg)
+
+![Inside SK_Tare](filling-program/inside-SK_Tare.svg)
+
+It holds the scale with `Tare` for 2 s. No parameters, no results. The second step of Resetting.
+
+#### `SK_Weigh`, `SL_Weigh`: read the weight
+
+![SK_Weigh](filling-program/type-SK_Weigh.svg) ![SL_Weigh](filling-program/type-SL_Weigh.svg)
+
+![Inside SK_Weigh](filling-program/inside-SK_Weigh.svg)
+
+It holds the scale with `Measure` for 0.2 s; when it is done, `SL_Weigh` takes the weight the scale
+reported last as its result (`R_Weight`). `PubResults` writes it to `Results/Weight`, and the block's
+`SUCCESS` carries it to a parent: in Dispensing it becomes Dispensing's result.
+
+### 8.7 The subapplications: procedures and the module level skill
+
+#### `Resetting` and `Stopping`: the procedures
+
+![Inside Resetting](filling-program/app-Resetting.svg)
+
+`Resetting` is what the module does when it is reset: `START → Home.START`, `Home.SUCCESS →
+Tare.START`, `Tare.SUCCESS → DONE`. Either step's failure goes through `Fail1` to `FAILED`, with its
+error code on `ErrorID`. The state manager starts it (`Module.RUN_RESETTING`) and hears how it ended.
+Its steps have `Methods` FALSE (a client cannot start them; their State and ErrorID are still
+published, at `/Procedures/Resetting/Home` and `.../Tare`), the holder `Procedures/Resetting`, and
+`ReleaseAfter` TRUE.
+
+![Inside Stopping](filling-program/app-Stopping.svg)
+
+`Stopping` is one step, `Home`: after a stop, the needle goes back up to the switch.
+
+#### `Dispensing`: the module level skill
+
+![Inside Dispensing](filling-program/app-Dispensing.svg)
+
+| Block | Type | What it does here |
 | --- | --- | --- |
-| `Logic` | `EL_LinearAxis` | One holder at a time; switches the outputs off before switching new ones on; all off on release or when the module aborts; keeps the position (counting the time it moves); reports input changes |
-| `SubCmd` | `SUBSCRIBE_8` | Hears the commands on `loc[Filling/LinearAxis/cmd]` (holder, release, Enable, Down, Step, Step enabled, Move, Goal) |
-| `SubRelease` | `SUBSCRIBE_1` | Hears `loc[Filling/release]` |
-| `Mode` | `MOD_StateView` | Knows the module state (switches off on Aborting) |
-| `Cycle` | `E_CYCLE` | Ticks every cycle: read the inputs |
-| `MoveT` | `E_DELAY` | Times a move to a position |
-| `In_AtHome` | `IO_DI` | The limit switch (GPIO23) |
-| `Out_Enable`, `Out_Down` | `IO_DO` | The driver's enable (GPIO17) and direction (GPIO27) |
-| `Out_Step` | `IO_AO` | The step pulses (PWM channel on GPIO18): 50 % while moving |
-| `PubState` | `PUBLISH_5` | Writes AtHome, ActualPosition, Homed, Moving and the holder on `loc[Filling/LinearAxis/state]` |
-| `PubUa` | `PUBLISH_4` | Writes them to `Equipment/LinearAxis/...` over OPC UA |
+| `Control` | `SKILL_Core` | The front desk of Dispensing: `UaPath "/Skills/Dispensing"`, `Holder "Dispensing"`, `ReleaseAll` TRUE (when a run ends, every piece of equipment its steps held is released) |
+| `UaStart` | `SERVER_2_2` | The method `Skills/Dispensing/Start(Session, Volume)` |
+| `Volume` | `SKILL_Param_LREAL` | The parameter: default 1.0, limits 0.5 to 10 mL |
+| `PubParams` | `PUBLISH_1` | Writes `Skills/Dispensing/Parameters/Volume` |
+| `Execute` | subapplication | The steps (below) |
+| `Stop` | subapplication | What runs when Dispensing is stopped: `Home` |
+| `PubResults` | `PUBLISH_1` | Writes `Skills/Dispensing/Results/Weight` when Execute is done |
 
-Its inputs: `Module`, `Name`, `UaRoot`, `UaEnable`, `CycleTime`, and one `<Pin>_Address` per pin
-(see the IO blocks). `EQ_Pump` has no pins; `EQ_Scale` one input, `Weight`.
+The wiring, in words: the call goes `UaStart.IND → Volume.CHECK`, the check `Volume.CHECKED →
+Control.START_REQ`, the answer `Control.START_RSP → UaStart.RSP`. When accepted, `Control.RUN →
+Volume.LATCH`, and `Volume.LATCHED` both publishes the volume and starts `Execute`, with the volume
+on `Execute.Volume`. `Execute.DONE` tells `Control` and `PubResults`; `Execute.FAILED` with its
+`ErrorID` tells `Control`. When Dispensing is stopped, `Control.HALT_SEQ` halts `Execute`, then
+`Control.RUN_STOPPING` starts `Stop`, whose end comes back on `Control.STOPPING_DONE`.
 
-### `IO_DI`, `IO_DO`, `IO_AI`, `IO_AO` (composite): one pin
+![Inside Dispensing.Execute](filling-program/app-Dispensing.Execute.svg)
 
-The address says where the signal is, so the same equipment type runs on every target:
+`Execute` holds the four steps, each a block of a primitive type with `Methods` FALSE,
+`Holder "Dispensing"` and `ReleaseAfter` FALSE (the next step keeps the equipment):
+`NeedleDown` (`SK_MoveAxis`, Position 40), `Dispense` (`SK_Dispense`, FlowRate 1.0, Volume from
+`Execute.Volume`), `Home` (`SK_Home`) and `Weigh` (`SK_Weigh`, its `R_Weight` is `Execute.Weight`).
+The chain: `START → NeedleDown.START`, each step's `SUCCESS` to the next step's `START`, `Weigh.SUCCESS →
+DONE`. `HALT`, `ABORT` and `RESET` go to every step. `Fail1` to `Fail3` join the four steps' failures
+into one `FAILED` (section 7.7).
 
-| Address | Meaning |
+![Inside Dispensing.Stop](filling-program/app-Dispensing.Stop.svg)
+
+`Stop` holds one step, `Home`, with the holder `Dispensing`.
+
+## 9. What is different in the stoppering module
+
+The stoppering module (`cell/modules/stoppering.yaml`, the project `cell/control/StopperingModule`,
+the Pi 5 at 192.168.0.134) is built in the same way. Everything in section 7 is the same, block for
+block. What section 8 describes is generated again from the stoppering spec, in the package
+`stoppering::`: some types are like the filling ones, others are new.
+
+| | Filling | Stoppering |
+| --- | --- | --- |
+| Module name, OPC UA folder | `Filling`, `/Objects/Filling` | `Stoppering`, `/Objects/Stoppering` |
+| Equipment | `LinearAxis` (the needle), `Pump`, `Scale` | `LinearAxis` (the head), `Piston` |
+| The axis | 12.5 mm/s, PWM 2 kHz | 20 mm/s (assumed until measured), PWM 1 kHz |
+| Primitives | `Home` (60 s), `MoveAxis` (30 s), `Dispense`, `Tare`, `Weigh` | `Home` (8 s), `MoveAxis` (8 s), `PressStopper`, `RetractPiston` |
+| Module level skill | `Dispensing`: NeedleDown (40 mm), Dispense, Home, Weigh; parameter Volume, result Weight | `Stoppering`: HeadDown (40 mm), PressStopper, Home; no parameters, no results |
+| Resetting | Home, Tare | RetractPiston, Home (the piston in before the head moves) |
+| Stopping | Home | Home |
+
+![The application Stoppering_pi](filling-program/stoppering-app-Stoppering_pi.svg)
+
+### 9.1 The same name is not the same type
+
+Both modules have an `EL_LinearAxis`, but `filling::EL_LinearAxis` counts the position at 12.5 mm/s
+and `stoppering::EL_LinearAxis` at 20 mm/s: the speed is written into the type (section 8.2).
+`SK_Home` differs in its default timeout (60 s and 8 s). Because the packages differ, both can be
+built into one FORTE. So never copy a module's `EQ_`, `EL_`, `EV_`, `EC_`, `SK_` or `SL_` types into
+another module by hand: write the other module's spec and let the generator make its own.
+
+### 9.2 The piston instead of the pump and the scale
+
+The piston is a small linear actuator on an L298N motor driver: two outputs, `Retract` (GPIO 5, the
+driver's IN1) and `Extend` (GPIO 6, IN2), and no sensors.
+
+![EQ_Piston](filling-program/stoppering-type-EQ_Piston.svg)
+
+![Inside EQ_Piston](filling-program/stoppering-inside-EQ_Piston.svg)
+
+Compared with the filling equipment: two output blocks (`Out_Retract`, `Out_Extend`, both `IO_DO`);
+no input blocks and so no `PubUa`; `PubState` sends only the holder (`PUBLISH_1`); `SubCmd` is a
+`SUBSCRIBE_4` (holder, release, Retract, Extend); no position, so no `MoveT`.
+
+![EC_Piston](filling-program/stoppering-type-EC_Piston.svg)
+
+Its command table has the first command with **timed phases**: 0 `Stop`, 1 `Extend`, 2 `Retract`,
+and 3 `Back`, which is Retract on for 3 s and then everything off. The `Driver` in the skill plays
+the first phase, `PhaseT` waits 3 s, then it plays the second; the release goes with the last phase
+only. In the filling module every command has one phase, so `PhaseT` is never used there.
+
+### 9.3 Its primitives
+
+![SK_PressStopper](filling-program/stoppering-type-SK_PressStopper.svg)
+
+`PressStopper` extends the piston for 3 s and then closes with `Back` (its spec says `stop: Back`)
+instead of the safe command, also when it is stopped halfway: so it ends with the piston back in. An
+abort switches everything off at once; `RetractPiston` retracts the piston for 3 s afterwards (it is
+the first step of Resetting). Both are open loop: no sensor
+says where the piston is, only the time. `Home` and `MoveAxis` are the filling ones with the head's
+timeouts.
+
+## 10. A new piece of equipment with its pins, and a primitive that uses it
+
+### 10.1 The example: a stopper feeder
+
+Say the stoppering module gets a feeder: a small double-acting air cylinder that pushes the next
+rubber stopper under the head. It has two valve coils, `Advance` (out) and `Retract` (in), and a
+reed switch at its front end, `Advanced`, that closes when the cylinder is fully out. We want a
+primitive `FeedStopper`: push until the switch closes, and fail if that takes longer than 2 s.
+
+For the example the pins are GPIO 22 (Advance, Pi pin 15), GPIO 25 (Retract, pin 22) and GPIO 24
+(Advanced, pin 18), which the stoppering spec does not use yet (it uses 23, 17, 27, 18, 5 and 6), and
+the simulator's coils `c4`, `c5` and input `d1`. Check them against the real wiring first.
+
+### 10.2 What you write: two entries in the spec
+
+In `cell/modules/stoppering.yaml`, below the `Piston`, the equipment:
+
+```yaml
+  Feeder:
+    kind: StopperFeeder
+    description: Small air cylinder that pushes the next stopper under the head, with a switch at its front end
+    inputs:
+      Advanced: {modbus: d1, gpio: {line: 24, bias: pull_up, active_low: true}}   # pin 18, reed switch at the front
+    outputs:
+      Advance: {modbus: c4, gpio: 22}                              # pin 15, valve coil: out
+      Retract: {modbus: c5, gpio: 25}                              # pin 22, valve coil: in
+    commands:
+      Stop: {}
+      Advance: [Advance]
+      Retract: [Retract]
+    sim: {axis: {forward: Advance, backward: Retract, travel_s: 0.5, start: 0.0, switches: {Advanced: 1.0}}}
+```
+
+- `inputs` and `outputs`: one line per pin. `modbus` is the pin on the PC (the simulator's register),
+  `gpio` the pin on the Pi. A switch to ground needs the pull-up and reads inverted, as the axis's
+  limit switch. A number (a pressure, a speed) would be `type: LREAL` and become an `IO_AI` or
+  `IO_AO`.
+- `commands`: what a skill may ask for, by name, and the outputs each switches on. The first is the
+  safe one (everything off), used to close every skill.
+- `sim`: how the PC's simulator moves it: the cylinder goes out in 0.5 s while `Advance` is on, and
+  `Advanced` closes at the front.
+
+And under `skills:`, the primitive:
+
+```yaml
+  FeedStopper:
+    description: Push the next stopper under the head, until the cylinder's front switch closes
+    equipment: Feeder
+    command: Advance
+    postcondition: Advanced
+    timeout: 2s
+```
+
+`postcondition` makes it a skill a sensor ends (with a timeout); `after: 0.5` instead would make it
+a timed one. The other fields (parameters, precondition, invariant, results) are in
+[building-skills.md](building-skills.md), section 3.1.
+
+### 10.3 What the generator makes of it
+
+Run `python -m modgen`. It writes six new types into `cell/control/StopperingModule`, and puts two new
+blocks into both applications (`Stoppering` for the PC, `Stoppering_pi` for the Pi): `Feeder` comes
+after the other equipment in the start-up chain, `FeedStopper` after the other primitives.
+
+| New | What it is |
 | --- | --- |
-| `gpio[0:23:pull_up:active_low]` | Raspberry Pi GPIO chip 0, line 23, with the pull-up on, read inverted |
-| `gpio[0:17:active_low]` | line 17 as an output, written inverted |
-| `pwm[0:2:500000:/hostsys/class/pwm]` | PWM chip 0, channel 2, period 500 000 ns (2 kHz), in the folder the container passes in |
-| `modbus[...]` | a Modbus register (the PC target, with the simulator) |
-| `sim` | simulated (the scale) |
-| empty | not connected |
+| `EQ_Feeder` | The equipment block; in the application as `Feeder`, with `Advanced_Address 'gpio[0:24:pull_up:active_low]'`, `Advance_Address 'gpio[0:22]'`, `Retract_Address 'gpio[0:25]'` (in `Stoppering` the simulator's registers) |
+| `EL_Feeder` | Its rules: one holder, off before on, all off on release or abort, the switch reported when it changes |
+| `EV_Feeder` | Its report form: `Advanced`, `Holder` |
+| `EC_Feeder` | Its command table: 0 Stop, 1 Advance, 2 Retract |
+| `SK_FeedStopper` | The primitive; in the application as `FeedStopper`, with `UaPath "/Skills/FeedStopper"` and `Holder "FeedStopper"` |
+| `SL_FeedStopper` | Its recipe: no precondition; already done if `Advanced`; command 1 (Advance); done on `Advanced`; after 2 s TimedOut (3); closes with 0 (Stop: both coils off) |
 
-Inside: `Route` (`IO_Route...`) picks the way from the address; `Line` (`GPIOChip` or `PWMChip`)
-sets up a Pi line or PWM channel; `Local` (`IX`, `QX`, `IW`, `QW`) reads or writes it; `Bus`
-(`CLIENT`) reaches Modbus.
+These are the pictures of what it generated (drawn from a copy of the spec with the two entries
+above; the repository's spec does not have them):
 
-### The small blocks
+![EQ_Feeder](filling-program/example-type-EQ_Feeder.svg)
 
-| Type | What it does |
-| --- | --- |
-| `SKILL_Param_LREAL` (and `_BOOL`, `_INT`, `_DINT`, `_UINT`) | A parameter: its default, the range check of a client's value, the value held for the run |
-| `SKILL_FailMerge` | Joins two failures into one (a data input can take only one wire) |
-| `SKILL_Join2` to `4`, `SKILL_Merge`, `SKILL_Condition_LREAL` / `_BOOL` | For skills with steps side by side or decisions (rule set 2); the filling program does not use them yet |
-| `SERVER_2_n` | An OPC UA method: 2 answers (Accepted, ErrorID), n inputs (the session and the parameters) |
-| `PUBLISH_n`, `SUBSCRIBE_n` | Write or read n values: to OPC UA (`opc_ua[WRITE;...]`) or on a local channel (`loc[...]`) |
-| `E_DELAY` | A timer: an event after a time |
-| `E_CYCLE` | An event every cycle time |
+![Inside EQ_Feeder](filling-program/example-inside-EQ_Feeder.svg)
 
-## 7. Where the descriptions are in 4diac
+![SL_FeedStopper](filling-program/example-type-SL_FeedStopper.svg)
+
+![Inside SK_FeedStopper](filling-program/example-inside-SK_FeedStopper.svg)
+
+How the sizes inside follow from the spec, for any new equipment:
+
+| Part of `EQ_<Item>` | For the feeder | The rule |
+| --- | --- | --- |
+| `In_<input>` | `In_Advanced` (`IO_DI`) | One per input: `IO_DI` for a BOOL, `IO_AI` for an LREAL |
+| `Out_<output>` | `Out_Advance`, `Out_Retract` (`IO_DO`) | One per output: `IO_DO` for a BOOL, `IO_AO` for an LREAL (an analog value or PWM) |
+| Inputs of the block | `Advanced_Address`, `Advanced_Sim`, `Advance_Address`, `Retract_Address` | `<pin>_Address` per pin; `<input>_Sim` per input; `<input>_Scale` per LREAL input; `<output>_Gain` and `_Bias` per LREAL output |
+| `SubCmd` (and `EqCmd` in the skills) | `SUBSCRIBE_4` (`PUBLISH_4`): holder, release, Advance, Retract | 2, plus one per output, plus one per LREAL output (its "enabled"), plus two with a position (Move, Goal) |
+| `PubState` (and `EqState` in the skills) | `PUBLISH_2` (`SUBSCRIBE_2`): Advanced, holder | One per input, plus three with a position (ActualPosition, Homed, Moving), plus the holder |
+| `PubUa` | `PUBLISH_1`: `Equipment/Feeder/Advanced` | One per input (and the position values); none without inputs |
+| `MoveT` | none | Only with a `position:` in the spec |
+
+And for any new primitive: `UaStart` is `SERVER_2_<1 + parameters>`, there is one `Par_<p>` per
+parameter and a `PubParams` (`PUBLISH_<parameters>`) if it has any, a `PubResults` if it has results,
+and a `Timeout` input if a sensor ends it. `FeedStopper` has no parameters: `SERVER_2_1`, no `Par_`,
+no `PubParams`.
+
+### 10.4 Build, test, put it on the Pi
+
+New block types mean a new FORTE: FORTE can only create blocks of the types it was built with
+([building-skills.md](building-skills.md), section 1). The steps, in full in section 5 there:
+
+1. `python -m modgen`: generate (section 10.3). A layout you arranged in the IDE is kept; the new
+   blocks get a free place in their group.
+2. `runtime/build-modules.ps1`: the IDE exports the types as C++ and FORTE for Windows is built with
+   them.
+3. Test on the PC: `python cell/sim/run_module.py cell/modules/stoppering.yaml --opcua-port 4841
+   --mgmt-port 61500 --forte <the new forte.exe>` starts the simulator (which now moves the feeder),
+   FORTE and the PC application. Then, with an OPC UA client: `Occupation/Occupy("me")`,
+   `Module/Reset("me")`, `Module/Start("me")`, `Skills/FeedStopper/Start("me")`, and watch
+   `Skills/FeedStopper/State` go 1 Running, 3 Succeeded, 0 Idle, and `Equipment/Feeder/Advanced` go
+   TRUE.
+4. FORTE for the Pi: `runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate`, then
+   `runtime/package-runtime.ps1`; commit `runtime/bin/forte-aarch64` and its `.sha256`.
+5. On the Pi, with someone at the module (the program starts and may move the head):
+   `python deploy/pi.py install --spec cell/modules/stoppering.yaml`, then
+   `python deploy/pi.py module --spec cell/modules/stoppering.yaml`.
+6. Check that the module is what its spec says: `python -m modsync pull --spec
+   cell/modules/stoppering.yaml --target pi`.
+
+To use the feeder in the module's sequence, add it as a step, and a second primitive to pull it back
+(for example `RetractFeeder`: `command: Retract`, `after: 0.5`):
+`execute: [FeedStopper, {MoveAxis: {Position: 40.0}, as: HeadDown}, PressStopper, Home, RetractFeeder]`.
+A changed sequence alone needs no new FORTE ([building-skills.md](building-skills.md), section 2); a
+new primitive does.
+
+### 10.5 And by hand?
+
+You could build the six types in the IDE, but nothing that exists is a good copy: the piston has
+outputs and no input, the scale an input and no outputs, the axis has a position. You would have to
+write `EL_Feeder`'s rules, size every channel block as in the table above and keep every block's
+name, because the tools (`modsync`) find a module's parts by them. Use the spec and the generator;
+what is inside, if you need it, is in [building-skills.md](building-skills.md), section 4.2.
+
+## 11. Where the descriptions are in 4diac
 
 - **A block in a network**: its comment is drawn with it, and shown in *Properties > Comment*.
   It says the block's role in this program: where its OPC UA nodes are, which channels it uses, what
@@ -441,3 +1399,18 @@ sets up a Pi line or PWM channel; `Local` (`IX`, `QX`, `IW`, `QW`) reads or writ
 To change a description, change `iec61499-skill-lib/modgen/explain.py` (the plain words) or the
 spec (`cell/modules/filling.yaml`: an equipment's or a skill's `description`) and regenerate
 (`python -m modgen`). A comment typed in the IDE is lost at the next generation.
+
+## 12. Drawing the pictures again
+
+The pictures are drawn from the program's files, so they go out of date when the program is
+regenerated or its layout is changed in the IDE. From the repository's root:
+
+```powershell
+python docs/filling-program/draw_blocks.py
+```
+
+draws every `type-`, `inside-` and `app-` picture of the filling module again (and `legend.svg`).
+The `stoppering-` pictures come from
+`python docs/filling-program/draw_blocks.py --project cell/control/StopperingModule --app Stoppering_pi --out <folder>`,
+copied from there with the prefix; the `example-` pictures from a copy of the stoppering spec with
+the two entries of section 10.2, generated into a folder of its own and drawn the same way.

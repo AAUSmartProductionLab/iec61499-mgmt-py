@@ -1,0 +1,459 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2620" height="1556" viewBox="-60 880 13102 7780" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-60" y="880" width="13102" height="7780" fill="#ffffff"/>
+<rect x="1000" y="1000" width="4730" height="2680" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="1100" y="1140" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Core</text>
+<text x="1100" y="1305" font-size="52" text-anchor="start" fill="#6b7280">One holder at a time, break before make, all off on release or abort; scanned every CycleTime</text>
+<rect x="1000" y="3980" width="7890" height="2880" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="1100" y="4120" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Channels</text>
+<text x="1100" y="4285" font-size="52" text-anchor="start" fill="#6b7280">Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA</text>
+<rect x="9190" y="3980" width="3150" height="1380" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="9290" y="4120" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Inputs</text>
+<text x="9290" y="4285" font-size="52" text-anchor="start" fill="#6b7280">The equipment's sensors: read every cycle, one block per IO point</text>
+<rect x="1000" y="7160" width="5860" height="1380" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="1100" y="7300" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Outputs</text>
+<text x="1100" y="7465" font-size="52" text-anchor="start" fill="#6b7280">The equipment's actuators: written on a change and every cycle, one block per IO point</text>
+<text x="2450" y="1552" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Logic</text>
+<rect x="1950" y="2400" width="1000" height="1080" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1950" y="1580" width="1000" height="780" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1995" y="2330" width="910" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2450" y="2400" font-size="58" text-anchor="middle" fill="#1f2430">EL_Feeder</text>
+<polygon points="1960,1635 1992,1655 1960,1675" fill="#b5452b"/>
+<text x="2005" y="1675" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="1960,1735 1992,1755 1960,1775" fill="#b5452b"/>
+<text x="2005" y="1775" font-size="58" text-anchor="start" fill="#1f2430">CMD</text>
+<polygon points="1960,1835 1992,1855 1960,1875" fill="#b5452b"/>
+<text x="2005" y="1875" font-size="58" text-anchor="start" fill="#1f2430">RELEASE</text>
+<polygon points="1960,1935 1992,1955 1960,1975" fill="#b5452b"/>
+<text x="2005" y="1975" font-size="58" text-anchor="start" fill="#1f2430">SAMPLE</text>
+<polygon points="1960,2035 1992,2055 1960,2075" fill="#b5452b"/>
+<text x="2005" y="2075" font-size="58" text-anchor="start" fill="#1f2430">REFRESH</text>
+<polygon points="1960,2135 1992,2155 1960,2175" fill="#b5452b"/>
+<text x="2005" y="2175" font-size="58" text-anchor="start" fill="#1f2430">DRIVEN</text>
+<polygon points="1960,2235 1992,2255 1960,2275" fill="#b5452b"/>
+<text x="2005" y="2275" font-size="58" text-anchor="start" fill="#1f2430">MOD_CHG</text>
+<polygon points="2908,1635 2940,1655 2908,1675" fill="#b5452b"/>
+<text x="2895" y="1675" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="2908,1735 2940,1755 2908,1775" fill="#b5452b"/>
+<text x="2895" y="1775" font-size="58" text-anchor="end" fill="#1f2430">DRIVE</text>
+<polygon points="2908,1835 2940,1855 2908,1875" fill="#b5452b"/>
+<text x="2895" y="1875" font-size="58" text-anchor="end" fill="#1f2430">STATE</text>
+<rect x="1962" y="2464" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="2500" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="1962" y="2564" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="2600" font-size="58" text-anchor="start" fill="#1f2430">Name</text>
+<rect x="1962" y="2664" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="2700" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="1962" y="2764" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="2800" font-size="58" text-anchor="start" fill="#1f2430">C_Holder</text>
+<rect x="1962" y="2864" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2005" y="2900" font-size="58" text-anchor="start" fill="#1f2430">C_Release</text>
+<rect x="1962" y="2964" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2005" y="3000" font-size="58" text-anchor="start" fill="#1f2430">C_Advance</text>
+<rect x="1962" y="3064" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2005" y="3100" font-size="58" text-anchor="start" fill="#1f2430">C_Retract</text>
+<rect x="1962" y="3164" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="3200" font-size="58" text-anchor="start" fill="#1f2430">R_Holder</text>
+<rect x="1962" y="3264" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2005" y="3300" font-size="58" text-anchor="start" fill="#1f2430">I_Advanced</text>
+<rect x="1962" y="3364" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2005" y="3400" font-size="58" text-anchor="start" fill="#1f2430">ModuleState</text>
+<rect x="2906" y="2464" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2895" y="2500" font-size="58" text-anchor="end" fill="#1f2430">IdCmd</text>
+<rect x="2906" y="2564" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2895" y="2600" font-size="58" text-anchor="end" fill="#1f2430">IdRelease</text>
+<rect x="2906" y="2664" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2895" y="2700" font-size="58" text-anchor="end" fill="#1f2430">IdState</text>
+<rect x="2906" y="2764" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2895" y="2800" font-size="58" text-anchor="end" fill="#1f2430">IdPub</text>
+<rect x="2906" y="2864" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2895" y="2900" font-size="58" text-anchor="end" fill="#1f2430">O_Advance</text>
+<rect x="2906" y="2964" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2895" y="3000" font-size="58" text-anchor="end" fill="#1f2430">O_Retract</text>
+<rect x="2906" y="3064" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2895" y="3100" font-size="58" text-anchor="end" fill="#1f2430">Advanced</text>
+<rect x="2906" y="3164" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2895" y="3200" font-size="58" text-anchor="end" fill="#1f2430">Holder</text>
+<rect x="1757" y="1617" width="168" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1841" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">INIT</text>
+<rect x="2975" y="1617" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3126" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">Mode.INIT</text>
+<rect x="1596" y="1717" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1761" y="1772" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.IND</text>
+<rect x="1489" y="1817" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1707" y="1872" font-size="48" text-anchor="middle" fill="#6b7280">SubRelease.IND</text>
+<rect x="1650" y="2217" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1787" y="2272" font-size="48" text-anchor="middle" fill="#6b7280">Mode.CHG</text>
+<rect x="1650" y="2017" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1787" y="2072" font-size="48" text-anchor="middle" fill="#6b7280">Cycle.EO</text>
+<rect x="1462" y="1917" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1693" y="1972" font-size="48" text-anchor="middle" fill="#6b7280">In_Advanced.CNF</text>
+<rect x="2975" y="1817" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3032" y="1872" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="2975" y="1717" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3207" y="1772" font-size="48" text-anchor="middle" fill="#6b7280">Out_Advance.REQ</text>
+<rect x="1462" y="2117" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1693" y="2172" font-size="48" text-anchor="middle" fill="#6b7280">Out_Retract.CNF</text>
+<rect x="1704" y="2442" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1814" y="2497" font-size="48" text-anchor="middle" fill="#6b7280">Module</text>
+<rect x="1757" y="2542" width="168" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1841" y="2597" font-size="48" text-anchor="middle" fill="#6b7280">Name</text>
+<rect x="1704" y="2642" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1814" y="2697" font-size="48" text-anchor="middle" fill="#6b7280">UaRoot</text>
+<rect x="2975" y="2442" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3126" y="2497" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.ID</text>
+<rect x="2975" y="2542" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3180" y="2597" font-size="48" text-anchor="middle" fill="#6b7280">SubRelease.ID</text>
+<rect x="2975" y="2642" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3153" y="2697" font-size="48" text-anchor="middle" fill="#6b7280">PubState.ID</text>
+<rect x="2975" y="2742" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3113" y="2797" font-size="48" text-anchor="middle" fill="#6b7280">PubUa.ID</text>
+<rect x="1569" y="2742" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="2797" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_1</text>
+<rect x="1569" y="2842" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="2897" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_2</text>
+<rect x="1569" y="2942" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="2997" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_3</text>
+<rect x="1569" y="3042" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="3097" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.RD_4</text>
+<rect x="1462" y="3142" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1693" y="3197" font-size="48" text-anchor="middle" fill="#6b7280">SubRelease.RD_1</text>
+<rect x="1596" y="3342" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1761" y="3397" font-size="48" text-anchor="middle" fill="#6b7280">Mode.State</text>
+<rect x="1489" y="3242" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1707" y="3297" font-size="48" text-anchor="middle" fill="#6b7280">In_Advanced.IN</text>
+<rect x="2975" y="3042" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3032" y="3097" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="2975" y="3142" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3180" y="3197" font-size="48" text-anchor="middle" fill="#6b7280">PubState.SD_2</text>
+<rect x="2975" y="2842" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3207" y="2897" font-size="48" text-anchor="middle" fill="#6b7280">Out_Advance.OUT</text>
+<rect x="2975" y="2942" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3207" y="2997" font-size="48" text-anchor="middle" fill="#6b7280">Out_Retract.OUT</text>
+<text x="5055" y="1552" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Cycle</text>
+<rect x="4770" y="1900" width="570" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4770" y="1580" width="570" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4815" y="1830" width="480" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="5055" y="1900" font-size="58" text-anchor="middle" fill="#1f2430">E_CYCLE</text>
+<polygon points="4780,1635 4812,1655 4780,1675" fill="#b5452b"/>
+<text x="4825" y="1675" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="4780,1735 4812,1755 4780,1775" fill="#b5452b"/>
+<text x="4825" y="1775" font-size="58" text-anchor="start" fill="#1f2430">STOP</text>
+<polygon points="5298,1635 5330,1655 5298,1675" fill="#b5452b"/>
+<text x="5285" y="1675" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
+<rect x="4782" y="1964" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="4825" y="2000" font-size="58" text-anchor="start" fill="#1f2430">DT</text>
+<rect x="4228" y="1617" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4487" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">Out_Retract.INITO</text>
+<rect x="5365" y="1617" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5422" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="4443" y="1942" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4594" y="1997" font-size="48" text-anchor="middle" fill="#6b7280">CycleTime</text>
+<text x="2415" y="4532" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Mode</text>
+<rect x="1950" y="4880" width="930" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1950" y="4560" width="930" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1995" y="4810" width="840" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2415" y="4880" font-size="58" text-anchor="middle" fill="#1f2430">MOD_StateView</text>
+<polygon points="1960,4615 1992,4635 1960,4655" fill="#b5452b"/>
+<text x="2005" y="4655" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="2838,4615 2870,4635 2838,4655" fill="#b5452b"/>
+<text x="2825" y="4655" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="2838,4715 2870,4735 2838,4755" fill="#b5452b"/>
+<text x="2825" y="4755" font-size="58" text-anchor="end" fill="#1f2430">CHG</text>
+<rect x="1962" y="4944" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2005" y="4980" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="2836" y="4944" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2825" y="4980" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+<rect x="1569" y="4597" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="4652" font-size="48" text-anchor="middle" fill="#6b7280">Logic.INITO</text>
+<rect x="2905" y="4597" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3083" y="4652" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.INIT</text>
+<rect x="2905" y="4697" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3110" y="4752" font-size="48" text-anchor="middle" fill="#6b7280">Logic.MOD_CHG</text>
+<rect x="1704" y="4922" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1814" y="4977" font-size="48" text-anchor="middle" fill="#6b7280">Module</text>
+<rect x="2905" y="4922" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3163" y="4977" font-size="48" text-anchor="middle" fill="#6b7280">Logic.ModuleState</text>
+<text x="4905" y="4532" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">SubCmd</text>
+<rect x="4500" y="4880" width="810" height="680" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4500" y="4560" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4545" y="4810" width="720" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="4905" y="4880" font-size="58" text-anchor="middle" fill="#1f2430">SUBSCRIBE_4</text>
+<polygon points="4510,4615 4542,4635 4510,4655" fill="#b5452b"/>
+<text x="4555" y="4655" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="4510,4715 4542,4735 4510,4755" fill="#b5452b"/>
+<text x="4555" y="4755" font-size="58" text-anchor="start" fill="#1f2430">RSP</text>
+<polygon points="5268,4615 5300,4635 5268,4655" fill="#b5452b"/>
+<text x="5255" y="4655" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="5268,4715 5300,4735 5268,4755" fill="#b5452b"/>
+<text x="5255" y="4755" font-size="58" text-anchor="end" fill="#1f2430">IND</text>
+<rect x="4512" y="4944" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="4555" y="4980" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="4512" y="5044" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="4555" y="5080" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="5266" y="4944" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5255" y="4980" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="5266" y="5044" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5255" y="5080" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="5266" y="5144" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="5180" font-size="58" text-anchor="end" fill="#1f2430">RD_1</text>
+<rect x="5266" y="5244" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="5280" font-size="58" text-anchor="end" fill="#1f2430">RD_2</text>
+<rect x="5266" y="5344" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="5380" font-size="58" text-anchor="end" fill="#1f2430">RD_3</text>
+<rect x="5266" y="5444" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="5255" y="5480" font-size="58" text-anchor="end" fill="#1f2430">RD_4</text>
+<rect x="4146" y="4597" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4311" y="4652" font-size="48" text-anchor="middle" fill="#6b7280">Mode.INITO</text>
+<rect x="5335" y="4597" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5567" y="4652" font-size="48" text-anchor="middle" fill="#6b7280">SubRelease.INIT</text>
+<rect x="5335" y="4697" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5486" y="4752" font-size="48" text-anchor="middle" fill="#6b7280">Logic.CMD</text>
+<rect x="4119" y="5022" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4297" y="5077" font-size="48" text-anchor="middle" fill="#6b7280">Logic.IdCmd</text>
+<rect x="5335" y="5122" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5553" y="5177" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Holder</text>
+<rect x="5335" y="5222" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5567" y="5277" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Release</text>
+<rect x="5335" y="5322" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5567" y="5377" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Advance</text>
+<rect x="5335" y="5422" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5567" y="5477" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Retract</text>
+<text x="4470" y="4977" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="7575" y="4532" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">SubRelease</text>
+<rect x="7170" y="4880" width="810" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="7170" y="4560" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="7215" y="4810" width="720" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="7575" y="4880" font-size="58" text-anchor="middle" fill="#1f2430">SUBSCRIBE_1</text>
+<polygon points="7180,4615 7212,4635 7180,4655" fill="#b5452b"/>
+<text x="7225" y="4655" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="7180,4715 7212,4735 7180,4755" fill="#b5452b"/>
+<text x="7225" y="4755" font-size="58" text-anchor="start" fill="#1f2430">RSP</text>
+<polygon points="7938,4615 7970,4635 7938,4655" fill="#b5452b"/>
+<text x="7925" y="4655" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="7938,4715 7970,4735 7938,4755" fill="#b5452b"/>
+<text x="7925" y="4755" font-size="58" text-anchor="end" fill="#1f2430">IND</text>
+<rect x="7182" y="4944" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="7225" y="4980" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="7182" y="5044" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="7225" y="5080" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="7936" y="4944" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="7925" y="4980" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="7936" y="5044" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="7925" y="5080" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="7936" y="5144" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="7925" y="5180" font-size="58" text-anchor="end" fill="#1f2430">RD_1</text>
+<rect x="6762" y="4597" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6954" y="4652" font-size="48" text-anchor="middle" fill="#6b7280">SubCmd.INITO</text>
+<rect x="8005" y="4597" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8210" y="4652" font-size="48" text-anchor="middle" fill="#6b7280">PubState.INIT</text>
+<rect x="8005" y="4697" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8210" y="4752" font-size="48" text-anchor="middle" fill="#6b7280">Logic.RELEASE</text>
+<rect x="6682" y="5022" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6913" y="5077" font-size="48" text-anchor="middle" fill="#6b7280">Logic.IdRelease</text>
+<rect x="8005" y="5122" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8223" y="5177" font-size="48" text-anchor="middle" fill="#6b7280">Logic.R_Holder</text>
+<text x="7140" y="4977" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="2335" y="5832" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">PubState</text>
+<rect x="1990" y="6180" width="690" height="480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1990" y="5860" width="690" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2035" y="6110" width="600" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2335" y="6180" font-size="58" text-anchor="middle" fill="#1f2430">PUBLISH_2</text>
+<polygon points="2000,5915 2032,5935 2000,5955" fill="#b5452b"/>
+<text x="2045" y="5955" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="2000,6015 2032,6035 2000,6055" fill="#b5452b"/>
+<text x="2045" y="6055" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="2638,5915 2670,5935 2638,5955" fill="#b5452b"/>
+<text x="2625" y="5955" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="2638,6015 2670,6035 2638,6055" fill="#b5452b"/>
+<text x="2625" y="6055" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="2002" y="6244" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2045" y="6280" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="2002" y="6344" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2045" y="6380" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="2002" y="6444" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="2045" y="6480" font-size="58" text-anchor="start" fill="#1f2430">SD_1</text>
+<rect x="2002" y="6544" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="2045" y="6580" font-size="58" text-anchor="start" fill="#1f2430">SD_2</text>
+<rect x="2636" y="6244" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2625" y="6280" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="2636" y="6344" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2625" y="6380" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="1475" y="5897" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1720" y="5952" font-size="48" text-anchor="middle" fill="#6b7280">SubRelease.INITO</text>
+<rect x="2705" y="5897" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2869" y="5952" font-size="48" text-anchor="middle" fill="#6b7280">PubUa.INIT</text>
+<rect x="1609" y="5997" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1787" y="6052" font-size="48" text-anchor="middle" fill="#6b7280">Logic.STATE</text>
+<rect x="1556" y="6322" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1760" y="6377" font-size="48" text-anchor="middle" fill="#6b7280">Logic.IdState</text>
+<rect x="1529" y="6422" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1747" y="6477" font-size="48" text-anchor="middle" fill="#6b7280">Logic.Advanced</text>
+<rect x="1582" y="6522" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1774" y="6577" font-size="48" text-anchor="middle" fill="#6b7280">Logic.Holder</text>
+<text x="1960" y="6277" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<text x="5085" y="5832" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">PubUa</text>
+<rect x="4740" y="6180" width="690" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4740" y="5860" width="690" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4785" y="6110" width="600" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="5085" y="6180" font-size="58" text-anchor="middle" fill="#1f2430">PUBLISH_1</text>
+<polygon points="4750,5915 4782,5935 4750,5955" fill="#b5452b"/>
+<text x="4795" y="5955" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="4750,6015 4782,6035 4750,6055" fill="#b5452b"/>
+<text x="4795" y="6055" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="5388,5915 5420,5935 5388,5955" fill="#b5452b"/>
+<text x="5375" y="5955" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="5388,6015 5420,6035 5388,6055" fill="#b5452b"/>
+<text x="5375" y="6055" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="4752" y="6244" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="4795" y="6280" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="4752" y="6344" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="4795" y="6380" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="4752" y="6444" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="4795" y="6480" font-size="58" text-anchor="start" fill="#1f2430">SD_1</text>
+<rect x="5386" y="6244" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5375" y="6280" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="5386" y="6344" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5375" y="6380" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="4279" y="5897" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4497" y="5952" font-size="48" text-anchor="middle" fill="#6b7280">PubState.INITO</text>
+<rect x="5455" y="5897" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5700" y="5952" font-size="48" text-anchor="middle" fill="#6b7280">In_Advanced.INIT</text>
+<rect x="4359" y="5997" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4537" y="6052" font-size="48" text-anchor="middle" fill="#6b7280">Logic.STATE</text>
+<rect x="4359" y="6322" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4537" y="6377" font-size="48" text-anchor="middle" fill="#6b7280">Logic.IdPub</text>
+<rect x="4440" y="6222" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4577" y="6277" font-size="48" text-anchor="middle" fill="#6b7280">UaEnable</text>
+<rect x="4279" y="6422" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4497" y="6477" font-size="48" text-anchor="middle" fill="#6b7280">Logic.Advanced</text>
+<text x="10945" y="4532" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">In_Advanced</text>
+<rect x="10540" y="4880" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="10540" y="4560" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="10585" y="4810" width="720" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="10945" y="4880" font-size="58" text-anchor="middle" fill="#1f2430">IO_DI</text>
+<polygon points="10550,4615 10582,4635 10550,4655" fill="#b5452b"/>
+<text x="10595" y="4655" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="10550,4715 10582,4735 10550,4755" fill="#b5452b"/>
+<text x="10595" y="4755" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="11308,4615 11340,4635 11308,4655" fill="#b5452b"/>
+<text x="11295" y="4655" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="11308,4715 11340,4735 11308,4755" fill="#b5452b"/>
+<text x="11295" y="4755" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="10552" y="4944" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="10595" y="4980" font-size="58" text-anchor="start" fill="#1f2430">Address</text>
+<rect x="10552" y="5044" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="10595" y="5080" font-size="58" text-anchor="start" fill="#1f2430">SimValue</text>
+<rect x="11306" y="4944" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="11295" y="4980" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="11306" y="5044" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="11295" y="5080" font-size="58" text-anchor="end" fill="#1f2430">IN</text>
+<rect x="10159" y="4597" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10337" y="4652" font-size="48" text-anchor="middle" fill="#6b7280">PubUa.INITO</text>
+<rect x="11375" y="4597" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="11620" y="4652" font-size="48" text-anchor="middle" fill="#6b7280">Out_Advance.INIT</text>
+<rect x="10240" y="4697" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10377" y="4752" font-size="48" text-anchor="middle" fill="#6b7280">Cycle.EO</text>
+<rect x="11375" y="4697" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="11566" y="4752" font-size="48" text-anchor="middle" fill="#6b7280">Logic.SAMPLE</text>
+<rect x="10025" y="4922" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10270" y="4977" font-size="48" text-anchor="middle" fill="#6b7280">Advanced_Address</text>
+<rect x="10132" y="5022" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10324" y="5077" font-size="48" text-anchor="middle" fill="#6b7280">Advanced_Sim</text>
+<rect x="11375" y="5022" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="11620" y="5077" font-size="48" text-anchor="middle" fill="#6b7280">Logic.I_Advanced</text>
+<text x="2715" y="7712" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Out_Advance</text>
+<rect x="2310" y="8060" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2310" y="7740" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2355" y="7990" width="720" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2715" y="8060" font-size="58" text-anchor="middle" fill="#1f2430">IO_DO</text>
+<polygon points="2320,7795 2352,7815 2320,7835" fill="#b5452b"/>
+<text x="2365" y="7835" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="2320,7895 2352,7915 2320,7935" fill="#b5452b"/>
+<text x="2365" y="7935" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="3078,7795 3110,7815 3078,7835" fill="#b5452b"/>
+<text x="3065" y="7835" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="3078,7895 3110,7915 3078,7935" fill="#b5452b"/>
+<text x="3065" y="7935" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="2322" y="8124" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2365" y="8160" font-size="58" text-anchor="start" fill="#1f2430">Address</text>
+<rect x="2322" y="8224" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2365" y="8260" font-size="58" text-anchor="start" fill="#1f2430">OUT</text>
+<rect x="3076" y="8124" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="3065" y="8160" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="1768" y="7777" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2027" y="7832" font-size="48" text-anchor="middle" fill="#6b7280">In_Advanced.INITO</text>
+<rect x="3145" y="7777" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3390" y="7832" font-size="48" text-anchor="middle" fill="#6b7280">Out_Retract.INIT</text>
+<rect x="1929" y="7877" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2107" y="7932" font-size="48" text-anchor="middle" fill="#6b7280">Logic.DRIVE</text>
+<rect x="3145" y="7877" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3377" y="7932" font-size="48" text-anchor="middle" fill="#6b7280">Out_Retract.REQ</text>
+<rect x="1822" y="8102" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2053" y="8157" font-size="48" text-anchor="middle" fill="#6b7280">Advance_Address</text>
+<rect x="1822" y="8202" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2053" y="8257" font-size="48" text-anchor="middle" fill="#6b7280">Logic.O_Advance</text>
+<text x="5625" y="7712" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Out_Retract</text>
+<rect x="5220" y="8060" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="5220" y="7740" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="5265" y="7990" width="720" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="5625" y="8060" font-size="58" text-anchor="middle" fill="#1f2430">IO_DO</text>
+<polygon points="5230,7795 5262,7815 5230,7835" fill="#b5452b"/>
+<text x="5275" y="7835" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="5230,7895 5262,7915 5230,7935" fill="#b5452b"/>
+<text x="5275" y="7935" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="5988,7795 6020,7815 5988,7835" fill="#b5452b"/>
+<text x="5975" y="7835" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="5988,7895 6020,7915 5988,7935" fill="#b5452b"/>
+<text x="5975" y="7935" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="5232" y="8124" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5275" y="8160" font-size="58" text-anchor="start" fill="#1f2430">Address</text>
+<rect x="5232" y="8224" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5275" y="8260" font-size="58" text-anchor="start" fill="#1f2430">OUT</text>
+<rect x="5986" y="8124" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5975" y="8160" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="4678" y="7777" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4937" y="7832" font-size="48" text-anchor="middle" fill="#6b7280">Out_Advance.INITO</text>
+<rect x="6055" y="7777" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6112" y="7832" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
+<rect x="4732" y="7877" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4963" y="7932" font-size="48" text-anchor="middle" fill="#6b7280">Out_Advance.CNF</text>
+<rect x="6055" y="7877" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6246" y="7932" font-size="48" text-anchor="middle" fill="#6b7280">Logic.DRIVEN</text>
+<rect x="4732" y="8102" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4963" y="8157" font-size="48" text-anchor="middle" fill="#6b7280">Retract_Address</text>
+<rect x="4732" y="8202" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4963" y="8257" font-size="48" text-anchor="middle" fill="#6b7280">Logic.O_Retract</text>
+<rect x="60" y="1000" width="640" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="80,1020 110,1040 80,1060" fill="#b5452b"/>
+<text x="125" y="1060" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<rect x="60" y="1160" width="640" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="80" y="1184" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="125" y="1220" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="60" y="1260" width="640" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="80" y="1284" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="125" y="1320" font-size="58" text-anchor="start" fill="#1f2430">Name</text>
+<rect x="60" y="1360" width="640" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="80" y="1384" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="125" y="1420" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="60" y="1460" width="640" height="80" rx="12" fill="#ffffff" stroke="#2e8540" stroke-width="5"/>
+<rect x="80" y="1484" width="30" height="30" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="125" y="1520" font-size="58" text-anchor="start" fill="#1f2430">UaEnable</text>
+<rect x="60" y="1560" width="640" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
+<rect x="80" y="1584" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="125" y="1620" font-size="58" text-anchor="start" fill="#1f2430">CycleTime</text>
+<rect x="60" y="1660" width="640" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="80" y="1684" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="125" y="1720" font-size="58" text-anchor="start" fill="#1f2430">Advanced_Address</text>
+<rect x="60" y="1760" width="640" height="80" rx="12" fill="#ffffff" stroke="#2e8540" stroke-width="5"/>
+<rect x="80" y="1784" width="30" height="30" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="125" y="1820" font-size="58" text-anchor="start" fill="#1f2430">Advanced_Sim</text>
+<rect x="60" y="1860" width="640" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="80" y="1884" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="125" y="1920" font-size="58" text-anchor="start" fill="#1f2430">Advance_Address</text>
+<rect x="60" y="1960" width="640" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="80" y="1984" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="125" y="2020" font-size="58" text-anchor="start" fill="#1f2430">Retract_Address</text>
+<rect x="12640" y="1000" width="282" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="12872,1020 12902,1040 12872,1060" fill="#b5452b"/>
+<text x="12857" y="1060" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+</svg>
