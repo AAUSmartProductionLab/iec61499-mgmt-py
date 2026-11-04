@@ -87,9 +87,14 @@ def keep_layout(root, path) -> set[int]:
         attr = node.find("Attribute[@Name='GroupName']")
         return attr.get("Value") if attr is not None else None
 
+    from . import ecc
+    for new_ecc in root.iter("ECC"):          # a state machine is kept as a whole, or laid out anew
+        ecc.keep(new_ecc, old.find(".//ECC"))
     before = placed(old)
     kept = set()
     for key, node in placed(root).items():
+        if key[0] == "ECState":
+            continue
         # A block's position is relative to its group: only kept while it stays in that group.
         if key in before and group(before[key]) == group(node):
             # A group keeps the size it was given too: its blocks keep their places in it.
@@ -408,8 +413,7 @@ class Basic(FB):
 
     def state(self, name, code=None, output=None, extra=()):
         """Add an ECC state with an optional algorithm and output events."""
-        n = len(self.ecc)
-        state = elem(self.ecc, "ECState", Name=name, x=150 + (n % 4) * 420, y=100 + (n // 4) * 230)
+        state = elem(self.ecc, "ECState", Name=name)
         outputs = ([output] if output else []) + list(extra)
         if code is not None:
             self.algorithms[name] = code
@@ -425,9 +429,12 @@ class Basic(FB):
         self.transitions.append((source, target, condition))
 
     def write(self):
-        """Emit transitions and algorithms, then write the file."""
+        """Emit transitions and algorithms, lay the state machine out, then write the file."""
+        from .ecc import condition as written, lay_out
+        events = {e.get("Name") for e in self.root.iterfind("InterfaceList/EventInputs/Event")}
         for source, target, condition in self.transitions:
-            elem(self.ecc, "ECTransition", Source=source, Destination=target, Condition=condition, x=0, y=0)
+            elem(self.ecc, "ECTransition", Source=source, Destination=target, Condition=written(condition, events))
+        lay_out(self.ecc)
         for name, code in self.algorithms.items():
             alg = elem(self.body, "Algorithm", Name="Alg_" + name)
             elem(alg, "ST").text = code  # element text, as the IDE writes it

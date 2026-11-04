@@ -278,6 +278,27 @@ def test_a_module_level_skill_gives_up_all_it_holds_when_a_run_ends():
     assert 'IdRelease := CONCAT(CONCAT("loc[", Module), "/release]");' in logic
 
 
+@pytest.mark.parametrize("project", [LIBRARY_PROJECT, *(load(p).project for p in ALL)])
+def test_every_state_machine_is_laid_out_as_the_ide_draws_it(project):
+    """No two states of an ECC on each other, every condition between its states (none left at 0,0,
+    where the IDE would draw every transition through one point), and a guard without an event in
+    brackets, as the IDE writes it (so opening a type in the IDE changes nothing)."""
+    from modgen.ecc import state_size
+    for path in (project_dir(project) / "Type Library").rglob("*.fbt"):
+        ecc = ET.parse(path).getroot().find("BasicFB/ECC")
+        if ecc is None or "Std" in path.parts:
+            continue
+        boxes = [(float(s.get("x")), float(s.get("y")), *state_size(s)) for s in ecc.findall("ECState")]
+        for i, (x, y, w, h) in enumerate(boxes):
+            for x2, y2, w2, h2 in boxes[i + 1:]:
+                assert x + w <= x2 or x2 + w2 <= x or y + h <= y2 or y2 + h2 <= y, path.name
+        events = {e.get("Name") for e in ET.parse(path).getroot().iterfind("InterfaceList/EventInputs/Event")}
+        for t in ecc.findall("ECTransition"):
+            assert (t.get("x"), t.get("y")) != ("0", "0"), (path.name, t.get("Source"), t.get("Destination"))
+            cond = t.get("Condition")
+            assert cond == "1" or cond.startswith("[") or cond.split("[")[0] in events, (path.name, cond)
+
+
 def test_skill_logic_carries_contract_range_and_lock():
     root, code = st("FillerModule", "Skills/Logic", "SL_MoveNeedleDown")
     conditions = {t.get("Condition") for t in root.iter("ECTransition")}
@@ -377,7 +398,7 @@ def test_an_axis_with_a_position_moves_itself_to_where_it_is_told():
     assert "ELSIF AtHome THEN\n  ActualPosition := 0.0;\n  Homed := TRUE;" in code       # the reference
     transitions = {(x.get("Source"), x.get("Destination"), x.get("Condition")) for x in logic.iter("ECTransition")}
     assert ("START", "MoveEnd", "MOVE_T[Moving AND NOT MoveStart]") in transitions
-    assert ("Settled", "MoveGo", "MoveStart") in transitions                              # timed from when the outputs are on
+    assert ("Settled", "MoveGo", "[MoveStart]") in transitions                            # timed from when the outputs are on
     eq, _ = st("FillingModule", "Equipment", "EQ_LinearAxis")
     blocks = {fb.get("Name"): fb.get("Type") for fb in eq.iter("FB")}
     assert blocks["MoveT"] == "iec61499::events::E_DELAY" and "In_AtHome" in blocks

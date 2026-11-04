@@ -27,21 +27,21 @@
       <VarDeclaration Name="Holds" Type="BOOL" />
     </InternalVars>
     <ECC>
-      <ECState Name="START" x="150" y="100" />
-      <ECState Name="Eval" x="570" y="100">
+      <ECState Name="START" x="612" y="0" />
+      <ECState Name="Eval" x="405" y="1260">
         <ECAction Algorithm="Alg_Eval" />
       </ECState>
-      <ECState Name="Yes" x="990" y="100">
+      <ECState Name="Yes" x="0" y="2520">
         <ECAction Output="YES" />
       </ECState>
-      <ECState Name="No" x="1410" y="100">
+      <ECState Name="No" x="1170" y="2520">
         <ECAction Output="NO" />
       </ECState>
-      <ECTransition Source="START" Destination="Eval" Condition="EVAL" x="0" y="0" />
-      <ECTransition Source="Eval" Destination="Yes" Condition="Holds" x="0" y="0" />
-      <ECTransition Source="Eval" Destination="No" Condition="1" x="0" y="0" />
-      <ECTransition Source="Yes" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="No" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Eval" Condition="EVAL" x="775" y="710" />
+      <ECTransition Source="Eval" Destination="Yes" Condition="[Holds]" x="505" y="1970" />
+      <ECTransition Source="Eval" Destination="No" Condition="1" x="1068" y="1970" />
+      <ECTransition Source="Yes" Destination="START" Condition="1" x="1905" y="1340" />
+      <ECTransition Source="No" Destination="START" Condition="1" x="-333" y="1340" />
     </ECC>
     <Algorithm Name="Alg_Eval">
       <ST>Holds := ((Operator = 'eq') AND (Operand = Expected)) OR ((Operator = 'ne') AND (Operand &lt;&gt; Expected)) OR ((Operator = 'gt') AND (Operand &gt; Expected)) OR ((Operator = 'gte') AND (Operand &gt;= Expected)) OR ((Operator = 'lt') AND (Operand &lt; Expected)) OR ((Operator = 'lte') AND (Operand &lt;= Expected));</ST>

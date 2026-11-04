@@ -40,30 +40,30 @@
       <VarDeclaration Name="Timed" Type="BOOL" />
     </InternalVars>
     <ECC>
-      <ECState Name="START" x="150" y="100" />
-      <ECState Name="Play" x="570" y="100">
+      <ECState Name="START" x="1202" y="0" />
+      <ECState Name="Play" x="0" y="1260">
         <ECAction Algorithm="Alg_Play" Output="PHASE_STOP" />
       </ECState>
-      <ECState Name="Next" x="990" y="100">
+      <ECState Name="Next" x="1990" y="1260">
         <ECAction Algorithm="Alg_Next" />
       </ECState>
-      <ECState Name="Send" x="1410" y="100">
+      <ECState Name="Send" x="878" y="2520">
         <ECAction Algorithm="Alg_Send" Output="OUT" />
       </ECState>
-      <ECState Name="Hold" x="150" y="330">
+      <ECState Name="Hold" x="208" y="3780">
         <ECAction Output="PHASE_START" />
       </ECState>
-      <ECState Name="Played" x="570" y="330">
+      <ECState Name="Played" x="1782" y="3780">
         <ECAction Output="PLAYED" />
       </ECState>
-      <ECTransition Source="START" Destination="Play" Condition="PLAY" x="0" y="0" />
-      <ECTransition Source="START" Destination="Next" Condition="PHASE_T" x="0" y="0" />
-      <ECTransition Source="Play" Destination="Send" Condition="1" x="0" y="0" />
-      <ECTransition Source="Next" Destination="Send" Condition="1" x="0" y="0" />
-      <ECTransition Source="Send" Destination="Hold" Condition="Timed" x="0" y="0" />
-      <ECTransition Source="Send" Destination="Played" Condition="1" x="0" y="0" />
-      <ECTransition Source="Hold" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="Played" Destination="START" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Play" Condition="PLAY" x="1005" y="710" />
+      <ECTransition Source="START" Destination="Next" Condition="PHASE_T" x="1862" y="710" />
+      <ECTransition Source="Play" Destination="Send" Condition="1" x="1005" y="1970" />
+      <ECTransition Source="Next" Destination="Send" Condition="1" x="1863" y="1970" />
+      <ECTransition Source="Send" Destination="Hold" Condition="[Timed]" x="1006" y="3230" />
+      <ECTransition Source="Send" Destination="Played" Condition="1" x="1759" y="3230" />
+      <ECTransition Source="Hold" Destination="START" Condition="1" x="2405" y="1970" />
+      <ECTransition Source="Played" Destination="START" Condition="1" x="358" y="1970" />
     </ECC>
     <Algorithm Name="Alg_Play">
       <ST>Phase := 0;</ST>

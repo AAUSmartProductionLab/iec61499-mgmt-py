@@ -339,6 +339,78 @@ def legend(types: dict, sizer) -> str:
     return cv.svg(0.25)
 
 
+STATE_FILL, STATE_TEXT, ALG_FILL, OUT_FILL, ARROW = "#3f6fb5", "#ffffff", "#dfe7f3", "#dff0d0", "#8a93a6"
+
+
+def edge(box, towards):
+    """Where a line from the centre of ``box`` (x, y, w, h) towards a point leaves the box."""
+    x, y, w, h = box
+    cx, cy = x + w / 2, y + h / 2
+    dx, dy = towards[0] - cx, towards[1] - cy
+    if dx == 0 and dy == 0:
+        return cx, cy
+    t = min(w / 2 / abs(dx) if dx else math.inf, h / 2 / abs(dy) if dy else math.inf)
+    return cx + dx * t, cy + dy * t
+
+
+def ecc_picture(root) -> str:
+    """A basic type's state machine as the IDE draws it: each state with its actions (algorithm,
+    output event), each transition a curve through its condition, at the transition's x and y."""
+    cv = Canvas()
+    ecc = root.find("BasicFB/ECC")
+    from modgen.ecc import state_size
+    boxes = {}
+    for s in ecc.findall("ECState"):
+        w, h = state_size(s)
+        boxes[s.get("Name")] = (float(s.get("x", 0)), float(s.get("y", 0)), w, h)
+    curves = []
+    for t in ecc.findall("ECTransition"):
+        src, dst = boxes[t.get("Source")], boxes[t.get("Destination")]
+        px, py = float(t.get("x", 0)), float(t.get("y", 0))
+        s0 = (src[0] + src[2] / 2, src[1] + src[3] / 2)
+        d0 = (dst[0] + dst[2] / 2, dst[1] + dst[3] / 2)
+        c = (2 * px - (s0[0] + d0[0]) / 2, 2 * py - (s0[1] + d0[1]) / 2)    # the curve passes the condition
+        a, b = edge(src, c), edge(dst, c)
+        curves.append(f'<path d="M{a[0]:.0f},{a[1]:.0f} Q{c[0]:.0f},{c[1]:.0f} {b[0]:.0f},{b[1]:.0f}" fill="none" '
+                      f'stroke="{ARROW}" stroke-width="7"/>')
+        ux, uy = b[0] - c[0], b[1] - c[1]
+        n = math.hypot(ux, uy) or 1
+        ux, uy = ux / n, uy / n
+        tip = [(b[0], b[1]), (b[0] - 60 * ux - 30 * uy, b[1] - 60 * uy + 30 * ux),
+               (b[0] - 60 * ux + 30 * uy, b[1] - 60 * uy - 30 * ux)]
+        curves.append('<polygon points="' + " ".join(f"{x:.0f},{y:.0f}" for x, y in tip) + f'" fill="{ARROW}"/>')
+        cv.grow(min(a[0], b[0], px), min(a[1], b[1], py), max(a[0], b[0], px), max(a[1], b[1], py))
+    cv.parts += curves
+    first = ecc.find("ECState").get("Name")
+    for s in ecc.findall("ECState"):
+        x, y, w, h = boxes[s.get("Name")]
+        name_w = len(s.get("Name")) * layout.CHAR + 100
+        cv.rect(x, y, name_w, h, STATE_FILL, STATE_FILL, rx=12)
+        if s.get("Name") == first:
+            cv.rect(x - 18, y - 18, name_w + 36, h + 36, "none", STATE_FILL, rx=18)
+        cv.text(x + name_w / 2, y + h / 2 + 20, s.get("Name"), anchor="middle", fill=STATE_TEXT, bold=True)
+        actions = s.findall("ECAction")
+        alg_w = max((len(a.get("Algorithm") or "") for a in actions), default=0) * layout.CHAR
+        alg_w = alg_w + 100 if alg_w else 0
+        out_w = w - name_w - alg_w
+        for i, a in enumerate(actions):
+            ry = y + 30 + i * layout.PIN_ROW
+            if alg_w:
+                cv.rect(x + name_w, ry, alg_w, layout.PIN_ROW, ALG_FILL, FB_LINE, stroke=3)
+                cv.text(x + name_w + 50, ry + 72, a.get("Algorithm") or "", size=52)
+            if a.get("Output"):
+                cv.rect(x + name_w + alg_w, ry, out_w, layout.PIN_ROW, OUT_FILL, FB_LINE, stroke=3)
+                cv.text(x + name_w + alg_w + 50, ry + 72, a.get("Output"), size=52)
+    for t in ecc.findall("ECTransition"):
+        cond = t.get("Condition", "")
+        if cond != "1":
+            px, py = float(t.get("x", 0)), float(t.get("y", 0))
+            w = width_of(cond, 46)
+            cv.rect(px - w / 2 - 20, py - 50, w + 40, 70, "#ffffff", "#c9ced8", rx=8, stroke=2)
+            cv.text(px, py + 4, cond, size=46, anchor="middle", fill=MUTED)
+    return cv.svg(0.16)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--project", default="cell/control/FillingModule")
@@ -363,6 +435,8 @@ def main():
         net = root.find("FBNetwork")
         if net is not None:
             write(f"inside-{name}.svg", network(net, types, sizer, iface=root.find("InterfaceList")))
+        if root.find("BasicFB/ECC") is not None:
+            write(f"ecc-{name}.svg", ecc_picture(root))
     system = ET.parse(next(project.glob("*.sys"))).getroot()
     app = system.find(f"Application[@Name='{args.app}']")
     if app is None:

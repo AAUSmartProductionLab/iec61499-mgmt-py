@@ -50,84 +50,84 @@
       <VarDeclaration Name="First" Type="UINT" />
     </InternalVars>
     <ECC>
-      <ECState Name="START" x="150" y="100" />
-      <ECState Name="Reset" x="570" y="100">
+      <ECState Name="START" x="7828" y="0" />
+      <ECState Name="Reset" x="7575" y="6300">
         <ECAction Algorithm="Alg_Reset" />
       </ECState>
-      <ECState Name="Check" x="990" y="100" />
-      <ECState Name="Done" x="1410" y="100">
+      <ECState Name="Check" x="7828" y="3780" />
+      <ECState Name="Done" x="6805" y="5040">
         <ECAction Output="DONE" />
       </ECState>
-      <ECState Name="Fail" x="150" y="330">
+      <ECState Name="Fail" x="8065" y="5040">
         <ECAction Algorithm="Alg_Fail" Output="FAILED" />
       </ECState>
-      <ECState Name="Done1" x="570" y="330">
+      <ECState Name="Done1" x="0" y="1260">
         <ECAction Algorithm="Alg_Done1" />
       </ECState>
-      <ECState Name="First1" x="990" y="330">
+      <ECState Name="First1" x="1530" y="1260">
         <ECAction Algorithm="Alg_First1" Output="HALT" />
       </ECState>
-      <ECState Name="Later1" x="1410" y="330">
+      <ECState Name="Later1" x="3430" y="1260">
         <ECAction Algorithm="Alg_Later1" />
       </ECState>
-      <ECState Name="Done2" x="150" y="560">
+      <ECState Name="Done2" x="5050" y="1260">
         <ECAction Algorithm="Alg_Done2" />
       </ECState>
-      <ECState Name="First2" x="570" y="560">
+      <ECState Name="First2" x="6580" y="1260">
         <ECAction Algorithm="Alg_First2" Output="HALT" />
       </ECState>
-      <ECState Name="Later2" x="990" y="560">
+      <ECState Name="Later2" x="8480" y="1260">
         <ECAction Algorithm="Alg_Later2" />
       </ECState>
-      <ECState Name="Done3" x="1410" y="560">
+      <ECState Name="Done3" x="10100" y="1260">
         <ECAction Algorithm="Alg_Done3" />
       </ECState>
-      <ECState Name="First3" x="150" y="790">
+      <ECState Name="First3" x="11630" y="1260">
         <ECAction Algorithm="Alg_First3" Output="HALT" />
       </ECState>
-      <ECState Name="Later3" x="570" y="790">
+      <ECState Name="Later3" x="13530" y="1260">
         <ECAction Algorithm="Alg_Later3" />
       </ECState>
-      <ECState Name="Done4" x="990" y="790">
+      <ECState Name="Done4" x="15150" y="1260">
         <ECAction Algorithm="Alg_Done4" />
       </ECState>
-      <ECState Name="First4" x="1410" y="790">
+      <ECState Name="First4" x="6580" y="2520">
         <ECAction Algorithm="Alg_First4" Output="HALT" />
       </ECState>
-      <ECState Name="Later4" x="150" y="1020">
+      <ECState Name="Later4" x="8480" y="2520">
         <ECAction Algorithm="Alg_Later4" />
       </ECState>
-      <ECTransition Source="START" Destination="Reset" Condition="START" x="0" y="0" />
-      <ECTransition Source="Reset" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="START" Destination="Done1" Condition="DONE_1" x="0" y="0" />
-      <ECTransition Source="START" Destination="First1" Condition="FAILED_1[NOT AnyFailed]" x="0" y="0" />
-      <ECTransition Source="START" Destination="Later1" Condition="FAILED_1" x="0" y="0" />
-      <ECTransition Source="Done1" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="First1" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="Later1" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="START" Destination="Done2" Condition="DONE_2" x="0" y="0" />
-      <ECTransition Source="START" Destination="First2" Condition="FAILED_2[NOT AnyFailed]" x="0" y="0" />
-      <ECTransition Source="START" Destination="Later2" Condition="FAILED_2" x="0" y="0" />
-      <ECTransition Source="Done2" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="First2" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="Later2" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="START" Destination="Done3" Condition="DONE_3" x="0" y="0" />
-      <ECTransition Source="START" Destination="First3" Condition="FAILED_3[NOT AnyFailed]" x="0" y="0" />
-      <ECTransition Source="START" Destination="Later3" Condition="FAILED_3" x="0" y="0" />
-      <ECTransition Source="Done3" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="First3" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="Later3" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="START" Destination="Done4" Condition="DONE_4" x="0" y="0" />
-      <ECTransition Source="START" Destination="First4" Condition="FAILED_4[NOT AnyFailed]" x="0" y="0" />
-      <ECTransition Source="START" Destination="Later4" Condition="FAILED_4" x="0" y="0" />
-      <ECTransition Source="Done4" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="First4" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="Later4" Destination="Check" Condition="1" x="0" y="0" />
-      <ECTransition Source="Check" Destination="Done" Condition="(Ended1 AND Ended2 AND Ended3 AND Ended4) AND NOT AnyFailed" x="0" y="0" />
-      <ECTransition Source="Check" Destination="Fail" Condition="(Ended1 AND Ended2 AND Ended3 AND Ended4) AND AnyFailed" x="0" y="0" />
-      <ECTransition Source="Check" Destination="START" Condition="1" x="0" y="0" />
-      <ECTransition Source="Done" Destination="Reset" Condition="1" x="0" y="0" />
-      <ECTransition Source="Fail" Destination="Reset" Condition="1" x="0" y="0" />
+      <ECTransition Source="START" Destination="Reset" Condition="START" x="9390" y="3230" />
+      <ECTransition Source="Reset" Destination="START" Condition="1" x="6590" y="3230" />
+      <ECTransition Source="START" Destination="Done1" Condition="DONE_1" x="4203" y="710" />
+      <ECTransition Source="START" Destination="First1" Condition="FAILED_1[NOT AnyFailed]" x="5060" y="710" />
+      <ECTransition Source="START" Destination="Later1" Condition="FAILED_1" x="5940" y="710" />
+      <ECTransition Source="Done1" Destination="Check" Condition="1" x="6103" y="2600" />
+      <ECTransition Source="First1" Destination="Check" Condition="1" x="3160" y="2600" />
+      <ECTransition Source="Later1" Destination="Check" Condition="1" x="8340" y="2600" />
+      <ECTransition Source="START" Destination="Done2" Condition="DONE_2" x="6728" y="710" />
+      <ECTransition Source="START" Destination="First2" Condition="FAILED_2[NOT AnyFailed]" x="7585" y="710" />
+      <ECTransition Source="START" Destination="Later2" Condition="FAILED_2" x="8465" y="710" />
+      <ECTransition Source="Done2" Destination="Check" Condition="1" x="4328" y="2600" />
+      <ECTransition Source="First2" Destination="Check" Condition="1" x="10485" y="2600" />
+      <ECTransition Source="Later2" Destination="Check" Condition="1" x="5565" y="2600" />
+      <ECTransition Source="START" Destination="Done3" Condition="DONE_3" x="9253" y="710" />
+      <ECTransition Source="START" Destination="First3" Condition="FAILED_3[NOT AnyFailed]" x="10110" y="710" />
+      <ECTransition Source="START" Destination="Later3" Condition="FAILED_3" x="10990" y="710" />
+      <ECTransition Source="Done3" Destination="Check" Condition="1" x="12653" y="2600" />
+      <ECTransition Source="First3" Destination="Check" Condition="1" x="6710" y="2600" />
+      <ECTransition Source="Later3" Destination="Check" Condition="1" x="14890" y="2600" />
+      <ECTransition Source="START" Destination="Done4" Condition="DONE_4" x="11778" y="710" />
+      <ECTransition Source="START" Destination="First4" Condition="FAILED_4[NOT AnyFailed]" x="3685" y="1340" />
+      <ECTransition Source="START" Destination="Later4" Condition="FAILED_4" x="12865" y="1340" />
+      <ECTransition Source="Done4" Destination="Check" Condition="1" x="7378" y="2600" />
+      <ECTransition Source="First4" Destination="Check" Condition="1" x="7585" y="3230" />
+      <ECTransition Source="Later4" Destination="Check" Condition="1" x="8465" y="3230" />
+      <ECTransition Source="Check" Destination="Done" Condition="[(Ended1 AND Ended2 AND Ended3 AND Ended4) AND NOT AnyFailed]" x="7538" y="4490" />
+      <ECTransition Source="Check" Destination="Fail" Condition="[(Ended1 AND Ended2 AND Ended3 AND Ended4) AND AnyFailed]" x="8305" y="4490" />
+      <ECTransition Source="Check" Destination="START" Condition="1" x="12890" y="1970" />
+      <ECTransition Source="Done" Destination="Reset" Condition="1" x="7538" y="5750" />
+      <ECTransition Source="Fail" Destination="Reset" Condition="1" x="8305" y="5750" />
     </ECC>
     <Algorithm Name="Alg_Reset">
       <ST>Ended1 := FALSE; Ended2 := FALSE; Ended3 := FALSE; Ended4 := FALSE; AnyFailed := FALSE;</ST>

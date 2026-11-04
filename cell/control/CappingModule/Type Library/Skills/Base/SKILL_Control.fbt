@@ -126,191 +126,191 @@
       <VarDeclaration Name="Active" Type="BOOL" />
     </InternalVars>
     <ECC>
-      <ECState Name="START" x="150" y="100" />
-      <ECState Name="Init" x="570" y="100">
+      <ECState Name="START" x="2602" y="0" />
+      <ECState Name="Init" x="2232" y="1260">
         <ECAction Algorithm="Alg_Init" Output="INITO" />
       </ECState>
-      <ECState Name="Idle" x="990" y="100">
+      <ECState Name="Idle" x="2278" y="2520">
         <ECAction Algorithm="Alg_Idle" Output="PUB" />
       </ECState>
-      <ECState Name="Running" x="1410" y="100">
+      <ECState Name="Running" x="2142" y="6500">
         <ECAction Algorithm="Alg_Running" Output="PUB" />
       </ECState>
-      <ECState Name="Stopping" x="150" y="330">
+      <ECState Name="Stopping" x="2098" y="10480">
         <ECAction Algorithm="Alg_Stopping" Output="PUB" />
       </ECState>
-      <ECState Name="StopProc" x="570" y="330">
+      <ECState Name="StopProc" x="4195" y="18240">
         <ECAction Algorithm="Alg_StopProc" Output="PUB" />
       </ECState>
-      <ECState Name="Succeeded" x="990" y="330">
+      <ECState Name="Succeeded" x="1620" y="18240">
         <ECAction Algorithm="Alg_Succeeded" Output="PUB" />
         <ECAction Output="TO_IDLE_START" />
       </ECState>
-      <ECState Name="Failed" x="1410" y="330">
+      <ECState Name="Failed" x="2188" y="21060">
         <ECAction Algorithm="Alg_Failed" Output="PUB" />
       </ECState>
-      <ECState Name="Aborted" x="150" y="560">
+      <ECState Name="Aborted" x="2142" y="15720">
         <ECAction Algorithm="Alg_Aborted" Output="PUB" />
       </ECState>
-      <ECState Name="GoUa" x="570" y="560">
+      <ECState Name="GoUa" x="2075" y="5040">
         <ECAction Algorithm="Alg_GoUa" Output="ACT" />
         <ECAction Output="TO_IDLE_STOP" />
         <ECAction Output="RUN" />
       </ECState>
-      <ECState Name="GoParent" x="990" y="560">
+      <ECState Name="GoParent" x="1895" y="22320">
         <ECAction Algorithm="Alg_GoParent" Output="ACT" />
         <ECAction Output="TO_IDLE_STOP" />
         <ECAction Output="RUN" />
       </ECState>
-      <ECState Name="Halt" x="1410" y="560">
+      <ECState Name="Halt" x="2395" y="9220">
         <ECAction Output="HALT_SEQ" />
       </ECState>
-      <ECState Name="RunStop" x="150" y="790">
+      <ECState Name="RunStop" x="1085" y="11740">
         <ECAction Output="RUN_STOPPING" />
       </ECState>
-      <ECState Name="Succeed" x="570" y="790">
+      <ECState Name="Succeed" x="40" y="7760">
         <ECAction Algorithm="Alg_Succeed" Output="ACT" />
         <ECAction Output="RELEASE" />
         <ECAction Output="SUCCESS" />
       </ECState>
-      <ECState Name="Fail" x="990" y="790">
+      <ECState Name="Fail" x="2165" y="7760">
         <ECAction Algorithm="Alg_Fail" Output="ACT" />
         <ECAction Output="RELEASE" />
         <ECAction Output="FAILURE" />
       </ECState>
-      <ECState Name="Interrupted" x="1410" y="790">
+      <ECState Name="Interrupted" x="1872" y="19600">
         <ECAction Algorithm="Alg_Interrupted" Output="ACT" />
         <ECAction Output="RELEASE" />
         <ECAction Output="FAILURE" />
       </ECState>
-      <ECState Name="AbortChk" x="150" y="1020" />
-      <ECState Name="AbortActive" x="570" y="1020">
+      <ECState Name="AbortChk" x="2535" y="13000" />
+      <ECState Name="AbortActive" x="972" y="14260">
         <ECAction Algorithm="Alg_AbortActive" Output="ABORT_SEQ" />
         <ECAction Output="ACT" />
         <ECAction Output="RELEASE" />
       </ECState>
-      <ECState Name="AbortIdle" x="990" y="1020">
+      <ECState Name="AbortIdle" x="3548" y="14260">
         <ECAction Output="ABORT_SEQ" />
       </ECState>
-      <ECState Name="StartRefused" x="1410" y="1020">
+      <ECState Name="StartRefused" x="675" y="16980">
         <ECAction Algorithm="Alg_StartRefused" Output="FAILURE" />
       </ECState>
-      <ECState Name="ResetOk" x="150" y="1250">
+      <ECState Name="ResetOk" x="0" y="18240">
         <ECAction Output="RESET_SEQ" />
       </ECState>
-      <ECState Name="ChkStart" x="570" y="1250">
+      <ECState Name="ChkStart" x="1962" y="3780">
         <ECAction Algorithm="Alg_ChkStart" Output="START_RSP" />
       </ECState>
-      <ECState Name="ChkStop" x="990" y="1250">
+      <ECState Name="ChkStop" x="4020" y="7760">
         <ECAction Algorithm="Alg_ChkStop" Output="STOP_RSP" />
       </ECState>
-      <ECState Name="ChkAbort" x="1410" y="1250">
+      <ECState Name="ChkAbort" x="2840" y="11740">
         <ECAction Algorithm="Alg_ChkAbort" Output="ABORT_RSP" />
       </ECState>
-      <ECState Name="ChkReset" x="150" y="1480">
+      <ECState Name="ChkReset" x="3250" y="16980">
         <ECAction Algorithm="Alg_ChkReset" Output="RESET_RSP" />
       </ECState>
-      <ECTransition Source="START" Destination="Init" Condition="INIT" x="0" y="0" />
-      <ECTransition Source="Init" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="Idle" Destination="ChkStart" Condition="START_REQ" x="0" y="0" />
-      <ECTransition Source="Idle" Destination="ChkStop" Condition="STOP_REQ" x="0" y="0" />
-      <ECTransition Source="Idle" Destination="ChkAbort" Condition="ABORT_REQ" x="0" y="0" />
-      <ECTransition Source="Idle" Destination="ChkReset" Condition="RESET_REQ" x="0" y="0" />
-      <ECTransition Source="Running" Destination="ChkStart" Condition="START_REQ" x="0" y="0" />
-      <ECTransition Source="Running" Destination="ChkStop" Condition="STOP_REQ" x="0" y="0" />
-      <ECTransition Source="Running" Destination="ChkAbort" Condition="ABORT_REQ" x="0" y="0" />
-      <ECTransition Source="Running" Destination="ChkReset" Condition="RESET_REQ" x="0" y="0" />
-      <ECTransition Source="Stopping" Destination="ChkStart" Condition="START_REQ" x="0" y="0" />
-      <ECTransition Source="Stopping" Destination="ChkStop" Condition="STOP_REQ" x="0" y="0" />
-      <ECTransition Source="Stopping" Destination="ChkAbort" Condition="ABORT_REQ" x="0" y="0" />
-      <ECTransition Source="Stopping" Destination="ChkReset" Condition="RESET_REQ" x="0" y="0" />
-      <ECTransition Source="StopProc" Destination="ChkStart" Condition="START_REQ" x="0" y="0" />
-      <ECTransition Source="StopProc" Destination="ChkStop" Condition="STOP_REQ" x="0" y="0" />
-      <ECTransition Source="StopProc" Destination="ChkAbort" Condition="ABORT_REQ" x="0" y="0" />
-      <ECTransition Source="StopProc" Destination="ChkReset" Condition="RESET_REQ" x="0" y="0" />
-      <ECTransition Source="Succeeded" Destination="ChkStart" Condition="START_REQ" x="0" y="0" />
-      <ECTransition Source="Succeeded" Destination="ChkStop" Condition="STOP_REQ" x="0" y="0" />
-      <ECTransition Source="Succeeded" Destination="ChkAbort" Condition="ABORT_REQ" x="0" y="0" />
-      <ECTransition Source="Succeeded" Destination="ChkReset" Condition="RESET_REQ" x="0" y="0" />
-      <ECTransition Source="Failed" Destination="ChkStart" Condition="START_REQ" x="0" y="0" />
-      <ECTransition Source="Failed" Destination="ChkStop" Condition="STOP_REQ" x="0" y="0" />
-      <ECTransition Source="Failed" Destination="ChkAbort" Condition="ABORT_REQ" x="0" y="0" />
-      <ECTransition Source="Failed" Destination="ChkReset" Condition="RESET_REQ" x="0" y="0" />
-      <ECTransition Source="Aborted" Destination="ChkStart" Condition="START_REQ" x="0" y="0" />
-      <ECTransition Source="Aborted" Destination="ChkStop" Condition="STOP_REQ" x="0" y="0" />
-      <ECTransition Source="Aborted" Destination="ChkAbort" Condition="ABORT_REQ" x="0" y="0" />
-      <ECTransition Source="Aborted" Destination="ChkReset" Condition="RESET_REQ" x="0" y="0" />
-      <ECTransition Source="Idle" Destination="GoParent" Condition="START" x="0" y="0" />
-      <ECTransition Source="Succeeded" Destination="GoParent" Condition="START" x="0" y="0" />
-      <ECTransition Source="Failed" Destination="GoParent" Condition="START" x="0" y="0" />
-      <ECTransition Source="Aborted" Destination="StartRefused" Condition="START" x="0" y="0" />
-      <ECTransition Source="StartRefused" Destination="Aborted" Condition="1" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Succeed" Condition="EXECUTE_DONE" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Fail" Condition="EXECUTE_FAILED" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Halt" Condition="HALT" x="0" y="0" />
-      <ECTransition Source="Running" Destination="Halt" Condition="MOD_CHG[(ModuleState = 7) AND CalledByClient]" x="0" y="0" />
-      <ECTransition Source="Stopping" Destination="RunStop" Condition="EXECUTE_DONE" x="0" y="0" />
-      <ECTransition Source="Stopping" Destination="RunStop" Condition="EXECUTE_FAILED" x="0" y="0" />
-      <ECTransition Source="StopProc" Destination="Interrupted" Condition="STOPPING_DONE" x="0" y="0" />
-      <ECTransition Source="Idle" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
-      <ECTransition Source="Idle" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
-      <ECTransition Source="Running" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
-      <ECTransition Source="Running" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
-      <ECTransition Source="Stopping" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
-      <ECTransition Source="Stopping" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
-      <ECTransition Source="StopProc" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
-      <ECTransition Source="StopProc" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
-      <ECTransition Source="Succeeded" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
-      <ECTransition Source="Succeeded" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
-      <ECTransition Source="Failed" Destination="AbortChk" Condition="ABORT" x="0" y="0" />
-      <ECTransition Source="Failed" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="0" y="0" />
-      <ECTransition Source="Aborted" Destination="ResetOk" Condition="MOD_CHG[(ModuleState = 1) OR (ModuleState = 2)]" x="0" y="0" />
-      <ECTransition Source="Aborted" Destination="ResetOk" Condition="RESET" x="0" y="0" />
-      <ECTransition Source="ResetOk" Destination="Idle" Condition="1" x="0" y="0" />
-      <ECTransition Source="GoUa" Destination="Running" Condition="1" x="0" y="0" />
-      <ECTransition Source="GoParent" Destination="Running" Condition="1" x="0" y="0" />
-      <ECTransition Source="Halt" Destination="Stopping" Condition="1" x="0" y="0" />
-      <ECTransition Source="RunStop" Destination="StopProc" Condition="1" x="0" y="0" />
-      <ECTransition Source="Succeed" Destination="Succeeded" Condition="1" x="0" y="0" />
-      <ECTransition Source="Succeeded" Destination="Idle" Condition="TO_IDLE" x="0" y="0" />
-      <ECTransition Source="Fail" Destination="Failed" Condition="1" x="0" y="0" />
-      <ECTransition Source="Interrupted" Destination="Failed" Condition="1" x="0" y="0" />
-      <ECTransition Source="AbortChk" Destination="AbortActive" Condition="Active" x="0" y="0" />
-      <ECTransition Source="AbortChk" Destination="AbortIdle" Condition="1" x="0" y="0" />
-      <ECTransition Source="AbortActive" Destination="Aborted" Condition="1" x="0" y="0" />
-      <ECTransition Source="AbortIdle" Destination="Aborted" Condition="1" x="0" y="0" />
-      <ECTransition Source="ChkStart" Destination="GoUa" Condition="Accepted" x="0" y="0" />
-      <ECTransition Source="ChkStart" Destination="Idle" Condition="Here = 0" x="0" y="0" />
-      <ECTransition Source="ChkStart" Destination="Running" Condition="Here = 1" x="0" y="0" />
-      <ECTransition Source="ChkStart" Destination="Stopping" Condition="Here = 2" x="0" y="0" />
-      <ECTransition Source="ChkStart" Destination="StopProc" Condition="Here = 3" x="0" y="0" />
-      <ECTransition Source="ChkStart" Destination="Succeeded" Condition="Here = 4" x="0" y="0" />
-      <ECTransition Source="ChkStart" Destination="Failed" Condition="Here = 5" x="0" y="0" />
-      <ECTransition Source="ChkStart" Destination="Aborted" Condition="Here = 6" x="0" y="0" />
-      <ECTransition Source="ChkStop" Destination="Halt" Condition="Accepted" x="0" y="0" />
-      <ECTransition Source="ChkStop" Destination="Idle" Condition="Here = 0" x="0" y="0" />
-      <ECTransition Source="ChkStop" Destination="Running" Condition="Here = 1" x="0" y="0" />
-      <ECTransition Source="ChkStop" Destination="Stopping" Condition="Here = 2" x="0" y="0" />
-      <ECTransition Source="ChkStop" Destination="StopProc" Condition="Here = 3" x="0" y="0" />
-      <ECTransition Source="ChkStop" Destination="Succeeded" Condition="Here = 4" x="0" y="0" />
-      <ECTransition Source="ChkStop" Destination="Failed" Condition="Here = 5" x="0" y="0" />
-      <ECTransition Source="ChkStop" Destination="Aborted" Condition="Here = 6" x="0" y="0" />
-      <ECTransition Source="ChkAbort" Destination="AbortChk" Condition="Accepted" x="0" y="0" />
-      <ECTransition Source="ChkAbort" Destination="Idle" Condition="Here = 0" x="0" y="0" />
-      <ECTransition Source="ChkAbort" Destination="Running" Condition="Here = 1" x="0" y="0" />
-      <ECTransition Source="ChkAbort" Destination="Stopping" Condition="Here = 2" x="0" y="0" />
-      <ECTransition Source="ChkAbort" Destination="StopProc" Condition="Here = 3" x="0" y="0" />
-      <ECTransition Source="ChkAbort" Destination="Succeeded" Condition="Here = 4" x="0" y="0" />
-      <ECTransition Source="ChkAbort" Destination="Failed" Condition="Here = 5" x="0" y="0" />
-      <ECTransition Source="ChkAbort" Destination="Aborted" Condition="Here = 6" x="0" y="0" />
-      <ECTransition Source="ChkReset" Destination="ResetOk" Condition="Accepted" x="0" y="0" />
-      <ECTransition Source="ChkReset" Destination="Idle" Condition="Here = 0" x="0" y="0" />
-      <ECTransition Source="ChkReset" Destination="Running" Condition="Here = 1" x="0" y="0" />
-      <ECTransition Source="ChkReset" Destination="Stopping" Condition="Here = 2" x="0" y="0" />
-      <ECTransition Source="ChkReset" Destination="StopProc" Condition="Here = 3" x="0" y="0" />
-      <ECTransition Source="ChkReset" Destination="Succeeded" Condition="Here = 4" x="0" y="0" />
-      <ECTransition Source="ChkReset" Destination="Failed" Condition="Here = 5" x="0" y="0" />
-      <ECTransition Source="ChkReset" Destination="Aborted" Condition="Here = 6" x="0" y="0" />
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="2764" y="710" />
+      <ECTransition Source="Init" Destination="Idle" Condition="1" x="2765" y="1970" />
+      <ECTransition Source="Idle" Destination="ChkStart" Condition="START_REQ" x="2765" y="3230" />
+      <ECTransition Source="Idle" Destination="ChkStop" Condition="STOP_REQ" x="5160" y="5220" />
+      <ECTransition Source="Idle" Destination="ChkAbort" Condition="ABORT_REQ" x="1804" y="7210" />
+      <ECTransition Source="Idle" Destination="ChkReset" Condition="RESET_REQ" x="5309" y="9830" />
+      <ECTransition Source="Running" Destination="ChkStart" Condition="START_REQ" x="864" y="5220" />
+      <ECTransition Source="Running" Destination="ChkStop" Condition="STOP_REQ" x="3760" y="7210" />
+      <ECTransition Source="Running" Destination="ChkAbort" Condition="ABORT_REQ" x="5604" y="9200" />
+      <ECTransition Source="Running" Destination="ChkReset" Condition="RESET_REQ" x="1008" y="11820" />
+      <ECTransition Source="Stopping" Destination="ChkStart" Condition="START_REQ" x="5665" y="7210" />
+      <ECTransition Source="Stopping" Destination="ChkStop" Condition="STOP_REQ" x="860" y="9200" />
+      <ECTransition Source="Stopping" Destination="ChkAbort" Condition="ABORT_REQ" x="3204" y="11190" />
+      <ECTransition Source="Stopping" Destination="ChkReset" Condition="RESET_REQ" x="6809" y="13810" />
+      <ECTransition Source="StopProc" Destination="ChkStart" Condition="START_REQ" x="414" y="11090" />
+      <ECTransition Source="StopProc" Destination="ChkStop" Condition="STOP_REQ" x="8709" y="13080" />
+      <ECTransition Source="StopProc" Destination="ChkAbort" Condition="ABORT_REQ" x="352" y="15070" />
+      <ECTransition Source="StopProc" Destination="ChkReset" Condition="RESET_REQ" x="4458" y="17690" />
+      <ECTransition Source="Succeeded" Destination="ChkStart" Condition="START_REQ" x="7061" y="11115" />
+      <ECTransition Source="Succeeded" Destination="ChkStop" Condition="STOP_REQ" x="-744" y="13105" />
+      <ECTransition Source="Succeeded" Destination="ChkAbort" Condition="ABORT_REQ" x="8000" y="15095" />
+      <ECTransition Source="Succeeded" Destination="ChkReset" Condition="RESET_REQ" x="3305" y="17715" />
+      <ECTransition Source="Failed" Destination="ChkStart" Condition="START_REQ" x="-2135" y="12500" />
+      <ECTransition Source="Failed" Destination="ChkStop" Condition="STOP_REQ" x="9160" y="14490" />
+      <ECTransition Source="Failed" Destination="ChkAbort" Condition="ABORT_REQ" x="-2196" y="16480" />
+      <ECTransition Source="Failed" Destination="ChkReset" Condition="RESET_REQ" x="9309" y="19100" />
+      <ECTransition Source="Aborted" Destination="ChkStart" Condition="START_REQ" x="-3136" y="9830" />
+      <ECTransition Source="Aborted" Destination="ChkStop" Condition="STOP_REQ" x="10160" y="11820" />
+      <ECTransition Source="Aborted" Destination="ChkAbort" Condition="ABORT_REQ" x="-3196" y="13810" />
+      <ECTransition Source="Aborted" Destination="ChkReset" Condition="RESET_REQ" x="3408" y="16430" />
+      <ECTransition Source="Idle" Destination="GoParent" Condition="START" x="9665" y="12550" />
+      <ECTransition Source="Succeeded" Destination="GoParent" Condition="START" x="-4239" y="20435" />
+      <ECTransition Source="Failed" Destination="GoParent" Condition="START" x="2765" y="21820" />
+      <ECTransition Source="Aborted" Destination="StartRefused" Condition="START" x="2188" y="16430" />
+      <ECTransition Source="StartRefused" Destination="Aborted" Condition="1" x="2668" y="16590" />
+      <ECTransition Source="Running" Destination="Succeed" Condition="EXECUTE_DONE" x="1758" y="7260" />
+      <ECTransition Source="Running" Destination="Fail" Condition="EXECUTE_FAILED" x="2754" y="7260" />
+      <ECTransition Source="Running" Destination="Halt" Condition="HALT" x="10165" y="7940" />
+      <ECTransition Source="Running" Destination="Halt" Condition="MOD_CHG[(ModuleState = 7) AND CalledByClient]" x="-4635" y="7940" />
+      <ECTransition Source="Stopping" Destination="RunStop" Condition="EXECUTE_DONE" x="2189" y="11190" />
+      <ECTransition Source="Stopping" Destination="RunStop" Condition="EXECUTE_FAILED" x="2669" y="11350" />
+      <ECTransition Source="StopProc" Destination="Interrupted" Condition="STOPPING_DONE" x="3814" y="19050" />
+      <ECTransition Source="Idle" Destination="AbortChk" Condition="ABORT" x="10665" y="7840" />
+      <ECTransition Source="Idle" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="-5135" y="7840" />
+      <ECTransition Source="Running" Destination="AbortChk" Condition="ABORT" x="11165" y="9830" />
+      <ECTransition Source="Running" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="-5635" y="9830" />
+      <ECTransition Source="Stopping" Destination="AbortChk" Condition="ABORT" x="11665" y="11820" />
+      <ECTransition Source="Stopping" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="-6135" y="11820" />
+      <ECTransition Source="StopProc" Destination="AbortChk" Condition="ABORT" x="13214" y="15700" />
+      <ECTransition Source="StopProc" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="-5586" y="15700" />
+      <ECTransition Source="Succeeded" Destination="AbortChk" Condition="ABORT" x="12561" y="15725" />
+      <ECTransition Source="Succeeded" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="-7239" y="15725" />
+      <ECTransition Source="Failed" Destination="AbortChk" Condition="ABORT" x="13165" y="17110" />
+      <ECTransition Source="Failed" Destination="AbortChk" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="-7635" y="17110" />
+      <ECTransition Source="Aborted" Destination="ResetOk" Condition="MOD_CHG[(ModuleState = 1) OR (ModuleState = 2)]" x="12512" y="17060" />
+      <ECTransition Source="Aborted" Destination="ResetOk" Condition="RESET" x="-9288" y="17060" />
+      <ECTransition Source="ResetOk" Destination="Idle" Condition="1" x="13013" y="10460" />
+      <ECTransition Source="GoUa" Destination="Running" Condition="1" x="2765" y="5900" />
+      <ECTransition Source="GoParent" Destination="Running" Condition="1" x="-8635" y="14540" />
+      <ECTransition Source="Halt" Destination="Stopping" Condition="1" x="2765" y="9930" />
+      <ECTransition Source="RunStop" Destination="StopProc" Condition="1" x="15138" y="15070" />
+      <ECTransition Source="Succeed" Destination="Succeeded" Condition="1" x="-10245" y="13155" />
+      <ECTransition Source="Succeeded" Destination="Idle" Condition="TO_IDLE" x="15062" y="10485" />
+      <ECTransition Source="Fail" Destination="Failed" Condition="1" x="-9646" y="14540" />
+      <ECTransition Source="Interrupted" Destination="Failed" Condition="1" x="2765" y="20460" />
+      <ECTransition Source="AbortChk" Destination="AbortActive" Condition="[Active]" x="2337" y="13760" />
+      <ECTransition Source="AbortChk" Destination="AbortIdle" Condition="1" x="3409" y="13710" />
+      <ECTransition Source="AbortActive" Destination="Aborted" Condition="1" x="2337" y="15120" />
+      <ECTransition Source="AbortIdle" Destination="Aborted" Condition="1" x="3409" y="15070" />
+      <ECTransition Source="ChkStart" Destination="GoUa" Condition="[Accepted]" x="2765" y="4540" />
+      <ECTransition Source="ChkStart" Destination="Idle" Condition="[Here = 0]" x="3245" y="3390" />
+      <ECTransition Source="ChkStart" Destination="Running" Condition="[Here = 1]" x="15664" y="5220" />
+      <ECTransition Source="ChkStart" Destination="Stopping" Condition="[Here = 2]" x="-10135" y="7210" />
+      <ECTransition Source="ChkStart" Destination="StopProc" Condition="[Here = 3]" x="17214" y="11090" />
+      <ECTransition Source="ChkStart" Destination="Succeeded" Condition="[Here = 4]" x="-10739" y="11115" />
+      <ECTransition Source="ChkStart" Destination="Failed" Condition="[Here = 5]" x="16665" y="12500" />
+      <ECTransition Source="ChkStart" Destination="Aborted" Condition="[Here = 6]" x="-11136" y="9830" />
+      <ECTransition Source="ChkStop" Destination="Halt" Condition="[Accepted]" x="3760" y="8570" />
+      <ECTransition Source="ChkStop" Destination="Idle" Condition="[Here = 0]" x="18160" y="5220" />
+      <ECTransition Source="ChkStop" Destination="Running" Condition="[Here = 1]" x="4240" y="7370" />
+      <ECTransition Source="ChkStop" Destination="Stopping" Condition="[Here = 2]" x="-10640" y="9200" />
+      <ECTransition Source="ChkStop" Destination="StopProc" Condition="[Here = 3]" x="19709" y="13080" />
+      <ECTransition Source="ChkStop" Destination="Succeeded" Condition="[Here = 4]" x="-11244" y="13105" />
+      <ECTransition Source="ChkStop" Destination="Failed" Condition="[Here = 5]" x="19160" y="14490" />
+      <ECTransition Source="ChkStop" Destination="Aborted" Condition="[Here = 6]" x="-11640" y="11820" />
+      <ECTransition Source="ChkAbort" Destination="AbortChk" Condition="[Accepted]" x="3204" y="12450" />
+      <ECTransition Source="ChkAbort" Destination="Idle" Condition="[Here = 0]" x="19104" y="7210" />
+      <ECTransition Source="ChkAbort" Destination="Running" Condition="[Here = 1]" x="-12696" y="9200" />
+      <ECTransition Source="ChkAbort" Destination="Stopping" Condition="[Here = 2]" x="3684" y="11350" />
+      <ECTransition Source="ChkAbort" Destination="StopProc" Condition="[Here = 3]" x="20652" y="15070" />
+      <ECTransition Source="ChkAbort" Destination="Succeeded" Condition="[Here = 4]" x="-13300" y="15095" />
+      <ECTransition Source="ChkAbort" Destination="Failed" Condition="[Here = 5]" x="20104" y="16480" />
+      <ECTransition Source="ChkAbort" Destination="Aborted" Condition="[Here = 6]" x="-13696" y="13810" />
+      <ECTransition Source="ChkReset" Destination="ResetOk" Condition="[Accepted]" x="2256" y="17690" />
+      <ECTransition Source="ChkReset" Destination="Idle" Condition="[Here = 0]" x="20809" y="9830" />
+      <ECTransition Source="ChkReset" Destination="Running" Condition="[Here = 1]" x="-13992" y="11820" />
+      <ECTransition Source="ChkReset" Destination="Stopping" Condition="[Here = 2]" x="21309" y="13810" />
+      <ECTransition Source="ChkReset" Destination="StopProc" Condition="[Here = 3]" x="4938" y="17850" />
+      <ECTransition Source="ChkReset" Destination="Succeeded" Condition="[Here = 4]" x="3785" y="17875" />
+      <ECTransition Source="ChkReset" Destination="Failed" Condition="[Here = 5]" x="-14491" y="19100" />
+      <ECTransition Source="ChkReset" Destination="Aborted" Condition="[Here = 6]" x="3888" y="16590" />
     </ECC>
     <Algorithm Name="Alg_Init">
       <ST>StartMethodId := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, UaPath)), "/Start"), "]");
