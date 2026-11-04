@@ -15,35 +15,37 @@ OUT = Path(sys.argv[1])
 TOP = "filling-program-for-students"
 GITHUB = "https://github.com/AAUSmartProductionLab/iec61499-mgmt-py/blob/main/"
 
-DOCS = ["filling-program.md", "filling-program-screenshots.md", "building-skills.md", "module-rules.md", "modules.md"]
-FOLDERS = ["docs/filling-program", "docs/figures/4diac_figs", "cell/control/FillingModule", "cell/control/StopperingModule"]
-FILES = ["cell/modules/filling.yaml", "cell/modules/stoppering.yaml"]
+DOCS = ["filling-program.md", "filling-program-screenshots.md", "module-rules.md", "modules.md"]
+FOLDERS = ["docs/filling-program", "docs/figures/4diac_figs", "cell/control/FillingModule",
+           "cell/control/StopperingModule", "cell/control/CappingModule"]
+FILES = ["runtime/kit/README.md"]
 SKIP = (".py", ".pyc")
+LEAVE_OUT = {"docs/filling-program/maintaining.md"}
 
-README = """# The filling program, for students
+README = """# The lab's module programs, for students
 
 What is in here:
 
-- `docs/filling-program.md`: start here. What every function block of the filling module's
-  IEC 61499 program does, in plain words, with a picture of each (`docs/filling-program/`), the
-  state machines drawn as the 4diac IDE lays them out, and how to build a new piece of equipment and
-  a skill primitive by hand (section 10.5).
+- `docs/filling-program.md`: start here. What every function block of the lab's module programs
+  does, in plain words, with the filling module as the example and a picture of each block
+  (`docs/filling-program/`), the state machines drawn as the 4diac IDE lays them out, and, step by
+  step, how to make a new piece of equipment and a skill primitive by hand in the 4diac IDE
+  (section 10), build FORTE with them and run them on the PC and the Pi (section 11).
 - `docs/filling-program-screenshots.md`: the same text with screenshots of the 4diac IDE where there
   are some (`docs/figures/4diac_figs/`).
-- `docs/building-skills.md`, `docs/module-rules.md`, `docs/modules.md`: how skills and equipment are
-  built, the rules every module follows, and the lab's modules. Links to other documents go to the
-  repository on GitHub.
-- `cell/control/FillingModule` and `cell/control/StopperingModule`: the two 4diac projects. Open
-  them in the 4diac IDE 3.3 with *File > Import > Existing Projects into Workspace*, choose the
-  folder, then open the system (`FillingModule.sys`) and the application `Filling_pi` (the Pi) or
-  `Filling` (the PC with the simulator).
-- `cell/modules/filling.yaml`, `stoppering.yaml`: the specs the programs are generated from.
+- `docs/module-rules.md`, `docs/modules.md`: the rules every module follows, and the lab's modules
+  and their hardware. Links to other documents go to the repository on GitHub.
+- `cell/control/StopperingModule` and `cell/control/CappingModule`: the projects you work on, and
+  `cell/control/FillingModule`, the example. Open one in the 4diac IDE 3.3 with *File > Import >
+  General > Existing Projects into Workspace*, choose its folder and tick *Copy projects into
+  workspace*, then open its system (`StopperingModule.sys`). Each has two applications: the one
+  ending in `_pi` for the module's Raspberry Pi, the other for your PC.
+- `runtime/kit/README.md`: the README of the FORTE kit (`forte-kit.zip`, which you get separately),
+  which builds FORTE with your block types and puts it on the Pi.
 
 To read the Markdown with its pictures, open the folder in VS Code (or any Markdown viewer) and open
-the preview of `docs/filling-program.md`. To run a program you need FORTE built with the module
-types and, for the generator and the simulator, the whole repository:
-{github}
-""".format(github=GITHUB.replace("/blob/main/", ""))
+the preview of `docs/filling-program.md`.
+"""
 
 
 def relink(text: str, here: str) -> str:
@@ -79,7 +81,8 @@ with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED) as z:
     count = 0
     for folder in FOLDERS:
         for path in sorted((ROOT / folder).rglob("*")):
-            if path.is_file() and path.suffix not in SKIP and "__pycache__" not in path.parts:
+            rel = path.relative_to(ROOT).as_posix()
+            if path.is_file() and path.suffix not in SKIP and "__pycache__" not in path.parts and rel not in LEAVE_OUT:
                 z.write(path, f"{TOP}/{path.relative_to(ROOT).as_posix()}")
                 count += 1
 print(OUT, count + len(DOCS) + len(FILES) + 1, "files")
