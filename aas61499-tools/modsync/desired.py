@@ -42,7 +42,7 @@ from modgen.fbxml import connections as wire, fb
 from modgen.module import module_skill
 from modgen.spec import ModuleSpec, Parameter
 
-from .compare import Drift
+from .compare import Drift, init_link, owner
 from .device import BOOT, Snapshot, literal, read_structure, read_values
 from .structure import driven_by, shape, stated, structure, walk
 # What the AAS says, where it is, and what it describes: re-exported, so ``desired`` stays the one
@@ -66,6 +66,7 @@ class Differences:
     values: dict[str, tuple[str, str | None]] = field(default_factory=dict)  # port -> (described, running)
     restart: list[str] = field(default_factory=list)                        # differences no online change removes
     built: list[str] = field(default_factory=list)                          # the record of what was built is wrong
+    partial: dict[str, str] = field(default_factory=dict)                  # of ``create``: what the program has of it
 
     @property
     def empty(self) -> bool:
@@ -77,7 +78,7 @@ class Differences:
         return bool(self.create or self.values) and not self.restart
 
     def lines(self) -> list[str]:
-        return ([f"described, not in the program: {n}" for n in self.create]
+        return ([self.partial.get(n) or f"described, not in the program: {n}" for n in self.create]
                 + [f"{p} = {r}, the AAS describes {w}" for p, (w, r) in self.values.items()]
                 + self.restart + self.built)
 
@@ -120,8 +121,12 @@ def read(client: Client, host: str, port: int, module: dict, components: list[di
         mark = time.perf_counter()
     primitives = {n: {"package": package, **{k: v for k, v in s.items() if k != "offered"}}
                   for n, s in wanted["skills"].items()}
-    running = structure(snap.fbs, snap.connections, value, primitives)
+    # A described skill the program has only part of (a change that was cut) is read as one it lacks,
+    # and so created, that is completed; the rest of the program is read without it.
+    partial = {s: why for s in spec.composites if (why := partly(spec, snap, s, value))}
+    running = structure(*without(snap.fbs, snap.connections, partial), value, primitives)
     found = differences(wanted, running, spec)
+    found.partial = {s: why for s, why in partial.items() if s in found.create}
     for path, typ, digest in instances(record_):
         if path.split(".")[0] in found.create:
             continue                                      # of a skill that is still to be built
@@ -166,10 +171,13 @@ def differences(wanted: dict, running: dict, spec: ModuleSpec) -> Differences:
                     typ = spec.skills[a["skill"]].parameters[p].type
                     found.values[f"{prefix}.{a['name']}.{p}"] = (text(v, typ), text(r, typ))
 
+    for name, why in running.get("unreadable", {}).items():
+        found.restart.append(f"{name}: in the program, but it cannot be read as a skill ({why})")
     for name, comp in wanted["composites"].items():
         have = running["composites"].get(name)
         if have is None:
-            found.create.append(name)
+            if name not in running.get("unreadable", {}):
+                found.create.append(name)
             continue
         sequence(f"{name}.Execute", comp["execute"], have["execute"])
         sequence(f"{name}.Stop", comp["stop"], have["stop"])
@@ -222,6 +230,77 @@ def fragment(spec: ModuleSpec, names: list[str], tail: str) -> tuple[FlatApplica
     del flat.fbs["Tail__"]
     links = [(tail if s == "Tail__.INITO" else s, d) for s, d in flat.event_connections + flat.data_connections]
     return flat, links
+
+
+TAIL = "Tail__.INITO"                       # where ``fragment`` links a skill into the INIT chain
+
+
+def partly(spec: ModuleSpec, snap: Snapshot, name: str, value) -> str | None:
+    """What the program has of the described skill ``name`` when it has some of it but not all of it
+    running and initialised, as a reconfiguration leaves it that was cut (it creates, writes, connects,
+    starts, and fires INIT last): an instance never started (IDLE), or its OPC UA method not opened
+    (``UaStart.QO`` FALSE, set by INIT). None when the program has none of it, or all of it running."""
+    have = [n for n in snap.fbs if n.startswith(name + ".")]
+    if not have:
+        return None
+    idle = [n for n in have if snap.status.get(n) == "IDLE"]
+    uninitialised = literal(value(f"{name}.UaStart.QO")) is False
+    if not idle and not uninitialised:
+        return None
+    app, links = fragment(spec, [name], TAIL)
+    inner = [c for c in links if c[0] != TAIL]
+    entry = next(d for s, d in links if s == TAIL)
+    lacking_ = [n for n in app.fbs if n not in snap.fbs]
+    unlinked = [c for c in inner if c not in snap.connections]
+    entered = any(d == entry and not s.startswith(name + ".") for s, d in snap.connections)
+    return (f"{name}: part of it in the program, to be completed ({len(app.fbs) - len(lacking_)} of "
+            f"{len(app.fbs)} instances, {len(inner) - len(unlinked)} of {len(inner)} connections, "
+            f"{len(idle)} never started{'' if entered else ', not in the INIT chain'}"
+            f"{', not initialised' if uninitialised or idle else ''})")
+
+
+def without(fbs: dict[str, str], connections, names) -> tuple[dict[str, str], set[tuple[str, str]]]:
+    """The program without the instances of the skills ``names`` and the connections to and from them."""
+    inside = lambda instance: any(instance.startswith(n + ".") for n in names)          # noqa: E731
+    return ({i: t for i, t in fbs.items() if not inside(i)},
+            {(s, d) for s, d in connections if not inside(owner(s)) and not inside(owner(d))})
+
+
+def completing(app: FlatApplication, links: list[tuple[str, str]], snap: Snapshot,
+               values: dict[str, tuple[str, str | None]], resource: str) -> list[Command]:
+    """The commands that complete skills the program has part of: the instances it lacks created, the
+    values of all their instances written, the connections it lacks made, what has not run started,
+    and the INIT chain fired once where it enters them (a cut change stopped before that, its last
+    command). Refused where completing is not enough: an instance of another type, or one the skill
+    does not have (they would have to be deleted)."""
+    names = {n.partition(".")[0] for n in app.fbs}
+    wrong = [n for n in app.fbs if n in snap.fbs and snap.fbs[n] != app.fbs[n]]
+    stray = [n for n in snap.fbs if n.partition(".")[0] in names and n not in app.fbs]
+    if wrong or stray:
+        raise Refused("a skill the program has part of cannot be completed online: "
+                      + "; ".join(([f"{n} is {snap.fbs[n]}, the skill needs {app.fbs[n]}" for n in wrong]
+                                   + [f"{n} is not one of the skill's instances" for n in stray])[:10]))
+    cmd = lambda op, **kw: Command(op=op, resource=resource, **kw).inside(snap.container)  # noqa: E731
+    entries = [d for s, d in links if init_link((s, d)) and owner(s) not in app.fbs and owner(d) in app.fbs]
+    return [*[cmd("write", destination=p, value=e) for p, (e, _) in values.items()],
+            *[cmd("create_fb", name=n, type=app.fbs[n]) for n in app.fbs if n not in snap.fbs],
+            *[cmd("write", destination=p, value=v) for p, v in app.parameters.items() if owner(p) in app.fbs],
+            *[cmd("connect", source=s, destination=d) for s, d in links if (s, d) not in snap.connections],
+            *[cmd("start", name=n) for n in app.fbs if snap.status.get(n) != "RUNNING"],
+            *[cmd("write", destination=d, value="$e") for d in entries]]
+
+
+def initialised(client: Client, snap: Snapshot, names, timeout: float = 5.0) -> None:
+    """Until the skills ``names`` have opened their OPC UA method (``UaStart.QO``, set when the INIT
+    fired at their entry has reached it), or ``timeout``: the INIT chain runs after its trigger."""
+    deadline = time.monotonic() + timeout
+    waiting = set(names)
+    while waiting and time.monotonic() < deadline:
+        found = Snapshot(snap.host, snap.port, snap.resource, snap.container, fbs={f"{n}.UaStart": "" for n in waiting})
+        read_values(client, found, [f"{n}.UaStart.QO" for n in waiting])
+        waiting = {n for n in waiting if literal(found.values.get(f"{n}.UaStart.QO")) is False}
+        if waiting:
+            time.sleep(0.005)
 
 
 def amended(boot: str, commands: list[Command]) -> str:
@@ -282,13 +361,25 @@ def reconfigure(client: Client, host: str, port: int, module: dict, components: 
         return ["the program is what the AAS describes, nothing to do"], before
     if found.restart or found.built:
         raise Refused("not possible online: " + "; ".join((found.restart + found.built)[:10]))
-    app, links = fragment(before.spec, found.create, init_tail(before.snapshot.connections)) if found.create \
-        else (FlatApplication(), [])
-    if missing := lacking(client, app.fbs.values(), before.snapshot.hashes):
+    snap = before.snapshot
+    # The INIT chain's end without the skills to create: a skill the program has part of may be in it.
+    app, links = fragment(before.spec, found.create, init_tail(without(snap.fbs, snap.connections, found.create)[1])) \
+        if found.create else (FlatApplication(), [])
+    if missing := lacking(client, app.fbs.values(), snap.hashes):
         raise Refused(f"FORTE lacks the block types {missing}")
-    drift = Drift(missing=list(app.fbs), missing_connections=links, values=found.values)
-    commands = online(app, drift, resource, container=before.snapshot.container)
-    done = summary(drift, commands)
+    skills = sorted({n.partition(".")[0] for n in app.fbs})
+    if any(n in snap.fbs for n in app.fbs):        # skills the program has part of: completed
+        commands = completing(app, links, snap, found.values, resource)
+        count = lambda op: sum(c.op == op for c in commands)                      # noqa: E731
+        done = [f"write {p} := {e} (was {r})" for p, (e, r) in found.values.items()]
+        done.append(f"complete {', '.join(skills)}: {count('create_fb')} instances created, "
+                    f"{count('connect')} connections made, {count('start')} started")
+        done += [f"initialise from {c.destination}" for c in commands if c.value == "$e"]
+        done.append(f"{len(commands)} management commands")
+    else:
+        drift = Drift(missing=list(app.fbs), missing_connections=links, values=found.values)
+        commands = online(app, drift, resource, container=snap.container)
+        done = summary(drift, commands)
     stats["commands"] = len(commands)
     stats["bytes"] = sum(len(c.xml(i).encode()) for i, c in enumerate(commands, 1))
     phase("compile_s")
@@ -299,6 +390,8 @@ def reconfigure(client: Client, host: str, port: int, module: dict, components: 
     phase("guard_s")
     for command in commands:
         client.execute(command)
+    if skills:
+        initialised(client, snap, skills)          # their INIT chain runs after its trigger
     phase("apply_s")
     after = read(client, host, port, module, components, resource, record_, stats.setdefault("verify", {}))
     lacks = [n for n in app.fbs if n not in after.snapshot.fbs]

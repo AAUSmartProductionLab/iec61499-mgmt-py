@@ -223,20 +223,23 @@ def structure(fbs: dict[str, str], connections, value: Callable[[str], str | Non
         """The steps of the sequence ``prefix``: a flow, of steps one after the other or with blocks."""
         return flow(prefix)
 
-    composites = {}
+    composites, unreadable = {}, {}
     for name in [n for n in order if fbs.get(f"{n}.Control") == CORE]:
-        # Rule 3: the Start method hands argument k + 1 to the latch of parameter k.
-        latches = sorted((int(s.rpartition("_")[2]), d.split(".")[-2]) for s, d in connections
-                         if s.startswith(f"{name}.UaStart.RD_") and d.endswith(".Requested"))
-        parameters = {p: declared(fbs[f"{name}.{p}"][len(LATCH):], value(f"{name}.{p}.Default"),
-                                  value(f"{name}.{p}.Lower"), value(f"{name}.{p}.Upper")) for _, p in latches}
-        # The results are published in the order the ID names them.
-        published = [path.rpartition("/")[2] for path in (literal(value(f"{name}.PubResults.ID")) or "").strip("]").split(";")[1:]]
-        results = {published[int(d.rpartition("_")[2]) - 1]: ".".join(s.split(".")[-2:]).replace(".R_", ".")
-                   for s, d in connections if d.startswith(f"{name}.PubResults.SD_")}
-        composites[name] = {"offered": literal(value(f"{name}.Control.Methods")) is True, "parameters": parameters,
-                            "execute": steps(f"{name}.Execute"), "stop": steps(f"{name}.Stop"),
-                            "results": {r: results[r] for r in published}}
+        try:
+            # Rule 3: the Start method hands argument k + 1 to the latch of parameter k.
+            latches = sorted((int(s.rpartition("_")[2]), d.split(".")[-2]) for s, d in connections
+                             if s.startswith(f"{name}.UaStart.RD_") and d.endswith(".Requested"))
+            parameters = {p: declared(fbs[f"{name}.{p}"][len(LATCH):], value(f"{name}.{p}.Default"),
+                                      value(f"{name}.{p}.Lower"), value(f"{name}.{p}.Upper")) for _, p in latches}
+            # The results are published in the order the ID names them.
+            published = [path.rpartition("/")[2] for path in (literal(value(f"{name}.PubResults.ID")) or "").strip("]").split(";")[1:]]
+            results = {published[int(d.rpartition("_")[2]) - 1]: ".".join(s.split(".")[-2:]).replace(".R_", ".")
+                       for s, d in connections if d.startswith(f"{name}.PubResults.SD_")}
+            composites[name] = {"offered": literal(value(f"{name}.Control.Methods")) is True, "parameters": parameters,
+                                "execute": steps(f"{name}.Execute"), "stop": steps(f"{name}.Stop"),
+                                "results": {r: results[r] for r in published}}
+        except (KeyError, ValueError, IndexError) as exc:      # a skill with parts missing: said, not read
+            unreadable[name] = f"{type(exc).__name__}: {exc}"
 
     offered = [n for n in order if fbs.get(n) == f"{primitive}{n}"]
     return {
@@ -247,6 +250,7 @@ def structure(fbs: dict[str, str], connections, value: Callable[[str], str | Non
                    for n, p in primitives.items() if p["package"] == package},
         "composites": composites,
         "procedures": {n: steps(n) for n in order if n in PROCEDURES and n not in composites},
+        **({"unreadable": unreadable} if unreadable else {}),
     }
 
 

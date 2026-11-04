@@ -38,13 +38,16 @@ class FakeForte:
                        for p, v in expected_values(cand.spec, app).items()}
         self.values[MODULE_STATE] = str(STATES[state])
         self.values[OCCUPIED] = "TRUE" if occupied else "FALSE"
+        # As FORTE: booted, every instance runs and every skill's OPC UA method is open (QO).
+        self.status = {n: "RUNNING" for n in self.fbs}
+        self.values.update({f"{n}.QO": "TRUE" for n in self.fbs if n.endswith(".UaStart")})
         self.lacking = set(lacking)
         self.writes, self.started, self.triggered = [], [], []
 
     def execute(self, c):
         if c.op == "query_fbs":
             return response(fbs=[{"Name": "START", "Type": "iec61499::events::E_RESTART", "Status": "RUNNING"}]
-                            + [{"Name": n, "Type": t, "Status": "RUNNING"} for n, t in self.fbs.items()])
+                            + [{"Name": n, "Type": t, "Status": self.status.get(n, "RUNNING")} for n, t in self.fbs.items()])
         if c.op == "query_connections":
             return response(connections=[{"Source": s, "Destination": d} for s, d in sorted(self.connections)])
         if c.op == "query_type":
@@ -56,19 +59,31 @@ class FakeForte:
             return response(connections=[{"Source": c.source, "Destination": self.values[c.source]}])
         if c.op == "write" and c.value == "$e":
             self.triggered.append(c.destination)
+            # The INIT chain from there opens the OPC UA method of its skill, if that instance runs.
+            skill = c.destination.rpartition(".")[0].rpartition(".")[0]
+            for n in self.fbs:
+                if n == f"{skill}.UaStart" and self.status.get(n) == "RUNNING":
+                    self.values[f"{n}.QO"] = "TRUE"
         elif c.op == "write":
             self.writes.append((c.destination, c.value))
             self.values[c.destination] = literal(c.value) if c.value.startswith(("'", '"')) else c.value
         elif c.op == "create_fb":
+            if c.name in self.fbs:                     # FORTE refuses a name it has
+                raise ManagementError(Response(request_id="1", reason="INVALID_STATE", raw="", fbs=[],
+                                               connections=[], types=[]))
             self.fbs[c.name] = c.type
+            self.status[c.name] = "IDLE"               # created, not started
             # FORTE starts an instance with its type's initial values, here the skills' parameter defaults.
             self.values.update(expected_values(self.spec, FlatApplication(fbs={c.name: c.type})))
+            if c.name.endswith(".UaStart"):
+                self.values[f"{c.name}.QO"] = "FALSE"
         elif c.op == "connect":
             self.connections.add((c.source, c.destination))
         elif c.op == "disconnect":
             self.connections.remove((c.source, c.destination))
         elif c.op == "start":
             self.started.append(c.name)
+            self.status[c.name] = "RUNNING"
         else:
             raise AssertionError(c.op)
         return response()
