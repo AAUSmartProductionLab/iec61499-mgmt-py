@@ -344,5 +344,39 @@ rate; every missed drift listed with its element, and looked at.
   AAS has no value (fixed). A1: 5 of 34 edits lowered a parameter's minimum below what the dosing
   primitive takes; the reconciler refused that AAS as describing a skill the module cannot carry out (the
   check, a case for Q4), so A1 now raises a minimum toward the default, a valid change. Not made: 2
-  stray joins, which FORTE refuses to create alone (left out of P3's types), and 1 time value (now
-  written in seconds, as the boot file writes it). The runs that count are those of the second full run.
+  stray joins, which FORTE refuses to create alone (left out of P3's types), and 1 time value, written
+  with a fraction (`T#10001.0ms`) that FORTE's TIME literal does not take (understood in the second
+  full run). The runs that count are those of the second full run.
+- *Second full run (4 Nov, 1,258 runs in 2 h 36 min, `cell/eval/results/q3-2026-11-04T1252.jsonl`, commit
+  `6d4f0d3`, the tools unchanged).* 1,257 runs passed R1 to R3. The one that did not was a drift the
+  harness could not make, the module's stop timeout (`T#10000ms`): the time it wrote, `T#11.0s`, came
+  from a float, and FORTE refused it (BAD_PARAMS). The harness now writes an integer millisecond (commit
+  `3af15c1`), and that drift was made again alone, on the same FORTE
+  (`q3-2026-11-04T1252-repeat.jsonl`, commit `a8542a6`); the analysis counts it in place of the first.
+
+**Results (4 Nov).** The second full run with its repeated drift: 1,258 runs, every one counted, the
+tables in `cell/eval/results/q3-2026-11-04T1252.md`. No FORTE error in any run; in 8 the OPC UA server
+failed to register with a discovery server (counted apart, V10).
+
+- *H3.1 holds.* The audit detected all 1,157 drifts (100 % [99.7, 100]), every kind in every run, and
+  located each: a reported line names the instance, port or skill. The reading before a change detected
+  every drift of P2 to P5 and A1 to A4, and 42 of the 412 values (P1): those the skills hold, a step's
+  constants, a parameter's default and limits, whether a skill is offered and where its results are
+  published. The other values, what every block of the module carries (the module's name, the OPC UA
+  root and path, the holder) and the IO addresses, only the audit reads, one request each, by design.
+- *H3.2 holds.* No difference was reported in the 101 runs where the oracle finds none, the 100 clean
+  runs and the change cut after its last command: 0 of 101 (0 % [0, 3.7]).
+- *H3.3 holds.* Every drift was sorted into the class its kind calls for. 572 drifts of an online class
+  were removed, 404 of the 412 values written in the program, every cut change (135) and every value
+  changed in the AAS (33), and afterwards the oracle found the program the generator's of the AAS each
+  time. The other 8 values are what the skill model reads as a skill's interface: whether the skill
+  offers its OPC UA methods (`Control.Methods`, 5) and where its results are published
+  (`PubResults.ID`, 3). Their blocks take them at initialisation, so the audit also reports the skill as
+  differing, a restart, and the reconciler refuses, by design. Every drift of a restart or record class
+  (P2, P3, P5, A2 to A4; 577) was refused, as not possible online.
+- *H3.4 holds.* A reconfiguration cut after any of its 135 commands (i = 0 to 134) was completed by the
+  next one: the new skill then ran in all 135, and Dispensing still ran in all 14 of every tenth. Cut
+  after its last command, the program was complete and nothing was left to do.
+- *The baseline,* the AAS compared with the boot file that was deployed instead of with the running
+  program, detected the 220 drifts where the AAS is ahead of the program (P4, A1 to A4) and none of the
+  937 made in the program (P1 to P3, P5).
