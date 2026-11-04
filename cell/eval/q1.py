@@ -290,26 +290,31 @@ def reading(commands) -> dict:
     return dict(Counter(c.op for c in commands if c.op in READING))
 
 
-def program_is(bench, boot: str) -> dict:
+def program_is(bench, boot: str, running: bool = False) -> dict:
     """What differs between the program FORTE runs and the one the generator's boot file ``boot``
     creates: instances and their types, connections, and the values it writes (read back); empty
-    lists if nothing. Independent of the AAS and of the reconciler's own reading and comparing."""
+    lists if nothing. Independent of the AAS and of the reconciler's own reading and comparing.
+    ``running``: also every instance running and every skill's OPC UA method open (``UaStart.QO``),
+    as after a boot."""
     snap = read_structure(bench.client, bench.host, bench.port)
     rel = lambda name: outside(name, snap.container)                                  # noqa: E731
     want = boot_set(boot)
     fbs = {(rel(a), b) for kind, a, b in want if kind == "fb" and a != "RES"}
     connections = {(rel(a), rel(b)) for kind, a, b in want if kind == "connect"}
     values = {rel(b): html.unescape(a) for kind, a, b in want if kind == "write"}
-    read_values(bench.client, snap, values)
+    opened = [f"{n}.QO" for n, _ in fbs if n.endswith(".UaStart")] if running else []
+    read_values(bench.client, snap, [*values, *opened])
     return {"fbs": [list(x) for x in sorted(fbs ^ set(snap.fbs.items()))[:5]],
             "connections": [list(x) for x in sorted(connections ^ snap.connections)[:5]],
             "values": sorted([p, v, snap.values.get(p)] for p, v in values.items()
                              if literal(snap.values.get(p)) != literal(v))[:5],
+            "states": sorted([n, s] for n, s in snap.status.items() if running and s != "RUNNING")[:5],
+            "closed": sorted(p for p in opened if literal(snap.values.get(p)) is not True)[:5],
             "compared": [len(fbs), len(connections), len(values)]}
 
 
 def same(found: dict) -> bool:
-    return not (found["fbs"] or found["connections"] or found["values"])
+    return not any(found.get(k) for k in ("fbs", "connections", "values", "states", "closed"))
 
 
 # The OPC UA server announces itself (LDS-ME) and registers with a discovery server it finds, such as

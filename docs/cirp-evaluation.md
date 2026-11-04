@@ -241,3 +241,70 @@ tables in `q1-2026-11-04T0028.md`, the figure in `docs/paper/cirp/figures/activa
   is Python only (32 of them in the verify phase). An offline test found full garbage collections of up
   to 0.41 s in such a process, but none inside a reading in 300, so the cause is not established. They
   are kept; every run stayed below 1 s.
+
+## Q3: does the program stay what its AAS says?
+
+**Question.** When the running program and the module's AAS come apart, does the reconciler notice it,
+say what and where, sort it as it should, and bring the program back where it can; and does it never
+report a difference where there is none? The two come apart from either side: the program changed
+around the reconciler (over the management protocol, as from the IDE or by hand, or by a
+reconfiguration that was cut), or the AAS changed by an engineer and not yet applied.
+
+**Hypotheses** (stated before the runs):
+
+- H3.1 Every drift that makes the program differ from what the AAS describes is detected, in every kind.
+- H3.2 Where the program is what the AAS describes, no difference is reported (100 clean runs).
+- H3.3 Each detected drift is sorted into the class its kind calls for, and the ones the reconciler can
+  remove online are removed: afterwards the program is the generator's of the AAS.
+- H3.4 A reconfiguration cut after any of its commands is completed by the next one: the new skill then
+  runs, and the module still runs what it ran.
+
+**Ground truth.** The drift is made by the harness, so what and where are known. Whether the program
+then differs from what the AAS describes at all is the generator's oracle of Q1 (V1g): the program read
+from FORTE against the generator's boot file of the module spec the AAS was built from, instances and
+types, connections and values, here also every instance running and every skill's OPC UA method open.
+An injection after which the oracle finds no difference (a value written that the port had) is counted
+with the clean runs.
+
+**The test program.** The filling module with five skills of different shapes: Dispensing as delivered,
+DoubleDose (two doses, the tests' skill), BottomUpFilling (a parallel block: the needle rises while the
+pump doses), and Q1's synthetic composite of 8 steps, once in sequence (Sequence8) and once in two
+parallel branches (Parallel8). The module Idle and free in every run (between orders), so that a value
+can be written back (the guard).
+
+**Kinds of drift,** each made on a fresh FORTE started from the test program's boot file:
+
+| Kind | Made by | Population | Expected class |
+| --- | --- | --- | --- |
+| P1 value | a WRITE of another value (a number + 1, a boolean negated, a string or time changed) to an input the boot file writes | every such input | value |
+| P2 connection | a DELETE of a connection | every connection | restart |
+| P3 stray instance | a CREATE of an instance of one of the module's block types, unconnected, or with its INIT linked from an INITO of the program | 30 sampled (type, place, linked or not) | restart |
+| P4 cut change | Q1's new composite of 4 steps (135 commands) cut after command i: only the first i sent | every i | create (completed) |
+| P5 type version | the record of what was built names another hash for an instance's type than FORTE reports | every instance recorded | record |
+| A1 value | a step's constant, or a parameter's default or limit, changed in the AAS | every one | value |
+| A2 step added | a primitive step without parameters inserted into a skill's sequence | 30 sampled (skill, place, step) | restart |
+| A3 flow reordered | two neighbouring steps of a skill's sequence swapped | every pair | restart |
+| A4 skill removed | a skill taken out of the AAS | every skill | restart |
+| Clean | nothing | 100 runs | none |
+
+The A kinds are made in the module spec and the AAS built from it (as the skill editor saves it), so
+that the oracle has the generator's program of the changed AAS.
+
+**Measures,** per run: *detected*, whether the reconciler reports a difference (against the oracle:
+true and false positives and negatives); *located*, whether a reported line names the drifted element
+(its instance, port or skill); *class*, the reported kinds (value, create, restart, record; a confusion
+matrix of kind and class); *removed*, for an online class, the reconciler run and the oracle asked again
+(the program the generator's of the AAS, read back without a difference), and for a restart class, the
+reason it refuses with. For P4 also: the new skill run (V5), and Dispensing run in every tenth.
+
+**Baselines,** on the same runs: a deployment that never reads back (the IDE's) detects no drift by
+construction; comparing the AAS with the boot file that was deployed, instead of with the running
+program, is computed for every run from the boot files (it sees the A kinds and none of the P kinds).
+
+**Checks in every run:** R1 before the drift, the program is the generator's (V1g) and the reconciler
+reads no difference; R2 the drift was made (FORTE accepted the command, or the AAS differs); R3 FORTE
+logged no error (as V10). A run failing one is reported, not counted.
+
+**Analysis.** Per kind: detection rate, location rate, class accuracy and removal rate with 95 % Wilson
+intervals; the false alarm rate of the clean runs; the confusion matrix; the baseline's detection
+rate; every missed drift listed with its element, and looked at.
