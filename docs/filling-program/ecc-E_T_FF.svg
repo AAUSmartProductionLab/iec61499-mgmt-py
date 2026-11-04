@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="302" height="110" viewBox="262 420 1888 685" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="262" y="420" width="1888" height="685" fill="#ffffff"/>
+<path d="M576,700 Q622,418 1386,665" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1386,665 1319,675 1338,618" fill="#8a93a6"/>
+<path d="M1485,825 Q782,1208 604,860" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="604,860 658,900 604,927" fill="#8a93a6"/>
+<rect x="400" y="700" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="382" y="682" width="361" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="562" y="800" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">START</text>
+<rect x="1235" y="665" width="235" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="1352" y="765" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">SET</text>
+<rect x="1470" y="695" width="370" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="1520" y="767" font-size="52" text-anchor="start" fill="#1f2430">TOGGLE</text>
+<rect x="1840" y="695" width="190" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1890" y="767" font-size="52" text-anchor="start" fill="#1f2430">EO</text>
+<rect x="801" y="540" width="117" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="860" y="594" font-size="46" text-anchor="middle" fill="#6b7280">CLK</text>
+</svg>

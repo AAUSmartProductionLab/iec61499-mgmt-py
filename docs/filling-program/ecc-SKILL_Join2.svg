@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1542" height="873" viewBox="-120 -138 9640 5458" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-120" y="-138" width="9640" height="5458" fill="#ffffff"/>
+<path d="M4789,160 Q7500,2600 4789,5040" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4789,5040 4813,4978 4854,5022" fill="#8a93a6"/>
+<path d="M4611,5040 Q1900,2600 4612,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4612,160 4587,222 4547,178" fill="#8a93a6"/>
+<path d="M4538,128 Q2558,710 687,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="687,1260 736,1214 753,1272" fill="#8a93a6"/>
+<path d="M4538,160 Q3415,710 2293,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2293,1260 2334,1207 2360,1261" fill="#8a93a6"/>
+<path d="M4649,160 Q4295,710 3941,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="3941,1260 3949,1193 3999,1226" fill="#8a93a6"/>
+<path d="M687,1420 Q2558,1970 4538,2552" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4538,2552 4472,2564 4489,2507" fill="#8a93a6"/>
+<path d="M2293,1420 Q3415,1970 4538,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4538,2520 4471,2521 4497,2467" fill="#8a93a6"/>
+<path d="M3941,1420 Q4295,1970 4649,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4649,2520 4591,2486 4642,2453" fill="#8a93a6"/>
+<path d="M4749,160 Q5083,710 5417,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5417,1260 5360,1224 5411,1193" fill="#8a93a6"/>
+<path d="M4858,160 Q5940,710 7023,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="7023,1260 6955,1260 6983,1206" fill="#8a93a6"/>
+<path d="M4863,128 Q6820,710 8671,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="8671,1260 8605,1272 8622,1214" fill="#8a93a6"/>
+<path d="M5417,1420 Q5083,1970 4749,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4749,2520 4755,2453 4806,2484" fill="#8a93a6"/>
+<path d="M7023,1420 Q5940,1970 4858,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4858,2520 4898,2466 4925,2520" fill="#8a93a6"/>
+<path d="M8671,1420 Q6820,1970 4863,2552" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4863,2552 4912,2506 4929,2563" fill="#8a93a6"/>
+<path d="M4643,2680 Q4248,3230 3853,3780" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="3853,3780 3863,3714 3912,3749" fill="#8a93a6"/>
+<path d="M4740,2680 Q5015,3230 5290,3780" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5290,3780 5236,3740 5290,3713" fill="#8a93a6"/>
+<path d="M4863,2546 Q8500,1340 4863,134" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4863,134 4929,124 4911,181" fill="#8a93a6"/>
+<path d="M3853,3940 Q4248,4490 4643,5040" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4643,5040 4583,5009 4632,4974" fill="#8a93a6"/>
+<path d="M5290,3940 Q5015,4490 4740,5040" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4740,5040 4740,4973 4794,5000" fill="#8a93a6"/>
+<rect x="4538" y="0" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="4520" y="-18" width="361" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="4700" y="100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">START</text>
+<rect x="4285" y="5040" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="4448" y="5140" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Reset</text>
+<rect x="4610" y="5070" width="505" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="4660" y="5142" font-size="52" text-anchor="start" fill="#1f2430">Alg_Reset</text>
+<rect x="4538" y="2520" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="4700" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Check</text>
+<rect x="3515" y="3780" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="3655" y="3880" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Done</text>
+<rect x="3795" y="3810" width="280" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="3845" y="3882" font-size="52" text-anchor="start" fill="#1f2430">DONE</text>
+<rect x="4775" y="3780" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="4915" y="3880" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Fail</text>
+<rect x="5055" y="3810" width="460" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="5105" y="3882" font-size="52" text-anchor="start" fill="#1f2430">Alg_Fail</text>
+<rect x="5515" y="3810" width="370" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="5565" y="3882" font-size="52" text-anchor="start" fill="#1f2430">FAILED</text>
+<rect x="0" y="1260" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="162" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Done1</text>
+<rect x="325" y="1290" width="505" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="375" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Done1</text>
+<rect x="1530" y="1260" width="370" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="1715" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">First1</text>
+<rect x="1900" y="1290" width="550" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="1950" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_First1</text>
+<rect x="2450" y="1290" width="280" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="2500" y="1362" font-size="52" text-anchor="start" fill="#1f2430">HALT</text>
+<rect x="3430" y="1260" width="370" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="3615" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Later1</text>
+<rect x="3800" y="1290" width="550" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="3850" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Later1</text>
+<rect x="5050" y="1260" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="5212" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Done2</text>
+<rect x="5375" y="1290" width="505" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="5425" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Done2</text>
+<rect x="6580" y="1260" width="370" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="6765" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">First2</text>
+<rect x="6950" y="1290" width="550" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="7000" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_First2</text>
+<rect x="7500" y="1290" width="280" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="7550" y="1362" font-size="52" text-anchor="start" fill="#1f2430">HALT</text>
+<rect x="8480" y="1260" width="370" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="8665" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Later2</text>
+<rect x="8850" y="1290" width="550" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="8900" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Later2</text>
+<rect x="6016" y="2550" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="6100" y="2604" font-size="46" text-anchor="middle" fill="#6b7280">START</text>
+<rect x="2461" y="660" width="195" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="2558" y="714" font-size="46" text-anchor="middle" fill="#6b7280">DONE_1</text>
+<rect x="3099" y="660" width="632" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="3415" y="714" font-size="46" text-anchor="middle" fill="#6b7280">FAILED_1[NOT AnyFailed]</text>
+<rect x="4172" y="660" width="246" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="4295" y="714" font-size="46" text-anchor="middle" fill="#6b7280">FAILED_1</text>
+<rect x="4986" y="660" width="195" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="5083" y="714" font-size="46" text-anchor="middle" fill="#6b7280">DONE_2</text>
+<rect x="5624" y="660" width="632" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="5940" y="714" font-size="46" text-anchor="middle" fill="#6b7280">FAILED_2[NOT AnyFailed]</text>
+<rect x="6697" y="660" width="246" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="6820" y="714" font-size="46" text-anchor="middle" fill="#6b7280">FAILED_2</text>
+<rect x="3726" y="3180" width="1045" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="4248" y="3234" font-size="46" text-anchor="middle" fill="#6b7280">[(Ended1 AND Ended2) AND NOT AnyFailed]</text>
+<rect x="4544" y="3180" width="942" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="5015" y="3234" font-size="46" text-anchor="middle" fill="#6b7280">[(Ended1 AND Ended2) AND AnyFailed]</text>
+</svg>

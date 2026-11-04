@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1785" height="470" viewBox="-120 -138 11155 2938" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-120" y="-138" width="11155" height="2938" fill="#ffffff"/>
+<path d="M5318,118 Q3130,710 1098,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1098,1260 1148,1215 1164,1273" fill="#8a93a6"/>
+<path d="M5318,153 Q4249,710 3194,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="3194,1260 3233,1206 3261,1259" fill="#8a93a6"/>
+<path d="M5447,160 Q5368,710 5289,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5289,1260 5268,1196 5327,1205" fill="#8a93a6"/>
+<path d="M5593,160 Q6520,710 7448,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="7448,1260 7381,1255 7411,1204" fill="#8a93a6"/>
+<path d="M5598,119 Q7729,710 9712,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="9712,1260 9646,1273 9662,1215" fill="#8a93a6"/>
+<path d="M5598,147 Q8103,1340 5335,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5335,2520 5379,2469 5402,2524" fill="#8a93a6"/>
+<path d="M5319,160 Q3268,1340 6461,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6461,2520 6394,2527 6415,2471" fill="#8a93a6"/>
+<path d="M5598,114 Q10655,1340 8405,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="8405,2520 8444,2466 8472,2519" fill="#8a93a6"/>
+<path d="M5318,135 Q2268,1340 6398,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6398,2520 6332,2532 6348,2475" fill="#8a93a6"/>
+<path d="M5598,118 Q10103,1340 5462,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5462,2520 5513,2476 5528,2534" fill="#8a93a6"/>
+<path d="M5318,132 Q2055,1340 7859,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="7859,2520 7794,2537 7806,2479" fill="#8a93a6"/>
+<path d="M951,1420 Q1971,1970 2992,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2992,2520 2924,2518 2953,2465" fill="#8a93a6"/>
+<path d="M1605,1264 Q4090,1030 5343,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5343,160 5311,219 5276,170" fill="#8a93a6"/>
+<path d="M3174,1420 Q4094,1970 5014,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5014,2520 4947,2515 4978,2463" fill="#8a93a6"/>
+<path d="M3600,1260 Q5209,1030 5437,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5437,160 5451,226 5393,210" fill="#8a93a6"/>
+<path d="M5367,1420 Q5978,1970 6589,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6589,2520 6524,2502 6564,2458" fill="#8a93a6"/>
+<path d="M5549,1260 Q6328,1030 5531,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5531,160 5594,184 5550,225" fill="#8a93a6"/>
+<path d="M7625,1420 Q7918,1970 8210,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="8210,2520 8155,2481 8208,2453" fill="#8a93a6"/>
+<path d="M7556,1260 Q7480,1030 5598,146" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5598,146 5665,144 5640,198" fill="#8a93a6"/>
+<path d="M3582,2520 Q10099,1340 5598,118" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5598,118 5664,105 5648,163" fill="#8a93a6"/>
+<path d="M9662,1260 Q8689,1030 5598,121" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5598,121 5664,109 5647,167" fill="#8a93a6"/>
+<path d="M4789,2520 Q-497,1340 5318,110" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5318,110 5266,151 5253,93" fill="#8a93a6"/>
+<path d="M7071,2520 Q12868,1340 5598,104" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5598,104 5662,84 5652,143" fill="#8a93a6"/>
+<path d="M7815,2533 Q55,1340 5318,113" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5318,113 5266,155 5253,97" fill="#8a93a6"/>
+<rect x="5318" y="0" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="5300" y="-18" width="316" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="5458" y="100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Wait</text>
+<rect x="0" y="1260" width="460" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="230" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ChkStart</text>
+<rect x="460" y="1290" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="510" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_ChkStart</text>
+<rect x="1100" y="1290" width="505" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1150" y="1362" font-size="52" text-anchor="start" fill="#1f2430">START_RSP</text>
+<rect x="2305" y="1260" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="2512" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ChkStop</text>
+<rect x="2720" y="1290" width="595" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="2770" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_ChkStop</text>
+<rect x="3315" y="1290" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="3365" y="1362" font-size="52" text-anchor="start" fill="#1f2430">STOP_RSP</text>
+<rect x="4475" y="1260" width="460" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="4705" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ChkAbort</text>
+<rect x="4935" y="1290" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="4985" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_ChkAbort</text>
+<rect x="5575" y="1290" width="505" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="5625" y="1362" font-size="52" text-anchor="start" fill="#1f2430">ABORT_RSP</text>
+<rect x="6780" y="1260" width="460" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="7010" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ChkReset</text>
+<rect x="7240" y="1290" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="7290" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_ChkReset</text>
+<rect x="7880" y="1290" width="505" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="7930" y="1362" font-size="52" text-anchor="start" fill="#1f2430">RESET_RSP</text>
+<rect x="2225" y="2520" width="595" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="2522" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ClientStart</text>
+<rect x="2820" y="2550" width="775" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="2870" y="2622" font-size="52" text-anchor="start" fill="#1f2430">Alg_ClientStart</text>
+<rect x="3595" y="2550" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="3645" y="2622" font-size="52" text-anchor="start" fill="#1f2430">GO_START</text>
+<rect x="9085" y="1260" width="595" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="9382" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ParentStart</text>
+<rect x="9680" y="1290" width="775" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="9730" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_ParentStart</text>
+<rect x="10455" y="1290" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="10505" y="1362" font-size="52" text-anchor="start" fill="#1f2430">GO_START</text>
+<rect x="4755" y="2520" width="370" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="4940" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">GoHalt</text>
+<rect x="5125" y="2550" width="415" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="5175" y="2622" font-size="52" text-anchor="start" fill="#1f2430">GO_HALT</text>
+<rect x="6240" y="2520" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="6448" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">GoAbort</text>
+<rect x="6655" y="2550" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="6705" y="2622" font-size="52" text-anchor="start" fill="#1f2430">GO_ABORT</text>
+<rect x="7815" y="2520" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="8022" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">GoReset</text>
+<rect x="8230" y="2550" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="8280" y="2622" font-size="52" text-anchor="start" fill="#1f2430">GO_RESET</text>
+<rect x="2994" y="660" width="272" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="3130" y="714" font-size="46" text-anchor="middle" fill="#6b7280">START_REQ</text>
+<rect x="4126" y="660" width="246" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="4249" y="714" font-size="46" text-anchor="middle" fill="#6b7280">STOP_REQ</text>
+<rect x="5232" y="660" width="272" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="5368" y="714" font-size="46" text-anchor="middle" fill="#6b7280">ABORT_REQ</text>
+<rect x="6384" y="660" width="272" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="6520" y="714" font-size="46" text-anchor="middle" fill="#6b7280">RESET_REQ</text>
+<rect x="7645" y="660" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="7729" y="714" font-size="46" text-anchor="middle" fill="#6b7280">START</text>
+<rect x="6631" y="1290" width="143" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="6703" y="1344" font-size="46" text-anchor="middle" fill="#6b7280">HALT</text>
+<rect x="4584" y="1290" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="4668" y="1344" font-size="46" text-anchor="middle" fill="#6b7280">ABORT</text>
+<rect x="8671" y="1290" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="8755" y="1344" font-size="46" text-anchor="middle" fill="#6b7280">RESET</text>
+<rect x="3298" y="1290" width="1740" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="4168" y="1344" font-size="46" text-anchor="middle" fill="#6b7280">MOD_CHG[((ModuleState = 8) OR (ModuleState = 9)) AND (State &lt;&gt; 5)]</text>
+<rect x="6975" y="1290" width="1457" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="7703" y="1344" font-size="46" text-anchor="middle" fill="#6b7280">MOD_CHG[(ModuleState = 7) AND (State = 1) AND ByClient]</text>
+<rect x="3598" y="1290" width="1714" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="4455" y="1344" font-size="46" text-anchor="middle" fill="#6b7280">MOD_CHG[((ModuleState = 1) OR (ModuleState = 2)) AND (State = 5)]</text>
+<rect x="1822" y="1920" width="298" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="1971" y="1974" font-size="46" text-anchor="middle" fill="#6b7280">[Accepted]</text>
+<rect x="3945" y="1920" width="298" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="4094" y="1974" font-size="46" text-anchor="middle" fill="#6b7280">[Accepted]</text>
+<rect x="5829" y="1920" width="298" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="5978" y="1974" font-size="46" text-anchor="middle" fill="#6b7280">[Accepted]</text>
+<rect x="7769" y="1920" width="298" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="7918" y="1974" font-size="46" text-anchor="middle" fill="#6b7280">[Accepted]</text>
+</svg>

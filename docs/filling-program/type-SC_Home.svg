@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="408" height="385" viewBox="-348 -120 1634 1540" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-348" y="-120" width="1634" height="1540" fill="#ffffff"/>
+<rect x="0" y="420" width="910" height="880" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="910" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="350" width="820" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="455" y="420" font-size="58" text-anchor="middle" fill="#1f2430">SC_Home</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="10,155 42,175 10,195" fill="#b5452b"/>
+<text x="55" y="195" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="10,255 42,275 10,295" fill="#b5452b"/>
+<text x="55" y="295" font-size="58" text-anchor="start" fill="#1f2430">SAMPLE</text>
+<polygon points="868,55 900,75 868,95" fill="#b5452b"/>
+<text x="855" y="95" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="868,155 900,175 868,195" fill="#b5452b"/>
+<text x="855" y="195" font-size="58" text-anchor="end" fill="#1f2430">STARTO</text>
+<polygon points="868,255 900,275 868,295" fill="#b5452b"/>
+<text x="855" y="295" font-size="58" text-anchor="end" fill="#1f2430">SAMPLEO</text>
+<rect x="12" y="484" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="55" y="520" font-size="58" text-anchor="start" fill="#1f2430">Timeout</text>
+<rect x="12" y="584" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="55" y="620" font-size="58" text-anchor="start" fill="#1f2430">AtHome</text>
+<rect x="866" y="484" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="855" y="520" font-size="58" text-anchor="end" fill="#1f2430">Pre</text>
+<rect x="866" y="584" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="855" y="620" font-size="58" text-anchor="end" fill="#1f2430">Post</text>
+<rect x="866" y="684" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="855" y="720" font-size="58" text-anchor="end" fill="#1f2430">Inv</text>
+<rect x="866" y="784" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="855" y="820" font-size="58" text-anchor="end" fill="#1f2430">Timed</text>
+<rect x="866" y="884" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="855" y="920" font-size="58" text-anchor="end" fill="#1f2430">RunTime</text>
+<rect x="866" y="984" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="855" y="1020" font-size="58" text-anchor="end" fill="#1f2430">Command</text>
+<rect x="866" y="1084" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="855" y="1120" font-size="58" text-anchor="end" fill="#1f2430">Arg</text>
+<rect x="866" y="1184" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="855" y="1220" font-size="58" text-anchor="end" fill="#1f2430">StopCommand</text>
+<line x1="-40" y1="175" x2="-40" y2="500" stroke="#6b7280" stroke-width="4"/>
+<rect x="-50" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-50" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="-68" y1="275" x2="-68" y2="600" stroke="#6b7280" stroke-width="4"/>
+<rect x="-78" y="265" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="-78" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="-116" y="518" font-size="50" text-anchor="end" fill="#6b7280">TIME</text>
+<text x="-116" y="618" font-size="50" text-anchor="end" fill="#6b7280">BOOL</text>
+<line x1="950" y1="175" x2="950" y2="1200" stroke="#6b7280" stroke-width="4"/>
+<rect x="940" y="165" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="940" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="940" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="940" y="790" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="940" y="890" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="940" y="990" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="940" y="1090" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="940" y="1190" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<line x1="978" y1="275" x2="978" y2="700" stroke="#6b7280" stroke-width="4"/>
+<rect x="968" y="265" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="968" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="968" y="690" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="1026" y="518" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="1026" y="618" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="1026" y="718" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="1026" y="818" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+<text x="1026" y="918" font-size="50" text-anchor="start" fill="#6b7280">TIME</text>
+<text x="1026" y="1018" font-size="50" text-anchor="start" fill="#6b7280">USINT</text>
+<text x="1026" y="1118" font-size="50" text-anchor="start" fill="#6b7280">LREAL</text>
+<text x="1026" y="1218" font-size="50" text-anchor="start" fill="#6b7280">USINT</text>
+</svg>

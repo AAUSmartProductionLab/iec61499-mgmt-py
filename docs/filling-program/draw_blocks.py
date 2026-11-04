@@ -10,6 +10,8 @@ It writes, into the output folder:
   pins at the top, the data pins below, each data pin's type outside it and, as thin lines on the
   outside, which data pins go with which event;
 - ``inside-<Type>.svg`` for every composite type: the blocks inside it;
+- ``ecc-<Type>.svg`` for every basic type: its state machine, each state with its actions and each
+  transition a curve through its condition, at the places the generator (``modgen/ecc.py``) gave them;
 - ``app-<Application>.svg`` for the application, and ``app-<SubApp>.svg`` (``Dispensing.Execute``)
   for each subapplication in it: the blocks inside;
 - ``legend.svg``: how to read the pictures.

@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2024" height="268" viewBox="-120 -138 12650 1678" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-120" y="-138" width="12650" height="1678" fill="#ffffff"/>
+<path d="M6042,116 Q3391,710 935,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="935,1260 987,1218 1000,1276" fill="#8a93a6"/>
+<path d="M1155,1293 Q4351,1030 6048,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6048,160 6009,214 5981,161" fill="#8a93a6"/>
+<path d="M6042,134 Q4318,710 2672,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2672,1260 2719,1213 2738,1269" fill="#8a93a6"/>
+<path d="M3010,1277 Q5278,1030 6126,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6126,160 6106,224 6063,182" fill="#8a93a6"/>
+<path d="M6065,160 Q5108,710 4152,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="4152,1260 4189,1204 4219,1256" fill="#8a93a6"/>
+<path d="M6148,160 Q5761,710 5374,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5374,1260 5384,1194 5433,1228" fill="#8a93a6"/>
+<path d="M6343,160 Q7298,710 8253,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="8253,1260 8186,1256 8216,1204" fill="#8a93a6"/>
+<path d="M6240,160 Q6484,710 6727,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6727,1260 6676,1217 6730,1193" fill="#8a93a6"/>
+<path d="M6367,132 Q8158,710 9864,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="9864,1260 9798,1270 9816,1213" fill="#8a93a6"/>
+<path d="M6367,116 Q9041,710 11517,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="11517,1260 11452,1276 11465,1218" fill="#8a93a6"/>
+<path d="M4315,1294 Q6068,1030 6193,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6193,160 6214,224 6155,215" fill="#8a93a6"/>
+<path d="M5620,1273 Q6721,1030 6248,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6248,160 6303,198 6250,227" fill="#8a93a6"/>
+<path d="M6938,1260 Q7444,1030 6309,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6309,160 6375,173 6338,220" fill="#8a93a6"/>
+<path d="M8358,1260 Q8258,1030 6367,155" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6367,155 6434,153 6409,208" fill="#8a93a6"/>
+<path d="M9856,1260 Q9118,1030 6367,133" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6367,133 6433,123 6415,180" fill="#8a93a6"/>
+<path d="M11393,1260 Q10001,1030 6367,121" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6367,121 6432,106 6418,164" fill="#8a93a6"/>
+<rect x="6042" y="0" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="6024" y="-18" width="361" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="6204" y="100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">START</text>
+<rect x="0" y="1260" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="140" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Init</text>
+<rect x="280" y="1290" width="460" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="330" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Init</text>
+<rect x="740" y="1290" width="415" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="790" y="1362" font-size="52" text-anchor="start" fill="#1f2430">INIT_IO</text>
+<rect x="1855" y="1260" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="2018" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Ready</text>
+<rect x="2180" y="1290" width="505" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="2230" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Ready</text>
+<rect x="2685" y="1290" width="325" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="2735" y="1362" font-size="52" text-anchor="start" fill="#1f2430">INITO</text>
+<rect x="3710" y="1260" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="3850" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ReqG</text>
+<rect x="3990" y="1290" width="325" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="4040" y="1362" font-size="52" text-anchor="start" fill="#1f2430">REQ_G</text>
+<rect x="5015" y="1260" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="5155" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ReqM</text>
+<rect x="5295" y="1290" width="325" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="5345" y="1362" font-size="52" text-anchor="start" fill="#1f2430">REQ_M</text>
+<rect x="6320" y="1260" width="235" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="6438" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Sim</text>
+<rect x="6555" y="1290" width="415" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="6605" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Sim</text>
+<rect x="6970" y="1290" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="7020" y="1362" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="7905" y="1260" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="8045" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">None</text>
+<rect x="8185" y="1290" width="460" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="8235" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_None</text>
+<rect x="8645" y="1290" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="8695" y="1362" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="9580" y="1260" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="9742" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">DoneG</text>
+<rect x="9905" y="1290" width="505" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="9955" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_DoneG</text>
+<rect x="10410" y="1290" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="10460" y="1362" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="11345" y="1260" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="11508" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">DoneM</text>
+<rect x="11670" y="1290" width="505" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="11720" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_DoneM</text>
+<rect x="12175" y="1290" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="12225" y="1362" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="3319" y="660" width="143" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="3391" y="714" font-size="46" text-anchor="middle" fill="#6b7280">INIT</text>
+<rect x="4195" y="660" width="246" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="4318" y="714" font-size="46" text-anchor="middle" fill="#6b7280">IO_READY</text>
+<rect x="4882" y="660" width="452" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="5108" y="714" font-size="46" text-anchor="middle" fill="#6b7280">REQ[Backend = 1]</text>
+<rect x="5535" y="660" width="452" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="5761" y="714" font-size="46" text-anchor="middle" fill="#6b7280">REQ[Backend = 2]</text>
+<rect x="7072" y="660" width="452" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="7298" y="714" font-size="46" text-anchor="middle" fill="#6b7280">REQ[Backend = 3]</text>
+<rect x="6425" y="660" width="117" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="6484" y="714" font-size="46" text-anchor="middle" fill="#6b7280">REQ</text>
+<rect x="8074" y="660" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="8158" y="714" font-size="46" text-anchor="middle" fill="#6b7280">CNF_G</text>
+<rect x="8957" y="660" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="9041" y="714" font-size="46" text-anchor="middle" fill="#6b7280">CNF_M</text>
+</svg>

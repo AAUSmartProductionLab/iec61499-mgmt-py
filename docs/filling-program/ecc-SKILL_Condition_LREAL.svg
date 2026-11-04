@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="396" height="470" viewBox="-453 -138 2478 2938" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-453" y="-138" width="2478" height="2938" fill="#ffffff"/>
+<path d="M775,160 Q775,710 775,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="775,1260 745,1200 805,1200" fill="#8a93a6"/>
+<path d="M741,1420 Q505,1970 269,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="269,2520 265,2453 320,2477" fill="#8a93a6"/>
+<path d="M812,1420 Q1068,1970 1323,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1323,2520 1271,2478 1325,2453" fill="#8a93a6"/>
+<path d="M430,2520 Q3305,1340 935,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="935,160 1002,160 976,214" fill="#8a93a6"/>
+<path d="M1170,2523 Q-1733,1340 615,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="615,160 575,214 548,160" fill="#8a93a6"/>
+<rect x="612" y="0" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="594" y="-18" width="361" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="774" y="100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">START</text>
+<rect x="405" y="1260" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="545" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Eval</text>
+<rect x="685" y="1290" width="460" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="735" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Eval</text>
+<rect x="0" y="2520" width="235" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="118" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Yes</text>
+<rect x="235" y="2550" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="285" y="2622" font-size="52" text-anchor="start" fill="#1f2430">YES</text>
+<rect x="1170" y="2520" width="190" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="1265" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">No</text>
+<rect x="1360" y="2550" width="190" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1410" y="2622" font-size="52" text-anchor="start" fill="#1f2430">NO</text>
+<rect x="703" y="660" width="143" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="775" y="714" font-size="46" text-anchor="middle" fill="#6b7280">EVAL</text>
+<rect x="395" y="1920" width="220" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="505" y="1974" font-size="46" text-anchor="middle" fill="#6b7280">[Holds]</text>
+</svg>

@@ -1,14 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2093" height="2476" viewBox="70 880 10467 12380" font-family="Segoe UI, Helvetica, Arial, sans-serif">
-<rect x="70" y="880" width="10467" height="12380" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="2424" height="1500" viewBox="70 880 12122 7500" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="70" y="880" width="12122" height="7500" fill="#ffffff"/>
 <rect x="1000" y="1000" width="7030" height="4380" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
 <text x="1100" y="1140" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">SkillControl</text>
 <text x="1100" y="1305" font-size="52" text-anchor="start" fill="#6b7280">State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published</text>
-<rect x="1000" y="5680" width="8235" height="3180" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<rect x="1000" y="5680" width="6770" height="2580" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
 <text x="1100" y="5820" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Execution</text>
-<text x="1100" y="5985" font-size="52" text-anchor="start" fill="#6b7280">One run: the contract, the command to the equipment and the end condition</text>
-<rect x="1000" y="9160" width="8770" height="3980" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
-<text x="1100" y="9300" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Equipment</text>
-<text x="1100" y="9465" font-size="52" text-anchor="start" fill="#6b7280">The equipment's state in, the command as output values out (the command table and its timed phases are in Driver)</text>
+<text x="1100" y="5985" font-size="52" text-anchor="start" fill="#6b7280">What the skill is (its contract) and one run of it, the same for every primitive</text>
+<rect x="8070" y="5680" width="3355" height="1880" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<text x="8170" y="5820" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">Equipment</text>
+<text x="8170" y="5985" font-size="52" text-anchor="start" fill="#6b7280">The equipment as the skill sees it: its state in, the command out</text>
 <text x="2950" y="1552" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Control</text>
 <rect x="2270" y="2600" width="1360" height="1180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
 <rect x="2270" y="1580" width="1360" height="980" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
@@ -92,8 +92,8 @@
 <text x="1946" y="1772" font-size="48" text-anchor="middle" fill="#6b7280">Par_Position.CHECKED</text>
 <rect x="2077" y="1617" width="168" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="2161" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">INIT</text>
-<rect x="3655" y="1617" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3819" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">Logic.INIT</text>
+<rect x="3655" y="1617" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3860" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">Contract.INIT</text>
 <rect x="2051" y="1817" width="194" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="2148" y="1872" font-size="48" text-anchor="middle" fill="#6b7280">START</text>
 <rect x="2077" y="1917" width="168" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
@@ -106,16 +106,16 @@
 <text x="3779" y="2372" font-size="48" text-anchor="middle" fill="#6b7280">SUCCESS</text>
 <rect x="3655" y="2417" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="3779" y="2472" font-size="48" text-anchor="middle" fill="#6b7280">FAILURE</text>
-<rect x="3655" y="1917" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3819" y="1972" font-size="48" text-anchor="middle" fill="#6b7280">Logic.HALT</text>
-<rect x="3655" y="2017" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3833" y="2072" font-size="48" text-anchor="middle" fill="#6b7280">Logic.ABORT</text>
+<rect x="3655" y="1917" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3793" y="1972" font-size="48" text-anchor="middle" fill="#6b7280">Run.HALT</text>
+<rect x="3655" y="2017" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3806" y="2072" font-size="48" text-anchor="middle" fill="#6b7280">Run.ABORT</text>
 <rect x="1647" y="2417" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="1946" y="2472" font-size="48" text-anchor="middle" fill="#6b7280">Control.RUN_STOPPING</text>
 <rect x="3655" y="2217" width="624" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="3967" y="2272" font-size="48" text-anchor="middle" fill="#6b7280">Control.STOPPING_DONE</text>
-<rect x="1916" y="2217" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2081" y="2272" font-size="48" text-anchor="middle" fill="#6b7280">Logic.DONE</text>
+<rect x="1970" y="2217" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2107" y="2272" font-size="48" text-anchor="middle" fill="#6b7280">Run.DONE</text>
 <rect x="2131" y="2317" width="114" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="2188" y="2372" font-size="48" text-anchor="middle" fill="#6b7280">×2</text>
 <rect x="3655" y="2642" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
@@ -144,172 +144,103 @@
 <text x="3752" y="3097" font-size="48" text-anchor="middle" fill="#6b7280">State</text>
 <rect x="3655" y="3142" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="3779" y="3197" font-size="48" text-anchor="middle" fill="#6b7280">ErrorID</text>
-<rect x="1836" y="3642" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2040" y="3697" font-size="48" text-anchor="middle" fill="#6b7280">Logic.ErrorID</text>
-<rect x="1674" y="3542" width="571" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1960" y="3597" font-size="48" text-anchor="middle" fill="#6b7280">Logic.EquipmentFree</text>
-<text x="2848" y="6232" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Logic</text>
-<rect x="2190" y="7380" width="1315" height="1280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="2190" y="6260" width="1315" height="1080" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="2235" y="7310" width="1225" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
-<text x="2848" y="7380" font-size="58" text-anchor="middle" fill="#1f2430">SL_MoveAxis</text>
-<polygon points="2200,6315 2232,6335 2200,6355" fill="#b5452b"/>
-<text x="2245" y="6355" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
-<polygon points="2200,6415 2232,6435 2200,6455" fill="#b5452b"/>
-<text x="2245" y="6455" font-size="58" text-anchor="start" fill="#1f2430">START</text>
-<polygon points="2200,6515 2232,6535 2200,6555" fill="#b5452b"/>
-<text x="2245" y="6555" font-size="58" text-anchor="start" fill="#1f2430">HALT</text>
-<polygon points="2200,6615 2232,6635 2200,6655" fill="#b5452b"/>
-<text x="2245" y="6655" font-size="58" text-anchor="start" fill="#1f2430">ABORT</text>
-<polygon points="2200,6715 2232,6735 2200,6755" fill="#b5452b"/>
-<text x="2245" y="6755" font-size="58" text-anchor="start" fill="#1f2430">TIMER</text>
-<polygon points="2200,6815 2232,6835 2200,6855" fill="#b5452b"/>
-<text x="2245" y="6855" font-size="58" text-anchor="start" fill="#1f2430">SAMPLE</text>
-<polygon points="2200,6915 2232,6935 2200,6955" fill="#b5452b"/>
-<text x="2245" y="6955" font-size="58" text-anchor="start" fill="#1f2430">WAIT_OVER</text>
-<polygon points="2200,7015 2232,7035 2200,7055" fill="#b5452b"/>
-<text x="2245" y="7055" font-size="58" text-anchor="start" fill="#1f2430">PLAYED</text>
-<polygon points="3463,6315 3495,6335 3463,6355" fill="#b5452b"/>
-<text x="3450" y="6355" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
-<polygon points="3463,6415 3495,6435 3463,6455" fill="#b5452b"/>
-<text x="3450" y="6455" font-size="58" text-anchor="end" fill="#1f2430">DONE</text>
-<polygon points="3463,6515 3495,6535 3463,6555" fill="#b5452b"/>
-<text x="3450" y="6555" font-size="58" text-anchor="end" fill="#1f2430">FAILED</text>
-<polygon points="3463,6615 3495,6635 3463,6655" fill="#b5452b"/>
-<text x="3450" y="6655" font-size="58" text-anchor="end" fill="#1f2430">HALTED</text>
-<polygon points="3463,6715 3495,6735 3463,6755" fill="#b5452b"/>
-<text x="3450" y="6755" font-size="58" text-anchor="end" fill="#1f2430">TIMER_START</text>
-<polygon points="3463,6815 3495,6835 3463,6855" fill="#b5452b"/>
-<text x="3450" y="6855" font-size="58" text-anchor="end" fill="#1f2430">TIMER_STOP</text>
-<polygon points="3463,6915 3495,6935 3463,6955" fill="#b5452b"/>
-<text x="3450" y="6955" font-size="58" text-anchor="end" fill="#1f2430">WAIT_START</text>
-<polygon points="3463,7015 3495,7035 3463,7055" fill="#b5452b"/>
-<text x="3450" y="7055" font-size="58" text-anchor="end" fill="#1f2430">WAIT_STOP</text>
-<polygon points="3463,7115 3495,7135 3463,7155" fill="#b5452b"/>
-<text x="3450" y="7155" font-size="58" text-anchor="end" fill="#1f2430">CMD</text>
-<polygon points="3463,7215 3495,7235 3463,7255" fill="#b5452b"/>
-<text x="3450" y="7255" font-size="58" text-anchor="end" fill="#1f2430">EQ_FREE</text>
-<rect x="2202" y="7444" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="2245" y="7480" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
-<rect x="2202" y="7544" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="2245" y="7580" font-size="58" text-anchor="start" fill="#1f2430">Equipment</text>
-<rect x="2202" y="7644" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="2245" y="7680" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
-<rect x="2202" y="7744" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="2245" y="7780" font-size="58" text-anchor="start" fill="#1f2430">ReleaseAfter</text>
-<rect x="2202" y="7844" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="2245" y="7880" font-size="58" text-anchor="start" fill="#1f2430">Timeout</text>
-<rect x="2202" y="7944" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="2245" y="7980" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
-<rect x="2202" y="8044" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="2245" y="8080" font-size="58" text-anchor="start" fill="#1f2430">UaPath</text>
-<rect x="2202" y="8144" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="2245" y="8180" font-size="58" text-anchor="start" fill="#1f2430">Position</text>
-<rect x="2202" y="8244" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="2245" y="8280" font-size="58" text-anchor="start" fill="#1f2430">ActualPosition</text>
-<rect x="2202" y="8344" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="2245" y="8380" font-size="58" text-anchor="start" fill="#1f2430">Homed</text>
-<rect x="2202" y="8444" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="2245" y="8480" font-size="58" text-anchor="start" fill="#1f2430">Moving</text>
-<rect x="2202" y="8544" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="2245" y="8580" font-size="58" text-anchor="start" fill="#1f2430">EqHolder</text>
-<rect x="3461" y="7444" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="3450" y="7480" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
-<rect x="3461" y="7544" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="3450" y="7580" font-size="58" text-anchor="end" fill="#1f2430">TimerDT</text>
-<rect x="3461" y="7644" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="3450" y="7680" font-size="58" text-anchor="end" fill="#1f2430">IdEqState</text>
-<rect x="3461" y="7744" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="3450" y="7780" font-size="58" text-anchor="end" fill="#1f2430">IdEqCmd</text>
-<rect x="3461" y="7844" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="3450" y="7880" font-size="58" text-anchor="end" fill="#1f2430">IdParams</text>
-<rect x="3461" y="7944" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="3450" y="7980" font-size="58" text-anchor="end" fill="#1f2430">C_Holder</text>
-<rect x="3461" y="8044" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="3450" y="8080" font-size="58" text-anchor="end" fill="#1f2430">C_Command</text>
-<rect x="3461" y="8144" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="3450" y="8180" font-size="58" text-anchor="end" fill="#1f2430">C_Arg</text>
-<rect x="3461" y="8244" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="3450" y="8280" font-size="58" text-anchor="end" fill="#1f2430">C_Release</text>
-<rect x="3461" y="8344" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="3450" y="8380" font-size="58" text-anchor="end" fill="#1f2430">EquipmentFree</text>
-<rect x="1756" y="6297" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1960" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">Control.INITO</text>
-<rect x="3530" y="6297" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3721" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">UaStart.INIT</text>
-<rect x="1567" y="6397" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1866" y="6452" font-size="48" text-anchor="middle" fill="#6b7280">Par_Position.LATCHED</text>
-<rect x="1675" y="6497" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1920" y="6552" font-size="48" text-anchor="middle" fill="#6b7280">Control.HALT_SEQ</text>
-<rect x="1648" y="6597" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1907" y="6652" font-size="48" text-anchor="middle" fill="#6b7280">Control.ABORT_SEQ</text>
-<rect x="3530" y="6397" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3829" y="6452" font-size="48" text-anchor="middle" fill="#6b7280">Control.EXECUTE_DONE</text>
-<rect x="3530" y="6497" width="651" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3856" y="6552" font-size="48" text-anchor="middle" fill="#6b7280">Control.EXECUTE_FAILED</text>
-<rect x="3530" y="6597" width="651" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3856" y="6652" font-size="48" text-anchor="middle" fill="#6b7280">Control.EXECUTE_FAILED</text>
-<rect x="1836" y="6797" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2001" y="6852" font-size="48" text-anchor="middle" fill="#6b7280">EqView.CNF</text>
-<rect x="3530" y="7097" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3708" y="7152" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PLAY</text>
-<rect x="1756" y="6997" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1960" y="7052" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PLAYED</text>
-<rect x="3530" y="6897" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3708" y="6952" font-size="48" text-anchor="middle" fill="#6b7280">WaitT.START</text>
-<rect x="3530" y="6997" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3694" y="7052" font-size="48" text-anchor="middle" fill="#6b7280">WaitT.STOP</text>
-<rect x="1890" y="6897" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2027" y="6952" font-size="48" text-anchor="middle" fill="#6b7280">WaitT.EO</text>
-<rect x="3530" y="6697" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3708" y="6752" font-size="48" text-anchor="middle" fill="#6b7280">Timer.START</text>
-<rect x="3530" y="6797" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3694" y="6852" font-size="48" text-anchor="middle" fill="#6b7280">Timer.STOP</text>
-<rect x="1890" y="6697" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2027" y="6752" font-size="48" text-anchor="middle" fill="#6b7280">Timer.EO</text>
-<rect x="1944" y="7422" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2054" y="7477" font-size="48" text-anchor="middle" fill="#6b7280">Module</text>
-<rect x="1944" y="7622" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2054" y="7677" font-size="48" text-anchor="middle" fill="#6b7280">Holder</text>
-<rect x="1782" y="7722" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1974" y="7777" font-size="48" text-anchor="middle" fill="#6b7280">ReleaseAfter</text>
-<rect x="1944" y="7922" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2054" y="7977" font-size="48" text-anchor="middle" fill="#6b7280">UaRoot</text>
-<rect x="1944" y="8022" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2054" y="8077" font-size="48" text-anchor="middle" fill="#6b7280">UaPath</text>
-<rect x="1917" y="7822" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2041" y="7877" font-size="48" text-anchor="middle" fill="#6b7280">Timeout</text>
-<rect x="3530" y="7822" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3721" y="7877" font-size="48" text-anchor="middle" fill="#6b7280">PubParams.ID</text>
-<rect x="1621" y="8122" width="544" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1893" y="8177" font-size="48" text-anchor="middle" fill="#6b7280">Par_Position.Value</text>
-<rect x="3530" y="7422" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3829" y="7477" font-size="48" text-anchor="middle" fill="#6b7280">Control.ExecuteError</text>
-<rect x="3530" y="8322" width="624" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3842" y="8377" font-size="48" text-anchor="middle" fill="#6b7280">Control.EquipmentFree</text>
-<rect x="3530" y="7622" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3694" y="7677" font-size="48" text-anchor="middle" fill="#6b7280">EqState.ID</text>
-<rect x="1541" y="8222" width="624" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1853" y="8277" font-size="48" text-anchor="middle" fill="#6b7280">EqView.ActualPosition</text>
-<rect x="1782" y="8322" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1974" y="8377" font-size="48" text-anchor="middle" fill="#6b7280">EqView.Homed</text>
-<rect x="1756" y="8422" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1960" y="8477" font-size="48" text-anchor="middle" fill="#6b7280">EqView.Moving</text>
-<rect x="1756" y="8522" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1960" y="8577" font-size="48" text-anchor="middle" fill="#6b7280">EqView.Holder</text>
-<rect x="3530" y="7722" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3668" y="7777" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.ID</text>
-<rect x="3530" y="7922" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3735" y="7977" font-size="48" text-anchor="middle" fill="#6b7280">Driver.Holder</text>
-<rect x="3530" y="8022" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3748" y="8077" font-size="48" text-anchor="middle" fill="#6b7280">Driver.Command</text>
-<rect x="3530" y="8122" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3694" y="8177" font-size="48" text-anchor="middle" fill="#6b7280">Driver.Arg</text>
-<rect x="3530" y="8222" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3748" y="8277" font-size="48" text-anchor="middle" fill="#6b7280">Driver.Release</text>
-<rect x="3530" y="7522" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3668" y="7577" font-size="48" text-anchor="middle" fill="#6b7280">Timer.DT</text>
-<text x="2160" y="7577" font-size="48" text-anchor="end" fill="#0f6b6b">"LinearAxis"</text>
+<rect x="1889" y="3642" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2067" y="3697" font-size="48" text-anchor="middle" fill="#6b7280">Run.ErrorID</text>
+<rect x="1728" y="3542" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1987" y="3597" font-size="48" text-anchor="middle" fill="#6b7280">Run.EquipmentFree</text>
+<text x="2762" y="6232" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Contract</text>
+<rect x="2150" y="6680" width="1225" height="980" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2150" y="6260" width="1225" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="2195" y="6610" width="1135" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2762" y="6680" font-size="58" text-anchor="middle" fill="#1f2430">SC_MoveAxis</text>
+<polygon points="2160,6315 2192,6335 2160,6355" fill="#b5452b"/>
+<text x="2205" y="6355" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="2160,6415 2192,6435 2160,6455" fill="#b5452b"/>
+<text x="2205" y="6455" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="2160,6515 2192,6535 2160,6555" fill="#b5452b"/>
+<text x="2205" y="6555" font-size="58" text-anchor="start" fill="#1f2430">SAMPLE</text>
+<polygon points="3333,6315 3365,6335 3333,6355" fill="#b5452b"/>
+<text x="3320" y="6355" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="3333,6415 3365,6435 3333,6455" fill="#b5452b"/>
+<text x="3320" y="6455" font-size="58" text-anchor="end" fill="#1f2430">STARTO</text>
+<polygon points="3333,6515 3365,6535 3333,6555" fill="#b5452b"/>
+<text x="3320" y="6555" font-size="58" text-anchor="end" fill="#1f2430">SAMPLEO</text>
+<rect x="2162" y="6744" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2205" y="6780" font-size="58" text-anchor="start" fill="#1f2430">UaRoot</text>
+<rect x="2162" y="6844" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2205" y="6880" font-size="58" text-anchor="start" fill="#1f2430">UaPath</text>
+<rect x="2162" y="6944" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2205" y="6980" font-size="58" text-anchor="start" fill="#1f2430">Position</text>
+<rect x="2162" y="7044" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2205" y="7080" font-size="58" text-anchor="start" fill="#1f2430">Timeout</text>
+<rect x="2162" y="7144" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2205" y="7180" font-size="58" text-anchor="start" fill="#1f2430">ActualPosition</text>
+<rect x="2162" y="7244" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2205" y="7280" font-size="58" text-anchor="start" fill="#1f2430">Homed</text>
+<rect x="2162" y="7344" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2205" y="7380" font-size="58" text-anchor="start" fill="#1f2430">Moving</text>
+<rect x="3331" y="6744" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="3320" y="6780" font-size="58" text-anchor="end" fill="#1f2430">Pre</text>
+<rect x="3331" y="6844" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="3320" y="6880" font-size="58" text-anchor="end" fill="#1f2430">Post</text>
+<rect x="3331" y="6944" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="3320" y="6980" font-size="58" text-anchor="end" fill="#1f2430">Inv</text>
+<rect x="3331" y="7044" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="3320" y="7080" font-size="58" text-anchor="end" fill="#1f2430">Timed</text>
+<rect x="3331" y="7144" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3320" y="7180" font-size="58" text-anchor="end" fill="#1f2430">RunTime</text>
+<rect x="3331" y="7244" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3320" y="7280" font-size="58" text-anchor="end" fill="#1f2430">Command</text>
+<rect x="3331" y="7344" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3320" y="7380" font-size="58" text-anchor="end" fill="#1f2430">Arg</text>
+<rect x="3331" y="7444" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="3320" y="7480" font-size="58" text-anchor="end" fill="#1f2430">StopCommand</text>
+<rect x="3331" y="7544" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="3320" y="7580" font-size="58" text-anchor="end" fill="#1f2430">IdParams</text>
+<rect x="1716" y="6297" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1920" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">Control.INITO</text>
+<rect x="3400" y="6297" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3591" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">UaStart.INIT</text>
+<rect x="1527" y="6397" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1826" y="6452" font-size="48" text-anchor="middle" fill="#6b7280">Par_Position.LATCHED</text>
+<rect x="3400" y="6397" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3551" y="6452" font-size="48" text-anchor="middle" fill="#6b7280">Run.START</text>
+<rect x="3400" y="6497" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3564" y="6552" font-size="48" text-anchor="middle" fill="#6b7280">Run.SAMPLE</text>
+<rect x="1796" y="6497" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1961" y="6552" font-size="48" text-anchor="middle" fill="#6b7280">Port.STATE</text>
+<rect x="1904" y="6722" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2014" y="6777" font-size="48" text-anchor="middle" fill="#6b7280">UaRoot</text>
+<rect x="1904" y="6822" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2014" y="6877" font-size="48" text-anchor="middle" fill="#6b7280">UaPath</text>
+<rect x="1877" y="7022" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2001" y="7077" font-size="48" text-anchor="middle" fill="#6b7280">Timeout</text>
+<rect x="3400" y="7522" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3591" y="7577" font-size="48" text-anchor="middle" fill="#6b7280">PubParams.ID</text>
+<rect x="1581" y="6922" width="544" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1853" y="6977" font-size="48" text-anchor="middle" fill="#6b7280">Par_Position.Value</text>
+<rect x="3400" y="6722" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3524" y="6777" font-size="48" text-anchor="middle" fill="#6b7280">Run.Pre</text>
+<rect x="3400" y="6822" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3538" y="6877" font-size="48" text-anchor="middle" fill="#6b7280">Run.Post</text>
+<rect x="3400" y="7022" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3551" y="7077" font-size="48" text-anchor="middle" fill="#6b7280">Run.Timed</text>
+<rect x="3400" y="7122" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3578" y="7177" font-size="48" text-anchor="middle" fill="#6b7280">Run.RunTime</text>
+<rect x="3400" y="7222" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3578" y="7277" font-size="48" text-anchor="middle" fill="#6b7280">Run.Command</text>
+<rect x="3400" y="7322" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3524" y="7377" font-size="48" text-anchor="middle" fill="#6b7280">Run.Arg</text>
+<rect x="3400" y="7422" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3632" y="7477" font-size="48" text-anchor="middle" fill="#6b7280">Run.StopCommand</text>
+<rect x="3400" y="6922" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="3524" y="6977" font-size="48" text-anchor="middle" fill="#6b7280">Run.Inv</text>
+<rect x="1554" y="7122" width="571" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1840" y="7177" font-size="48" text-anchor="middle" fill="#6b7280">Port.ActualPosition</text>
+<rect x="1796" y="7222" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1961" y="7277" font-size="48" text-anchor="middle" fill="#6b7280">Port.Homed</text>
+<rect x="1769" y="7322" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1947" y="7377" font-size="48" text-anchor="middle" fill="#6b7280">Port.Moving</text>
 <text x="6425" y="1552" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">UaStart</text>
 <rect x="6050" y="1900" width="750" height="480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
 <rect x="6050" y="1580" width="750" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
@@ -343,8 +274,8 @@
 <text x="5767" y="1772" font-size="48" text-anchor="middle" fill="#6b7280">Control.START_RSP</text>
 <rect x="6825" y="1717" width="544" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="7097" y="1772" font-size="48" text-anchor="middle" fill="#6b7280">Par_Position.CHECK</text>
-<rect x="5669" y="1617" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="5847" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">Logic.INITO</text>
+<rect x="5589" y="1617" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5807" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">Contract.INITO</text>
 <rect x="6825" y="1617" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="7083" y="1672" font-size="48" text-anchor="middle" fill="#6b7280">Par_Position.INIT</text>
 <rect x="5401" y="2042" width="624" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
@@ -449,314 +380,182 @@
 <text x="5633" y="4697" font-size="48" text-anchor="middle" fill="#6b7280">Par_Position.Value</text>
 <rect x="5630" y="4442" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="5767" y="4497" font-size="48" text-anchor="middle" fill="#6b7280">UaEnable</text>
-<rect x="5469" y="4542" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="5687" y="4597" font-size="48" text-anchor="middle" fill="#6b7280">Logic.IdParams</text>
-<text x="2355" y="9712" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">EqState</text>
-<rect x="1950" y="10060" width="810" height="780" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="1950" y="9740" width="810" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="1995" y="9990" width="720" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
-<text x="2355" y="10060" font-size="58" text-anchor="middle" fill="#1f2430">SUBSCRIBE_5</text>
-<polygon points="1960,9795 1992,9815 1960,9835" fill="#b5452b"/>
-<text x="2005" y="9835" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
-<polygon points="1960,9895 1992,9915 1960,9935" fill="#b5452b"/>
-<text x="2005" y="9935" font-size="58" text-anchor="start" fill="#1f2430">RSP</text>
-<polygon points="2718,9795 2750,9815 2718,9835" fill="#b5452b"/>
-<text x="2705" y="9835" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
-<polygon points="2718,9895 2750,9915 2718,9935" fill="#b5452b"/>
-<text x="2705" y="9935" font-size="58" text-anchor="end" fill="#1f2430">IND</text>
-<rect x="1962" y="10124" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="2005" y="10160" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
-<rect x="1962" y="10224" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="2005" y="10260" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
-<rect x="2716" y="10124" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="2705" y="10160" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
-<rect x="2716" y="10224" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="2705" y="10260" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
-<rect x="2716" y="10324" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="2705" y="10360" font-size="58" text-anchor="end" fill="#1f2430">RD_1</text>
-<rect x="2716" y="10424" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="2705" y="10460" font-size="58" text-anchor="end" fill="#1f2430">RD_2</text>
-<rect x="2716" y="10524" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="2705" y="10560" font-size="58" text-anchor="end" fill="#1f2430">RD_3</text>
-<rect x="2716" y="10624" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="2705" y="10660" font-size="58" text-anchor="end" fill="#1f2430">RD_4</text>
-<rect x="2716" y="10724" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="2705" y="10760" font-size="58" text-anchor="end" fill="#1f2430">RD_5</text>
-<rect x="1462" y="9777" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1693" y="9832" font-size="48" text-anchor="middle" fill="#6b7280">PubParams.INITO</text>
-<rect x="2785" y="9777" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2949" y="9832" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.INIT</text>
-<rect x="2785" y="9877" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2949" y="9932" font-size="48" text-anchor="middle" fill="#6b7280">EqView.REQ</text>
-<rect x="1462" y="10202" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1693" y="10257" font-size="48" text-anchor="middle" fill="#6b7280">Logic.IdEqState</text>
-<rect x="2785" y="10302" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3017" y="10357" font-size="48" text-anchor="middle" fill="#6b7280">EqView.I_AtHome</text>
-<rect x="2785" y="10402" width="678" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3124" y="10457" font-size="48" text-anchor="middle" fill="#6b7280">EqView.I_ActualPosition</text>
-<rect x="2785" y="10502" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3003" y="10557" font-size="48" text-anchor="middle" fill="#6b7280">EqView.I_Homed</text>
-<rect x="2785" y="10602" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3017" y="10657" font-size="48" text-anchor="middle" fill="#6b7280">EqView.I_Moving</text>
-<rect x="2785" y="10702" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3017" y="10757" font-size="48" text-anchor="middle" fill="#6b7280">EqView.I_Holder</text>
-<text x="1920" y="10157" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
-<text x="5385" y="9712" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">EqView</text>
-<rect x="4660" y="9960" width="1450" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="4660" y="9740" width="1450" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="4705" y="9890" width="1360" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
-<text x="5385" y="9960" font-size="58" text-anchor="middle" fill="#1f2430">EV_LinearAxis</text>
-<polygon points="4670,9795 4702,9815 4670,9835" fill="#b5452b"/>
-<text x="4715" y="9835" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
-<polygon points="6068,9795 6100,9815 6068,9835" fill="#b5452b"/>
-<text x="6055" y="9835" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
-<rect x="4672" y="10024" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="4715" y="10060" font-size="58" text-anchor="start" fill="#1f2430">I_AtHome</text>
-<rect x="4672" y="10124" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="4715" y="10160" font-size="58" text-anchor="start" fill="#1f2430">I_ActualPosition</text>
-<rect x="4672" y="10224" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="4715" y="10260" font-size="58" text-anchor="start" fill="#1f2430">I_Homed</text>
-<rect x="4672" y="10324" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="4715" y="10360" font-size="58" text-anchor="start" fill="#1f2430">I_Moving</text>
-<rect x="4672" y="10424" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="4715" y="10460" font-size="58" text-anchor="start" fill="#1f2430">I_Holder</text>
-<rect x="6066" y="10024" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="6055" y="10060" font-size="58" text-anchor="end" fill="#1f2430">AtHome</text>
-<rect x="6066" y="10124" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="6055" y="10160" font-size="58" text-anchor="end" fill="#1f2430">ActualPosition</text>
-<rect x="6066" y="10224" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="6055" y="10260" font-size="58" text-anchor="end" fill="#1f2430">Homed</text>
-<rect x="6066" y="10324" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="6055" y="10360" font-size="58" text-anchor="end" fill="#1f2430">Moving</text>
-<rect x="6066" y="10424" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="6055" y="10460" font-size="58" text-anchor="end" fill="#1f2430">Holder</text>
-<rect x="4279" y="9777" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4457" y="9832" font-size="48" text-anchor="middle" fill="#6b7280">EqState.IND</text>
-<rect x="6135" y="9777" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6326" y="9832" font-size="48" text-anchor="middle" fill="#6b7280">Logic.SAMPLE</text>
-<rect x="4252" y="10002" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4444" y="10057" font-size="48" text-anchor="middle" fill="#6b7280">EqState.RD_1</text>
-<rect x="4252" y="10102" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4444" y="10157" font-size="48" text-anchor="middle" fill="#6b7280">EqState.RD_2</text>
-<rect x="4252" y="10202" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4444" y="10257" font-size="48" text-anchor="middle" fill="#6b7280">EqState.RD_3</text>
-<rect x="4252" y="10302" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4444" y="10357" font-size="48" text-anchor="middle" fill="#6b7280">EqState.RD_4</text>
-<rect x="4252" y="10402" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4444" y="10457" font-size="48" text-anchor="middle" fill="#6b7280">EqState.RD_5</text>
-<rect x="6135" y="10102" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6434" y="10157" font-size="48" text-anchor="middle" fill="#6b7280">Logic.ActualPosition</text>
-<rect x="6135" y="10202" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6313" y="10257" font-size="48" text-anchor="middle" fill="#6b7280">Logic.Homed</text>
-<rect x="6135" y="10302" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6326" y="10357" font-size="48" text-anchor="middle" fill="#6b7280">Logic.Moving</text>
-<rect x="6135" y="10402" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6353" y="10457" font-size="48" text-anchor="middle" fill="#6b7280">Logic.EqHolder</text>
-<text x="5810" y="6232" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">WaitT</text>
-<rect x="5525" y="6580" width="570" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="5525" y="6260" width="570" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="5570" y="6510" width="480" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
-<text x="5810" y="6580" font-size="58" text-anchor="middle" fill="#1f2430">E_DELAY</text>
-<polygon points="5535,6315 5567,6335 5535,6355" fill="#b5452b"/>
-<text x="5580" y="6355" font-size="58" text-anchor="start" fill="#1f2430">START</text>
-<polygon points="5535,6415 5567,6435 5535,6455" fill="#b5452b"/>
-<text x="5580" y="6455" font-size="58" text-anchor="start" fill="#1f2430">STOP</text>
-<polygon points="6053,6315 6085,6335 6053,6355" fill="#b5452b"/>
-<text x="6040" y="6355" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
-<rect x="5537" y="6644" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="5580" y="6680" font-size="58" text-anchor="start" fill="#1f2430">DT</text>
-<rect x="5010" y="6297" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="5255" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">Logic.WAIT_START</text>
-<rect x="5037" y="6397" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="5268" y="6452" font-size="48" text-anchor="middle" fill="#6b7280">Logic.WAIT_STOP</text>
-<rect x="6120" y="6297" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6352" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">Logic.WAIT_OVER</text>
-<text x="5495" y="6677" font-size="48" text-anchor="end" fill="#0f6b6b">T#500ms</text>
-<text x="8475" y="9712" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Driver</text>
-<rect x="8010" y="10260" width="930" height="980" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="8010" y="9740" width="930" height="480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="8055" y="10190" width="840" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
-<text x="8475" y="10260" font-size="58" text-anchor="middle" fill="#1f2430">EC_LinearAxis</text>
-<polygon points="8020,9795 8052,9815 8020,9835" fill="#b5452b"/>
-<text x="8065" y="9835" font-size="58" text-anchor="start" fill="#1f2430">PLAY</text>
-<polygon points="8020,9895 8052,9915 8020,9935" fill="#b5452b"/>
-<text x="8065" y="9935" font-size="58" text-anchor="start" fill="#1f2430">PHASE_T</text>
-<polygon points="8898,9795 8930,9815 8898,9835" fill="#b5452b"/>
-<text x="8885" y="9835" font-size="58" text-anchor="end" fill="#1f2430">OUT</text>
-<polygon points="8898,9895 8930,9915 8898,9935" fill="#b5452b"/>
-<text x="8885" y="9935" font-size="58" text-anchor="end" fill="#1f2430">PHASE_START</text>
-<polygon points="8898,9995 8930,10015 8898,10035" fill="#b5452b"/>
-<text x="8885" y="10035" font-size="58" text-anchor="end" fill="#1f2430">PHASE_STOP</text>
-<polygon points="8898,10095 8930,10115 8898,10135" fill="#b5452b"/>
-<text x="8885" y="10135" font-size="58" text-anchor="end" fill="#1f2430">PLAYED</text>
-<rect x="8022" y="10324" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="8065" y="10360" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
-<rect x="8022" y="10424" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="8065" y="10460" font-size="58" text-anchor="start" fill="#1f2430">Command</text>
-<rect x="8022" y="10524" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="8065" y="10560" font-size="58" text-anchor="start" fill="#1f2430">Arg</text>
-<rect x="8022" y="10624" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="8065" y="10660" font-size="58" text-anchor="start" fill="#1f2430">Release</text>
-<rect x="8896" y="10324" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="8885" y="10360" font-size="58" text-anchor="end" fill="#1f2430">O_Holder</text>
-<rect x="8896" y="10424" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="8885" y="10460" font-size="58" text-anchor="end" fill="#1f2430">O_Release</text>
-<rect x="8896" y="10524" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="8885" y="10560" font-size="58" text-anchor="end" fill="#1f2430">N_Enable</text>
-<rect x="8896" y="10624" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="8885" y="10660" font-size="58" text-anchor="end" fill="#1f2430">N_Down</text>
-<rect x="8896" y="10724" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="8885" y="10760" font-size="58" text-anchor="end" fill="#1f2430">N_Step</text>
-<rect x="8896" y="10824" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="8885" y="10860" font-size="58" text-anchor="end" fill="#1f2430">NE_Step</text>
-<rect x="8896" y="10924" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="8885" y="10960" font-size="58" text-anchor="end" fill="#1f2430">N_Move</text>
-<rect x="8896" y="11024" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="8885" y="11060" font-size="58" text-anchor="end" fill="#1f2430">N_Goal</text>
-<rect x="8896" y="11124" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="8885" y="11160" font-size="58" text-anchor="end" fill="#1f2430">PhaseDT</text>
-<rect x="7683" y="9777" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="7834" y="9832" font-size="48" text-anchor="middle" fill="#6b7280">Logic.CMD</text>
-<rect x="8965" y="9777" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9116" y="9832" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.REQ</text>
-<rect x="8965" y="9877" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9156" y="9932" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.START</text>
-<rect x="8965" y="9977" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9143" y="10032" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.STOP</text>
-<rect x="7683" y="9877" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="7834" y="9932" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.EO</text>
-<rect x="8965" y="10077" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9156" y="10132" font-size="48" text-anchor="middle" fill="#6b7280">Logic.PLAYED</text>
-<rect x="7549" y="10302" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="7767" y="10357" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Holder</text>
-<rect x="7522" y="10402" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="7753" y="10457" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Command</text>
-<rect x="7629" y="10502" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="7807" y="10557" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Arg</text>
-<rect x="7522" y="10602" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="7753" y="10657" font-size="48" text-anchor="middle" fill="#6b7280">Logic.C_Release</text>
-<rect x="8965" y="10302" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9129" y="10357" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_1</text>
-<rect x="8965" y="10402" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9129" y="10457" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_2</text>
-<rect x="8965" y="10502" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9129" y="10557" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_3</text>
-<rect x="8965" y="10602" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9129" y="10657" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_4</text>
-<rect x="8965" y="10702" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9129" y="10757" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_5</text>
-<rect x="8965" y="10802" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9129" y="10857" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_6</text>
-<rect x="8965" y="10902" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9129" y="10957" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_7</text>
-<rect x="8965" y="11002" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9129" y="11057" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_8</text>
-<rect x="8965" y="11102" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="9116" y="11157" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.DT</text>
-<text x="2355" y="11512" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">PhaseT</text>
-<rect x="2070" y="11860" width="570" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="2070" y="11540" width="570" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="2115" y="11790" width="480" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
-<text x="2355" y="11860" font-size="58" text-anchor="middle" fill="#1f2430">E_DELAY</text>
-<polygon points="2080,11595 2112,11615 2080,11635" fill="#b5452b"/>
-<text x="2125" y="11635" font-size="58" text-anchor="start" fill="#1f2430">START</text>
-<polygon points="2080,11695 2112,11715 2080,11735" fill="#b5452b"/>
-<text x="2125" y="11735" font-size="58" text-anchor="start" fill="#1f2430">STOP</text>
-<polygon points="2598,11595 2630,11615 2598,11635" fill="#b5452b"/>
-<text x="2585" y="11635" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
-<rect x="2082" y="11924" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="2125" y="11960" font-size="58" text-anchor="start" fill="#1f2430">DT</text>
-<rect x="1501" y="11577" width="544" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1773" y="11632" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PHASE_START</text>
-<rect x="1528" y="11677" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1787" y="11732" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PHASE_STOP</text>
-<rect x="2665" y="11577" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="2883" y="11632" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PHASE_T</text>
-<rect x="1609" y="11902" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1827" y="11957" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PhaseDT</text>
-<text x="5165" y="11512" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">EqCmd</text>
-<rect x="4820" y="11860" width="690" height="1080" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="4820" y="11540" width="690" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="4865" y="11790" width="600" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
-<text x="5165" y="11860" font-size="58" text-anchor="middle" fill="#1f2430">PUBLISH_8</text>
-<polygon points="4830,11595 4862,11615 4830,11635" fill="#b5452b"/>
-<text x="4875" y="11635" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
-<polygon points="4830,11695 4862,11715 4830,11735" fill="#b5452b"/>
-<text x="4875" y="11735" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
-<polygon points="5468,11595 5500,11615 5468,11635" fill="#b5452b"/>
-<text x="5455" y="11635" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
-<polygon points="5468,11695 5500,11715 5468,11735" fill="#b5452b"/>
-<text x="5455" y="11735" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
-<rect x="4832" y="11924" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="4875" y="11960" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
-<rect x="4832" y="12024" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="4875" y="12060" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
-<rect x="4832" y="12124" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="4875" y="12160" font-size="58" text-anchor="start" fill="#1f2430">SD_1</text>
-<rect x="4832" y="12224" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="4875" y="12260" font-size="58" text-anchor="start" fill="#1f2430">SD_2</text>
-<rect x="4832" y="12324" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="4875" y="12360" font-size="58" text-anchor="start" fill="#1f2430">SD_3</text>
-<rect x="4832" y="12424" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="4875" y="12460" font-size="58" text-anchor="start" fill="#1f2430">SD_4</text>
-<rect x="4832" y="12524" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="4875" y="12560" font-size="58" text-anchor="start" fill="#1f2430">SD_5</text>
-<rect x="4832" y="12624" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="4875" y="12660" font-size="58" text-anchor="start" fill="#1f2430">SD_6</text>
-<rect x="4832" y="12724" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="4875" y="12760" font-size="58" text-anchor="start" fill="#1f2430">SD_7</text>
-<rect x="4832" y="12824" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="4875" y="12860" font-size="58" text-anchor="start" fill="#1f2430">SD_8</text>
-<rect x="5466" y="11924" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="5455" y="11960" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
-<rect x="5466" y="12024" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="5455" y="12060" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
-<rect x="4386" y="11577" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4590" y="11632" font-size="48" text-anchor="middle" fill="#6b7280">EqState.INITO</text>
-<rect x="5535" y="11577" width="194" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="5632" y="11632" font-size="48" text-anchor="middle" fill="#6b7280">INITO</text>
-<rect x="4466" y="11677" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4631" y="11732" font-size="48" text-anchor="middle" fill="#6b7280">Driver.OUT</text>
-<rect x="4386" y="12002" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4590" y="12057" font-size="48" text-anchor="middle" fill="#6b7280">Logic.IdEqCmd</text>
-<rect x="4332" y="12102" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4563" y="12157" font-size="48" text-anchor="middle" fill="#6b7280">Driver.O_Holder</text>
-<rect x="4305" y="12202" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4550" y="12257" font-size="48" text-anchor="middle" fill="#6b7280">Driver.O_Release</text>
-<rect x="4332" y="12302" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4563" y="12357" font-size="48" text-anchor="middle" fill="#6b7280">Driver.N_Enable</text>
-<rect x="4386" y="12402" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4590" y="12457" font-size="48" text-anchor="middle" fill="#6b7280">Driver.N_Down</text>
-<rect x="4386" y="12502" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4590" y="12557" font-size="48" text-anchor="middle" fill="#6b7280">Driver.N_Step</text>
-<rect x="4359" y="12602" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4577" y="12657" font-size="48" text-anchor="middle" fill="#6b7280">Driver.NE_Step</text>
-<rect x="4386" y="12702" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4590" y="12757" font-size="48" text-anchor="middle" fill="#6b7280">Driver.N_Move</text>
-<rect x="4386" y="12802" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4590" y="12857" font-size="48" text-anchor="middle" fill="#6b7280">Driver.N_Goal</text>
-<text x="4790" y="11957" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
-<text x="8160" y="6232" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Timer</text>
-<rect x="7875" y="6580" width="570" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="7875" y="6260" width="570" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="7920" y="6510" width="480" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
-<text x="8160" y="6580" font-size="58" text-anchor="middle" fill="#1f2430">E_DELAY</text>
-<polygon points="7885,6315 7917,6335 7885,6355" fill="#b5452b"/>
-<text x="7930" y="6355" font-size="58" text-anchor="start" fill="#1f2430">START</text>
-<polygon points="7885,6415 7917,6435 7885,6455" fill="#b5452b"/>
-<text x="7930" y="6455" font-size="58" text-anchor="start" fill="#1f2430">STOP</text>
-<polygon points="8403,6315 8435,6335 8403,6355" fill="#b5452b"/>
-<text x="8390" y="6355" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
-<rect x="7887" y="6644" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="7930" y="6680" font-size="58" text-anchor="start" fill="#1f2430">DT</text>
-<rect x="7333" y="6297" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="7592" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">Logic.TIMER_START</text>
-<rect x="7360" y="6397" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="7605" y="6452" font-size="48" text-anchor="middle" fill="#6b7280">Logic.TIMER_STOP</text>
-<rect x="8470" y="6297" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="8648" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">Logic.TIMER</text>
-<rect x="7441" y="6622" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="7645" y="6677" font-size="48" text-anchor="middle" fill="#6b7280">Logic.TimerDT</text>
+<rect x="5388" y="4542" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5647" y="4597" font-size="48" text-anchor="middle" fill="#6b7280">Contract.IdParams</text>
+<text x="5928" y="6232" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Run</text>
+<rect x="5315" y="6880" width="1225" height="1180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="5315" y="6260" width="1225" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="5360" y="6810" width="1135" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="5928" y="6880" font-size="58" text-anchor="middle" fill="#1f2430">SKILL_Run</text>
+<polygon points="5325,6315 5357,6335 5325,6355" fill="#b5452b"/>
+<text x="5370" y="6355" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="5325,6415 5357,6435 5325,6455" fill="#b5452b"/>
+<text x="5370" y="6455" font-size="58" text-anchor="start" fill="#1f2430">SAMPLE</text>
+<polygon points="5325,6515 5357,6535 5325,6555" fill="#b5452b"/>
+<text x="5370" y="6555" font-size="58" text-anchor="start" fill="#1f2430">HALT</text>
+<polygon points="5325,6615 5357,6635 5325,6655" fill="#b5452b"/>
+<text x="5370" y="6655" font-size="58" text-anchor="start" fill="#1f2430">ABORT</text>
+<polygon points="5325,6715 5357,6735 5325,6755" fill="#b5452b"/>
+<text x="5370" y="6755" font-size="58" text-anchor="start" fill="#1f2430">PLAYED</text>
+<polygon points="6498,6315 6530,6335 6498,6355" fill="#b5452b"/>
+<text x="6485" y="6355" font-size="58" text-anchor="end" fill="#1f2430">DONE</text>
+<polygon points="6498,6415 6530,6435 6498,6455" fill="#b5452b"/>
+<text x="6485" y="6455" font-size="58" text-anchor="end" fill="#1f2430">FAILED</text>
+<polygon points="6498,6515 6530,6535 6498,6555" fill="#b5452b"/>
+<text x="6485" y="6555" font-size="58" text-anchor="end" fill="#1f2430">HALTED</text>
+<polygon points="6498,6615 6530,6635 6498,6655" fill="#b5452b"/>
+<text x="6485" y="6655" font-size="58" text-anchor="end" fill="#1f2430">CMD</text>
+<polygon points="6498,6715 6530,6735 6498,6755" fill="#b5452b"/>
+<text x="6485" y="6755" font-size="58" text-anchor="end" fill="#1f2430">EQ_FREE</text>
+<rect x="5327" y="6944" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5370" y="6980" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
+<rect x="5327" y="7044" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5370" y="7080" font-size="58" text-anchor="start" fill="#1f2430">ReleaseAfter</text>
+<rect x="5327" y="7144" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5370" y="7180" font-size="58" text-anchor="start" fill="#1f2430">Pre</text>
+<rect x="5327" y="7244" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5370" y="7280" font-size="58" text-anchor="start" fill="#1f2430">Post</text>
+<rect x="5327" y="7344" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5370" y="7380" font-size="58" text-anchor="start" fill="#1f2430">Inv</text>
+<rect x="5327" y="7444" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="5370" y="7480" font-size="58" text-anchor="start" fill="#1f2430">Timed</text>
+<rect x="5327" y="7544" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5370" y="7580" font-size="58" text-anchor="start" fill="#1f2430">RunTime</text>
+<rect x="5327" y="7644" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5370" y="7680" font-size="58" text-anchor="start" fill="#1f2430">Command</text>
+<rect x="5327" y="7744" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5370" y="7780" font-size="58" text-anchor="start" fill="#1f2430">Arg</text>
+<rect x="5327" y="7844" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="5370" y="7880" font-size="58" text-anchor="start" fill="#1f2430">StopCommand</text>
+<rect x="5327" y="7944" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="5370" y="7980" font-size="58" text-anchor="start" fill="#1f2430">EqHolder</text>
+<rect x="6496" y="6944" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="6485" y="6980" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
+<rect x="6496" y="7044" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="6485" y="7080" font-size="58" text-anchor="end" fill="#1f2430">C_Holder</text>
+<rect x="6496" y="7144" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="6485" y="7180" font-size="58" text-anchor="end" fill="#1f2430">C_Command</text>
+<rect x="6496" y="7244" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="6485" y="7280" font-size="58" text-anchor="end" fill="#1f2430">C_Arg</text>
+<rect x="6496" y="7344" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="6485" y="7380" font-size="58" text-anchor="end" fill="#1f2430">C_Release</text>
+<rect x="6496" y="7444" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="6485" y="7480" font-size="58" text-anchor="end" fill="#1f2430">EquipmentFree</text>
+<rect x="4827" y="6297" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5058" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">Contract.STARTO</text>
+<rect x="4800" y="6397" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5045" y="6452" font-size="48" text-anchor="middle" fill="#6b7280">Contract.SAMPLEO</text>
+<rect x="4800" y="6497" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5045" y="6552" font-size="48" text-anchor="middle" fill="#6b7280">Control.HALT_SEQ</text>
+<rect x="4773" y="6597" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5032" y="6652" font-size="48" text-anchor="middle" fill="#6b7280">Control.ABORT_SEQ</text>
+<rect x="6565" y="6297" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6864" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">Control.EXECUTE_DONE</text>
+<rect x="6565" y="6397" width="651" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6891" y="6452" font-size="48" text-anchor="middle" fill="#6b7280">Control.EXECUTE_FAILED</text>
+<rect x="6565" y="6497" width="651" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6891" y="6552" font-size="48" text-anchor="middle" fill="#6b7280">Control.EXECUTE_FAILED</text>
+<rect x="6565" y="6597" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6716" y="6652" font-size="48" text-anchor="middle" fill="#6b7280">Port.SEND</text>
+<rect x="4934" y="6697" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5112" y="6752" font-size="48" text-anchor="middle" fill="#6b7280">Port.PLAYED</text>
+<rect x="4907" y="7122" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5099" y="7177" font-size="48" text-anchor="middle" fill="#6b7280">Contract.Pre</text>
+<rect x="4881" y="7222" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5085" y="7277" font-size="48" text-anchor="middle" fill="#6b7280">Contract.Post</text>
+<rect x="4854" y="7422" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5072" y="7477" font-size="48" text-anchor="middle" fill="#6b7280">Contract.Timed</text>
+<rect x="4800" y="7522" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5045" y="7577" font-size="48" text-anchor="middle" fill="#6b7280">Contract.RunTime</text>
+<rect x="4800" y="7622" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5045" y="7677" font-size="48" text-anchor="middle" fill="#6b7280">Contract.Command</text>
+<rect x="4907" y="7722" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5099" y="7777" font-size="48" text-anchor="middle" fill="#6b7280">Contract.Arg</text>
+<rect x="4692" y="7822" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4991" y="7877" font-size="48" text-anchor="middle" fill="#6b7280">Contract.StopCommand</text>
+<rect x="4907" y="7322" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5099" y="7377" font-size="48" text-anchor="middle" fill="#6b7280">Contract.Inv</text>
+<rect x="5069" y="6922" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5179" y="6977" font-size="48" text-anchor="middle" fill="#6b7280">Holder</text>
+<rect x="4907" y="7022" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5099" y="7077" font-size="48" text-anchor="middle" fill="#6b7280">ReleaseAfter</text>
+<rect x="6565" y="6922" width="598" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6864" y="6977" font-size="48" text-anchor="middle" fill="#6b7280">Control.ExecuteError</text>
+<rect x="4881" y="7922" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5085" y="7977" font-size="48" text-anchor="middle" fill="#6b7280">Port.EqHolder</text>
+<rect x="6565" y="7422" width="624" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6877" y="7477" font-size="48" text-anchor="middle" fill="#6b7280">Control.EquipmentFree</text>
+<rect x="6565" y="7022" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6743" y="7077" font-size="48" text-anchor="middle" fill="#6b7280">Port.Holder</text>
+<rect x="6565" y="7122" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6756" y="7177" font-size="48" text-anchor="middle" fill="#6b7280">Port.Command</text>
+<rect x="6565" y="7222" width="275" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6703" y="7277" font-size="48" text-anchor="middle" fill="#6b7280">Port.Arg</text>
+<rect x="6565" y="7322" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6756" y="7377" font-size="48" text-anchor="middle" fill="#6b7280">Port.Release</text>
+<text x="9542" y="6232" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Port</text>
+<rect x="9020" y="6680" width="1045" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="9020" y="6260" width="1045" height="380" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="9065" y="6610" width="955" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="9542" y="6680" font-size="58" text-anchor="middle" fill="#1f2430">EP_LinearAxis</text>
+<polygon points="9030,6315 9062,6335 9030,6355" fill="#b5452b"/>
+<text x="9075" y="6355" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="9030,6415 9062,6435 9030,6455" fill="#b5452b"/>
+<text x="9075" y="6455" font-size="58" text-anchor="start" fill="#1f2430">SEND</text>
+<polygon points="10023,6315 10055,6335 10023,6355" fill="#b5452b"/>
+<text x="10010" y="6355" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="10023,6415 10055,6435 10023,6455" fill="#b5452b"/>
+<text x="10010" y="6455" font-size="58" text-anchor="end" fill="#1f2430">STATE</text>
+<polygon points="10023,6515 10055,6535 10023,6555" fill="#b5452b"/>
+<text x="10010" y="6555" font-size="58" text-anchor="end" fill="#1f2430">PLAYED</text>
+<rect x="9032" y="6744" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="9075" y="6780" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="9032" y="6844" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="9075" y="6880" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
+<rect x="9032" y="6944" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="9075" y="6980" font-size="58" text-anchor="start" fill="#1f2430">Command</text>
+<rect x="9032" y="7044" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="9075" y="7080" font-size="58" text-anchor="start" fill="#1f2430">Arg</text>
+<rect x="9032" y="7144" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="9075" y="7180" font-size="58" text-anchor="start" fill="#1f2430">Release</text>
+<rect x="10021" y="6744" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="10010" y="6780" font-size="58" text-anchor="end" fill="#1f2430">AtHome</text>
+<rect x="10021" y="6844" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="10010" y="6880" font-size="58" text-anchor="end" fill="#1f2430">ActualPosition</text>
+<rect x="10021" y="6944" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="10010" y="6980" font-size="58" text-anchor="end" fill="#1f2430">Homed</text>
+<rect x="10021" y="7044" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="10010" y="7080" font-size="58" text-anchor="end" fill="#1f2430">Moving</text>
+<rect x="10021" y="7144" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="10010" y="7180" font-size="58" text-anchor="end" fill="#1f2430">EqHolder</text>
+<rect x="8532" y="6297" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8763" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">PubParams.INITO</text>
+<rect x="10090" y="6297" width="194" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10187" y="6352" font-size="48" text-anchor="middle" fill="#6b7280">INITO</text>
+<rect x="10090" y="6397" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10322" y="6452" font-size="48" text-anchor="middle" fill="#6b7280">Contract.SAMPLE</text>
+<rect x="8747" y="6397" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8871" y="6452" font-size="48" text-anchor="middle" fill="#6b7280">Run.CMD</text>
+<rect x="10090" y="6497" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10254" y="6552" font-size="48" text-anchor="middle" fill="#6b7280">Run.PLAYED</text>
+<rect x="8774" y="6722" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8884" y="6777" font-size="48" text-anchor="middle" fill="#6b7280">Module</text>
+<rect x="10090" y="6822" width="678" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10429" y="6877" font-size="48" text-anchor="middle" fill="#6b7280">Contract.ActualPosition</text>
+<rect x="10090" y="6922" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10308" y="6977" font-size="48" text-anchor="middle" fill="#6b7280">Contract.Homed</text>
+<rect x="10090" y="7022" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10322" y="7077" font-size="48" text-anchor="middle" fill="#6b7280">Contract.Moving</text>
+<rect x="10090" y="7122" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="10281" y="7177" font-size="48" text-anchor="middle" fill="#6b7280">Run.EqHolder</text>
+<rect x="8612" y="6822" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8804" y="6877" font-size="48" text-anchor="middle" fill="#6b7280">Run.C_Holder</text>
+<rect x="8586" y="6922" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8790" y="6977" font-size="48" text-anchor="middle" fill="#6b7280">Run.C_Command</text>
+<rect x="8693" y="7022" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8844" y="7077" font-size="48" text-anchor="middle" fill="#6b7280">Run.C_Arg</text>
+<rect x="8586" y="7122" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="8790" y="7177" font-size="48" text-anchor="middle" fill="#6b7280">Run.C_Release</text>
 <rect x="190" y="1000" width="510" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
 <polygon points="210,1020 240,1040 210,1060" fill="#b5452b"/>
 <text x="255" y="1060" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
@@ -799,19 +598,19 @@
 <rect x="190" y="2360" width="510" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
 <rect x="210" y="2384" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
 <text x="255" y="2420" font-size="58" text-anchor="start" fill="#1f2430">Position</text>
-<rect x="10070" y="1000" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
-<polygon points="10367,1020 10397,1040 10367,1060" fill="#b5452b"/>
-<text x="10352" y="1060" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
-<rect x="10070" y="1100" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
-<polygon points="10367,1120 10397,1140 10367,1160" fill="#b5452b"/>
-<text x="10352" y="1160" font-size="58" text-anchor="end" fill="#1f2430">SUCCESS</text>
-<rect x="10070" y="1200" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
-<polygon points="10367,1220 10397,1240 10367,1260" fill="#b5452b"/>
-<text x="10352" y="1260" font-size="58" text-anchor="end" fill="#1f2430">FAILURE</text>
-<rect x="10070" y="1360" width="347" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
-<rect x="10367" y="1384" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="10352" y="1420" font-size="58" text-anchor="end" fill="#1f2430">State</text>
-<rect x="10070" y="1460" width="347" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
-<rect x="10367" y="1484" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="10352" y="1520" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
+<rect x="11725" y="1000" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="12022,1020 12052,1040 12022,1060" fill="#b5452b"/>
+<text x="12007" y="1060" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<rect x="11725" y="1100" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="12022,1120 12052,1140 12022,1160" fill="#b5452b"/>
+<text x="12007" y="1160" font-size="58" text-anchor="end" fill="#1f2430">SUCCESS</text>
+<rect x="11725" y="1200" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="12022,1220 12052,1240 12022,1260" fill="#b5452b"/>
+<text x="12007" y="1260" font-size="58" text-anchor="end" fill="#1f2430">FAILURE</text>
+<rect x="11725" y="1360" width="347" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
+<rect x="12022" y="1384" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="12007" y="1420" font-size="58" text-anchor="end" fill="#1f2430">State</text>
+<rect x="11725" y="1460" width="347" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
+<rect x="12022" y="1484" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="12007" y="1520" font-size="58" text-anchor="end" fill="#1f2430">ErrorID</text>
 </svg>

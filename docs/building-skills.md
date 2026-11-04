@@ -19,7 +19,7 @@ of those types**, wire them, and set their values. That decides what a change co
 | --- | --- | --- | --- | --- |
 | A new sequence of things the module can already do (fill twice, fill and weigh twice) | A **module level skill**, like Dispensing | New blocks and wires of existing types | **No** | Yes (`modsync push`, or from the AAS) |
 | A different constant (the fill position, the flow rate) or default | A **parameter value** | One value | No | Yes |
-| A new action of existing equipment (prime the pump, home slowly) | A **skill primitive**, like Home or Dispense | New types `SK_<Skill>` and `SL_<Skill>` | **Yes** | No: a new FORTE and a new program |
+| A new action of existing equipment (prime the pump, home slowly) | A **skill primitive**, like Home or Dispense | New types `SK_<Skill>` and `SC_<Skill>` | **Yes** | No: a new FORTE and a new program |
 | Different behaviour of a primitive (another end condition, timeout, command) | A changed skill primitive | Its types | **Yes** | No |
 | New hardware (a valve, a second axis, a sensor) or other pins | A **piece of equipment** | New types `EQ_`, `EL_`, `EV_`, `EC_<Item>` | **Yes** | No |
 | Another pin for existing equipment (GPIO 22 instead of 27) | An **address** | One value of the equipment block | No | No: a new program (the pin is set up at start) |
@@ -174,8 +174,9 @@ Skills/DoubleDose/Results/Weight
 ## 3. A skill primitive
 
 A primitive is **one command to one piece of equipment, until a sensor says it is done or a time has
-passed**. Every primitive has the same skeleton (`SK_<Skill>`, a composite); only its logic
-(`SL_<Skill>`, a basic block) and a few sizes differ.
+passed**. Every primitive has the same skeleton (`SK_<Skill>`, a composite); only its contract
+(`SC_<Skill>`, a small basic block: the command, the time and three conditions) and a few sizes
+differ.
 
 ### 3.1 In the module spec
 
@@ -211,24 +212,24 @@ Then regenerate, rebuild FORTE (section 5), and deploy the new program.
 ### 3.2 What the generator makes, and what differs between primitives
 
 `SK_<Skill>` always holds the same blocks (see [filling-program.md](filling-program.md), section 8.5):
-`Control` (`SKILL_Core`), `UaStart`, one `Par_<p>` per parameter, `PubParams`, `Logic`
-(`SL_<Skill>`), `EqState`, `EqView` (`EV_<Item>`), `WaitT`, `Driver` (`EC_<Item>`), `PhaseT`,
-`EqCmd`, `Timer`, and `PubResults` if it has results. What a new primitive changes:
+`Control` (`SKILL_Core`), `UaStart`, one `Par_<p>` per parameter, `PubParams`, `Contract`
+(`SC_<Skill>`), `Run` (`SKILL_Run`, the same in every primitive), `Port` (`EP_<Item>`, the same in
+every primitive of that equipment), and `PubResults` if it has results. What a new primitive changes:
 
 | In the spec | Changes in the blocks |
 | --- | --- |
-| Its parameters | The number of `Par_<p>` blocks; the size of `UaStart` (`SERVER_2_<1 + parameters>`) and of `PubParams` (`PUBLISH_<parameters>`); one input each on `SK_` and `SL_` |
-| Its results | `R_<r>` outputs on `SL_`, and `PubResults` |
-| Its equipment | Which `EV_<Item>` and `EC_<Item>` it uses; the sizes of `EqState` (one value per input, and the holder) and `EqCmd` (the holder, release, and one value per output); the channels it uses (`loc[<Module>/<Item>/...]`) |
-| `command`, `arg`, `stop` | The command number `Logic` hands to `Driver`, its argument, and the closing command |
-| `precondition` | `SL_`: the condition under which a start is refused (state Reject) |
-| `postcondition` | `SL_`: the condition that ends it (Running → Done) and lets it succeed at once if it already holds (AlreadyDone); its `Timeout` input and the timeout transition (TimedOut) |
-| `after` | `SL_`: the time it runs for, computed from the parameters (`TimerDT`), and Running → Done when the timer ends |
-| `invariant` | `SL_`: the condition whose loss stops it (Unsafe) |
+| Its parameters | The number of `Par_<p>` blocks; the size of `UaStart` (`SERVER_2_<1 + parameters>`) and of `PubParams` (`PUBLISH_<parameters>`); one input each on `SK_` and `SC_` |
+| Its results | `R_<r>` outputs on `SC_` (`R_<r> := <input>;`), and `PubResults` |
+| Its equipment | Which `EP_<Item>` it uses, and the equipment's signals its conditions read (inputs of `SC_`) |
+| `command`, `arg`, `stop` | `SC_`'s `Alg_Start`: `Command`, `Arg`, `StopCommand` (the commands' numbers in the order of the spec) |
+| `precondition` | `SC_`'s `Alg_Evaluate`: `Pre :=` (a start is refused when it does not hold) |
+| `postcondition` | `SC_`'s `Alg_Evaluate`: `Post :=` (it is done when it holds; done at once if it already holds), and `Timed := FALSE; RunTime := Timeout;` with a `Timeout` input |
+| `after` | `SC_`'s `Alg_Start`: `Timed := TRUE; RunTime := MUL_TIME(T#1s, <after>);` |
+| `invariant` | `SC_`'s `Alg_Evaluate`: `Inv :=` (its loss stops it with 2) |
 
-Everything else in `SL_` is the same in every primitive: waiting for the equipment (WaitFree, then
-Busy), noticing that the equipment was taken away (Lost), halting and aborting, and the closing
-command. The five filling primitives side by side:
+Everything else is in `SKILL_Run` and the same in every primitive: waiting for the equipment (0.5 s,
+then Busy), noticing that the equipment was taken away (Lost), the timeout, halting and aborting,
+and the closing command. The five filling primitives side by side:
 
 | | `Home` | `MoveAxis` | `Dispense` | `Tare` | `Weigh` |
 | --- | --- | --- | --- | --- | --- |
@@ -245,10 +246,10 @@ command. The five filling primitives side by side:
 
 Copy a primitive of the same kind (one ended by a sensor or one ended by a time) and change only
 what the table in 3.2 lists: make `SK_Prime` from `SK_Dispense` (*Save As* in the type's editor),
-make `SL_Prime` from `SL_Dispense`, and in `SL_Prime` change the inputs (`Duration` instead of
-`Volume` and `FlowRate`), the algorithm that computes `TimerDT` (`Duration` seconds), and the
-`IdParams` text (`.../Parameters/Duration`). In `SK_Prime` keep one parameter block, use
-`SERVER_2_2` and `PUBLISH_1`, and wire `Par_Duration` as `Par_Volume` was. Keep the block names: the
+make `SC_Prime` from `SC_Dispense`, and in `SC_Prime` change the inputs (`Duration` instead of
+`Volume` and `FlowRate`), the line `RunTime := MUL_TIME(T#1s, Duration);` in `Alg_Start`, and the
+`IdParams` text in `Alg_Init` (`.../Parameters/Duration`). In `SK_Prime` keep one parameter block,
+use `SERVER_2_2` and `PUBLISH_1`, and wire `Par_Duration` as `Par_Volume` was. Keep the block names: the
 tools find a skill's parts by them. Then export and rebuild FORTE (section 5).
 
 Every block, value and connection of a primitive, and its whole ECC, are listed one by one in
@@ -298,8 +299,9 @@ skills:
     after: Duration
 ```
 
-The generator makes `EQ_Valve` (the block in the application), `EL_Valve` (its logic), `EV_Valve`
-(its state for the skills) and `EC_Valve` (its command table, used inside the skills). New types:
+The generator makes `EQ_Valve` (the block in the application), `EL_Valve` (its logic), and for the
+skills `EP_Valve` (the valve as a skill sees it), with `EV_Valve` (its state) and `EC_Valve` (its
+command table) inside. New types:
 rebuild FORTE (section 5).
 
 ### 4.2 What is inside, if you build it by hand
@@ -316,8 +318,9 @@ input, `EQ_LinearAxis` outputs, an input and a position) and keep its structure:
   (the time a move takes at its speed);
 - one IO block per pin, `In_<input>` (`IO_DI` or `IO_AI`) or `Out_<output>` (`IO_DO` or `IO_AO`),
   whose `Address` is the block's input `<pin>_Address`;
-- and `EC_<Item>` (the command table: one number per command, the output values per phase) and
-  `EV_<Item>` (the state unpacked) for the skills.
+- and, for the skills, `EP_<Item>` (the equipment as a skill sees it: `SEND` a command, `STATE` with
+  its signals) with `EC_<Item>` (the command table: one number per command, the output values per
+  phase) and `EV_<Item>` (the channel names, and the state unpacked) inside.
 
 The generated types are the reference: a hand-made one that differs is not read back by the tools
 (`modsync`) as the rules say.

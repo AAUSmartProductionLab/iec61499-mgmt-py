@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="286" height="268" viewBox="-120 -138 1790 1678" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-120" y="-138" width="1790" height="1678" fill="#ffffff"/>
+<path d="M739,160 Q494,710 248,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="248,1260 245,1193 300,1217" fill="#8a93a6"/>
+<path d="M810,160 Q1056,710 1302,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1302,1260 1250,1217 1305,1193" fill="#8a93a6"/>
+<path d="M425,1287 Q1454,1030 832,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="832,160 891,191 842,226" fill="#8a93a6"/>
+<path d="M1513,1260 Q2016,1030 879,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="879,160 945,173 908,220" fill="#8a93a6"/>
+<rect x="612" y="0" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="594" y="-18" width="361" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="774" y="100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">START</text>
+<rect x="0" y="1260" width="235" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="118" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">One</text>
+<rect x="235" y="1290" width="190" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="285" y="1362" font-size="52" text-anchor="start" fill="#1f2430">EO</text>
+<rect x="1125" y="1260" width="235" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="1242" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Two</text>
+<rect x="1360" y="1290" width="190" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1410" y="1362" font-size="52" text-anchor="start" fill="#1f2430">EO</text>
+<rect x="435" y="660" width="117" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="494" y="714" font-size="46" text-anchor="middle" fill="#6b7280">EI1</text>
+<rect x="997" y="660" width="117" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="1056" y="714" font-size="46" text-anchor="middle" fill="#6b7280">EI2</text>
+</svg>

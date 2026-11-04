@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="470" viewBox="-120 -138 4500 2938" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-120" y="-138" width="4500" height="2938" fill="#ffffff"/>
+<path d="M2014,160 Q1216,710 418,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="418,1260 451,1201 485,1251" fill="#8a93a6"/>
+<path d="M605,1290 Q2176,1030 2134,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2134,160 2167,218 2107,221" fill="#8a93a6"/>
+<path d="M2104,160 Q1925,710 1746,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1746,1260 1736,1194 1793,1212" fill="#8a93a6"/>
+<path d="M1746,1420 Q1925,1970 2104,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2104,2520 2057,2472 2114,2454" fill="#8a93a6"/>
+<path d="M2308,2520 Q4930,1340 2270,143" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2270,143 2337,140 2312,195" fill="#8a93a6"/>
+<path d="M2220,160 Q2839,710 3458,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="3458,1260 3393,1243 3433,1198" fill="#8a93a6"/>
+<path d="M3612,1260 Q3799,1030 2270,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2270,160 2337,163 2307,215" fill="#8a93a6"/>
+<rect x="1990" y="0" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="1972" y="-18" width="316" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="2130" y="100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Wait</text>
+<rect x="0" y="1260" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="140" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Init</text>
+<rect x="280" y="1290" width="325" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="330" y="1362" font-size="52" text-anchor="start" fill="#1f2430">INITO</text>
+<rect x="1305" y="1260" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="1468" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Start</text>
+<rect x="1630" y="1290" width="505" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="1680" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Start</text>
+<rect x="1418" y="2520" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="1626" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Started</text>
+<rect x="1833" y="2550" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="1883" y="2622" font-size="52" text-anchor="start" fill="#1f2430">Alg_Evaluate</text>
+<rect x="2473" y="2550" width="370" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="2523" y="2622" font-size="52" text-anchor="start" fill="#1f2430">STARTO</text>
+<rect x="2835" y="1260" width="370" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="3020" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Sample</text>
+<rect x="3205" y="1290" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="3255" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Evaluate</text>
+<rect x="3845" y="1290" width="415" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="3895" y="1362" font-size="52" text-anchor="start" fill="#1f2430">SAMPLEO</text>
+<rect x="1144" y="660" width="143" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="1216" y="714" font-size="46" text-anchor="middle" fill="#6b7280">INIT</text>
+<rect x="1841" y="660" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="1925" y="714" font-size="46" text-anchor="middle" fill="#6b7280">START</text>
+<rect x="2742" y="660" width="195" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="2839" y="714" font-size="46" text-anchor="middle" fill="#6b7280">SAMPLE</text>
+</svg>
