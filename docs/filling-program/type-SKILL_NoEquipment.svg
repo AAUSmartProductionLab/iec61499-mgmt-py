@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="438" height="135" viewBox="-460 -120 1750 540" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-460" y="-120" width="1750" height="540" fill="#ffffff"/>
+<rect x="0" y="120" width="1170" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="1170" height="80" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="50" width="1080" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="585" y="120" font-size="58" text-anchor="middle" fill="#1f2430">SKILL_NoEquipment</text>
+<rect x="6" y="176" width="44" height="48" rx="8" fill="#ffffff" stroke="#c0761a" stroke-width="7"/>
+<text x="62" y="220" font-size="58" text-anchor="start" fill="#c0761a" font-weight="bold">Skill</text>
+<text x="-60" y="218" font-size="50" text-anchor="end" fill="#6b7280">AEquipment</text>
+</svg>

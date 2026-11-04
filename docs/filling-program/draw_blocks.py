@@ -6,7 +6,7 @@ docs/filling-program.md.
 
 It writes, into the output folder:
 
-- ``type-<Type>.svg`` for every block type of the project's type library: its interface, the event
+- ``type-<Type>.svg`` for every block type (and adapter type) of the project's type library: its interface, the event
   pins at the top, the data pins below, each data pin's type outside it and, as thin lines on the
   outside, which data pins go with which event;
 - ``inside-<Type>.svg`` for every composite type: the blocks inside it;
@@ -41,6 +41,7 @@ INK, MUTED, VALUE = "#1f2430", "#6b7280", "#0f6b6b"
 EVENT = "#b5452b"
 DATA = {"BOOL": "#2e8540", "STRING": "#7d3cb5", "WSTRING": "#7d3cb5", "ANY": "#6b7280"}
 NUMBER = "#2563a8"
+ADAPTER = "#c0761a"            # a plug or socket: one connection that carries a bundle of events and data
 FB_FILL, FB_NECK, FB_LINE = "#eef2f8", "#dde5f1", "#56688a"
 SUB_FILL, SUB_NECK, SUB_LINE = "#fbf3dc", "#f3e6bd", "#9a7618"
 GROUP_FILL, GROUP_LINE = "#f6f6f1", "#c8c8b8"
@@ -48,6 +49,8 @@ LABEL_FILL, LABEL_LINE = "#ffffff", "#9aa3b5"
 
 
 def colour(typ: str | None) -> str:
+    if (typ or "").startswith("adapter:"):
+        return ADAPTER
     typ = (typ or "").upper()
     if typ in ("EVENT", "EINIT"):
         return EVENT
@@ -117,7 +120,15 @@ def pins_of(iface, sub: bool = False):
 
     def data(path):
         return [(v.get("Name"), v.get("Type"), []) for v in iface.findall(f"{path}/VarDeclaration")]
-    return events(ev_in), events(ev_out), data("InputVars"), data("OutputVars")
+
+    def adapters(path):          # sockets with the inputs, plugs with the outputs, drawn below the data
+        return [(a.get("Name"), "adapter:" + short(a.get("Type")), []) for a in iface.findall(f"{path}/AdapterDeclaration")]
+    return (events(ev_in), events(ev_out), data("InputVars") + adapters("Sockets"),
+            data("OutputVars") + adapters("Plugs"))
+
+
+def is_adapter(pin) -> bool:
+    return (pin[1] or "").startswith("adapter:")
 
 
 def short(typ: str) -> str:
@@ -137,7 +148,9 @@ def block(cv: Canvas, x, y, width, pins, name=None, neck="", sub=False):
     """Draw a block whose top left is (x, y); with ``name`` the instance name above it (a row of
     100), as in a network. Returns the y of every pin's row, by (side, pin name)."""
     ei, eo, di, do = pins
-    ne, nd = max(len(ei), len(eo)), max(len(di), len(do))
+    si, po = [q for q in di if is_adapter(q)], [q for q in do if is_adapter(q)]
+    di, do = [q for q in di if not is_adapter(q)], [q for q in do if not is_adapter(q)]
+    ne, nd, na = max(len(ei), len(eo)), max(len(di), len(do)), max(len(si), len(po))
     fill, neck_fill, line = (SUB_FILL, SUB_NECK, SUB_LINE) if sub else (FB_FILL, FB_NECK, FB_LINE)
     top = y
     if name is not None:
@@ -145,7 +158,7 @@ def block(cv: Canvas, x, y, width, pins, name=None, neck="", sub=False):
         top = y + 100
     ev_bottom = top + 25 + ne * 100 + 25
     neck_bottom = ev_bottom + 100
-    bottom = neck_bottom + nd * 100 + 50
+    bottom = neck_bottom + (nd + na) * 100 + 50
     cv.rect(x, neck_bottom - 30, width, bottom - neck_bottom + 30, fill, line, rx=30)
     cv.rect(x, top, width, ev_bottom - top + 30, fill, line, rx=30)
     cv.rect(x + 45, ev_bottom, width - 90, 100, neck_fill, line, stroke=5)
@@ -171,6 +184,16 @@ def block(cv: Canvas, x, y, width, pins, name=None, neck="", sub=False):
         yc = neck_bottom + j * 100 + 50
         cv.rect(x + width - 44, yc - 16, 32, 32, colour(typ), colour(typ), stroke=1)
         cv.text(x + width - 55, yc + 20, pin, anchor="end")
+        rows[("out", pin)] = yc
+    for j, (pin, typ, _) in enumerate(si):          # a socket: a notch on the left
+        yc = neck_bottom + (nd + j) * 100 + 50
+        cv.rect(x + 6, yc - 24, 44, 48, "#ffffff", ADAPTER, rx=8, stroke=7)
+        cv.text(x + 62, yc + 20, pin, fill=ADAPTER, bold=True)
+        rows[("in", pin)] = yc
+    for j, (pin, typ, _) in enumerate(po):          # a plug: a filled tab on the right
+        yc = neck_bottom + (nd + j) * 100 + 50
+        cv.rect(x + width - 50, yc - 24, 44, 48, ADAPTER, ADAPTER, rx=8, stroke=7)
+        cv.text(x + width - 62, yc + 20, pin, anchor="end", fill=ADAPTER, bold=True)
         rows[("out", pin)] = yc
     return rows
 
@@ -205,9 +228,9 @@ def type_picture(root) -> str:
             if pin_side == side:
                 yc = rows[(side, pin)]
                 if side == "in":
-                    cv.text(-reach, yc + 18, typ, size=50, anchor="end", fill=MUTED)
+                    cv.text(-reach, yc + 18, typ.removeprefix("adapter:"), size=50, anchor="end", fill=MUTED)
                 else:
-                    cv.text(width + reach, yc + 18, typ, size=50, fill=MUTED)
+                    cv.text(width + reach, yc + 18, typ.removeprefix("adapter:"), size=50, fill=MUTED)
     return cv.svg(0.25)
 
 
@@ -304,6 +327,8 @@ def interface_columns(cv: Canvas, pins):
             mark = left + 20 if side == "in" else left + w - 50
             if n < len(events):
                 cv.poly([(mark, y + 20), (mark + 30, y + 40), (mark, y + 60)], EVENT)
+            elif (typ or "").startswith("adapter:"):
+                cv.rect(mark - 4, y + 18, 38, 44, ADAPTER if side == "out" else "#ffffff", ADAPTER, rx=8, stroke=6)
             else:
                 cv.rect(mark, y + 24, 30, 30, colour(typ), colour(typ), stroke=1)
             tx = left + 65 if side == "in" else left + w - 65
@@ -423,7 +448,7 @@ def main():
     library = project / "Type Library"
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    types = {p.stem: ET.parse(p).getroot() for p in sorted(library.rglob("*.fbt"))}
+    types = {p.stem: ET.parse(p).getroot() for p in sorted([*library.rglob("*.fbt"), *library.rglob("*.adp")])}
     sizer = layout.Sizer(library)
     written = 0
 

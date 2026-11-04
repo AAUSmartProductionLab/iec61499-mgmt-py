@@ -1,22 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="794" height="470" viewBox="-120 -138 4960 2938" font-family="Segoe UI, Helvetica, Arial, sans-serif">
-<rect x="-120" y="-138" width="4960" height="2938" fill="#ffffff"/>
-<path d="M2244,160 Q1446,710 648,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
-<polygon points="648,1260 681,1201 715,1251" fill="#8a93a6"/>
-<path d="M1016,1260 Q2406,1030 2364,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
-<polygon points="2364,160 2397,218 2337,221" fill="#8a93a6"/>
-<path d="M2349,160 Q2270,710 2191,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
-<polygon points="2191,1260 2170,1196 2230,1205" fill="#8a93a6"/>
-<path d="M2191,1420 Q2270,1970 2349,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
-<polygon points="2349,2520 2311,2465 2370,2456" fill="#8a93a6"/>
-<path d="M2538,2520 Q5160,1340 2500,143" fill="none" stroke="#8a93a6" stroke-width="7"/>
-<polygon points="2500,143 2567,140 2542,195" fill="#8a93a6"/>
-<path d="M2465,160 Q3184,710 3903,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
-<polygon points="3903,1260 3837,1247 3874,1200" fill="#8a93a6"/>
-<path d="M4043,1260 Q4144,1030 2500,155" fill="none" stroke="#8a93a6" stroke-width="7"/>
-<polygon points="2500,155 2567,156 2539,209" fill="#8a93a6"/>
-<rect x="2220" y="0" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
-<rect x="2202" y="-18" width="316" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
-<text x="2360" y="100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Wait</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="713" height="470" viewBox="-120 -138 4455 2938" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-120" y="-138" width="4455" height="2938" fill="#ffffff"/>
+<path d="M2008,160 Q1320,710 632,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="632,1260 661,1199 698,1246" fill="#8a93a6"/>
+<path d="M983,1260 Q2280,1030 2122,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2122,160 2163,214 2104,224" fill="#8a93a6"/>
+<path d="M2113,160 Q2144,710 2175,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2175,1260 2142,1202 2202,1198" fill="#8a93a6"/>
+<path d="M2105,1420 Q1590,1970 1075,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1075,2520 1094,2456 1138,2497" fill="#8a93a6"/>
+<path d="M1213,2520 Q4354,1340 2248,159" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2248,159 2315,162 2286,214" fill="#8a93a6"/>
+<path d="M2213,160 Q2932,710 3651,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="3651,1260 3585,1247 3621,1200" fill="#8a93a6"/>
+<path d="M3722,1420 Q3496,1970 3270,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="3270,2520 3265,2453 3321,2476" fill="#8a93a6"/>
+<path d="M3024,2520 Q-127,1340 1968,159" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1968,159 1930,215 1901,162" fill="#8a93a6"/>
+<rect x="1968" y="0" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="1950" y="-18" width="316" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="2108" y="100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Wait</text>
 <rect x="0" y="1260" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
 <text x="140" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Init</text>
 <rect x="280" y="1290" width="460" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
@@ -27,22 +29,26 @@
 <text x="1928" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Start</text>
 <rect x="2090" y="1290" width="505" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
 <text x="2140" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Start</text>
-<rect x="1648" y="2520" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
-<text x="1856" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Started</text>
-<rect x="2063" y="2550" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
-<text x="2113" y="2622" font-size="52" text-anchor="start" fill="#1f2430">Alg_Evaluate</text>
-<rect x="2703" y="2550" width="370" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
-<text x="2753" y="2622" font-size="52" text-anchor="start" fill="#1f2430">STARTO</text>
+<rect x="220" y="2520" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="428" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Started</text>
+<rect x="635" y="2550" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="685" y="2622" font-size="52" text-anchor="start" fill="#1f2430">Alg_Evaluate</text>
+<rect x="1275" y="2550" width="505" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1325" y="2622" font-size="52" text-anchor="start" fill="#1f2430">Run.START</text>
 <rect x="3295" y="1260" width="370" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
 <text x="3480" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Sample</text>
-<rect x="3665" y="1290" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
-<text x="3715" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Evaluate</text>
-<rect x="4305" y="1290" width="415" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
-<text x="4355" y="1362" font-size="52" text-anchor="start" fill="#1f2430">SAMPLEO</text>
-<rect x="1374" y="660" width="143" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
-<text x="1446" y="714" font-size="46" text-anchor="middle" fill="#6b7280">INIT</text>
-<rect x="2186" y="660" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
-<text x="2270" y="714" font-size="46" text-anchor="middle" fill="#6b7280">START</text>
-<rect x="3087" y="660" width="195" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
-<text x="3184" y="714" font-size="46" text-anchor="middle" fill="#6b7280">SAMPLE</text>
+<rect x="3665" y="1290" width="550" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="3715" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Sample</text>
+<rect x="2480" y="2520" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="2642" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Judge</text>
+<rect x="2805" y="2550" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="2855" y="2622" font-size="52" text-anchor="start" fill="#1f2430">Alg_Evaluate</text>
+<rect x="3445" y="2550" width="550" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="3495" y="2622" font-size="52" text-anchor="start" fill="#1f2430">Run.SAMPLE</text>
+<rect x="1248" y="660" width="143" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="1320" y="714" font-size="46" text-anchor="middle" fill="#6b7280">INIT</text>
+<rect x="2060" y="660" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="2144" y="714" font-size="46" text-anchor="middle" fill="#6b7280">START</text>
+<rect x="2835" y="660" width="195" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="2932" y="714" font-size="46" text-anchor="middle" fill="#6b7280">SAMPLE</text>
 </svg>

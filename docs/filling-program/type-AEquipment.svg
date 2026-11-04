@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="318" height="235" viewBox="-120 -120 1274 940" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-120" y="-120" width="1274" height="940" fill="#ffffff"/>
+<rect x="0" y="220" width="750" height="480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="0" y="0" width="750" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="45" y="150" width="660" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="375" y="220" font-size="58" text-anchor="middle" fill="#1f2430">AEquipment</text>
+<polygon points="10,55 42,75 10,95" fill="#b5452b"/>
+<text x="55" y="95" font-size="58" text-anchor="start" fill="#1f2430">PLAYED</text>
+<polygon points="708,55 740,75 708,95" fill="#b5452b"/>
+<text x="695" y="95" font-size="58" text-anchor="end" fill="#1f2430">SEND</text>
+<rect x="706" y="284" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="695" y="320" font-size="58" text-anchor="end" fill="#1f2430">Holder</text>
+<rect x="706" y="384" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="695" y="420" font-size="58" text-anchor="end" fill="#1f2430">Command</text>
+<rect x="706" y="484" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="695" y="520" font-size="58" text-anchor="end" fill="#1f2430">Arg</text>
+<rect x="706" y="584" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="695" y="620" font-size="58" text-anchor="end" fill="#1f2430">Release</text>
+<line x1="790" y1="75" x2="790" y2="600" stroke="#6b7280" stroke-width="4"/>
+<rect x="780" y="65" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="780" y="290" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="780" y="390" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="780" y="490" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<rect x="780" y="590" width="20" height="20" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="838" y="318" font-size="50" text-anchor="start" fill="#6b7280">WSTRING</text>
+<text x="838" y="418" font-size="50" text-anchor="start" fill="#6b7280">USINT</text>
+<text x="838" y="518" font-size="50" text-anchor="start" fill="#6b7280">LREAL</text>
+<text x="838" y="618" font-size="50" text-anchor="start" fill="#6b7280">BOOL</text>
+</svg>

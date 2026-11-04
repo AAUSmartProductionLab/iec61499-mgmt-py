@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1831" height="800" viewBox="233 880 9157 4000" font-family="Segoe UI, Helvetica, Arial, sans-serif">
-<rect x="233" y="880" width="9157" height="4000" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1777" height="800" viewBox="265 880 8885 4000" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="265" y="880" width="8885" height="4000" fill="#ffffff"/>
 <rect x="1000" y="1000" width="5440" height="1580" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
 <text x="1100" y="1140" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">StateIn</text>
 <text x="1100" y="1305" font-size="52" text-anchor="start" fill="#6b7280">The equipment's state in: its inputs and who holds it, from its state channel</text>
-<rect x="1000" y="2880" width="7590" height="1880" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
+<rect x="1000" y="2880" width="7350" height="1880" rx="40" fill="#f6f6f1" stroke="#c8c8b8" stroke-width="6"/>
 <text x="1100" y="3020" font-size="70" text-anchor="start" fill="#4b5320" font-weight="bold">CommandOut</text>
 <text x="1100" y="3185" font-size="52" text-anchor="start" fill="#6b7280">A command out: its output values, phase by phase (the command table), on the command channel</text>
 <text x="2405" y="1552" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">EqView</text>
@@ -93,165 +93,153 @@
 <rect x="5435" y="2242" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
 <text x="5667" y="2297" font-size="48" text-anchor="middle" fill="#6b7280">EqView.I_Holder</text>
 <text x="4570" y="1997" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
-<text x="2445" y="3432" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Driver</text>
-<rect x="1990" y="3980" width="910" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="1990" y="3460" width="910" height="480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="2035" y="3910" width="820" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
-<text x="2445" y="3980" font-size="58" text-anchor="middle" fill="#1f2430">EC_Feeder</text>
-<polygon points="2000,3515 2032,3535 2000,3555" fill="#b5452b"/>
-<text x="2045" y="3555" font-size="58" text-anchor="start" fill="#1f2430">PLAY</text>
-<polygon points="2000,3615 2032,3635 2000,3655" fill="#b5452b"/>
-<text x="2045" y="3655" font-size="58" text-anchor="start" fill="#1f2430">PHASE_T</text>
-<polygon points="2858,3515 2890,3535 2858,3555" fill="#b5452b"/>
-<text x="2845" y="3555" font-size="58" text-anchor="end" fill="#1f2430">OUT</text>
-<polygon points="2858,3615 2890,3635 2858,3655" fill="#b5452b"/>
-<text x="2845" y="3655" font-size="58" text-anchor="end" fill="#1f2430">PHASE_START</text>
-<polygon points="2858,3715 2890,3735 2858,3755" fill="#b5452b"/>
-<text x="2845" y="3755" font-size="58" text-anchor="end" fill="#1f2430">PHASE_STOP</text>
-<polygon points="2858,3815 2890,3835 2858,3855" fill="#b5452b"/>
-<text x="2845" y="3855" font-size="58" text-anchor="end" fill="#1f2430">PLAYED</text>
-<rect x="2002" y="4044" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="2045" y="4080" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
-<rect x="2002" y="4144" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="2045" y="4180" font-size="58" text-anchor="start" fill="#1f2430">Command</text>
-<rect x="2002" y="4244" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="2045" y="4280" font-size="58" text-anchor="start" fill="#1f2430">Release</text>
-<rect x="2856" y="4044" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="2845" y="4080" font-size="58" text-anchor="end" fill="#1f2430">O_Holder</text>
-<rect x="2856" y="4144" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="2845" y="4180" font-size="58" text-anchor="end" fill="#1f2430">O_Release</text>
-<rect x="2856" y="4244" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="2845" y="4280" font-size="58" text-anchor="end" fill="#1f2430">N_Advance</text>
-<rect x="2856" y="4344" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="2845" y="4380" font-size="58" text-anchor="end" fill="#1f2430">N_Retract</text>
-<rect x="2856" y="4444" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="2845" y="4480" font-size="58" text-anchor="end" fill="#1f2430">PhaseDT</text>
-<rect x="1797" y="3497" width="168" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1881" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">SEND</text>
-<rect x="2925" y="3497" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3076" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.REQ</text>
-<rect x="2925" y="3597" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3116" y="3652" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.START</text>
-<rect x="2925" y="3697" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3103" y="3752" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.STOP</text>
-<rect x="1663" y="3597" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1814" y="3652" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.EO</text>
-<rect x="2925" y="3797" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3036" y="3852" font-size="48" text-anchor="middle" fill="#6b7280">PLAYED</text>
-<rect x="1744" y="4022" width="221" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1854" y="4077" font-size="48" text-anchor="middle" fill="#6b7280">Holder</text>
-<rect x="1717" y="4122" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1841" y="4177" font-size="48" text-anchor="middle" fill="#6b7280">Command</text>
-<rect x="1717" y="4222" width="248" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="1841" y="4277" font-size="48" text-anchor="middle" fill="#6b7280">Release</text>
-<rect x="2925" y="4022" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3089" y="4077" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_1</text>
-<rect x="2925" y="4122" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3089" y="4177" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_2</text>
-<rect x="2925" y="4222" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3089" y="4277" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_3</text>
-<rect x="2925" y="4322" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3089" y="4377" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_4</text>
-<rect x="2925" y="4422" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="3076" y="4477" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.DT</text>
-<text x="5005" y="3432" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">PhaseT</text>
-<rect x="4720" y="3780" width="570" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="4720" y="3460" width="570" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="4765" y="3710" width="480" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
-<text x="5005" y="3780" font-size="58" text-anchor="middle" fill="#1f2430">E_DELAY</text>
-<polygon points="4730,3515 4762,3535 4730,3555" fill="#b5452b"/>
-<text x="4775" y="3555" font-size="58" text-anchor="start" fill="#1f2430">START</text>
-<polygon points="4730,3615 4762,3635 4730,3655" fill="#b5452b"/>
-<text x="4775" y="3655" font-size="58" text-anchor="start" fill="#1f2430">STOP</text>
-<polygon points="5248,3515 5280,3535 5248,3555" fill="#b5452b"/>
-<text x="5235" y="3555" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
-<rect x="4732" y="3844" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="4775" y="3880" font-size="58" text-anchor="start" fill="#1f2430">DT</text>
-<rect x="4151" y="3497" width="544" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4423" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PHASE_START</text>
-<rect x="4178" y="3597" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4437" y="3652" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PHASE_STOP</text>
-<rect x="5315" y="3497" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="5533" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PHASE_T</text>
-<rect x="4259" y="3822" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="4477" y="3877" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PhaseDT</text>
-<text x="7335" y="3432" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">EqCmd</text>
-<rect x="6990" y="3780" width="690" height="680" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="6990" y="3460" width="690" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
-<rect x="7035" y="3710" width="600" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
-<text x="7335" y="3780" font-size="58" text-anchor="middle" fill="#1f2430">PUBLISH_4</text>
-<polygon points="7000,3515 7032,3535 7000,3555" fill="#b5452b"/>
-<text x="7045" y="3555" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
-<polygon points="7000,3615 7032,3635 7000,3655" fill="#b5452b"/>
-<text x="7045" y="3655" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
-<polygon points="7638,3515 7670,3535 7638,3555" fill="#b5452b"/>
-<text x="7625" y="3555" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
-<polygon points="7638,3615 7670,3635 7638,3655" fill="#b5452b"/>
-<text x="7625" y="3655" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
-<rect x="7002" y="3844" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="7045" y="3880" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
-<rect x="7002" y="3944" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="7045" y="3980" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
-<rect x="7002" y="4044" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="7045" y="4080" font-size="58" text-anchor="start" fill="#1f2430">SD_1</text>
-<rect x="7002" y="4144" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="7045" y="4180" font-size="58" text-anchor="start" fill="#1f2430">SD_2</text>
-<rect x="7002" y="4244" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="7045" y="4280" font-size="58" text-anchor="start" fill="#1f2430">SD_3</text>
-<rect x="7002" y="4344" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
-<text x="7045" y="4380" font-size="58" text-anchor="start" fill="#1f2430">SD_4</text>
-<rect x="7636" y="3844" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="7625" y="3880" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
-<rect x="7636" y="3944" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="7625" y="3980" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
-<rect x="6556" y="3497" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6760" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">EqState.INITO</text>
-<rect x="7705" y="3497" width="194" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="7802" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">INITO</text>
-<rect x="6636" y="3597" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6801" y="3652" font-size="48" text-anchor="middle" fill="#6b7280">Driver.OUT</text>
-<rect x="6582" y="3922" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6774" y="3977" font-size="48" text-anchor="middle" fill="#6b7280">EqView.IdCmd</text>
-<rect x="6502" y="4022" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6733" y="4077" font-size="48" text-anchor="middle" fill="#6b7280">Driver.O_Holder</text>
-<rect x="6475" y="4122" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6720" y="4177" font-size="48" text-anchor="middle" fill="#6b7280">Driver.O_Release</text>
-<rect x="6475" y="4222" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6720" y="4277" font-size="48" text-anchor="middle" fill="#6b7280">Driver.N_Advance</text>
-<rect x="6475" y="4322" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
-<text x="6720" y="4377" font-size="48" text-anchor="middle" fill="#6b7280">Driver.N_Retract</text>
-<text x="6960" y="3877" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
-<rect x="353" y="1000" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
-<polygon points="373,1020 403,1040 373,1060" fill="#b5452b"/>
-<text x="418" y="1060" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
-<rect x="353" y="1100" width="347" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
-<polygon points="373,1120 403,1140 373,1160" fill="#b5452b"/>
-<text x="418" y="1160" font-size="58" text-anchor="start" fill="#1f2430">SEND</text>
-<rect x="353" y="1260" width="347" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
-<rect x="373" y="1284" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="418" y="1320" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
-<rect x="353" y="1360" width="347" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
-<rect x="373" y="1384" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="418" y="1420" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
-<rect x="353" y="1460" width="347" height="80" rx="12" fill="#ffffff" stroke="#2563a8" stroke-width="5"/>
-<rect x="373" y="1484" width="30" height="30" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
-<text x="418" y="1520" font-size="58" text-anchor="start" fill="#1f2430">Command</text>
-<rect x="353" y="1560" width="347" height="80" rx="12" fill="#ffffff" stroke="#2e8540" stroke-width="5"/>
-<rect x="373" y="1584" width="30" height="30" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="418" y="1620" font-size="58" text-anchor="start" fill="#1f2430">Release</text>
-<rect x="8890" y="1000" width="380" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
-<polygon points="9220,1020 9250,1040 9220,1060" fill="#b5452b"/>
-<text x="9205" y="1060" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
-<rect x="8890" y="1100" width="380" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
-<polygon points="9220,1120 9250,1140 9220,1160" fill="#b5452b"/>
-<text x="9205" y="1160" font-size="58" text-anchor="end" fill="#1f2430">STATE</text>
-<rect x="8890" y="1200" width="380" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
-<polygon points="9220,1220 9250,1240 9220,1260" fill="#b5452b"/>
-<text x="9205" y="1260" font-size="58" text-anchor="end" fill="#1f2430">PLAYED</text>
-<rect x="8890" y="1360" width="380" height="80" rx="12" fill="#ffffff" stroke="#2e8540" stroke-width="5"/>
-<rect x="9220" y="1384" width="30" height="30" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
-<text x="9205" y="1420" font-size="58" text-anchor="end" fill="#1f2430">Advanced</text>
-<rect x="8890" y="1460" width="380" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
-<rect x="9220" y="1484" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
-<text x="9205" y="1520" font-size="58" text-anchor="end" fill="#1f2430">EqHolder</text>
+<text x="2325" y="3432" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">Driver</text>
+<rect x="1870" y="3980" width="910" height="580" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1870" y="3460" width="910" height="480" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="1915" y="3910" width="820" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="2325" y="3980" font-size="58" text-anchor="middle" fill="#1f2430">EC_Feeder</text>
+<polygon points="1880,3515 1912,3535 1880,3555" fill="#b5452b"/>
+<text x="1925" y="3555" font-size="58" text-anchor="start" fill="#1f2430">PLAY</text>
+<polygon points="1880,3615 1912,3635 1880,3655" fill="#b5452b"/>
+<text x="1925" y="3655" font-size="58" text-anchor="start" fill="#1f2430">PHASE_T</text>
+<polygon points="2738,3515 2770,3535 2738,3555" fill="#b5452b"/>
+<text x="2725" y="3555" font-size="58" text-anchor="end" fill="#1f2430">OUT</text>
+<polygon points="2738,3615 2770,3635 2738,3655" fill="#b5452b"/>
+<text x="2725" y="3655" font-size="58" text-anchor="end" fill="#1f2430">PHASE_START</text>
+<polygon points="2738,3715 2770,3735 2738,3755" fill="#b5452b"/>
+<text x="2725" y="3755" font-size="58" text-anchor="end" fill="#1f2430">PHASE_STOP</text>
+<polygon points="2738,3815 2770,3835 2738,3855" fill="#b5452b"/>
+<text x="2725" y="3855" font-size="58" text-anchor="end" fill="#1f2430">PLAYED</text>
+<rect x="1882" y="4044" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="1925" y="4080" font-size="58" text-anchor="start" fill="#1f2430">Holder</text>
+<rect x="1882" y="4144" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="1925" y="4180" font-size="58" text-anchor="start" fill="#1f2430">Command</text>
+<rect x="1882" y="4244" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="1925" y="4280" font-size="58" text-anchor="start" fill="#1f2430">Release</text>
+<rect x="2736" y="4044" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="2725" y="4080" font-size="58" text-anchor="end" fill="#1f2430">O_Holder</text>
+<rect x="2736" y="4144" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2725" y="4180" font-size="58" text-anchor="end" fill="#1f2430">O_Release</text>
+<rect x="2736" y="4244" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2725" y="4280" font-size="58" text-anchor="end" fill="#1f2430">N_Advance</text>
+<rect x="2736" y="4344" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="2725" y="4380" font-size="58" text-anchor="end" fill="#1f2430">N_Retract</text>
+<rect x="2736" y="4444" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="2725" y="4480" font-size="58" text-anchor="end" fill="#1f2430">PhaseDT</text>
+<rect x="1516" y="3497" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1681" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">Skill.SEND</text>
+<rect x="2805" y="3497" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2956" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.REQ</text>
+<rect x="2805" y="3597" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2996" y="3652" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.START</text>
+<rect x="2805" y="3697" width="356" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2983" y="3752" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.STOP</text>
+<rect x="1543" y="3597" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1694" y="3652" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.EO</text>
+<rect x="2805" y="3797" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2996" y="3852" font-size="48" text-anchor="middle" fill="#6b7280">Skill.PLAYED</text>
+<rect x="1462" y="4022" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1654" y="4077" font-size="48" text-anchor="middle" fill="#6b7280">Skill.Holder</text>
+<rect x="1436" y="4122" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1640" y="4177" font-size="48" text-anchor="middle" fill="#6b7280">Skill.Command</text>
+<rect x="1436" y="4222" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="1640" y="4277" font-size="48" text-anchor="middle" fill="#6b7280">Skill.Release</text>
+<rect x="2805" y="4022" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2969" y="4077" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_1</text>
+<rect x="2805" y="4122" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2969" y="4177" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_2</text>
+<rect x="2805" y="4222" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2969" y="4277" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_3</text>
+<rect x="2805" y="4322" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2969" y="4377" font-size="48" text-anchor="middle" fill="#6b7280">EqCmd.SD_4</text>
+<rect x="2805" y="4422" width="302" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="2956" y="4477" font-size="48" text-anchor="middle" fill="#6b7280">PhaseT.DT</text>
+<text x="4765" y="3432" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">PhaseT</text>
+<rect x="4480" y="3780" width="570" height="180" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4480" y="3460" width="570" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="4525" y="3710" width="480" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="4765" y="3780" font-size="58" text-anchor="middle" fill="#1f2430">E_DELAY</text>
+<polygon points="4490,3515 4522,3535 4490,3555" fill="#b5452b"/>
+<text x="4535" y="3555" font-size="58" text-anchor="start" fill="#1f2430">START</text>
+<polygon points="4490,3615 4522,3635 4490,3655" fill="#b5452b"/>
+<text x="4535" y="3655" font-size="58" text-anchor="start" fill="#1f2430">STOP</text>
+<polygon points="5008,3515 5040,3535 5008,3555" fill="#b5452b"/>
+<text x="4995" y="3555" font-size="58" text-anchor="end" fill="#1f2430">EO</text>
+<rect x="4492" y="3844" width="32" height="32" rx="0" fill="#2563a8" stroke="#2563a8" stroke-width="1"/>
+<text x="4535" y="3880" font-size="58" text-anchor="start" fill="#1f2430">DT</text>
+<rect x="3911" y="3497" width="544" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4183" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PHASE_START</text>
+<rect x="3938" y="3597" width="517" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4197" y="3652" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PHASE_STOP</text>
+<rect x="5075" y="3497" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="5293" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PHASE_T</text>
+<rect x="4019" y="3822" width="436" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="4237" y="3877" font-size="48" text-anchor="middle" fill="#6b7280">Driver.PhaseDT</text>
+<text x="7095" y="3432" font-size="58" text-anchor="middle" fill="#1f2430" font-weight="bold">EqCmd</text>
+<rect x="6750" y="3780" width="690" height="680" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="6750" y="3460" width="690" height="280" rx="30" fill="#eef2f8" stroke="#56688a" stroke-width="6"/>
+<rect x="6795" y="3710" width="600" height="100" rx="0" fill="#dde5f1" stroke="#56688a" stroke-width="5"/>
+<text x="7095" y="3780" font-size="58" text-anchor="middle" fill="#1f2430">PUBLISH_4</text>
+<polygon points="6760,3515 6792,3535 6760,3555" fill="#b5452b"/>
+<text x="6805" y="3555" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<polygon points="6760,3615 6792,3635 6760,3655" fill="#b5452b"/>
+<text x="6805" y="3655" font-size="58" text-anchor="start" fill="#1f2430">REQ</text>
+<polygon points="7398,3515 7430,3535 7398,3555" fill="#b5452b"/>
+<text x="7385" y="3555" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<polygon points="7398,3615 7430,3635 7398,3655" fill="#b5452b"/>
+<text x="7385" y="3655" font-size="58" text-anchor="end" fill="#1f2430">CNF</text>
+<rect x="6762" y="3844" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="6805" y="3880" font-size="58" text-anchor="start" fill="#1f2430">QI</text>
+<rect x="6762" y="3944" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="6805" y="3980" font-size="58" text-anchor="start" fill="#1f2430">ID</text>
+<rect x="6762" y="4044" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="6805" y="4080" font-size="58" text-anchor="start" fill="#1f2430">SD_1</text>
+<rect x="6762" y="4144" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="6805" y="4180" font-size="58" text-anchor="start" fill="#1f2430">SD_2</text>
+<rect x="6762" y="4244" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="6805" y="4280" font-size="58" text-anchor="start" fill="#1f2430">SD_3</text>
+<rect x="6762" y="4344" width="32" height="32" rx="0" fill="#6b7280" stroke="#6b7280" stroke-width="1"/>
+<text x="6805" y="4380" font-size="58" text-anchor="start" fill="#1f2430">SD_4</text>
+<rect x="7396" y="3844" width="32" height="32" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="7385" y="3880" font-size="58" text-anchor="end" fill="#1f2430">QO</text>
+<rect x="7396" y="3944" width="32" height="32" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="7385" y="3980" font-size="58" text-anchor="end" fill="#1f2430">STATUS</text>
+<rect x="6316" y="3497" width="409" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6520" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">EqState.INITO</text>
+<rect x="7465" y="3497" width="194" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="7562" y="3552" font-size="48" text-anchor="middle" fill="#6b7280">INITO</text>
+<rect x="6396" y="3597" width="329" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6561" y="3652" font-size="48" text-anchor="middle" fill="#6b7280">Driver.OUT</text>
+<rect x="6342" y="3922" width="383" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6534" y="3977" font-size="48" text-anchor="middle" fill="#6b7280">EqView.IdCmd</text>
+<rect x="6262" y="4022" width="463" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6493" y="4077" font-size="48" text-anchor="middle" fill="#6b7280">Driver.O_Holder</text>
+<rect x="6235" y="4122" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6480" y="4177" font-size="48" text-anchor="middle" fill="#6b7280">Driver.O_Release</text>
+<rect x="6235" y="4222" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6480" y="4277" font-size="48" text-anchor="middle" fill="#6b7280">Driver.N_Advance</text>
+<rect x="6235" y="4322" width="490" height="76" rx="14" fill="#ffffff" stroke="#9aa3b5" stroke-width="4"/>
+<text x="6480" y="4377" font-size="48" text-anchor="middle" fill="#6b7280">Driver.N_Retract</text>
+<text x="6720" y="3877" font-size="48" text-anchor="end" fill="#0f6b6b">TRUE</text>
+<rect x="385" y="1000" width="315" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="405,1020 435,1040 405,1060" fill="#b5452b"/>
+<text x="450" y="1060" font-size="58" text-anchor="start" fill="#1f2430">INIT</text>
+<rect x="385" y="1160" width="315" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="405" y="1184" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="450" y="1220" font-size="58" text-anchor="start" fill="#1f2430">Module</text>
+<rect x="385" y="1260" width="315" height="80" rx="12" fill="#ffffff" stroke="#c0761a" stroke-width="5"/>
+<rect x="401" y="1278" width="38" height="44" rx="8" fill="#ffffff" stroke="#c0761a" stroke-width="6"/>
+<text x="450" y="1320" font-size="58" text-anchor="start" fill="#1f2430">Skill</text>
+<rect x="8650" y="1000" width="380" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="8980,1020 9010,1040 8980,1060" fill="#b5452b"/>
+<text x="8965" y="1060" font-size="58" text-anchor="end" fill="#1f2430">INITO</text>
+<rect x="8650" y="1100" width="380" height="80" rx="12" fill="#ffffff" stroke="#b5452b" stroke-width="5"/>
+<polygon points="8980,1120 9010,1140 8980,1160" fill="#b5452b"/>
+<text x="8965" y="1160" font-size="58" text-anchor="end" fill="#1f2430">STATE</text>
+<rect x="8650" y="1260" width="380" height="80" rx="12" fill="#ffffff" stroke="#2e8540" stroke-width="5"/>
+<rect x="8980" y="1284" width="30" height="30" rx="0" fill="#2e8540" stroke="#2e8540" stroke-width="1"/>
+<text x="8965" y="1320" font-size="58" text-anchor="end" fill="#1f2430">Advanced</text>
+<rect x="8650" y="1360" width="380" height="80" rx="12" fill="#ffffff" stroke="#7d3cb5" stroke-width="5"/>
+<rect x="8980" y="1384" width="30" height="30" rx="0" fill="#7d3cb5" stroke="#7d3cb5" stroke-width="1"/>
+<text x="8965" y="1420" font-size="58" text-anchor="end" fill="#1f2430">EqHolder</text>
 </svg>
