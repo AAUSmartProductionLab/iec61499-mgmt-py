@@ -26,7 +26,8 @@ explain each block on its own; look a block up there when you meet it.
 files by [filling-program/draw_blocks.py](filling-program/draw_blocks.py), with the positions,
 groups and sizes the 4diac IDE uses, so they look as the program looks in the IDE; they are not
 screenshots of it. Open one on its own to see it full size. After the program is regenerated, draw
-them again (section 12).
+them again (section 12). The same document with screenshots of the IDE, where there are some, is
+[filling-program-screenshots.md](filling-program-screenshots.md).
 
 ## 1. The whole program in one picture
 
