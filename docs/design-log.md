@@ -20,6 +20,15 @@ A running log of design considerations made while building, for writing the pape
 
 ## 4 Nov 2026
 
+- **The audit takes the module's identity and its IO wiring from the boot file.** *CIRP* (Q3).
+  - Found by Q3's first full run: the module's name and OPC UA root are not in the AAS, and the reading
+    took them from the running program; when the occupation's root or name changed in the program,
+    that became the desired value, and the audit "repaired" every other block to it (2 of 411 values
+    written). The linear axis's four IO addresses, which the program built from the AAS has no value
+    for, were never compared (4 of 411).
+  - Now, given the deployed boot file, the reading takes the name and root from it, and the audit
+    compares every IO address the boot file writes. Without a boot file both are as before.
+
 - **The reconciler compares the program block by block as well, and audits every value on request.**
   *CIRP* (Q3), *Journal*.
   - Found by Q3's pilot: reading the program only as skills (steps, bindings, parameters) misses drift

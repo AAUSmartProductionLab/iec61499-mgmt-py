@@ -118,6 +118,12 @@ def read(client: Client, host: str, port: int, module: dict, components: list[di
     if package is None or value(MODULE_NAME) is None:
         raise NotDescribed(f"{host}:{port} does not run a module built by the module rules")
     name, root = literal(value(MODULE_NAME)), literal(value(MODULE_ROOT))
+    if boot:
+        # The module's name and OPC UA root are not in the AAS: as the deployed boot file has them, so
+        # that one of them changed in the program is found, not taken for what the AAS describes.
+        deployed = written(boot, snap.container)
+        name = literal(deployed.get(MODULE_NAME)) or name
+        root = literal(deployed.get(MODULE_ROOT)) or root
     if stats is not None:
         stats["program_s"] = time.perf_counter() - mark
         mark = time.perf_counter()
@@ -209,7 +215,10 @@ def blockwise(spec: ModuleSpec, snap: Snapshot, value, found: Differences, audit
                              + ("; ..." if len(found_) > 4 else ""))
     if audit:
         deployed = written(boot, snap.container) if boot else {}
-        for port, want_value in expected_values(spec, app).items():
+        values = expected_values(spec, app)
+        # Every IO address the boot file writes, also where the program built from the AAS has none.
+        values.update({p: v for p, v in deployed.items() if p not in values and wiring(p, app)})
+        for port, want_value in values.items():
             if inside(owner(port)) or port in found.values or owner(port) not in have:
                 continue
             if wiring(port, app):                  # not in the AAS: as the deployed boot file has it, if given
