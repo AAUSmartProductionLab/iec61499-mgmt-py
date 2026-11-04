@@ -204,20 +204,39 @@ Much of the traffic between the layers goes over **local channels** instead: nam
 FORTE (`loc[<name>]`), written by PUBLISH blocks and read by SUBSCRIBE blocks. Any number of blocks
 can write to and read from one channel, and they need no line between them. That is why a skill
 added while the program runs needs no wiring to the equipment or to the occupation. The price: these
-links are not drawn in the IDE. They are:
+links are not drawn in the IDE. This map draws them, from the program: each channel is a bar, each
+block of the application that uses one is a column, an arrow down onto a bar writes on that channel
+and an arrow up from it reads. The 13 primitives (5 offered on their own, 8 as steps of Resetting,
+Stopping and Dispensing) are grouped by type.
+
+![The local channels of the filling module: who writes and who reads](filling-program/channels-Filling_pi.svg)
 
 | Channel | Written by | Read by | Carries |
 | --- | --- | --- | --- |
-| `loc[Filling/owner]` | Occupation | every skill, Module | The session id of whoever occupies the module (empty: free) |
-| `loc[Filling/owner/query]` | a block at start-up | Occupation | "Tell me the owner" |
-| `loc[Filling/state]` | Module | every skill, every equipment block | The PackML state (a number, see section 3) |
-| `loc[Filling/state/query]` | a block at start-up | Module | "Tell me the state" |
-| `loc[Filling/activity]` | every skill | Module | +1 when a skill starts, -1 when it ends (Stopping waits until no skill runs) |
-| `loc[Filling/release]` | every skill when its run ends | every equipment block | "The holder X gives up": the equipment X holds switches off and is free |
-| `loc[Filling/LinearAxis/cmd]` | the skills that move the axis | LinearAxis | The holder's name and the output values to switch (Enable, Down, Step), or a move to a position |
-| `loc[Filling/LinearAxis/state]` | LinearAxis | the skills that move the axis | AtHome, ActualPosition, Homed, Moving and the holder |
-| `loc[Filling/Pump/cmd]`, `.../state` | Dispense / Pump | Pump / Dispense | The holder and the command; the holder |
-| `loc[Filling/Scale/cmd]`, `.../state` | Tare, Weigh / Scale | Scale / Tare, Weigh | The holder and the command; Weight and the holder |
+| `loc[Filling/owner]` | `Occupation` (its `PubOwner`) | every skill (the `Owner` in its `SKILL_Core`: 14) and `Module` (its `Owner`) | The session id of whoever occupies the module (empty: free) |
+| `loc[Filling/owner/query]` | those same 15, once at start-up (their `Owner`'s `Query`) | `Occupation` (its `SubQuery`) | "Tell me the owner": `Occupation` answers on `owner` |
+| `loc[Filling/state]` | `Module` (its `PubState`) | every skill (the `Mode` in its `SKILL_Core`: 14) and every equipment block (its `Mode`: 3) | The PackML state (a number, see section 3) |
+| `loc[Filling/state/query]` | those same 17, once at start-up (their `Mode`'s `Query`) | `Module` (its `SubQuery`) | "Tell me the state": `Module` answers on `state` |
+| `loc[Filling/activity]` | every skill (the `Act` in its `SKILL_Core`: 14) | `Module` (its `SubAct`) | +1 when a skill starts, -1 when it ends (Stopping waits until no skill runs) |
+| `loc[Filling/release]` | `Dispensing` (the `PubRelease` in its `Control`), when its run ends | every equipment block (its `SubRelease`: 3) | "The holder Dispensing gives up": what it holds switches off and is free. A primitive's `PubRelease` is switched off (`ReleaseAll` FALSE): it gives its equipment up with its last command instead |
+| `loc[Filling/LinearAxis/cmd]` | the skills that move the axis (the `EqCmd` in their port: Home ×5, MoveAxis ×2) | `LinearAxis` (its `SubCmd`) | The holder's name, the release, and the output values to switch (Enable, Down, Step), or a move to a position |
+| `loc[Filling/LinearAxis/state]` | `LinearAxis` (its `PubState`) | the same 7 skills (the `EqState` in their port) | AtHome, ActualPosition, Homed, Moving and the holder |
+| `loc[Filling/Pump/cmd]`, `.../state` | Dispense ×2 / `Pump` | `Pump` / Dispense ×2 | The holder and the command; the holder |
+| `loc[Filling/Scale/cmd]`, `.../state` | Tare ×2, Weigh ×2 / `Scale` | `Scale` / Tare ×2, Weigh ×2 | The holder and the command; Weight and the holder |
+
+Three things to notice in the map:
+
+- **Only the module level talks to everyone.** `owner` and `state` go from one writer to every skill;
+  `activity` goes the other way, from every skill to `Module`. The `query` channels are only used once,
+  at start-up, so a block that starts late still learns the owner and the state.
+- **A skill never talks to another skill.** Skills meet only at the equipment: whoever holds the
+  axis is on `LinearAxis/state` for every other skill of the axis to see.
+- **A piece of equipment talks only to its own skills** (its `cmd` and `state`), and listens to the
+  module (`state`, `release`). That is why adding a primitive or a piece of equipment adds a column,
+  and a piece of equipment two bars, but changes nothing else.
+
+The channel names are built at start-up from the module's name (`Module "Filling"`), so the
+stoppering module's blocks use `loc[Stoppering/...]` and the two never mix, even in one FORTE.
 
 ## 3. What a client can see and call
 
@@ -2050,7 +2069,8 @@ python docs/filling-program/draw_blocks.py
 ```
 
 draws every `type-`, `inside-`, `ecc-` (the state machine of a basic type, as the IDE lays it out)
-and `app-` picture of the filling module again (and `legend.svg`).
+and `app-` picture of the filling module again, `legend.svg`, and the map of the local channels
+(`channels-Filling_pi.svg`).
 The `stoppering-` pictures come from
 `python docs/filling-program/draw_blocks.py --project cell/control/StopperingModule --app Stoppering_pi --out <folder>`,
 copied from there with the prefix; the `example-` pictures from a copy of the stoppering spec with

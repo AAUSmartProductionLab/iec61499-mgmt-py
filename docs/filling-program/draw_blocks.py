@@ -14,6 +14,7 @@ It writes, into the output folder:
   transition a curve through its condition, at the places the generator (``modgen/ecc.py``) gave them;
 - ``app-<Application>.svg`` for the application, and ``app-<SubApp>.svg`` (``Dispensing.Execute``)
   for each subapplication in it: the blocks inside;
+- ``channels-<Application>.svg``: who writes and who reads which local channel;
 - ``legend.svg``: how to read the pictures.
 
 The networks use the positions, groups and block sizes the IDE uses (``modgen/layout.py``): each
@@ -438,6 +439,118 @@ def ecc_picture(root) -> str:
     return cv.svg(0.16)
 
 
+# The local channels
+
+def participants(app, types: dict, module: str):
+    """Who writes and who reads which local channel, worked out from the application: the module
+    level blocks, the equipment blocks, and every skill (its SKILL_Core, and for a primitive its
+    port). Returns the channels in order and the columns: (title, members, {channel: "w" or "r"})."""
+    found = []
+
+    def walk(net, path):
+        for fb in net.findall("FB"):
+            found.append((path + fb.get("Name"), short(fb.get("Type")), fb))
+        for sub in net.findall("SubApp"):
+            walk(sub.find("SubAppNetwork"), path + sub.get("Name") + ".")
+    walk(app.find("SubAppNetwork"), "")
+    m = module
+    items = [n for n, t, _ in found if t.startswith("EQ_")]
+    channels = [f"{m}/owner", f"{m}/owner/query", f"{m}/state", f"{m}/state/query", f"{m}/activity",
+                f"{m}/release"] + [f"{m}/{i}/{w}" for i in items for w in ("cmd", "state")]
+    core = {f"{m}/owner": "r", f"{m}/owner/query": "w", f"{m}/state": "r", f"{m}/state/query": "w",
+            f"{m}/activity": "w"}
+    columns = []
+    for name, typ, _ in found:
+        if typ == "MOD_Occupation":
+            columns.append((name, [name], {f"{m}/owner": "w", f"{m}/owner/query": "r"}))
+        elif typ == "MOD_StateManager":
+            columns.append((name, [name], {f"{m}/owner": "r", f"{m}/owner/query": "w", f"{m}/state": "w",
+                                           f"{m}/state/query": "r", f"{m}/activity": "r"}))
+    skills: dict[str, list[str]] = {}
+    for name, typ, fb in found:
+        if typ.startswith("SK_"):
+            skills.setdefault(typ, []).append(name)
+    for typ, names in skills.items():
+        net = types[typ].find("FBNetwork")
+        port = next((short(f.get("Type")) for f in net.findall("FB") if f.get("Name") == "Port"), "")
+        item = port[len("EP_"):] if port.startswith("EP_") else None
+        uses = dict(core)
+        if item:
+            uses.update({f"{m}/{item}/cmd": "w", f"{m}/{item}/state": "r"})
+        columns.append((f"{typ[len('SK_'):]} ×{len(names)}", names, uses))
+    for name, typ, fb in found:
+        if typ == "SKILL_Core":            # a module level skill: it gives up all it holds when a run ends
+            given = {p.get("Name"): p.get("Value") for p in fb.findall("Parameter")}
+            columns.append((name.split(".")[0], [name], {**core, **({f"{m}/release": "w"}
+                                                                   if given.get("ReleaseAll") == "TRUE" else {})}))
+    for item in items:
+        columns.append((item, [item], {f"{m}/state": "r", f"{m}/state/query": "w", f"{m}/release": "r",
+                                       f"{m}/{item}/cmd": "r", f"{m}/{item}/state": "w"}))
+    return channels, columns
+
+
+def channel_map(app, types: dict, module: str) -> str:
+    """The local channels as bus bars, one per channel, and every block that uses them as a column:
+    an arrow down onto a bar writes on that channel, an arrow up from it reads."""
+    channels, columns = participants(app, types, module)
+    cv = Canvas()
+    col_w, bar_gap, top = 1500, 260, 900
+    left = 2600
+    WRITE, READ = "#b5452b", "#2563a8"
+    for j, (title, members, _) in enumerate(columns):
+        x = left + j * col_w
+        cv.rect(x - 640, 0, 1280, 620, FB_FILL, FB_LINE, rx=30)
+        cv.text(x, 150, title, anchor="middle", bold=True)
+        shown = members if len(members) <= 5 else members[:4] + [f"and {len(members) - 4} more"]
+        for k, n in enumerate(shown if len(members) > 1 or title != members[0] else []):
+            cv.text(x, 250 + k * 70, n, size=44, anchor="middle", fill=MUTED)
+    right = left + (len(columns) - 1) * col_w + 700
+    carries = {"owner": "who occupies the module", "owner/query": "\"tell me the owner\"",
+               "state": "the module's PackML state", "state/query": "\"tell me the state\"",
+               "activity": "+1 a skill starts, -1 it ends", "release": "a holder gives up all it holds",
+               "cmd": "the holder and the output values", "state#": "the inputs and who holds it"}
+    for i, ch in enumerate(channels):
+        y = top + i * bar_gap
+        cv.line(left - 700, y, right, y, "#9aa3b5", stroke=10)
+        cv.text(left - 760, y + 20, f"loc[{ch}]", size=60, anchor="end", fill=INK, bold=True)
+        tail = ch.split("/", 1)[1]
+        key = tail if tail in carries else ("cmd" if tail.endswith("/cmd") else "state#")
+        cv.text(right + 60, y + 20, carries[key], size=54, fill=MUTED)
+    # Which columns are what.
+    kinds = [("module level", lambda t: t in ("Occupation", "Module")),
+             ("equipment blocks", lambda t: t.split(" ")[0] not in ("Occupation", "Module")
+              and "×" not in t and t in {c[0] for c in columns[-3:]}),
+             ("skills: each with its SKILL_Core; a primitive also with its port (EP_) to its equipment",
+              lambda t: "×" in t or t not in ("Occupation", "Module"))]
+    placed = set()
+    for label_text, test in kinds:
+        idx = [j for j, c in enumerate(columns) if test(c[0]) and j not in placed]
+        if not idx:
+            continue
+        placed |= set(idx)
+        x0, x1 = left + idx[0] * col_w - 640, left + idx[-1] * col_w + 640
+        cv.line(x0, -60, x1, -60, MUTED, stroke=6)
+        cv.text((x0 + x1) / 2, -100, label_text, size=56, anchor="middle", fill=MUTED)
+    for j, (_, _, uses) in enumerate(columns):
+        x = left + j * col_w
+        bottom = top + max(i for i, ch in enumerate(channels) if ch in uses) * bar_gap
+        cv.line(x, 620, x, bottom, "#c9ced8", stroke=6)
+        for i, ch in enumerate(channels):
+            if ch not in uses:
+                continue
+            y = top + i * bar_gap
+            if uses[ch] == "w":     # onto the bar
+                cv.poly([(x - 45, y - 95), (x + 45, y - 95), (x, y - 12)], WRITE)
+            else:                   # off the bar, up to the block
+                cv.poly([(x - 45, y - 12), (x + 45, y - 12), (x, y - 95)], READ)
+    y = top + len(channels) * bar_gap + 60
+    cv.poly([(left - 700, y - 40), (left - 610, y - 40), (left - 655, y + 40)], WRITE)
+    cv.text(left - 580, y + 25, "writes (PUBLISH)", size=54, fill=WRITE)
+    cv.poly([(left + 200, y + 40), (left + 290, y + 40), (left + 245, y - 40)], READ)
+    cv.text(left + 320, y + 25, "reads (SUBSCRIBE)", size=54, fill=READ)
+    return cv.svg(0.2)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--project", default="cell/control/FillingModule")
@@ -469,6 +582,8 @@ def main():
     if app is None:
         raise SystemExit(f"no application {args.app} in {project}")
     write(f"app-{args.app}.svg", network(app.find("SubAppNetwork"), types, sizer))
+    module = next((p.get("Value").strip('"') for p in app.iter("Parameter") if p.get("Name") == "Module"), args.app)
+    write(f"channels-{args.app}.svg", channel_map(app, types, module))
 
     def subapps(net, trail):
         for sub in net.findall("SubApp"):
