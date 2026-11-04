@@ -212,4 +212,32 @@ with these numbers. Outliers (beyond three interquartile ranges) are listed and 
 **Outputs.** `cell/eval/results/q1-<when>.jsonl` (one line per run), `cell/eval/q1_analysis.py` writes
 `q1-<when>.md` (the tables) and the figure for the paper.
 
-**Results.** To come after the pilot and the runs.
+**Results (4 Nov).** 1,260 runs and 5 warm-up runs, 30 per cell in random order, the evaluation's FORTE,
+commit `4ab503c` with the tools unchanged; the runs in `cell/eval/results/q1-2026-11-04T0028.jsonl`, the
+tables in `q1-2026-11-04T0028.md`, the figure in `docs/paper/cirp/figures/activation.pdf`.
+
+- *Every counted run passed every check*, V1 to V10 and the oracle's (V1g, V3g, V7g; up to 342
+  instances, 1,604 connections and 1,377 values compared). In 12 runs the OPC UA server failed to
+  register with a discovery server (counted apart, V10).
+- *H1.1 holds.* A composite of 32 steps in a program of 20 composites is activated in 0.352 s [0.348,
+  0.365], and the slowest of all 780 runs that added a composite took 0.582 s. Applying costs
+  0.141 ms per command (R² 0.98), reading and verifying 0.188 ms per connection of the program (R²
+  0.84), the two together explain the activation time with R² 0.87. Reading part by part, from about
+  600 connections on, adds about 35 ms (the program read in 6 ms at 5 composites, 40 ms at 10).
+- *H1.2 holds.* The commands, by operation, are those the generator's boot files call for in 1,020 of
+  1,020 runs: 2n + 4 instances created and started, and per step of the dose cycle 9.25 connections
+  and 7.5 values; 73 commands (9.8 kB) for 1 step to 716 (99 kB) for 32, the same at every program size.
+- *H1.3 holds.* Dispensing, running while a composite was added, took 0.01 % [-0.01, 0.08] longer
+  (120 pairs in four cells); the module stayed in Execute throughout (V9, 900 runs).
+- *H1.4 holds for a new composite and, for a value, between orders only.* A restart leaves the module
+  unavailable 3.31 s; adding a composite online, not at all. A value changed from Execute costs 2.35 to
+  2.54 s online, as the guard needs the module stopped and a stopped module is reset (2.13 s, it
+  homes), against 3.30 to 3.31 s by a restart (x1.3 to x1.4): H1.4 fails there. Between orders, from
+  Idle, it costs 0.02 to 0.21 s online against 3.16 to 3.17 s by a restart (x15 to x133).
+- *The restart's parts:* FORTE loads in 0.57 s at every program size (boot files of 246 to 2,875
+  lines), the reset takes 2.60 s (online 2.13 s), the start 0.08 s; generating the boot file 4 to 44 ms.
+- *Outliers:* 48 of the 1,020 online runs (4.7 %) took 0.2 to 0.25 s longer than their cell's median,
+  spread over the session (from run 7 to 1263). The time is lost in the reconciler's comparison, which
+  is Python only (32 of them in the verify phase). An offline test found full garbage collections of up
+  to 0.41 s in such a process, but none inside a reading in 300, so the cause is not established. They
+  are kept; every run stayed below 1 s.
