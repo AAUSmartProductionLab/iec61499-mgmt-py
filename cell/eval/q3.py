@@ -99,6 +99,12 @@ def other(value):
 
 # The drifts ------------------------------------------------------------------------------------------
 
+def identity(drift: dict) -> str:
+    """A drift as --resume and q3_analysis.py know it again: a value (P1) by its port alone, since the
+    value it had holds the session's simulator port where it is an IO address."""
+    return json.dumps({k: v for k, v in drift.items() if not (drift["kind"] == "P1" and k == "was")}, sort_keys=True)
+
+
 def drifts(spec: ModuleSpec, boot: str, record_: dict, rng: random.Random) -> list[dict]:
     """Every drift of every kind (P3 and A2 sampled), each a dict with its kind and target."""
     entries = q1.boot_set(boot)
@@ -404,7 +410,7 @@ def main() -> None:
     out_path = a.resume or sc.RESULTS / f"q3-{datetime.now():%Y-%m-%dT%H%M}.jsonl"
     done_ids = set()
     if a.resume and a.resume.exists():
-        done_ids = {json.dumps(json.loads(line)["out"]["drift"], sort_keys=True)
+        done_ids = {identity(json.loads(line)["out"]["drift"])
                     for line in a.resume.read_text(encoding="utf-8").splitlines() if line.strip()}
     env = q1.setup(a.forte, a.seed)
     with tempfile.TemporaryDirectory() as tmp:
@@ -429,7 +435,7 @@ def main() -> None:
                 if d["kind"].startswith("A"):
                     q1.delivered_spec(described(d, base))
             for i, drift in enumerate(order):
-                if json.dumps(drift, sort_keys=True) in done_ids:
+                if identity(drift) in done_ids:
                     continue
                 started = time.perf_counter()
                 row = {"index": i, "time": datetime.now().isoformat(), **env}
