@@ -44,12 +44,24 @@ def rate(k: int, n: int) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("runs", type=Path)
+    ap.add_argument("runs", type=Path, nargs="+", help="a run, then the runs that repeat some of its drifts")
     a = ap.parse_args()
-    rows = [json.loads(line) for line in a.runs.read_text(encoding="utf-8").splitlines() if line.strip()]
+    latest: dict[str, dict] = {}                      # a drift run again (after a fix) counts as its last run
+    repeated = 0
+    for path in a.runs:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                row = json.loads(line)
+                drift = row["out"]["drift"]               # as q3.identity: a value (P1) by its port alone
+                key = json.dumps({k: v for k, v in drift.items() if not (drift["kind"] == "P1" and k == "was")},
+                                 sort_keys=True)
+                repeated += key in latest
+                latest[key] = row
+    rows = list(latest.values())
     ok = [r for r in rows if r.get("ok")]
-    md = [f"# Q3 results: {a.runs.name}", "", "## Runs", "",
-          f"- {len(rows)} runs; {len(ok)} passed R1 to R3 and are counted.",
+    md = [f"# Q3 results: {' + '.join(p.name for p in a.runs)}", "", "## Runs", "",
+          f"- {len(rows)} runs; {len(ok)} passed R1 to R3 and are counted"
+          f"{f'; {repeated} repeated from the later files, the last run of a drift counted' if repeated else ''}.",
           f"- Setups (commit, FORTE hash, tools changed): {sorted({(r.get('commit'), r.get('forte_sha256'), r.get('tools_dirty')) for r in rows}, key=str)}"]
     for r in rows:
         if not r.get("ok"):
@@ -146,7 +158,7 @@ def main() -> None:
         for first, last, (classes, outcome, ran), disp in groups:
             seen = [d for d in disp if d is not None]
             md.append(f"| {first} | {last} | {classes} | {outcome} | {ran} | {f'{sum(seen)}/{len(seen)}' if seen else ''} |")
-    out = a.runs.with_suffix(".md")
+    out = a.runs[0].with_suffix(".md")
     out.write_text("\n".join(md) + "\n", encoding="utf-8")
     print(out)
 
