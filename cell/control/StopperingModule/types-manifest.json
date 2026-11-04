@@ -216,6 +216,12 @@
     "exported": false
   },
   {
+    "type": "modlib::SKILL_Gate",
+    "kind": "BasicFB",
+    "file": "Skills/Base/SKILL_Gate.fbt",
+    "exported": false
+  },
+  {
     "type": "modlib::SKILL_Control",
     "kind": "BasicFB",
     "file": "Skills/Base/SKILL_Control.fbt",

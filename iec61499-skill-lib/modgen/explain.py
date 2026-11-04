@@ -41,8 +41,13 @@ LIBRARY = {
                   "checks a client's Start (the caller holds the occupation, the module is in Execute, the skill is "
                   "not running, the values are in range, the equipment is free) and then starts the skill's own "
                   "logic.",
-    "SKILL_Control": "The skill's state machine inside SKILL_Core: what Start, Stop, Abort and Reset do in each state, "
-                     "and the answer a client gets.",
+    "SKILL_Control": "The skill's state machine inside SKILL_Core: what Start, Stop, Abort and Reset do in each state. "
+                     "A client's command reaches it only once SKILL_Gate has accepted it, so here a command is the "
+                     "same from a client or from a parent.",
+    "SKILL_Gate": "The front desk of a skill, inside SKILL_Core: answers a client's Start, Stop, Abort or Reset at "
+                  "once (only the module's owner; Start only with the module in Execute, the skill not running, the "
+                  "values in range and the equipment free) and passes an accepted command on to SKILL_Control, as a "
+                  "parent's command is passed on.",
     "SKILL_FailMerge": "Joins two failure events (with their error codes) into one, because a data input can only be "
                        "wired once.",
     "SKILL_Merge": "Where the two branches of a decision meet again: either branch's end goes on.",
@@ -155,6 +160,8 @@ INSIDE = {
         "Wd": "Gives up waiting for the skills to stop after StopTimeout: the module then aborts.",
     },
     "SKILL_Core": {
+        "Gate": "Decides a client's Start, Stop, Abort and Reset and answers it; passes accepted ones, and the "
+                "parent's commands, on to Control.",
         "Control": "The skill's state machine (SKILL_Control).",
         "Owner": "Knows who occupies the module: only the owner may command the skill over OPC UA.",
         "Mode": "Knows the module's state: a client may start the skill only in Execute; the skill stops when the "
