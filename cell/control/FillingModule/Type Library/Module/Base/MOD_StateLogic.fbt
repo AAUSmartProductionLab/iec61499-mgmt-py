@@ -1,28 +1,15 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FBType Name="MOD_StateLogic" Comment="The PackML state machine itself: accepts a command only from the owner and only where PackML allows it; while Stopping it waits until no skill runs any more. Technical: PackML module state machine: commands only from the occupation owner and only where PackML allows them; runs the Resetting and Stopping procedures; Stopping waits until no skill is active">
+<FBType Name="MOD_StateLogic" Comment="The PackML state machine itself: Reset, Start, Stop, Abort and Clear take it from state to state (MOD_StateGate has already checked who sent them, and that PackML allows them now); while Stopping it waits until no skill runs any more. Technical: PackML module state machine: RESET, START, STOP, ABORT, CLEAR (decided by MOD_StateGate); runs the Resetting and Stopping procedures; Stopping waits until no skill is active">
   <Identification Standard="61499-2" />
   <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
   <CompilerInfo packageName="modlib" />
   <InterfaceList>
     <EventInputs>
-      <Event Name="RESET_REQ" Type="Event" Comment="RESET(Session) was called">
-        <With Var="ResetSession" />
-      </Event>
-      <Event Name="START_REQ" Type="Event" Comment="START(Session) was called">
-        <With Var="StartSession" />
-      </Event>
-      <Event Name="STOP_REQ" Type="Event" Comment="STOP(Session) was called">
-        <With Var="StopSession" />
-      </Event>
-      <Event Name="ABORT_REQ" Type="Event" Comment="ABORT(Session) was called">
-        <With Var="AbortSession" />
-      </Event>
-      <Event Name="CLEAR_REQ" Type="Event" Comment="CLEAR(Session) was called">
-        <With Var="ClearSession" />
-      </Event>
-      <Event Name="OWNER_CHG" Type="Event" Comment="The owner changed">
-        <With Var="Owner" />
-      </Event>
+      <Event Name="RESET" Type="Event" Comment="Reset the module (accepted by MOD_StateGate)" />
+      <Event Name="START" Type="Event" Comment="Start the module (accepted by MOD_StateGate)" />
+      <Event Name="STOP" Type="Event" Comment="Stop the module (accepted by MOD_StateGate)" />
+      <Event Name="ABORT" Type="Event" Comment="Abort the module (accepted by MOD_StateGate)" />
+      <Event Name="CLEAR" Type="Event" Comment="Clear the module (accepted by MOD_StateGate)" />
       <Event Name="ACT" Type="Event" Comment="The number of running skills changed (AllIdle)">
         <With Var="AllIdle" />
       </Event>
@@ -33,26 +20,6 @@
       <Event Name="STOP_TIMEOUT" Type="Event" Comment="Stopping took longer than StopTimeout" />
     </EventInputs>
     <EventOutputs>
-      <Event Name="RESET_RSP" Type="Event" Comment="Answer to RESET: Accepted, ErrorID">
-        <With Var="Accepted" />
-        <With Var="ErrorID" />
-      </Event>
-      <Event Name="START_RSP" Type="Event" Comment="Answer to START: Accepted, ErrorID">
-        <With Var="Accepted" />
-        <With Var="ErrorID" />
-      </Event>
-      <Event Name="STOP_RSP" Type="Event" Comment="Answer to STOP: Accepted, ErrorID">
-        <With Var="Accepted" />
-        <With Var="ErrorID" />
-      </Event>
-      <Event Name="ABORT_RSP" Type="Event" Comment="Answer to ABORT: Accepted, ErrorID">
-        <With Var="Accepted" />
-        <With Var="ErrorID" />
-      </Event>
-      <Event Name="CLEAR_RSP" Type="Event" Comment="Answer to CLEAR: Accepted, ErrorID">
-        <With Var="Accepted" />
-        <With Var="ErrorID" />
-      </Event>
       <Event Name="CNF" Type="Event" Comment="The state changed">
         <With Var="State" />
       </Event>
@@ -62,266 +29,102 @@
       <Event Name="WD_STOP" Type="Event" Comment="Stop the stop timeout" />
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Name="ResetSession" Type="WSTRING" Comment="Session ID of the caller of Reset" />
-      <VarDeclaration Name="StartSession" Type="WSTRING" Comment="Session ID of the caller of Start" />
-      <VarDeclaration Name="StopSession" Type="WSTRING" Comment="Session ID of the caller of Stop" />
-      <VarDeclaration Name="AbortSession" Type="WSTRING" Comment="Session ID of the caller of Abort" />
-      <VarDeclaration Name="ClearSession" Type="WSTRING" Comment="Session ID of the caller of Clear" />
-      <VarDeclaration Name="Owner" Type="WSTRING" Comment="Session ID of the module's owner (empty: free)" />
       <VarDeclaration Name="AllIdle" Type="BOOL" InitialValue="TRUE" Comment="No skill runs" />
     </InputVars>
     <OutputVars>
       <VarDeclaration Name="State" Type="USINT" InitialValue="2" Comment="PackML state: 1 Clearing, 2 Stopped, 3 Starting, 4 Idle, 6 Execute, 7 Stopping, 8 Aborting, 9 Aborted, 15 Resetting" />
-      <VarDeclaration Name="Accepted" Type="BOOL" Comment="The call was accepted" />
-      <VarDeclaration Name="ErrorID" Type="UINT" Comment="Error code: 0 none, 1 PreconditionViolated, 2 InvariantViolated, 3 Timeout, 4 NotReady, 5 NotPermitted, 6 Busy, 7 Interrupted, 8 OutOfRange" />
     </OutputVars>
   </InterfaceList>
   <BasicFB>
-    <InternalVars>
-      <VarDeclaration Name="Owned" Type="BOOL" />
-      <VarDeclaration Name="Here" Type="USINT" />
-    </InternalVars>
     <ECC>
-      <ECState Name="Stopped" x="1828" y="0">
+      <ECState Name="Stopped" x="315" y="0">
         <ECAction Algorithm="Alg_Stopped" Output="CNF" />
       </ECState>
-      <ECState Name="Resetting" x="1512" y="2520">
+      <ECState Name="Resetting" x="0" y="1260">
         <ECAction Algorithm="Alg_Resetting" Output="CNF" />
         <ECAction Output="RUN_RESETTING" />
       </ECState>
-      <ECState Name="ResettingW" x="1810" y="3880">
-        <ECAction Algorithm="Alg_ResettingW" />
-      </ECState>
-      <ECState Name="Idle" x="3925" y="18040">
+      <ECState Name="ResettingW" x="662" y="2620" />
+      <ECState Name="Idle" x="450" y="3880">
         <ECAction Algorithm="Alg_Idle" Output="CNF" />
       </ECState>
-      <ECState Name="Starting" x="1782" y="6400">
+      <ECState Name="Starting" x="270" y="5140">
         <ECAction Algorithm="Alg_Starting" Output="CNF" />
       </ECState>
-      <ECState Name="Execute" x="1828" y="7660">
+      <ECState Name="Execute" x="315" y="6400">
         <ECAction Algorithm="Alg_Execute" Output="CNF" />
       </ECState>
-      <ECState Name="Stopping" x="1670" y="10180">
+      <ECState Name="Stopping" x="158" y="7660">
         <ECAction Algorithm="Alg_Stopping" Output="CNF" />
         <ECAction Output="WD_START" />
       </ECState>
-      <ECState Name="StoppingW" x="1855" y="11540">
-        <ECAction Algorithm="Alg_StoppingW" />
-      </ECState>
-      <ECState Name="StopProc" x="748" y="12800">
+      <ECState Name="StoppingW" x="685" y="9020" />
+      <ECState Name="StopProc" x="388" y="10280">
         <ECAction Output="WD_STOP" />
         <ECAction Output="RUN_STOPPING" />
       </ECState>
-      <ECState Name="StopProcW" x="0" y="18040">
-        <ECAction Algorithm="Alg_StopProcW" />
-      </ECState>
-      <ECState Name="Aborting" x="1692" y="14160">
+      <ECState Name="StopProcW" x="685" y="11640" />
+      <ECState Name="Aborting" x="180" y="12900">
         <ECAction Algorithm="Alg_Aborting" Output="CNF" />
         <ECAction Output="WD_STOP" />
       </ECState>
-      <ECState Name="Aborted" x="1828" y="15520">
+      <ECState Name="Aborted" x="315" y="14260">
         <ECAction Algorithm="Alg_Aborted" Output="CNF" />
       </ECState>
-      <ECState Name="Clearing" x="1890" y="18040">
+      <ECState Name="Clearing" x="270" y="15520">
         <ECAction Algorithm="Alg_Clearing" Output="CNF" />
       </ECState>
-      <ECState Name="ChkReset" x="1648" y="1260">
-        <ECAction Algorithm="Alg_ChkReset" Output="RESET_RSP" />
-      </ECState>
-      <ECState Name="ChkStart" x="1648" y="5140">
-        <ECAction Algorithm="Alg_ChkStart" Output="START_RSP" />
-      </ECState>
-      <ECState Name="ChkStop" x="1715" y="8920">
-        <ECAction Algorithm="Alg_ChkStop" Output="STOP_RSP" />
-      </ECState>
-      <ECState Name="ChkAbort" x="2548" y="12800">
-        <ECAction Algorithm="Alg_ChkAbort" Output="ABORT_RSP" />
-      </ECState>
-      <ECState Name="ChkClear" x="1648" y="16780">
-        <ECAction Algorithm="Alg_ChkClear" Output="CLEAR_RSP" />
-      </ECState>
-      <ECTransition Source="Stopped" Destination="ChkReset" Condition="RESET_REQ" x="2450" y="710" />
-      <ECTransition Source="ResettingW" Destination="ChkReset" Condition="RESET_REQ" x="3850" y="2650" />
-      <ECTransition Source="Idle" Destination="ChkReset" Condition="RESET_REQ" x="2032" y="9730" />
-      <ECTransition Source="Execute" Destination="ChkReset" Condition="RESET_REQ" x="4350" y="4540" />
-      <ECTransition Source="StoppingW" Destination="ChkReset" Condition="RESET_REQ" x="550" y="6480" />
-      <ECTransition Source="StopProcW" Destination="ChkReset" Condition="RESET_REQ" x="3923" y="9730" />
-      <ECTransition Source="Aborted" Destination="ChkReset" Condition="RESET_REQ" x="50" y="8470" />
-      <ECTransition Source="ChkReset" Destination="Resetting" Condition="[Accepted]" x="2450" y="1995" />
-      <ECTransition Source="ChkReset" Destination="Stopped" Condition="[Here = 0]" x="2930" y="870" />
-      <ECTransition Source="ChkReset" Destination="ResettingW" Condition="[Here = 1]" x="5350" y="2650" />
-      <ECTransition Source="ChkReset" Destination="Idle" Condition="[Here = 2]" x="532" y="9730" />
-      <ECTransition Source="ChkReset" Destination="Execute" Condition="[Here = 3]" x="5850" y="4540" />
-      <ECTransition Source="ChkReset" Destination="StoppingW" Condition="[Here = 4]" x="-950" y="6480" />
-      <ECTransition Source="ChkReset" Destination="StopProcW" Condition="[Here = 5]" x="5423" y="9730" />
-      <ECTransition Source="ChkReset" Destination="Aborted" Condition="[Here = 6]" x="-1450" y="8470" />
-      <ECTransition Source="Stopped" Destination="ChkStart" Condition="START_REQ" x="6850" y="2650" />
-      <ECTransition Source="ResettingW" Destination="ChkStart" Condition="START_REQ" x="2450" y="4590" />
-      <ECTransition Source="Idle" Destination="ChkStart" Condition="START_REQ" x="-968" y="11670" />
-      <ECTransition Source="Execute" Destination="ChkStart" Condition="START_REQ" x="7350" y="6480" />
-      <ECTransition Source="StoppingW" Destination="ChkStart" Condition="START_REQ" x="-2450" y="8420" />
-      <ECTransition Source="StopProcW" Destination="ChkStart" Condition="START_REQ" x="6923" y="11670" />
-      <ECTransition Source="Aborted" Destination="ChkStart" Condition="START_REQ" x="-2950" y="10410" />
-      <ECTransition Source="ChkStart" Destination="Starting" Condition="[Accepted]" x="2450" y="5850" />
-      <ECTransition Source="ChkStart" Destination="Stopped" Condition="[Here = 0]" x="8350" y="2650" />
-      <ECTransition Source="ChkStart" Destination="ResettingW" Condition="[Here = 1]" x="2930" y="4750" />
-      <ECTransition Source="ChkStart" Destination="Idle" Condition="[Here = 2]" x="-2468" y="11670" />
-      <ECTransition Source="ChkStart" Destination="Execute" Condition="[Here = 3]" x="8850" y="6480" />
-      <ECTransition Source="ChkStart" Destination="StoppingW" Condition="[Here = 4]" x="-3950" y="8420" />
-      <ECTransition Source="ChkStart" Destination="StopProcW" Condition="[Here = 5]" x="8423" y="11670" />
-      <ECTransition Source="ChkStart" Destination="Aborted" Condition="[Here = 6]" x="-4450" y="10410" />
-      <ECTransition Source="Stopped" Destination="ChkStop" Condition="STOP_REQ" x="9850" y="4540" />
-      <ECTransition Source="ResettingW" Destination="ChkStop" Condition="STOP_REQ" x="-4950" y="6480" />
-      <ECTransition Source="Idle" Destination="ChkStop" Condition="STOP_REQ" x="11331" y="13560" />
-      <ECTransition Source="Execute" Destination="ChkStop" Condition="STOP_REQ" x="2450" y="8370" />
-      <ECTransition Source="StoppingW" Destination="ChkStop" Condition="STOP_REQ" x="-5450" y="10310" />
-      <ECTransition Source="StopProcW" Destination="ChkStop" Condition="STOP_REQ" x="9922" y="13560" />
-      <ECTransition Source="Aborted" Destination="ChkStop" Condition="STOP_REQ" x="-5950" y="12300" />
-      <ECTransition Source="ChkStop" Destination="Stopping" Condition="[Accepted]" x="2450" y="9655" />
-      <ECTransition Source="ChkStop" Destination="Stopped" Condition="[Here = 0]" x="11350" y="4540" />
-      <ECTransition Source="ChkStop" Destination="ResettingW" Condition="[Here = 1]" x="-6450" y="6480" />
-      <ECTransition Source="ChkStop" Destination="Idle" Condition="[Here = 2]" x="12831" y="13560" />
-      <ECTransition Source="ChkStop" Destination="Execute" Condition="[Here = 3]" x="2930" y="8530" />
-      <ECTransition Source="ChkStop" Destination="StoppingW" Condition="[Here = 4]" x="-6950" y="10310" />
-      <ECTransition Source="ChkStop" Destination="StopProcW" Condition="[Here = 5]" x="11422" y="13560" />
-      <ECTransition Source="ChkStop" Destination="Aborted" Condition="[Here = 6]" x="-7450" y="12300" />
-      <ECTransition Source="Stopped" Destination="ChkAbort" Condition="ABORT_REQ" x="13300" y="6480" />
-      <ECTransition Source="ResettingW" Destination="ChkAbort" Condition="ABORT_REQ" x="-7500" y="8420" />
-      <ECTransition Source="Idle" Destination="ChkAbort" Condition="ABORT_REQ" x="14782" y="15500" />
-      <ECTransition Source="Execute" Destination="ChkAbort" Condition="ABORT_REQ" x="-8000" y="10310" />
-      <ECTransition Source="StoppingW" Destination="ChkAbort" Condition="ABORT_REQ" x="2900" y="12250" />
-      <ECTransition Source="StopProcW" Destination="ChkAbort" Condition="ABORT_REQ" x="13373" y="15500" />
-      <ECTransition Source="Aborted" Destination="ChkAbort" Condition="ABORT_REQ" x="-8500" y="14240" />
-      <ECTransition Source="ChkAbort" Destination="Aborting" Condition="[Accepted]" x="2900" y="13585" />
-      <ECTransition Source="ChkAbort" Destination="Stopped" Condition="[Here = 0]" x="14800" y="6480" />
-      <ECTransition Source="ChkAbort" Destination="ResettingW" Condition="[Here = 1]" x="-9000" y="8420" />
-      <ECTransition Source="ChkAbort" Destination="Idle" Condition="[Here = 2]" x="16282" y="15500" />
-      <ECTransition Source="ChkAbort" Destination="Execute" Condition="[Here = 3]" x="-9500" y="10310" />
-      <ECTransition Source="ChkAbort" Destination="StoppingW" Condition="[Here = 4]" x="3380" y="12410" />
-      <ECTransition Source="ChkAbort" Destination="StopProcW" Condition="[Here = 5]" x="15353" y="15660" />
-      <ECTransition Source="ChkAbort" Destination="Aborted" Condition="[Here = 6]" x="-10000" y="14240" />
-      <ECTransition Source="Stopped" Destination="ChkClear" Condition="CLEAR_REQ" x="15850" y="8470" />
-      <ECTransition Source="ResettingW" Destination="ChkClear" Condition="CLEAR_REQ" x="-10950" y="10410" />
-      <ECTransition Source="Idle" Destination="ChkClear" Condition="CLEAR_REQ" x="3432" y="17490" />
-      <ECTransition Source="Execute" Destination="ChkClear" Condition="CLEAR_REQ" x="16350" y="12300" />
-      <ECTransition Source="StoppingW" Destination="ChkClear" Condition="CLEAR_REQ" x="-11450" y="14240" />
-      <ECTransition Source="StopProcW" Destination="ChkClear" Condition="CLEAR_REQ" x="1523" y="17490" />
-      <ECTransition Source="Aborted" Destination="ChkClear" Condition="CLEAR_REQ" x="2450" y="16230" />
-      <ECTransition Source="ChkClear" Destination="Clearing" Condition="[Accepted]" x="2504" y="17490" />
-      <ECTransition Source="ChkClear" Destination="Stopped" Condition="[Here = 0]" x="16850" y="8470" />
-      <ECTransition Source="ChkClear" Destination="ResettingW" Condition="[Here = 1]" x="-11950" y="10410" />
-      <ECTransition Source="ChkClear" Destination="Idle" Condition="[Here = 2]" x="3912" y="17650" />
-      <ECTransition Source="ChkClear" Destination="Execute" Condition="[Here = 3]" x="17350" y="12300" />
-      <ECTransition Source="ChkClear" Destination="StoppingW" Condition="[Here = 4]" x="-12450" y="14240" />
-      <ECTransition Source="ChkClear" Destination="StopProcW" Condition="[Here = 5]" x="2003" y="17650" />
-      <ECTransition Source="ChkClear" Destination="Aborted" Condition="[Here = 6]" x="2930" y="16390" />
-      <ECTransition Source="Resetting" Destination="ResettingW" Condition="1" x="2450" y="3305" />
-      <ECTransition Source="ResettingW" Destination="Idle" Condition="RESETTING_DONE" x="18831" y="11040" />
-      <ECTransition Source="ResettingW" Destination="Aborting" Condition="RESETTING_FAILED" x="-12950" y="9125" />
-      <ECTransition Source="Starting" Destination="Execute" Condition="1" x="2450" y="7110" />
-      <ECTransition Source="Stopping" Destination="StoppingW" Condition="1" x="2450" y="10965" />
-      <ECTransition Source="StoppingW" Destination="StopProc" Condition="[AllIdle]" x="1874" y="12275" />
-      <ECTransition Source="StoppingW" Destination="Aborting" Condition="STOP_TIMEOUT" x="18350" y="12955" />
-      <ECTransition Source="StopProc" Destination="StopProcW" Condition="1" x="-14954" y="15525" />
-      <ECTransition Source="StopProcW" Destination="Stopped" Condition="STOPPING_DONE" x="17923" y="9100" />
-      <ECTransition Source="StopProcW" Destination="Aborting" Condition="STOPPING_FAILED" x="-14878" y="16205" />
-      <ECTransition Source="Aborting" Destination="Aborted" Condition="1" x="2450" y="14945" />
-      <ECTransition Source="Clearing" Destination="Stopped" Condition="1" x="19404" y="9100" />
+      <ECTransition Source="Stopped" Destination="Resetting" Condition="RESET" x="938" y="735" />
+      <ECTransition Source="Idle" Destination="Starting" Condition="START" x="938" y="4590" />
+      <ECTransition Source="ResettingW" Destination="Stopping" Condition="STOP" x="2338" y="5245" />
+      <ECTransition Source="Idle" Destination="Stopping" Condition="STOP" x="-462" y="5875" />
+      <ECTransition Source="Execute" Destination="Stopping" Condition="STOP" x="938" y="7135" />
+      <ECTransition Source="Stopped" Destination="Aborting" Condition="ABORT" x="2838" y="6555" />
+      <ECTransition Source="ResettingW" Destination="Aborting" Condition="ABORT" x="-963" y="7865" />
+      <ECTransition Source="Idle" Destination="Aborting" Condition="ABORT" x="3338" y="8495" />
+      <ECTransition Source="Execute" Destination="Aborting" Condition="ABORT" x="-1462" y="9755" />
+      <ECTransition Source="StoppingW" Destination="Aborting" Condition="ABORT" x="3838" y="11065" />
+      <ECTransition Source="StopProcW" Destination="Aborting" Condition="ABORT" x="938" y="12375" />
+      <ECTransition Source="Aborted" Destination="Clearing" Condition="CLEAR" x="938" y="14970" />
+      <ECTransition Source="Resetting" Destination="ResettingW" Condition="1" x="937" y="2045" />
+      <ECTransition Source="ResettingW" Destination="Idle" Condition="RESETTING_DONE" x="937" y="3330" />
+      <ECTransition Source="ResettingW" Destination="Aborting" Condition="RESETTING_FAILED" x="-1963" y="7865" />
+      <ECTransition Source="Starting" Destination="Execute" Condition="1" x="938" y="5850" />
+      <ECTransition Source="Stopping" Destination="StoppingW" Condition="1" x="938" y="8445" />
+      <ECTransition Source="StoppingW" Destination="StopProc" Condition="[AllIdle]" x="938" y="9755" />
+      <ECTransition Source="StoppingW" Destination="Aborting" Condition="STOP_TIMEOUT" x="4338" y="11065" />
+      <ECTransition Source="StopProc" Destination="StopProcW" Condition="1" x="938" y="11065" />
+      <ECTransition Source="StopProcW" Destination="Stopped" Condition="STOPPING_DONE" x="-2462" y="5900" />
+      <ECTransition Source="StopProcW" Destination="Aborting" Condition="STOPPING_FAILED" x="1418" y="12535" />
+      <ECTransition Source="Aborting" Destination="Aborted" Condition="1" x="938" y="13685" />
+      <ECTransition Source="Clearing" Destination="Stopped" Condition="1" x="4838" y="7840" />
     </ECC>
     <Algorithm Name="Alg_Stopped">
-      <ST>State := 2;
-Here := 0;</ST>
+      <ST>State := 2;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Resetting">
       <ST>State := 15;</ST>
     </Algorithm>
-    <Algorithm Name="Alg_ResettingW">
-      <ST>Here := 1;</ST>
-    </Algorithm>
     <Algorithm Name="Alg_Idle">
-      <ST>State := 4;
-Here := 2;</ST>
+      <ST>State := 4;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Starting">
       <ST>State := 3;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Execute">
-      <ST>State := 6;
-Here := 3;</ST>
+      <ST>State := 6;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Stopping">
       <ST>State := 7;</ST>
-    </Algorithm>
-    <Algorithm Name="Alg_StoppingW">
-      <ST>Here := 4;</ST>
-    </Algorithm>
-    <Algorithm Name="Alg_StopProcW">
-      <ST>Here := 5;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Aborting">
       <ST>State := 8;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Aborted">
-      <ST>State := 9;
-Here := 6;</ST>
+      <ST>State := 9;</ST>
     </Algorithm>
     <Algorithm Name="Alg_Clearing">
       <ST>State := 1;</ST>
-    </Algorithm>
-    <Algorithm Name="Alg_ChkReset">
-      <ST>Owned := (ResetSession = Owner) AND (Owner &lt;&gt; "");
-Accepted := Owned AND ((Here = 0));
-IF NOT Owned THEN
-  ErrorID := 5;
-ELSIF NOT Accepted THEN
-  ErrorID := 4;
-ELSE
-  ErrorID := 0;
-END_IF;</ST>
-    </Algorithm>
-    <Algorithm Name="Alg_ChkStart">
-      <ST>Owned := (StartSession = Owner) AND (Owner &lt;&gt; "");
-Accepted := Owned AND ((Here = 2));
-IF NOT Owned THEN
-  ErrorID := 5;
-ELSIF NOT Accepted THEN
-  ErrorID := 4;
-ELSE
-  ErrorID := 0;
-END_IF;</ST>
-    </Algorithm>
-    <Algorithm Name="Alg_ChkStop">
-      <ST>Owned := (StopSession = Owner) AND (Owner &lt;&gt; "");
-Accepted := Owned AND ((Here = 1) OR (Here = 2) OR (Here = 3));
-IF NOT Owned THEN
-  ErrorID := 5;
-ELSIF NOT Accepted THEN
-  ErrorID := 4;
-ELSE
-  ErrorID := 0;
-END_IF;</ST>
-    </Algorithm>
-    <Algorithm Name="Alg_ChkAbort">
-      <ST>Owned := (AbortSession = Owner) AND (Owner &lt;&gt; "");
-Accepted := Owned AND ((Here = 0) OR (Here = 1) OR (Here = 2) OR (Here = 3) OR (Here = 4) OR (Here = 5));
-IF NOT Owned THEN
-  ErrorID := 5;
-ELSIF NOT Accepted THEN
-  ErrorID := 4;
-ELSE
-  ErrorID := 0;
-END_IF;</ST>
-    </Algorithm>
-    <Algorithm Name="Alg_ChkClear">
-      <ST>Owned := (ClearSession = Owner) AND (Owner &lt;&gt; "");
-Accepted := Owned AND ((Here = 6));
-IF NOT Owned THEN
-  ErrorID := 5;
-ELSIF NOT Accepted THEN
-  ErrorID := 4;
-ELSE
-  ErrorID := 0;
-END_IF;</ST>
     </Algorithm>
   </BasicFB>
 </FBType>

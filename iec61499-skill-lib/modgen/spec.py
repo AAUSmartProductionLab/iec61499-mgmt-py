@@ -34,6 +34,9 @@ DURATION = r"^\d+(ms|s)$"
 PROCEDURES = Literal["Resetting", "Stopping"]
 # Blocks and pins of a module level skill's subapp (IEC names are case-insensitive).
 RESERVED = {"CONTROL", "UASTART", "PUBPARAMS", "PUBRESULTS", "RELEASE", "EXECUTE", "STOP", "INIT", "INITO"}
+# The names of a skill primitive's contract (SC_<Skill>) and its block's own inputs: no parameter may take one.
+CONTRACT = {"PRE", "POST", "INV", "TIMED", "RUNTIME", "COMMAND", "ARG", "STOPCOMMAND", "TIMEOUT", "UAROOT", "UAPATH",
+            "IDPARAMS", "IDRESULTS", "MODULE", "UAENABLE", "METHODS", "HOLDER", "RELEASEAFTER", "STATE", "ERRORID"}
 # What an equipment item with a position adds itself: where it is, whether that is known (it has
 # been at its home switch) and whether a move is under way; and the command that moves it to its argument.
 ACTUAL, HOMED, MOVING, MOVE = "ActualPosition", "Homed", "Moving", "MoveTo"
@@ -356,6 +359,8 @@ class Skill(Model):
             raise ValueError("A skill without equipment only waits (after)")
         if self.equipment is not None and self.command is None:
             raise ValueError("A skill with equipment needs a command")
+        if taken := sorted(p for p in self.parameters if p.upper() in CONTRACT):
+            raise ValueError(f"parameter names taken by the skill's contract (SC_) {taken}")
         return self
 
 

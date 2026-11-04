@@ -411,13 +411,15 @@ class Basic(FB):
         self.transitions = []
         self.algorithms = {}
 
-    def state(self, name, code=None, output=None, extra=()):
-        """Add an ECC state with an optional algorithm and output events."""
+    def state(self, name, code=None, output=None, extra=(), algorithm=None):
+        """Add an ECC state with an optional algorithm and output events. ``algorithm`` names the
+        algorithm (default: the state's), so several states can run the same one."""
         state = elem(self.ecc, "ECState", Name=name)
         outputs = ([output] if output else []) + list(extra)
         if code is not None:
-            self.algorithms[name] = code
-            attrs = {"Algorithm": "Alg_" + name}
+            algorithm = algorithm or name
+            self.algorithms.setdefault(algorithm, code)
+            attrs = {"Algorithm": "Alg_" + algorithm}
             if outputs:
                 attrs["Output"] = outputs.pop(0)
             elem(state, "ECAction", **attrs)

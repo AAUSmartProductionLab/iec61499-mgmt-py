@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EP_Piston" Comment="The equipment as its skills see it, the same in every skill that uses it: plays a command (its output values, phase by phase) on the equipment's command channel, and gives the equipment's newest state. Technical: Piston as its skills see it: SEND(Holder, Command, Arg, Release) plays a command on its command channel (PLAYED when all phases are out); STATE gives its inputs and holder">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="stoppering" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise: name the equipment's channels and listen to its state">
+        <With Var="Module" />
+      </Event>
+      <Event Name="SEND" Type="Event" Comment="Play a command: its output values, phase by phase, to the equipment">
+        <With Var="Holder" />
+        <With Var="Command" />
+        <With Var="Release" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
+      <Event Name="STATE" Type="Event" Comment="The equipment's newest state: its inputs and who holds it">
+        <With Var="EqHolder" />
+      </Event>
+      <Event Name="PLAYED" Type="Event" Comment="All phases of the command were sent" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who sends the command" />
+      <VarDeclaration Name="Command" Type="USINT" Comment="The command's code" />
+      <VarDeclaration Name="Release" Type="BOOL" Comment="Give up the equipment after the command" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="EqHolder" Type="WSTRING" Comment="Who holds the equipment now (empty: free)" />
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <Group Name="StateIn" Comment="The equipment's state in: its inputs and who holds it, from its state channel" x="1000" y="1000" width="5390" height="1480" locked="false" />
+    <Group Name="CommandOut" Comment="A command out: its output values, phase by phase (the command table), on the command channel" x="1000" y="2780" width="7590" height="1880" locked="false" />
+    <FB Name="EqView" Type="stoppering::EV_Piston" x="1070" y="150" Comment="Names the equipment's channels, and unpacks its state into named values.">
+      <Attribute Name="GroupName" Type="STRING" Value="StateIn" />
+    </FB>
+    <FB Name="EqState" Type="iec61499::net::SUBSCRIBE_1" x="3630" y="150" Comment="Listens to the equipment's state channel: its inputs and who holds it.">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="StateIn" />
+    </FB>
+    <FB Name="Driver" Type="stoppering::EC_Piston" x="990" y="150" Comment="The equipment's command table (EC_): turns a command into output values, phase by phase.">
+      <Attribute Name="GroupName" Type="STRING" Value="CommandOut" />
+    </FB>
+    <FB Name="PhaseT" Type="iec61499::events::E_DELAY" x="3720" y="150" Comment="Times the phases of a command.">
+      <Attribute Name="GroupName" Type="STRING" Value="CommandOut" />
+    </FB>
+    <FB Name="EqCmd" Type="iec61499::net::PUBLISH_4" x="5990" y="150" Comment="Sends the output values and the holder's name to the equipment block on its command channel.">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="CommandOut" />
+    </FB>
+    <EventConnections>
+      <Connection Source="INIT" Destination="EqView.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqView.INITO" Destination="EqState.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqState.INITO" Destination="EqCmd.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqCmd.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqState.IND" Destination="EqView.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqView.CNF" Destination="STATE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SEND" Destination="Driver.PLAY">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.OUT" Destination="EqCmd.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.PHASE_START" Destination="PhaseT.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.PHASE_STOP" Destination="PhaseT.STOP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PhaseT.EO" Destination="Driver.PHASE_T">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.PLAYED" Destination="PLAYED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Module" Destination="EqView.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqView.IdState" Destination="EqState.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqView.IdCmd" Destination="EqCmd.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqState.RD_1" Destination="EqView.I_Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="EqView.Holder" Destination="EqHolder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Holder" Destination="Driver.Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Command" Destination="Driver.Command">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Release" Destination="Driver.Release">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.O_Holder" Destination="EqCmd.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.O_Release" Destination="EqCmd.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.N_Retract" Destination="EqCmd.SD_3">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.N_Extend" Destination="EqCmd.SD_4">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Driver.PhaseDT" Destination="PhaseT.DT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </DataConnections>
+  </FBNetwork>
+</FBType>

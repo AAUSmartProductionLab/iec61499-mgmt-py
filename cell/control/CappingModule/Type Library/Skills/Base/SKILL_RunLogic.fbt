@@ -1,0 +1,241 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_RunLogic" Comment="The state machine of SKILL_Run: the precondition, waiting for the equipment, the command, the end condition, the timeout, the closing command. Technical: One run of a skill primitive: Pre, then the equipment free (0.5 s grace), Command until Post or the timer (Timed), Inv over it, StopCommand at the end, played before the end is reported">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="START" Type="Event" Comment="Start the run with what the contract says (Pre first)">
+        <With Var="Holder" />
+        <With Var="ReleaseAfter" />
+        <With Var="Pre" />
+        <With Var="Post" />
+        <With Var="Timed" />
+        <With Var="RunTime" />
+        <With Var="Command" />
+        <With Var="Arg" />
+        <With Var="StopCommand" />
+      </Event>
+      <Event Name="SAMPLE" Type="Event" Comment="The equipment's newest state, as the contract judges it (Post, Inv, EqHolder)">
+        <With Var="Holder" />
+        <With Var="Post" />
+        <With Var="Inv" />
+        <With Var="EqHolder" />
+      </Event>
+      <Event Name="HALT" Type="Event" Comment="Stop the run (ErrorID Interrupted)" />
+      <Event Name="ABORT" Type="Event" Comment="Abort the run: the equipment off and given up" />
+      <Event Name="TIMER" Type="Event" Comment="The run's timer expired" />
+      <Event Name="WAIT_OVER" Type="Event" Comment="Waited long enough for another holder to let go" />
+      <Event Name="PLAYED" Type="Event" Comment="The command's phases were played" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="DONE" Type="Event" Comment="The run succeeded" />
+      <Event Name="FAILED" Type="Event" Comment="The run failed (ErrorID)">
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="HALTED" Type="Event" Comment="The run was stopped">
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="TIMER_START" Type="Event" Comment="Start the timer (TimerDT)">
+        <With Var="TimerDT" />
+      </Event>
+      <Event Name="TIMER_STOP" Type="Event" Comment="Stop the timer" />
+      <Event Name="WAIT_START" Type="Event" Comment="Start waiting for the equipment" />
+      <Event Name="WAIT_STOP" Type="Event" Comment="Stop waiting" />
+      <Event Name="CMD" Type="Event" Comment="Send a command to the equipment">
+        <With Var="C_Holder" />
+        <With Var="C_Command" />
+        <With Var="C_Arg" />
+        <With Var="C_Release" />
+      </Event>
+      <Event Name="EQ_FREE" Type="Event" Comment="EquipmentFree is updated">
+        <With Var="EquipmentFree" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="The name the equipment is held under: the skill's own, or for a step the skill it belongs to" />
+      <VarDeclaration Name="ReleaseAfter" Type="BOOL" Comment="Give up the equipment with the run's last command" />
+      <VarDeclaration Name="Pre" Type="BOOL" Comment="The precondition holds: the run may start (else PreconditionViolated, 1)" />
+      <VarDeclaration Name="Post" Type="BOOL" Comment="The postcondition holds: the skill is done" />
+      <VarDeclaration Name="Inv" Type="BOOL" InitialValue="TRUE" Comment="The invariant holds: the run may go on (else InvariantViolated, 2)" />
+      <VarDeclaration Name="Timed" Type="BOOL" Comment="The skill ends after RunTime (TRUE), or when Post holds, failing after RunTime (FALSE)" />
+      <VarDeclaration Name="RunTime" Type="TIME" Comment="How long it runs (Timed), or may take before it fails with Timeout (3)" />
+      <VarDeclaration Name="Command" Type="USINT" Comment="The command's code to send while it runs" />
+      <VarDeclaration Name="Arg" Type="LREAL" Comment="The command's argument (e.g. a position)" />
+      <VarDeclaration Name="StopCommand" Type="USINT" Comment="The command's code to send when it is done or halted" />
+      <VarDeclaration Name="EqHolder" Type="WSTRING" Comment="Who holds the equipment now (empty: free)" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="ErrorID" Type="UINT" Comment="Error code: 0 none, 1 PreconditionViolated, 2 InvariantViolated, 3 Timeout, 4 NotReady, 5 NotPermitted, 6 Busy, 7 Interrupted, 8 OutOfRange" />
+      <VarDeclaration Name="TimerDT" Type="TIME" Comment="How long the timer runs" />
+      <VarDeclaration Name="C_Holder" Type="WSTRING" Comment="Sent with the command: who holds the equipment" />
+      <VarDeclaration Name="C_Command" Type="USINT" Comment="Sent with the command: the command's code" />
+      <VarDeclaration Name="C_Arg" Type="LREAL" Comment="Sent with the command: its argument (e.g. a position)" />
+      <VarDeclaration Name="C_Release" Type="BOOL" Comment="Sent with the command: give up the equipment after it" />
+      <VarDeclaration Name="EquipmentFree" Type="BOOL" Comment="The equipment is free, or held under Holder" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Outcome" Type="USINT" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="Idle" x="7398" y="0" />
+      <ECState Name="Check" x="6358" y="1260" />
+      <ECState Name="Reject" x="4278" y="2520">
+        <ECAction Algorithm="Alg_Reject" Output="FAILED" />
+      </ECState>
+      <ECState Name="Sample" x="7382" y="1260">
+        <ECAction Algorithm="Alg_Sample" Output="EQ_FREE" />
+      </ECState>
+      <ECState Name="Busy" x="0" y="5140">
+        <ECAction Algorithm="Alg_Busy" Output="FAILED" />
+      </ECState>
+      <ECState Name="WaitFree" x="6268" y="2520">
+        <ECAction Output="WAIT_START" />
+      </ECState>
+      <ECState Name="WaitW" x="6818" y="3880" />
+      <ECState Name="Recheck" x="1810" y="5140">
+        <ECAction Output="WAIT_STOP" />
+      </ECState>
+      <ECState Name="AlreadyDone" x="7978" y="2520">
+        <ECAction Output="DONE" />
+      </ECState>
+      <ECState Name="Run" x="9552" y="2520">
+        <ECAction Algorithm="Alg_Run" Output="CMD" />
+        <ECAction Output="TIMER_START" />
+      </ECState>
+      <ECState Name="RunSample" x="3430" y="5140">
+        <ECAction Algorithm="Alg_Sample" Output="EQ_FREE" />
+      </ECState>
+      <ECState Name="Unsafe" x="5600" y="5140">
+        <ECAction Algorithm="Alg_Unsafe" Output="CMD" />
+        <ECAction Output="TIMER_STOP" />
+      </ECState>
+      <ECState Name="Lost" x="7770" y="5140">
+        <ECAction Algorithm="Alg_Busy" Output="TIMER_STOP" />
+        <ECAction Output="FAILED" />
+      </ECState>
+      <ECState Name="Done" x="9760" y="5140">
+        <ECAction Algorithm="Alg_Done" Output="CMD" />
+        <ECAction Output="TIMER_STOP" />
+      </ECState>
+      <ECState Name="TimedOut" x="11750" y="5140">
+        <ECAction Algorithm="Alg_TimedOut" Output="CMD" />
+      </ECState>
+      <ECState Name="Halt" x="13785" y="5140">
+        <ECAction Algorithm="Alg_Halt" Output="CMD" />
+        <ECAction Output="TIMER_STOP" />
+      </ECState>
+      <ECState Name="Abort" x="9120" y="7760">
+        <ECAction Algorithm="Alg_Abort" Output="CMD" />
+        <ECAction Output="TIMER_STOP" />
+      </ECState>
+      <ECState Name="Ending" x="7352" y="6500" />
+      <ECState Name="EndDone" x="4575" y="7760">
+        <ECAction Output="DONE" />
+      </ECState>
+      <ECState Name="EndFailed" x="5970" y="7760">
+        <ECAction Output="FAILED" />
+      </ECState>
+      <ECState Name="EndHalted" x="7545" y="7760">
+        <ECAction Output="HALTED" />
+      </ECState>
+      <ECState Name="Running" x="7842" y="3880" />
+      <ECTransition Source="Idle" Destination="Check" Condition="START" x="7029" y="710" />
+      <ECTransition Source="Idle" Destination="Sample" Condition="SAMPLE" x="7794" y="710" />
+      <ECTransition Source="Sample" Destination="Idle" Condition="1" x="8274" y="870" />
+      <ECTransition Source="Check" Destination="Reject" Condition="[NOT Pre]" x="5722" y="1970" />
+      <ECTransition Source="Check" Destination="WaitFree" Condition="[(EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder)]" x="6647" y="1970" />
+      <ECTransition Source="WaitFree" Destination="WaitW" Condition="1" x="6877" y="3280" />
+      <ECTransition Source="WaitW" Destination="Recheck" Condition="SAMPLE[NOT ((EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder))]" x="4625" y="4590" />
+      <ECTransition Source="WaitW" Destination="Busy" Condition="WAIT_OVER" x="3768" y="4590" />
+      <ECTransition Source="WaitW" Destination="Idle" Condition="HALT" x="8659" y="2020" />
+      <ECTransition Source="WaitW" Destination="Idle" Condition="ABORT" x="5859" y="2020" />
+      <ECTransition Source="Recheck" Destination="Check" Condition="1" x="6295" y="3280" />
+      <ECTransition Source="Check" Destination="AlreadyDone" Condition="[Post AND NOT Timed]" x="7468" y="1970" />
+      <ECTransition Source="Check" Destination="Run" Condition="1" x="8348" y="1995" />
+      <ECTransition Source="Run" Destination="Running" Condition="1" x="9112" y="3305" />
+      <ECTransition Source="Running" Destination="Unsafe" Condition="SAMPLE[NOT Inv]" x="7192" y="4615" />
+      <ECTransition Source="Running" Destination="Lost" Condition="SAMPLE[(EqHolder &lt;&gt; &quot;&quot;) AND (EqHolder &lt;&gt; Holder)]" x="8232" y="4615" />
+      <ECTransition Source="Running" Destination="Done" Condition="SAMPLE[Post AND NOT Timed]" x="9227" y="4615" />
+      <ECTransition Source="Running" Destination="Done" Condition="TIMER[Timed]" x="9707" y="4775" />
+      <ECTransition Source="Running" Destination="TimedOut" Condition="TIMER" x="10234" y="4590" />
+      <ECTransition Source="Running" Destination="RunSample" Condition="SAMPLE" x="6107" y="4590" />
+      <ECTransition Source="RunSample" Destination="Running" Condition="1" x="6587" y="4750" />
+      <ECTransition Source="Running" Destination="Halt" Condition="HALT" x="11240" y="4615" />
+      <ECTransition Source="Running" Destination="Abort" Condition="ABORT" x="7030" y="5925" />
+      <ECTransition Source="Reject" Destination="Idle" Condition="1" x="8630" y="1340" />
+      <ECTransition Source="Busy" Destination="Idle" Condition="1" x="1646" y="2650" />
+      <ECTransition Source="Lost" Destination="Idle" Condition="1" x="10876" y="2675" />
+      <ECTransition Source="AlreadyDone" Destination="Idle" Condition="1" x="5077" y="1340" />
+      <ECTransition Source="Unsafe" Destination="Ending" Condition="1" x="6936" y="5925" />
+      <ECTransition Source="Done" Destination="Ending" Condition="1" x="8971" y="5925" />
+      <ECTransition Source="TimedOut" Destination="Ending" Condition="1" x="9977" y="5900" />
+      <ECTransition Source="Halt" Destination="Ending" Condition="1" x="10984" y="5925" />
+      <ECTransition Source="Abort" Destination="Ending" Condition="1" x="8674" y="7235" />
+      <ECTransition Source="Ending" Destination="EndDone" Condition="PLAYED[Outcome = 1]" x="6230" y="7210" />
+      <ECTransition Source="Ending" Destination="EndFailed" Condition="PLAYED[Outcome = 2]" x="6972" y="7210" />
+      <ECTransition Source="Ending" Destination="EndHalted" Condition="PLAYED[Outcome = 3]" x="7760" y="7210" />
+      <ECTransition Source="Ending" Destination="Idle" Condition="PLAYED" x="10938" y="3330" />
+      <ECTransition Source="Ending" Destination="Abort" Condition="ABORT" x="9154" y="7395" />
+      <ECTransition Source="EndDone" Destination="Idle" Condition="1" x="2830" y="3960" />
+      <ECTransition Source="EndFailed" Destination="Idle" Condition="1" x="10873" y="3960" />
+      <ECTransition Source="EndHalted" Destination="Idle" Condition="1" x="3860" y="3960" />
+    </ECC>
+    <Algorithm Name="Alg_Reject">
+      <ST>ErrorID := 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Sample">
+      <ST>EquipmentFree := (EqHolder = "") OR (EqHolder = Holder);</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Busy">
+      <ST>ErrorID := 6;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Run">
+      <ST>C_Holder := Holder;
+C_Command := Command;
+C_Arg := Arg;
+C_Release := FALSE;
+TimerDT := RunTime;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Unsafe">
+      <ST>C_Holder := Holder;
+C_Command := 0;
+C_Arg := Arg;
+C_Release := ReleaseAfter;
+ErrorID := 2;
+Outcome := 2;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Done">
+      <ST>C_Holder := Holder;
+C_Command := StopCommand;
+C_Arg := Arg;
+C_Release := ReleaseAfter;
+Outcome := 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_TimedOut">
+      <ST>C_Holder := Holder;
+C_Command := 0;
+C_Arg := Arg;
+C_Release := ReleaseAfter;
+ErrorID := 3;
+Outcome := 2;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Halt">
+      <ST>C_Holder := Holder;
+C_Command := StopCommand;
+C_Arg := Arg;
+C_Release := ReleaseAfter;
+ErrorID := 7;
+Outcome := 3;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Abort">
+      <ST>C_Holder := Holder;
+C_Command := 0;
+C_Arg := Arg;
+C_Release := TRUE;
+Outcome := 0;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

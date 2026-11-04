@@ -6,8 +6,8 @@ What the generator writes as blocks is done here by objects of the same names:
 
 - an item of equipment (EQ_<item>) plays a command's phases on its outputs; outputs a phase does not
   name are off, ``Arg`` is the command's argument; one holder at a time, the first command is all off;
-- a primitive's logic (SL_<skill>): the precondition first (else PreconditionViolated), the item free
-  within 0.5 s (else Busy), done at once if the postcondition already holds; else its command until
+- a primitive's run (SKILL_Run with its contract SC_<skill>): the precondition first (else
+  PreconditionViolated), the item free within 0.5 s (else Busy), done at once if the postcondition already holds; else its command until
   the postcondition holds (or ``after`` has passed), with the invariant (InvariantViolated) and the
   timeout (Timeout) over it; at the end the stop command, after an abort the first command;
 - a flow (a module level skill's execute and stop flows, a procedure): its steps one after the other,
@@ -96,7 +96,7 @@ class Item:
 
 
 class Primitive:
-    """The logic of a skill primitive (SL_<skill>), run by its skill instance."""
+    """One run of a skill primitive (SKILL_Run with its contract SC_<skill>), run by its skill instance."""
 
     def __init__(self, runtime: Runtime, decl: SkillSpec, holder: str, release: bool):
         self.runtime, self.decl, self.holder, self.release = runtime, decl, holder, release

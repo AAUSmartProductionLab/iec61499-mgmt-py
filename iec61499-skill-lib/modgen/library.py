@@ -424,10 +424,9 @@ MODULE_COMMANDS = {"Reset": (["Stopped"], "Resetting"), "Start": (["Idle"], "Sta
                    "Stop": (["ResettingW", "Idle", "Execute"], "Stopping"),
                    "Abort": (["Stopped", "ResettingW", "Idle", "Execute", "StoppingW", "StopProcW"], "Aborting"),
                    "Clear": (["Aborted"], "Clearing")}
-# Wait states: name -> (published PackML state, index kept in Here to return after a refused command).
-MODULE_WAIT = {"Stopped": ("Stopped", 0), "ResettingW": ("Resetting", 1), "Idle": ("Idle", 2),
-               "Execute": ("Execute", 3), "StoppingW": ("Stopping", 4), "StopProcW": ("Stopping", 5),
-               "Aborted": ("Aborted", 6)}
+# Wait states: name -> the PackML state they publish (a command is decided on it, in MOD_StateGate).
+MODULE_WAIT = {"Stopped": "Stopped", "ResettingW": "Resetting", "Idle": "Idle", "Execute": "Execute",
+               "StoppingW": "Stopping", "StopProcW": "Stopping", "Aborted": "Aborted"}
 
 
 def make_state_manager(p: Project):
@@ -455,44 +454,61 @@ def make_state_manager(p: Project):
            {"ACT": ("Active := Active + Delta;\nIF Active < 0 THEN\n  Active := 0;\nEND_IF;\nAllIdle := Active = 0;",
                     "CHG")}, folder="Module/Base").write()
 
-    ei = {f"{m.upper()}_REQ": [f"{m}Session"] for m in MODULE_COMMANDS}
-    ei.update({"OWNER_CHG": ["Owner"], "ACT": ["AllIdle"], "RESETTING_DONE": [], "RESETTING_FAILED": [],
-               "STOPPING_DONE": [], "STOPPING_FAILED": [], "STOP_TIMEOUT": []})
-    eo = {f"{m.upper()}_RSP": ["Accepted", "ErrorID"] for m in MODULE_COMMANDS}
-    eo.update({"CNF": ["State"], "RUN_RESETTING": [], "RUN_STOPPING": [], "WD_START": [], "WD_STOP": []})
-    b = Basic(p, LIB, "MOD_StateLogic",
-              "PackML module state machine: commands only from the occupation owner and only where PackML allows "
-              "them; runs the Resetting and Stopping procedures; Stopping waits until no skill is active",
-              ei, eo, {**{f"{m}Session": "WSTRING" for m in MODULE_COMMANDS}, "Owner": "WSTRING",
-                       "AllIdle": ("BOOL", "TRUE")},
-              {"State": ("USINT", str(STATES["Stopped"])), "Accepted": "BOOL", "ErrorID": "UINT"},
-              {"Owned": "BOOL", "Here": "USINT"}, folder="Module/Base")
-    s = STATES
-    b.state("Stopped", f"State := {s['Stopped']};\nHere := 0;", "CNF")   # initial state
-    b.state("Resetting", f"State := {s['Resetting']};", "CNF", ["RUN_RESETTING"])
-    b.state("ResettingW", "Here := 1;")
-    b.state("Idle", f"State := {s['Idle']};\nHere := 2;", "CNF")
-    b.state("Starting", f"State := {s['Starting']};", "CNF")
-    b.state("Execute", f"State := {s['Execute']};\nHere := 3;", "CNF")
-    b.state("Stopping", f"State := {s['Stopping']};", "CNF", ["WD_START"])
-    b.state("StoppingW", "Here := 4;")
-    b.state("StopProc", None, "WD_STOP", ["RUN_STOPPING"])
-    b.state("StopProcW", "Here := 5;")
-    b.state("Aborting", f"State := {s['Aborting']};", "CNF", ["WD_STOP"])
-    b.state("Aborted", f"State := {s['Aborted']};\nHere := 6;", "CNF")
-    b.state("Clearing", f"State := {s['Clearing']};", "CNF")
-    for m, (valid, target) in MODULE_COMMANDS.items():
-        allowed = " OR ".join(f"(Here = {MODULE_WAIT[v][1]})" for v in valid)
-        b.state("Chk" + m, f'Owned := ({m}Session = Owner) AND (Owner <> "");\n'
+    # The gate: who may command the module, and in which state (decided on the state Logic publishes).
+    gate_ei = {f"{m.upper()}_REQ": [f"{m}Session"] for m in MODULE_COMMANDS}
+    gate_ei.update({"OWNER_CHG": ["Owner"], "STATE_CHG": ["State"]})
+    gate_eo = {f"{m.upper()}_RSP": ["Accepted", "ErrorID"] for m in MODULE_COMMANDS}
+    gate_eo.update({f"GO_{m.upper()}": [] for m in MODULE_COMMANDS})
+    g = Basic(p, LIB, "MOD_StateGate",
+              "Decides the module commands Reset/Start/Stop/Abort/Clear: only from the occupation owner (5 "
+              "NotPermitted) and only in a state PackML allows them in (4 NotReady); passes an accepted one on "
+              "to MOD_StateLogic", gate_ei, gate_eo,
+              {**{f"{m}Session": "WSTRING" for m in MODULE_COMMANDS}, "Owner": "WSTRING",
+               "State": ("USINT", str(STATES["Stopped"]))},
+              {"Accepted": "BOOL", "ErrorID": "UINT"}, {"Owned": "BOOL"}, folder="Module/Base")
+    g.state("Wait")
+    for m, (valid, _) in MODULE_COMMANDS.items():
+        states = sorted({STATES[MODULE_WAIT[v]] for v in valid})
+        allowed = " OR ".join(f"(State = {n})" for n in states)
+        g.state("Chk" + m, f'Owned := ({m}Session = Owner) AND (Owner <> "");\n'
                            f"Accepted := Owned AND ({allowed});\n"
                            f"IF NOT Owned THEN\n  ErrorID := {ERRORS['NotPermitted']};\n"
                            f"ELSIF NOT Accepted THEN\n  ErrorID := {ERRORS['NotReady']};\nELSE\n  ErrorID := 0;\nEND_IF;",
                 f"{m.upper()}_RSP")
-        for w in MODULE_WAIT:
-            b.trans(w, "Chk" + m, f"{m.upper()}_REQ")
-        b.trans("Chk" + m, target, "Accepted")
-        for w, (_, here) in MODULE_WAIT.items():
-            b.trans("Chk" + m, w, f"Here = {here}")
+        g.state("Go" + m, None, f"GO_{m.upper()}")
+    for m in MODULE_COMMANDS:
+        g.trans("Wait", "Chk" + m, f"{m.upper()}_REQ")
+        g.trans("Chk" + m, "Go" + m, "Accepted")
+        g.trans("Chk" + m, "Wait", "1")
+        g.trans("Go" + m, "Wait", "1")
+    g.write()
+
+    ei = {m.upper(): [] for m in MODULE_COMMANDS}
+    ei.update({"ACT": ["AllIdle"], "RESETTING_DONE": [], "RESETTING_FAILED": [], "STOPPING_DONE": [],
+               "STOPPING_FAILED": [], "STOP_TIMEOUT": []})
+    eo = {"CNF": ["State"], "RUN_RESETTING": [], "RUN_STOPPING": [], "WD_START": [], "WD_STOP": []}
+    b = Basic(p, LIB, "MOD_StateLogic",
+              "PackML module state machine: RESET, START, STOP, ABORT, CLEAR (decided by MOD_StateGate); runs the "
+              "Resetting and Stopping procedures; Stopping waits until no skill is active",
+              ei, eo, {"AllIdle": ("BOOL", "TRUE")}, {"State": ("USINT", str(STATES["Stopped"]))},
+              folder="Module/Base")
+    s = STATES
+    b.state("Stopped", f"State := {s['Stopped']};", "CNF")   # initial state
+    b.state("Resetting", f"State := {s['Resetting']};", "CNF", ["RUN_RESETTING"])
+    b.state("ResettingW")
+    b.state("Idle", f"State := {s['Idle']};", "CNF")
+    b.state("Starting", f"State := {s['Starting']};", "CNF")
+    b.state("Execute", f"State := {s['Execute']};", "CNF")
+    b.state("Stopping", f"State := {s['Stopping']};", "CNF", ["WD_START"])
+    b.state("StoppingW")
+    b.state("StopProc", None, "WD_STOP", ["RUN_STOPPING"])
+    b.state("StopProcW")
+    b.state("Aborting", f"State := {s['Aborting']};", "CNF", ["WD_STOP"])
+    b.state("Aborted", f"State := {s['Aborted']};", "CNF")
+    b.state("Clearing", f"State := {s['Clearing']};", "CNF")
+    for m, (valid, target) in MODULE_COMMANDS.items():
+        for w in valid:
+            b.trans(w, target, m.upper())
     b.trans("Resetting", "ResettingW", "1")
     b.trans("ResettingW", "Idle", "RESETTING_DONE")
     b.trans("ResettingW", "Aborting", "RESETTING_FAILED")
@@ -521,6 +537,7 @@ def make_state_manager(p: Project):
     servers = list(MODULE_COMMANDS)
     for m in servers:
         c.fb(m, p.server(2, 1))
+    c.fb("Gate", q("MOD_StateGate"))
     c.fb("Logic", q("MOD_StateLogic"))
     c.fb("PubUa", p.publish(1))
     c.fb("PubState", p.publish(1), QI="TRUE")
@@ -534,22 +551,23 @@ def make_state_manager(p: Project):
     c.da("UaRoot", "Ids.UaRoot")
     c.da("UaEnable", *[f"{m}.QI" for m in servers], "PubUa.QI")
     c.da("StopTimeout", "Wd.DT")
-    c.ev("Owner.CHG", "Logic.OWNER_CHG")
-    c.da("Owner.Owner", "Logic.Owner")
+    c.ev("Owner.CHG", "Gate.OWNER_CHG")
+    c.da("Owner.Owner", "Gate.Owner")
     for m in servers:
         c.da(f"Ids.Id{m}", f"{m}.ID")
-        c.ev(f"{m}.IND", f"Logic.{m.upper()}_REQ")
-        c.da(f"{m}.RD_1", f"Logic.{m}Session")
-        c.ev(f"Logic.{m.upper()}_RSP", f"{m}.RSP")
-        c.da("Logic.Accepted", f"{m}.SD_1")
-        c.da("Logic.ErrorID", f"{m}.SD_2")
+        c.ev(f"{m}.IND", f"Gate.{m.upper()}_REQ")
+        c.da(f"{m}.RD_1", f"Gate.{m}Session")
+        c.ev(f"Gate.{m.upper()}_RSP", f"{m}.RSP")
+        c.da("Gate.Accepted", f"{m}.SD_1")
+        c.da("Gate.ErrorID", f"{m}.SD_2")
+        c.ev(f"Gate.GO_{m.upper()}", f"Logic.{m.upper()}")
     c.da("Ids.IdPub", "PubUa.ID")
     c.da("Ids.IdState", "PubState.ID")
     c.da("Ids.IdQuery", "SubQuery.ID")
     c.da("Ids.IdAct", "SubAct.ID")
-    c.ev("Logic.CNF", "PubUa.REQ", "PubState.REQ")
+    c.ev("Logic.CNF", "PubUa.REQ", "PubState.REQ", "Gate.STATE_CHG")
     c.ev("SubQuery.IND", "PubState.REQ")
-    c.da("Logic.State", "PubUa.SD_1", "PubState.SD_1")
+    c.da("Logic.State", "PubUa.SD_1", "PubState.SD_1", "Gate.State")
     c.ev("SubAct.IND", "Count.ACT")
     c.da("SubAct.RD_1", "Count.Delta")
     c.ev("Count.CHG", "Logic.ACT")
@@ -837,6 +855,137 @@ def make_skill_core(p: Project):
     c.write()
 
 
+def make_skill_run(p: Project):
+    """SKILL_Run: one run of any skill primitive, the same for all of them; what the skill is (its
+    contract, ``SC_<Skill>``) comes in as values.
+
+    START (with what the contract says at the start: Pre, Post, Timed, RunTime, Command, Arg,
+    StopCommand): refused when Pre does not hold (1 PreconditionViolated); while another holder has the
+    equipment, it waits up to 0.5 s for it to let go (else 6 Busy); succeeds at once when Post already
+    holds (not for a timed skill); else sends Command with Arg and starts the timer (RunTime). Then, at
+    each SAMPLE (Post and Inv on the equipment's newest state): Inv lost -> 2 InvariantViolated; another
+    holder -> 6 Busy (Lost); Post -> done; the timer -> done for a timed skill, 3 Timeout for one a sensor
+    ends. Every end sends StopCommand (all off for a failure or an abort), giving the equipment up with it
+    when ReleaseAfter is set (always on an abort), and reports only once the command has been played
+    (PLAYED). Without equipment (no port), CMD is looped back to PLAYED.
+    """
+    e = ERRORS
+    ei = {"START": ["Holder", "ReleaseAfter", "Pre", "Post", "Timed", "RunTime", "Command", "Arg", "StopCommand"],
+          "SAMPLE": ["Holder", "Post", "Inv", "EqHolder"], "HALT": [], "ABORT": [], "TIMER": [], "WAIT_OVER": [],
+          "PLAYED": []}
+    eo = {"DONE": [], "FAILED": ["ErrorID"], "HALTED": ["ErrorID"], "TIMER_START": ["TimerDT"], "TIMER_STOP": [],
+          "WAIT_START": [], "WAIT_STOP": [], "CMD": ["C_Holder", "C_Command", "C_Arg", "C_Release"],
+          "EQ_FREE": ["EquipmentFree"]}
+    iv = {"Holder": "WSTRING", "ReleaseAfter": "BOOL", "Pre": "BOOL", "Post": "BOOL", "Inv": ("BOOL", "TRUE"),
+          "Timed": "BOOL", "RunTime": "TIME", "Command": "USINT", "Arg": "LREAL", "StopCommand": "USINT",
+          "EqHolder": "WSTRING"}
+    ov = {"ErrorID": "UINT", "TimerDT": "TIME", "C_Holder": "WSTRING", "C_Command": "USINT", "C_Arg": "LREAL",
+          "C_Release": "BOOL", "EquipmentFree": "BOOL"}
+    b = Basic(p, LIB, "SKILL_RunLogic",
+              "One run of a skill primitive: Pre, then the equipment free (0.5 s grace), Command until Post or the "
+              "timer (Timed), Inv over it, StopCommand at the end, played before the end is reported",
+              ei, eo, iv, ov, {"Outcome": "USINT"}, folder="Skills/Base")
+
+    def cmd(code, release="ReleaseAfter"):
+        return f"C_Holder := Holder;\nC_Command := {code};\nC_Arg := Arg;\nC_Release := {release};"
+
+    busy = '(EqHolder <> "") AND (EqHolder <> Holder)'
+    free = 'EquipmentFree := (EqHolder = "") OR (EqHolder = Holder);'
+    b.state("Idle")
+    b.state("Check")
+    b.state("Reject", f"ErrorID := {e['PreconditionViolated']};", "FAILED")
+    b.state("Sample", free, "EQ_FREE")
+    b.state("Busy", f"ErrorID := {e['Busy']};", "FAILED", algorithm="Busy")
+    # Another holder: wait up to 0.5 s for the equipment's next state (a release in flight, e.g. from
+    # the previous step or a skill that just stopped) before failing with Busy.
+    b.state("WaitFree", None, "WAIT_START")
+    b.state("WaitW")
+    b.state("Recheck", None, "WAIT_STOP")
+    b.state("AlreadyDone", None, "DONE")
+    b.state("Run", cmd("Command", "FALSE") + "\nTimerDT := RunTime;", "CMD", ["TIMER_START"])
+    b.state("RunSample", free, "EQ_FREE", algorithm="Sample")
+    # A final command may take time (a brake pulse): the run ends when it has been played, and Outcome
+    # says how (1 done, 2 failed, 3 halted, 0 aborted: nothing to report).
+    b.state("Unsafe", cmd(0) + f"\nErrorID := {e['InvariantViolated']};\nOutcome := 2;", "CMD", ["TIMER_STOP"])
+    b.state("Lost", f"ErrorID := {e['Busy']};", "TIMER_STOP", ["FAILED"], algorithm="Busy")
+    b.state("Done", cmd("StopCommand") + "\nOutcome := 1;", "CMD", ["TIMER_STOP"])
+    b.state("TimedOut", cmd(0) + f"\nErrorID := {e['Timeout']};\nOutcome := 2;", "CMD")
+    b.state("Halt", cmd("StopCommand") + f"\nErrorID := {e['Interrupted']};\nOutcome := 3;", "CMD", ["TIMER_STOP"])
+    # An abort always gives the equipment up: with the module aborting, the equipment has already freed
+    # itself, and a message that kept the holder would take it again for good.
+    b.state("Abort", cmd(0, "TRUE") + "\nOutcome := 0;", "CMD", ["TIMER_STOP"])
+    b.state("Ending")
+    b.state("EndDone", None, "DONE")
+    b.state("EndFailed", None, "FAILED")
+    b.state("EndHalted", None, "HALTED")
+    b.state("Running")
+    b.trans("Idle", "Check", "START")
+    b.trans("Idle", "Sample", "SAMPLE")
+    b.trans("Sample", "Idle", "1")
+    b.trans("Check", "Reject", "NOT Pre")
+    b.trans("Check", "WaitFree", busy)
+    b.trans("WaitFree", "WaitW", "1")
+    b.trans("WaitW", "Recheck", f"SAMPLE[NOT ({busy})]")
+    b.trans("WaitW", "Busy", "WAIT_OVER")
+    b.trans("WaitW", "Idle", "HALT")
+    b.trans("WaitW", "Idle", "ABORT")
+    b.trans("Recheck", "Check", "1")
+    b.trans("Check", "AlreadyDone", "Post AND NOT Timed")   # already there: succeed without driving
+    b.trans("Check", "Run", "1")
+    b.trans("Run", "Running", "1")
+    b.trans("Running", "Unsafe", "SAMPLE[NOT Inv]")
+    b.trans("Running", "Lost", f"SAMPLE[{busy}]")
+    b.trans("Running", "Done", "SAMPLE[Post AND NOT Timed]")
+    b.trans("Running", "Done", "TIMER[Timed]")
+    b.trans("Running", "TimedOut", "TIMER")
+    b.trans("Running", "RunSample", "SAMPLE")
+    b.trans("RunSample", "Running", "1")
+    b.trans("Running", "Halt", "HALT")
+    b.trans("Running", "Abort", "ABORT")
+    for s in ["Reject", "Busy", "Lost", "AlreadyDone"]:
+        b.trans(s, "Idle", "1")
+    for s in ["Unsafe", "Done", "TimedOut", "Halt", "Abort"]:
+        b.trans(s, "Ending", "1")
+    b.trans("Ending", "EndDone", "PLAYED[Outcome = 1]")
+    b.trans("Ending", "EndFailed", "PLAYED[Outcome = 2]")
+    b.trans("Ending", "EndHalted", "PLAYED[Outcome = 3]")
+    b.trans("Ending", "Idle", "PLAYED")
+    b.trans("Ending", "Abort", "ABORT")
+    for s in ["EndDone", "EndFailed", "EndHalted"]:
+        b.trans(s, "Idle", "1")
+    b.write()
+
+    # The composite: the logic with its two timers, so a primitive needs no timer of its own.
+    outer_ei = {k: v for k, v in ei.items() if k not in ("TIMER", "WAIT_OVER")}
+    outer_eo = {k: v for k, v in eo.items() if k not in ("TIMER_START", "TIMER_STOP", "WAIT_START", "WAIT_STOP")}
+    outer_ov = {k: v for k, v in ov.items() if k != "TimerDT"}
+    c = Composite(p, LIB, "SKILL_Run",
+                  "One run of a skill primitive, the same for every primitive: what the skill is comes in as values "
+                  "from its contract (SC_): Pre, Post, Inv, Timed, RunTime, Command, Arg, StopCommand",
+                  outer_ei, outer_eo, iv, outer_ov, folder="Skills")
+    c.fb("Logic", q("SKILL_RunLogic"))
+    c.fb("Timer", STD["E_DELAY"])
+    c.fb("WaitT", STD["E_DELAY"], DT="T#500ms")      # how long a run waits for another holder's release
+    for ev in outer_ei:
+        c.ev(ev, f"Logic.{ev}")
+    for v in iv:
+        c.da(v, f"Logic.{v}")
+    for ev in outer_eo:
+        c.ev(f"Logic.{ev}", ev)
+    for v in outer_ov:
+        c.da(f"Logic.{v}", v)
+    c.ev("Logic.TIMER_START", "Timer.START")
+    c.da("Logic.TimerDT", "Timer.DT")
+    c.ev("Logic.TIMER_STOP", "Timer.STOP")
+    c.ev("Timer.EO", "Logic.TIMER")
+    c.ev("Logic.WAIT_START", "WaitT.START")
+    c.ev("Logic.WAIT_STOP", "WaitT.STOP")
+    c.ev("WaitT.EO", "Logic.WAIT_OVER")
+    c.group("OneRun", "One run: the contract's values in, the command out, until the end condition or the timer",
+            ["Logic", "Timer", "WaitT"], dx=7000, dy=4200)
+    c.write()
+
+
 # Types a skill parameter can have, with the widest range (the default Lower and Upper; MIN and MAX
 # are standard functions, so not usable as names).
 PARAM_RANGE = {"LREAL": ("-1.0E308", "1.0E308"), "INT": ("-32768", "32767"), "DINT": ("-2147483648", "2147483647"),
@@ -949,5 +1098,6 @@ def make_library(p: Project):
     make_skill_gate(p)
     make_skill_control(p)
     make_skill_core(p)
+    make_skill_run(p)
     make_parameters(p)
     make_flow(p)

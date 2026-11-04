@@ -204,6 +204,12 @@
     "exported": false
   },
   {
+    "type": "modlib::MOD_StateGate",
+    "kind": "BasicFB",
+    "file": "Module/Base/MOD_StateGate.fbt",
+    "exported": false
+  },
+  {
     "type": "modlib::MOD_StateLogic",
     "kind": "BasicFB",
     "file": "Module/Base/MOD_StateLogic.fbt",
@@ -237,6 +243,18 @@
     "type": "modlib::SKILL_Core",
     "kind": "CompositeFB",
     "file": "Skills/SKILL_Core.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_RunLogic",
+    "kind": "BasicFB",
+    "file": "Skills/Base/SKILL_RunLogic.fbt",
+    "exported": false
+  },
+  {
+    "type": "modlib::SKILL_Run",
+    "kind": "CompositeFB",
+    "file": "Skills/SKILL_Run.fbt",
     "exported": false
   },
   {
@@ -330,9 +348,15 @@
     "exported": true
   },
   {
-    "type": "filler::SL_MoveNeedleDown",
+    "type": "filler::EP_NeedleAxis",
+    "kind": "CompositeFB",
+    "file": "Equipment/Ports/EP_NeedleAxis.fbt",
+    "exported": true
+  },
+  {
+    "type": "filler::SC_MoveNeedleDown",
     "kind": "BasicFB",
-    "file": "Skills/Logic/SL_MoveNeedleDown.fbt",
+    "file": "Skills/Contract/SC_MoveNeedleDown.fbt",
     "exported": true
   },
   {
@@ -342,9 +366,9 @@
     "exported": true
   },
   {
-    "type": "filler::SL_MoveNeedleUp",
+    "type": "filler::SC_MoveNeedleUp",
     "kind": "BasicFB",
-    "file": "Skills/Logic/SL_MoveNeedleUp.fbt",
+    "file": "Skills/Contract/SC_MoveNeedleUp.fbt",
     "exported": true
   },
   {
