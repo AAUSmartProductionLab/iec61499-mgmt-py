@@ -291,7 +291,10 @@ The A kinds are made in the module spec and the AAS built from it (as the skill 
 that the oracle has the generator's program of the changed AAS.
 
 **Measures,** per run: *detected*, whether the reconciler reports a difference (against the oracle:
-true and false positives and negatives); *located*, whether a reported line names the drifted element
+true and false positives and negatives), by the reading it makes before every change (its skills, and
+block by block the instances, types, connections and run states, from what it reads anyway) and by its
+audit (also every value the generator writes, one request each; the equipment's IO addresses, which
+the AAS does not describe, against the deployed boot file); *located*, whether a reported line names the drifted element
 (its instance, port or skill); *class*, the reported kinds (value, create, restart, record; a confusion
 matrix of kind and class); *removed*, for an online class, the reconciler run and the oracle asked again
 (the program the generator's of the AAS, read back without a difference), and for a restart class, the
@@ -308,3 +311,22 @@ logged no error (as V10). A run failing one is reported, not counted.
 **Analysis.** Per kind: detection rate, location rate, class accuracy and removal rate with 95 % Wilson
 intervals; the false alarm rate of the clean runs; the confusion matrix; the baseline's detection
 rate; every missed drift listed with its element, and looked at.
+
+**The pilots of Q3.**
+
+- *First pilot (4 Nov, 30 runs, three of each kind; `cell/eval/results/q3-2026-11-04T0849.jsonl`).*
+  The cut change, the type version and the four AAS kinds were found, sorted and removed or refused as
+  expected, and the clean runs raised no alarm. Drift in the program outside the skill model was
+  missed: the three values written (the OPC UA root path of a skill's blocks), the three connections
+  deleted (the abort wiring, which the reading of a flow does not follow) and two of three stray
+  instances (in a skill's container, not linked into its flow). The third stray, linked into the INIT
+  chain beside the next skill, misled the reading: it followed one destination of that INITO, the
+  stray, lost the rest of the chain, took four complete skills for missing and "completed" them,
+  firing INIT into running skills again (285 commands), the stray left in place.
+- What was changed (design log, 4 Nov): the INIT chain is followed into every branch; a skill the
+  program has all of, running, but that was not read as one is a restart, never completed; the
+  reading compares the program block by block with the program the generator builds from the AAS
+  (instances, types, connections, run states, with no request more), and an audit also every value.
+  Of the 132 values of the filling module's program, the 5 IO addresses are not in the AAS (the
+  rebuilt spec has no pins, PWM channels or Modbus registers), on both targets; everything else is,
+  so the audit compares those against the module's boot file. R1 now asks the audit for nothing.
