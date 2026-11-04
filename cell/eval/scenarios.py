@@ -34,6 +34,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 import statistics
+import subprocess
 import sys
 import tempfile
 import time
@@ -157,6 +158,16 @@ class Bench:
             self.running.close()
             self.running = None
 
+    @property
+    def marker(self):
+        """Which FORTE ran: its folder, its log (forte.log) in it."""
+        return self.forte_dir
+
+    def log(self, marker=None) -> str:
+        """The log of the FORTE ``marker`` names (the last one started if None)."""
+        path = (marker or self.forte_dir) / "forte.log"
+        return path.read_text(encoding="utf-8", errors="replace") if path.exists() else "ERROR: no FORTE log"
+
     def execute(self) -> None:
         """Occupy, Reset and Start the module: it is in Execute."""
         self.ua.call("Occupation/Occupy", SESSION)
@@ -196,9 +207,11 @@ class PiBench(Bench):
         self.host, self.port, self.deployer = where.host, 61499, PiDeployer(where.host, where.user)
 
     def start(self, boot: str) -> None:
-        """The container restarted with ``boot``; waits until the module is Stopped."""
+        """The container restarted with ``boot`` (only FORTE's; the time it started kept on the Pi, for
+        its log); waits until the module is Stopped."""
         self.running = ExitStack()
-        self.deployer.restart(boot)
+        self.deployer.pi.ssh(self.deployer.args, "date +%s > ~/forte/started && cat > ~/forte/boot/forte.fboot"
+                             " && cd ~/forte && docker compose restart forte", stdin=boot)
         self.client = self.running.enter_context(Client(self.host, self.port))
         self.ua = ModuleUa(4840, self.cand.spec.module, host=self.host)
         self.running.callback(self.ua.close)
@@ -206,7 +219,19 @@ class PiBench(Bench):
 
     def stop(self) -> None:
         super().stop()
-        self.deployer.pi.compose(self.deployer.args, "stop")
+        self.deployer.pi.compose(self.deployer.args, "stop forte")
+
+    @property
+    def marker(self):
+        return None
+
+    def log(self, marker=None) -> str:
+        """FORTE's log since its container was last started (``docker compose logs``)."""
+        where = self.deployer.args
+        found = subprocess.run(["ssh", f"{where.user}@{where.host}",
+                                "cd ~/forte && docker compose logs --no-color --since $(cat ~/forte/started) forte"],
+                               capture_output=True, text=True, encoding="utf-8", errors="replace")
+        return found.stdout if found.returncode == 0 else f"ERROR: no FORTE log ({found.stderr.strip()[:200]})"
 
 
 def commands(done: list[str]) -> int:

@@ -47,6 +47,10 @@ PROGRAMS = (1, 5, 10, 20)
 STARTS = ("execute", "idle")  # a value changed while an order runs, or between two orders
 DISTURB = {(8, 1), (8, 20), (32, 1), (32, 20)}       # (steps, program size): Dispensing's d0 measured too
 NEW = "Synthetic"
+# On the Raspberry Pi (--pi), at the bench: the filling module as delivered (program size 1), a new
+# composite of 1 and of 8 steps, a value from Execute and from Idle, and the two restarts.
+PI_CELLS = ("A-flow-n1-k1-m1", "A-flow-n8-k1-m1", "C-parameter-n0-k0-m1-execute", "C-parameter-n0-k0-m1-idle",
+            "D-flow-n8-k1-m1", "D-parameter-n0-k0-m1")
 CACHE = sc.RESULTS / "q1-cache"
 VERBOSE = False
 
@@ -323,30 +327,29 @@ def same(found: dict) -> bool:
 REGISTERING = ("Discovery server", "RegisterServer", "[OPC UA LOGGER] error/network")
 
 
-def forte_errors(folder: Path) -> list[str]:
-    """The ERROR lines of the log of the FORTE that ran in ``folder`` (an event dropped from a full
-    queue, a block that failed): a run is right only without them. The OPC UA server's failed
-    registrations with a discovery server are not among them (``registering_errors``)."""
-    return [ln for ln in _errors(folder) if not any(r in ln for r in REGISTERING)]
+def forte_errors(log_: str) -> list[str]:
+    """The ERROR lines of a FORTE's log (an event dropped from a full queue, a block that failed): a run
+    is right only without them. The OPC UA server's failed registrations with a discovery server are
+    not among them (``registering_errors``)."""
+    return [ln for ln in _errors(log_) if not any(r in ln for r in REGISTERING)]
 
 
-def registering_errors(folder: Path) -> list[str]:
-    return [ln for ln in _errors(folder) if any(r in ln for r in REGISTERING)]
+def registering_errors(log_: str) -> list[str]:
+    return [ln for ln in _errors(log_) if any(r in ln for r in REGISTERING)]
 
 
-def logged(out: dict, checks: dict, *folders: Path) -> None:
-    """V10 from the logs of the FORTEs that ran in ``folders``; failed registrations counted apart."""
-    errors = [e for folder in folders for e in forte_errors(folder)]
+def logged(out: dict, checks: dict, bench, *markers) -> None:
+    """V10 from the logs of the FORTEs the ``markers`` name (the bench's: a folder on the PC, the last
+    start on the Pi); failed registrations counted apart."""
+    logs = [bench.log(m) for m in markers]
+    errors = [e for text in logs for e in forte_errors(text)]
     out["forte_errors"] = errors[:5]
-    out["registering_errors"] = sum(len(registering_errors(folder)) for folder in folders)
+    out["registering_errors"] = sum(len(registering_errors(text)) for text in logs)
     checks["V10"] = not errors
 
 
-def _errors(folder: Path) -> list[str]:
-    path = folder / "forte.log"
-    if not path.exists():
-        return ["no FORTE log"]
-    return [ln.strip() for ln in path.read_text(encoding="utf-8", errors="replace").splitlines() if "ERROR" in ln]
+def _errors(log_: str) -> list[str]:
+    return [ln.strip() for ln in log_.splitlines() if "ERROR" in ln]
 
 
 # The runs -------------------------------------------------------------------------------------------
@@ -398,6 +401,12 @@ def between_orders(bench) -> None:
     bench.ua.expect("Occupation/Occupied", False)
 
 
+def persisting(bench, work: Path, boot: str):
+    """Where the reconciler amends the module's boot file: on the Pi its own (over SSH, as deployed),
+    on the PC a folder of the run's."""
+    return bench.deployer if bench.target == "pi" else deployer_with(work / f"deploy{time.monotonic_ns()}", boot)
+
+
 def deployer_with(folder: Path, boot: str) -> LocalDeployer:
     """A boot file of the module's own, as the deployer of an installed FORTE keeps it."""
     (folder / "boot").mkdir(parents=True, exist_ok=True)
@@ -420,7 +429,7 @@ def after_change(bench, out: dict, checks: dict, done: list, wanted: dict, compo
 def run_online_flow(bench, cell: dict, first: bool, work: Path) -> dict:
     n, k, m = cell["steps"], cell["branches"], cell["program"]
     base = program(m)
-    module, components = delivered_spec(base)
+    module, components = delivered_spec(base, bench.target)
     wanted = with_composite(module, components, NEW, synthetic(n, k))
     boot = boot_of(bench, base, f"base-{m}")
     generated = boot_of(bench, with_flow(base, n, k), f"flow-{n}-{k}-{m}")
@@ -436,7 +445,7 @@ def run_online_flow(bench, cell: dict, first: bool, work: Path) -> dict:
     if (n, m) in DISTURB:
         log("Dispensing alone")
         out["d0_s"], out["d0_clock"], _, out["d0_trace"] = dispense_once(bench)
-    deployer = deployer_with(work / f"deploy{time.monotonic_ns()}", boot)
+    deployer = persisting(bench, work, boot)
     stats: dict = {}
     sent: list = []
 
@@ -469,14 +478,14 @@ def run_online_flow(bench, cell: dict, first: bool, work: Path) -> dict:
             checks["V5"], out["V5_error"] = False, f"{type(exc).__name__}: {exc}"[:300]
         out["new_run_s"] = time.perf_counter() - t
     bench.stop()
-    logged(out, checks, bench.forte_dir)
+    logged(out, checks, bench, bench.marker)
     return {"out": out, "checks": checks}
 
 
 def run_online_parameter(bench, cell: dict, work: Path) -> dict:
     m, start = cell["program"], cell["start"]
     base = program(m)
-    module, components = delivered_spec(base)
+    module, components = delivered_spec(base, bench.target)
     wanted = sc.with_value(module)
     boot = boot_of(bench, base, f"base-{m}")
     generated = boot_of(bench, with_parameter(base), f"parameter-{m}")
@@ -489,7 +498,7 @@ def run_online_parameter(bench, cell: dict, work: Path) -> dict:
     checks["V1"] = read(bench.client, bench.host, bench.port, module, components).differences.empty
     out["V1g"] = program_is(bench, boot)
     checks["V1g"] = same(out["V1g"])
-    deployer = deployer_with(work / f"deploy{time.monotonic_ns()}", boot)
+    deployer = persisting(bench, work, boot)
     stats: dict = {}
     sent: list = []
     state = Clock(bench.ua, "Module/State")
@@ -520,7 +529,7 @@ def run_online_parameter(bench, cell: dict, work: Path) -> dict:
     after_change(bench, out, checks, done, wanted, components, boot, generated, sent, deployer)
     out.update(stats)
     bench.stop()
-    logged(out, checks, bench.forte_dir)
+    logged(out, checks, bench, bench.marker)
     return {"out": out, "checks": checks}
 
 
@@ -528,14 +537,14 @@ def run_restart(bench, cell: dict) -> dict:
     m = cell["program"]
     base = program(m)
     new = with_flow(base, 8, 1) if cell["change"] == "flow" else with_parameter(base)
-    module, components = delivered_spec(new)
+    module, components = delivered_spec(new, bench.target)
     out, checks = {}, {}
     t = time.perf_counter()
     boot = bench.boot(new)
     out["generate_s"] = time.perf_counter() - t
     out["boot_lines"] = len(boot.splitlines())
     bench.start(boot_of(bench, base, f"base-{m}"))
-    before = bench.forte_dir
+    before = bench.marker
     bench.execute()
     t0, wall = time.perf_counter(), time.time()
     bench.stop()
@@ -558,42 +567,52 @@ def run_restart(bench, cell: dict) -> dict:
     out["V7g"] = program_is(bench, boot)
     checks["V7g"] = same(out["V7g"])
     bench.stop()
-    logged(out, checks, before, bench.forte_dir)
+    # On the Pi the log is the container's since its last start: the FORTE the restart started.
+    logged(out, checks, bench, *([before, bench.marker] if before is not None else [bench.marker]))
     return {"out": out, "checks": checks}
 
 
-def prepare(chosen: list[dict]) -> None:
+def prepare(chosen: list[dict], target: str = "pc") -> None:
     """Build the AASs and described skills the cells need, before anything is timed."""
     for m in sorted({c["program"] for c in chosen}):
         base = program(m)
         log(f"program {m}: AAS")
-        module, components = delivered_spec(base)
+        module, components = delivered_spec(base, target)
         for c in chosen:
             if c["program"] != m:
                 continue
             if c["mode"] == "online" and c["change"] == "flow":
                 with_composite(module, components, NEW, synthetic(c["steps"], c["branches"]))
             elif c["mode"] == "restart":
-                delivered_spec(with_flow(base, 8, 1) if c["change"] == "flow" else with_parameter(base))
+                delivered_spec(with_flow(base, 8, 1) if c["change"] == "flow" else with_parameter(base), target)
 
 
 # The session ----------------------------------------------------------------------------------------
 
-def setup(forte: Path, seed: int) -> dict:
+def setup(forte: Path | None, seed: int, pi=None) -> dict:
     root = Path(__file__).resolve().parents[2]
     commit = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
     dirty = bool(subprocess.run(["git", "-C", str(root), "status", "--porcelain", "--untracked-files=no",
                                  "aas61499-tools", "iec61499-mgmt-py", "cell/eval", "cell/sim"],
                                 capture_output=True, text=True).stdout.strip())
+    if pi is not None:                             # FORTE in its container on the Pi: its binary there
+        where = pi.deployer.args
+        found = subprocess.run(["ssh", f"{where.user}@{where.host}", "sha256sum ~/forte/forte; uname -m"],
+                               capture_output=True, text=True).stdout.split()
+        forte_id, digest = f"{where.user}@{where.host}:~/forte/forte ({found[-1] if found else '?'})", (found or ["?"])[0][:16]
+    else:
+        forte_id, digest = str(forte), hashlib.sha256(forte.read_bytes()).hexdigest()[:16]
     return {"machine": platform.platform(), "cpu": platform.processor(), "python": platform.python_version(),
-            "forte": str(forte), "forte_sha256": hashlib.sha256(forte.read_bytes()).hexdigest()[:16],
+            "forte": forte_id, "forte_sha256": digest, "target": "pi" if pi is not None else "pc",
             "commit": commit[:12], "tools_dirty": dirty, "seed": seed}
 
 
 def main() -> None:
     global VERBOSE
     ap = argparse.ArgumentParser()
-    ap.add_argument("--forte", type=Path, required=True)
+    ap.add_argument("--forte", type=Path, help="FORTE on the PC (not with --pi)")
+    ap.add_argument("--pi", action="store_true",
+                    help="the module on its Raspberry Pi (the spec's target pi), someone at the bench: PI_CELLS")
     ap.add_argument("--runs", type=int, default=30)
     ap.add_argument("--warmup", type=int, default=5)
     ap.add_argument("--seed", type=int, default=20261103)
@@ -603,8 +622,10 @@ def main() -> None:
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args()
     VERBOSE = a.verbose
+    if not a.pi and a.forte is None:
+        ap.error("--forte is needed on the PC")
     chosen = [c for c in cells() if (not a.only or c["set"] in a.only or c["id"] in a.only)
-              and (not a.programs or c["program"] in a.programs)]
+              and (not a.programs or c["program"] in a.programs) and (not a.pi or c["id"] in PI_CELLS)]
     rng = random.Random(a.seed)
     order = [(c, r) for c in chosen for r in range(a.runs)]
     rng.shuffle(order)
@@ -616,11 +637,13 @@ def main() -> None:
             r = json.loads(line)
             if r.get("ok") or r.get("failure") in ("method", "check"):
                 done.add((r["cell"]["id"], r["replicate"]))
-    env = setup(a.forte, a.seed)
-    prepare(chosen)
+    pi = sc.PiBench() if a.pi else None
+    original = pi.deployer.load() if pi else None     # the Pi's program, brought back after the runs
+    env = setup(a.forte, a.seed, pi)
+    prepare(chosen, "pi" if a.pi else "pc")
     firsts = {c["id"]: min((r for cc, r in order if cc["id"] == c["id"] and r >= 0), default=None) for c in chosen}
     with tempfile.TemporaryDirectory() as tmp:
-        bench = sc.Bench(a.forte, Path(tmp))
+        bench = pi or sc.Bench(a.forte, Path(tmp))
         try:
             for i, (cell, rep) in enumerate(order):
                 if (cell["id"], rep) in done:
@@ -644,7 +667,7 @@ def main() -> None:
                     infra = isinstance(exc, (OSError, TimeoutError, ConnectionError))
                     record.update({"ok": False, "failure": "infrastructure" if infra else "method",
                                    "error": f"{type(exc).__name__}: {exc}"[:800], "trace": traceback.format_exc()[-1500:],
-                                   "forte_errors": forte_errors(bench.forte_dir)[:5] if bench.forte_dir else []})
+                                   "forte_errors": forte_errors(bench.log(bench.marker))[:5]})
                 record["run_s"] = time.perf_counter() - started
                 with out.open("a", encoding="utf-8") as f:
                     f.write(json.dumps(record, default=str) + "\n")
@@ -655,6 +678,8 @@ def main() -> None:
                       f"{' ' + record['error'][:120] if record.get('error') else ''}", flush=True)
         finally:
             bench.close()
+            if pi is not None:
+                pi.deployer.restart(original)
     print(out)
 
 
