@@ -315,6 +315,12 @@ effort (E1) and the planners' times become a sentence each.
 measures the model against itself. Simulated IO on the PC, one module type and synthetic flows are the
 other limits to state.
 
+**Setup, decided 4 Nov:** of the FORTE patches only 0008 goes into the paper (a note in paper.tex's
+Evaluation marks the sentence): verification reads the program back, and stock FORTE 3.3.0 cuts every
+management answer at 64 KiB with an unfiltered connection query, about 600 connections; the evaluation's
+FORTE reads by part. The event lists of 1,024 go into the same sentence. Patches 0001 to 0007 (Pi IO,
+restarts, the IDE's type check) are left out ([cirp-evaluation.md](cirp-evaluation.md), the setup).
+
 ## 5 Discussion and conclusion (300 words)
 
 - **The effort moves into the AAS,** and from there into the module's capabilities. As in
