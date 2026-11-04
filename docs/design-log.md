@@ -20,6 +20,21 @@ A running log of design considerations made while building, for writing the pape
 
 ## 4 Nov 2026
 
+- **Who may command a skill is decided in front of its state machine (SKILL_Gate).** *Journal*
+  (the skill's behaviour as a readable state machine), *CIRP* (the same skill interface, unchanged).
+  - `SKILL_Control` had 25 states and 101 transitions: each of its 7 waiting states had to take each
+    of the 4 OPC UA requests, each check had to jump back to the state it came from (`Here = 0..6`),
+    and the module's Aborting, Stopping and Clearing were handled again in every state.
+  - Now `SKILL_Gate` (in `SKILL_Core`, 10 states, 24 transitions) answers a client's Start, Stop,
+    Abort and Reset at once, with the same checks and error codes as before, and passes an accepted
+    one on as the command a parent gives; a parent's command goes through unchecked, and the module's
+    state becomes a command too (Aborting or Aborted aborts, Stopping halts a skill a client started,
+    Clearing or Stopped resets an aborted one). It decides on the skill state `SKILL_Control`
+    publishes. `SKILL_Control` sees only START, HALT, ABORT and RESET: 20 states, 32 transitions.
+  - The behaviour seen from outside is the same: the methods, answers, error codes and states. Chosen
+    instead of keeping one block with a better drawing only: the transitions were many because the
+    one block mixed two questions (may this caller do this now? what does the skill do?).
+
 - **Every ECC is laid out as the IDE draws it: states in rows, each condition between its states.**
   *Journal* (a generated program a person can read and change in the IDE).
   - Before, the generator put the states on a grid narrower than a state is drawn, and every

@@ -568,49 +568,115 @@ def make_state_manager(p: Project):
 # Skill state machine and helpers
 # --------------------------------------------------------------------------------------------
 
-# Wait states of SKILL_Control: name -> (published skill state, Here index).
-SKILL_WAIT = {"Idle": ("Idle", 0), "Running": ("Running", 1), "Stopping": ("Stopping", 2),
-              "StopProc": ("Stopping", 3), "Succeeded": ("Succeeded", 4), "Failed": ("Failed", 5),
-              "Aborted": ("Aborted", 6)}
+# Wait states of SKILL_Control: name -> the skill state it publishes.
+SKILL_WAIT = {"Idle": "Idle", "Running": "Running", "Stopping": "Stopping", "StopProc": "Stopping",
+              "Succeeded": "Succeeded", "Failed": "Failed", "Aborted": "Aborted"}
 READY = ["Idle", "Succeeded", "Failed"]
 # How long a skill shows Succeeded before it returns to Idle by itself.
 SUCCEEDED_FOR = "T#1500ms"
 
 
+def make_skill_gate(p: Project):
+    """SKILL_Gate: in front of SKILL_Control, decides a client's command and passes on the parent's.
+
+    A call of Start, Stop, Abort or Reset over OPC UA is answered at once with [Accepted,
+    ResponseError]: only the module's owner may call (5 NotPermitted); Start only with the module in
+    Execute (4 NotReady), the skill neither running (6 Busy) nor aborted (4), its parameters in range
+    (8 OutOfRange) and its equipment free (6); Stop only while it runs, Abort unless it is aborted, Reset
+    only when it is (4). An accepted call goes on as the same command a parent gives (GO_START with
+    ByClient, GO_HALT, GO_ABORT, GO_RESET); a parent's command goes on unchecked. The module commands
+    the skill too: its Aborting or Aborted aborts it, its Stopping halts a skill a client started, and its
+    Clearing or Stopped resets an aborted one. The skill state it decides on is the one SKILL_Control
+    publishes (SKILL_CHG).
+    """
+    e, s = ERRORS, SKILL_STATES
+    reqs = {"START": ["Session", "ParamsInRange", "EquipmentFree"], "STOP": ["StopSession"],
+            "ABORT": ["AbortSession"], "RESET": ["ResetSession"]}
+    ei = {**{f"{k}_REQ": v for k, v in reqs.items()}, "OWNER_CHG": ["Owner"], "MOD_CHG": ["ModuleState"],
+          "SKILL_CHG": ["State"], "START": [], "HALT": [], "ABORT": [], "RESET": []}
+    eo = {**{f"{k}_RSP": ["Accepted", "ResponseError"] for k in reqs}, "GO_START": ["ByClient"], "GO_HALT": [],
+          "GO_ABORT": [], "GO_RESET": []}
+    iv = {"Session": "WSTRING", "ParamsInRange": "BOOL", "EquipmentFree": "BOOL", "StopSession": "WSTRING",
+          "AbortSession": "WSTRING", "ResetSession": "WSTRING", "Owner": "WSTRING", "ModuleState": "USINT",
+          "State": "USINT"}
+    ov = {"Accepted": "BOOL", "ResponseError": "UINT", "ByClient": "BOOL"}
+    b = Basic(p, LIB, "SKILL_Gate",
+              "Decides a client's Start/Stop/Abort/Reset (owner only; Start only in module Execute, not running, "
+              "parameters in range, equipment free) and passes accepted ones and a parent's on as GO_START, "
+              "GO_HALT, GO_ABORT, GO_RESET to SKILL_Control", ei, eo, iv, ov, {"Owned": "BOOL"}, folder="Skills/Base")
+    owned = 'Owned := ({0} = Owner) AND (Owner <> "");\n'
+    running, stopping, aborted = s["Running"], s["Stopping"], s["Aborted"]
+    b.state("Wait")
+    b.state("ChkStart", owned.format("Session") + "Accepted := FALSE;\n"
+            f"IF NOT Owned THEN\n  ResponseError := {e['NotPermitted']};\n"
+            f"ELSIF ModuleState <> {STATES['Execute']} THEN\n  ResponseError := {e['NotReady']};\n"
+            f"ELSIF (State = {running}) OR (State = {stopping}) THEN\n  ResponseError := {e['Busy']};\n"
+            f"ELSIF State = {aborted} THEN\n  ResponseError := {e['NotReady']};\n"
+            f"ELSIF NOT ParamsInRange THEN\n  ResponseError := {e['OutOfRange']};\n"
+            f"ELSIF NOT EquipmentFree THEN\n  ResponseError := {e['Busy']};\n"
+            "ELSE\n  Accepted := TRUE;\n  ResponseError := 0;\nEND_IF;", "START_RSP")
+    valid = {"Stop": f"State = {running}", "Abort": f"State <> {aborted}", "Reset": f"State = {aborted}"}
+    session = {"Stop": "StopSession", "Abort": "AbortSession", "Reset": "ResetSession"}
+    for m, ok in valid.items():
+        b.state("Chk" + m, owned.format(session[m]) + f"Accepted := Owned AND ({ok});\n"
+                f"IF NOT Owned THEN\n  ResponseError := {e['NotPermitted']};\n"
+                f"ELSIF NOT Accepted THEN\n  ResponseError := {e['NotReady']};\nELSE\n  ResponseError := 0;\nEND_IF;",
+                f"{m.upper()}_RSP")
+    b.state("ClientStart", "ByClient := TRUE;", "GO_START")
+    b.state("ParentStart", "ByClient := FALSE;", "GO_START")
+    for cmd in ("Halt", "Abort", "Reset"):
+        b.state(f"Go{cmd}", None, f"GO_{cmd.upper()}")
+    for m in ("Start", "Stop", "Abort", "Reset"):
+        b.trans("Wait", f"Chk{m}", f"{m.upper()}_REQ")
+    b.trans("Wait", "ParentStart", "START")
+    for cmd in ("Halt", "Abort", "Reset"):
+        b.trans("Wait", f"Go{cmd}", cmd.upper())
+    # What the module's state means for the skill. Aborting is followed at once by Aborted, and Clearing
+    # by Stopped, and a subscriber may see only the latter (a local channel keeps the latest value).
+    b.trans("Wait", "GoAbort", f"MOD_CHG[((ModuleState = {STATES['Aborting']}) OR (ModuleState = {STATES['Aborted']}))"
+            f" AND (State <> {aborted})]")
+    # Only a skill the occupant started stops itself when the module stops. One started by a parent
+    # is halted by it; a step of the Stopping procedure must run exactly then.
+    b.trans("Wait", "GoHalt", f"MOD_CHG[(ModuleState = {STATES['Stopping']}) AND (State = {running}) AND ByClient]")
+    b.trans("Wait", "GoReset", f"MOD_CHG[((ModuleState = {STATES['Clearing']}) OR (ModuleState = {STATES['Stopped']}))"
+            f" AND (State = {aborted})]")
+    for chk, go in [("ChkStart", "ClientStart"), ("ChkStop", "GoHalt"), ("ChkAbort", "GoAbort"), ("ChkReset", "GoReset")]:
+        b.trans(chk, go, "Accepted")
+        b.trans(chk, "Wait", "1")
+    for go in ("ClientStart", "ParentStart", "GoHalt", "GoAbort", "GoReset"):
+        b.trans(go, "Wait", "1")
+    b.write()
+
+
 def make_skill_control(p: Project):
     """SKILL_Control: the state machine every skill shares (primitive or module level skill).
 
-    Idle/Succeeded/Failed -Start-> Running -> Succeeded | Failed(ErrorID); Succeeded returns to Idle
-    by itself after SUCCEEDED_FOR (TO_IDLE_START -> TO_IDLE). Stop, a parent HALT or (for
-    a skill started over OPC UA) the module entering Stopping -> Stopping: the execution is halted, then the stop procedure runs
-    (RUN_STOPPING -> STOPPING_DONE) -> Failed(Interrupted). Abort, a parent ABORT or the module entering
-    Aborting -> Aborted (outputs off at once); Reset, a parent RESET or the module Clearing -> Idle
-    (RESET_SEQ passes it on to children).
-    OPC UA commands need the occupation and (Start) the module in Execute; commands from a parent
-    are not gated. Every start and end is counted on the module's activity channel (ACT +1/-1).
+    Idle/Succeeded/Failed -START-> Running -> Succeeded | Failed(ErrorID); Succeeded returns to Idle
+    by itself after SUCCEEDED_FOR (TO_IDLE_START -> TO_IDLE). HALT -> Stopping: the execution is
+    halted, then the stop procedure runs (RUN_STOPPING -> STOPPING_DONE) -> Failed(Interrupted).
+    ABORT -> Aborted (outputs off at once); RESET -> Idle (RESET_SEQ passes it on to children). Who
+    commands it (a client, the parent, the module's state) is decided in front of it, in SKILL_Gate:
+    here a command is the same whoever gives it. Every start and end is counted on the module's
+    activity channel (ACT +1/-1).
     """
     e, s = ERRORS, SKILL_STATES
-    cmds = {"START": ["Session", "ParamsInRange", "EquipmentFree"], "STOP": ["StopSession"], "ABORT": ["AbortSession"], "RESET": ["ResetSession"]}
-    ei = {"INIT": (["Module", "UaRoot", "UaPath"], "EInit"),
-          **{f"{k}_REQ": v for k, v in cmds.items()},
-          "OWNER_CHG": ["Owner"], "MOD_CHG": ["ModuleState"], "START": [], "HALT": [], "ABORT": [], "RESET": [],
-          "EXECUTE_DONE": [], "EXECUTE_FAILED": ["ExecuteError"], "STOPPING_DONE": [], "TO_IDLE": []}
+    ei = {"INIT": (["Module", "UaRoot", "UaPath"], "EInit"), "START": ["ByClient"], "HALT": [], "ABORT": [],
+          "RESET": [], "EXECUTE_DONE": [], "EXECUTE_FAILED": ["ExecuteError"],
+          "STOPPING_DONE": [], "TO_IDLE": []}
     eo = {"INITO": (["StartMethodId", "StopMethodId", "AbortMethodId", "ResetMethodId", "StateId", "ActivityId",
                      "ReleaseId"], "EInit"),
-          **{f"{k}_RSP": ["Accepted", "ResponseError"] for k in cmds},
-          "PUB": ["State", "ErrorID"], "RUN": ["CalledByClient"], "HALT_SEQ": [], "ABORT_SEQ": [], "RESET_SEQ": [], "RUN_STOPPING": [],
-          "SUCCESS": [], "FAILURE": ["ErrorID"], "RELEASE": [], "ACT": ["ActivityDelta"], "TO_IDLE_START": [], "TO_IDLE_STOP": []}
-    iv = {"Module": "WSTRING", "UaRoot": "WSTRING", "UaPath": "WSTRING", "Session": "WSTRING", "ParamsInRange": "BOOL",
-          "EquipmentFree": "BOOL", "StopSession": "WSTRING", "AbortSession": "WSTRING", "ResetSession": "WSTRING", "Owner": "WSTRING",
-          "ModuleState": "USINT", "ExecuteError": "UINT"}
-    ov = {"StartMethodId": "WSTRING", "StopMethodId": "WSTRING", "AbortMethodId": "WSTRING", "ResetMethodId": "WSTRING", "StateId": "WSTRING",
-          "ActivityId": "WSTRING", "ReleaseId": "WSTRING", "Accepted": "BOOL", "ResponseError": "UINT", "State": "USINT", "ErrorID": "UINT",
+          "PUB": ["State", "ErrorID"], "RUN": ["CalledByClient"], "HALT_SEQ": [], "ABORT_SEQ": [], "RESET_SEQ": [],
+          "RUN_STOPPING": [], "SUCCESS": [], "FAILURE": ["ErrorID"], "RELEASE": [], "ACT": ["ActivityDelta"],
+          "TO_IDLE_START": [], "TO_IDLE_STOP": []}
+    iv = {"Module": "WSTRING", "UaRoot": "WSTRING", "UaPath": "WSTRING", "ByClient": "BOOL", "ExecuteError": "UINT"}
+    ov = {"StartMethodId": "WSTRING", "StopMethodId": "WSTRING", "AbortMethodId": "WSTRING", "ResetMethodId": "WSTRING",
+          "StateId": "WSTRING", "ActivityId": "WSTRING", "ReleaseId": "WSTRING", "State": "USINT", "ErrorID": "UINT",
           "ActivityDelta": "INT", "CalledByClient": "BOOL"}
     b = Basic(p, LIB, "SKILL_Control",
-              "Skill state machine: Start/Stop/Abort/Reset over OPC UA (owner only, Start only in module Execute) "
-              "and START/HALT/ABORT from a parent; Idle 0, Running 1, Stopping 2, Succeeded 3, Failed 4, Aborted 5; "
-              "RUN starts the execution (CalledByClient: with the Start arguments, else with the parent's values)",
-              ei, eo, iv, ov, {"Owned": "BOOL", "Here": "USINT", "Active": "BOOL"}, folder="Skills/Base")
+              "Skill state machine: START, HALT, ABORT, RESET (a client's already decided by SKILL_Gate); Idle 0, "
+              "Running 1, Stopping 2, Succeeded 3, Failed 4, Aborted 5; RUN starts the execution (CalledByClient: "
+              "with the Start arguments, else with the parent's values)",
+              ei, eo, iv, ov, {"Active": "BOOL"}, folder="Skills/Base")
     base = cat("UaRoot", "UaPath")
     b.state("START")
     b.state("Init", "\n".join([f"StartMethodId := {ua('CREATE_METHOD', base, lit('/Start'))};",
@@ -620,11 +686,10 @@ def make_skill_control(p: Project):
                                f"StateId := {ua('WRITE', base, lit('/State;'), base, lit('/ErrorID'))};",
                                f"ActivityId := {loc('Module', 'activity')};",
                                f"ReleaseId := {loc('Module', 'release')};"]), "INITO")
-    for w, (state, here) in SKILL_WAIT.items():
-        b.state(w, f"State := {s[state]};\nHere := {here};", "PUB", ["TO_IDLE_START"] if w == "Succeeded" else ())
+    for w, state in SKILL_WAIT.items():
+        b.state(w, f"State := {s[state]};", "PUB", ["TO_IDLE_START"] if w == "Succeeded" else ())
     # Entry actions; a start stops the timer of a Succeeded it leaves.
-    b.state("GoUa", "Active := TRUE;\nActivityDelta := 1;\nErrorID := 0;\nCalledByClient := TRUE;", "ACT", ["TO_IDLE_STOP", "RUN"])
-    b.state("GoParent", "Active := TRUE;\nActivityDelta := 1;\nErrorID := 0;\nCalledByClient := FALSE;", "ACT",
+    b.state("Go", "Active := TRUE;\nActivityDelta := 1;\nErrorID := 0;\nCalledByClient := ByClient;", "ACT",
             ["TO_IDLE_STOP", "RUN"])
     b.state("Halt", None, "HALT_SEQ")
     b.state("RunStop", None, "RUN_STOPPING")
@@ -634,56 +699,28 @@ def make_skill_control(p: Project):
     b.state("Interrupted", f"Active := FALSE;\nActivityDelta := -1;\nErrorID := {e['Interrupted']};", "ACT",
             ["RELEASE", "FAILURE"])
     b.state("AbortChk")
-    b.state("AbortActive", f"Active := FALSE;\nActivityDelta := -1;\nErrorID := {e['Interrupted']};", "ABORT_SEQ", ["ACT", "RELEASE"])
+    b.state("AbortActive", f"Active := FALSE;\nActivityDelta := -1;\nErrorID := {e['Interrupted']};", "ABORT_SEQ",
+            ["ACT", "RELEASE"])
     b.state("AbortIdle", None, "ABORT_SEQ")
     b.state("StartRefused", f"ErrorID := {e['NotReady']};", "FAILURE")
     b.state("ResetOk", None, "RESET_SEQ")
-    # Command checks: answer the method, then act or return to the wait state (Here).
-    owned = 'Owned := ({0} = Owner) AND (Owner <> "");\n'
-    session = {"Start": "Session", "Stop": "StopSession", "Abort": "AbortSession", "Reset": "ResetSession"}
-    b.state("ChkStart", owned.format(session["Start"]) + "Accepted := FALSE;\n"
-            f"IF NOT Owned THEN\n  ResponseError := {e['NotPermitted']};\n"
-            f"ELSIF ModuleState <> {STATES['Execute']} THEN\n  ResponseError := {e['NotReady']};\n"
-            f"ELSIF (Here = 1) OR (Here = 2) OR (Here = 3) THEN\n  ResponseError := {e['Busy']};\n"
-            f"ELSIF Here = 6 THEN\n  ResponseError := {e['NotReady']};\n"
-            f"ELSIF NOT ParamsInRange THEN\n  ResponseError := {e['OutOfRange']};\n"
-            f"ELSIF NOT EquipmentFree THEN\n  ResponseError := {e['Busy']};\n"
-            "ELSE\n  Accepted := TRUE;\n  ResponseError := 0;\nEND_IF;", "START_RSP")
-    for m, valid in [("Stop", "Here = 1"), ("Abort", "Here <> 6"), ("Reset", "Here = 6")]:
-        b.state("Chk" + m, owned.format(session[m]) + f"Accepted := Owned AND ({valid});\n"
-                f"IF NOT Owned THEN\n  ResponseError := {e['NotPermitted']};\n"
-                f"ELSIF NOT Accepted THEN\n  ResponseError := {e['NotReady']};\nELSE\n  ResponseError := 0;\nEND_IF;",
-                f"{m.upper()}_RSP")
     b.trans("START", "Init", "INIT")
     b.trans("Init", "Idle", "1")
-    for w in SKILL_WAIT:
-        for k in cmds:
-            b.trans(w, f"Chk{k.capitalize()}", f"{k}_REQ")
     for w in READY:
-        b.trans(w, "GoParent", "START")
+        b.trans(w, "Go", "START")
     b.trans("Aborted", "StartRefused", "START")
     b.trans("StartRefused", "Aborted", "1")
-    for w in ["Running"]:
-        b.trans(w, "Succeed", "EXECUTE_DONE")
-        b.trans(w, "Fail", "EXECUTE_FAILED")
-        b.trans(w, "Halt", "HALT")
-        # Only a skill the occupant started stops itself when the module stops. One started by a parent
-        # is halted by it; a step of the Stopping procedure must run exactly then.
-        b.trans(w, "Halt", f"MOD_CHG[(ModuleState = {STATES['Stopping']}) AND CalledByClient]")
+    b.trans("Running", "Succeed", "EXECUTE_DONE")
+    b.trans("Running", "Fail", "EXECUTE_FAILED")
+    b.trans("Running", "Halt", "HALT")
     b.trans("Stopping", "RunStop", "EXECUTE_DONE")
     b.trans("Stopping", "RunStop", "EXECUTE_FAILED")
     b.trans("StopProc", "Interrupted", "STOPPING_DONE")
     for w in [x for x in SKILL_WAIT if x != "Aborted"]:
         b.trans(w, "AbortChk", "ABORT")
-        # Aborting is followed at once by Aborted, and a subscriber may see only the latter (a
-        # local channel keeps the latest value): both mean abort.
-        b.trans(w, "AbortChk", f"MOD_CHG[(ModuleState = {STATES['Aborting']}) OR (ModuleState = {STATES['Aborted']})]")
-    # Likewise Clearing is followed at once by Stopped.
-    b.trans("Aborted", "ResetOk", f"MOD_CHG[(ModuleState = {STATES['Clearing']}) OR (ModuleState = {STATES['Stopped']})]")
     b.trans("Aborted", "ResetOk", "RESET")
     b.trans("ResetOk", "Idle", "1")
-    b.trans("GoUa", "Running", "1")
-    b.trans("GoParent", "Running", "1")
+    b.trans("Go", "Running", "1")
     b.trans("Halt", "Stopping", "1")
     b.trans("RunStop", "StopProc", "1")
     b.trans("Succeed", "Succeeded", "1")
@@ -694,11 +731,8 @@ def make_skill_control(p: Project):
     b.trans("AbortChk", "AbortIdle", "1")
     b.trans("AbortActive", "Aborted", "1")
     b.trans("AbortIdle", "Aborted", "1")
-    for chk, target in [("ChkStart", "GoUa"), ("ChkStop", "Halt"), ("ChkAbort", "AbortChk"), ("ChkReset", "ResetOk")]:
-        b.trans(chk, target, "Accepted")
-        for w, (_, here) in SKILL_WAIT.items():
-            b.trans(chk, w, f"Here = {here}")
     b.write()
+
 
     Simple(p, LIB, "SKILL_FailMerge", "Merges two failure events with their error codes into one",
            {"FAIL_1": ["Error1"], "FAIL_2": ["Error2"]}, {"FAIL": ["Error"]},
@@ -730,6 +764,7 @@ def make_skill_core(p: Project):
                    "HALT_SEQ": [], "ABORT_SEQ": [], "RESET_SEQ": [], "RUN_STOPPING": [], "SUCCESS": [], "FAILURE": ["ErrorID"]},
                   iv, {"StartMethodId": "WSTRING", "Accepted": "BOOL", "StartError": "UINT", "CalledByClient": "BOOL", "State": "USINT",
                        "ErrorID": "UINT"}, folder="Skills")
+    c.fb("Gate", q("SKILL_Gate"))
     c.fb("Control", q("SKILL_Control"))
     c.fb("Owner", q("MOD_OwnerView"))
     c.fb("Mode", q("MOD_StateView"))
@@ -749,29 +784,36 @@ def make_skill_core(p: Project):
     c.da("Methods", *[f"Ua{m}.QI" for m in methods])
     c.da("UaEnable", "PubState.QI")
     c.da("Control.StartMethodId", "StartMethodId")
-    c.ev("START_REQ", "Control.START_REQ")
+    # The gate answers a client's call and passes on what it accepts, and a parent's command.
+    c.ev("START_REQ", "Gate.START_REQ")
     for v in ["Session", "ParamsInRange", "EquipmentFree"]:
-        c.da(v, f"Control.{v}")
-    c.ev("Control.START_RSP", "START_RSP")
-    c.da("Control.Accepted", "Accepted", *[f"Ua{m}.SD_1" for m in methods])
-    c.da("Control.ResponseError", "StartError", *[f"Ua{m}.SD_2" for m in methods])
+        c.da(v, f"Gate.{v}")
+    c.ev("Gate.START_RSP", "START_RSP")
+    c.da("Gate.Accepted", "Accepted", *[f"Ua{m}.SD_1" for m in methods])
+    c.da("Gate.ResponseError", "StartError", *[f"Ua{m}.SD_2" for m in methods])
     for m in methods:
         c.da(f"Control.{m}MethodId", f"Ua{m}.ID")
-        c.ev(f"Ua{m}.IND", f"Control.{m.upper()}_REQ")
-        c.da(f"Ua{m}.RD_1", f"Control.{m}Session")
-        c.ev(f"Control.{m.upper()}_RSP", f"Ua{m}.RSP")
-    c.ev("Owner.CHG", "Control.OWNER_CHG")
-    c.da("Owner.Owner", "Control.Owner")
-    c.ev("Mode.CHG", "Control.MOD_CHG")
-    c.da("Mode.State", "Control.ModuleState")
+        c.ev(f"Ua{m}.IND", f"Gate.{m.upper()}_REQ")
+        c.da(f"Ua{m}.RD_1", f"Gate.{m}Session")
+        c.ev(f"Gate.{m.upper()}_RSP", f"Ua{m}.RSP")
+    c.ev("Owner.CHG", "Gate.OWNER_CHG")
+    c.da("Owner.Owner", "Gate.Owner")
+    c.ev("Mode.CHG", "Gate.MOD_CHG")
+    c.da("Mode.State", "Gate.ModuleState")
+    c.ev("Gate.GO_START", "Control.START")
+    c.da("Gate.ByClient", "Control.ByClient")
+    for cmd in ["HALT", "ABORT", "RESET"]:
+        c.ev(f"Gate.GO_{cmd}", f"Control.{cmd}")
     c.da("Control.StateId", "PubState.ID")
-    c.ev("Control.PUB", "PubState.REQ")
-    c.da("Control.State", "PubState.SD_1", "State")
+    c.ev("Control.PUB", "PubState.REQ", "Gate.SKILL_CHG")
+    c.da("Control.State", "PubState.SD_1", "State", "Gate.State")
     c.da("Control.ErrorID", "PubState.SD_2", "ErrorID")
     c.da("Control.ActivityId", "Act.ID")
     c.ev("Control.ACT", "Act.REQ")
     c.da("Control.ActivityDelta", "Act.SD_1")
-    for ev in ["START", "HALT", "ABORT", "RESET", "EXECUTE_DONE", "EXECUTE_FAILED", "STOPPING_DONE"]:
+    for ev in ["START", "HALT", "ABORT", "RESET"]:
+        c.ev(ev, f"Gate.{ev}")
+    for ev in ["EXECUTE_DONE", "EXECUTE_FAILED", "STOPPING_DONE"]:
         c.ev(ev, f"Control.{ev}")
     c.da("ExecuteError", "Control.ExecuteError")
     for ev in ["RUN", "HALT_SEQ", "ABORT_SEQ", "RESET_SEQ", "RUN_STOPPING", "SUCCESS", "FAILURE"]:
@@ -785,8 +827,8 @@ def make_skill_core(p: Project):
     c.da("Control.ReleaseId", "PubRelease.ID")
     c.da("Holder", "PubRelease.SD_1")
     c.ev("Control.RELEASE", "PubRelease.REQ")
-    c.group("StateMachine", "The skill's states and when a Succeeded returns to Idle",
-            ["Control", "ToIdle"])
+    c.group("StateMachine", "The skill's states; in front of them the gate, which decides a client's command; "
+            "and when a Succeeded returns to Idle", ["Gate", "Control", "ToIdle"])
     c.group("ModuleViews", "The module's owner and state in, the activity count out", ["Owner", "Mode", "Act"])
     c.group("OpcUa", "The methods Stop, Abort and Reset, and the published State and ErrorID",
             ["UaStop", "UaAbort", "UaReset", "PubState"])
@@ -904,6 +946,7 @@ def make_library(p: Project):
     make_view(p, "State", "state", "State", "USINT", "PackML state")
     make_occupation(p)
     make_state_manager(p)
+    make_skill_gate(p)
     make_skill_control(p)
     make_skill_core(p)
     make_parameters(p)

@@ -1,0 +1,195 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_Gate" Comment="The front desk of a skill, inside SKILL_Core: answers a client's Start, Stop, Abort or Reset at once (only the module's owner; Start only with the module in Execute, the skill not running, the values in range and the equipment free) and passes an accepted command on to SKILL_Control, as a parent's command is passed on. Technical: Decides a client's Start/Stop/Abort/Reset (owner only; Start only in module Execute, not running, parameters in range, equipment free) and passes accepted ones and a parent's on as GO_START, GO_HALT, GO_ABORT, GO_RESET to SKILL_Control">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="START_REQ" Type="Event" Comment="Start(Session, parameters) was called: check Session, ParamsInRange, EquipmentFree">
+        <With Var="Session" />
+        <With Var="ParamsInRange" />
+        <With Var="EquipmentFree" />
+      </Event>
+      <Event Name="STOP_REQ" Type="Event" Comment="Stop(Session) was called">
+        <With Var="StopSession" />
+      </Event>
+      <Event Name="ABORT_REQ" Type="Event" Comment="Abort(Session) was called">
+        <With Var="AbortSession" />
+      </Event>
+      <Event Name="RESET_REQ" Type="Event" Comment="Reset(Session) was called">
+        <With Var="ResetSession" />
+      </Event>
+      <Event Name="OWNER_CHG" Type="Event" Comment="The module's owner changed">
+        <With Var="Owner" />
+      </Event>
+      <Event Name="MOD_CHG" Type="Event" Comment="The module's state changed (its Stopping halts, its Aborting aborts the skill)">
+        <With Var="ModuleState" />
+      </Event>
+      <Event Name="SKILL_CHG" Type="Event" Comment="The skill's state changed (State, as SKILL_Control publishes it)">
+        <With Var="State" />
+      </Event>
+      <Event Name="START" Type="Event" Comment="The parent starts a run: passed on unchecked" />
+      <Event Name="HALT" Type="Event" Comment="The parent stops the run: passed on unchecked" />
+      <Event Name="ABORT" Type="Event" Comment="The parent aborts: passed on unchecked" />
+      <Event Name="RESET" Type="Event" Comment="The parent resets: passed on unchecked" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="START_RSP" Type="Event" Comment="Answer to Start">
+        <With Var="Accepted" />
+        <With Var="ResponseError" />
+      </Event>
+      <Event Name="STOP_RSP" Type="Event" Comment="Answer to Stop">
+        <With Var="Accepted" />
+        <With Var="ResponseError" />
+      </Event>
+      <Event Name="ABORT_RSP" Type="Event" Comment="Answer to Abort">
+        <With Var="Accepted" />
+        <With Var="ResponseError" />
+      </Event>
+      <Event Name="RESET_RSP" Type="Event" Comment="Answer to Reset">
+        <With Var="Accepted" />
+        <With Var="ResponseError" />
+      </Event>
+      <Event Name="GO_START" Type="Event" Comment="Start the run: a client's Start that was accepted, or the parent's (ByClient says which)">
+        <With Var="ByClient" />
+      </Event>
+      <Event Name="GO_HALT" Type="Event" Comment="Stop the run: a client's Stop that was accepted, or the parent's HALT" />
+      <Event Name="GO_ABORT" Type="Event" Comment="Abort: a client's Abort that was accepted, or the parent's ABORT" />
+      <Event Name="GO_RESET" Type="Event" Comment="Reset: a client's Reset that was accepted, or the parent's RESET" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Session" Type="WSTRING" Comment="Session ID of the caller of Start (must be the module's owner)" />
+      <VarDeclaration Name="ParamsInRange" Type="BOOL" Comment="Every Start argument lies within its limits" />
+      <VarDeclaration Name="EquipmentFree" Type="BOOL" Comment="The equipment is free, or held by this skill" />
+      <VarDeclaration Name="StopSession" Type="WSTRING" Comment="Session ID of the caller of Stop" />
+      <VarDeclaration Name="AbortSession" Type="WSTRING" Comment="Session ID of the caller of Abort" />
+      <VarDeclaration Name="ResetSession" Type="WSTRING" Comment="Session ID of the caller of Reset" />
+      <VarDeclaration Name="Owner" Type="WSTRING" Comment="Session ID of the module's owner (empty: free)" />
+      <VarDeclaration Name="ModuleState" Type="USINT" Comment="PackML state: 1 Clearing, 2 Stopped, 3 Starting, 4 Idle, 6 Execute, 7 Stopping, 8 Aborting, 9 Aborted, 15 Resetting" />
+      <VarDeclaration Name="State" Type="USINT" Comment="Skill state: 0 Idle, 1 Running, 2 Stopping, 3 Succeeded, 4 Failed, 5 Aborted" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Accepted" Type="BOOL" Comment="The call was accepted" />
+      <VarDeclaration Name="ResponseError" Type="UINT" Comment="Why a call was refused (error code)" />
+      <VarDeclaration Name="ByClient" Type="BOOL" Comment="The start came from a client over OPC UA (TRUE), or from the parent (FALSE)" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Owned" Type="BOOL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="Wait" x="5318" y="0" />
+      <ECState Name="ChkStart" x="0" y="1260">
+        <ECAction Algorithm="Alg_ChkStart" Output="START_RSP" />
+      </ECState>
+      <ECState Name="ChkStop" x="2305" y="1260">
+        <ECAction Algorithm="Alg_ChkStop" Output="STOP_RSP" />
+      </ECState>
+      <ECState Name="ChkAbort" x="4475" y="1260">
+        <ECAction Algorithm="Alg_ChkAbort" Output="ABORT_RSP" />
+      </ECState>
+      <ECState Name="ChkReset" x="6780" y="1260">
+        <ECAction Algorithm="Alg_ChkReset" Output="RESET_RSP" />
+      </ECState>
+      <ECState Name="ClientStart" x="2225" y="2520">
+        <ECAction Algorithm="Alg_ClientStart" Output="GO_START" />
+      </ECState>
+      <ECState Name="ParentStart" x="9085" y="1260">
+        <ECAction Algorithm="Alg_ParentStart" Output="GO_START" />
+      </ECState>
+      <ECState Name="GoHalt" x="4755" y="2520">
+        <ECAction Output="GO_HALT" />
+      </ECState>
+      <ECState Name="GoAbort" x="6240" y="2520">
+        <ECAction Output="GO_ABORT" />
+      </ECState>
+      <ECState Name="GoReset" x="7815" y="2520">
+        <ECAction Output="GO_RESET" />
+      </ECState>
+      <ECTransition Source="Wait" Destination="ChkStart" Condition="START_REQ" x="3130" y="710" />
+      <ECTransition Source="Wait" Destination="ChkStop" Condition="STOP_REQ" x="4249" y="710" />
+      <ECTransition Source="Wait" Destination="ChkAbort" Condition="ABORT_REQ" x="5368" y="710" />
+      <ECTransition Source="Wait" Destination="ChkReset" Condition="RESET_REQ" x="6520" y="710" />
+      <ECTransition Source="Wait" Destination="ParentStart" Condition="START" x="7729" y="710" />
+      <ECTransition Source="Wait" Destination="GoHalt" Condition="HALT" x="6703" y="1340" />
+      <ECTransition Source="Wait" Destination="GoAbort" Condition="ABORT" x="4668" y="1340" />
+      <ECTransition Source="Wait" Destination="GoReset" Condition="RESET" x="8755" y="1340" />
+      <ECTransition Source="Wait" Destination="GoAbort" Condition="MOD_CHG[((ModuleState = 8) OR (ModuleState = 9)) AND (State &lt;&gt; 5)]" x="4168" y="1340" />
+      <ECTransition Source="Wait" Destination="GoHalt" Condition="MOD_CHG[(ModuleState = 7) AND (State = 1) AND ByClient]" x="7703" y="1340" />
+      <ECTransition Source="Wait" Destination="GoReset" Condition="MOD_CHG[((ModuleState = 1) OR (ModuleState = 2)) AND (State = 5)]" x="4455" y="1340" />
+      <ECTransition Source="ChkStart" Destination="ClientStart" Condition="[Accepted]" x="1971" y="1970" />
+      <ECTransition Source="ChkStart" Destination="Wait" Condition="1" x="3610" y="870" />
+      <ECTransition Source="ChkStop" Destination="GoHalt" Condition="[Accepted]" x="4094" y="1970" />
+      <ECTransition Source="ChkStop" Destination="Wait" Condition="1" x="4729" y="870" />
+      <ECTransition Source="ChkAbort" Destination="GoAbort" Condition="[Accepted]" x="5978" y="1970" />
+      <ECTransition Source="ChkAbort" Destination="Wait" Condition="1" x="5848" y="870" />
+      <ECTransition Source="ChkReset" Destination="GoReset" Condition="[Accepted]" x="7918" y="1970" />
+      <ECTransition Source="ChkReset" Destination="Wait" Condition="1" x="7000" y="870" />
+      <ECTransition Source="ClientStart" Destination="Wait" Condition="1" x="7199" y="1340" />
+      <ECTransition Source="ParentStart" Destination="Wait" Condition="1" x="8209" y="870" />
+      <ECTransition Source="GoHalt" Destination="Wait" Condition="1" x="2403" y="1340" />
+      <ECTransition Source="GoAbort" Destination="Wait" Condition="1" x="9468" y="1340" />
+      <ECTransition Source="GoReset" Destination="Wait" Condition="1" x="3455" y="1340" />
+    </ECC>
+    <Algorithm Name="Alg_ChkStart">
+      <ST>Owned := (Session = Owner) AND (Owner &lt;&gt; "");
+Accepted := FALSE;
+IF NOT Owned THEN
+  ResponseError := 5;
+ELSIF ModuleState &lt;&gt; 6 THEN
+  ResponseError := 4;
+ELSIF (State = 1) OR (State = 2) THEN
+  ResponseError := 6;
+ELSIF State = 5 THEN
+  ResponseError := 4;
+ELSIF NOT ParamsInRange THEN
+  ResponseError := 8;
+ELSIF NOT EquipmentFree THEN
+  ResponseError := 6;
+ELSE
+  Accepted := TRUE;
+  ResponseError := 0;
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ChkStop">
+      <ST>Owned := (StopSession = Owner) AND (Owner &lt;&gt; "");
+Accepted := Owned AND (State = 1);
+IF NOT Owned THEN
+  ResponseError := 5;
+ELSIF NOT Accepted THEN
+  ResponseError := 4;
+ELSE
+  ResponseError := 0;
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ChkAbort">
+      <ST>Owned := (AbortSession = Owner) AND (Owner &lt;&gt; "");
+Accepted := Owned AND (State &lt;&gt; 5);
+IF NOT Owned THEN
+  ResponseError := 5;
+ELSIF NOT Accepted THEN
+  ResponseError := 4;
+ELSE
+  ResponseError := 0;
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ChkReset">
+      <ST>Owned := (ResetSession = Owner) AND (Owner &lt;&gt; "");
+Accepted := Owned AND (State = 5);
+IF NOT Owned THEN
+  ResponseError := 5;
+ELSIF NOT Accepted THEN
+  ResponseError := 4;
+ELSE
+  ResponseError := 0;
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ClientStart">
+      <ST>ByClient := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_ParentStart">
+      <ST>ByClient := FALSE;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

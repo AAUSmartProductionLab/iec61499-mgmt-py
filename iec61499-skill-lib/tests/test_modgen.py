@@ -299,6 +299,27 @@ def test_every_state_machine_is_laid_out_as_the_ide_draws_it(project):
             assert cond == "1" or cond.startswith("[") or cond.split("[")[0] in events, (path.name, cond)
 
 
+def test_who_may_command_a_skill_is_decided_in_front_of_its_state_machine():
+    """SKILL_Gate answers a client's call and turns the module's state into commands; SKILL_Control
+    then sees only START, HALT, ABORT and RESET, the same whoever gives them, so each of its states
+    needs one transition per command instead of one per caller and request."""
+    control, _ = st(LIBRARY_PROJECT, "Skills/Base", "SKILL_Control")
+    events = {e.get("Name") for e in control.iterfind("InterfaceList/EventInputs/Event")}
+    assert {"START", "HALT", "ABORT", "RESET"} <= events
+    assert not events & {"START_REQ", "STOP_REQ", "ABORT_REQ", "RESET_REQ", "OWNER_CHG", "MOD_CHG"}
+    assert len(control.findall("BasicFB/ECC/ECTransition")) <= 32
+    gate, code = st(LIBRARY_PROJECT, "Skills/Base", "SKILL_Gate")
+    conditions = {(t.get("Source"), t.get("Destination"), t.get("Condition")) for t in gate.iter("ECTransition")}
+    assert ("Wait", "GoAbort", "MOD_CHG[((ModuleState = 8) OR (ModuleState = 9)) AND (State <> 5)]") in conditions
+    assert ("Wait", "GoHalt", "MOD_CHG[(ModuleState = 7) AND (State = 1) AND ByClient]") in conditions
+    assert ("ChkStart", "ClientStart", "[Accepted]") in conditions
+    assert "ELSIF ModuleState <> 6 THEN\n  ResponseError := 4;" in code          # Start only in Execute
+    core, _ = st(LIBRARY_PROJECT, "Skills", "SKILL_Core")
+    wired = {(c.get("Source"), c.get("Destination")) for c in core.iter("Connection")}
+    assert {("UaStop.IND", "Gate.STOP_REQ"), ("Gate.GO_HALT", "Control.HALT"), ("START", "Gate.START"),
+            ("Control.PUB", "Gate.SKILL_CHG"), ("Gate.STOP_RSP", "UaStop.RSP")} <= wired
+
+
 def test_skill_logic_carries_contract_range_and_lock():
     root, code = st("FillerModule", "Skills/Logic", "SL_MoveNeedleDown")
     conditions = {t.get("Condition") for t in root.iter("ECTransition")}
