@@ -15,6 +15,10 @@ TARGET = DOCS / "filling-program-screenshots.md"
 SHOTS = "figures/4diac_figs"
 
 # Drawing -> the screenshots shown instead (file, what it shows), and the groups with no screenshot.
+# Not used since 4 Nov 2026, when these types changed: module.png (MOD_StateManager, now with its
+# gate), skill_core.png (SKILL_Core, now with its gate), and those of the primitives' insides
+# (homeLogic, home_equipment, move_axis, move_axis_equipment, dispense_equipment, tare_execution,
+# tare_equipment, weight_equipment: now Contract, Run and Port).
 SCREENSHOTS = {
     "app-Filling_pi.svg": (
         [("moduleLevel.png", "The groups ModuleLevel, ModuleLevelSkills and Procedures"),
@@ -22,9 +26,7 @@ SCREENSHOTS = {
          ("primitives.png", "The group SkillPrimitives")], []),
     "inside-MOD_Occupation.svg": ([("occupation.png", "Inside MOD_Occupation")], []),
     "inside-MOD_OwnerView.svg": ([("MODOwner.png", "Inside MOD_OwnerView")], []),
-    "inside-MOD_StateManager.svg": ([("module.png", "Inside MOD_StateManager")], []),
     "inside-MOD_StateView.svg": ([("MODStateview.png", "Inside MOD_StateView")], []),
-    "inside-SKILL_Core.svg": ([("skill_core.png", "Inside SKILL_Core")], []),
     "inside-IO_DO.svg": (
         [("down_out_internal.png", "Inside IO_DO, opened from the block Out_Down"),
          ("out_enable.png", "Inside IO_DO, opened from the block Out_Enable"),
@@ -38,21 +40,6 @@ SCREENSHOTS = {
     "inside-EQ_Pump.svg": ([("pump_internal.png", "Inside EQ_Pump: the groups Core and Channels")], []),
     "inside-EQ_Scale.svg": (
         [("scale_internal.png", "Inside EQ_Scale: the groups Core, Channels and Inputs")], []),
-    "inside-SK_Home.svg": (
-        [("homeLogic.png", "Inside SK_Home: the group Execution"),
-         ("home_equipment.png", "Inside SK_Home: the group Equipment")], ["SkillControl"]),
-    "inside-SK_MoveAxis.svg": (
-        [("move_axis.png", "Inside SK_MoveAxis: the group SkillControl"),
-         ("move_axis_equipment.png", "Inside SK_MoveAxis: the group Equipment")], ["Execution"]),
-    "inside-SK_Dispense.svg": (
-        [("dispense_equipment.png", "Inside SK_Dispense: the group Equipment")],
-        ["SkillControl", "Execution"]),
-    "inside-SK_Tare.svg": (
-        [("tare_execution.png", "Inside SK_Tare: the group Execution"),
-         ("tare_equipment.png", "Inside SK_Tare: the group Equipment")], ["SkillControl"]),
-    "inside-SK_Weigh.svg": (
-        [("weight_equipment.png", "Inside SK_Weigh: the group Equipment")],
-        ["SkillControl", "Execution"]),
     "app-Dispensing.svg": (
         [("dispensing.png", "Inside Dispensing: the groups Core, Sequences, Results and Start")], []),
 }
@@ -69,7 +56,9 @@ PICTURES_NEW = """**This is the version with screenshots.** The text is that of
 [figures/4diac_figs/](figures/4diac_figs/)), it is shown instead of the drawing, so you see exactly
 what the IDE shows. The other pictures are the drawings of [filling-program/](filling-program/),
 made from the program's files with the IDE's positions, groups and sizes. Open a picture on its own
-to see it full size. This file is made from filling-program.md by
+to see it full size. The screenshots of `MOD_StateManager`, `SKILL_Core` and the primitives' insides
+were taken before these types changed on 4 Nov 2026, so their drawings are shown until they are
+taken again. This file is made from filling-program.md by
 [filling-program/with_screenshots.py](filling-program/with_screenshots.py) (section 13): change
 filling-program.md, not this file.
 """

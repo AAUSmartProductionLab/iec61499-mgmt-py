@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1236" height="2550" viewBox="-2769 -138 7727 15938" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-2769" y="-138" width="7727" height="15938" fill="#ffffff"/>
+<path d="M938,160 Q938,735 938,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="938,1260 908,1200 968,1200" fill="#8a93a6"/>
+<path d="M938,4040 Q938,4590 938,5140" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="938,5140 908,5080 968,5080" fill="#8a93a6"/>
+<path d="M1025,2780 Q3738,5245 1081,7660" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1081,7660 1105,7597 1146,7642" fill="#8a93a6"/>
+<path d="M821,4040 Q-1862,5875 748,7660" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="748,7660 681,7651 715,7601" fill="#8a93a6"/>
+<path d="M938,6560 Q938,7135 938,7660" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="938,7660 908,7600 968,7600" fill="#8a93a6"/>
+<path d="M984,160 Q4738,6555 1014,12900" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1014,12900 1018,12833 1070,12863" fill="#8a93a6"/>
+<path d="M878,2780 Q-2863,7865 842,12900" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="842,12900 782,12869 830,12834" fill="#8a93a6"/>
+<path d="M1022,4040 Q5738,8495 1075,12900" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1075,12900 1098,12837 1139,12881" fill="#8a93a6"/>
+<path d="M820,6560 Q-3862,9755 747,12900" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="747,12900 681,12891 714,12841" fill="#8a93a6"/>
+<path d="M1174,9180 Q6738,11065 1321,12900" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1321,12900 1368,12852 1388,12909" fill="#8a93a6"/>
+<path d="M938,11800 Q938,12375 938,12900" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="938,12900 908,12840 968,12840" fill="#8a93a6"/>
+<path d="M938,14420 Q938,14970 938,15520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="938,15520 908,15460 968,15460" fill="#8a93a6"/>
+<path d="M937,1520 Q937,2045 937,2620" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="937,2620 907,2560 967,2560" fill="#8a93a6"/>
+<path d="M937,2780 Q937,3330 937,3880" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="937,3880 907,3820 967,3820" fill="#8a93a6"/>
+<path d="M847,2780 Q-4863,7865 791,12900" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="791,12900 727,12883 767,12838" fill="#8a93a6"/>
+<path d="M938,5300 Q938,5850 938,6400" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="938,6400 908,6340 968,6340" fill="#8a93a6"/>
+<path d="M938,7920 Q938,8445 938,9020" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="938,9020 908,8960 968,8960" fill="#8a93a6"/>
+<path d="M938,9180 Q938,9755 938,10280" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="938,10280 908,10220 968,10220" fill="#8a93a6"/>
+<path d="M1190,9173 Q7738,11065 1387,12900" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1387,12900 1437,12855 1453,12912" fill="#8a93a6"/>
+<path d="M938,10540 Q938,11065 938,11640" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="938,11640 908,11580 968,11580" fill="#8a93a6"/>
+<path d="M844,11640 Q-5862,5900 844,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="844,160 818,222 779,176" fill="#8a93a6"/>
+<path d="M1016,11800 Q1898,12695 1310,12900" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1310,12900 1357,12852 1377,12909" fill="#8a93a6"/>
+<path d="M938,13160 Q938,13685 938,14260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="938,14260 908,14200 968,14200" fill="#8a93a6"/>
+<path d="M1018,15520 Q8738,7840 1018,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1018,160 1082,181 1039,224" fill="#8a93a6"/>
+<rect x="315" y="0" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="297" y="-18" width="451" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="522" y="100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Stopped</text>
+<rect x="730" y="30" width="595" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="780" y="102" font-size="52" text-anchor="start" fill="#1f2430">Alg_Stopped</text>
+<rect x="1325" y="30" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1375" y="102" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="0" y="1260" width="505" height="260" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="252" y="1410" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Resetting</text>
+<rect x="505" y="1290" width="685" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="555" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Resetting</text>
+<rect x="1190" y="1290" width="685" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1240" y="1362" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="505" y="1390" width="685" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="555" y="1462" font-size="52" text-anchor="start" fill="#1f2430"></text>
+<rect x="1190" y="1390" width="685" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1240" y="1462" font-size="52" text-anchor="start" fill="#1f2430">RUN_RESETTING</text>
+<rect x="662" y="2620" width="550" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="937" y="2720" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ResettingW</text>
+<rect x="450" y="3880" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="590" y="3980" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Idle</text>
+<rect x="730" y="3910" width="460" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="780" y="3982" font-size="52" text-anchor="start" fill="#1f2430">Alg_Idle</text>
+<rect x="1190" y="3910" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1240" y="3982" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="270" y="5140" width="460" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="500" y="5240" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Starting</text>
+<rect x="730" y="5170" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="780" y="5242" font-size="52" text-anchor="start" fill="#1f2430">Alg_Starting</text>
+<rect x="1370" y="5170" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1420" y="5242" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="315" y="6400" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="522" y="6500" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Execute</text>
+<rect x="730" y="6430" width="595" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="780" y="6502" font-size="52" text-anchor="start" fill="#1f2430">Alg_Execute</text>
+<rect x="1325" y="6430" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1375" y="6502" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="158" y="7660" width="460" height="260" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="388" y="7810" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Stopping</text>
+<rect x="618" y="7690" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="668" y="7762" font-size="52" text-anchor="start" fill="#1f2430">Alg_Stopping</text>
+<rect x="1258" y="7690" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1308" y="7762" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="618" y="7790" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="668" y="7862" font-size="52" text-anchor="start" fill="#1f2430"></text>
+<rect x="1258" y="7790" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1308" y="7862" font-size="52" text-anchor="start" fill="#1f2430">WD_START</text>
+<rect x="685" y="9020" width="505" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="938" y="9120" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">StoppingW</text>
+<rect x="388" y="10280" width="460" height="260" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="618" y="10430" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">StopProc</text>
+<rect x="848" y="10310" width="640" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="898" y="10382" font-size="52" text-anchor="start" fill="#1f2430">WD_STOP</text>
+<rect x="848" y="10410" width="640" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="898" y="10482" font-size="52" text-anchor="start" fill="#1f2430">RUN_STOPPING</text>
+<rect x="685" y="11640" width="505" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="938" y="11740" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">StopProcW</text>
+<rect x="180" y="12900" width="460" height="260" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="410" y="13050" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Aborting</text>
+<rect x="640" y="12930" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="690" y="13002" font-size="52" text-anchor="start" fill="#1f2430">Alg_Aborting</text>
+<rect x="1280" y="12930" width="415" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1330" y="13002" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="640" y="13030" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="690" y="13102" font-size="52" text-anchor="start" fill="#1f2430"></text>
+<rect x="1280" y="13030" width="415" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1330" y="13102" font-size="52" text-anchor="start" fill="#1f2430">WD_STOP</text>
+<rect x="315" y="14260" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="522" y="14360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Aborted</text>
+<rect x="730" y="14290" width="595" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="780" y="14362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Aborted</text>
+<rect x="1325" y="14290" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1375" y="14362" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="270" y="15520" width="460" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="500" y="15620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Clearing</text>
+<rect x="730" y="15550" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="780" y="15622" font-size="52" text-anchor="start" fill="#1f2430">Alg_Clearing</text>
+<rect x="1370" y="15550" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1420" y="15622" font-size="52" text-anchor="start" fill="#1f2430">CNF</text>
+<rect x="854" y="685" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="938" y="739" font-size="46" text-anchor="middle" fill="#6b7280">RESET</text>
+<rect x="854" y="4540" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="938" y="4594" font-size="46" text-anchor="middle" fill="#6b7280">START</text>
+<rect x="2266" y="5195" width="143" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="2338" y="5249" font-size="46" text-anchor="middle" fill="#6b7280">STOP</text>
+<rect x="-534" y="5825" width="143" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="-462" y="5879" font-size="46" text-anchor="middle" fill="#6b7280">STOP</text>
+<rect x="866" y="7085" width="143" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="938" y="7139" font-size="46" text-anchor="middle" fill="#6b7280">STOP</text>
+<rect x="2754" y="6505" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="2838" y="6559" font-size="46" text-anchor="middle" fill="#6b7280">ABORT</text>
+<rect x="-1047" y="7815" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="-963" y="7869" font-size="46" text-anchor="middle" fill="#6b7280">ABORT</text>
+<rect x="3254" y="8445" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="3338" y="8499" font-size="46" text-anchor="middle" fill="#6b7280">ABORT</text>
+<rect x="-1546" y="9705" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="-1462" y="9759" font-size="46" text-anchor="middle" fill="#6b7280">ABORT</text>
+<rect x="3754" y="11015" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="3838" y="11069" font-size="46" text-anchor="middle" fill="#6b7280">ABORT</text>
+<rect x="854" y="12325" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="938" y="12379" font-size="46" text-anchor="middle" fill="#6b7280">ABORT</text>
+<rect x="854" y="14920" width="169" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="938" y="14974" font-size="46" text-anchor="middle" fill="#6b7280">CLEAR</text>
+<rect x="737" y="3280" width="401" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="937" y="3334" font-size="46" text-anchor="middle" fill="#6b7280">RESETTING_DONE</text>
+<rect x="-2189" y="7815" width="452" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="-1963" y="7869" font-size="46" text-anchor="middle" fill="#6b7280">RESETTING_FAILED</text>
+<rect x="802" y="9705" width="272" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="938" y="9759" font-size="46" text-anchor="middle" fill="#6b7280">[AllIdle]</text>
+<rect x="4163" y="11015" width="349" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="4338" y="11069" font-size="46" text-anchor="middle" fill="#6b7280">STOP_TIMEOUT</text>
+<rect x="-2649" y="5850" width="375" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="-2462" y="5904" font-size="46" text-anchor="middle" fill="#6b7280">STOPPING_DONE</text>
+<rect x="1205" y="12485" width="426" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="1418" y="12539" font-size="46" text-anchor="middle" fill="#6b7280">STOPPING_FAILED</text>
+</svg>

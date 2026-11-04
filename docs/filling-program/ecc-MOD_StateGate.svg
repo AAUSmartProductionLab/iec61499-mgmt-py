@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1749" height="470" viewBox="-120 -138 10930 2938" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-120" y="-138" width="10930" height="2938" fill="#ffffff"/>
+<path d="M5205,119 Q3074,710 1091,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1091,1260 1141,1215 1157,1273" fill="#8a93a6"/>
+<path d="M894,1420 Q1521,1970 2148,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2148,2520 2083,2503 2123,2458" fill="#8a93a6"/>
+<path d="M1605,1263 Q4034,1030 5235,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5235,160 5204,220 5168,171" fill="#8a93a6"/>
+<path d="M2516,2520 Q6592,1340 5424,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5424,160 5488,182 5445,224" fill="#8a93a6"/>
+<path d="M5205,159 Q4226,710 3250,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="3250,1260 3287,1204 3317,1257" fill="#8a93a6"/>
+<path d="M3153,1420 Q3462,1970 3771,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="3771,2520 3715,2482 3768,2453" fill="#8a93a6"/>
+<path d="M3644,1260 Q5186,1030 5332,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5332,160 5351,224 5292,214" fill="#8a93a6"/>
+<path d="M3686,2520 Q1780,1340 5205,129" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5205,129 5158,178 5138,121" fill="#8a93a6"/>
+<path d="M5345,160 Q5345,710 5345,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5345,1260 5315,1200 5375,1200" fill="#8a93a6"/>
+<path d="M5345,1420 Q5345,1970 5345,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5345,2520 5315,2460 5375,2460" fill="#8a93a6"/>
+<path d="M5593,1260 Q6305,1030 5426,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5426,160 5490,181 5447,224" fill="#8a93a6"/>
+<path d="M5586,2520 Q9145,1340 5485,126" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5485,126 5551,117 5533,174" fill="#8a93a6"/>
+<path d="M5485,159 Q6464,710 7440,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="7440,1260 7373,1257 7403,1204" fill="#8a93a6"/>
+<path d="M7538,1420 Q7229,1970 6920,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="6920,2520 6924,2453 6976,2482" fill="#8a93a6"/>
+<path d="M7542,1260 Q7424,1030 5485,144" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5485,144 5552,142 5527,196" fill="#8a93a6"/>
+<path d="M6586,2520 Q2310,1340 5205,138" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5205,138 5161,189 5138,133" fill="#8a93a6"/>
+<path d="M5485,119 Q7616,710 9599,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="9599,1260 9533,1273 9549,1215" fill="#8a93a6"/>
+<path d="M9796,1420 Q9168,1970 8541,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="8541,2520 8566,2458 8606,2503" fill="#8a93a6"/>
+<path d="M9549,1260 Q8576,1030 5485,121" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5485,121 5551,109 5534,167" fill="#8a93a6"/>
+<path d="M8656,2520 Q11697,1340 5485,108" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="5485,108 5550,90 5538,149" fill="#8a93a6"/>
+<rect x="5205" y="0" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="5187" y="-18" width="316" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="5345" y="100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Wait</text>
+<rect x="0" y="1260" width="460" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="230" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ChkReset</text>
+<rect x="460" y="1290" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="510" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_ChkReset</text>
+<rect x="1100" y="1290" width="505" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1150" y="1362" font-size="52" text-anchor="start" fill="#1f2430">RESET_RSP</text>
+<rect x="1802" y="2520" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="2010" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">GoReset</text>
+<rect x="2217" y="2550" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="2267" y="2622" font-size="52" text-anchor="start" fill="#1f2430">GO_RESET</text>
+<rect x="2305" y="1260" width="460" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="2535" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ChkStart</text>
+<rect x="2765" y="1290" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="2815" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_ChkStart</text>
+<rect x="3405" y="1290" width="505" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="3455" y="1362" font-size="52" text-anchor="start" fill="#1f2430">START_RSP</text>
+<rect x="3378" y="2520" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="3586" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">GoStart</text>
+<rect x="3793" y="2550" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="3843" y="2622" font-size="52" text-anchor="start" fill="#1f2430">GO_START</text>
+<rect x="4610" y="1260" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="4818" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ChkStop</text>
+<rect x="5025" y="1290" width="595" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="5075" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_ChkStop</text>
+<rect x="5620" y="1290" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="5670" y="1362" font-size="52" text-anchor="start" fill="#1f2430">STOP_RSP</text>
+<rect x="4952" y="2520" width="370" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="5137" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">GoStop</text>
+<rect x="5322" y="2550" width="415" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="5372" y="2622" font-size="52" text-anchor="start" fill="#1f2430">GO_STOP</text>
+<rect x="6780" y="1260" width="460" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="7010" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ChkAbort</text>
+<rect x="7240" y="1290" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="7290" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_ChkAbort</text>
+<rect x="7880" y="1290" width="505" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="7930" y="1362" font-size="52" text-anchor="start" fill="#1f2430">ABORT_RSP</text>
+<rect x="6438" y="2520" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="6646" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">GoAbort</text>
+<rect x="6853" y="2550" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="6903" y="2622" font-size="52" text-anchor="start" fill="#1f2430">GO_ABORT</text>
+<rect x="9085" y="1260" width="460" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="9315" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">ChkClear</text>
+<rect x="9545" y="1290" width="640" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="9595" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_ChkClear</text>
+<rect x="10185" y="1290" width="505" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="10235" y="1362" font-size="52" text-anchor="start" fill="#1f2430">CLEAR_RSP</text>
+<rect x="8012" y="2520" width="415" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="8220" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">GoClear</text>
+<rect x="8427" y="2550" width="460" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="8477" y="2622" font-size="52" text-anchor="start" fill="#1f2430">GO_CLEAR</text>
+<rect x="2938" y="660" width="272" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="3074" y="714" font-size="46" text-anchor="middle" fill="#6b7280">RESET_REQ</text>
+<rect x="1372" y="1920" width="298" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="1521" y="1974" font-size="46" text-anchor="middle" fill="#6b7280">[Accepted]</text>
+<rect x="4090" y="660" width="272" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="4226" y="714" font-size="46" text-anchor="middle" fill="#6b7280">START_REQ</text>
+<rect x="3313" y="1920" width="298" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="3462" y="1974" font-size="46" text-anchor="middle" fill="#6b7280">[Accepted]</text>
+<rect x="5222" y="660" width="246" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="5345" y="714" font-size="46" text-anchor="middle" fill="#6b7280">STOP_REQ</text>
+<rect x="5196" y="1920" width="298" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="5345" y="1974" font-size="46" text-anchor="middle" fill="#6b7280">[Accepted]</text>
+<rect x="6328" y="660" width="272" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="6464" y="714" font-size="46" text-anchor="middle" fill="#6b7280">ABORT_REQ</text>
+<rect x="7080" y="1920" width="298" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="7229" y="1974" font-size="46" text-anchor="middle" fill="#6b7280">[Accepted]</text>
+<rect x="7480" y="660" width="272" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="7616" y="714" font-size="46" text-anchor="middle" fill="#6b7280">CLEAR_REQ</text>
+<rect x="9019" y="1920" width="298" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="9168" y="1974" font-size="46" text-anchor="middle" fill="#6b7280">[Accepted]</text>
+</svg>

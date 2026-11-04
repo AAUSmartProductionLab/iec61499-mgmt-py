@@ -52,9 +52,10 @@ Module (one FORTE resource)                       OPC UA below /Objects/<Module>
 │                  before make), reads its inputs every cycle, publishes changes, switches
 │                  all off on release or module Abort                  /Equipment/<Item>
 ├─ Skill primitives  SK_<Skill> (the offered ones): SKILL_Core (state machine, Stop, Abort,
-│                  Reset, State, ErrorID) + a parameter block per parameter + SL_<Skill> (the
-│                  contract) + EC_<Item> (the equipment's command table with its timed phases:
-│                  start boost, brake pulse)                           /Skills/<Skill>
+│                  Reset, State, ErrorID) + a parameter block per parameter + SC_<Skill> (the
+│                  contract) + SKILL_Run (one run, the same for all) + EP_<Item> (the equipment
+│                  port: EC_<Item>, the command table with its timed phases: start boost, brake
+│                  pulse)                                              /Skills/<Skill>
 ├─ Module level skills  subapp <Skill> of library blocks only: Control (SKILL_Core), UaStart,
 │                  parameter blocks, Execute and Stop subapps with private skill instances in
 │                  sequence; holds its equipment until done            /Skills/<Skill>

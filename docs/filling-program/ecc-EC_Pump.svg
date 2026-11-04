@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="475" height="672" viewBox="-120 -138 2970 4198" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="-120" y="-138" width="2970" height="4198" fill="#ffffff"/>
+<path d="M1319,160 Q1005,710 691,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="691,1260 694,1193 747,1223" fill="#8a93a6"/>
+<path d="M1428,160 Q1862,710 2297,1260" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2297,1260 2236,1232 2283,1194" fill="#8a93a6"/>
+<path d="M691,1420 Q1005,1970 1320,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1320,2520 1264,2483 1316,2453" fill="#8a93a6"/>
+<path d="M2297,1420 Q1863,1970 1429,2520" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1429,2520 1442,2454 1489,2492" fill="#8a93a6"/>
+<path d="M1320,2680 Q1006,3230 691,3780" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="691,3780 695,3713 747,3743" fill="#8a93a6"/>
+<path d="M1416,2680 Q1759,3230 2102,3780" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="2102,3780 2045,3745 2096,3713" fill="#8a93a6"/>
+<path d="M779,3780 Q3805,1970 1468,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1468,160 1534,173 1497,220" fill="#8a93a6"/>
+<path d="M2017,3780 Q-1042,1970 1263,160" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1263,160 1234,221 1197,173" fill="#8a93a6"/>
+<rect x="1202" y="0" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="1184" y="-18" width="361" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="1364" y="100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">START</text>
+<rect x="0" y="1260" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="140" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Play</text>
+<rect x="280" y="1290" width="460" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="330" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Play</text>
+<rect x="740" y="1290" width="550" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="790" y="1362" font-size="52" text-anchor="start" fill="#1f2430">PHASE_STOP</text>
+<rect x="1990" y="1260" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="2130" y="1360" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Next</text>
+<rect x="2270" y="1290" width="460" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="2320" y="1362" font-size="52" text-anchor="start" fill="#1f2430">Alg_Next</text>
+<rect x="878" y="2520" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="1018" y="2620" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Send</text>
+<rect x="1158" y="2550" width="460" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="1208" y="2622" font-size="52" text-anchor="start" fill="#1f2430">Alg_Send</text>
+<rect x="1618" y="2550" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1668" y="2622" font-size="52" text-anchor="start" fill="#1f2430">OUT</text>
+<rect x="208" y="3780" width="280" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="348" y="3880" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Hold</text>
+<rect x="488" y="3810" width="595" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="538" y="3882" font-size="52" text-anchor="start" fill="#1f2430">PHASE_START</text>
+<rect x="1782" y="3780" width="370" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="1967" y="3880" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">Played</text>
+<rect x="2152" y="3810" width="370" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="2202" y="3882" font-size="52" text-anchor="start" fill="#1f2430">PLAYED</text>
+<rect x="933" y="660" width="143" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="1005" y="714" font-size="46" text-anchor="middle" fill="#6b7280">PLAY</text>
+<rect x="1752" y="660" width="220" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="1862" y="714" font-size="46" text-anchor="middle" fill="#6b7280">PHASE_T</text>
+<rect x="896" y="3180" width="220" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="1006" y="3234" font-size="46" text-anchor="middle" fill="#6b7280">[Timed]</text>
+</svg>

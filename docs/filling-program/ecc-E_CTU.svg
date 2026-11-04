@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="303" height="198" viewBox="412 40 1893 1240" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="412" y="40" width="1893" height="1240" fill="#ffffff"/>
+<path d="M701,425 Q645,45 1570,195" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1570,195 1506,215 1516,156" fill="#8a93a6"/>
+<path d="M1757,325 Q1275,645 875,545" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="875,545 940,531 926,589" fill="#8a93a6"/>
+<path d="M729,585 Q764,748 1049,1000" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="1049,1000 985,983 1024,938" fill="#8a93a6"/>
+<path d="M900,1136 Q164,1308 658,585" fill="none" stroke="#8a93a6" stroke-width="7"/>
+<polygon points="658,585 649,651 599,618" fill="#8a93a6"/>
+<rect x="550" y="425" width="325" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<rect x="532" y="407" width="361" height="196" rx="18" fill="none" stroke="#3f6fb5" stroke-width="6"/>
+<text x="712" y="525" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">START</text>
+<rect x="1570" y="165" width="190" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="1665" y="265" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">CU</text>
+<rect x="1760" y="195" width="190" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="1810" y="267" font-size="52" text-anchor="start" fill="#1f2430">CU</text>
+<rect x="1950" y="195" width="235" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="2000" y="267" font-size="52" text-anchor="start" fill="#1f2430">CUO</text>
+<rect x="900" y="1000" width="145" height="160" rx="12" fill="#3f6fb5" stroke="#3f6fb5" stroke-width="6"/>
+<text x="972" y="1100" font-size="58" text-anchor="middle" fill="#ffffff" font-weight="bold">R</text>
+<rect x="1045" y="1030" width="145" height="100" rx="0" fill="#dfe7f3" stroke="#56688a" stroke-width="3"/>
+<text x="1095" y="1102" font-size="52" text-anchor="start" fill="#1f2430">R</text>
+<rect x="1190" y="1030" width="190" height="100" rx="0" fill="#dff0d0" stroke="#56688a" stroke-width="3"/>
+<text x="1240" y="1102" font-size="52" text-anchor="start" fill="#1f2430">RO</text>
+<rect x="770" y="160" width="401" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="970" y="214" font-size="46" text-anchor="middle" fill="#6b7280">CU[CV &lt; 65535]</text>
+<rect x="812" y="720" width="66" height="70" rx="8" fill="#ffffff" stroke="#c9ced8" stroke-width="2"/>
+<text x="845" y="774" font-size="46" text-anchor="middle" fill="#6b7280">R</text>
+</svg>
