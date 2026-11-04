@@ -20,14 +20,111 @@ The rules every module follows are in [module-rules.md](module-rules.md); the ha
 
 **New to IEC 61499?** Read sections 1, 2 and 6 first: they say what the program is made of and how
 to read the pictures. Then section 4 follows one call through the blocks, and sections 7 and 8
-explain each block on its own; look a block up there when you meet it.
+explain each block on its own; look a block up there when you meet it. How to build the program
+and run it, on the PC or on the Pi, is in section 11.
 
 **The pictures** are in [filling-program/](filling-program/). They are drawn from the program's
 files by [filling-program/draw_blocks.py](filling-program/draw_blocks.py), with the positions,
 groups and sizes the 4diac IDE uses, so they look as the program looks in the IDE; they are not
 screenshots of it. Open one on its own to see it full size. After the program is regenerated, draw
-them again (section 12). The same document with screenshots of the IDE, where there are some, is
+them again (section 13). The same document with screenshots of the IDE, where there are some, is
 [filling-program-screenshots.md](filling-program-screenshots.md).
+
+## Contents
+
+- [1. The whole program in one picture](#1-the-whole-program-in-one-picture)
+- [2. Two kinds of wire](#2-two-kinds-of-wire)
+- [3. What a client can see and call](#3-what-a-client-can-see-and-call)
+- [4. Following a call through the blocks](#4-following-a-call-through-the-blocks)
+  - [4.1 Occupying the module](#41-occupying-the-module)
+  - [4.2 Resetting and starting the module](#42-resetting-and-starting-the-module)
+  - [4.3 Starting Dispensing](#43-starting-dispensing)
+  - [4.4 A primitive on its own](#44-a-primitive-on-its-own)
+  - [4.5 Stopping, aborting, releasing](#45-stopping-aborting-releasing)
+  - [4.6 Start-up](#46-start-up)
+- [5. Every block of the application](#5-every-block-of-the-application)
+- [6. Before the blocks: a few words, and how to read the pictures](#6-before-the-blocks-a-few-words-and-how-to-read-the-pictures)
+  - [6.1 Types and blocks](#61-types-and-blocks)
+  - [6.2 Events and data](#62-events-and-data)
+  - [6.3 The start-up chain](#63-the-start-up-chain)
+  - [6.4 How the IDE shows the program, and so the pictures](#64-how-the-ide-shows-the-program-and-so-the-pictures)
+  - [6.5 Who made a type](#65-who-made-a-type)
+- [7. The blocks that are always there](#7-the-blocks-that-are-always-there)
+  - [7.1 Timers and the start signal](#71-timers-and-the-start-signal)
+    - [`E_DELAY`: a kitchen timer](#e_delay-a-kitchen-timer)
+    - [`E_CYCLE`: a metronome](#e_cycle-a-metronome)
+    - [`E_RESTART`: the power-on signal](#e_restart-the-power-on-signal)
+    - [`E_CTU`, `E_T_FF`: in the library, not used](#e_ctu-e_t_ff-in-the-library-not-used)
+  - [7.2 Talking: local channels, OPC UA and Modbus](#72-talking-local-channels-opc-ua-and-modbus)
+    - [`PUBLISH_n` and `SUBSCRIBE_n`: send and receive](#publish_n-and-subscribe_n-send-and-receive)
+    - [`SERVER_2_n`: an OPC UA method, like a phone line](#server_2_n-an-opc-ua-method-like-a-phone-line)
+    - [`CLIENT_1_0` and `CLIENT_0_1`: Modbus](#client_1_0-and-client_0_1-modbus)
+  - [7.3 Pins: FORTE's own IO blocks](#73-pins-fortes-own-io-blocks)
+    - [`IX`, `QX`, `IW`, `QW`](#ix-qx-iw-qw)
+    - [`GPIOChip`: set up one Raspberry Pi pin](#gpiochip-set-up-one-raspberry-pi-pin)
+    - [`PWMChip`: set up one PWM channel](#pwmchip-set-up-one-pwm-channel)
+  - [7.4 Who may command: `MOD_Occupation`](#74-who-may-command-mod_occupation)
+    - [`MOD_Occupation` (composite)](#mod_occupation-composite)
+    - [`MOD_OccupationIds` (simple)](#mod_occupationids-simple)
+    - [`MOD_OccupationLogic` (basic)](#mod_occupationlogic-basic)
+    - [`MOD_OwnerView` (composite) and `MOD_OwnerLatch` (simple): the ear for the owner](#mod_ownerview-composite-and-mod_ownerlatch-simple-the-ear-for-the-owner)
+  - [7.5 The module's state: `MOD_StateManager`](#75-the-modules-state-mod_statemanager)
+    - [`MOD_StateManager` (composite)](#mod_statemanager-composite)
+    - [`MOD_StateLogic` (basic): the PackML state machine](#mod_statelogic-basic-the-packml-state-machine)
+    - [`MOD_StateIds` (simple)](#mod_stateids-simple)
+    - [`MOD_ActivityCount` (simple): a tally counter at the door](#mod_activitycount-simple-a-tally-counter-at-the-door)
+    - [`MOD_StateView` (composite) and `MOD_StateLatch` (simple): the ear for the module state](#mod_stateview-composite-and-mod_statelatch-simple-the-ear-for-the-module-state)
+  - [7.6 What every skill shares: `SKILL_Core`](#76-what-every-skill-shares-skill_core)
+    - [`SKILL_Core` (composite)](#skill_core-composite)
+    - [`SKILL_Control` (basic): the skill's state machine](#skill_control-basic-the-skills-state-machine)
+  - [7.7 Parameters and failures](#77-parameters-and-failures)
+    - [`SKILL_Param_LREAL` (and `_BOOL`, `_INT`, `_DINT`, `_UINT`): a door check with a memory](#skill_param_lreal-and-_bool-_int-_dint-_uint-a-door-check-with-a-memory)
+    - [`SKILL_FailMerge` (simple): a funnel](#skill_failmerge-simple-a-funnel)
+    - [`SKILL_Join2` to `SKILL_Join4`, `SKILL_Merge`, `SKILL_Condition_LREAL`, `SKILL_Condition_BOOL`: for later](#skill_join2-to-skill_join4-skill_merge-skill_condition_lreal-skill_condition_bool-for-later)
+  - [7.8 The IO blocks: one pin each](#78-the-io-blocks-one-pin-each)
+    - [`IO_DI`, `IO_DO`, `IO_AI`, `IO_AO` (composite)](#io_di-io_do-io_ai-io_ao-composite)
+    - [`IO_RouteDI`, `IO_RouteDO`, `IO_RouteAI`, `IO_RouteAO` (basic): the switchboard](#io_routedi-io_routedo-io_routeai-io_routeao-basic-the-switchboard)
+- [8. The filling module's own blocks](#8-the-filling-modules-own-blocks)
+  - [8.1 Equipment: four types for each piece](#81-equipment-four-types-for-each-piece)
+  - [8.2 The linear axis: the needle's lift](#82-the-linear-axis-the-needles-lift)
+    - [`EQ_LinearAxis` (composite)](#eq_linearaxis-composite)
+    - [`EL_LinearAxis` (basic): the axis's rules](#el_linearaxis-basic-the-axiss-rules)
+    - [`EC_LinearAxis` (basic): the axis's command table](#ec_linearaxis-basic-the-axiss-command-table)
+    - [`EV_LinearAxis` (simple): the axis's report form](#ev_linearaxis-simple-the-axiss-report-form)
+  - [8.3 The pump](#83-the-pump)
+  - [8.4 The scale](#84-the-scale)
+  - [8.5 A skill primitive: two types](#85-a-skill-primitive-two-types)
+    - [`SK_<Skill>` (composite), with `SK_Home` as the example](#sk_skill-composite-with-sk_home-as-the-example)
+    - [`SL_<Skill>` (basic): the recipe](#sl_skill-basic-the-recipe)
+  - [8.6 The five filling primitives](#86-the-five-filling-primitives)
+    - [`SK_Home`, `SL_Home`: needle up to the switch](#sk_home-sl_home-needle-up-to-the-switch)
+    - [`SK_MoveAxis`, `SL_MoveAxis`: needle to a position](#sk_moveaxis-sl_moveaxis-needle-to-a-position)
+    - [`SK_Dispense`, `SL_Dispense`: dispense a volume](#sk_dispense-sl_dispense-dispense-a-volume)
+    - [`SK_Tare`, `SL_Tare`: tare the scale](#sk_tare-sl_tare-tare-the-scale)
+    - [`SK_Weigh`, `SL_Weigh`: read the weight](#sk_weigh-sl_weigh-read-the-weight)
+  - [8.7 The subapplications: procedures and the module level skill](#87-the-subapplications-procedures-and-the-module-level-skill)
+    - [`Resetting` and `Stopping`: the procedures](#resetting-and-stopping-the-procedures)
+    - [`Dispensing`: the module level skill](#dispensing-the-module-level-skill)
+- [9. What is different in the stoppering module](#9-what-is-different-in-the-stoppering-module)
+  - [9.1 The same name is not the same type](#91-the-same-name-is-not-the-same-type)
+  - [9.2 The piston instead of the pump and the scale](#92-the-piston-instead-of-the-pump-and-the-scale)
+  - [9.3 Its primitives](#93-its-primitives)
+- [10. A new piece of equipment with its pins, and a primitive that uses it](#10-a-new-piece-of-equipment-with-its-pins-and-a-primitive-that-uses-it)
+  - [10.1 The example: a stopper feeder](#101-the-example-a-stopper-feeder)
+  - [10.2 What you write: two entries in the spec](#102-what-you-write-two-entries-in-the-spec)
+  - [10.3 What the generator makes of it](#103-what-the-generator-makes-of-it)
+  - [10.4 Build, test, put it on the Pi](#104-build-test-put-it-on-the-pi)
+  - [10.5 And by hand?](#105-and-by-hand)
+- [11. Building the program and putting it on the Pi](#11-building-the-program-and-putting-it-on-the-pi)
+  - [11.1 What you need](#111-what-you-need)
+  - [11.2 Change the spec, not the program](#112-change-the-spec-not-the-program)
+  - [11.3 Generate the program and check it](#113-generate-the-program-and-check-it)
+  - [11.4 Does it need a new FORTE?](#114-does-it-need-a-new-forte)
+  - [11.5 Try it on the PC](#115-try-it-on-the-pc)
+  - [11.6 Put it on the Pi](#116-put-it-on-the-pi)
+  - [11.7 Check that the Pi runs what the spec says](#117-check-that-the-pi-runs-what-the-spec-says)
+- [12. Where the descriptions are in 4diac](#12-where-the-descriptions-are-in-4diac)
+- [13. Drawing the pictures again](#13-drawing-the-pictures-again)
 
 ## 1. The whole program in one picture
 
@@ -1354,7 +1451,8 @@ no `PubParams`.
 ### 10.4 Build, test, put it on the Pi
 
 New block types mean a new FORTE: FORTE can only create blocks of the types it was built with
-([building-skills.md](building-skills.md), section 1). The steps, in full in section 5 there:
+([building-skills.md](building-skills.md), section 1). The steps, as in section 11 for the filling
+module:
 
 1. `python -m modgen`: generate (section 10.3). A layout you arranged in the IDE is kept; the new
    blocks get a free place in their group.
@@ -1388,7 +1486,142 @@ write `EL_Feeder`'s rules, size every channel block as in the table above and ke
 name, because the tools (`modsync`) find a module's parts by them. Use the spec and the generator;
 what is inside, if you need it, is in [building-skills.md](building-skills.md), section 4.2.
 
-## 11. Where the descriptions are in 4diac
+## 11. Building the program and putting it on the Pi
+
+The filling program is not drawn by hand: a generator writes it from a short description of the
+module, the *spec*. So "building" it means: change the spec, let the generator write the program,
+build a FORTE that knows its block types, try it on the PC, then put it on the Pi. Every command
+below is run from the repository's root in PowerShell. In more detail: [building-skills.md](building-skills.md)
+(section 5) and [tooling.md](tooling.md) (sections 1, 2, 4 and 5).
+
+```
+ cell/modules/filling.yaml        the spec: equipment, pins, skills, sequences
+        │  python -m modgen
+        ▼
+ cell/control/FillingModule       the 4diac project: types (.fbt) and the system (.sys)
+        │  runtime/build-modules.ps1
+        ▼
+ forte.exe (PC)  ──  python cell/sim/run_module.py   the program on the PC, with a simulated module
+        │  runtime/build-modules.ps1 -Config pi/modules-pi, runtime/package-runtime.ps1
+        ▼
+ runtime/bin/forte-aarch64 (Pi)  ──  python deploy/pi.py install / module   the program on the Pi
+```
+
+### 11.1 What you need
+
+- **Python** (3.11 is used here) with the repository's packages, installed once
+  ([onboarding.md](onboarding.md)):
+  `python -m venv .venv; .venv/Scripts/python.exe -m pip install -e ".[test,registration,opcua,planning,agents]"`.
+  With the `.venv` active, `python` below is that one.
+- **The 4diac IDE 3.3**, to look at the program (and, headless, to export the types as C++;
+  `runtime/validate.ps1` names the path it expects).
+- **The 4diac FORTE Build Environment** in `C:\4diac-fbe`: the compilers for the PC, and the cross
+  compiler for the Pi. Only needed when FORTE must be built again (section 11.4).
+- **For the Pi**: this PC's SSH key on the Pi, and the Pi set up once with `runtime/install.sh`
+  ([tooling.md](tooling.md), section 5).
+
+### 11.2 Change the spec, not the program
+
+Everything the program is made of comes from [cell/modules/filling.yaml](../cell/modules/filling.yaml):
+the equipment and its pins, the primitives with their parameters and limits, and the module level
+skill Dispensing with its steps. To change the program, change the spec. A change made to the XML or
+in the IDE is lost the next time the generator runs (the layout you arranged in the IDE is the
+exception: it is kept).
+
+### 11.3 Generate the program and check it
+
+```powershell
+git status                                                     # a modified .sys is your IDE layout: it is kept
+python -m modgen                                               # writes cell/control/FillingModule (and the other modules)
+python -m pytest -q iec61499-skill-lib/tests/test_modgen.py    # the generator's tests
+runtime/check-project.ps1 -ProjectDir cell/control/FillingModule   # the IDE's own checks, headless
+```
+
+The check should report 0 errors and 0 application collisions. To look at the result, open the
+project in the 4diac IDE: *File > Import > Existing Projects*, choose `cell/control/FillingModule`,
+then open the system `FillingModule.sys` and the application `Filling` (the PC) or `Filling_pi`
+(the Pi). The two applications differ only in their IO addresses (section 8.2).
+
+### 11.4 Does it need a new FORTE?
+
+FORTE is a compiled program, and it can only create blocks of the types it was built with (section
+6.1: the cookie cutters are built in). So:
+
+| You changed | New FORTE? |
+| --- | --- |
+| A value: a parameter's default or limits, a step's constant, a time-out | No |
+| A module level skill (Dispensing's steps, a new sequence of existing primitives) | No |
+| A comment or a description | No |
+| A primitive (new or changed) | Yes |
+| A piece of equipment, its pins or its commands (new or changed) | Yes |
+| Anything in ModLib (`modgen/library.py`) | Yes |
+
+If it does, build FORTE for the PC:
+
+```powershell
+runtime/build-modules.ps1      # runs modgen, exports every type as C++ with the IDE, builds forte.exe
+```
+
+It prints where the new `forte.exe` is (usually
+`runtime/fbe/build/modules-win/forte/build/forte/forte.exe`).
+
+### 11.5 Try it on the PC
+
+```powershell
+python cell/sim/run_module.py cell/modules/filling.yaml --forte runtime/fbe/build/modules-win/forte/build/forte/forte.exe
+```
+
+This starts three things: a simulator of the module's hardware (the axis with its switch, the pump
+and the scale, over Modbus), FORTE, and the application `Filling` in it. The module is then at
+`opc.tcp://localhost:4840`, below `/Objects/Filling`. With any OPC UA client (UaExpert, or the HMI,
+[tooling.md](tooling.md) section 3) call, with a session id of your own, say `"me"`:
+
+1. `Occupation/Occupy("me")`: the module is yours.
+2. `Module/Reset("me")`: Resetting homes the needle and tares the scale; `Module/State` goes 15,
+   then 4 (Idle).
+3. `Module/Start("me")`: `Module/State` 6 (Execute).
+4. `Skills/Dispensing/Start("me", 2.0)`: watch `Skills/Dispensing/State` go 1 (Running), 3
+   (Succeeded), 0 (Idle), and read the weight in `Skills/Dispensing/Results/Weight`.
+
+Section 4 follows these calls through the blocks. With `--no-deploy` FORTE starts empty, and you can
+deploy the application from the IDE yourself. The automatic tests of a module on the PC are in
+`cell/tests` ([tooling.md](tooling.md), section 1).
+
+### 11.6 Put it on the Pi
+
+The Pi needs its own FORTE (for its processor, aarch64) only when section 11.4 said "yes":
+
+```powershell
+runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate   # FORTE for the Pi, from the exports of 11.4
+runtime/package-runtime.ps1                                     # into runtime/bin/forte-aarch64, with its checksum
+```
+
+Commit `runtime/bin/forte-aarch64` and `runtime/bin/forte-aarch64.sha256` with the change.
+
+Then, **only with someone at the module**: once the program runs, a Reset or a skill moves the
+needle.
+
+```powershell
+python deploy/pi.py install    # only with a new FORTE: copies it to the Pi and restarts its container
+python deploy/pi.py module     # the application Filling_pi as the Pi's boot file, FORTE restarted
+python deploy/pi.py status     # is it running?
+```
+
+`deploy/pi.py` takes the Pi's address (192.168.0.203) and login from the spec's `pi` target; without
+`--spec` it is the filling module. After this the module is Stopped and free: occupy, reset and
+start it as in section 11.5, at `opc.tcp://192.168.0.203:4840`.
+
+### 11.7 Check that the Pi runs what the spec says
+
+```powershell
+python -m modsync pull --spec cell/modules/filling.yaml --target pi   # differences between the Pi and the spec
+python -m modsync verify aas --host 192.168.0.203                     # is the module what its AAS describes?
+```
+
+`pull` lists every difference between what runs on the Pi and what the spec says; after a fresh
+deployment there should be none.
+
+## 12. Where the descriptions are in 4diac
 
 - **A block in a network**: its comment is drawn with it, and shown in *Properties > Comment*.
   It says the block's role in this program: where its OPC UA nodes are, which channels it uses, what
@@ -1401,7 +1634,7 @@ To change a description, change `iec61499-skill-lib/modgen/explain.py` (the plai
 spec (`cell/modules/filling.yaml`: an equipment's or a skill's `description`) and regenerate
 (`python -m modgen`). A comment typed in the IDE is lost at the next generation.
 
-## 12. Drawing the pictures again
+## 13. Drawing the pictures again
 
 The pictures are drawn from the program's files, so they go out of date when the program is
 regenerated or its layout is changed in the IDE. From the repository's root:
@@ -1415,3 +1648,11 @@ The `stoppering-` pictures come from
 `python docs/filling-program/draw_blocks.py --project cell/control/StopperingModule --app Stoppering_pi --out <folder>`,
 copied from there with the prefix; the `example-` pictures from a copy of the stoppering spec with
 the two entries of section 10.2, generated into a folder of its own and drawn the same way.
+
+The contents at the top are made from the headings. After a heading changed, make them again, and
+then the version with screenshots ([filling-program-screenshots.md](filling-program-screenshots.md)):
+
+```powershell
+python docs/filling-program/toc.py
+python docs/filling-program/with_screenshots.py
+```
