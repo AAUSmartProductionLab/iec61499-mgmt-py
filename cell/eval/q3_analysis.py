@@ -45,6 +45,7 @@ def rate(k: int, n: int) -> str:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("runs", type=Path, nargs="+", help="a run, then the runs that repeat some of its drifts")
+    ap.add_argument("--figure", type=Path, help="folder for detection.pdf")
     a = ap.parse_args()
     latest: dict[str, dict] = {}                      # a drift run again (after a fix) counts as its last run
     repeated = 0
@@ -161,6 +162,60 @@ def main() -> None:
     out = a.runs[0].with_suffix(".md")
     out.write_text("\n".join(md) + "\n", encoding="utf-8")
     print(out)
+    if a.figure:
+        figure(by_kind, len(alarms), len(quiet_all), a.figure)
+
+
+SHORT = {"P1": "A value written", "P2": "A connection deleted", "P3": "A stray block", "P4": "A change cut short",
+         "P5": "Another type version", "A1": "A value changed", "A2": "A step added", "A3": "Two steps swapped",
+         "A4": "A skill removed"}
+
+
+def figure(by_kind, alarms: int, quiet: int, folder: Path) -> None:
+    """Per kind of drift (rows, in the program and in the AAS), the share detected by the baseline (the
+    AAS against the deployed boot file), by the reading before every change, by the audit, and the
+    share handled as its class calls for (removed online, or refused): a cell per rate, shaded by it,
+    the method's columns in teal, the baseline's in gray."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    plt.rcParams.update({"font.family": "Arial", "font.size": 7, "text.color": "#24292B"})
+    columns = ["Boot file\n(baseline)", "Read before\na change", "Audit", "Handled\nas its class"]
+    kinds = [k for k in KINDS if k != "clean" and by_kind.get(k)]
+    fig, ax = plt.subplots(figsize=(3.4, 2.75))
+    for i, kind in enumerate(kinds):
+        drift = [o for o in by_kind[kind] if o["oracle_differs"]]
+        hit = [o for o in drift if o.get("detected")]
+        expected = EXPECTED[kind]
+        handled = [o for o in hit if (o.get("removed") if expected in ONLINE else o.get("outcome") == "refused")]
+        counts = [sum(bool(o.get("baseline_detects")) for o in drift), sum(bool(o["read"].get("detected")) for o in drift),
+                  len(hit), len(handled)]
+        for j, k in enumerate(counts):
+            p = k / len(drift) if drift else 0.0
+            ax.add_patch(plt.Rectangle((j, i), 0.97, 0.92, color="#5E676B" if j == 0 else "#1C6560",
+                                       alpha=0.08 + 0.92 * p, lw=0))
+            ax.text(j + 0.485, i + 0.46, f"{100 * p:.0f} %" if p not in (0.0, 1.0) else ("100 %" if p else "0"),
+                    ha="center", va="center", fontsize=6.4, color="white" if p > 0.55 else "#24292B")
+        ax.text(-0.08, i + 0.46, f"{SHORT[kind]}  (n = {len(drift)})", ha="right", va="center", fontsize=6.2)
+    split = sum(1 for k in kinds if k.startswith("P"))
+    ax.axhline(split - 0.04, color="#24292B", lw=0.6, xmin=-0.9, clip_on=False)
+    ax.text(-3.3, split / 2, "In the program", rotation=90, ha="center", va="center", fontsize=6.2, color="#5E676B")
+    ax.text(-3.3, split + (len(kinds) - split) / 2, "In the AAS", rotation=90, ha="center", va="center",
+            fontsize=6.2, color="#5E676B")
+    ax.set_xlim(0, len(columns)), ax.set_ylim(len(kinds), 0)
+    ax.set_xticks([j + 0.485 for j in range(len(columns))], columns, fontsize=6.2)
+    ax.xaxis.tick_top()
+    ax.set_yticks([])
+    for side in ax.spines.values():
+        side.set_visible(False)
+    ax.tick_params(length=0)
+    fig.text(0.98, 0.012, f"False alarms where nothing differs: {alarms} of {quiet}", ha="right", fontsize=6.2,
+             color="#5E676B")
+    fig.subplots_adjust(left=0.5, right=0.99, top=0.86, bottom=0.07)
+    folder.mkdir(parents=True, exist_ok=True)
+    fig.savefig(folder / "detection.pdf")
+    fig.savefig(folder / "detection.png", dpi=220)
+    print(folder / "detection.pdf")
 
 
 if __name__ == "__main__":

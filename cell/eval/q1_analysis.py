@@ -287,6 +287,73 @@ def main() -> None:
 
     if a.figure:
         figure(by_cell, cells, restart, a.figure)
+        figure_unavailable(by_cell, cells, a.figure)
+
+
+def figure_unavailable(by_cell, cells, folder: Path) -> None:
+    """How long the module cannot take a product, per way of making a change, in its parts: a bar per
+    way, medians over every program size, each part labelled. The change itself (the reconciler's
+    work) in teal, what the module does around it in grays: homing dominates."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    plt.rcParams.update({"font.family": "Arial", "font.size": 7, "axes.linewidth": 0.6, "axes.edgecolor": "#5E676B",
+                         "xtick.color": "#5E676B", "ytick.color": "#5E676B"})
+
+    def med(cell_filter, key):
+        vals = [r["out"][key] for cid, rs in by_cell.items() if cell_filter(cells[cid]) for r in rs
+                if r["out"].get(key) is not None]
+        return float(np.median(vals)) if vals else 0.0, len(vals)
+
+    def is_c(start):
+        return lambda c: c["set"] == "C" and c.get("start", "execute") == start
+    restart_flow = lambda c: c["set"] == "D" and c.get("change") == "flow"            # noqa: E731
+    idle_u, n_idle = med(is_c("idle"), "u_s")
+    exe = {k: med(is_c("execute"), k)[0] for k in ("u_s", "stop_s", "reset_s", "start_s")}
+    rst = {k: med(restart_flow, k)[0] for k in ("u_s", "load_s", "reset_s", "start_s")}
+    n_flow = sum(len(rs) for cid, rs in by_cell.items() if cells[cid]["set"] in "AB")
+    TEAL, DARK, MID, LIGHT = "#1C6560", "#3E4447", "#8A9397", "#C9CED1"
+    rows = [  # (label, [(seconds, color, part)])
+        ("Add a skill, online", []),
+        ("Change a value, online,\nbetween orders", [(idle_u, TEAL, "write")]),
+        ("Change a value, online,\nduring an order", [(exe["stop_s"], LIGHT, "stop"),
+                                                       (exe["u_s"] - exe["stop_s"] - exe["reset_s"] - exe["start_s"], TEAL, "write"),
+                                                       (exe["reset_s"], DARK, "reset (homes)"), (exe["start_s"], LIGHT, "start")]),
+        ("Any change,\nby a restart", [(rst["u_s"] - rst["load_s"] - rst["reset_s"] - rst["start_s"], LIGHT, "stop"),
+                                       (rst["load_s"], MID, "load FORTE"), (rst["reset_s"], DARK, "reset (homes)"),
+                                       (rst["start_s"], LIGHT, "start")]),
+    ]
+    fig, ax = plt.subplots(figsize=(3.4, 1.75))
+    for y, (label, parts) in enumerate(rows):
+        left = 0.0
+        for seconds, color, part in parts:
+            seconds = max(seconds, 0.0)
+            ax.barh(y, seconds, left=left, height=0.58, color=color, edgecolor="white", linewidth=0.8)
+            if seconds > 1.0:
+                ax.text(left + seconds / 2, y, part, ha="center", va="center", fontsize=5.6,
+                        color="white" if color in (TEAL, DARK, MID) else "#24292B")
+            left += seconds
+        total = sum(max(s, 0.0) for s, _, _ in parts)
+        ax.text(left + 0.05, y, f"{total:.2f} s" if parts else f"0 s: it keeps running ({n_flow} runs)",
+                va="center", fontsize=6.2, color="#24292B")
+    ax.set_yticks(range(len(rows)), [r[0] for r in rows], fontsize=6.2)
+    ax.invert_yaxis()
+    ax.set_xlim(0, 4.0)
+    ax.set_xlabel("Seconds the module cannot take a product (median)")
+    ax.xaxis.grid(True, color="#E4E7E8", lw=0.5)
+    ax.set_axisbelow(True)
+    for side in ("top", "right", "left"):
+        ax.spines[side].set_visible(False)
+    ax.tick_params(axis="y", length=0)
+    from matplotlib.patches import Patch
+    ax.legend(handles=[Patch(color=TEAL, label="the change"), Patch(color=LIGHT, label="stop, start"),
+                       Patch(color=MID, label="load FORTE"), Patch(color=DARK, label="reset (homes)")],
+              ncol=4, frameon=False, fontsize=5.8, loc="lower left", bbox_to_anchor=(-0.02, 1.0),
+              handlelength=1.0, handleheight=0.8, columnspacing=1.0, handletextpad=0.4)
+    fig.tight_layout(pad=0.3)
+    fig.savefig(folder / "unavailable.pdf")
+    fig.savefig(folder / "unavailable.png", dpi=220)
+    print(folder / "unavailable.pdf")
 
 
 def figure(by_cell, cells, restart, folder: Path) -> None:
