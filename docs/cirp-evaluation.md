@@ -514,12 +514,12 @@ unchanged; the tables in `q4-2026-11-05T2346.md`, the figures `docs/paper/cirp/f
   beyond its limits and pair made parallel, and every extra dose (by the volume it leaves). It misses
   19: a Tare inserted after the needle went in or after a dose (13; Taring has no condition in the
   AAS, so nothing says the scale is tared with the empty container), and six of BottomUpFilling's where
-  the needle starts too high or the dose is too slow for the rise (foam, 4) or the needle goes to the
+  the needle starts too high, or the dose is too slow or too late for the rise (foam, 4) or the needle goes to the
   barrel's bottom (crash, 2). Foam and the container's geometry are in no condition: the narrowing of
   BottomUpFilling lies in how the skill moves (vocabulary 0.6).
 - *H4.2 fails.* Of the 143 rejected, 117 spoil the product (precision 82 % [75, 87]). The 26 others are
   as expected stricter than the physics: Weigh needs the needle at home where out of the container is
-  enough (13), the module's rest at the end (3), the one holder per item (1), and nine of
+  enough (14), the module's rest at the end (2), the one holder per item (1), and nine of
   BottomUpFilling's where the needle rises past the fill position after the dose is in: the check takes
   a move's ends, not its speed.
 - *H4.3 holds.* Structure alone rejects 3 (2 % [1, 6]), the ones whose result names a deleted Weigh.
