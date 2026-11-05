@@ -73,6 +73,33 @@ The guide's section 10 describes these generated types block by block, pin by pi
 line: after a change to the generator's equipment or primitive types, check that section against
 a new generation of this example.
 
+## The templates
+
+`templates/` holds a template of every type a student makes, one set per module students work on
+(stoppering, capping), with `templates/README.md` for the students. They are generated, not written
+by hand:
+
+```powershell
+python docs/filling-program/make_templates.py
+```
+
+It adds a neutral piece of equipment `Template` and two primitives on it (`TemplateUntil`,
+`TemplateTimed`) to a copy of each module's spec, generates them into a scratch folder with `modgen`,
+and marks every pin, block, algorithm line and size that is the student's own with *YOUR OWN*. Run
+it again after a change to the generator's equipment or primitive types, and check the result: copy
+each set into a copy of its project and run `runtime/check-project.ps1 -ProjectDir <copy>` (0 errors
+and warnings when this was written, 5 Nov 2026).
+
+## The PDF
+
+```powershell
+python docs/filling-program/make_pdf.py docs/filling-program.md <file>.pdf
+```
+
+pandoc (3.2 here) makes one HTML page with the pictures in it and the look of `pdf.css`; Chrome (else
+Edge), headless, prints it. The browser returns before it has written the file, so the script waits
+for it. The zip script makes the PDF itself.
+
 ## The contents, the version with screenshots, the zip
 
 The contents at the top of the guide are made from its headings. After a heading changed, make
@@ -88,13 +115,20 @@ The screenshots in `docs/figures/4diac_figs` are taken by hand in the IDE. After
 changes, take them again under the same names (`with_screenshots.py` lists which are not used
 because they are out of date).
 
-The zip for students (the guide, the version with screenshots, the pictures and screenshots, the
-module rules and the modules, the three module projects, and the kit's README, with a README of
-its own) is made with
+The zip for students holds:
+- the guide, its PDF, and the version with screenshots, with the pictures and screenshots;
+- the templates;
+- the module rules and the modules;
+- the three module projects;
+- the FORTE kit (`forte-kit.zip`) and its README;
+- a README of its own.
+
+Make the kit first, then the zip:
 
 ```powershell
+runtime/make-kit.ps1
 python docs/filling-program/student_zip.py filling-program-for-students.zip
 ```
 
-The kit itself is sent separately: `runtime/make-kit.ps1` makes `runtime/dist/forte-kit.zip`
-([../forte-for-the-pi.md](../forte-for-the-pi.md)).
+`make-kit.ps1` takes the lab's exports from the last `build-modules.ps1` and the projects from the
+last commit ([../forte-for-the-pi.md](../forte-for-the-pi.md)), so build and commit before.
