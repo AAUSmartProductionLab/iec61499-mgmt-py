@@ -380,3 +380,126 @@ failed to register with a discovery server (counted apart, V10).
 - *The baseline,* the AAS compared with the boot file that was deployed instead of with the running
   program, detected the 220 drifts where the AAS is ahead of the program (P4, A1 to A4) and none of the
   937 made in the program (P1 to P3, P5).
+
+## Q4: are the skills right for the product?
+
+**Question.** Before a skill is built, the method checks its flow against the conditions of the module's
+capabilities and matches what it reaches against the product's requirement (section 3.4 of the paper).
+Does that check reject the flows that would spoil a product and pass the ones that would not; and does
+matching answer offered, offered after a reconfiguration, or not offered as the module can in fact
+do it, with a planned skill that makes the product right the first time?
+
+**The oracle: a process model of the filling station** (`cell/eval/process_model.py`). It runs a flow
+in time steps of 10 ms: the needle's tip moving at the axis's speed, the pump dosing at its flow rate,
+the scale, each branch of a parallel block at once, one holder per equipment item. It knows the
+containers and the physics, and **none of the AAS's capability conditions**: no fill position, no
+rest state, no pre- or postcondition, no invariant. It shares with the AAS only the hardware's ranges
+(the axis's travel 0 to 60 mm, the pump's dose 0.5 to 10 mL and flow rate 0.1 to 5 mL/s, as the
+primitives' parameter limits state them), so that what it judges is the flow, not the hardware.
+A product is right when all of these hold:
+
+| | Rule of the oracle |
+| --- | --- |
+| O1 | Every step can be carried out: a target within the axis's travel, a dose and rate within the pump's range, one holder per item (a second branch on the same item is refused, and the run fails) |
+| O2 | No spill: liquid leaves the needle only while its tip is inside the container (below the rim) |
+| O3 | No crash: the tip never goes within 1 mm of the container's bottom |
+| O4 | No overflow: the content stays within the container's capacity |
+| O5 | For a product to be filled from the bottom (prefilled syringe), no foam: while the pump doses, the tip is never more than 2 mm above the liquid's surface |
+| O6 | The volume: the content equals the required volume within the product's AbsoluteFillError (0.05 mL) |
+| O7 | Where the product requires its weight: a weighing after the last dose, on a tared scale, with the needle out of the container, the axis still and the pump off throughout |
+| O8 | The container can leave: at the end the tip is out of the container |
+
+The containers stand in the shuttle's nest with their base 30 mm above the table; the tip at home is
+100 mm above it. A vial 2R is 35 mm high (rim 35 mm down the stroke, 4 mL to the brim, inner diameter
+14 mm), a 10R 45 mm (13.5 mL, 22 mm), a 20R 55 mm (26 mL, 28 mm). A prefilled syringe of 1 mL (long)
+stands deeper, its barrel's bottom 59 mm down the stroke, its rim 4 mm, its inner diameter 6.35 mm
+(1.0 mL). Weighing is right only with the needle out and still, because a scale reads a load with
+nothing touching it; the module's condition (needle at home) is stricter, and where the two differ the
+oracle decides.
+
+### Q4a: the check, on mutants of the module's skills
+
+**Population.** Every single mutant of three skills, each run for the product it is written for:
+Dispensing (1.0 mL into a vial 2R) and DoubleDose (2 × 0.5 mL into a vial 2R), both delivered or
+tested, and BottomUpFilling (1.0 mL into the prefilled syringe), written in the skill editor.
+
+| Operator | Mutants |
+| --- | --- |
+| M1 delete | each step deleted |
+| M2 swap | each two neighbouring steps swapped (in a sequence or a branch) |
+| M3 duplicate | each step repeated right after itself |
+| M4 insert | each of Home, Tare, Weigh, MoveAxis to 0, 20, 40 and 58 mm, and Dispense of 1 mL inserted at each place |
+| M5 value | each numeric constant of a step set to each quarter point of its range (0, 25, 50, 75, 100 %) |
+| M6 beyond | each numeric constant set 10 % of its range below its minimum and above its maximum |
+| M7 parallel | each two neighbouring steps of a sequence made a parallel block |
+
+A mutant equal to its original (the same flow after the change) is left out. Step names are kept unique.
+
+**What is checked.** The method's check, as the paper describes it: (1) the module spec takes the
+skill (steps name the module's primitives, every bound value within the step's limits, results from
+steps that exist); (2) `modplan.check` on the domain read from the module's AAS finds no condition
+that fails; (3) what the flow leaves (`modplan.check.simulate`) is what the product requires: the
+volume, and where required the weight. A mutant is *rejected* if any of them reports something.
+
+**Baselines,** on the same mutants:
+
+- *Structure only,* what the 4diac IDE checks: the types exist and the connections join pins of the same
+  type. A mutant of the module's primitives always passes, except where a result names a step that is
+  gone.
+- *Hand-written sequence rules,* as a tool expert writes them for a workflow engine
+  [lindorfer2019user], written here before any run from the module's documentation: R1 a Dispense
+  follows a MoveAxis of 40 mm or more, with no move up in between; R2 a Weigh follows a Home or a
+  MoveAxis to 0, with no move down in between, and is in no parallel block; R3 the flow ends with a Home
+  or a MoveAxis to 0 after its last move down; R4 every value within its step's limits; R5 no two
+  branches on the same equipment item; R6 at least one Dispense, and a Weigh after the last one when
+  the skill has a weight result.
+
+**Measures.** Against the oracle (wrong: a product not right or a run that fails): true and false
+positives and negatives, precision and recall with 95 % Wilson intervals, per method and per
+operator; every disagreement listed with the oracle's rule and the check's finding, and looked at.
+For a rejected mutant also whether a finding names the mutated step.
+
+**Hypotheses.** H4.1 The check's recall is 100 %: no mutant that spoils the product passes. H4.2 Its
+precision is at least 90 %: what it rejects in excess comes from the module's conditions being stricter
+than the physics (the fill position, the needle at home to weigh), and every such case is listed.
+H4.3 Structure alone finds almost nothing; the hand-written rules reach the check's results only where
+a rule was written for the case (none for the needle rising while the pump doses).
+
+### Q4b: matching and planning, on products and module variants
+
+**Products,** 26: a vial 2R of 0.25, 0.5, 1 or 2 mL; a 10R of 2, 5 or 10 mL; a 20R of 15, 20 or 25 mL;
+a prefilled syringe of 0.25, 0.5 or 1 mL; each with its weight required or not. A vial asks for
+Filling, the syringe for BottomUpFilling (the vocabulary's narrower capability).
+
+**Module variants,** 4, each built by modreg from a changed spec: *full* (as delivered); *no scale*
+(no Tare and Weigh, Dispensing without Weigh); *small pump* (a dose of 5 mL at most); *raised*
+(the station 5 mm higher: every container 5 mm further down the stroke, the fill position at 45 mm).
+On each, Dispensing is built and BottomUpFilling described (written, not built), with the values the
+variant needs (NeedleDown 45 mm on the raised one, BottomUpFilling's start at 58 mm or the axis's end).
+
+**The method's answer.** *Offered* when a built skill's offered capability (the module's derived
+Capability Description) has the meaning asked for and covers the product's properties, and gives the
+weight where it is required; *after a reconfiguration* when a described skill's does, or else the
+planner finds a plan (`modplan.plan`, with FillWeight as a result where the weight is required);
+*not offered* otherwise.
+
+**The truth, from the oracle.** *Offered* when a built skill, started with the product's volume within
+its limits, makes the product right. Otherwise *after a reconfiguration* when the module can do it at
+all: a witness flow, built from the product and the hardware alone (into the container, as many doses
+as the pump needs, from the bottom rising with the liquid for the syringe at each flow rate of a grid,
+out, weigh where required), makes the product right in the oracle. Else *not offered*.
+
+**Measures.** A confusion matrix of answer and truth with the accuracy and its Wilson interval; for
+every answer after a reconfiguration by planning, the plan's time (median of 5) and whether the
+planned skill, run in the oracle, makes the product right the first time; every disagreement listed
+and looked at.
+
+**Hypotheses.** H4.4 The answer equals the truth in at least 90 % of the cases, and the method never
+offers what the module cannot do (no *offered* or *after a reconfiguration* where the truth is *not
+offered*). H4.5 Every planned skill makes the product right the first time. H4.6 Planning takes less
+than 1 s on the PC.
+
+**Outputs.** `cell/eval/q4.py` writes `cell/eval/results/q4-<when>.jsonl` (a line per mutant and per
+case), `cell/eval/q4_analysis.py` the tables (`q4-<when>.md`) and the figure. Q4 runs no FORTE: the
+check and the match come before anything is built, and are deterministic, so each mutant and case is
+run once (the plan's time five times).
