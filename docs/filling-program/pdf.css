@@ -1,0 +1,29 @@
+/* The look of the PDFs make_pdf.py makes: A4, plain and readable in print. */
+@page {
+  size: A4;
+  margin: 18mm 16mm 18mm 16mm;
+  @bottom-center { content: counter(page) " / " counter(pages); font: 8pt "Segoe UI", Arial, sans-serif; color: #777; }
+}
+html { font: 10pt/1.45 "Segoe UI", Arial, sans-serif; color: #1a1a1a; background: #fff; }
+body { margin: 0; max-width: none; }
+h1 { font-size: 22pt; line-height: 1.2; margin: 0 0 10pt; color: #2A918B; }
+h2 { font-size: 16pt; margin: 0 0 8pt; padding-bottom: 3pt; border-bottom: 1.5pt solid #2A918B; break-before: page; }
+h3 { font-size: 12.5pt; margin: 16pt 0 6pt; }
+h4 { font-size: 10.5pt; margin: 12pt 0 4pt; }
+h2, h3, h4 { break-after: avoid; color: #1a1a1a; }
+p, li { orphans: 3; widows: 3; }
+a { color: #1f6f6a; text-decoration: none; }
+code { font: 8.8pt Consolas, "Courier New", monospace; background: #f1f4f4; padding: 0 2pt; border-radius: 2pt; }
+pre { background: #f1f4f4; border-left: 3pt solid #2A918B; padding: 6pt 8pt; white-space: pre-wrap;
+      overflow-wrap: anywhere; break-inside: avoid; }
+pre code { background: none; padding: 0; font-size: 8.3pt; }
+table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 8.5pt; }
+th, td { border: 0.6pt solid #c8d3d2; padding: 3pt 5pt; vertical-align: top; text-align: left; overflow-wrap: break-word; }
+th { background: #e3efee; }
+tr { break-inside: avoid; }
+thead { display: table-header-group; }
+td code, th code { font-size: 8pt; }
+img { display: block; max-width: 100%; max-height: 235mm; margin: 6pt auto 10pt; break-inside: avoid; }
+p:has(> img:only-child) { break-inside: avoid; }
+blockquote { margin: 8pt 0; padding: 4pt 10pt; border-left: 3pt solid #e0a030; background: #fdf6e8; }
+hr { border: none; border-top: 0.6pt solid #c8d3d2; }
