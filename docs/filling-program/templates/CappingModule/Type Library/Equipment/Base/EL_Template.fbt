@@ -1,0 +1,212 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EL_Template" Comment="TEMPLATE for the rules of your equipment, EL_&lt;Equipment&gt;: copy it under that name, then change what says YOUR OWN, and this comment; keep the rest as it is. The logic of an equipment block: one holder at a time, outputs switched off before new ones go on, all off on release or abort, inputs reported when they change. Technical: Template: output values from its holder -&gt; outputs (break before make); one holder at a time; all off on release or when the module aborts; inputs -&gt; state channel when they change">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="capping" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
+        <With Var="Module" />
+        <With Var="Name" />
+        <With Var="UaRoot" />
+      </Event>
+      <Event Name="CMD" Type="Event" Comment="A command arrived from a holder">
+        <With Var="C_Holder" />
+        <With Var="C_Release" />
+        <With Var="C_MyOutput" />
+      </Event>
+      <Event Name="RELEASE" Type="Event" Comment="A release arrived on the module's release channel (R_Holder)">
+        <With Var="R_Holder" />
+      </Event>
+      <Event Name="SAMPLE" Type="Event" Comment="The inputs were read">
+        <With Var="I_MyInput" />
+      </Event>
+      <Event Name="REFRESH" Type="Event" Comment="Cycle: write the outputs again" />
+      <Event Name="DRIVEN" Type="Event" Comment="The outputs were written" />
+      <Event Name="MOD_CHG" Type="Event" Comment="The module's state changed (its Aborting switches all off)">
+        <With Var="ModuleState" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
+        <With Var="IdCmd" />
+        <With Var="IdRelease" />
+        <With Var="IdState" />
+        <With Var="IdPub" />
+      </Event>
+      <Event Name="DRIVE" Type="Event" Comment="Write the outputs">
+        <With Var="O_MyOutput" />
+      </Event>
+      <Event Name="STATE" Type="Event" Comment="Publish the state (the inputs and the holder)">
+        <With Var="MyInput" />
+        <With Var="Holder" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="Name" Type="WSTRING" Comment="The equipment item's name: its local channels and OPC UA folder" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="C_Holder" Type="WSTRING" Comment="Who sends the command" />
+      <VarDeclaration Name="C_Release" Type="BOOL" Comment="Give up the equipment after this command" />
+      <VarDeclaration Name="C_MyOutput" Type="BOOL" Comment="YOUR OWN, one per output pin. Commanded value of MyOutput" />
+      <VarDeclaration Name="R_Holder" Type="WSTRING" Comment="Who gives up the equipment" />
+      <VarDeclaration Name="I_MyInput" Type="BOOL" Comment="YOUR OWN, one per input pin. MyInput as read or received" />
+      <VarDeclaration Name="ModuleState" Type="USINT" Comment="PackML state: 1 Clearing, 2 Stopped, 3 Starting, 4 Idle, 6 Execute, 7 Stopping, 8 Aborting, 9 Aborted, 15 Resetting" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="IdCmd" Type="WSTRING" Comment="Local channel of the commands" />
+      <VarDeclaration Name="IdRelease" Type="WSTRING" Comment="Local channel of the releases (the module's, one for all equipment)" />
+      <VarDeclaration Name="IdState" Type="WSTRING" Comment="Local channel of the state" />
+      <VarDeclaration Name="IdPub" Type="WSTRING" Comment="OPC UA ID of the published inputs" />
+      <VarDeclaration Name="O_MyOutput" Type="BOOL" Comment="YOUR OWN, one per output pin. The value to write to MyOutput" />
+      <VarDeclaration Name="MyInput" Type="BOOL" Comment="YOUR OWN, one per input pin. Template: MyInput, an input" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who holds the equipment (empty: free)" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Publish" Type="BOOL" />
+      <VarDeclaration Name="Beat" Type="USINT" />
+      <VarDeclaration Name="LastHolder" Type="WSTRING" />
+      <VarDeclaration Name="Pending" Type="BOOL" />
+      <VarDeclaration Name="OffPending" Type="BOOL" />
+      <VarDeclaration Name="L_MyInput" Type="BOOL" Comment="YOUR OWN, one per input pin" />
+      <VarDeclaration Name="N_MyOutput" Type="BOOL" Comment="YOUR OWN, one per output pin" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="2575" y="0" />
+      <ECState Name="Init" x="0" y="1260">
+        <ECAction Algorithm="Alg_Init" Output="INITO" />
+      </ECState>
+      <ECState Name="Sample" x="1765" y="1260">
+        <ECAction Algorithm="Alg_Sample" />
+      </ECState>
+      <ECState Name="Publish" x="1142" y="2520">
+        <ECAction Algorithm="Alg_Publish" Output="STATE" />
+      </ECState>
+      <ECState Name="Refresh" x="3385" y="1260">
+        <ECAction Output="DRIVE" />
+      </ECState>
+      <ECState Name="Cmd" x="4825" y="1260">
+        <ECAction Algorithm="Alg_Cmd" />
+      </ECState>
+      <ECState Name="Off" x="1558" y="8820">
+        <ECAction Algorithm="Alg_Off" />
+      </ECState>
+      <ECState Name="Break" x="3178" y="2520">
+        <ECAction Algorithm="Alg_Break" Output="DRIVE" />
+      </ECState>
+      <ECState Name="Make" x="675" y="5040">
+        <ECAction Algorithm="Alg_Make" Output="DRIVE" />
+      </ECState>
+      <ECState Name="BreakW" x="2552" y="3780" />
+      <ECState Name="MakeW" x="2575" y="6300" />
+      <ECState Name="QueueB" x="2440" y="5040">
+        <ECAction Algorithm="Alg_QueueB" />
+      </ECState>
+      <ECState Name="OffB" x="4060" y="5040">
+        <ECAction Algorithm="Alg_OffB" />
+      </ECState>
+      <ECState Name="QueueM" x="1000" y="7560">
+        <ECAction Algorithm="Alg_QueueM" />
+      </ECState>
+      <ECState Name="OffM" x="2620" y="7560">
+        <ECAction Algorithm="Alg_OffM" />
+      </ECState>
+      <ECState Name="CmdPend" x="2908" y="8820">
+        <ECAction Algorithm="Alg_CmdPend" />
+      </ECState>
+      <ECState Name="Settled" x="4060" y="7560" />
+      <ECState Name="Report" x="2115" y="10080">
+        <ECAction Algorithm="Alg_Report" Output="STATE" />
+      </ECState>
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="1635" y="710" />
+      <ECTransition Source="START" Destination="Sample" Condition="SAMPLE" x="2481" y="710" />
+      <ECTransition Source="START" Destination="Refresh" Condition="REFRESH" x="3246" y="710" />
+      <ECTransition Source="START" Destination="Cmd" Condition="CMD[(Holder = &quot;&quot;) OR (C_Holder = Holder)]" x="3944" y="710" />
+      <ECTransition Source="START" Destination="Off" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="3710" y="4490" />
+      <ECTransition Source="START" Destination="Off" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="910" y="4490" />
+      <ECTransition Source="Init" Destination="START" Condition="1" x="2115" y="870" />
+      <ECTransition Source="Sample" Destination="Publish" Condition="[Publish]" x="2017" y="1970" />
+      <ECTransition Source="Sample" Destination="START" Condition="1" x="2961" y="870" />
+      <ECTransition Source="Publish" Destination="START" Condition="1" x="4174" y="1340" />
+      <ECTransition Source="Refresh" Destination="START" Condition="1" x="3726" y="870" />
+      <ECTransition Source="Cmd" Destination="Break" Condition="1" x="4453" y="1970" />
+      <ECTransition Source="Off" Destination="Break" Condition="1" x="919" y="5750" />
+      <ECTransition Source="Break" Destination="BreakW" Condition="1" x="3246" y="3230" />
+      <ECTransition Source="BreakW" Destination="Make" Condition="DRIVEN" x="1972" y="4490" />
+      <ECTransition Source="Make" Destination="MakeW" Condition="1" x="1972" y="5750" />
+      <ECTransition Source="MakeW" Destination="Settled" Condition="DRIVEN" x="3502" y="7010" />
+      <ECTransition Source="BreakW" Destination="QueueB" Condition="CMD" x="2818" y="4490" />
+      <ECTransition Source="BreakW" Destination="OffB" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="4064" y="4650" />
+      <ECTransition Source="BreakW" Destination="OffB" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="3104" y="4330" />
+      <ECTransition Source="QueueB" Destination="BreakW" Condition="1" x="3298" y="4650" />
+      <ECTransition Source="OffB" Destination="BreakW" Condition="1" x="4544" y="4810" />
+      <ECTransition Source="MakeW" Destination="QueueM" Condition="CMD" x="2099" y="7010" />
+      <ECTransition Source="MakeW" Destination="OffM" Condition="RELEASE[(R_Holder = Holder) AND (Holder &lt;&gt; &quot;&quot;)]" x="2864" y="7010" />
+      <ECTransition Source="MakeW" Destination="OffM" Condition="MOD_CHG[(ModuleState = 8) OR (ModuleState = 9)]" x="3344" y="7170" />
+      <ECTransition Source="QueueM" Destination="MakeW" Condition="1" x="2579" y="7170" />
+      <ECTransition Source="OffM" Destination="MakeW" Condition="1" x="2384" y="6850" />
+      <ECTransition Source="Settled" Destination="Off" Condition="[OffPending]" x="3075" y="8270" />
+      <ECTransition Source="Settled" Destination="CmdPend" Condition="[Pending]" x="3840" y="8270" />
+      <ECTransition Source="CmdPend" Destination="Cmd" Condition="[(Holder = &quot;&quot;) OR (C_Holder = Holder)]" x="6682" y="5120" />
+      <ECTransition Source="CmdPend" Destination="Report" Condition="1" x="3075" y="9530" />
+      <ECTransition Source="Settled" Destination="Report" Condition="1" x="1102" y="8900" />
+      <ECTransition Source="Report" Destination="START" Condition="1" x="5638" y="5120" />
+    </ECC>
+    <Algorithm Name="Alg_Init">
+      <ST>IdCmd := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/cmd]");
+IdRelease := CONCAT(CONCAT("loc[", Module), "/release]");
+IdState := CONCAT(CONCAT(CONCAT(CONCAT("loc[", Module), "/"), Name), "/state]");
+(* YOUR OWN: the OPC UA variable of each input, with two inputs A and B: IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", UaRoot), "/Equipment/"), Name), "/A;"), UaRoot), "/Equipment/"), Name), "/B"), "]"); with none: IdPub := ""; *)
+IdPub := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", UaRoot), "/Equipment/"), Name), "/MyInput"), "]");</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Sample">
+      <ST>MyInput := I_MyInput;  (* YOUR OWN: one line per input pin *)
+Publish := (MyInput &lt;&gt; L_MyInput) OR (Holder &lt;&gt; LastHolder) OR (Beat &gt;= 20);  (* YOUR OWN: one (X &lt;&gt; L_X) OR per input pin *)
+Beat := Beat + 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Publish">
+      <ST>L_MyInput := MyInput;  (* YOUR OWN: one line per input pin *)
+LastHolder := Holder;
+Beat := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Cmd">
+      <ST>Holder := C_Holder;
+N_MyOutput := C_MyOutput;  (* YOUR OWN: one line per output pin *)
+IF C_Release THEN
+  Holder := "";
+END_IF;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Off">
+      <ST>N_MyOutput := FALSE;  (* YOUR OWN: one line per output pin *)
+Holder := "";
+OffPending := FALSE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Break">
+      <ST>O_MyOutput := O_MyOutput AND N_MyOutput;  (* YOUR OWN: one line per output pin *)</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Make">
+      <ST>O_MyOutput := N_MyOutput;  (* YOUR OWN: one line per output pin *)</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_QueueB">
+      <ST>Pending := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_OffB">
+      <ST>OffPending := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_QueueM">
+      <ST>Pending := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_OffM">
+      <ST>OffPending := TRUE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_CmdPend">
+      <ST>Pending := FALSE;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Report">
+      <ST>LastHolder := Holder;
+Beat := 0;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

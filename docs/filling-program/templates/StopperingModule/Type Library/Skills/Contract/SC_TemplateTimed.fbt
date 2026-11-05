@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SC_TemplateTimed" Comment="TEMPLATE for the contract of your primitive, SC_&lt;Primitive&gt;: copy it under that name, then change what says YOUR OWN, and this comment; keep the rest as it is. The contract of a skill primitive, the only part that is its own: which command it sends (and with what argument, and which when it ends), how long it may run, and three conditions on the equipment's signals and its parameters: when it may start, when it is done, what must hold while it runs. Technical: TemplateTimed: Precondition TRUE; Template.MyCommand until MyParameter s; Invariant TRUE">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="stoppering" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise: name the OPC UA variables of the parameters and results">
+        <With Var="UaRoot" />
+        <With Var="UaPath" />
+      </Event>
+      <Event Name="START" Type="Event" Comment="A run starts, with the parameters: say what the skill does">
+        <With Var="MyParameter" />
+      </Event>
+      <Event Name="SAMPLE" Type="Event" Comment="The equipment's newest state arrived">
+        <With Var="EqHolder" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
+        <With Var="IdParams" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaPath" Type="WSTRING" Comment="This skill's OPC UA folder below UaRoot, e.g. /Skills/Dispensing" />
+      <VarDeclaration Name="MyParameter" Type="LREAL" Comment="YOUR OWN, one per parameter. Parameter MyParameter s, 0.0 to 5.0: How long it runs" />
+      <VarDeclaration Name="EqHolder" Type="WSTRING" Comment="Who holds the equipment now (empty: free), passed on to the run" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="IdParams" Type="WSTRING" Comment="OPC UA ID of the published parameters" />
+    </OutputVars>
+    <Plugs>
+      <AdapterDeclaration Name="Run" Type="modlib::AContract" Comment="To the run (AContract): what the skill does and when it is done" />
+    </Plugs>
+  </InterfaceList>
+  <BasicFB>
+    <ECC>
+      <ECState Name="Wait" x="1968" y="0" />
+      <ECState Name="Init" x="0" y="1260">
+        <ECAction Algorithm="Alg_Init" Output="INITO" />
+      </ECState>
+      <ECState Name="Start" x="1765" y="1260">
+        <ECAction Algorithm="Alg_Start" />
+      </ECState>
+      <ECState Name="Started" x="220" y="2520">
+        <ECAction Algorithm="Alg_Evaluate" Output="Run.START" />
+      </ECState>
+      <ECState Name="Sample" x="3295" y="1260">
+        <ECAction Algorithm="Alg_Sample" />
+      </ECState>
+      <ECState Name="Judge" x="2480" y="2520">
+        <ECAction Algorithm="Alg_Evaluate" Output="Run.SAMPLE" />
+      </ECState>
+      <ECTransition Source="Wait" Destination="Init" Condition="INIT" x="1320" y="710" />
+      <ECTransition Source="Init" Destination="Wait" Condition="1" x="1800" y="870" />
+      <ECTransition Source="Wait" Destination="Start" Condition="START" x="2144" y="710" />
+      <ECTransition Source="Start" Destination="Started" Condition="1" x="1590" y="1970" />
+      <ECTransition Source="Started" Destination="Wait" Condition="1" x="2954" y="1340" />
+      <ECTransition Source="Wait" Destination="Sample" Condition="SAMPLE" x="2932" y="710" />
+      <ECTransition Source="Sample" Destination="Judge" Condition="1" x="3496" y="1970" />
+      <ECTransition Source="Judge" Destination="Wait" Condition="1" x="1273" y="1340" />
+    </ECC>
+    <Algorithm Name="Alg_Init">
+      <ST>IdParams := CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, UaPath)), "/Parameters/MyParameter"), "]");  (* YOUR OWN: one line per parameter *)</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Start">
+      <ST>Run.Timed := TRUE;  (* YOUR OWN: TRUE: the time RunTime ends the run; FALSE: Run.Post ends it, and RunTime is its timeout *)
+Run.RunTime := MUL_TIME(T#1s, MyParameter);  (* YOUR OWN: how long it runs (Timed) or may run (not Timed) *)
+Run.Command := 1;  (* YOUR OWN: the command to send: its number in EC_, in the order of its table (0 Stop, 1 MyCommand, ...) *)
+Run.Arg := 0.0;  (* YOUR OWN: the command's argument, e.g. a position; 0.0 for none *)
+Run.StopCommand := 0;  (* YOUR OWN: the command sent when the run ends: 0 Stop (all off), or another *)</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Evaluate">
+      <ST>Run.Pre := TRUE;  (* YOUR OWN: the precondition: may it start? *)
+Run.Post := FALSE;  (* YOUR OWN: the postcondition: is it done? *)
+Run.Inv := TRUE;  (* YOUR OWN: the invariant: may it go on? *)</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Sample">
+      <ST>Run.EqHolder := EqHolder;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

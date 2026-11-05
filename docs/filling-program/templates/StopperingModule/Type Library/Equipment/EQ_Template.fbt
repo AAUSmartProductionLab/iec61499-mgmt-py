@@ -1,0 +1,203 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EQ_Template" Comment="TEMPLATE for your equipment block, EQ_&lt;Equipment&gt;: copy it under that name, then change what says YOUR OWN, and this comment; keep the rest as it is. An equipment block: the only block that touches this equipment's pins. Skills send it what to switch over a local channel; it switches the outputs (off first, then on), reads the inputs every cycle and reports them to the skills and to OPC UA. One skill holds it at a time; on release or when the module aborts it switches everything off. Technical: A piece of equipment to make your own: one input, one output, one command besides Stop; equipment IO: owns its IO points, writes the output values its holder sends, reads its inputs every cycle and reports changes">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="stoppering" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
+        <With Var="Module" />
+        <With Var="Name" />
+        <With Var="UaRoot" />
+        <With Var="UaEnable" />
+        <With Var="CycleTime" />
+        <With Var="MyInput_Address" />
+        <With Var="MyInput_Sim" />
+        <With Var="MyOutput_Address" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="Name" Type="WSTRING" InitialValue="&quot;Template&quot;" Comment="YOUR OWN, your equipment's name. The equipment item's name: its local channels and OPC UA folder" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" Comment="Publish on OPC UA" />
+      <VarDeclaration Name="CycleTime" Type="TIME" InitialValue="T#50ms" Comment="How often the inputs are read" />
+      <VarDeclaration Name="MyInput_Address" Type="STRING" Comment="YOUR OWN, one per input pin. Where MyInput is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+      <VarDeclaration Name="MyInput_Sim" Type="BOOL" InitialValue="FALSE" Comment="YOUR OWN, one per input pin. The value of MyInput when simulated (address 'sim')" />
+      <VarDeclaration Name="MyOutput_Address" Type="STRING" Comment="YOUR OWN, one per output pin. Where MyOutput is: 'gpio[chip:line(:pull_up|:pull_down)(:active_low)]', 'pwm[chip:channel:period_ns]', 'modbus[...]', 'sim', or an IO handle's name; empty: not connected" />
+    </InputVars>
+    <OutputVars />
+  </InterfaceList>
+  <FBNetwork>
+    <Group Name="Core" Comment="One holder at a time, break before make, all off on release or abort; scanned every CycleTime" x="1000" y="1000" width="4855" height="2580" locked="false" />
+    <Group Name="Channels" Comment="Local channels to and from the skills (cmd, release, state), the module's state, and the inputs over OPC UA" x="1000" y="3880" width="7850" height="2780" locked="false" />
+    <Group Name="Inputs" Comment="The equipment's sensors: read every cycle, one block per IO point" x="9150" y="3880" width="3090" height="1380" locked="false" />
+    <Group Name="Outputs" Comment="The equipment's actuators: written on a change and every cycle, one block per IO point" x="1000" y="6960" width="3050" height="1490" locked="false" />
+    <FB Name="Logic" Type="stoppering::EL_Template" x="990" y="150" Comment="YOUR OWN, Change Type to your EL_&lt;Equipment&gt;. The equipment's logic (EL_): takes commands from one holder at a time, switches the outputs (off first, then on), switches all off on release or module abort, and reports input changes.">
+      <Attribute Name="GroupName" Type="STRING" Value="Core" />
+    </FB>
+    <FB Name="Cycle" Type="iec61499::events::E_CYCLE" x="3895" y="150" Comment="Ticks every cycle so the inputs are read and the outputs refreshed.">
+      <Attribute Name="GroupName" Type="STRING" Value="Core" />
+    </FB>
+    <FB Name="Mode" Type="modlib::MOD_StateView" x="950" y="150" Comment="Watches the module's PackML state, to switch everything off when the module aborts.">
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="SubCmd" Type="iec61499::net::SUBSCRIBE_3" x="3500" y="150" Comment="YOUR OWN, its size: SUBSCRIBE_&lt;outputs + 2&gt;. Receives the commands skills send on this equipment's command channel.">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="SubRelease" Type="iec61499::net::SUBSCRIBE_1" x="6130" y="150" Comment="Hears the module's release channel: when its holder gives up, everything goes off.">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="PubState" Type="iec61499::net::PUBLISH_2" x="990" y="1350" Comment="YOUR OWN, its size: PUBLISH_&lt;inputs + 1&gt;. Publishes the inputs and the holder on this equipment's state channel, for the skills.">
+      <Parameter Name="QI" Value="TRUE" />
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="PubUa" Type="iec61499::net::PUBLISH_1" x="3740" y="1350" Comment="YOUR OWN, its size: PUBLISH_&lt;inputs&gt;; without inputs there is no PubUa. Writes the inputs (and a position, if it keeps one) to OPC UA, below Equipment/&lt;item&gt;.">
+      <Attribute Name="GroupName" Type="STRING" Value="Channels" />
+    </FB>
+    <FB Name="In_MyInput" Type="modlib::IO_DI" x="1310" y="150" Comment="YOUR OWN, one per input pin: IO_DI for a switch, IO_AI for an analog input. The pin MyInput: reads the input at MyInput_Address (a Pi pin, Modbus, or simulated).">
+      <Attribute Name="GroupName" Type="STRING" Value="Inputs" />
+    </FB>
+    <FB Name="Out_MyOutput" Type="modlib::IO_DO" x="1350" y="150" Comment="YOUR OWN, one per output pin: IO_DO for a switched output, IO_AO for an analog one. The pin MyOutput: switches the output at MyOutput_Address (a Pi pin, Modbus, or simulated).">
+      <Attribute Name="GroupName" Type="STRING" Value="Outputs" />
+    </FB>
+    <EventConnections>
+      <Connection Source="INIT" Destination="Logic.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.INITO" Destination="Mode.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.INITO" Destination="SubCmd.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.INITO" Destination="SubRelease.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubRelease.INITO" Destination="PubState.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubState.INITO" Destination="PubUa.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="PubUa.INITO" Destination="In_MyInput.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_MyInput.INITO" Destination="Out_MyOutput.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_MyOutput.INITO" Destination="Cycle.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_MyOutput.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.IND" Destination="Logic.CMD">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubRelease.IND" Destination="Logic.RELEASE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.CHG" Destination="Logic.MOD_CHG">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Cycle.EO" Destination="Logic.REFRESH">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Cycle.EO" Destination="In_MyInput.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_MyInput.CNF" Destination="Logic.SAMPLE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.STATE" Destination="PubState.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.STATE" Destination="PubUa.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.DRIVE" Destination="Out_MyOutput.REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Out_MyOutput.CNF" Destination="Logic.DRIVEN">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Module" Destination="Logic.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Name" Destination="Logic.Name">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaRoot" Destination="Logic.UaRoot">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Module" Destination="Mode.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdCmd" Destination="SubCmd.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdRelease" Destination="SubRelease.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdState" Destination="PubState.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.IdPub" Destination="PubUa.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="PubUa.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="CycleTime" Destination="Cycle.DT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_1" Destination="Logic.C_Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_2" Destination="Logic.C_Release">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubCmd.RD_3" Destination="Logic.C_MyOutput">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="SubRelease.RD_1" Destination="Logic.R_Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Mode.State" Destination="Logic.ModuleState">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="MyInput_Address" Destination="In_MyInput.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="MyInput_Sim" Destination="In_MyInput.SimValue">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="In_MyInput.IN" Destination="Logic.I_MyInput">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.MyInput" Destination="PubState.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.MyInput" Destination="PubUa.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.Holder" Destination="PubState.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="MyOutput_Address" Destination="Out_MyOutput.Address">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.O_MyOutput" Destination="Out_MyOutput.OUT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </DataConnections>
+  </FBNetwork>
+</FBType>

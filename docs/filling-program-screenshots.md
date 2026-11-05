@@ -17,7 +17,9 @@ You put blocks of them into yours and give them values. What you make yourself i
 | A piece of equipment | 5: `EQ_<Item>`, `EL_<Item>`, `EC_<Item>`, `EV_<Item>`, `EP_<Item>` | Its pins: one IO block per pin, the pins' names in the algorithms, and its command table. The state machines are the same in every piece of equipment without a position, so you copy them |
 
 You make each new type as a copy of a type that is nearly the same, and change only your own part.
-Section 10 does that step by step for a new stopper feeder and its primitive. Section 11 builds
+Section 10 does that step by step for a new stopper feeder and its primitive. Templates of every new
+type, with your own part marked *YOUR OWN*, are in
+[filling-program/templates](filling-program/templates/README.md). Section 11 builds
 FORTE with your types and puts them on your PC and on the module's Pi.
 
 **New to IEC 61499?** Read sections 1, 2 and 6 first: they say what the program is made of and how
@@ -1724,15 +1726,27 @@ Make every new type as a copy of the type the table in 10.1 names, and change on
    `EL_Piston` inside). Right-click such a block, *Change Type*, and choose the new one. Connections
    to pins the new type does not have are shown as errors: delete them and draw the new ones.
 
-A type made from nothing instead: *File > New > Type*, with the template *Basic*, *Simple* or
-*Composite*. Save often (Ctrl+S), and check the project before you build (section 11.2).
+**Or start from a template.** [filling-program/templates](filling-program/templates/README.md) has
+one of each new type, for the stoppering and for the capping module:
+- `EC_Template` to `EP_Template`: a piece of equipment with one input and one output;
+- `SC_TemplateUntil`, `SK_TemplateUntil`: a primitive that runs until an input says it is done;
+- `SC_TemplateTimed`, `SK_TemplateTimed`: a primitive that runs for a time given as a parameter.
+
+They are the same types as the lab's with neutral names (`MyInput`, `MyOutput`, `MyCommand`). In
+each, every pin, block, algorithm line and size that is your own says *YOUR OWN* in its comment, and
+how many of it there are. Copy the set into your project as its README says, then copy and change
+each template as above.
+
+A type made from nothing instead: *File > New > Type*, with the IDE's own template *Basic*,
+*Simple* or *Composite*. Save often (Ctrl+S), and check the project before you build (section 11.2).
 
 **Sizes of `PUBLISH`, `SUBSCRIBE` and `SERVER`.** The project declares every size it uses in
 *Type Library/Generic* (`PUBLISH_4`, `SUBSCRIBE_5`, ...), so the IDE knows its pins. FORTE makes
 any size from the name. When you need a size that is not there (the feeder's port needs
 `SUBSCRIBE_2`), copy the next smaller one (`SUBSCRIBE_1`) as `SUBSCRIBE_2` and add the output
 `RD_2` of type `ANY`, with the event `IND` (its *With*, as `RD_1` has). For `PUBLISH_n` it is the
-input `SD_n` with `REQ`; for `SERVER_2_n` the output `RD_n` with `IND`.
+input `SD_n` with `REQ`; for `SERVER_2_n` the output `RD_n` with `IND`. The templates bring the
+sizes they use themselves (`SUBSCRIBE_2` among them).
 
 ### 10.3 Step 1: the command table `EC_Feeder`
 

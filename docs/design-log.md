@@ -18,6 +18,29 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 5 Nov 2026
+
+- **Templates for the students' new types: generated, with their own part marked.** *CIRP* (what a
+  person makes by hand per primitive and per piece of equipment, and what is the same in every one).
+  - For the stoppering and capping modules, `docs/filling-program/templates` holds one template of
+    each type a student makes: `EC_`, `EL_`, `EV_`, `EQ_`, `EP_Template` (equipment with one input
+    and one output), and `SC_`/`SK_TemplateUntil` and `SC_`/`SK_TemplateTimed` (a primitive that a
+    signal ends, and one that a time parameter ends).
+  - In each template, every pin, block, algorithm line and channel size that is the student's own
+    says *YOUR OWN* in its comment, with how many there are (one per input pin, one per command).
+    The rest is the same in every type of its kind.
+  - `make_templates.py` generates them with `modgen` from a neutral entry added to a copy of each
+    module's spec, and then marks them. So they are always the generator's current types and pass
+    the IDE's check. The marking rule is that a line or pin naming a placeholder (`MyInput`,
+    `MyOutput`, `MyParameter`) is the student's own, plus the contract's two algorithms and the
+    sizes.
+  - Chosen instead of:
+    - hand-written template files, which go out of date with the generator;
+    - only "copy the nearest lab type" (section 10 of the guide), which leaves the student to find
+      which parts of `EL_Piston` are the piston's. Both routes stay.
+  - The marked templates make the split between the student's own part and the shared part, which
+    the paper measures, visible in the types themselves.
+
 ## 4 Nov 2026
 
 - **Students make the real modules' new blocks by hand, by copying the nearest type.** *CIRP* (the
