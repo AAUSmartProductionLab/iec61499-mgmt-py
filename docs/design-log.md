@@ -20,6 +20,30 @@ A running log of design considerations made while building, for writing the pape
 
 ## 5 Nov 2026
 
+- **Q4 judged by a process model of the filling station, not by the AAS's own conditions.** *CIRP*
+  (Q4), *Journal* (how far capability conditions carry).
+  - The oracle (`cell/eval/process_model.py`) runs a flow in 10 ms steps: the tip moving at the axis's
+    speed, the pump dosing, the scale, the branches at once, one holder per item. It knows the
+    containers (rim, bottom, capacity, diameter) and the physics: spill, crash, overflow, foam when
+    filled from the bottom, volume, a weighing on a tared scale with nothing touching or moving, the
+    tip out at the end. It shares only the hardware's ranges with the AAS. Instead of: the outline's
+    "a process model of needle depth, liquid, spill and weight" left open; and instead of judging by
+    the module's conditions, which would measure the model against itself.
+  - The check is what the paper describes, in three parts: the module spec takes the skill (limits,
+    names, results), `modplan.check` finds no failing condition, and what the flow leaves
+    (`modplan.check.simulate`) is the product's volume and weight. The baselines are the structure
+    the 4diac IDE checks, and six sequence rules written beforehand, as a tool expert writes them for
+    a workflow engine [lindorfer2019user].
+  - Matching (Q4b) is judged against a truth found by running, in the oracle, the built skill and
+    then witness flows built from the product and the hardware alone. A capability whose narrowing
+    lies in how the skill moves (BottomUpFilling) cannot be planned, so it is offered only by a
+    skill written for it.
+  - The first runs are not counted, as the harness was not committed yet. They showed what the
+    conditions leave out: Taring has no condition, and the container's geometry, the foam and the
+    timing are in no condition at all. The checker also takes only the ends of a move, without its
+    speed, so it rejects a rise that the dose finishes before. Kept as found; they are the paper's
+    limits of the check.
+
 - **Templates for the students' new types: generated, with their own part marked.** *CIRP* (what a
   person makes by hand per primitive and per piece of equipment, and what is the same in every one).
   - For the stoppering and capping modules, `docs/filling-program/templates` holds one template of
