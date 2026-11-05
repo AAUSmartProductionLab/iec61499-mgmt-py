@@ -40,6 +40,11 @@ A running log of design considerations made while building, for writing the pape
       which parts of `EL_Piston` are the piston's. Both routes stay.
   - The marked templates make the split between the student's own part and the shared part, which
     the paper measures, visible in the types themselves.
+- **The student package is complete: the FORTE kit and a PDF of the guide go into the zip.** The
+  PDF is made by pandoc to HTML and then printed by a headless Chrome. LaTeX was not chosen because
+  the guide's pictures are SVG, which a browser prints as drawings (sharp at any zoom), and because
+  the guide's contents links and its bookmarks carry over. *CIRP* (the material students build
+  with).
 
 ## 4 Nov 2026
 
