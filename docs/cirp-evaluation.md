@@ -503,3 +503,36 @@ than 1 s on the PC.
 case), `cell/eval/q4_analysis.py` the tables (`q4-<when>.md`) and the figure. Q4 runs no FORTE: the
 check and the match come before anything is built, and are deterministic, so each mutant and case is
 run once (the plan's time five times).
+
+**Results (5 Nov).** `cell/eval/results/q4-2026-11-05T2346.jsonl`, commit `2ed3c87` with the tools
+unchanged; the tables in `q4-2026-11-05T2346.md`, the figures `docs/paper/cirp/figures/check.pdf` and
+`match.pdf`. The first runs, before the harness was committed, gave the same numbers and are not kept.
+
+- *Q4a, the population:* 245 distinct mutants (Dispensing 62, DoubleDose 84, BottomUpFilling 99), of
+  which the oracle finds 136 spoil the product or cannot be carried out, 109 not.
+- *H4.1 fails.* The check rejects 117 of the 136 (recall 86 % [79, 91]): every deletion, swap, value
+  beyond its limits and pair made parallel, and every extra dose (by the volume it leaves). It misses
+  19: a Tare inserted after the needle went in or after a dose (13; Taring has no condition in the
+  AAS, so nothing says the scale is tared with the empty container), and six of BottomUpFilling's where
+  the needle starts too high or the dose is too slow for the rise (foam, 4) or the needle goes to the
+  barrel's bottom (crash, 2). Foam and the container's geometry are in no condition: the narrowing of
+  BottomUpFilling lies in how the skill moves (vocabulary 0.6).
+- *H4.2 fails.* Of the 143 rejected, 117 spoil the product (precision 82 % [75, 87]). The 26 others are
+  as expected stricter than the physics: Weigh needs the needle at home where out of the container is
+  enough (13), the module's rest at the end (3), the one holder per item (1), and nine of
+  BottomUpFilling's where the needle rises past the fill position after the dose is in: the check takes
+  a move's ends, not its speed.
+- *H4.3 holds.* Structure alone rejects 3 (2 % [1, 6]), the ones whose result names a deleted Weigh.
+  The hand-written rules reject 102 (recall 75 % [67, 82], precision 86 % [78, 91]): all of them the
+  check rejects too, and they miss 15 the check catches, the extra doses (no rule about the volume) and a
+  dose made parallel to Home. A rule more would catch those; the check needs none, as the volume comes
+  from the capabilities' effects.
+- *Q4b, H4.4 holds in part.* The answer equals the truth in 100 of 104 cases (96 % [91, 98]): 40
+  offered, 33 after a reconfiguration, 27 not offered. Nothing the module cannot do is offered by a
+  built skill. The 4 disagreements are the syringe on the raised station: BottomUpFilling, described,
+  covers it, but the axis cannot reach the barrel's bottom there (60 mm of travel, the bottom at 64), so
+  the needle starts 4 mm above the liquid and it foams. The described skill was not checked against
+  the product; the check of Q4a would not see it either (foam is in no condition).
+- *H4.5 holds.* All 23 planned skills (15 to 25 mL on all variants, 10 mL on the small pump; two or
+  three doses) make the product right the first time in the oracle (100 % [86, 100]).
+- *H4.6 holds.* Planning takes 0.72 ms (median), 0.98 ms at most.
