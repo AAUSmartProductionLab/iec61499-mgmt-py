@@ -1,0 +1,203 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SK_TemplateUntil" Comment="TEMPLATE for your primitive, SK_&lt;Primitive&gt;: copy it under that name, then change what says YOUR OWN, and this comment; keep the rest as it is. A skill primitive: one action of one piece of equipment (move the axis, run the pump, weigh). It can be called on its own over OPC UA, or be a step of a bigger skill. Inside: SKILL_Core (state machine and OPC UA methods), a parameter block per parameter, SC_ (its contract: what this skill does and when it is done), SKILL_Run (one run, the same for every primitive) and EP_ (the equipment as the skill sees it). Technical: Skill primitive TemplateUntil: A primitive to make your own: MyCommand until MyInput says it is done (parameters: none). OPC UA Start(Session, parameters...)/Stop/Abort/Reset(Session) -&gt; [Accepted, ErrorID]; START/HALT/ABORT/RESET from a parent -&gt; SUCCESS or FAILURE(ErrorID)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="stoppering" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise: its OPC UA nodes and its equipment's channels">
+        <With Var="Module" />
+        <With Var="UaRoot" />
+        <With Var="UaPath" />
+        <With Var="UaEnable" />
+        <With Var="Methods" />
+        <With Var="Holder" />
+        <With Var="ReleaseAfter" />
+        <With Var="Timeout" />
+      </Event>
+      <Event Name="START" Type="Event" Comment="Start a run, from the parent (a step of a sequence): no session check" />
+      <Event Name="HALT" Type="Event" Comment="Stop the run, from the parent" />
+      <Event Name="ABORT" Type="Event" Comment="Abort: everything off at once" />
+      <Event Name="RESET" Type="Event" Comment="Reset from Failed or Aborted to Idle" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
+      <Event Name="SUCCESS" Type="Event" Comment="The run succeeded (the results are set)" />
+      <Event Name="FAILURE" Type="Event" Comment="The run failed (ErrorID)">
+        <With Var="ErrorID" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaPath" Type="WSTRING" Comment="This skill's OPC UA folder below UaRoot, e.g. /Skills/Dispensing" />
+      <VarDeclaration Name="UaEnable" Type="BOOL" Comment="Publish on OPC UA" />
+      <VarDeclaration Name="Methods" Type="BOOL" Comment="Offer the OPC UA methods Start, Stop, Abort, Reset (FALSE: a step, run by its parent)" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="The name the equipment is held under: the skill's own, or for a step the skill it belongs to" />
+      <VarDeclaration Name="ReleaseAfter" Type="BOOL" InitialValue="TRUE" Comment="Give up the equipment when the run ends (FALSE: the next step keeps it)" />
+      <VarDeclaration Name="Timeout" Type="TIME" InitialValue="T#2000ms" Comment="YOUR OWN, how long a run may take. How long the run may take before it fails with Timeout (3)" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="State" Type="USINT" Comment="Skill state: 0 Idle, 1 Running, 2 Stopping, 3 Succeeded, 4 Failed, 5 Aborted" />
+      <VarDeclaration Name="ErrorID" Type="UINT" Comment="Error code: 0 none, 1 PreconditionViolated, 2 InvariantViolated, 3 Timeout, 4 NotReady, 5 NotPermitted, 6 Busy, 7 Interrupted, 8 OutOfRange" />
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <Group Name="SkillControl" Comment="State machine and OPC UA: Start(Session, parameters) with the range check, Stop, Abort, Reset; State, parameters and results published" x="1000" y="1000" width="6470" height="2980" locked="false" />
+    <Group Name="Execution" Comment="What the skill is (its contract) and one run of it, the same for every primitive" x="1000" y="4280" width="6375" height="1780" locked="false" />
+    <Group Name="Equipment" Comment="The equipment as the skill sees it: its state in, the command out" x="7675" y="4280" width="2790" height="1480" locked="false" />
+    <FB Name="Control" Type="modlib::SKILL_Core" x="1150" y="150" Comment="The skill's state machine (SKILL_Core): checks a client's Start, publishes State and ErrorID, offers Stop, Abort and Reset over OPC UA, and starts the run when it may begin.">
+      <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+    </FB>
+    <FB Name="Contract" Type="stoppering::SC_TemplateUntil" x="990" y="150" Comment="YOUR OWN, Change Type to your SC_&lt;Primitive&gt;. What this skill is (its SC_ type): the command it sends, how long it may run, and when it may start, is done, and must stop.">
+      <Attribute Name="GroupName" Type="STRING" Value="Execution" />
+    </FB>
+    <FB Name="UaStart" Type="iec61499::net::SERVER_2_1" x="4690" y="150" Comment="YOUR OWN, its size: SERVER_2_&lt;1 + parameters&gt;. The OPC UA method Start: a client's call arrives here with its session id and the parameters; Control's answer (Accepted, ErrorID) goes back to the client.">
+      <Attribute Name="GroupName" Type="STRING" Value="SkillControl" />
+    </FB>
+    <FB Name="Run" Type="modlib::SKILL_Run" x="3920" y="150" Comment="One run (SKILL_Run, the same in every primitive): waits for the equipment, checks the contract's precondition, sends the command and watches the conditions until the skill is done.">
+      <Attribute Name="GroupName" Type="STRING" Value="Execution" />
+    </FB>
+    <FB Name="Port" Type="stoppering::EP_Template" x="950" y="150" Comment="YOUR OWN, Change Type to your equipment's EP_&lt;Equipment&gt; (it is the same in every primitive of that equipment). The equipment as this skill sees it (EP_): its state in (to the contract), the commands from the run (over the adapter AEquipment).">
+      <Attribute Name="GroupName" Type="STRING" Value="Equipment" />
+    </FB>
+    <EventConnections>
+      <Connection Source="Control.START_RSP" Destination="UaStart.RSP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaStart.IND" Destination="Control.START_REQ">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="INIT" Destination="Control.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.INITO" Destination="Contract.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.INITO" Destination="UaStart.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaStart.INITO" Destination="Run.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Run.INITO" Destination="Port.INIT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Port.INITO" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="START" Destination="Control.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="HALT" Destination="Control.HALT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="ABORT" Destination="Control.ABORT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="RESET" Destination="Control.RESET">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.SUCCESS" Destination="SUCCESS">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.FAILURE" Destination="FAILURE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.RUN" Destination="Contract.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.HALT_SEQ" Destination="Run.HALT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ABORT_SEQ" Destination="Run.ABORT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.RUN_STOPPING" Destination="Control.STOPPING_DONE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Run.DONE" Destination="Control.EXECUTE_DONE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Run.FAILED" Destination="Control.EXECUTE_FAILED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Run.HALTED" Destination="Control.EXECUTE_FAILED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Port.STATE" Destination="Contract.SAMPLE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Control.StartMethodId" Destination="UaStart.ID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaStart.RD_1" Destination="Control.Session">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.Accepted" Destination="UaStart.SD_1">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.StartError" Destination="UaStart.SD_2">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Module" Destination="Control.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaRoot" Destination="Control.UaRoot">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaPath" Destination="Control.UaPath">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="UaEnable" Destination="Control.UaEnable">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Methods" Destination="Control.Methods">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Methods" Destination="UaStart.QI">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.State" Destination="State">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Control.ErrorID" Destination="ErrorID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Timeout" Destination="Contract.Timeout">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Holder" Destination="Run.Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="ReleaseAfter" Destination="Run.ReleaseAfter">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Run.ErrorID" Destination="Control.ExecuteError">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Module" Destination="Port.Module">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Port.MyInput" Destination="Contract.MyInput">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Port.EqHolder" Destination="Contract.EqHolder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Run.EquipmentFree" Destination="Control.EquipmentFree">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </DataConnections>
+    <AdapterConnections>
+      <Connection Source="Contract.Run" Destination="Run.Contract">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Run.Equipment" Destination="Port.Skill">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </AdapterConnections>
+  </FBNetwork>
+</FBType>

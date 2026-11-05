@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EV_Template" Comment="TEMPLATE for the report form of your equipment, EV_&lt;Equipment&gt;: copy it under that name, then change what says YOUR OWN, and this comment; keep the rest as it is. Names the equipment's two channels, and unpacks its state channel into named values (its inputs and who holds it) for a skill. Technical: Names Template's channels; typed view of its state channel (inputs and holder)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="stoppering" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Name the equipment's channels">
+        <With Var="Module" />
+      </Event>
+      <Event Name="REQ" Type="Event" Comment="The equipment's state arrived">
+        <With Var="I_MyInput" />
+        <With Var="I_Holder" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="IdState and IdCmd are set">
+        <With Var="IdState" />
+        <With Var="IdCmd" />
+      </Event>
+      <Event Name="CNF" Type="Event" Comment="The values below are updated">
+        <With Var="MyInput" />
+        <With Var="Holder" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="I_MyInput" Type="BOOL" Comment="YOUR OWN, one per input pin. MyInput as read or received" />
+      <VarDeclaration Name="I_Holder" Type="WSTRING" Comment="Holder as read or received" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="MyInput" Type="BOOL" Comment="YOUR OWN, one per input pin. Template: MyInput, an input" />
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who holds the equipment (empty: free)" />
+      <VarDeclaration Name="IdState" Type="WSTRING" Comment="Local channel of the equipment's state" />
+      <VarDeclaration Name="IdCmd" Type="WSTRING" Comment="Local channel of the equipment's commands" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="INIT">
+      <ECAction Algorithm="INIT" Output="INITO" />
+    </ECState>
+    <ECState Name="REQ">
+      <ECAction Algorithm="REQ" Output="CNF" />
+    </ECState>
+    <Algorithm Name="INIT">
+      <ST>IdState := CONCAT(CONCAT("loc[", Module), "/Template/state]");  (* YOUR OWN: the equipment item's name, as Name in EQ_ *)
+IdCmd := CONCAT(CONCAT("loc[", Module), "/Template/cmd]");  (* YOUR OWN: the equipment item's name, as Name in EQ_ *)</ST>
+    </Algorithm>
+    <Algorithm Name="REQ">
+      <ST>MyInput := I_MyInput;  (* YOUR OWN: one line per input pin *)
+Holder := I_Holder;</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

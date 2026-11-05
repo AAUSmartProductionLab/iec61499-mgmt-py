@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="EC_Template" Comment="TEMPLATE for the command table of your equipment, EC_&lt;Equipment&gt;: copy it under that name, then change what says YOUR OWN, and this comment; keep the rest as it is. The equipment's command table: turns a command's name (Up, Down, Run, ...) into the output values to switch, phase by phase with their times. Technical: Commands of Template as output values, in timed phases: Stop=0, MyCommand=1">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="stoppering" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="PLAY" Type="Event" Comment="Play a command: its output values, phase by phase">
+        <With Var="Holder" />
+        <With Var="Command" />
+        <With Var="Release" />
+      </Event>
+      <Event Name="PHASE_T" Type="Event" Comment="A phase's time is up" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="OUT" Type="Event" Comment="Send the output values">
+        <With Var="O_Holder" />
+        <With Var="O_Release" />
+        <With Var="N_MyOutput" />
+      </Event>
+      <Event Name="PHASE_START" Type="Event" Comment="Start a phase's timer (PhaseDT)">
+        <With Var="PhaseDT" />
+      </Event>
+      <Event Name="PHASE_STOP" Type="Event" Comment="Stop the phase's timer" />
+      <Event Name="PLAYED" Type="Event" Comment="All phases were played" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="Who sends the command" />
+      <VarDeclaration Name="Command" Type="USINT" Comment="The command's code" />
+      <VarDeclaration Name="Release" Type="BOOL" Comment="Give up the equipment after the command" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="O_Holder" Type="WSTRING" Comment="Sent: who holds the equipment" />
+      <VarDeclaration Name="O_Release" Type="BOOL" Comment="Sent: give up the equipment after this" />
+      <VarDeclaration Name="N_MyOutput" Type="BOOL" Comment="YOUR OWN, one per output pin. Sent: the value of MyOutput" />
+      <VarDeclaration Name="PhaseDT" Type="TIME" Comment="How long the phase lasts" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Phase" Type="USINT" />
+      <VarDeclaration Name="Timed" Type="BOOL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="1202" y="0" />
+      <ECState Name="Play" x="0" y="1260">
+        <ECAction Algorithm="Alg_Play" Output="PHASE_STOP" />
+      </ECState>
+      <ECState Name="Next" x="1990" y="1260">
+        <ECAction Algorithm="Alg_Next" />
+      </ECState>
+      <ECState Name="Send" x="878" y="2520">
+        <ECAction Algorithm="Alg_Send" Output="OUT" />
+      </ECState>
+      <ECState Name="Hold" x="208" y="3780">
+        <ECAction Output="PHASE_START" />
+      </ECState>
+      <ECState Name="Played" x="1782" y="3780">
+        <ECAction Output="PLAYED" />
+      </ECState>
+      <ECTransition Source="START" Destination="Play" Condition="PLAY" x="1005" y="710" />
+      <ECTransition Source="START" Destination="Next" Condition="PHASE_T" x="1862" y="710" />
+      <ECTransition Source="Play" Destination="Send" Condition="1" x="1005" y="1970" />
+      <ECTransition Source="Next" Destination="Send" Condition="1" x="1863" y="1970" />
+      <ECTransition Source="Send" Destination="Hold" Condition="[Timed]" x="1006" y="3230" />
+      <ECTransition Source="Send" Destination="Played" Condition="1" x="1759" y="3230" />
+      <ECTransition Source="Hold" Destination="START" Condition="1" x="2405" y="1970" />
+      <ECTransition Source="Played" Destination="START" Condition="1" x="358" y="1970" />
+    </ECC>
+    <Algorithm Name="Alg_Play">
+      <ST>Phase := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Next">
+      <ST>Phase := Phase + 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Send">
+      <ST>N_MyOutput := FALSE;  (* YOUR OWN: one line per output pin *)
+Timed := FALSE;
+PhaseDT := T#0ms;
+IF Command = 1 THEN  (* YOUR OWN: one branch per command but Stop: IF Command = 1 for the first, ELSIF Command = 2 for the next, ... *)
+  N_MyOutput := TRUE;  (* YOUR OWN: the outputs this command switches on *)
+END_IF;
+O_Holder := Holder;
+O_Release := Release AND NOT Timed;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>
