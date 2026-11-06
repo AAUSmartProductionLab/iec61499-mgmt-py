@@ -1,0 +1,14 @@
+{
+ "task": "value",
+ "route": "editor",
+ "pointer": 3,
+ "typed": 1,
+ "keys": 0,
+ "keystrokes": 4,
+ "log": [
+  "click open Dispensing",
+  "click the Dispense step",
+  "type FlowRate: 2.0",
+  "click Save"
+ ]
+}

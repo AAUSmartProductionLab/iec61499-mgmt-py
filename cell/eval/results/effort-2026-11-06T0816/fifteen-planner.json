@@ -1,0 +1,16 @@
+{
+ "task": "fifteen",
+ "route": "planner",
+ "pointer": 4,
+ "typed": 2,
+ "keys": 0,
+ "keystrokes": 14,
+ "log": [
+  "click Plan a skill",
+  "click Capability",
+  "click Filling",
+  "type FillVolume: 15",
+  "type Results: FillWeight",
+  "click Plan and describe"
+ ]
+}
