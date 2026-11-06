@@ -67,6 +67,7 @@ is a value or another property of the same capability.
 | Post | `measured` | Ends at what the capability measured (an output) |
 | Invariant | `unchanged` | Nothing changes it while the capability runs |
 | Invariant | `>= FillPosition`, `< …` | Holds all the time it runs: a step of a parallel branch may move it, inside the bound (since 29 Oct) |
+| Pre, Post, Invariant | `>= NestPosition - RimHeight + InsertDepth`, `= 1000 * ContentVolume / …` | The operand a **formula** (since 6 Nov): numbers and properties with `+ - * /`, brackets and `pi`, linear in the states the capabilities change. An Invariant `=` a formula about a property nothing else sets *defines* it while the capability runs (a derived quantity: how deep the needle is in the liquid) |
 
 The planner splits an expression into operator and operand. `=` and `+=` are **achieved** (a goal
 method finds a capability whose Post makes them hold); the other comparisons are **checked**. A value

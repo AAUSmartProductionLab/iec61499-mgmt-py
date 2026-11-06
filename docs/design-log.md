@@ -20,6 +20,26 @@ A running log of design considerations made while building, for writing the pape
 
 ## 6 Nov 2026
 
+- **A constraint's operand may be a linear formula of the capability's properties.** *CIRP* (the
+  time model) and *Journal* (the constraint language).
+  - `BasicConstraint` held `<op> <value or one property>` (ARSO 0.11). It now also takes a formula of
+    numbers and properties with `+ - * /`, brackets and `pi`: `= LinearAxisPosition - NestPosition +
+    InnerBottomHeight + 1000 * ContentVolume / (pi * InnerDiameter * InnerDiameter / 4)`. Still one
+    BasicConstraint, so the AAS stays IDTA 02020; the language is ours, as 02020 leaves it open.
+  - It has to be linear in the states the capabilities change; a product of two of them, or a division
+    by one, is refused when the domain is read (`Domain.nonlinear`). Constants may be multiplied (the
+    diameter squared). Why linear: with every rate constant between two events, a linear condition
+    holds all along a stretch if it holds at both its ends, so the checker looks at events only and is
+    still exact, with no time steps and no hybrid-systems solver.
+  - An Invariant `=` a formula about a property nothing else sets defines that property while the
+    capability runs: a derived quantity (how deep the needle is below the liquid's surface) that a
+    product's requirement can then bound.
+  - Instead of: derived properties defined by formula in the vocabulary (chosen against by the user,
+    6 Nov). A formula that mixes the module's facts (where the nest is on its axis) with the product's
+    (its inner diameter) belongs to the module's capability, not to a vocabulary shared by every line.
+  - A capability also says how long it runs (`Capability.duration`): the longest change it makes at a
+    rate, else its skill's Completion `After`; not known if neither says.
+
 - **The capabilities placed below DIN 8580 and VDI 2860, as HSU's ontology design patterns state
   them (vocabulary 0.9).** *CIRP* (a sentence and a citation) and *Journal* (the ontologies).
   - A capability class of the lab is also a subclass of the standard's class it is a kind of: DIN 8580

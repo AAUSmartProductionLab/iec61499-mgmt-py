@@ -87,8 +87,8 @@ class Container:
 
     def constrain(self, kind: str, prop: str, expression: str) -> None:
         """A constraint of ``kind`` (Pre, Post, Invariant) about the property ``prop``."""
-        named = parse(expression, kind).named                  # of the language, and of its kind
-        for needed in (prop, named):
+        named = parse(expression, kind).names                  # of the language, and of its kind
+        for needed in (prop, *named):
             if needed and needed not in self.properties:
                 raise ValueError(f"{self.name}: {kind} {prop} {expression}: it has no property {needed}")
         id_short, n = f"{kind}{prop}", 2
