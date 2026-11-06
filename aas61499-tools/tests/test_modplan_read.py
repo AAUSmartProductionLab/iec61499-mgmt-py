@@ -42,7 +42,12 @@ def test_the_domain_read_is_the_one_the_design_states(domain):
         for kind in ("pre", "post", "invariant"):
             said = lambda c_: {(c.var, str(c.expression)) for c in getattr(c_, kind)}       # noqa: E731
             assert said(got) == said(cap), (name, kind)
-    assert domain.capabilities["Dosing"].values == {"FillPosition": 40.0}
+    assert domain.capabilities["Dosing"].values == {"FillPosition": 40.0, "NestPosition": 70.0, "InsertDepth": 5.0}
+    # Time (0.10): the axis at its speed, the dose at its flow rate, the scale as long as its Completion says.
+    for name, cap in expected.capabilities.items():
+        got = domain.capabilities[name]
+        assert (got.rates, str(got.after)) == (cap.rates, str(cap.after)), name
+    assert domain.capabilities["Positioning"].values["Speed"] == 12.5 and domain.nonlinear() == []
     dose = domain.capabilities["Dosing"].parameters["Volume"]
     assert (dose.minimum, dose.maximum, dose.default) == (0.5, 10.0, 1.0)              # the default is the skill's
     assert list(domain.capabilities["Filling"].results) == ["FillWeight"]

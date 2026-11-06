@@ -74,11 +74,23 @@
 # a component, not handle a product), Receiving and Releasing (custody:
 # VDI 2860's holding and releasing are clamping), Loading, Unloading,
 # Unpacking and Packing (no class of either fits without a guess).
+#
+# 0.10 (6 Nov): time and the container. A property can be the rate of
+# another (lab:rateOf): a capability that has it changes the other
+# steadily, at that rate, from its start to its end (a dose at its flow
+# rate, an axis at its Speed). The container's geometry, as the product
+# states it (InnerDiameter, InnerBottomHeight and RimHeight above the
+# face it stands on), and where a module's nest puts that face on its
+# axis (NestPosition): from them a module states how deep its outlet is
+# in the liquid (OutletImmersion) while it doses. BottomUpFilling is now
+# a Filling that keeps OutletImmersion between MinImmersion and
+# MaxImmersion, bounds the product gives: what makes it narrower is a
+# constraint, so it can be planned (docs/skill-planning.md).
 #################################################################
 
 <https://smartproductionlab.aau.dk/semantics>
   rdf:type owl:Ontology ;
-  owl:versionInfo "0.9" ;
+  owl:versionInfo "0.10" ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://w3id.org/2025/pprl> ;
   owl:imports <http://www.w3id.org/hsu-aut/VDI2860> ;
@@ -99,6 +111,9 @@ lab:contributes rdf:type owl:AnnotationProperty ;
 
 lab:realizes rdf:type owl:AnnotationProperty ;
   rdfs:comment "Said of a skill type (Skills vocabulary): the capability of its component a primitive of this type realizes, with what that capability needs, does and keeps (0.2). It is a part of the module's capabilities, never offered on its own." .
+
+lab:rateOf rdf:type owl:AnnotationProperty ;
+  rdfs:comment "Said of a property: how fast another property changes, per second. A capability that has it and changes the other changes it steadily at that rate, from its start to its end, and runs as long as the change takes (0.10)." .
 
 
 #################################################################
@@ -186,7 +201,9 @@ lab:Filling rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCap
 
 lab:BottomUpFilling rdf:type owl:Class ; rdfs:subClassOf lab:Filling ;
   rdfs:label "Bottom-up filling" ;
-  rdfs:comment "Fill from the bottom of the container up: the needle starts deep in it and rises while the liquid flows, so that the liquid does not foam and no air is trapped (prefilled syringes, cartridges). What holds of Filling holds of it." .
+  rdfs:comment "Fill from the bottom of the container up: the needle starts deep in it and rises with the liquid while it flows, its tip never more than MinImmersion above the surface (the liquid would fall and foam) nor more than MaxImmersion below it (the needle would be wetted), so that no air is trapped (prefilled syringes, cartridges). What holds of Filling holds of it; the bounds are the product's (0.10)." ;
+  pprl:invariant [ pprl:onProperty lab:OutletImmersion ; pprl:expression ">= MinImmersion" ] ,
+                 [ pprl:onProperty lab:OutletImmersion ; pprl:expression "<= MaxImmersion" ] .
 
 lab:Stoppering rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability , din8580:Fuegen_durch_Presspassung ;
   rdfs:label "Stoppering" ; rdfs:comment "Place a stopper on a filled container and press it in." ;
@@ -291,7 +308,37 @@ lab:Volume rdf:type owl:Class ; rdfs:subClassOf css:Property ;
 lab:FlowRate rdf:type owl:Class ; rdfs:subClassOf css:Property ;
   rdfs:label "Flow rate" ; lab:valueType "number" ; lab:unit "mL/s" ;
   rdfs:comment "How fast a pump delivers liquid; a setting of the station, not asked for by a product." ;
+  lab:characterizes lab:Dosing ; lab:rateOf lab:ContentVolume .
+
+lab:Speed rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Speed" ; lab:valueType "number" ; lab:unit "mm/s" ;
+  rdfs:comment "How fast an axis moves (0.10)." ;
+  lab:characterizes lab:Positioning , lab:Referencing ; lab:rateOf lab:Position .
+
+lab:NestPosition rdf:type owl:Class ; rdfs:subClassOf css:Property , lab:Position ;
+  rdfs:label "Nest position" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where the face a container stands on in its nest is, along an axis over it: the position of the axis at which the tool's tip would touch it (0.10)." ;
+  lab:characterizes lab:Dosing , lab:Positioning .
+
+lab:InsertDepth rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Insert depth" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "How far below a container's rim an outlet has to be for what it delivers to go into the container (0.10)." ;
   lab:characterizes lab:Dosing .
+
+lab:BottomClearance rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Bottom clearance" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "How far above a container's inner bottom a tool's tip has to stay (0.10)." ;
+  lab:characterizes lab:Positioning .
+
+lab:MinImmersion rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Least immersion" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "The least OutletImmersion a product allows while it is filled from the bottom: negative, the most the tip may be above the liquid (0.10)." ;
+  lab:characterizes lab:BottomUpFilling .
+
+lab:MaxImmersion rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Greatest immersion" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "The greatest OutletImmersion a product allows while it is filled from the bottom: how deep the tip may be in the liquid (0.10)." ;
+  lab:characterizes lab:BottomUpFilling .
 
 lab:Weight rdf:type owl:Class ; rdfs:subClassOf css:Property ;
   rdfs:label "Weight" ; lab:valueType "number" ; lab:unit "g" ;
@@ -311,6 +358,30 @@ lab:FillWeight rdf:type owl:Class ; rdfs:subClassOf css:Property ;
 
 
 # Properties of the product: a process changes or checks them (0.2) ------------
+
+# The container's geometry (0.10): what a module needs to know where the
+# container's rim, its inner bottom and its liquid's surface are. Heights
+# are above the face the container stands on in its nest.
+
+lab:InnerDiameter rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Inner diameter" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Inner diameter of the container where it holds the liquid (0.10)." ;
+  lab:characterizes lab:Filling , lab:Dosing .
+
+lab:InnerBottomHeight rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Inner bottom height" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Height of the container's inner bottom above the face it stands on (0.10)." ;
+  lab:characterizes lab:Filling , lab:Dosing , lab:Positioning .
+
+lab:RimHeight rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Rim height" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Height of the container's rim above the face it stands on (0.10)." ;
+  lab:characterizes lab:Filling , lab:Dosing .
+
+lab:OutletImmersion rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Outlet immersion" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "How far the outlet a liquid is dosed through is below the liquid's surface in the container, negative when it is above it. A module states how it follows from where its axis is, the container's geometry and its content; defined only while it doses (0.10)." ;
+  lab:characterizes lab:Dosing , lab:BottomUpFilling .
 
 lab:HeldBy rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
   rdfs:label "Held by" ; lab:valueType "string" ;

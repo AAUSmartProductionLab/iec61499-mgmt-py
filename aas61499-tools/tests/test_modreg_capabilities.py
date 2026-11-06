@@ -62,12 +62,19 @@ def test_each_component_has_the_capabilities_its_primitives_realize(filling):
 
 def test_a_capability_says_what_it_needs_does_and_keeps(filling):
     """The vocabulary's (Dosing adds to the content, the vial is no longer weighed) and the module's
-    (the needle in the vial, and still)."""
+    (the needle in the vial, below its rim, and how deep it is in the liquid; and still)."""
     dosing = at(submodel(filling[0], "CapabilityDescription"), "Pump", "Dosing")
     assert sorted(constraints(dosing).values()) == [
-        ("Invariant", "LinearAxisPosition", ">= FillPosition"), ("Post", "ContentVolume", "+= Volume"),
-        ("Post", "Weighed", "= false"), ("Pre", "LinearAxisPosition", ">= FillPosition")]
+        ("Invariant", "LinearAxisPosition", ">= NestPosition - RimHeight + InsertDepth"),
+        ("Invariant", "OutletImmersion", "= LinearAxisPosition - NestPosition + InnerBottomHeight + 1000 * ContentVolume / "
+                                         "(pi * InnerDiameter * InnerDiameter / 4)"),
+        ("Post", "ContentVolume", "+= Volume"), ("Post", "Weighed", "= false"), ("Pre", "LinearAxisPosition", ">= FillPosition")]
     assert at(dosing, "PropertySet", "FillPosition", "Value")["value"] == "40.0"
+    # The container's geometry is the product's: states of it with no value here, no data point.
+    diameter = at(dosing, "PropertySet", "InnerDiameter")
+    assert at(diameter, "Value").get("value") is None and at(diameter, "SameProperty") is None
+    positioning = at(submodel(filling[0], "CapabilityDescription"), "LinearAxis", "Positioning")
+    assert at(positioning, "PropertySet", "Speed", "Value")["value"] == "12.5"           # the axis's, its rate
     volume = at(dosing, "PropertySet", "Volume", "Value")
     assert (volume["modelType"], volume["min"], volume["max"]) == ("Range", "0.5", "10.0")
     assert volume["supplementalSemanticIds"][0]["keys"][0]["value"] == f"{BASE}/semantics/Volume"   # a dose

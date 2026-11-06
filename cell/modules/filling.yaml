@@ -73,6 +73,12 @@ skills:
     parameters:
       Position: {unit: mm, minimum: 0.0, maximum: 60.0, default: 0.0, meaning: Position, description: Where to move to}
     timeout: 30s
+    # The needle's tip stays BottomClearance above the inner bottom of the container in the nest: where
+    # that is follows from where the nest's face is on the axis and the container's geometry, which the
+    # product states (vocabulary 0.10). Without a product nothing is known of it, and nothing is said.
+    capability:
+      values: {NestPosition: {value: 70.0, unit: mm}, BottomClearance: {value: 1.0, unit: mm}}
+      invariant: {LinearAxis.Position: "<= NestPosition - InnerBottomHeight - BottomClearance"}
   Dispense:
     description: Dispense a volume at the station's flow rate (open loop, by time, until a pump is wired)
     equipment: Pump
@@ -83,13 +89,20 @@ skills:
                  description: Flow rate of the station (calibration)}
     after: Volume / FlowRate
     # What holds on this module of the Dosing it realizes (the vocabulary says the rest): the pump
-    # doses through the needle on the axis, into the container only with the needle in it, at the
-    # fill position or deeper, and the needle stays in it meanwhile (it may rise as the liquid does,
-    # filling from the bottom). The fill position is a placeholder until the station is measured.
+    # doses through the needle on the axis, so a dose starts with the needle at the fill position or
+    # deeper, and the needle stays InsertDepth below the container's rim meanwhile (it may rise as the
+    # liquid does, filling from the bottom). While it doses, the module states how deep the needle's
+    # tip is in the liquid (OutletImmersion): the tip's position less the liquid's surface, the surface
+    # the container's inner bottom less the content over its cross-section (vocabulary 0.10; the
+    # container's geometry is the product's). The fill position and the nest are placeholders until the
+    # station is measured; the nest's face is 70 mm down the stroke (the tip at home 100 mm above the
+    # table, the nest 30 mm).
     capability:
-      values: {FillPosition: {value: 40.0, unit: mm}}
+      values: {FillPosition: {value: 40.0, unit: mm}, NestPosition: {value: 70.0, unit: mm}, InsertDepth: {value: 5.0, unit: mm}}
       precondition: {LinearAxis.Position: ">= FillPosition"}
-      invariant: {LinearAxis.Position: ">= FillPosition"}
+      invariant:
+        LinearAxis.Position: ">= NestPosition - RimHeight + InsertDepth"
+        OutletImmersion: "= LinearAxis.Position - NestPosition + InnerBottomHeight + 1000 * ContentVolume / (pi * InnerDiameter * InnerDiameter / 4)"
   Tare:
     description: Tare the scale
     equipment: Scale

@@ -19,7 +19,7 @@ resource ontology, is the blueprint every resource AAS is checked against.
 | `APSO/` | APSO 0.2 | The product AAS (to be brought to aas-model's `Product`) |
 | `AProSO/` | AProSO 0.1 | The process AAS (to be brought to aas-model's `Process`) |
 | `PPRL/` | PPRL 0.2 | What lies between them: a step requires a capability a resource offers, matching, skill composition, bindings |
-| `Vocabulary/` | the lab's vocabulary 0.9 | What the AASs' elements mean (their supplemental semantic ids): capabilities, process and auxiliary, and what each kind needs and does; what each is a kind of in DIN 8580 or VDI 2860 |
+| `Vocabulary/` | the lab's vocabulary 0.10 | What the AASs' elements mean (their supplemental semantic ids): capabilities, process and auxiliary, and what each kind needs and does; what each is a kind of in DIN 8580 or VDI 2860 |
 | `AAS/` | AAS v3.1 | The AAS metamodel as RDF (IDTA's, unchanged) |
 | `CSS/` | CSS 2.0.2 | Capabilities, skills and services (Plattform Industrie 4.0; Helmut Schmidt University) |
 | `VDI2860/`, `DIN8580/` | VDI 2860 2.0.0, DIN 8580 2.0.0 | The standards' taxonomies of handling functions and of manufacturing processes (Helmut Schmidt University, unchanged) |

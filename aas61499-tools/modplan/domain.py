@@ -119,8 +119,13 @@ class Capability:
         found = None
         if self.rates:
             end = effect(self, state, args)
+            adds = {c.var: c for c in self.post if c.expression.op == "+="}
             for var, rate in self.rates.items():
-                before, after, speed = state.get(var), end.get(var), self.lookup(rate, args, state)
+                speed = self.lookup(rate, args, state)
+                if var in adds:                       # what is added, whatever was there before
+                    before, after = 0.0, self.operand(adds[var].expression, args, state)
+                else:
+                    before, after = state.get(var), end.get(var)
                 if not all(_number(v) for v in (before, after, speed)) or speed == 0:
                     return None
                 found = max(found or 0.0, abs(after - before) / abs(speed))

@@ -103,6 +103,15 @@ class Vocabulary:
     def characterizes(self, prop: str) -> set[str]:
         return {local(c) for c in self.graph.objects(LAB[prop], LAB.characterizes)}
 
+    def describing(self, capability: str) -> list[str]:
+        """The properties that describe the capability class (lab:characterizes), by local name."""
+        return sorted(local(p) for p in self.graph.subjects(LAB.characterizes, LAB[capability]))
+
+    def rate_of(self, prop: str) -> str | None:
+        """The property ``prop`` is the rate of, per second (FlowRate: ContentVolume; 0.10)."""
+        found = self.graph.value(LAB[prop], LAB.rateOf)
+        return local(found) if found is not None else None
+
     def unit(self, prop: str) -> str | None:
         found = self.graph.value(LAB[prop], LAB.unit)
         return str(found) if found is not None else None
