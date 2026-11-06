@@ -58,10 +58,22 @@ def test_plain_filling_is_planned_as_before():
         "Positioning(Position=40.0)", "Dosing(FlowRate=1.0, Volume=1.0)", "Referencing()", "Weighing()"]
 
 
-@pytest.mark.parametrize("volume, top", [(0.25, 49.609), (0.5, 41.717)])
+@pytest.mark.parametrize("volume, top", [(0.5, 41.717), (0.75, 33.826)])
 def test_less_is_a_shorter_rise(volume, top):
     steps = plan(bottom_up(), "BottomUpFilling", {"FillVolume": volume, **SYRINGE})
     assert steps[1].along[0].args["Position"] == top and steps[1].args["FlowRate"] == 0.396
+
+
+def test_a_dose_the_pump_cannot_give_is_not_tracked_either():
+    """0.25 mL is below the pump's least dose (0.5 mL): no plan, tracked or not (Q4b found it planned)."""
+    with pytest.raises(NoPlan):
+        plan(bottom_up(), "BottomUpFilling", {"FillVolume": 0.25, **SYRINGE})
+
+
+def test_the_checker_says_an_argument_beyond_its_range():
+    domain = filling()
+    skill = Composite(execute=[{"MoveAxis": {"Position": 40.0}, "as": "In"}, {"Dispense": {"Volume": 0.25, "FlowRate": 1.0}}, "Home"])
+    assert [str(f) for f in check(domain, skill)] == ["Dispense: Volume = 0.25 is beyond its range (0.5 to 10.0)"]
 
 
 def test_a_station_raised_too_high_cannot_fill_from_the_bottom():
