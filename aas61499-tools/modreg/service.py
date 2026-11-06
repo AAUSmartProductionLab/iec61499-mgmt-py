@@ -33,7 +33,8 @@ HTTP (JSON):
                                 does (BottomUpFilling): planned as the vocabulary defines it, and every
                                 plan checked in time against the requirement first
     GET    /vocabulary/<name>   a capability class of the lab's vocabulary: its label, whether a product
-                                can require it, and the classes it narrows, itself first (lineage)
+                                can require it, the classes it narrows, itself first (lineage), and the
+                                results it can give (FillWeight)
     POST   /process/<product>   the product's process AAS on its line, from the bindings the planner
                                 saved in its recipe, written to the AAS server with the plan check's
                                 result as its Validation; the body may hold {"line": ..., "status": ...}
@@ -310,13 +311,14 @@ class Registry:
     @staticmethod
     def vocabulary(name: str) -> dict:
         """A capability class of the lab's vocabulary: its label, whether a product can require it,
-        and the classes it narrows, itself first (BottomUpFilling, Filling)."""
+        the classes it narrows, itself first (BottomUpFilling, Filling), and the results it can give."""
         from modplan.vocabulary import LAB, Vocabulary
         from rdflib import OWL, RDF
         voc = Vocabulary()
         if (LAB[name], RDF.type, OWL.Class) not in voc.graph:
             raise Refused(404, "vocabulary", [f"the vocabulary has no class {name}"])
-        return {"name": name, "label": voc.label(name), "process": voc.process(name), "lineage": voc.lineage(name)}
+        return {"name": name, "label": voc.label(name), "process": voc.process(name), "lineage": voc.lineage(name),
+                "results": voc.results(name)}
 
     def process(self, shell: str, request: dict) -> dict:
         """The process AAS of a product on its line (``modreg.process``), from the bindings the planner

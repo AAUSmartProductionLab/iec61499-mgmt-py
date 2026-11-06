@@ -322,7 +322,7 @@ def test_a_narrower_capability_is_planned_and_skills_are_checked_against_a_requi
         assert send(url, profile)[0] == 201
     with urllib.request.urlopen(f"{url}/vocabulary/BottomUpFilling") as response:
         assert json.loads(response.read()) == {"name": "BottomUpFilling", "label": "Bottom-up filling", "process": True,
-                                               "lineage": ["BottomUpFilling", "Filling"]}
+                                               "lineage": ["BottomUpFilling", "Filling"], "results": ["FillWeight"]}
     with pytest.raises(urllib.error.HTTPError):
         urllib.request.urlopen(f"{url}/vocabulary/Nothing")
     status, answer = post(f"{url}/plan/FillingModuleAAS", {"capability": "BottomUpFilling", "values": SYRINGE, "results": ["FillWeight"]})
