@@ -20,6 +20,18 @@ A running log of design considerations made while building, for writing the pape
 
 ## 6 Nov 2026
 
+- **The skill service answers what the process planner's Match and plan asks; matching stays in the
+  web UI.** *CIRP* (the automatic planning request).
+  - `GET /vocabulary/<class>`: what a required class narrows (BottomUpFilling, Filling), so the UI tries
+    to plan a narrower requirement on the modules that offer, or can be planned for, a class it narrows.
+    No module type is needed: every module's asset type is `.../Resource/Module`, and what a module can
+    do is what its capabilities say, which works for any process.
+  - `POST /plan/<shell>` plans a class the module does not offer (as the vocabulary defines it) and
+    checks every plan in time first; `POST /check/<shell>` with `{"capability", "values"}` checks the
+    module's skills against a requirement (Dispensing against the syringe: the needle 19 mm above the
+    liquid, then 12.6 mm in it). Instead of: a matching endpoint in the service, which would say again
+    what `capabilityMatching.ts` says (meaning, ranges, units, availability).
+
 - **The planner keeps invariants and tracks: a dose paired with the needle rising alongside, the rates
   set so that the depth in the liquid stays as it is.** *CIRP* (the planner, the main contribution) and
   *Journal*.

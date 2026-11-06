@@ -307,6 +307,37 @@ def test_the_skill_editor_has_a_flow_checked_and_a_skill_planned(service, aas_se
                                                  "results": ["Nothing"]})[0] == 422
 
 
+SYRINGE = {"FillVolume": 1.0, "InnerDiameter": 6.35, "InnerBottomHeight": 11.0, "RimHeight": 66.0,
+           "MinImmersion": -2.0, "MaxImmersion": 3.0}
+
+
+def test_a_narrower_capability_is_planned_and_skills_are_checked_against_a_requirement(service, aas_server):
+    """What the process planner's Match and plan asks (6 Nov): which classes a required one narrows
+    (BottomUpFilling is a Filling, so a module offering Filling is the one to plan it on); a plan for it
+    there, the needle rising alongside the dose; and whether the module's skills keep what it requires
+    (Dispensing does not: the needle stays at 40 mm and the syringe's bottom is 59 mm down)."""
+    pytest.importorskip("gtpyhop")
+    url, _ = service
+    for profile in profiles.describe_all(load(SPECS / "filling.yaml"), "pi"):
+        assert send(url, profile)[0] == 201
+    with urllib.request.urlopen(f"{url}/vocabulary/BottomUpFilling") as response:
+        assert json.loads(response.read()) == {"name": "BottomUpFilling", "label": "Bottom-up filling", "process": True,
+                                               "lineage": ["BottomUpFilling", "Filling"]}
+    with pytest.raises(urllib.error.HTTPError):
+        urllib.request.urlopen(f"{url}/vocabulary/Nothing")
+    status, answer = post(f"{url}/plan/FillingModuleAAS", {"capability": "BottomUpFilling", "values": SYRINGE, "results": ["FillWeight"]})
+    assert status == 200, answer
+    assert [(s["skill"], s.get("along")) for s in answer["steps"]] == [
+        ("MoveAxis", None), ("Dispense", None), ("MoveAxis", "Dosing"), ("Home", None), ("Weigh", None)]
+    assert "parallel" in answer["flow"][1]
+    # The needle at 40 mm starts 19 mm above the liquid and ends 12.6 mm in it: both bounds broken.
+    status, answer = post(f"{url}/check/FillingModuleAAS", {"capability": "BottomUpFilling", "values": SYRINGE})
+    assert status == 200 and [(f["step"], f["what"]) for f in answer["skills"]["Dispensing"]] == [
+        ("Dispense", "BottomUpFilling keeps OutletImmersion >= -2.0, but it comes to -19.0"),
+        ("Dispense", "BottomUpFilling keeps OutletImmersion <= 3.0, but it comes to 12.576")]
+    assert post(f"{url}/check/FillingModuleAAS", {"capability": "Nothing", "values": {}})[0] == 422
+
+
 def test_the_planner_has_the_process_aas_of_a_product_written(service, aas_server):
     """F6: after the planner saves a product's recipe with its bindings, the service writes the
     product's process AAS on the line that holds the bound modules, its Validation the plan check's."""

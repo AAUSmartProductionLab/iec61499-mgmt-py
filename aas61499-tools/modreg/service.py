@@ -23,10 +23,17 @@ HTTP (JSON):
                                   AAS server, and put them back (the skill editor, after saving)
     POST   /check/<shell>       the checker's findings on the module's skills (modplan); the body may
                                 hold {"skill": <a skill element as the editor has it>}, checked in its
-                                place
+                                place, and a requirement {"capability": "BottomUpFilling", "values":
+                                {...}}: each skill run in time with the product's geometry and checked
+                                against what the capability keeps (its bounds the values give)
     POST   /plan/<shell>        plan a skill: {"capability": "Filling", "values": {"FillVolume": 2.0},
                                 "results": ["FillWeight"], "name": "FillTwo", "write": true}; the steps
-                                and the flow, and with write the skill described on the AAS server
+                                and the flow, and with write the skill described on the AAS server. The
+                                capability may be one the module does not offer, narrower than one it
+                                does (BottomUpFilling): planned as the vocabulary defines it, and every
+                                plan checked in time against the requirement first
+    GET    /vocabulary/<name>   a capability class of the lab's vocabulary: its label, whether a product
+                                can require it, and the classes it narrows, itself first (lineage)
     POST   /process/<product>   the product's process AAS on its line, from the bindings the planner
                                 saved in its recipe, written to the AAS server with the plan check's
                                 result as its Validation; the body may hold {"line": ..., "status": ...}
@@ -237,12 +244,16 @@ class Registry:
         except desired.NotDescribed as e:
             raise Refused(404, step, [str(e)]) from e
 
-    def check_skills(self, shell: str, edited: dict | None = None) -> dict:
+    def check_skills(self, shell: str, edited: dict | None = None, requirement: dict | None = None) -> dict:
         """What does not hold in the module level skills of a module on the AAS server, run through
         the states (``modplan.check``): per skill, each finding with the skills that would fix it.
         ``edited`` is a skill as the editor holds it, not saved yet: it is checked in place of the
-        skill of its name."""
+        skill of its name. ``requirement`` ({"capability", "values"}): each skill is run from the
+        state that requirement starts from (the product's geometry) and checked against what the
+        capability keeps."""
         from modplan.check import check                    # the planning extra
+        from modplan.compose import requiring
+        from modplan.plan import NoPlan, start_state
         from modplan.read import read
         if edited is not None and not (isinstance(edited, dict) and edited.get("idShort")):
             raise Refused(400, "check", ["the skill to check is an element of the Skills submodel, with its idShort"])
@@ -254,18 +265,26 @@ class Registry:
             elements[:] = [e for e in elements if e.get("idShort") != edited.get("idShort")] + [edited]
         try:
             domain, composites = read(module, components), desired.described(module, components).composites
+            against = {}
+            if requirement and requirement.get("capability"):
+                capability, values = requirement["capability"], requirement.get("values") or {}
+                domain = requiring(domain, capability)
+                against = {"start": start_state(domain, capability, values), "task": domain.capabilities[capability],
+                           "values": values}
+        except NoPlan as e:
+            raise Refused(422, "check", [str(e)]) from e
         except (desired.NotDescribed, ValueError, KeyError) as e:
             raise Refused(422, "check", [str(e)]) from e
         names = [edited["idShort"]] if edited is not None else list(composites)
-        return {"shell": shell, "skills": {name: [asdict(f) for f in check(domain, composites[name])] for name in names}}
+        return {"shell": shell, "skills": {name: [asdict(f) for f in check(domain, composites[name], **against)] for name in names}}
 
     def plan(self, shell: str, request: dict) -> dict:
         """A new module level skill planned for a capability of a module on the AAS server
         (``modplan``): its steps and its flow; with ``write`` the skill described on the server, as
         the skill editor saves one (``modsync reconfigure`` builds it)."""
-        from modplan.compose import compose                # the planning extra
-        from modplan.lift import flow
-        from modplan.plan import NoPlan, plan
+        from modplan.compose import compose, planned        # the planning extra
+        from modplan.lift import flow, parts
+        from modplan.plan import NoPlan
         from modplan.read import read
         capability, values = request.get("capability"), request.get("values") or {}
         results = tuple(request.get("results") or ())
@@ -273,11 +292,12 @@ class Registry:
             raise Refused(400, "plan", ["name the capability to plan"])
         module, components = self.module(shell, "plan")
         try:
-            domain = read(module, components)
-            steps = plan(domain, capability, values, results)
+            domain, steps = planned(read(module, components), capability, values, results)
             found = {"shell": shell, "capability": capability, "flow": flow(domain, steps),
-                     "steps": [{"skill": domain.capabilities[s.capability].skill, "capability": s.capability,
-                                "component": domain.capabilities[s.capability].component, "args": s.args} for s in steps]}
+                     "steps": [{"skill": domain.capabilities[p.capability].skill, "capability": p.capability,
+                                "component": domain.capabilities[p.capability].component, "args": p.args,
+                                **({"along": s.capability} if p is not s else {})}
+                               for s in steps for p in parts(s)]}
             if request.get("write"):
                 composed = compose(module, components, capability, values, results, request.get("name"))
                 found.update(name=composed.name, stored=desired.store(self.server.url, composed.module, module))
@@ -286,6 +306,17 @@ class Registry:
         except (desired.NotDescribed, ValueError) as e:
             raise Refused(422, "plan", [str(e)]) from e
         return found
+
+    @staticmethod
+    def vocabulary(name: str) -> dict:
+        """A capability class of the lab's vocabulary: its label, whether a product can require it,
+        and the classes it narrows, itself first (BottomUpFilling, Filling)."""
+        from modplan.vocabulary import LAB, Vocabulary
+        from rdflib import OWL, RDF
+        voc = Vocabulary()
+        if (LAB[name], RDF.type, OWL.Class) not in voc.graph:
+            raise Refused(404, "vocabulary", [f"the vocabulary has no class {name}"])
+        return {"name": name, "label": voc.label(name), "process": voc.process(name), "lineage": voc.lineage(name)}
 
     def process(self, shell: str, request: dict) -> dict:
         """The process AAS of a product on its line (``modreg.process``), from the bindings the planner
@@ -384,7 +415,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self.answer(200, self.registry.derive(urllib.parse.unquote(parts[1])))
             if method == "POST" and parts[:1] == ["check"] and len(parts) == 2:
                 given = self.body() if int(self.headers.get("Content-Length") or 0) else {}
-                return self.answer(200, self.registry.check_skills(urllib.parse.unquote(parts[1]), given.get("skill")))
+                requirement = {k: given[k] for k in ("capability", "values") if k in given} or None
+                return self.answer(200, self.registry.check_skills(urllib.parse.unquote(parts[1]), given.get("skill"), requirement))
+            if method == "GET" and parts[:1] == ["vocabulary"] and len(parts) == 2:
+                return self.answer(200, self.registry.vocabulary(urllib.parse.unquote(parts[1])))
             if method == "POST" and parts[:1] == ["plan"] and len(parts) == 2:
                 return self.answer(200, self.registry.plan(urllib.parse.unquote(parts[1]), self.body()))
             if method == "POST" and parts[:1] == ["process"] and len(parts) == 2:
