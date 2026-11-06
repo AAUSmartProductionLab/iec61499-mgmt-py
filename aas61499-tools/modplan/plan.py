@@ -307,6 +307,8 @@ def _paired(s: Capability, a: Capability, meanings: list[str], keeping: _Keeping
         state = _from_state(planning, meanings)
         if any(holds(cap, c, state, args) is not True for cap, args in ((s, s_args), (a, a_args)) for c in cap.pre):
             return False
+        if not all(p.admits(args[n]) for cap, args in ((s, s_args), (a, a_args)) for n, p in cap.parameters.items() if n in args):
+            return False
         end = effect(a, effect(s, state, s_args), a_args)
         parts = [(s, s_args), (a, a_args)]
         if keeping.broken(parts, state) or keeping.broken(parts, end):
@@ -337,6 +339,8 @@ def _tracking(s: Capability, a: Capability, x: Var, y: Var, adding: Constraint, 
         doses = max(1, math.ceil(need / parameter.maximum - 10 ** -DIGITS)) if parameter.maximum else 1
         s_args = {**s.defaults(), amount: round(need / doses, DIGITS)}
         a_args = a.defaults()
+        if not parameter.admits(s_args[amount]):
+            return False                                   # the pump cannot dose so little
         # How the defined quantity moves with x and with y (the formula is linear in both).
         quantity = next(d for d in s.invariant if d.var in keeping.defined and d.var in {c.var for c in keeping.task.invariant})
         g = lambda st: s.operand(quantity.expression, s_args, st)                       # noqa: E731

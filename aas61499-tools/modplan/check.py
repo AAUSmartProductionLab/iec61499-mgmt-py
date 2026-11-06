@@ -3,7 +3,8 @@ and report every condition that does not hold, with the steps that would make it
 
 A step's capability is the one its primitive realizes; its arguments are the step's constants and,
 for a parameter of the skill it is handed, the value given (by default the parameter's default). A
-precondition that cannot be told (a value not known) is not reported. Both branches of a decision
+precondition that cannot be told (a value not known) is not reported, nor is an argument beyond the
+range of its parameter (6 Nov: a dose the pump cannot give). Both branches of a decision
 are checked; after it, a variable keeps its value only if both branches leave it the same. A skill
 ends at the module's rest state, or that is reported.
 
@@ -167,6 +168,12 @@ class _Checker:
                         seen[c.var] = round(value, DIGITS)
         return seen
 
+    def ranges(self, name: str, cap: Capability, args: dict, into: list | None = None) -> None:
+        """Report an argument beyond the range of its parameter (a dose the pump cannot give)."""
+        for given, p in cap.parameters.items():
+            if given in args and isinstance(args[given], (int, float)) and not isinstance(args[given], bool) and not p.admits(args[given]):
+                self.report(Finding(name, f"{given} = {_text(args[given])} is beyond its range ({_text(p.minimum)} to {_text(p.maximum)})"), into)
+
     def pre(self, name: str, cap: Capability, args: dict, state: dict, into: list | None = None) -> set[Var]:
         """Report the preconditions that do not hold; the variables they are about."""
         broken = set()
@@ -230,6 +237,7 @@ class _Checker:
             return state                             # a primitive no capability is realized by
         args = self.args(cap, step)
         alone = [(step.name, cap, args)]
+        self.ranges(step.name, cap, args)
         broken = self.pre(step.name, cap, args, state)
         self.keeps(alone, state, skip={step.name: broken})
         end = effect(cap, state, args)
@@ -269,6 +277,7 @@ class _Checker:
                     state[c.var] = 0.0
             here = [(r.name, r.cap, r.args) for r in running] + [(step.name, cap, args)]
             seen = self.derived([(c, a) for _, c, a in here], state)
+            self.ranges(step.name, cap, args, found)
             broken = self.pre(step.name, cap, args, seen, found)
             end = effect(cap, state, args)
             rates = {var: (end[var] - state[var]) / took for var in cap.rates
