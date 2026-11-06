@@ -1,0 +1,24 @@
+{
+ "task": "double",
+ "route": "editor",
+ "pointer": 12,
+ "typed": 2,
+ "keys": 0,
+ "keystrokes": 15,
+ "log": [
+  "click open Dispensing",
+  "click New skill from this",
+  "type its name: DoubleDose",
+  "click Create",
+  "click the Dispense step",
+  "click Add step",
+  "click Runs the skill",
+  "click Dispense (FillingPump)",
+  "click the new step again (choosing its skill renamed it)",
+  "click Volume from",
+  "click The skill's Volume",
+  "click Start (the skill itself)",
+  "type Volume default: 0.5",
+  "click Save"
+ ]
+}

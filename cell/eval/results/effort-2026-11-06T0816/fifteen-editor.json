@@ -1,0 +1,24 @@
+{
+ "task": "fifteen",
+ "route": "editor",
+ "pointer": 11,
+ "typed": 3,
+ "keys": 0,
+ "keystrokes": 18,
+ "log": [
+  "click open Dispensing",
+  "click New skill from this",
+  "type its name: Filling15",
+  "click Create",
+  "click the Dispense step",
+  "click Volume from",
+  "click A constant",
+  "type Volume: 7.5",
+  "click Add step",
+  "click Runs the skill",
+  "click Dispense (FillingPump)",
+  "click the new step again (choosing its skill renamed it)",
+  "type Volume: 7.5",
+  "click Save"
+ ]
+}
