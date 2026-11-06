@@ -6,6 +6,7 @@ pump doses, out of it and still while the scale weighs). The module's own skills
 truth: Dispensing (the spec), DoubleDose, Checked and Ready (the tests of rule set 2).
 """
 import copy
+import math
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,7 @@ import pytest
 from modgen import load
 from modgen.spec import Composite, Parallel, Step
 
-from modplan.check import check
+from modplan.check import check, timed
 from modplan.domain import PRODUCT, Capability, Constraint, Domain, Parameter, Var
 from modplan.expression import parse
 from modplan.lift import flow
@@ -31,27 +32,42 @@ def said(kind: str, prop: str, var: Var, text: str) -> Constraint:
     return Constraint(prop, var, parse(text, kind))
 
 
+IMMERSION = Var(PRODUCT, "OutletImmersion")
+# What the product states of its container (vocabulary 0.10): a 2R vial and the 1 mL syringe, as the
+# oracle of Q4 has them (cell/eval/process_model.py), heights above the face it stands on in the nest.
+VIAL_2R = {Var(PRODUCT, "InnerDiameter"): 14.0, Var(PRODUCT, "InnerBottomHeight"): 1.0, Var(PRODUCT, "RimHeight"): 35.0}
+SYRINGE = {Var(PRODUCT, "InnerDiameter"): 6.35, Var(PRODUCT, "InnerBottomHeight"): 11.0, Var(PRODUCT, "RimHeight"): 66.0}
+IMMERSED = "= LinearAxisPosition - NestPosition + InnerBottomHeight + 1000 * ContentVolume / (pi * InnerDiameter * InnerDiameter / 4)"
+
+
 def filling(dose: float = 10.0, needle_in_vial: bool = True, scale: bool = True) -> Domain:
-    """The filling module's domain; ``dose``: the largest dose of the pump."""
+    """The filling module's domain; ``dose``: the largest dose of the pump. The axis moves at 12.5
+    mm/s, the pump at its flow rate, the scale takes its Completion's time (vocabulary 0.10)."""
+    geometry = {var.meaning: var for var in VIAL_2R}
     caps = [
-        Capability("Referencing", "Referencing", "Home", "LinearAxis",
-                   post=[said("Post", "Referenced", HOMED, "= true"), said("Post", "Position", AXIS, "= 0.0")]),
+        Capability("Referencing", "Referencing", "Home", "LinearAxis", values={"Speed": 12.5},
+                   post=[said("Post", "Referenced", HOMED, "= true"), said("Post", "Position", AXIS, "= 0.0")], rates={AXIS: "Speed"}),
         Capability("Positioning", "Positioning", "MoveAxis", "LinearAxis", parameters={"Position": Parameter(0.0, 60.0, 0.0)},
-                   pre=[said("Pre", "Referenced", HOMED, "= true")], post=[said("Post", "Position", AXIS, "given")]),
+                   values={"NestPosition": 70.0, "BottomClearance": 1.0, "Speed": 12.5},
+                   pre=[said("Pre", "Referenced", HOMED, "= true")], post=[said("Post", "Position", AXIS, "given")],
+                   invariant=[said("Invariant", "Position", AXIS, "<= NestPosition - InnerBottomHeight - BottomClearance")],
+                   rates={AXIS: "Speed"}, variables=dict(geometry)),
         Capability("Dosing", "Dosing", "Dispense", "Pump",
                    parameters={"Volume": Parameter(0.5, dose, 1.0), "FlowRate": Parameter(0.1, 5.0, 1.0)},
-                   values={"FillPosition": 40.0},
+                   values={"FillPosition": 40.0, "NestPosition": 70.0, "InsertDepth": 5.0},
                    pre=[said("Pre", "NeedlePosition", AXIS, ">= FillPosition")] if needle_in_vial else [],
                    post=[said("Post", "ContentVolume", CONTENT, "+= Volume"), said("Post", "Weighed", WEIGHED, "= false")],
-                   invariant=[said("Invariant", "NeedlePosition", AXIS, ">= FillPosition")]),
+                   invariant=[said("Invariant", "NeedlePosition", AXIS, ">= NestPosition - RimHeight + InsertDepth"),
+                              said("Invariant", "OutletImmersion", IMMERSION, IMMERSED)],
+                   rates={CONTENT: "FlowRate"}, after=parse("= Volume / FlowRate"), variables={**geometry, "LinearAxisPosition": AXIS}),
     ]
     if scale:
         caps += [
-            Capability("Taring", "Taring", "Tare", "Scale", post=[said("Post", "Tared", TARED, "= true")]),
+            Capability("Taring", "Taring", "Tare", "Scale", post=[said("Post", "Tared", TARED, "= true")], after=parse("= 2.0")),
             Capability("Weighing", "Weighing", "Weigh", "Scale",
                        pre=[said("Pre", "Tared", TARED, "= true"), said("Pre", "NeedlePosition", AXIS, "= 0.0")],
                        post=[said("Post", "Weight", WEIGHT, "measured"), said("Post", "Weighed", WEIGHED, "= true")],
-                       invariant=[said("Invariant", "NeedlePosition", AXIS, "unchanged")]),
+                       invariant=[said("Invariant", "NeedlePosition", AXIS, "unchanged")], after=parse("= 0.2")),
         ]
     caps.append(Capability("Filling", "Filling", "Dispensing", None, parameters={"FillVolume": Parameter(0.5, 10.0)},
                            pre=[said("Pre", "ContentVolume", CONTENT, "= 0.0")],
@@ -168,9 +184,13 @@ def test_a_missing_step_is_found_with_the_step_that_makes_it_hold():
 
 
 def test_weighing_while_the_axis_moves_is_found():
-    """T7: Home and Weigh at once: the scale is read while the needle moves."""
-    found = check(filling(), Composite(execute=[{"parallel": [["Home"], ["Weigh"]], "as": "Both"}]))
-    assert [(f.step, "cannot run at the same time" in f.what) for f in found] == [("Weigh", True)]
+    """T7: Home and Weigh at once, the needle 20 mm down: the scale is read while the needle moves.
+    From home, Home does not move the needle, and nothing is said (in time, 6 Nov)."""
+    domain, both = filling(), Composite(execute=[{"parallel": [["Home"], ["Weigh"]], "as": "Both"}])
+    found = check(domain, both, start={**domain.rest, AXIS: 20.0})
+    assert ("Weigh", "keeps LinearAxis_ActualPosition.Position while Home changes it: they cannot run at the same time") in [
+        (f.step, f.what) for f in found]
+    assert check(domain, both) == []
 
 
 BOTTOM_UP = {"parameters": {"Volume": {"unit": "mL", "minimum": 0.5, "maximum": 10.0, "default": 1.0}},
@@ -187,11 +207,78 @@ def test_filling_from_the_bottom_keeps_the_needle_in_the_container():
 
 
 def test_a_needle_that_rises_out_of_the_container_while_dosing_is_found():
-    """T14: rising to 30 mm takes the needle out of the container before the dose is in."""
+    """T14: in a 2R vial (its rim 35 mm down, the needle 5 mm below it), rising to 30 mm takes the
+    needle out of the container before the dose is in. Without the product, nothing is known of where
+    its rim is, and nothing is said."""
     above = copy.deepcopy(BOTTOM_UP)
     above["execute"][1]["parallel"][1][0]["MoveAxis"]["Position"] = 30.0
-    (finding,) = check(filling(), Composite(**above))
+    above["execute"][1]["parallel"][0][0]["Dispense"]["FlowRate"] = 0.5          # 2 s; the needle passes 40 mm at 1.44 s
+    domain = filling()
+    (finding,) = check(domain, Composite(**above), start={**domain.rest, **VIAL_2R})
     assert finding.step == "Dispense" and finding.what.endswith(">= 40.0 while NeedleRise changes it")
+    assert check(domain, Composite(**above)) == []
+
+
+def test_in_time_a_dose_that_is_in_before_the_needle_leaves_is_kept():
+    """At 0.7 mL/s the dose of 1 mL is in after 1.43 s; rising from 58 mm at 12.5 mm/s, the needle passes
+    40 mm at 1.44 s: the bound held all the time the pump ran. Without the speed the checker could only
+    take the move's end (30 mm) and refuse it: nine of Q4a's refusals were so (6 Nov)."""
+    above = copy.deepcopy(BOTTOM_UP)
+    above["execute"][1]["parallel"][1][0]["MoveAxis"]["Position"] = 30.0
+    domain = filling()
+    assert check(domain, Composite(**above), start={**domain.rest, **VIAL_2R}) == []
+    slow = filling()
+    slow.capabilities["Positioning"].rates = {}                                     # no speed: not in time
+    assert [f.step for f in check(slow, Composite(**above), start={**slow.rest, **VIAL_2R})] == ["Dispense"]
+
+
+def test_a_skill_takes_as_long_as_its_steps_in_time():
+    """Dispensing: 3.2 s down at 12.5 mm/s, 1 s to dose 1 mL, 3.2 s home, 0.2 s to weigh; the bottom-up
+    skill's rising dose takes as long as its longer branch."""
+    domain = filling()
+    _, took = timed(domain, load(SPECS / "filling.yaml").composites["Dispensing"])
+    assert took == pytest.approx(3.2 + 1.0 + 3.2 + 0.2)
+    _, took = timed(domain, Composite(**BOTTOM_UP))
+    assert took == pytest.approx(58 / 12.5 + max(1 / 0.7, 18 / 12.5) + 40 / 12.5 + 0.2)
+
+
+def test_how_deep_the_needle_is_in_the_liquid_is_kept_as_the_requirement_says():
+    """BottomUpFilling of 1 mL into the syringe: the needle 1.5 mm above the barrel's bottom (57.5 mm down)
+    and rising with the liquid keeps the tip within 2 mm above and 3 mm below the surface. A needle that
+    stays deep goes 30 mm under; one that rises too fast leaves the liquid."""
+    domain, task = filling(), _bottom_up()
+    bounds = {"MinImmersion": -2.0, "MaxImmersion": 3.0}
+    rise = 1000 / (math.pi * 6.35 ** 2 / 4)                                       # 31.6 mm for 1 mL
+    flow = 12.5 * (math.pi * 6.35 ** 2 / 4) / 1000                               # the flow rate the axis's speed keeps up with
+    tracked = {"execute": [{"MoveAxis": {"Position": 57.5}, "as": "NeedleDeep"},
+                           {"parallel": [[{"Dispense": {"Volume": 1.0, "FlowRate": round(flow, 6)}}],
+                                         [{"MoveAxis": {"Position": round(57.5 - rise, 6)}, "as": "NeedleRise"}]], "as": "Rising"},
+                           "Home", "Weigh"]}
+    start = {**domain.rest, **SYRINGE, CONTENT: 0.0}
+    assert check(domain, Composite(**tracked), start=start, task=task, values=bounds) == []
+    deep = {"execute": [{"MoveAxis": {"Position": 57.5}, "as": "NeedleDeep"}, {"Dispense": {"Volume": 1.0, "FlowRate": 0.4}}, "Home", "Weigh"]}
+    (finding,) = check(domain, Composite(**deep), start=start, task=task, values=bounds)
+    assert finding.step == "Dispense" and "BottomUpFilling keeps OutletImmersion <= 3.0, but it comes to 30.076" in finding.what
+    fast = copy.deepcopy(tracked)
+    fast["execute"][1]["parallel"][0][0]["Dispense"]["FlowRate"] = round(flow / 2, 6)
+    (finding,) = check(domain, Composite(**fast), start=start, task=task, values=bounds)
+    assert "OutletImmersion >= -2.0, but it comes to" in finding.what and finding.step == "Dispense"
+    assert check(domain, Composite(**deep), start=start) == []                    # no requirement: nothing to keep
+
+
+def test_the_needle_does_not_go_into_the_bottom():
+    """In the syringe, 59 mm down is its bottom; the needle stays 1 mm above it."""
+    domain = filling()
+    (finding,) = check(domain, Composite(execute=[{"MoveAxis": {"Position": 59.5}, "as": "TooDeep"}, "Home"]),
+                       start={**domain.rest, **SYRINGE})
+    assert finding.step == "TooDeep" and finding.what == "keeps LinearAxis_ActualPosition.Position <= 58.0, but it comes to 59.5"
+
+
+def _bottom_up() -> Capability:
+    """BottomUpFilling as the vocabulary defines it: Filling, and the tip kept near the surface."""
+    from modplan.discover import task
+    from modplan.vocabulary import Vocabulary
+    return task(Vocabulary(), "BottomUpFilling")
 
 
 def test_a_skill_that_does_not_end_at_rest_is_found():

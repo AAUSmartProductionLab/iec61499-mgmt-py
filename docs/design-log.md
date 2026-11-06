@@ -20,6 +20,55 @@ A running log of design considerations made while building, for writing the pape
 
 ## 6 Nov 2026
 
+- **The checker runs a parallel block in time, event by event, and checks a requirement's invariants.**
+  *CIRP* (Q4, the time model) and *Journal*.
+  - A step keeps its invariants from its start to its end: checked at both (before, a step's invariants
+    were looked at only against another branch). A parallel block whose steps all say how long they
+    take is run in time: a branch starts its next step when the one before ends, every state a step
+    changes moves at its rate, and at each event (a step starting or ending) every running step's
+    invariants, a defined quantity (OutletImmersion) and the requirement's invariants are checked.
+    Between two events every rate is constant, so a linear invariant that holds at both holds all along:
+    exact without time steps. Instead of: a 10 ms simulation like the oracle's (a second model of the
+    physics to keep in step, and not exact), or a hybrid-automaton checker (more than linear needs).
+  - Where a step does not say how long it takes, or a decision is in the block, the block is checked
+    as before (each invariant against every state the other branch passes through): conservative, never
+    weaker than it was.
+  - What it changes, against the physics: at 0.7 mL/s a 1 mL dose is in after 1.43 s, and a needle
+    rising from 58 mm at 12.5 mm/s passes 40 mm at 1.44 s: kept, where the ends of the move alone
+    (30 mm) were a refusal (Q4a's nine refusals stricter than the physics were so). Home from home moves
+    nothing, so weighing beside it is no longer a conflict. `check(..., task=, values=)` takes a
+    requirement (BottomUpFilling and the product's bounds), and `timed` gives how long a skill takes
+    (Dispensing: 7.6 s).
+
+- **Rates, durations and the container's geometry in the Capability Description (vocabulary 0.10).**
+  *CIRP* (the time model, the syringe) and *Journal*.
+  - A property can be the rate of another (`lab:rateOf`): FlowRate of ContentVolume, and a new Speed
+    of Position. A capability that has it changes that state steadily from its start to its end and
+    runs as long as the change takes. The axis's Speed is written into Referencing's and Positioning's
+    PropertySet from the spec's `position.speed`, for any item with a position. A primitive with no
+    rate takes what its Completion `After` says, read from the component's Skills submodel (not through
+    `described()`, whose skills regenerate programs). Instead of: durations as a property of their own,
+    which would say twice what the rate and the change already say.
+  - The container's geometry is the product's: InnerDiameter, InnerBottomHeight and RimHeight above
+    the face it stands on in its nest, product properties with no value in the module's AAS. Where that
+    face is on the axis is the module's (NestPosition, 70 mm). From them the module's Dosing states
+    OutletImmersion, how deep the tip is in the liquid, by a formula; Positioning keeps the tip 1 mm
+    above the inner bottom (the crashes Q4a missed). Chosen by the user over the geometry in the process
+    AAS (the planner would need a process AAS first) or per container in the module (every new
+    container would mean editing every module).
+  - The needle stays 5 mm below the container's rim while it doses (`>= NestPosition - RimHeight +
+    InsertDepth`), in place of `>= FillPosition`. Why: a 1 mL syringe filled from the bottom has the
+    needle follow the liquid up to about 27 mm, above the fill position of 40 mm, which was a vial's
+    rule written as the module's; in a 2R vial the new bound is 40 mm again. The fill position stays
+    the dose's precondition, where it starts. What it costs: without a product the checker cannot tell
+    whether a needle that rises while dosing leaves the container (T14 now gives the 2R vial).
+  - BottomUpFilling is now a Filling that keeps OutletImmersion between MinImmersion and MaxImmersion,
+    bounds the product gives. What made it narrower (vocabulary 0.6: how the skill moves) is now a
+    constraint, so it can be planned, and a skill written for it can be checked against a product. The
+    upper bound is what makes the needle's rise necessary: with the tip allowed anywhere deep in the
+    liquid, a needle that stays at the bottom would do. The classical PDDL export leaves the formulas
+    out: they say how a state follows in time, which a sequential plan does not see.
+
 - **A constraint's operand may be a linear formula of the capability's properties.** *CIRP* (the
   time model) and *Journal* (the constraint language).
   - `BasicConstraint` held `<op> <value or one property>` (ARSO 0.11). It now also takes a formula of
