@@ -1,6 +1,8 @@
 @prefix lab:  <https://smartproductionlab.aau.dk/semantics/> .
 @prefix css:  <http://www.w3id.org/hsu-aut/css#> .
 @prefix pprl: <https://w3id.org/2025/pprl#> .
+@prefix vdi2860: <http://www.w3id.org/hsu-aut/VDI2860#> .
+@prefix din8580: <http://www.w3id.org/hsu-aut/DIN8580#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -17,10 +19,8 @@
 # matched. Capabilities are classes below css:Capability, their
 # properties classes below css:Property.
 #
-# Not yet placed below the manufacturing taxonomies (DIN 8580 for
-# Filling, Stoppering and Capping; VDI 2860 for the handling
-# capabilities). The names are those of the process planner's examples
-# (vial, prefilled syringe, cartridge).
+# The names are those of the process planner's examples (vial,
+# prefilled syringe, cartridge).
 #
 # 0.2 (28 Oct): what a capability needs, does and keeps, for planning
 # (PPRL's pre, post and invariant; docs/skill-planning.md). A component's
@@ -60,13 +60,29 @@
 #
 # 0.8 (3 Nov): CrimpPosition, where the crimping head closes around
 # the cap, as PressPosition is where the press meets the stopper.
+#
+# 0.9 (6 Nov): the capabilities placed below the standards' taxonomies,
+# as HSU's ontology design patterns state them (copies in ontology/
+# VDI2860 and ontology/DIN8580): what changes the product below DIN
+# 8580 (Filling and Dosing are pouring, 4.2.1; Stoppering and Pressing
+# press fitting, 4.3.4; Crimping joining by forming sheet metal, 4.5.2;
+# Capping joining, as a cap may be crimped or screwed), what moves or
+# checks below VDI 2860 (Positioning, Transporting as conveying,
+# Weighing as measuring, Imaging and Inspection as checking). The
+# standards' classes state no constraints, so a class inherits only
+# what it is a kind of. Not placed: Referencing and Taring (they set up
+# a component, not handle a product), Receiving and Releasing (custody:
+# VDI 2860's holding and releasing are clamping), Loading, Unloading,
+# Unpacking and Packing (no class of either fits without a guess).
 #################################################################
 
 <https://smartproductionlab.aau.dk/semantics>
   rdf:type owl:Ontology ;
-  owl:versionInfo "0.8" ;
+  owl:versionInfo "0.9" ;
   owl:imports <http://www.w3id.org/hsu-aut/css> ;
   owl:imports <https://w3id.org/2025/pprl> ;
+  owl:imports <http://www.w3id.org/hsu-aut/VDI2860> ;
+  owl:imports <http://www.w3id.org/hsu-aut/DIN8580> ;
   rdfs:comment "Capabilities and capability properties of aseptic filling lines for vials, prefilled syringes and cartridges (AAU Smart Production Lab)." .
 
 lab:unit rdf:type owl:AnnotationProperty ;
@@ -92,6 +108,9 @@ lab:realizes rdf:type owl:AnnotationProperty ;
 # require: it changes or checks the product. An auxiliary capability
 # serves other skills (moving an axis, weighing); it is offered only
 # through the skills that use it and never required by a product.
+# Across both kinds, what a capability is a kind of in the standards:
+# DIN 8580 for what changes the product, VDI 2860 for what moves or
+# checks it (0.9).
 #################################################################
 
 lab:ProcessCapability rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
@@ -103,7 +122,7 @@ lab:AuxiliaryCapability rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
   rdfs:label "Auxiliary capability" ;
   rdfs:comment "A capability that serves other skills: offered only through the skills that use it, never required by a product." .
 
-lab:Positioning rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+lab:Positioning rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , vdi2860:Positionieren ;
   rdfs:label "Positioning" ; rdfs:comment "Move an axis to a position measured from its reference." ;
   pprl:pre  [ pprl:onProperty lab:Referenced ; pprl:expression "= true" ] ;
   pprl:post [ pprl:onProperty lab:Position ; pprl:expression "given" ] .
@@ -113,12 +132,12 @@ lab:Referencing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:Auxili
   pprl:post [ pprl:onProperty lab:Referenced ; pprl:expression "= true" ] ,
             [ pprl:onProperty lab:Position ; pprl:expression "= 0.0" ] .
 
-lab:Dosing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+lab:Dosing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , din8580:Einfuellen ;
   rdfs:label "Dosing" ; rdfs:comment "Deliver a volume of liquid through a pump's outlet, into the container." ;
   pprl:post [ pprl:onProperty lab:ContentVolume ; pprl:expression "+= Volume" ] ,
             [ pprl:onProperty lab:Weighed ; pprl:expression "= false" ] .
 
-lab:Weighing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+lab:Weighing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , vdi2860:Messen ;
   rdfs:label "Weighing" ; rdfs:comment "Weigh what is on a scale." ;
   pprl:pre  [ pprl:onProperty lab:Tared ; pprl:expression "= true" ] ;
   pprl:post [ pprl:onProperty lab:Weight ; pprl:expression "measured" ] ,
@@ -128,15 +147,15 @@ lab:Taring rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCa
   rdfs:label "Taring" ; rdfs:comment "Set a scale to zero." ;
   pprl:post [ pprl:onProperty lab:Tared ; pprl:expression "= true" ] .
 
-lab:Pressing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+lab:Pressing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , din8580:Fuegen_durch_Presspassung ;
   rdfs:label "Pressing" ; rdfs:comment "Press a stopper into the container with a piston." ;
   pprl:post [ pprl:onProperty lab:Stoppered ; pprl:expression "= true" ] .
 
-lab:Crimping rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+lab:Crimping rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , din8580:Fuegen_durch_Umformen_bei_Blech-_Rohr-_und_Profilteilen ;
   rdfs:label "Crimping" ; rdfs:comment "Crimp a cap onto the container." ;
   pprl:post [ pprl:onProperty lab:Capped ; pprl:expression "= true" ] .
 
-lab:Transporting rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+lab:Transporting rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , vdi2860:Foerdern ;
   rdfs:label "Transporting" ; rdfs:comment "Carry a container on a shuttle of the planar table to a pose on the table (X, Y in mm, Rz in degrees, in the table's frame): from one module's transfer point to the next. Only the resource that has the container in its custody carries it (0.7)." ;
   pprl:pre [ pprl:onProperty lab:Holding ; pprl:expression "= true" ] .
 
@@ -150,7 +169,7 @@ lab:Releasing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:Auxiliar
   pprl:pre  [ pprl:onProperty lab:Holding ; pprl:expression "= true" ] ;
   pprl:post [ pprl:onProperty lab:Holding ; pprl:expression "= false" ] .
 
-lab:Imaging rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+lab:Imaging rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , vdi2860:Pruefen ;
   rdfs:label "Imaging" ; rdfs:comment "Take an image of the container and judge it." ;
   pprl:post [ pprl:onProperty lab:Inspected ; pprl:expression "= true" ] .
 
@@ -160,7 +179,7 @@ lab:Unpacking rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessC
 lab:Loading rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
   rdfs:label "Loading" ; rdfs:comment "Place a container on the carrier that takes it through the line." .
 
-lab:Filling rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
+lab:Filling rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability , din8580:Einfuellen ;
   rdfs:label "Filling" ; rdfs:comment "Fill a volume of liquid into an open container." ;
   pprl:pre  [ pprl:onProperty lab:ContentVolume ; pprl:expression "= 0.0" ] ;
   pprl:post [ pprl:onProperty lab:ContentVolume ; pprl:expression "= FillVolume" ] .
@@ -169,17 +188,17 @@ lab:BottomUpFilling rdf:type owl:Class ; rdfs:subClassOf lab:Filling ;
   rdfs:label "Bottom-up filling" ;
   rdfs:comment "Fill from the bottom of the container up: the needle starts deep in it and rises while the liquid flows, so that the liquid does not foam and no air is trapped (prefilled syringes, cartridges). What holds of Filling holds of it." .
 
-lab:Stoppering rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
+lab:Stoppering rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability , din8580:Fuegen_durch_Presspassung ;
   rdfs:label "Stoppering" ; rdfs:comment "Place a stopper on a filled container and press it in." ;
   pprl:pre  [ pprl:onProperty lab:ContentVolume ; pprl:expression "> 0.0" ] ;
   pprl:post [ pprl:onProperty lab:Stoppered ; pprl:expression "= true" ] .
 
-lab:Capping rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
+lab:Capping rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability , din8580:Fuegen ;
   rdfs:label "Capping" ; rdfs:comment "Put a cap on a stoppered container and fasten it." ;
   pprl:pre  [ pprl:onProperty lab:Stoppered ; pprl:expression "= true" ] ;
   pprl:post [ pprl:onProperty lab:Capped ; pprl:expression "= true" ] .
 
-lab:Inspection rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
+lab:Inspection rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability , vdi2860:Pruefen ;
   rdfs:label "Inspection" ; rdfs:comment "Inspect a container and decide whether it passes." ;
   pprl:post [ pprl:onProperty lab:Inspected ; pprl:expression "= true" ] .
 

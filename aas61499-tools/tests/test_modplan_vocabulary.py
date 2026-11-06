@@ -6,7 +6,7 @@ import pytest
 
 from modgen import load
 
-from modplan.vocabulary import PPRL, Vocabulary, local
+from modplan.vocabulary import LAB, PPRL, Vocabulary, local
 
 SPECS = Path(__file__).resolve().parents[2] / "cell" / "modules"
 # Primitives that serve no capability: RetractPiston draws the piston in after an abort; AwaitJob
@@ -50,3 +50,30 @@ def test_the_products_state_and_what_a_result_needs(vocabulary):
     # A process capability is defined by what it does to the product.
     assert [(s.kind, s.prop, str(s.expression)) for s in vocabulary.constraints("Filling")] == [
         ("Pre", "ContentVolume", "= 0.0"), ("Post", "ContentVolume", "= FillVolume")]
+
+
+STANDARDS = {"http://www.w3id.org/hsu-aut/VDI2860": "VDI2860", "http://www.w3id.org/hsu-aut/DIN8580": "DIN8580"}
+
+
+def test_the_capabilities_are_kinds_of_the_standards_classes(vocabulary):
+    """0.9: a capability below DIN 8580 (what changes the product) or VDI 2860 (what moves or checks
+    it), each class it names declared in the copy kept here, and the copies are what it imports."""
+    from rdflib import OWL, RDF, RDFS, Graph, URIRef
+    ontology = Path(__file__).resolve().parents[2] / "ontology"
+    graph = Graph()
+    for folder in STANDARDS.values():
+        graph.parse(ontology / folder / f"{folder}.ttl", format="turtle")
+    assert set(STANDARDS) <= {str(o) for o in vocabulary.graph.objects(None, OWL.imports)}
+    assert set(STANDARDS) == {str(o) for o in graph.subjects(RDF.type, OWL.Ontology)}
+    named = [o for o in vocabulary.graph.objects(None, RDFS.subClassOf) if str(o).startswith(tuple(STANDARDS))]
+    assert len(named) >= 8 and all((o, RDF.type, OWL.Class) in graph for o in named), named
+    both = vocabulary.graph + graph
+
+    def kinds(capability: str) -> set[str]:
+        return {str(o).rsplit("#", 1)[-1] for o in both.transitive_objects(URIRef(f"{LAB}{capability}"), RDFS.subClassOf)}
+    assert {"Einfuellen", "Fuellen"} <= kinds("BottomUpFilling")           # through Filling
+    assert "Fuegen_durch_Presspassung" in kinds("Stoppering") and "Fuegen" in kinds("Capping")
+    assert {"Positionieren", "Bewegen"} <= kinds("Positioning") and "Messen" in kinds("Weighing")
+    # The kinds the lab's planning rests on are untouched: still disjoint, still the lab's own lineage.
+    assert vocabulary.process("Filling") and not vocabulary.process("Dosing")
+    assert vocabulary.lineage("BottomUpFilling") == ["BottomUpFilling", "Filling"]
