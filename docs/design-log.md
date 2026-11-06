@@ -20,6 +20,34 @@ A running log of design considerations made while building, for writing the pape
 
 ## 6 Nov 2026
 
+- **Found by Q4b's re-run: the tracking planned a dose the pump cannot give; the checker now says an
+  argument beyond its parameter's range.** *CIRP* (Q4).
+  - 0.25 mL into the syringe was planned as one tracked dose of 0.25 mL; the pump doses 0.5 to 10 mL.
+    The plain dosing method checked the range, the tracking method did not, and neither the paired
+    action nor the checker looked at ranges (the spec's validation did, in Q4a only). Now the tracking
+    method and the pair keep every argument within its parameter's range, and the checker reports one
+    beyond it (`Dispense: Volume = 0.25 is beyond its range (0.5 to 10.0)`), in the editor too. The
+    oracle, which knows nothing of the model, is what found it.
+
+- **Match and plan: one button in the process planner binds every step, and plans a skill where none
+  matches.** *CIRP* (the automatic planning request; no agents).
+  - In the web UI's Process Sequence toolbar (the fork's `utils/matchAndPlan.ts`, committed there, not
+    pushed). For each step without a resource: a skill that matches is bound, as Match resources would
+    bind it; one that matches but states constraints (a skill written for BottomUpFilling) is checked
+    against the requirement in time by the skill service and bound if it keeps it; otherwise a skill is
+    planned on a module the matching says can be planned for it, or one that offers a class the required
+    one narrows, described in that module's AAS, its capabilities derived anew, and the step bound to it.
+    The draft is saved as any other; `modsync reconfigure` builds the skill.
+  - Why the narrower class's broader one decides where to plan, and not a module type: no AAS of ours
+    has a module type (every module is `.../Resource/Module`), and a type would say what the module is,
+    not what it can do; its capabilities say that, for any process. The user's idea ("only plan in
+    modules that offer the filling capability") is this, with the lineage from the vocabulary.
+  - Checked in a browser (Playwright, the scratch AAS server): the syringe asking for BottomUpFilling, the
+    filling module offering Filling; one press planned `BottomUpFillingForPrefilledSyringe1mL` on it
+    (the needle to 57.5 mm, the dose at 0.396 mL/s beside the rise to 25.9 mm, home) and bound the step.
+    The example line's syringe still asks for Filling: its process AAS, the plan check and the agents'
+    tests assume it.
+
 - **The skill service answers what the process planner's Match and plan asks; matching stays in the
   web UI.** *CIRP* (the automatic planning request).
   - `GET /vocabulary/<class>`: what a required class narrows (BottomUpFilling, Filling), so the UI tries
