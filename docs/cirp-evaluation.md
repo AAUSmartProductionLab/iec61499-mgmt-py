@@ -578,3 +578,82 @@ unchanged; the tables in `q4-2026-11-05T2346.md`, the figures `docs/paper/cirp/f
 - *H4.5 holds.* All 23 planned skills (15 to 25 mL on all variants, 10 mL on the small pump; two or
   three doses) make the product right the first time in the oracle (100 % [86, 100]).
 - *H4.6 holds.* Planning takes 0.72 ms (median), 0.98 ms at most.
+
+## E1: the effort of a reconfiguration, in user inputs
+
+**Question.** How many inputs does a person make to change the module: by hand in the 4diac IDE, in the
+skill editor on the AAS, and with the skill planner? A baseline for the paper's claim that the change
+is made in the AAS, not in the program. Measured on 6 Nov, with no hypothesis stated before; it
+replaces the estimate of 29 Oct (by hand 131 to 155, editor 19 to 22, planned 3), which built every
+skill new in 4diac and counted the editor as if a skill were typed from nothing, which the editor does
+not do.
+
+**Tasks,** on the filling module as delivered (Dispensing its only skill), each with a target:
+
+| Task | Target |
+| --- | --- |
+| A value | Dispensing doses at 2.0 mL/s instead of 1.0 (Q1's parameter change) |
+| A skill made like one | DoubleDose: Dispensing with a second dose of the same volume after the first, 0.5 mL by default |
+| A new flow | BottomUpFilling for the syringe (Q3, Q4): the needle deep (58 mm), then dosing at 0.7 mL/s while it rises to 40 mm (a parallel block), home, weigh |
+| A product | a vial of 15 mL, weighed: the skill the planner composes for it (two doses of 7.5 mL), named Filling15 |
+
+**Routes and what is counted.** An input is a pointer action (a click or a drag), a typed entry (a
+value or name typed into a field; the click into it belongs to it), or a key pressed alone (Ctrl+C,
+Del, Escape). Keystrokes (the characters and the key that ends an entry) are counted apart.
+
+- *The skill editor and the planner* (the web UI, basyx-aas-web-ui, the classic editor) are driven in
+  Chrome by `cell/eval/ui/effort-ui.cjs` (Playwright), on the shortest path the UI offers, from the
+  module's Skills submodel shown in the viewer to the skill saved. Every input the script makes is
+  counted. Before each run the AAS server is emptied and the module's AAS as delivered is posted;
+  after it the skill saved on the server is read back (modsync) and compared with the target: its
+  flow (what each step runs and is handed, the blocks; not the step names), its results and, where the
+  task sets them, its parameter's limits. A count stands only for a change made right.
+- *The planner* is the editor's "Plan a skill": the capability, its values and the results asked for;
+  the skill planned from the module's capabilities and described in the AAS. Only the product task is
+  a planning task; a value, DoubleDose (not a capability) and BottomUpFilling (not plannable, Q4) are
+  not.
+- *The 4diac IDE* cannot be driven so. Its count is the difference, element by element, between the
+  program before and the program the module rules generate for the target (modsync's fragment, the
+  generator's own pattern, the program Q1 deploys): a block dragged from the type library (1), a
+  connection drawn (1) or deleted (a click and Del), a value typed on a pin (1), a subapplication made
+  (a frame, a right click, the menu, its name) or entered (a double click). A new skill is made like
+  Dispensing: the subapplication copied, pasted and renamed, then changed, its blocks taken as the
+  pasted ones where type and place match (the pairing with the fewest inputs). Building it new costs
+  143 to 164 inputs and is never cheaper. Block names are left as the IDE gives them, the palette is
+  not searched, nothing is read, and a deleted block takes its connections with it: a lower bound.
+- *To the running module*, not in the task's count: 4diac saves and deploys (Ctrl+S, a right click on
+  the device, Deploy; 3 inputs), a new boot file and a restart (3.3 s down, Q1); the AAS routes run
+  `modsync reconfigure` (1 typed command), online.
+
+**Outputs.** `python cell/eval/effort.py --ui` (an AAS server, `modreg serve --basyx` and the web UI's
+dev server running) writes `cell/eval/results/effort-<when>/`: `effort.jsonl` (the counts, every input
+of the browser runs, the comparison), `effort.md`, `effort.tex` (the paper's table) and a screenshot
+of each run's end. The counts are deterministic: two full runs gave the same numbers.
+
+**Results (6 Nov).** `cell/eval/results/effort-2026-11-06T0816/`, every saved skill equal to its
+target.
+
+| Task | 4diac IDE, by hand | Skill editor | Planner |
+| --- | --- | --- | --- |
+| A value | 3 (4 keystrokes) | 4 (4) | – |
+| A skill made like one (DoubleDose) | 55 (536) | 14 (15) | – |
+| A new flow (BottomUpFilling) | 60 (627) | 25 (26) | – |
+| A product, 15 mL weighed | 71 (466) | 14 (18) | 6 (14) |
+| To the running module | 3, a restart | 1, online | 1, online |
+
+- *A value costs the same three or four inputs* on every route: enter the skill, the step, type the
+  value. The difference is in reaching the module: a restart, 3.3 s down, against online.
+- *A new skill costs 2.4 to 5.1 times fewer inputs in the editor* (14 to 25 against 55 to 71) and
+  24 to 36 times fewer keystrokes. The 4diac count is mostly what the editor does not ask for: 23 or 24
+  values, of which the skill's name in every step's OPC UA path, its holder and its publishing
+  addresses (a copy must have them all retyped), and 15 to 23 connections for the step chain, the
+  failure merges and the command fan-out (halt, abort, reset to every step). In the editor a step is
+  added, its skill chosen and what it is handed set.
+- *The planner takes 6 inputs* for the product, 12 times fewer than 4diac, 2.3 times fewer than the
+  editor: the capability, the volume and the result asked for; the doses are worked out.
+- *Against Dorofeev et al.* (2.7 to 5.5 times fewer actions in 4diac for a generated composite), the
+  editor lies in the same range and the planner beyond it.
+- *What the runs showed of the UI.* Choosing a step's skill renames the step and drops the selection,
+  so the step is clicked again (one input per new step, 4 of the 53 counted). The editor cannot add or
+  rename a parameter (DoubleDose keeps Volume, Q4's has Dose), so the targets keep the parameters the
+  copied skill has. The planner's FillVolume shows 0.5 to 10.0 mL (one dose's range) and takes 15.

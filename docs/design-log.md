@@ -20,6 +20,22 @@ A running log of design considerations made while building, for writing the pape
 
 ## 6 Nov 2026
 
+- **The effort of a reconfiguration measured in the UI's own inputs, against 4diac counted from the
+  generated program.** *CIRP* (E1, a table).
+  - The skill editor and the planner are driven in a browser (`cell/eval/ui/effort-ui.cjs`, Playwright)
+    on the shortest path the UI offers, and every input is counted. The skill each run saves is read back
+    from the AAS and compared with the task's target, so a count stands for a change made right.
+    Instead of: the 29 Oct estimate from the skill's model (an action per element), which counted
+    parameters typed in the editor that the editor never asks for.
+  - 4diac cannot be driven so. Its count is the difference between the program before and the
+    generator's program for the target, an input per element. A new skill is made by copying
+    Dispensing, with the pasted blocks paired to the target's so that the inputs are fewest. Instead
+    of: building every skill new in 4diac (143 to 164 inputs), which would flatter the method. The count
+    is a lower bound: no searching, reading or renaming.
+  - Four tasks: a value, DoubleDose, BottomUpFilling and a 15 mL product. 4diac takes 3, 55, 60 and 71
+    inputs; the editor 4, 14, 25 and 14; the planner 6 for the product. Reaching the running module is
+    counted apart: a restart against one command online.
+
 - **Q1 and Q3 run again on the refactored types; the paper reports the new runs.** *CIRP* (Q1, Q3).
   - The runs of 4 Nov ran on block types from before the 4 Nov refactor. The application program is
     the same, but the program the paper describes runs on the new types, so the evaluation's FORTE

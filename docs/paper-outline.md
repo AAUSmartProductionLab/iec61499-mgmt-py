@@ -240,7 +240,7 @@ product-to-process.
 
 | # | Question | Measure | State |
 | --- | --- | --- | --- |
-| E1 | How much effort is a new skill? | User actions, as [dorofeev2021orchestrator] counts them: by hand in 4diac, in the skill editor, planned (`cell/eval/effort.py`) | By hand 131 to 155; editor 19 to 22; planned 3 (Dispensing, BottomUpFilling, a planned 15 mL; 29 Oct) |
+| E1 | How much effort is a new skill? | User actions, as [dorofeev2021orchestrator] counts them: by hand in 4diac, in the skill editor, planned (`cell/eval/effort.py`) | Measured 6 Nov, inputs (editor and planner driven in a browser, 4diac from the generated program): a value 3 / 4 / -; DoubleDose 55 / 14 / -; BottomUpFilling 60 / 25 / -; a 15 mL product 71 / 14 / 6 (4diac / editor / planner; [cirp-evaluation.md](cirp-evaluation.md), E1) |
 | E2 | Does it reach the running module without stopping it? | Change, verify and down time, online against a restart (`cell/eval/scenarios.py`) | PC, 29 Oct: a new skill 0.05 s with the running skill kept running, a value 0.03 s (the module out of Execute 2.2 s), against 3.3 s down by a restart; the changeover of both modules 3.2 s down online (the stoppering module, for its value) against 7.1 s. Pi 5 to do |
 | E3 | Is the result right? | Read back equals the AAS, before and after a restart; a planned skill equals the hand-written one (T2, T5); it runs on FORTE | Done |
 
