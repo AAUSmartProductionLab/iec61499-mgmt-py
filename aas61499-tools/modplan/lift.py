@@ -5,7 +5,9 @@ skill at a time), or one changes a variable the other needs, changes or keeps (i
 flow is the series-parallel form of that order: the plan is cut wherever every step before the cut
 comes before every step after it; a part no cut splits becomes a parallel block with one branch per
 group of steps the order connects; a part neither splits keeps the plan's order. Steps are named
-after their skill (``Home``, then ``Home_2``), as a module spec names them.
+after their skill (``Home``, then ``Home_2``), as a module spec names them. A step planned with others
+along (the tracking's pair: the dose and the needle rising with the liquid) is a parallel block of
+its own, a branch each, started together; it is ordered by what all of them touch.
 """
 from __future__ import annotations
 
@@ -17,18 +19,24 @@ from .plan import Planned
 MAX_BRANCHES = 4                                  # what a parallel block takes (rule set 2)
 
 
+def parts(step: Planned) -> list[Planned]:
+    """The step and those along it."""
+    return [step, *step.along]
+
+
 def order(domain: Domain, steps: list[Planned]) -> list[list[bool]]:
     """``before[i][j]``: step i has to end before step j starts."""
     touched = []
     for step in steps:
-        cap = domain.capabilities[step.capability]
-        touched.append((cap.component, {c.var for c in cap.pre}, {c.var for c in cap.post}, {c.var for c in cap.invariant}))
+        caps = [domain.capabilities[p.capability] for p in parts(step)]
+        touched.append(({cap.component for cap in caps}, {c.var for cap in caps for c in cap.pre},
+                        {c.var for cap in caps for c in cap.post}, {c.var for cap in caps for c in cap.invariant}))
     n = len(steps)
     before = [[False] * n for _ in range(n)]
     for i in range(n):
         for j in range(i + 1, n):
             (ci, ri, wi, ki), (cj, rj, wj, kj) = touched[i], touched[j]
-            before[i][j] = ci == cj or bool(wi & (rj | wj | kj)) or bool(wj & (ri | ki))
+            before[i][j] = bool(ci & cj) or bool(wi & (rj | wj | kj)) or bool(wj & (ri | ki))
     for k in range(n):                                # what comes before comes before what follows
         for i in range(n):
             if before[i][k]:
@@ -38,23 +46,38 @@ def order(domain: Domain, steps: list[Planned]) -> list[list[bool]]:
 
 
 def names(domain: Domain, steps: list[Planned]) -> list[str]:
+    """The name of each step (of a pair, of its first part); ``named`` has those of the parts along."""
+    return [found[0] for found in named(domain, steps)]
+
+
+def named(domain: Domain, steps: list[Planned]) -> list[list[str]]:
+    """The names of each step's parts, the step first: ``Dispense``, then ``Dispense_2``."""
     seen: dict[str, int] = {}
     found = []
     for step in steps:
-        skill = domain.capabilities[step.capability].skill
-        seen[skill] = seen.get(skill, 0) + 1
-        found.append(skill if seen[skill] == 1 else f"{skill}_{seen[skill]}")
+        here = []
+        for part in parts(step):
+            skill = domain.capabilities[part.capability].skill
+            seen[skill] = seen.get(skill, 0) + 1
+            here.append(skill if seen[skill] == 1 else f"{skill}_{seen[skill]}")
+        found.append(here)
     return found
 
 
 def flow(domain: Domain, steps: list[Planned]) -> list:
     """The plan as the Execute flow of a module level skill, in a module spec's short form."""
-    before, named = order(domain, steps), names(domain, steps)
-    blocks = iter(range(1, len(steps) + 1))
+    before, called = order(domain, steps), named(domain, steps)
+    blocks = iter(range(1, 2 * len(steps) + 1))
+
+    def one(part: Planned, name: str):
+        return {domain.capabilities[part.capability].skill: dict(part.args), "as": name}
 
     def item(i: int):
-        skill = domain.capabilities[steps[i].capability].skill
-        return {skill: dict(steps[i].args), "as": named[i]}
+        if not steps[i].along:
+            return one(steps[i], called[i][0])
+        number = next(blocks)
+        return {"parallel": [[one(part, name)] for part, name in zip(parts(steps[i]), called[i])],
+                "as": "Parallel" if number == 1 else f"Parallel_{number}"}
 
     def nest(part: list[int]) -> list:
         if len(part) == 1:
@@ -64,7 +87,7 @@ def flow(domain: Domain, steps: list[Planned]) -> list:
             bounds = [0, *cuts, len(part)]
             return [node for lo, hi in zip(bounds, bounds[1:]) for node in nest(part[lo:hi])]
         groups = _connected(part, before)
-        if 1 < len(groups) <= MAX_BRANCHES:
+        if 1 < len(groups) <= MAX_BRANCHES and not any(steps[i].along for i in part):
             number = next(blocks)
             return [{"parallel": [nest(g) for g in groups], "as": "Parallel" if number == 1 else f"Parallel_{number}"}]
         return [item(i) for i in part]

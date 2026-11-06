@@ -20,6 +20,35 @@ A running log of design considerations made while building, for writing the pape
 
 ## 6 Nov 2026
 
+- **The planner keeps invariants and tracks: a dose paired with the needle rising alongside, the rates
+  set so that the depth in the liquid stays as it is.** *CIRP* (the planner, the main contribution) and
+  *Journal*.
+  - Every action keeps its own invariants and the requirement's at its start and its end; one that
+    would break them is not applied (a dose with the needle still ends 30 mm under the surface). GTPyhop
+    then backtracks to a second method, **tracking**: the action changes x at a rate (the content), a
+    formula of it defines a quantity the requirement bounds from x and y (the depth in the liquid from
+    the content and the needle), and another action sets y to what it is given at a rate (Positioning).
+    The pair runs as one step, the second in parallel (`Planned.along`, lifted to a parallel block).
+    The rate that can be set is set so that the quantity does not change (the axis's speed is fixed, so
+    the pump's flow rate: 0.396 mL/s for the 1 mL syringe at 12.5 mm/s); where y starts is the middle of
+    what every bound of both actions and of the requirement leaves at the start and at the end, each
+    linear in it (57.5 mm: between 2 mm above the liquid and 1 mm above the bottom), or where it is if
+    that will do (a second dose). Nothing in it is about filling: the pair, the rates and the start
+    follow from the formula, the rates and the bounds the domain states.
+  - Instead of: PDDL+ or a temporal planner (OPTIC, ENHSP's processes): the domain would have to be
+    rewritten as processes and events, the planners are hard to bound in time, and tracking a quantity
+    is one linear equation here. Instead of: a fixed rate pairing written into the module (a
+    "bottom-up skill"): it would hold for one container.
+  - Every plan is checked in time against the requirement before it is described (`compose.planned`).
+    A capability the module does not offer yet is planned as the vocabulary defines it
+    (`compose.requiring`); planned for a narrower one, the skill says it was written for it
+    (`pprl:writtenFor`), so the module offers BottomUpFilling after a reconfiguration. `discover` leaves
+    out a class whose constraints need what only a product says (BottomUpFilling's bounds): it is
+    planned when a product asks.
+  - What follows, on the module as described: 0.25, 0.5 and 1 mL into the syringe plan in about 2 ms;
+    raised 5 mm (the bottom 64 mm down, the axis 60 mm long) there is no plan, which is Q4b's "not
+    offered" where the written BottomUpFilling said "offered".
+
 - **The checker runs a parallel block in time, event by event, and checks a requirement's invariants.**
   *CIRP* (Q4, the time model) and *Journal*.
   - A step keeps its invariants from its start to its end: checked at both (before, a step's invariants

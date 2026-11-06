@@ -101,8 +101,6 @@ def discover(domain: Domain, vocabulary: Vocabulary | None = None) -> list[Disco
     classes = sorted(local(c) for c in voc.graph.transitive_subjects(RDFS.subClassOf, LAB.ProcessCapability)
                      if c != LAB.ProcessCapability)
     for capability in classes:
-        if voc.specializes(capability):
-            continue            # what makes it narrower no constraint states: only a skill written for it
         cap = task(voc, capability)
         if not cap.post:
             continue
@@ -110,6 +108,8 @@ def discover(domain: Domain, vocabulary: Vocabulary | None = None) -> list[Disco
         spans = ranges(trial, cap)
         if any(c.expression.named and c.expression.named not in spans for c in cap.post):
             continue                                      # nothing on the module sets what it compares with
+        if any(name not in spans for c in (*cap.pre, *cap.invariant) for name in c.expression.names):
+            continue            # it keeps what only a product says (BottomUpFilling's bounds): planned when asked
         start = {**domain.rest, **arriving(cap)}
         try:
             low = plan(trial, capability, {k: lo for k, (lo, _) in spans.items()}, start=start)

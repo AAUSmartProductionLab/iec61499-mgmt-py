@@ -48,6 +48,41 @@ def test_a_planned_skill_is_created_online(delivered):
     assert done[0].startswith("create PlannedFilling: ") and after.differences.empty, done
 
 
+SYRINGE = {"FillVolume": 1.0, "InnerDiameter": 6.35, "InnerBottomHeight": 11.0, "RimHeight": 66.0,
+           "MinImmersion": -2.0, "MaxImmersion": 3.0}
+
+
+def test_filling_from_the_bottom_is_planned_from_the_aas_and_offered_after_a_reconfiguration(delivered):
+    """The module offers Filling; the syringe asks for BottomUpFilling. The vocabulary's definition and
+    the product's bounds and geometry are enough to plan it on the module, the needle rising with the
+    liquid in a parallel block; described, the skill says it was written for BottomUpFilling, so the
+    module offers that after a reconfiguration, and it is created online as any described skill."""
+    from modreg.offer import capabilities
+    module, components = delivered
+    composed = compose(module, components, "BottomUpFilling", SYRINGE, ("FillWeight",), name="FillSyringe")
+    made = described(composed.module, components).composites["FillSyringe"]
+    deep, rising, home, weigh = made.execute
+    assert (deep.skill, deep.bind) == ("MoveAxis", {"Position": 57.5})
+    assert [[(s.skill, s.bind) for s in b] for b in rising.branches] == [
+        [("Dispense", {"FlowRate": 0.396, "Volume": 1.0})], [("MoveAxis", {"Position": 25.934})]]
+    skill = at(submodel(composed.module, "Skills"), "FillSyringe")
+    assert any(k["value"].endswith("/semantics/BottomUpFilling") for ref in skill["supplementalSemanticIds"] for k in ref["keys"])
+    offered = capabilities(composed.module, components)
+    found = {(at(c, "Capability")["supplementalSemanticIds"][0]["keys"][0]["value"].rsplit("/", 1)[-1],
+              next((q["value"] for q in at(c, "Capability").get("qualifiers", []) if q["type"] == "Availability"), "Now"))
+             for c in at(submodel(offered, "CapabilityDescription"), "OfferedCapabilities")["value"]}
+    assert ("BottomUpFilling", "AfterReconfiguration") in found and ("Filling", "Now") in found
+    done, after = reconfigure(FakeForte(filling()), "pi", 61499, composed.module, components)
+    assert done[0].startswith("create FillSyringe: ") and after.differences.empty, done
+
+
+def test_a_requirement_the_module_cannot_keep_is_refused(delivered):
+    """With the tip to stay in the liquid from the start, the bottom clearance leaves no place to start."""
+    module, components = delivered
+    with pytest.raises(NoPlan):
+        compose(module, components, "BottomUpFilling", {**SYRINGE, "MinImmersion": 0.0})
+
+
 def test_a_result_the_capability_cannot_give_is_refused(delivered):
     module, components = delivered
     with pytest.raises(NoPlan, match="no result Nothing"):
