@@ -117,6 +117,31 @@ def main() -> None:
                 md.append(f"- {r['variant']}, {r['container']} {r['volume']} mL{', weight' if r['weight'] else ''}: "
                           f"answer {ANSWER_NAMES[r['answer']]} ({r.get('route', '')} {r.get('by', '')}), truth "
                           f"{ANSWER_NAMES[r['truth']]}")
+    rt = [r for r in rows if r.get("part") == "t"]
+    if rt:
+        planned_t = [r for r in rt if r["answer"] == "after"]
+        md += ["", "## Q4t: filling from the bottom, the needle rising with the liquid (added 6 Nov)", "",
+               f"{len(rt)} cases: the syringe at {sorted({r['volume'] for r in rt})} mL, with and without its weight, "
+               f"on {len({r['variant'] for r in rt})} module variants; the needle within 2 mm above and 3 mm below the "
+               "liquid, planned by tracking, run in the oracle (which checks the 2 mm, not the 3).", "",
+               "| Variant | Cases | Planned | Tracked | Right in the oracle | Not planned | Truth not |",
+               "| --- | --- | --- | --- | --- | --- | --- |"]
+        for v in sorted({r["variant"] for r in rt}, key=lambda v: ("full", "no scale", "small pump", "raised").index(v)):
+            rs = [r for r in rt if r["variant"] == v]
+            ps = [r for r in rs if r["answer"] == "after"]
+            md.append(f"| {v} | {len(rs)} | {len(ps)} | {sum(bool(r.get('tracked')) for r in ps)} | "
+                      f"{sum(bool(r.get('planned_right')) for r in ps)} | {len(rs) - len(ps)} | {sum(r['truth'] == 'not' for r in rs)} |")
+        if planned_t:
+            right = sum(bool(r.get("planned_right")) for r in planned_t)
+            md += ["", f"- Planned: {len(planned_t)}; right the first time in the oracle: {rate(right, len(planned_t))}.",
+                   f"- Not planned where the oracle says the module can: "
+                   f"{sum(r['answer'] == 'not' and r['truth'] != 'not' for r in rt)}; planned where it cannot: "
+                   f"{sum(r['answer'] == 'after' and r['truth'] == 'not' for r in rt)}.",
+                   f"- Flow rates set: {sorted({r['flow_rate'] for r in planned_t if r.get('flow_rate')})} mL/s; time to plan: median "
+                   f"{1000 * statistics.median(r['plan_s'] for r in planned_t):.2f} ms."]
+        for r in rt:
+            if r["answer"] == "after" and not r.get("planned_right"):
+                md.append(f"- Wrong: {r['variant']}, {r['volume']} mL: {r.get('planned_broken')}")
     out = a.rows.with_suffix(".md")
     out.write_text("\n".join(md) + "\n", encoding="utf-8")
     print(out)

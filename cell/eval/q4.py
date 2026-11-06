@@ -4,7 +4,7 @@ single mutant of three skills (Q4a), and its matching and planning on products a
 knows none of the AAS's capability conditions.
 
     python cell/eval/q4.py            # writes cell/eval/results/q4-<when>.jsonl
-    python cell/eval/q4.py --only a   # Q4a only (or b)
+    python cell/eval/q4.py --only a   # Q4a only (or b, or t)
 
 No FORTE: the check and the match come before anything is built.
 
@@ -472,7 +472,7 @@ def answer(module, components, domain, product: Product) -> dict:
                     **({"refused": refused} if refused else {})}
         times.append(time.perf_counter() - t)
     return {"answer": "after", "route": "planned", "plan_s": statistics.median(times),
-            "plan": [(str(p), p.args) for p in steps], "steps": steps, "domain": planned_on,
+            "plan": [(p.capability, p.args) for p in steps], "along": [[str(a) for a in p.along] for p in steps], "steps": steps, "domain": planned_on,
             **({"refused": refused} if refused else {})}
 
 
@@ -545,6 +545,44 @@ def q4b() -> list[dict]:
     return rows
 
 
+TRACKED_VOLUMES = (0.5, 0.75, 1.0)
+MAX_IMMERSION = 3.0                                       # mm: the needle no deeper in the liquid
+
+
+def q4t() -> list[dict]:
+    """Added 6 Nov, outside the protocol's population: the syringe filled from the bottom with the needle
+    kept within 2 mm above and 3 mm below the liquid, so that it has to rise with it (MaxImmersion, which no
+    rule of the oracle checks), planned by tracking on each variant (no described skill) and run in the
+    oracle; the truth as in Q4b."""
+    rows = []
+    for variant in VARIANTS:
+        spec_data, _, hw = variant_spec(variant)
+        spec = ModuleSpec.model_validate(spec_data)
+        module, components = aas(spec, "pc")
+        domain = read(module, components)
+        for volume in TRACKED_VOLUMES:
+            for weight in (True, False):
+                product = Product("syringe 1 mL", volume, weight)
+                values = {**facts(product), "MaxImmersion": MAX_IMMERSION}
+                row = {"part": "t", "variant": variant, "container": product.container, "volume": volume, "weight": weight,
+                       **truth(product, hw, {})}
+                t = time.perf_counter()
+                try:
+                    planned_on, steps = planned(domain, "BottomUpFilling", values, ("FillWeight",) if weight else ())
+                except NoPlan as e:
+                    rows.append({**row, "answer": "not", "why": str(e)[:200], "plan_s": time.perf_counter() - t})
+                    continue
+                row["plan_s"] = time.perf_counter() - t
+                skill = lifted(planned_on, steps, "planned")
+                o = run(skill, product, hw)
+                tracked = next((p for p in steps if p.along), None)
+                rows.append({**row, "answer": "after", "planned_flow": dump(skill)["execute"], "planned_right": o.right,
+                             "planned_broken": o.broken, "tracked": bool(tracked),
+                             "flow_rate": tracked.args.get("FlowRate") if tracked else None,
+                             "rise": [a.args for a in tracked.along] if tracked else None})
+    return rows
+
+
 def setup() -> dict:
     commit = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
     dirty = bool(subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=no",
@@ -556,7 +594,7 @@ def setup() -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--only", choices=("a", "b"))
+    ap.add_argument("--only", choices=("a", "b", "t"))
     a = ap.parse_args()
     when = datetime.now().strftime("%Y-%m-%dT%H%M")
     out = RESULTS / f"q4-{when}.jsonl"
@@ -568,6 +606,8 @@ def main() -> None:
         rows += q4a(spec, read(module, components))
     if a.only in (None, "b"):
         rows += q4b()
+    if a.only in (None, "t"):
+        rows += q4t()
     with out.open("w", encoding="utf-8") as f:
         for r in rows:
             f.write(json.dumps({**r, **info}, default=str) + "\n")
