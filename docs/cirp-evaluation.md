@@ -579,6 +579,44 @@ unchanged; the tables in `q4-2026-11-05T2346.md`, the figures `docs/paper/cirp/f
   three doses) make the product right the first time in the oracle (100 % [86, 100]).
 - *H4.6 holds.* Planning takes 0.72 ms (median), 0.98 ms at most.
 
+**Re-run with the time model (6 Nov).** `cell/eval/results/q4-2026-11-06T1253.jsonl`, commit `35cc451`
+with the tools unchanged; the tables in `q4-2026-11-06T1253.md`, the figures `check.pdf` and `match.pdf`
+written anew. The mutants, the cases and the oracle are the same; the method is the one of 6 Nov
+(design log): rates and durations in the Capability Description, the container's geometry in the
+product's requirement and the nest in the module's, the checker run in time against the requirement,
+an argument beyond its parameter's range a finding, a matched skill checked against the requirement
+before it counts, and plans checked in time before they count. The product states what it is (the
+geometry) and, filled from the bottom, the least immersion of the needle (2 mm above the liquid): that
+bound is O5's number, so for the syringe the check and the oracle say the same about it; the oracle
+still finds it its own way, by running the flow in 10 ms steps.
+
+- *Q4a, H4.1 still fails, by the Tare insertions only.* Recall 123 of 136 (90 % [84, 94]), from 117:
+  the four foam and two crash misses are caught (the needle 4 mm above the liquid, the tip into the
+  barrel's bottom). The 13 left are a Tare inserted after the needle went in or after a dose: still no
+  condition says the scale is tared with the empty container (skill-planning, open points).
+- *H4.2 still fails, closer.* Precision 123 of 140 (88 % [81, 92]), from 82 %. The nine refusals where the
+  needle rose past the fill position after the dose was in are gone: the check now runs the move at
+  its speed. The 17 left: Weigh with the needle at home where out of the container is enough (14), the
+  rest state at the end (2), one holder per item (1).
+- *H4.3 holds.* The rules catch nothing the check misses; the check catches 21 the rules miss.
+- *Q4b, H4.4 holds.* 104 of 104 (100 % [96, 100]), from 100: the four syringes on the raised station
+  are now *not offered*. The described BottomUpFilling matches them, is checked in time against the
+  requirement, and refused (the needle 4 mm above the liquid at the start), and no plan exists (the
+  bottom 64 mm down, the axis 60 mm long). Nothing is offered that the module cannot do.
+- *H4.5 holds.* 23 of 23 planned skills right the first time (2 to 5 doses).
+- *H4.6 holds.* 2.4 ms median, 4.6 ms at most (the plan is now also checked in time).
+- *Q4t (added, outside the protocol's population): filling from the bottom planned by tracking.* The
+  syringe at 0.5, 0.75 and 1 mL, with and without its weight, on the four variants, the needle to stay
+  within 2 mm above and 3 mm below the liquid, so that it has to rise with it (24 cases). 15 are
+  planned, all by tracking (the dose at 0.396 mL/s with the needle rising 15.8 to 31.6 mm alongside),
+  and all 15 are right the first time in the oracle (100 % [80, 100]); the 9 not planned are those the
+  oracle says the module cannot do (the weight without a scale, the raised station). Planning takes
+  39 ms median: the plain dose is tried and refused first. The oracle checks the 2 mm, not the 3: that
+  the needle stays no deeper is the planner's to show (its tests), not the oracle's.
+- *Found by the re-run:* the first run planned 0.25 mL into the syringe as one tracked dose the pump
+  cannot give (it doses from 0.5 mL); the oracle refused it. Fixed in the planner and the checker before
+  the run reported here (design log).
+
 ## E1: the effort of a reconfiguration, in user inputs
 
 **Question.** How many inputs does a person make to change the module: by hand in the 4diac IDE, in the
