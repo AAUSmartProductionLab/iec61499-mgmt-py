@@ -223,9 +223,33 @@ from the rest state; if a plan exists, the module offers it after a reconfigurat
 limits of the plan's capabilities give. modreg adds such offers when it derives a module's capabilities
 anew (after a skill is described or built): no skill realizes them yet. The derivation from the skills
 (`lab:contributes`) stays for the skills that exist; it gives their ranges exactly. A capability
-narrower than its parent (BottomUpFilling, a Filling; vocabulary 0.6, 30 Oct) is not discovered: no
-constraint says what makes it narrower, so only a skill written for it (`capability:` in the spec)
-offers it.
+narrower than its parent (BottomUpFilling, a Filling) was not discovered while no constraint said what
+makes it narrower (vocabulary 0.6, 30 Oct). Since 0.10 (6 Nov) a constraint says it (the needle kept
+near the liquid's surface), with bounds only a product gives, so it is still not discovered but planned
+when a product asks for it (below).
+
+**Planning in time (6 Nov).** Every action keeps its own invariants and the requirement's from its
+start to its end (`plan._Keeping`): a linear invariant that holds at both holds in between, as every
+rate is constant while the action runs. A requirement that bounds a quantity a formula defines is kept
+by **tracking** (`plan._tracking`): the action that changes it at a rate (the dose fills the barrel)
+is paired with one that moves another state of the formula alongside (Positioning raises the needle),
+the rate that can be set is set so that the quantity stays as it is (the pump's flow rate, the axis's
+speed being fixed), and the other state is first brought to the middle of what every bound leaves at
+the start and at the end. The pair is one planned step with the other `along`; lifting makes it a
+parallel block. For 1 mL into the 1 mL syringe: the needle to 57.5 mm, then the dose at 0.396 mL/s with
+the needle rising to 25.9 mm, then home: 9.4 s. Every plan is run through the checker in time against
+the requirement before it is described (`compose.planned`); a capability the module does not offer is
+planned as the vocabulary defines it (`compose.requiring`), and the skill planned for a narrower one
+says what it was written for, so that the module offers that.
+
+**Match and plan (6 Nov, the web UI's process planner).** One button binds every step of a product's
+sequence: a skill that matches (the matching of Match resources: meaning, values, units, now before
+after a reconfiguration); a skill that matches but states constraints, checked against the requirement
+by the skill service (`POST /check` with `{"capability", "values"}`); otherwise a skill planned
+(`POST /plan`) on a module the matching says can be planned for it, or one that offers a class the
+required one narrows (`GET /vocabulary/<class>`: BottomUpFilling's lineage is BottomUpFilling,
+Filling). The values are the requirement's properties and the recipe's parameters by meaning, the
+container's geometry among them. No module type is used: a module can do what its capabilities say.
 
 ## 7. Compared with AAS2PDDL (Nabizada et al., CASE 2026, arXiv 2606.02167)
 
@@ -293,7 +317,10 @@ All done: 1 to 6 on 27 and 28 Oct, 7 on 28 and 29 Oct (the plan's G0 to G7,
 | Numbers in PDDL | ~~Values as objects with an amount; the candidate doses are the requested volume, the limits and what is left~~ Built so (28 Oct) |
 | Decisions in a composed skill ("top up if light") | Not planned in the first version; offered as a pattern |
 | Tare with the container on the scale (a net weight) | Not modelled. Found 28 Oct: from a start where the scale is not tared, the plan is MoveAxis, Dispense, **Tare**, Home, Weigh, and lifting puts Tare beside the first three; on the machine that would zero the filled vial and lose the fill weight. Nothing says when taring is allowed. A Pre `ContentVolume = 0.0` on Taring orders it before Dispense (and makes Tare and MoveAxis a parallel block), but then the rest state cannot be reached from nothing (the content is not known after power-up). To decide: a property for what is on the scale, or Taring's Pre on the module (the spec's `capability`) |
-| The range of a discovered offer with `+=` | Bounded by the container's capacity, which the vocabulary does not have yet |
+| The range of a discovered offer with `+=` | Bounded by the container's capacity, which the vocabulary does not have yet (its geometry since 0.10: the capacity follows from the rim, the bottom and the diameter) |
+| A skill planned for one product | The plan is ground: the values of the requirement it was planned for are constants of its steps (a FillVolume of 1.0). A skill with parameters would need the tracking's rates as functions of them (the flow rate is not, the rise is) |
+| Tracking more than one quantity | One quantity, by one other state, at a time; two bounds on different quantities, or a quantity of three moving states, would need a small linear program instead of one equation |
+| The upper bound in Q4's oracle | O5 checks the needle no more than 2 mm above the liquid; nothing checks how deep it is, so the product's MaxImmersion (what makes the rise necessary) is validated by the planner's tests, not by the oracle |
 
 ## 10. Test cases with the filling module
 

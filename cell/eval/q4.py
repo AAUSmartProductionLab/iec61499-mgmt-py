@@ -7,6 +7,13 @@ knows none of the AAS's capability conditions.
     python cell/eval/q4.py --only a   # Q4a only (or b)
 
 No FORTE: the check and the match come before anything is built.
+
+Since 6 Nov (the time model, vocabulary 0.10) the method knows what the product states: its container's
+geometry (inner diameter, inner bottom and rim above the face it stands on in the nest) and, for one
+filled from the bottom, the least immersion of the needle (2 mm above the liquid, as O5 says the
+product needs). A skill is checked in time from that state, against the requirement (BottomUpFilling
+keeps the needle no more than 2 mm above the liquid), and the module's nest is where its spec says (70
+mm down the stroke, 75 on the raised station). The oracle is unchanged and knows none of it.
 """
 from __future__ import annotations
 
@@ -29,15 +36,16 @@ sys.path[:0] = [str(Path(__file__).resolve().parent), str(ROOT / "aas61499-tools
 import scenarios as sc                                                       # noqa: E402
 from modgen.spec import Composite, ModuleSpec, Parallel, Step               # noqa: E402
 from modplan.check import check, simulate                                    # noqa: E402
+from modplan.compose import planned, requiring                               # noqa: E402
 from modplan.domain import PRODUCT, Var                                      # noqa: E402
 from modplan.lift import composite as lifted                                 # noqa: E402
-from modplan.plan import NoPlan, plan                                        # noqa: E402
+from modplan.plan import NoPlan, start_state                                 # noqa: E402
 from modplan.read import read                                                # noqa: E402
 from modreg.offer import capabilities, described_skill                       # noqa: E402
 from modreg.plancheck import covers                                          # noqa: E402
 from modsync.aasjson import at, children, submodel                           # noqa: E402
 from modsync.described import described                                      # noqa: E402
-from process_model import CONTAINERS, Hardware, Product, run                 # noqa: E402
+from process_model import CONTAINERS, HOME_HEIGHT, NEST, Hardware, Product, run  # noqa: E402
 from test_modsync import DOUBLE_DOSE                                         # noqa: E402
 from test_modsync_desired import aas                                         # noqa: E402
 
@@ -61,6 +69,27 @@ VOLUMES = {"vial 2R": (0.25, 0.5, 1.0, 2.0), "vial 10R": (2.0, 5.0, 10.0), "vial
            "syringe 1 mL": (0.25, 0.5, 1.0)}
 GRASP = {"vial 2R": 16.0, "vial 10R": 24.0, "vial 20R": 30.0, "syringe 1 mL": 8.15}   # outer diameter, mm
 VARIANTS = ("full", "no scale", "small pump", "raised")
+NEST_FACE = HOME_HEIGHT - NEST                            # mm down the stroke: the face a container stands on
+
+
+def facts(product: Product) -> dict[str, float]:
+    """What the product states of its container and, filled from the bottom, of how deep the needle may
+    be (vocabulary 0.10): the geometry as heights above the nest's face, the least immersion O5's."""
+    c = CONTAINERS[product.container]
+    found = {"FillVolume": product.volume, "InnerDiameter": c.diameter, "InnerBottomHeight": round(NEST_FACE - c.bottom, 6),
+             "RimHeight": round(NEST_FACE - c.rim, 6)}
+    return {**found, "MinImmersion": -2.0} if c.from_bottom else found
+
+
+def meaning_of(product: Product) -> str:
+    return "BottomUpFilling" if CONTAINERS[product.container].from_bottom else "Filling"
+
+
+def against(domain, product: Product) -> tuple:
+    """The domain with the product's required capability, and how a skill is checked against it."""
+    meaning, values = meaning_of(product), facts(product)
+    domain = requiring(domain, meaning)
+    return domain, {"start": start_state(domain, meaning, values), "task": domain.capabilities[meaning], "values": values}
 RATES = [round(0.1 * i, 1) for i in range(1, 51)]         # the witness's flow rates for filling from the bottom
 
 
@@ -211,8 +240,9 @@ def method_check(spec: dict, domain, name: str, skill: Composite, product: Produ
     refused = spec_takes(spec, name, skill)
     if refused:
         found.append(f"spec: {refused}")
-    found += [f"check: {f}" for f in check(domain, skill, given)]
-    state = simulate(domain, skill, given)
+    domain, how = against(domain, product)
+    found += [f"check: {f}" for f in check(domain, skill, given, **how)]
+    state = simulate(domain, skill, given, how["start"])
     content = state.get(CONTENT)
     if not isinstance(content, (int, float)) or abs(content - product.volume) > product.tolerance:
         found.append(f"match: leaves {content} mL, {product.volume} required")
@@ -354,6 +384,8 @@ def variant_spec(variant: str) -> tuple[dict, Composite, Hardware]:
         hw = Hardware(dose=(0.5, 5.0))
     elif variant == "raised":
         spec["skills"]["Dispense"]["capability"]["values"]["FillPosition"]["value"] = 45.0
+        for skill in ("Dispense", "MoveAxis"):                 # the nest's face 5 mm further down the stroke
+            spec["skills"][skill]["capability"]["values"]["NestPosition"]["value"] = NEST_FACE + 5.0
         disp["execute"][0]["MoveAxis"]["Position"] = 45.0
         for s in bottom["execute"]:
             if isinstance(s, dict) and s.get("name") == "NeedleDeep":
@@ -387,7 +419,7 @@ def offers(module: dict, components: list[dict]) -> list[dict]:
 
 def requirement(product: Product) -> dict:
     kind = "syringe" if product.container.startswith("syringe") else "vial"
-    return {"meaning": "BottomUpFilling" if CONTAINERS[product.container].from_bottom else "Filling",
+    return {"meaning": meaning_of(product),
             "props": {"FillVolume": {"modelType": "Property", "value": str(product.volume)},
                       "ContainerType": {"modelType": "Property", "value": kind},
                       "GraspDiameter": {"modelType": "Property", "value": str(GRASP[product.container])}}}
@@ -398,35 +430,50 @@ def gives_weight(composites: dict, skill: str) -> bool:
     return c is not None and any(v.endswith(".Weight") for v in c.results.values())
 
 
+def keeps(domain, composites: dict, skill: str, product: Product) -> list[str]:
+    """What a skill that matches does not keep of the requirement, run in time from the product's
+    state (Match and plan's check of a skill whose capability states constraints)."""
+    if skill not in composites:
+        return []
+    found_domain, how = against(domain, product)
+    given = {name: product.volume for name in list(composites[skill].parameters)[:1]}
+    return [str(f) for f in check(found_domain, composites[skill], given, **how)]
+
+
 def answer(module, components, domain, product: Product) -> dict:
-    """The method's answer: offered, after a reconfiguration (a described skill, or a plan), not offered."""
+    """The method's answer: offered, after a reconfiguration (a described skill, or a plan), not offered.
+    A skill whose offer matches is checked in time against the requirement first (6 Nov)."""
     req = requirement(product)
     composites = described(module, components).composites
-    fits = []
+    fits, refused = [], {}
     for o in offers(module, components):
         if o["meaning"] != req["meaning"]:
             continue
         if all(name in o["props"] and o["props"][name] is not None and covers(o["props"][name], want)
                for name, want in req["props"].items()):
             if not product.weight or any(gives_weight(composites, s) for s in o["skills"]):
-                fits.append(o)
+                broken = {s: keeps(domain, composites, s, product) for s in o["skills"]}
+                if any(not b for b in broken.values()):
+                    fits.append(o)
+                else:
+                    refused.update(broken)
     if any(not o["after"] for o in fits):
         return {"answer": "offered", "by": [s for o in fits if not o["after"] for s in o["skills"]]}
     if fits:
         return {"answer": "after", "by": [s for o in fits for s in o["skills"]], "route": "described"}
-    if req["meaning"] not in domain.capabilities:
-        return {"answer": "not", "why": f"no capability {req['meaning']} to plan"}
     results = ("FillWeight",) if product.weight else ()
-    times, steps = [], None
+    times, steps, planned_on = [], None, domain
     for _ in range(5):
         t = time.perf_counter()
         try:
-            steps = plan(domain, req["meaning"], {"FillVolume": product.volume}, results)
+            planned_on, steps = planned(domain, req["meaning"], facts(product), results)
         except NoPlan as e:
-            return {"answer": "not", "why": f"no plan: {e}"[:200], "plan_s": time.perf_counter() - t}
+            return {"answer": "not", "why": f"no plan: {e}"[:200], "plan_s": time.perf_counter() - t,
+                    **({"refused": refused} if refused else {})}
         times.append(time.perf_counter() - t)
     return {"answer": "after", "route": "planned", "plan_s": statistics.median(times),
-            "plan": [(p.capability, p.args) for p in steps], "steps": steps}
+            "plan": [(str(p), p.args) for p in steps], "steps": steps, "domain": planned_on,
+            **({"refused": refused} if refused else {})}
 
 
 def witness(product: Product, hw: Hardware) -> list[Composite]:
@@ -488,9 +535,9 @@ def q4b() -> list[dict]:
                     got = answer(module, components, domain, product)
                     real = truth(product, hw, built)
                     row = {"part": "b", "variant": variant, "container": container, "volume": volume, "weight": weight,
-                           **{k: v for k, v in got.items() if k != "steps"}, **real}
+                           **{k: v for k, v in got.items() if k not in ("steps", "domain")}, **real}
                     if got.get("route") == "planned":
-                        skill = lifted(domain, got["steps"], "planned")
+                        skill = lifted(got["domain"], got["steps"], "planned")
                         o = run(skill, product, hw)
                         row["planned_flow"] = dump(skill)["execute"]
                         row["planned_right"], row["planned_broken"] = o.right, o.broken
