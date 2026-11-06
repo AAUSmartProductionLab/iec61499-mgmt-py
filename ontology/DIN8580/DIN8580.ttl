@@ -1,0 +1,1424 @@
+# An unchanged copy of https://github.com/hsu-aut/IndustrialStandard-ODP-DIN8580 (MIT licence, see LICENSE next to this file),
+# converted from OWL/XML to Turtle so that the imports of the lab's vocabulary resolve offline.
+
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://www.w3id.org/hsu-aut/DIN8580> a owl:Ontology ;
+    owl:versionIRI <http://www.w3id.org/hsu-aut/DIN8580/2.0.0> ;
+    owl:versionInfo "2.0.0" .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Abscheiden_aus_der_Dampfphase_in_einer_Form> a owl:Class ;
+    rdfs:label "Abscheiden aus der Dampfphase in einer Form"@de,
+        "Molding by vapor deposition"@en ;
+    rdfs:comment "Untergruppe 1.8.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_gas-_oder_dampffoermigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Auftraghartloeten> a owl:Class ;
+    rdfs:label "Auftraghartloeten"@de,
+        "Build-up brazing"@en ;
+    rdfs:comment "Untergruppe 5.7.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_durch_Loeten> ;
+    owl:disjointWith <http://www.w3id.org/hsu-aut/DIN8580#Auftragweichloeten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Austenitformhaerten> a owl:Class ;
+    rdfs:label "Austenitformhaerten"@de,
+        "Ausforming"@en ;
+    rdfs:comment "Untergruppe 6.3.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Thermomechanisches_Behandeln> ;
+    owl:disjointWith <http://www.w3id.org/hsu-aut/DIN8580#Heissisostatisches_Nachverdichten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Belichten> a owl:Class ;
+    rdfs:label "Belichten"@de,
+        "Exposing to light"@en ;
+    rdfs:comment "Untergruppe 6.7.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Photochemische_Verfahren> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Biegeumformen_mit_drehender_Werkzeugbewegung> a owl:Class ;
+    rdfs:label "Biegeumformen mit drehender Werkzeugbewegung"@de,
+        "Bending with rotary tool motion"@en ;
+    rdfs:comment """Untergruppe 2.4.2
+DIN 8586""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Biegeumformen> ;
+    owl:disjointWith <http://www.w3id.org/hsu-aut/DIN8580#Biegeumformen_mit_geradliniger_Werkzeugbewegung> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Chemisches_Beschichten> a owl:Class ;
+    rdfs:label "Chemisches Beschichten"@de,
+        "Chemical vapor deposition"@en ;
+    rdfs:comment "Untergruppe 5.9.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_ionisierten_Zustand> ;
+    owl:disjointWith <http://www.w3id.org/hsu-aut/DIN8580#Galvanisches_Beschichten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Einfuellen> a owl:Class ;
+    rdfs:label "Einfuellen"@de,
+        "Pouring"@en ;
+    rdfs:comment """Untergruppe 4.2.1
+DIN 8593-2""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuellen> ;
+    owl:disjointWith <http://www.w3id.org/hsu-aut/DIN8580#Traenken_oder_Impraegnieren> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Elektrolytisches_Abscheiden_in_einer_Form> a owl:Class ;
+    rdfs:label "Elektrolytisches Abscheiden in einer Form"@de,
+        "Molding by electrolytic deposition in a form"@en ;
+    rdfs:comment "Untergruppe 1.9.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_ionisierten_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Giessen_von_Beton_oder_Gips> a owl:Class ;
+    rdfs:label "Giessen von Beton oder Gips"@de,
+        "Molding of concrete or plaster"@en ;
+    rdfs:comment "Untergruppe 1.3.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_breiigen_Zustand> ;
+    owl:disjointWith <http://www.w3id.org/hsu-aut/DIN8580#Giessen_von_Porzellan_oder_Keramik> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Kleben_mit_chemisch_abbindenden_Klebstoffen> a owl:Class ;
+    rdfs:label "Kleben mit chemisch abbindenden Klebstoffen"@de,
+        "Bonding with chemical bonding adhesives"@en ;
+    rdfs:comment """Untergruppe 4.8.2
+DIN 8593-8
+Reaktionsklebstoffe""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Kleben> ;
+    owl:disjointWith <http://www.w3id.org/hsu-aut/DIN8580#Kleben_mit_physikalisch_abbindenden_Klebstoffen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Pressverbindungsschweissen> a owl:Class ;
+    rdfs:label "Pressverbindungsschweissen"@de,
+        "Pressure welding"@en ;
+    rdfs:comment """Untergruppe 4.6.1
+DIN 8593-6""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Schweissen> ;
+    owl:disjointWith <http://www.w3id.org/hsu-aut/DIN8580#Schmelzverbindungsschweissen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Putzen_oder_Verputzen> a owl:Class ;
+    rdfs:label "Putzen oder Verputzen"@de,
+        "Plastering"@en ;
+    rdfs:comment "Untergruppe 5.3.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_breiigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Schmelzauftragschweissen> a owl:Class ;
+    rdfs:label "Schmelzauftragschweissen"@de,
+        "Fusion build-up welding"@en ;
+    rdfs:comment "Untergruppe 5.6.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_durch_Schweissen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Spachteln> a owl:Class ;
+    rdfs:label "Spachteln"@de,
+        "Coating using a spatula"@en ;
+    rdfs:comment "Untergruppe 5.2.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_plastischen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Vakuumbedampfen> a owl:Class ;
+    rdfs:label "Vakuumbedampfen"@de,
+        "Vacuum deposition"@en ;
+    rdfs:comment "Untergruppe 5.8.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_gas-_oder_dampffoermigen_Zustand> ;
+    owl:disjointWith <http://www.w3id.org/hsu-aut/DIN8580#Vakuumbestaeuben> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Verbindungshartloeten> a owl:Class ;
+    rdfs:label "Verbindungshartloeten"@de,
+        "Joining by brazing"@en ;
+    rdfs:comment """Untergruppe 4.7.2
+DIN 8505-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Loeten> ;
+    owl:disjointWith <http://www.w3id.org/hsu-aut/DIN8580#Verbindungsweichloeten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Verschieben_mit_drehender_Werkzeugbewegung> a owl:Class ;
+    rdfs:label "Verschieben mit drehender Werkzeugbewegung"@de,
+        "Forming under shear stress using a tool with rotating movement"@en ;
+    rdfs:comment """Untergruppe 2.5.2
+DIN 8587""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Schubumformen> ;
+    owl:disjointWith <http://www.w3id.org/hsu-aut/DIN8580#Verschieben_mit_geradliniger_Werkzeugbewegung> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Abloeten> a owl:Class ;
+    rdfs:label "Abloeten"@de,
+        "Desoldering"@en ;
+    rdfs:comment """Untergruppe 3.5.7
+DIN 8591""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Anlassen_oder_Auslagern> a owl:Class ;
+    rdfs:label "Anlassen oder Auslagern"@de,
+        "Tempering"@en ;
+    rdfs:comment "Untergruppe 6.2.4" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Waermebehandeln> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Anstreichen_oder_Lackieren> a owl:Class ;
+    rdfs:label "Anstreichen oder Lackieren"@de,
+        "Painting or lacquering"@en ;
+    rdfs:comment "Untergruppe 5.1.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Auflegen_oder_Aufsetzen_oder_Schichten> a owl:Class ;
+    rdfs:label "Auflegen oder Aufsetzen oder Schichten"@de,
+        "Setting or positionning or stacking"@en ;
+    rdfs:comment """Untergruppe 4.1.1
+DIN 8593-1""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zusammensetzen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Auftragweichloeten> a owl:Class ;
+    rdfs:label "Auftragweichloeten"@de,
+        "Build-up soldering"@en ;
+    rdfs:comment "Untergruppe 5.7.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_durch_Loeten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Auseinandernehmen> a owl:Class ;
+    rdfs:label "Auseinandernehmen"@de,
+        "Taking apart"@en ;
+    rdfs:comment """Untergruppe 3.5.1
+DIN 8591""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Ausgiessen> a owl:Class ;
+    rdfs:label "Ausgiessen"@de,
+        "Joining by casting"@en ;
+    rdfs:comment """Untergruppe 4.4.1
+DIN 8593-4""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Aushaerten> a owl:Class ;
+    rdfs:label "Aushaerten"@de,
+        "Curing"@en ;
+    rdfs:comment "Untergruppe 6.2.8" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Waermebehandeln> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Bandschleifen> a owl:Class ;
+    rdfs:label "Bandschleifen"@de,
+        "Belt sanding"@en ;
+    rdfs:comment """Untergruppe 3.3.2
+DIN 8589-12""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_unbestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beissschneiden> a owl:Class ;
+    rdfs:label "Beissschneiden"@de,
+        "Cutting with two approaching blades"@en ;
+    rdfs:comment """Untergruppe 3.1.3
+DIN 8588""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerteilen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschichten_durch_Giessen> a owl:Class ;
+    rdfs:label "Beschichten durch Giessen"@de,
+        "Flood coating"@en ;
+    rdfs:comment "Untergruppe 5.1.5" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschichten_durch_thermisches_Spritzen> a owl:Class ;
+    rdfs:label "Beschichten durch thermisches Spritzen"@de,
+        "Thermal spray coating"@en ;
+    rdfs:comment """Untergruppe 5.4.3
+DIN EN 657""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_koernigen_oder_pulverfoermigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschriften> a owl:Class ;
+    rdfs:label "Beschriften"@de,
+        "Labeling"@en ;
+    rdfs:comment "Untergruppe 5.1.7" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Bestrahlen> a owl:Class ;
+    rdfs:label "Bestrahlen"@de,
+        "Abrasive blasting"@en ;
+    rdfs:comment "Gruppe 6.6" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Stoffeigenschaft_aendern> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Biegeumformen_mit_geradliniger_Werkzeugbewegung> a owl:Class ;
+    rdfs:label "Biegeumformen mit geradliniger Werkzeugbewegung"@de,
+        "Bending with linear tool motion"@en ;
+    rdfs:comment """Untergruppe 2.4.1
+DIN 8586""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Biegeumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Blasformen> a owl:Class ;
+    rdfs:label "Blasformen"@de,
+        "Blow molding"@en ;
+    rdfs:comment "Untergruppe 1.2.7" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_plastischen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Bohren_oder_Senken_oder_Reiben> a owl:Class ;
+    rdfs:label "Bohren oder Senken oder Reiben"@de,
+        "Drilling or countersinking or reaming"@en ;
+    rdfs:comment """Untergruppe 3.2.2
+DIN 8589-2""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_bestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Brechen> a owl:Class ;
+    rdfs:label "Brechen"@de,
+        "Crushing"@en ;
+    rdfs:comment """Untergruppe 3.1.6
+DIN 8588""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerteilen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Buerstenspanen> a owl:Class ;
+    rdfs:label "Buerstenspanen"@de,
+        "Machining with brushlike tools"@en ;
+    rdfs:comment """Untergruppe 3.2.8
+DIN 8589-8""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_bestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Chemisches_Abtragen> a owl:Class ;
+    rdfs:label "Chemisches Abtragen"@de,
+        "Chemical milling"@en ;
+    rdfs:comment """Untergruppe 3.4.2
+DIN 8590""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Abtragen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Chemisches_Reinigen> a owl:Class ;
+    rdfs:label "Chemisches Reinigen"@de,
+        "Cleaning using chemicals"@en ;
+    rdfs:comment """Untergruppe 3.6.5
+DIN 8592""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Reinigen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Drehen> a owl:Class ;
+    rdfs:label "Drehen"@de,
+        "Turning"@en ;
+    rdfs:comment """Untergruppe 3.2.1
+DIN 8589-1""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_bestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Druckdruecken> a owl:Class ;
+    rdfs:label "Druckdruecken"@de,
+        "Extruding"@en ;
+    rdfs:comment """Untergruppe 2.1.5
+DIN 8583-6""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Druckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Drucken_oder_Bedrucken> a owl:Class ;
+    rdfs:label "Drucken oder Bedrucken"@de,
+        "Printing"@en ;
+    rdfs:comment "Untergruppe 5.1.6" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Druckgiessen> a owl:Class ;
+    rdfs:label "Druckgiessen"@de,
+        "Compression molding"@en ;
+    rdfs:comment "Untergruppe 1.1.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Druecken> a owl:Class ;
+    rdfs:label "Druecken"@de,
+        "Compressing"@en ;
+    rdfs:comment """Untergruppe 2.2.3
+DIN 8584-4""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zugdruckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Durchziehen> a owl:Class ;
+    rdfs:label "Durchziehen"@de,
+        "Drawing"@en ;
+    rdfs:comment """Untergruppe 2.2.1
+DIN 8584-2""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zugdruckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Einbetten> a owl:Class ;
+    rdfs:label "Einbetten"@de,
+        "Joining by embedding"@en ;
+    rdfs:comment """Untergruppe 4.4.2
+DIN 8593-4""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Eindruecken> a owl:Class ;
+    rdfs:label "Eindruecken"@de,
+        "Pressing"@en ;
+    rdfs:comment """Untergruppe 2.1.4
+DIN 8583-5""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Druckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Eingalvanisieren> a owl:Class ;
+    rdfs:label "Eingalvanisieren"@de,
+        "Joining by galvanizing"@en ;
+    rdfs:comment """Untergruppe 4.4.4
+DIN 8593-4""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Einhaengen> a owl:Class ;
+    rdfs:label "Einhaengen"@de,
+        "Hanging"@en ;
+    rdfs:comment """Untergruppe 4.1.4
+DIN 8593-1""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zusammensetzen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Einlegen_oder_Einsetzen> a owl:Class ;
+    rdfs:label "Einlegen oder Einsetzen"@de,
+        "Inserting"@en ;
+    rdfs:comment """Untergruppe 4.1.2
+DIN 8593-1""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zusammensetzen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Einrenken> a owl:Class ;
+    rdfs:label "Einrenken"@de,
+        "Joining by translatory and rotatory movement"@en ;
+    rdfs:comment """Untergruppe 4.1.5
+DIN 8593-1""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zusammensetzen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Elektrochemisches_Abtragen> a owl:Class ;
+    rdfs:label "Elektrochemisches Abtragen"@de,
+        "Electrochemical trimming"@en ;
+    rdfs:comment """Untergruppe 3.4.3
+DIN 8590""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Abtragen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Elektrostatisches_Beschichten> a owl:Class ;
+    rdfs:label "Elektrostatisches Beschichten"@de,
+        "Electrostatic coating"@en ;
+    rdfs:comment "Untergruppe 5.4.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_koernigen_oder_pulverfoermigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Emaillieren_oder_Glasieren> a owl:Class ;
+    rdfs:label "Emaillieren oder Glasieren"@de,
+        "Enamelling or glazing"@en ;
+    rdfs:comment "Untergruppe 5.1.4" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Entleeren> a owl:Class ;
+    rdfs:label "Entleeren"@de,
+        "Draining"@en ;
+    rdfs:comment """Untergruppe 3.5.2
+DIN 8591""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Faerben> a owl:Class ;
+    rdfs:label "Faerben"@de,
+        "Coloring"@en ;
+    rdfs:comment "Untergruppe 5.1.3" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Federnd_Einspreizen> a owl:Class ;
+    rdfs:label "Federnd Einspreizen"@de,
+        "Snap fitting"@en ;
+    rdfs:comment """Untergruppe 4.1.6
+DIN 8593-1""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zusammensetzen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Feilen_oder_Raspeln> a owl:Class ;
+    rdfs:label "Feilen oder Raspeln"@de,
+        "Filing or rasping"@en ;
+    rdfs:comment """Untergruppe 3.2.7
+DIN 8589-7""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_bestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fraesen> a owl:Class ;
+    rdfs:label "Fraesen"@de,
+        "Milling"@en ;
+    rdfs:comment """Untergruppe 3.2.3
+DIN 8589-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_bestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Freiformen> a owl:Class ;
+    rdfs:label "Freiformen"@de,
+        "Free forming"@en ;
+    rdfs:comment """Untergruppe 2.1.2
+DIN 8583-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Druckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Nietverfahren> a owl:Class ;
+    rdfs:label "Fuegen durch Nietverfahren"@de,
+        "Joining by riveting"@en ;
+    rdfs:comment """Untergruppe 4.5.3
+DIN 8593-5""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Presspassung> a owl:Class ;
+    rdfs:label "Fuegen durch Presspassung"@de,
+        "Press fitting"@en ;
+    rdfs:comment """Untergruppe 4.3.4
+DIN 8593-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#An-_und_Einpressen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Umformen_bei_Blech-_Rohr-_und_Profilteilen> a owl:Class ;
+    rdfs:label "Fuegen durch Umformen bei Blech- Rohr- und Profilteilen"@de,
+        "Joining by forming of metal/tubing/profiles"@en ;
+    rdfs:comment """Untergruppe 4.5.2
+DIN 8593-5""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Umformen_drahtfoermiger_Koerper> a owl:Class ;
+    rdfs:label "Fuegen durch Umformen drahtfoermiger Koerper"@de,
+        "Joinng by forming wire-shaped elements"@en ;
+    rdfs:comment """Untergruppe 4.5.1
+DIN 8593-5""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Galvanisches_Beschichten> a owl:Class ;
+    rdfs:label "Galvanisches Beschichten"@de,
+        "Galvanic deposition"@en ;
+    rdfs:comment "Untergruppe 5.9.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_ionisierten_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Gesenkformen> a owl:Class ;
+    rdfs:label "Gesenkformen"@de,
+        "Die forming"@en ;
+    rdfs:comment """Untergruppe 2.1.3
+DIN 8583-4""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Druckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Giessen_von_Porzellan_oder_Keramik> a owl:Class ;
+    rdfs:label "Giessen von Porzellan oder Keramik"@de,
+        "Molding of porcelain or ceramics"@en ;
+    rdfs:comment "Untergruppe 1.3.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_breiigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Gleitspanen> a owl:Class ;
+    rdfs:label "Gleitspanen"@de,
+        "Vibratory finishing"@en ;
+    rdfs:comment """Untergruppe 3.3.7
+DIN 8589-17""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_unbestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Gluehen> a owl:Class ;
+    rdfs:label "Gluehen"@de,
+        "Annealing"@en ;
+    rdfs:comment "Untergruppe 6.2.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Waermebehandeln> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Haerten> a owl:Class ;
+    rdfs:label "Haerten"@de,
+        "Hardening"@en ;
+    rdfs:comment "Untergruppe 6.2.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Waermebehandeln> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Heissisostatisches_Nachverdichten> a owl:Class ;
+    rdfs:label "Heissisostatisches Nachverdichten"@de,
+        "Hot isiostatic pressing"@en ;
+    rdfs:comment "Untergruppe 6.3.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Thermomechanisches_Behandeln> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Herstellung_von_Faserplatten> a owl:Class ;
+    rdfs:label "Herstellung von Faserplatten"@de,
+        "Fibre plate manufacturing"@en ;
+    rdfs:comment "Untergruppe 1.5.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_span-_oder_faserfoermigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Herstellung_von_Papier_und_Pappe> a owl:Class ;
+    rdfs:label "Herstellung von Papier und Pappe"@de,
+        "Paper and carboard manufacturing"@en ;
+    rdfs:comment "Untergruppe 1.5.3" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_span-_oder_faserfoermigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Herstellung_von_Spanplatten> a owl:Class ;
+    rdfs:label "Herstellung von Spanplatten"@de,
+        "Particle board manufacturing"@en ;
+    rdfs:comment "Untergruppe 1.5.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_span-_oder_faserfoermigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Hobeln_oder_Stossen> a owl:Class ;
+    rdfs:label "Hobeln oder Stossen"@de,
+        "Planing or shaping"@en ;
+    rdfs:comment """Untergruppe 3.2.4
+DIN 8589-4""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_bestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Honen> a owl:Class ;
+    rdfs:label "Honen"@de,
+        "Honing"@en ;
+    rdfs:comment """Untergruppe 3.3.4
+DIN 8589-14""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_unbestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Hubschleifen> a owl:Class ;
+    rdfs:label "Hubschleifen"@de,
+        "Sanding using a tool with linear motion"@en ;
+    rdfs:comment """Untergruppe 3.3.3
+DIN 8589-13""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_unbestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Ineinanderschieben> a owl:Class ;
+    rdfs:label "Ineinanderschieben"@de,
+        "Joining by inserting parts into each other"@en ;
+    rdfs:comment """Untergruppe 4.1.3
+DIN 8593-1""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zusammensetzen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Innenhochdruck-Weitstauchen> a owl:Class ;
+    rdfs:label "Innenhochdruck-Weitstauchen"@de,
+        "Hydroforming"@en ;
+    rdfs:comment """Untergruppe 2.2.6
+DIN 8584-7""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zugdruckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Isothermisches_Umwandeln> a owl:Class ;
+    rdfs:label "Isothermisches Umwandeln"@de,
+        "Isothermal conversion"@en ;
+    rdfs:comment "Untergruppe 6.2.3" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Waermebehandeln> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Kalandrieren> a owl:Class ;
+    rdfs:label "Kalandrieren"@de,
+        "Calendering"@en ;
+    rdfs:comment "Untergruppe 1.2.6" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_plastischen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Kitten> a owl:Class ;
+    rdfs:label "Kitten"@de,
+        "Joining with putty"@en ;
+    rdfs:comment """Untergruppe 4.4.6
+DIN 8593-4""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Klammern> a owl:Class ;
+    rdfs:label "Klammern"@de,
+        "Stapling"@en ;
+    rdfs:comment """Untergruppe 4.3.3
+DIN 8593-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#An-_und_Einpressen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Kleben_mit_physikalisch_abbindenden_Klebstoffen> a owl:Class ;
+    rdfs:label "Kleben mit physikalisch abbindenden Klebstoffen"@de,
+        "Bonding with physical bonding adhesives"@en ;
+    rdfs:comment """Untergruppe 4.8.1
+DIN 8593-8""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Kleben> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Klemmen> a owl:Class ;
+    rdfs:label "Klemmen"@de,
+        "Clamping"@en ;
+    rdfs:comment """Untergruppe 4.3.2
+DIN 8593-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#An-_und_Einpressen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Knickbauchen> a owl:Class ;
+    rdfs:label "Knickbauchen"@de,
+        "Bulge pressing"@en ;
+    rdfs:comment """Untergruppe 2.2.5
+DIN 8584-6""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zugdruckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Kragenziehen> a owl:Class ;
+    rdfs:label "Kragenziehen"@de,
+        "Flange forming"@en ;
+    rdfs:comment """Untergruppe 2.2.4
+DIN 8584-5""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zugdruckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Laengen> a owl:Class ;
+    rdfs:label "Laengen"@de,
+        "Elongating"@en ;
+    rdfs:comment """Untergruppe 2.3.1
+DIN 8585-2""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zugumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Laeppen> a owl:Class ;
+    rdfs:label "Laeppen"@de,
+        "Lapping"@en ;
+    rdfs:comment """Untergruppe 3.3.5
+DIN 8589-15""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_unbestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Loesemittelreinigen> a owl:Class ;
+    rdfs:label "Loesemittelreinigen"@de,
+        "Cleaning using solvants"@en ;
+    rdfs:comment """Untergruppe 3.6.4
+DIN 8592""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Reinigen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Loesen_kraftschluessiger_Verbindungen> a owl:Class ;
+    rdfs:label "Loesen kraftschluessiger Verbindungen"@de,
+        "Loosening frictional joints"@en ;
+    rdfs:comment """Untergruppe 3.5.3
+DIN 8591""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Loesen_von_Klebeverbindungen> a owl:Class ;
+    rdfs:label "Loesen von Klebeverbindungen"@de,
+        "Loosening bonded joints"@en ;
+    rdfs:comment """Untergruppe 3.5.8
+DIN 8591""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Magnetisieren> a owl:Class ;
+    rdfs:label "Magnetisieren"@de,
+        "Magnetizing"@en ;
+    rdfs:comment "Gruppe 6.5" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Stoffeigenschaft_aendern> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Mechanisches_Reinigen> a owl:Class ;
+    rdfs:label "Mechanisches Reinigen"@de,
+        "Mechanical cleaning"@en ;
+    rdfs:comment """Untergruppe 3.6.2
+DIN 8592""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Reinigen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Messerschneiden> a owl:Class ;
+    rdfs:label "Messerschneiden"@de,
+        "Cutting with a single blade"@en ;
+    rdfs:comment """Untergruppe 3.1.2
+DIN 8588""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerteilen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Modellieren> a owl:Class ;
+    rdfs:label "Modellieren"@de,
+        "Modelling"@en ;
+    rdfs:comment "Untergruppe 1.2.8" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_plastischen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Nageln_oder_Verstiften_oder_Einschlagen> a owl:Class ;
+    rdfs:label "Nageln oder Verstiften oder Einschlagen"@de,
+        "Nailing or pinning or driving in"@en ;
+    rdfs:comment """Untergruppe 4.3.5
+DIN 8593-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#An-_und_Einpressen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Niederdruckgiessen> a owl:Class ;
+    rdfs:label "Niederdruckgiessen"@de,
+        "Low-pressure molding"@en ;
+    rdfs:comment "Untergruppe 1.1.3" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Oberflaechenveredelungsstrahlen> a owl:Class ;
+    rdfs:label "Oberflaechenveredelungsstrahlen"@de,
+        "Blast surfacing"@en ;
+    rdfs:comment """Untergruppe 2.1.7
+DIN 8200""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Druckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Pressen> a owl:Class ;
+    rdfs:label "Pressen"@de,
+        "Sintering"@en ;
+    rdfs:comment "Untergruppe 1.4.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_koernigen_oder_pulverfoermigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Pressformen> a owl:Class ;
+    rdfs:label "Pressformen"@de,
+        "Pressforming"@en ;
+    rdfs:comment "Untergruppe 1.2.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_plastischen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Raeumen> a owl:Class ;
+    rdfs:label "Raeumen"@de,
+        "Broaching"@en ;
+    rdfs:comment """Untergruppe 3.2.5
+DIN 8589-5""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_bestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Reinigungsstrahlen> a owl:Class ;
+    rdfs:label "Reinigungsstrahlen"@de,
+        "Cleaning by blasting"@en ;
+    rdfs:comment """Untergruppe 3.6.1
+DIN 8592""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Reinigen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Reissen> a owl:Class ;
+    rdfs:label "Reissen"@de,
+        "Ripping apart"@en ;
+    rdfs:comment """Untergruppe 3.1.5
+DIN 8588""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerteilen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Saegen> a owl:Class ;
+    rdfs:label "Saegen"@de,
+        "Sawing"@en ;
+    rdfs:comment """Untergruppe 3.2.6
+DIN 8589-6""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_bestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Sandformen> a owl:Class ;
+    rdfs:label "Sandformen"@de,
+        "Sand casting"@en ;
+    rdfs:comment "Untergruppe 1.4.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_koernigen_oder_pulverfoermigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Schaben_oder_Meisseln> a owl:Class ;
+    rdfs:label "Schaben oder Meisseln"@de,
+        "Scraping or chiseling"@en ;
+    rdfs:comment """Untergruppe 3.2.9
+DIN 8589-9""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_bestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Schaeumen> a owl:Class ;
+    rdfs:label "Schaeumen"@de,
+        "Expanding"@en ;
+    rdfs:comment "Untergruppe 1.1.6" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Scherschneiden> a owl:Class ;
+    rdfs:label "Scherschneiden"@de,
+        "Shearing"@en ;
+    rdfs:comment """Untergruppe 3.1.1
+DIN 8588""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerteilen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Schleifen_mit_rotierendem_Werkzeug> a owl:Class ;
+    rdfs:label "Schleifen mit rotierendem Werkzeug"@de,
+        "Sanding using a tool with rotating motion"@en ;
+    rdfs:comment """Untergruppe 3.3.1
+DIN 8589-11""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_unbestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Schleudergiessen> a owl:Class ;
+    rdfs:label "Schleudergiessen"@de,
+        "Rotational molding"@en ;
+    rdfs:comment "Untergruppe 1.1.4" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Schmelztauchen> a owl:Class ;
+    rdfs:label "Schmelztauchen"@de,
+        "Melt dipping"@en ;
+    rdfs:comment "Untergruppe 5.1.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Schmelzverbindungsschweissen> a owl:Class ;
+    rdfs:label "Schmelzverbindungsschweissen"@de,
+        "Welding methods involving melting of materials"@en ;
+    rdfs:comment """Untergruppe 4.6.2
+DIN 8593-6""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Schweissen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Schrauben> a owl:Class ;
+    rdfs:label "Schrauben"@de,
+        "Screwing or bolting"@en ;
+    rdfs:comment """Untergruppe 4.3.1
+DIN 8593-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#An-_und_Einpressen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Schwerkraftgiessen> a owl:Class ;
+    rdfs:label "Schwerkraftgiessen"@de,
+        "Gravity casting"@en ;
+    rdfs:comment "Untergruppe 1.1.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Sintern_oder_Brennen> a owl:Class ;
+    rdfs:label "Sintern oder Brennen"@de,
+        "Sintering or burning"@en ;
+    rdfs:comment "Gruppe 6.4" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Stoffeigenschaft_aendern> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Spalten> a owl:Class ;
+    rdfs:label "Spalten"@de,
+        "Splitting"@en ;
+    rdfs:comment """Untergruppe 3.1.4
+DIN 8588""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerteilen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Spritzgiessen> a owl:Class ;
+    rdfs:label "Spritzgiessen"@de,
+        "Injection molding"@en ;
+    rdfs:comment "Untergruppe 1.2.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_plastischen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Spritzpressen> a owl:Class ;
+    rdfs:label "Spritzpressen"@de,
+        "Transfer molding"@en ;
+    rdfs:comment "Untergruppe 1.2.3" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_plastischen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Strahlspanen> a owl:Class ;
+    rdfs:label "Strahlspanen"@de,
+        "Blast machining"@en ;
+    rdfs:comment """Untergruppe 3.3.6
+DIN 8200""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_unbestimmten_Schneiden> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Stranggiessen> a owl:Class ;
+    rdfs:label "Stranggiessen"@de,
+        "Continuous casting"@en ;
+    rdfs:comment "Untergruppe 1.1.5" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Strangpressen> a owl:Class ;
+    rdfs:label "Strangpressen"@de,
+        "Extruding"@en ;
+    rdfs:comment """Untergruppe 1.2.4
+Extrudieren""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_plastischen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Stroemungstechnisches_Reinigen> a owl:Class ;
+    rdfs:label "Stroemungstechnisches Reinigen"@de,
+        "Fluidic cleaning"@en ;
+    rdfs:comment """Untergruppe 3.6.3
+DIN 8592""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Reinigen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Tauchformen> a owl:Class ;
+    rdfs:label "Tauchformen"@de,
+        "Dip forming"@en ;
+    rdfs:comment "Untergruppe 1.1.7" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Textiles_Fuegen> a owl:Class ;
+    rdfs:label "Textiles Fuegen"@de,
+        "Textile joining"@en ;
+    rdfs:comment "Gruppe 4.9" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Thermisches_Abtragen> a owl:Class ;
+    rdfs:label "Thermisches Abtragen"@de,
+        "Thermal removal"@en ;
+    rdfs:comment """Untergruppe 3.4.1
+DIN 8590""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Abtragen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Thermisches_Reinigen> a owl:Class ;
+    rdfs:label "Thermisches Reinigen"@de,
+        "Thermal cleaning"@en ;
+    rdfs:comment """Untergruppe 3.6.6
+DIN 8592""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Reinigen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Thermochemisches_Behandeln> a owl:Class ;
+    rdfs:label "Thermochemisches Behandeln"@de,
+        "Thermochemical treating"@en ;
+    rdfs:comment "Untergruppe 6.2.7" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Waermebehandeln> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Tiefen> a owl:Class ;
+    rdfs:label "Tiefen"@de,
+        "Deepening"@en ;
+    rdfs:comment """Untergruppe 2.3.3
+DIN 8585-4""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zugumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Tiefkuehlen> a owl:Class ;
+    rdfs:label "Tiefkuehlen"@de,
+        "Cold treating"@en ;
+    rdfs:comment "Untergruppe 6.2.6" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Waermebehandeln> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Tiefziehen> a owl:Class ;
+    rdfs:label "Tiefziehen"@de,
+        "Deep drawing"@en ;
+    rdfs:comment """Untergruppe 2.2.2
+DIN 8584-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zugdruckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Traenken_oder_Impraegnieren> a owl:Class ;
+    rdfs:label "Traenken oder Impraegnieren"@de,
+        "soaking or impregnating"@en ;
+    rdfs:comment """Untergruppe 4.2.2
+DIN 8593-2""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuellen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Umformstrahlen> a owl:Class ;
+    rdfs:label "Umformstrahlen"@de,
+        "Blast forming"@en ;
+    rdfs:comment """Untergruppe 2.1.6
+DIN 8200""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Druckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Ummanteln> a owl:Class ;
+    rdfs:label "Ummanteln"@de,
+        "Joining by coating"@en ;
+    rdfs:comment """Untergruppe 4.4.5
+DIN 8593-4""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Urformen_durch_thermisches_Spritzen> a owl:Class ;
+    rdfs:label "Urformen durch thermisches Spritzen"@de,
+        "Deposition by thermal spraying"@en ;
+    rdfs:comment "Untergruppe 1.4.3" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_koernigen_oder_pulverfoermigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Urformen_von_faserverstaerkten_Kunststoffen> a owl:Class ;
+    rdfs:label "Urformen von faserverstaerkten Kunststoffen"@de,
+        "Molding of fibre reinforced plastics"@en ;
+    rdfs:comment """Untergruppe 1.1.8
+Niederdruckverfahren""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Vakuumbestaeuben> a owl:Class ;
+    rdfs:label "Vakuumbestaeuben"@de,
+        "Vacuum sputtering"@en ;
+    rdfs:comment "Untergruppe 5.8.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_gas-_oder_dampffoermigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Verbindungsweichloeten> a owl:Class ;
+    rdfs:label "Verbindungsweichloeten"@de,
+        "Joining by soldering"@en ;
+    rdfs:comment """Untergruppe 4.7.1
+DIN 8505-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Loeten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Schmieden> a owl:Class ;
+    rdfs:label "Verfestigen durch Schmieden"@de,
+        "Hardening by forging"@en ;
+    rdfs:comment "Untergruppe 6.1.4" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Walzen> a owl:Class ;
+    rdfs:label "Verfestigen durch Walzen"@de,
+        "Hardening by rolling"@en ;
+    rdfs:comment "Untergruppe 6.1.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Ziehen> a owl:Class ;
+    rdfs:label "Verfestigen durch Ziehen"@de,
+        "Hardening by drawing"@en ;
+    rdfs:comment "Untergruppe 6.1.3" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Verfestigungsstrahlen> a owl:Class ;
+    rdfs:label "Verfestigungsstrahlen"@de,
+        "Shot peening"@en ;
+    rdfs:comment """Untergruppe 6.1.1
+DIN 8200""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Vergiessen> a owl:Class ;
+    rdfs:label "Vergiessen"@de,
+        "Potting"@en ;
+    rdfs:comment """Untergruppe 4.4.3
+DIN 8593-4""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Vergueten> a owl:Class ;
+    rdfs:label "Vergueten"@de,
+        "Hardening and tempering"@en ;
+    rdfs:comment "Untergruppe 6.2.5" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Waermebehandeln> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Verkeilen> a owl:Class ;
+    rdfs:label "Verkeilen"@de,
+        "Wedging"@en ;
+    rdfs:comment """Untergruppe 4.3.6
+DIN 8593-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#An-_und_Einpressen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Verschieben_mit_geradliniger_Werkzeugbewegung> a owl:Class ;
+    rdfs:label "Verschieben mit geradliniger Werkzeugbewegung"@de,
+        "Forming under shear stress using a tool with linear movement"@en ;
+    rdfs:comment """Untergruppe 2.5.1
+DIN 8587""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Schubumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Verspannen> a owl:Class ;
+    rdfs:label "Verspannen"@de,
+        "Tensioning"@en ;
+    rdfs:comment """Untergruppe 4.3.7
+DIN 8593-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#An-_und_Einpressen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Walzen> a owl:Class ;
+    rdfs:label "Walzen"@de,
+        "Rolling"@en ;
+    rdfs:comment """Untergruppe 2.1.1
+DIN 8583-2""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Druckumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Weiten> a owl:Class ;
+    rdfs:label "Weiten"@de,
+        "Widening"@en ;
+    rdfs:comment """Untergruppe 2.3.2
+DIN 8585-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zugumformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Wirbelsintern> a owl:Class ;
+    rdfs:label "Wirbelsintern"@de,
+        "Whirl sintering"@en ;
+    rdfs:comment "Untergruppe 5.4.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_koernigen_oder_pulverfoermigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Zerlegen_textiler_Verbindungen> a owl:Class ;
+    rdfs:label "Zerlegen textiler Verbindungen"@de,
+        "Disassembling textile joints"@en ;
+    rdfs:comment """Untergruppe 3.5.9
+DIN 8591""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Zerlegen_von_durch_Umformen_gefuegten_Teilen> a owl:Class ;
+    rdfs:label "Zerlegen von durch Umformen gefuegten Teilen"@de,
+        "Disassembling parts joined by forming"@en ;
+    rdfs:comment """Untergruppe 3.5.5
+DIN 8591""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Zerlegen_von_durch_Urformen_gefuegten_Teilen> a owl:Class ;
+    rdfs:label "Zerlegen von durch Urformen gefuegten Teilen"@de,
+        "Disassembling parts joined by molding"@en ;
+    rdfs:comment """Untergruppe 3.5.4
+DIN 8591""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Ziehformen> a owl:Class ;
+    rdfs:label "Ziehformen"@de,
+        "Drawing"@en ;
+    rdfs:comment "Untergruppe 1.2.5" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_plastischen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Zuechten_von_Kristallen> a owl:Class ;
+    rdfs:label "Zuechten von Kristallen"@de,
+        "Crystal growing"@en ;
+    rdfs:comment "Untergruppe 1.1.9" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_fluessigen_Zustand> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_breiigen_Zustand> a owl:Class ;
+    rdfs:label "Beschichten aus dem breiigen Zustand"@de,
+        "Coating with a pasty material"@en ;
+    rdfs:comment "Gruppe 5.3" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_plastischen_Zustand> a owl:Class ;
+    rdfs:label "Beschichten aus dem plastischen Zustand"@de,
+        "Coating with a plastic material"@en ;
+    rdfs:comment "Gruppe 5.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschichten_durch_Schweissen> a owl:Class ;
+    rdfs:label "Beschichten durch Schweissen"@de,
+        "Coating by welding"@en ;
+    rdfs:comment """Gruppe 5.6
+Beschichten durch Schweissen ist nur durch Schmelzschweissen moeglich.""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Photochemische_Verfahren> a owl:Class ;
+    rdfs:label "Photochemische Verfahren"@de,
+        "Photochemical methods"@en ;
+    rdfs:comment "Gruppe 6.7" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Stoffeigenschaft_aendern> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_gas-_oder_dampffoermigen_Zustand> a owl:Class ;
+    rdfs:label "Urformen aus dem gas- oder dampffoermigen Zustand"@de,
+        "Molding of gaseous or vapour materials"@en ;
+    rdfs:comment "Gruppe 1.8" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_ionisierten_Zustand> a owl:Class ;
+    rdfs:label "Urformen aus dem ionisierten Zustand"@de,
+        "Molding of ionized materials"@en ;
+    rdfs:comment "Gruppe 1.9" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_gas-_oder_dampffoermigen_Zustand> a owl:Class ;
+    rdfs:label "Beschichten aus dem gas- oder dampffoermigen Zustand"@de,
+        "Coating with a gaseous or vaporous material"@en ;
+    rdfs:comment """Gruppe 5.8
+Vakuumbeschichten""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_ionisierten_Zustand> a owl:Class ;
+    rdfs:label "Beschichten aus dem ionisierten Zustand"@de,
+        "Coating with an ionized material"@en ;
+    rdfs:comment "Gruppe 5.9" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschichten_durch_Loeten> a owl:Class ;
+    rdfs:label "Beschichten durch Loeten"@de,
+        "Coating by soldering"@en ;
+    rdfs:comment """Gruppe 5.7
+Verzinken, Verzinnen u. ae. von Draehten, Blechen und Profilen ist dem Wesen nach ein Auftragloeten. Da jedoch die Benennung Loeten fuer diese Verfahren nicht ueblich ist, werden sie in der Untergruppe 5.1.1 und nicht in der Gruppe 5.7 aufgefuehrt.""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Biegeumformen> a owl:Class ;
+    rdfs:label "Biegeumformen"@de,
+        "Bending"@en ;
+    rdfs:comment """Gruppe 2.4
+DIN 8586""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Loeten> a owl:Class ;
+    rdfs:label "Fuegen durch Loeten"@de,
+        "Joining by soldering or brazing"@en ;
+    rdfs:comment """Gruppe 4.7
+DIN 8593-7""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Schweissen> a owl:Class ;
+    rdfs:label "Fuegen durch Schweissen"@de,
+        "Joining by welding"@en ;
+    rdfs:comment """Gruppe 4.6
+DIN 8593-6""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fuellen> a owl:Class ;
+    rdfs:label "Fuellen"@de,
+        "Filling"@en ;
+    rdfs:comment """Gruppe 4.2
+DIN 8593-2""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Kleben> a owl:Class ;
+    rdfs:label "Kleben"@de,
+        "Adhesive bonding"@en ;
+    rdfs:comment """Gruppe 4.8
+DIN 8593-8""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Schubumformen> a owl:Class ;
+    rdfs:label "Schubumformen"@de,
+        "Forming using shear stress"@en ;
+    rdfs:comment """Gruppe 2.5
+DIN 8587""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Thermomechanisches_Behandeln> a owl:Class ;
+    rdfs:label "Thermomechanisches Behandeln"@de,
+        "Thermomechanical treating"@en ;
+    rdfs:comment "Gruppe 6.3" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Stoffeigenschaft_aendern> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_breiigen_Zustand> a owl:Class ;
+    rdfs:label "Urformen aus dem breiigen Zustand"@de,
+        "Molding of a pulpy material"@en ;
+    rdfs:comment "Gruppe 1.3" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Abtragen> a owl:Class ;
+    rdfs:label "Abtragen"@de,
+        "Removing"@en ;
+    rdfs:comment """Gruppe 3.4 
+DIN 8590""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Trennen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_koernigen_oder_pulverfoermigen_Zustand> a owl:Class ;
+    rdfs:label "Beschichten aus dem koernigen oder pulverfoermigen Zustand"@de,
+        "Coating with a granular or powdery material"@en ;
+    rdfs:comment "Gruppe 5.4" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Umformen> a owl:Class ;
+    rdfs:label "Fuegen durch Umformen"@de,
+        "Joining by forming"@en ;
+    rdfs:comment """Gruppe 4.5
+DIN 8593-5""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_koernigen_oder_pulverfoermigen_Zustand> a owl:Class ;
+    rdfs:label "Urformen aus dem koernigen oder pulverfoermigen Zustand"@de,
+        "Molding of granular or powder material"@en ;
+    rdfs:comment "Gruppe 1.4" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_span-_oder_faserfoermigen_Zustand> a owl:Class ;
+    rdfs:label "Urformen aus dem span- oder faserfoermigen Zustand"@de,
+        "Molding of fibrous material"@en ;
+    rdfs:comment "Gruppe 1.5" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Zugumformen> a owl:Class ;
+    rdfs:label "Zugumformen"@de,
+        "Forming under tensile conditions"@en ;
+    rdfs:comment """Gruppe 2.3
+DIN 8585-1""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Umformen> a owl:Class ;
+    rdfs:label "Verfestigen durch Umformen"@de,
+        "Hardening by forming"@en ;
+    rdfs:comment "Gruppe 6.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Stoffeigenschaft_aendern> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fertigungsverfahren> a owl:Class ;
+    rdfs:label "Fertigungsverfahren"@de,
+        "Manufacturing process"@en ;
+    rdfs:comment """alle Verfahren zur Herstellung von geometrisch bestimmten festen Koerpern; 
+sie schliessen die Verfahren zur Gewinnung erster Formen aus dem formlosen Zustand, zur Veraenderung dieser Form sowie zur Veraenderung der Stoffeigenschaften ein""" .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Umformen> a owl:Class ;
+    rdfs:label "Umformen"@de,
+        "Forming"@en ;
+    rdfs:comment """Hauptgruppe 2: Fertigen durch bildsames (plastisches) aendern der Form eines festen Koerpers; 
+dabei werden sowohl die Masse als auch der Zusammenhalt beibehalten
+DIN 8582""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fertigungsverfahren> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Urformen> a owl:Class ;
+    rdfs:label "Fuegen durch Urformen"@de,
+        "Joining by molding"@en ;
+    rdfs:comment """Gruppe 4.4
+DIN 8593-4""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Reinigen> a owl:Class ;
+    rdfs:label "Reinigen"@de,
+        "Cleaning"@en ;
+    rdfs:comment """Gruppe 3.6 
+DIN 8592""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Trennen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Trennen> a owl:Class ;
+    rdfs:label "Trennen"@de,
+        "Separating"@en ;
+    rdfs:comment "Hauptgruppe 3: Fertigen durch Aufheben des Zusammenhaltens von Koerpern, wobei der Zusammenhalt teilweise oder im Ganzen vermindert wird" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fertigungsverfahren> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Zerteilen> a owl:Class ;
+    rdfs:label "Zerteilen"@de,
+        "Cutting"@en ;
+    rdfs:comment """Gruppe 3.1 
+DIN 8588""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Trennen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Zugdruckumformen> a owl:Class ;
+    rdfs:label "Zugdruckumformen"@de,
+        "Forming under combination of tensile and compressive stress"@en ;
+    rdfs:comment """Gruppe 2.2
+DIN 8584-1""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Zusammensetzen> a owl:Class ;
+    rdfs:label "Zusammensetzen"@de,
+        "Assembling "@en ;
+    rdfs:comment """Gruppe 4.1
+DIN 8593-1""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#An-_und_Einpressen> a owl:Class ;
+    rdfs:label "An- und Einpressen"@de,
+        "Pressing on and pressing in"@en ;
+    rdfs:comment """Gruppe 4.3
+DIN 8593-3""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fuegen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_fluessigen_Zustand> a owl:Class ;
+    rdfs:label "Beschichten aus dem fluessigen Zustand"@de,
+        "Coating with a liquid material"@en ;
+    rdfs:comment "Gruppe 5.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Beschichten> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Druckumformen> a owl:Class ;
+    rdfs:label "Druckumformen"@de,
+        "Forming under compressive conditions"@en ;
+    rdfs:comment """Gruppe 2.1
+DIN 8583-1""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Umformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_unbestimmten_Schneiden> a owl:Class ;
+    rdfs:label "Spanen mit geometrisch unbestimmten Schneiden"@de,
+        "Machining with geometrically undefined cutting edges"@en ;
+    rdfs:comment """Gruppe 3.3 
+DIN 8589-0""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Trennen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Stoffeigenschaft_aendern> a owl:Class ;
+    rdfs:label "Stoffeigenschaft aendern"@de,
+        "Changing material properties"@en ;
+    rdfs:comment """Hauptgruppe 6: Fertigen durch Veraendern der Eigenschaften des Werkstoffes, aus dem ein Werkstueck besteht; 
+dies geschieht u. a. durch Veraenderungen im submikroskopischen bzw. atomaren Bereich, z. B. durch Diffusion von Atomen, Erzeugung und Bewegung von Versetzungen im Atomgitter, chemische Reaktionen. Unvermeidbar auftretende Formaenderungen gehoeren nicht zum Wesen dieser Verfahren""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fertigungsverfahren> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Urformen> a owl:Class ;
+    rdfs:label "Urformen"@de,
+        "Molding"@en ;
+    rdfs:comment """Hauptgruppe 1: Fertigen eines festen Koerpers aus formlosem Stoff durch Schaffen des Zusammenhaltes; 
+hierbei treten die Stoffeigenschaften des Werkstueckes bestimmbar in Erscheinung""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fertigungsverfahren> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Beschichten> a owl:Class ;
+    rdfs:label "Beschichten"@de,
+        "Coating"@en ;
+    rdfs:comment """Hauptgruppe 5: Fertigen durch Aufbringen einer fest haftenden Schicht aus formlosem Stoff auf ein Werkstueck;
+massgebend ist der unmittelbar vor dem Beschichten herrschende Zustand des Beschichtungsstoffes""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fertigungsverfahren> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_plastischen_Zustand> a owl:Class ;
+    rdfs:label "Urformen aus dem plastischen Zustand"@de,
+        "Molding of plastic material"@en ;
+    rdfs:comment "Gruppe 1.2" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Waermebehandeln> a owl:Class ;
+    rdfs:label "Waermebehandeln"@de,
+        "Heat treating"@en ;
+    rdfs:comment """Gruppe 6.2
+DIN EN 10052""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Stoffeigenschaft_aendern> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Zerlegen> a owl:Class ;
+    rdfs:label "Zerlegen"@de,
+        "Disassembling"@en ;
+    rdfs:comment """Gruppe 3.5 
+DIN 8591""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Trennen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Fuegen> a owl:Class ;
+    rdfs:label "Fuegen"@de,
+        "Joining"@en ;
+    rdfs:comment """Hauptgruppe 4: auf Dauer angelegtes Verbinden oder sonstiges Zusammenbringen von zwei oder mehreren Werkstuecken geometrisch bestimmter fester Form oder von eben solchen Werkstuecken mit formlosem Stoff;
+dabei wird der Zusammenhalt oertlich geschaffen und im Ganzen vermehrt
+DIN 8593-0""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Fertigungsverfahren> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_bestimmten_Schneiden> a owl:Class ;
+    rdfs:label "Spanen mit geometrisch bestimmten Schneiden"@de,
+        "Machining with geometrically defined cutting edges"@en ;
+    rdfs:comment """Gruppe 3.2 
+DIN 8589-0""" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Trennen> .
+
+<http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_fluessigen_Zustand> a owl:Class ;
+    rdfs:label "Urformen aus dem fluessigen Zustand"@de,
+        "Molding of liquid material"@en ;
+    rdfs:comment "Gruppe 1.1" ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/DIN8580#Urformen> .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Beissschneiden> <http://www.w3id.org/hsu-aut/DIN8580#Brechen> <http://www.w3id.org/hsu-aut/DIN8580#Messerschneiden> <http://www.w3id.org/hsu-aut/DIN8580#Reissen> <http://www.w3id.org/hsu-aut/DIN8580#Scherschneiden> <http://www.w3id.org/hsu-aut/DIN8580#Spalten> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_breiigen_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_fluessigen_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_gas-_oder_dampffoermigen_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_ionisierten_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_koernigen_oder_pulverfoermigen_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_aus_dem_plastischen_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_durch_Loeten> <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_durch_Schweissen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Chemisches_Reinigen> <http://www.w3id.org/hsu-aut/DIN8580#Loesemittelreinigen> <http://www.w3id.org/hsu-aut/DIN8580#Mechanisches_Reinigen> <http://www.w3id.org/hsu-aut/DIN8580#Reinigungsstrahlen> <http://www.w3id.org/hsu-aut/DIN8580#Stroemungstechnisches_Reinigen> <http://www.w3id.org/hsu-aut/DIN8580#Thermisches_Reinigen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Anlassen_oder_Auslagern> <http://www.w3id.org/hsu-aut/DIN8580#Aushaerten> <http://www.w3id.org/hsu-aut/DIN8580#Gluehen> <http://www.w3id.org/hsu-aut/DIN8580#Haerten> <http://www.w3id.org/hsu-aut/DIN8580#Isothermisches_Umwandeln> <http://www.w3id.org/hsu-aut/DIN8580#Thermochemisches_Behandeln> <http://www.w3id.org/hsu-aut/DIN8580#Tiefkuehlen> <http://www.w3id.org/hsu-aut/DIN8580#Vergueten> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Druckgiessen> <http://www.w3id.org/hsu-aut/DIN8580#Niederdruckgiessen> <http://www.w3id.org/hsu-aut/DIN8580#Schaeumen> <http://www.w3id.org/hsu-aut/DIN8580#Schleudergiessen> <http://www.w3id.org/hsu-aut/DIN8580#Schwerkraftgiessen> <http://www.w3id.org/hsu-aut/DIN8580#Stranggiessen> <http://www.w3id.org/hsu-aut/DIN8580#Tauchformen> <http://www.w3id.org/hsu-aut/DIN8580#Urformen_von_faserverstaerkten_Kunststoffen> <http://www.w3id.org/hsu-aut/DIN8580#Zuechten_von_Kristallen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Bohren_oder_Senken_oder_Reiben> <http://www.w3id.org/hsu-aut/DIN8580#Buerstenspanen> <http://www.w3id.org/hsu-aut/DIN8580#Drehen> <http://www.w3id.org/hsu-aut/DIN8580#Feilen_oder_Raspeln> <http://www.w3id.org/hsu-aut/DIN8580#Fraesen> <http://www.w3id.org/hsu-aut/DIN8580#Hobeln_oder_Stossen> <http://www.w3id.org/hsu-aut/DIN8580#Raeumen> <http://www.w3id.org/hsu-aut/DIN8580#Saegen> <http://www.w3id.org/hsu-aut/DIN8580#Schaben_oder_Meisseln> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Nietverfahren> <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Umformen_bei_Blech-_Rohr-_und_Profilteilen> <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Umformen_drahtfoermiger_Koerper> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#An-_und_Einpressen> <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Loeten> <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Schweissen> <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Umformen> <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Urformen> <http://www.w3id.org/hsu-aut/DIN8580#Fuellen> <http://www.w3id.org/hsu-aut/DIN8580#Kleben> <http://www.w3id.org/hsu-aut/DIN8580#Textiles_Fuegen> <http://www.w3id.org/hsu-aut/DIN8580#Zusammensetzen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Beschichten> <http://www.w3id.org/hsu-aut/DIN8580#Fuegen> <http://www.w3id.org/hsu-aut/DIN8580#Stoffeigenschaft_aendern> <http://www.w3id.org/hsu-aut/DIN8580#Trennen> <http://www.w3id.org/hsu-aut/DIN8580#Umformen> <http://www.w3id.org/hsu-aut/DIN8580#Urformen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Herstellung_von_Faserplatten> <http://www.w3id.org/hsu-aut/DIN8580#Herstellung_von_Papier_und_Pappe> <http://www.w3id.org/hsu-aut/DIN8580#Herstellung_von_Spanplatten> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Ausgiessen> <http://www.w3id.org/hsu-aut/DIN8580#Einbetten> <http://www.w3id.org/hsu-aut/DIN8580#Eingalvanisieren> <http://www.w3id.org/hsu-aut/DIN8580#Kitten> <http://www.w3id.org/hsu-aut/DIN8580#Ummanteln> <http://www.w3id.org/hsu-aut/DIN8580#Vergiessen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Schmieden> <http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Walzen> <http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Ziehen> <http://www.w3id.org/hsu-aut/DIN8580#Verfestigungsstrahlen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Biegeumformen> <http://www.w3id.org/hsu-aut/DIN8580#Druckumformen> <http://www.w3id.org/hsu-aut/DIN8580#Schubumformen> <http://www.w3id.org/hsu-aut/DIN8580#Zugdruckumformen> <http://www.w3id.org/hsu-aut/DIN8580#Zugumformen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Abloeten> <http://www.w3id.org/hsu-aut/DIN8580#Auseinandernehmen> <http://www.w3id.org/hsu-aut/DIN8580#Entleeren> <http://www.w3id.org/hsu-aut/DIN8580#Loesen_kraftschluessiger_Verbindungen> <http://www.w3id.org/hsu-aut/DIN8580#Loesen_von_Klebeverbindungen> <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen_textiler_Verbindungen> <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen_von_durch_Umformen_gefuegten_Teilen> <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen_von_durch_Urformen_gefuegten_Teilen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Bestrahlen> <http://www.w3id.org/hsu-aut/DIN8580#Magnetisieren> <http://www.w3id.org/hsu-aut/DIN8580#Photochemische_Verfahren> <http://www.w3id.org/hsu-aut/DIN8580#Sintern_oder_Brennen> <http://www.w3id.org/hsu-aut/DIN8580#Thermomechanisches_Behandeln> <http://www.w3id.org/hsu-aut/DIN8580#Verfestigen_durch_Umformen> <http://www.w3id.org/hsu-aut/DIN8580#Waermebehandeln> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Blasformen> <http://www.w3id.org/hsu-aut/DIN8580#Kalandrieren> <http://www.w3id.org/hsu-aut/DIN8580#Modellieren> <http://www.w3id.org/hsu-aut/DIN8580#Pressformen> <http://www.w3id.org/hsu-aut/DIN8580#Spritzgiessen> <http://www.w3id.org/hsu-aut/DIN8580#Spritzpressen> <http://www.w3id.org/hsu-aut/DIN8580#Strangpressen> <http://www.w3id.org/hsu-aut/DIN8580#Ziehformen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Auflegen_oder_Aufsetzen_oder_Schichten> <http://www.w3id.org/hsu-aut/DIN8580#Einhaengen> <http://www.w3id.org/hsu-aut/DIN8580#Einlegen_oder_Einsetzen> <http://www.w3id.org/hsu-aut/DIN8580#Einrenken> <http://www.w3id.org/hsu-aut/DIN8580#Federnd_Einspreizen> <http://www.w3id.org/hsu-aut/DIN8580#Ineinanderschieben> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Laengen> <http://www.w3id.org/hsu-aut/DIN8580#Tiefen> <http://www.w3id.org/hsu-aut/DIN8580#Weiten> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Abtragen> <http://www.w3id.org/hsu-aut/DIN8580#Reinigen> <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_bestimmten_Schneiden> <http://www.w3id.org/hsu-aut/DIN8580#Spanen_mit_geometrisch_unbestimmten_Schneiden> <http://www.w3id.org/hsu-aut/DIN8580#Zerlegen> <http://www.w3id.org/hsu-aut/DIN8580#Zerteilen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Druecken> <http://www.w3id.org/hsu-aut/DIN8580#Durchziehen> <http://www.w3id.org/hsu-aut/DIN8580#Innenhochdruck-Weitstauchen> <http://www.w3id.org/hsu-aut/DIN8580#Knickbauchen> <http://www.w3id.org/hsu-aut/DIN8580#Kragenziehen> <http://www.w3id.org/hsu-aut/DIN8580#Tiefziehen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Druckdruecken> <http://www.w3id.org/hsu-aut/DIN8580#Eindruecken> <http://www.w3id.org/hsu-aut/DIN8580#Freiformen> <http://www.w3id.org/hsu-aut/DIN8580#Gesenkformen> <http://www.w3id.org/hsu-aut/DIN8580#Oberflaechenveredelungsstrahlen> <http://www.w3id.org/hsu-aut/DIN8580#Umformstrahlen> <http://www.w3id.org/hsu-aut/DIN8580#Walzen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Bandschleifen> <http://www.w3id.org/hsu-aut/DIN8580#Gleitspanen> <http://www.w3id.org/hsu-aut/DIN8580#Honen> <http://www.w3id.org/hsu-aut/DIN8580#Hubschleifen> <http://www.w3id.org/hsu-aut/DIN8580#Laeppen> <http://www.w3id.org/hsu-aut/DIN8580#Schleifen_mit_rotierendem_Werkzeug> <http://www.w3id.org/hsu-aut/DIN8580#Strahlspanen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_durch_thermisches_Spritzen> <http://www.w3id.org/hsu-aut/DIN8580#Elektrostatisches_Beschichten> <http://www.w3id.org/hsu-aut/DIN8580#Wirbelsintern> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Anstreichen_oder_Lackieren> <http://www.w3id.org/hsu-aut/DIN8580#Beschichten_durch_Giessen> <http://www.w3id.org/hsu-aut/DIN8580#Beschriften> <http://www.w3id.org/hsu-aut/DIN8580#Drucken_oder_Bedrucken> <http://www.w3id.org/hsu-aut/DIN8580#Emaillieren_oder_Glasieren> <http://www.w3id.org/hsu-aut/DIN8580#Faerben> <http://www.w3id.org/hsu-aut/DIN8580#Schmelztauchen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Fuegen_durch_Presspassung> <http://www.w3id.org/hsu-aut/DIN8580#Klammern> <http://www.w3id.org/hsu-aut/DIN8580#Klemmen> <http://www.w3id.org/hsu-aut/DIN8580#Nageln_oder_Verstiften_oder_Einschlagen> <http://www.w3id.org/hsu-aut/DIN8580#Schrauben> <http://www.w3id.org/hsu-aut/DIN8580#Verkeilen> <http://www.w3id.org/hsu-aut/DIN8580#Verspannen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_breiigen_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_fluessigen_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_gas-_oder_dampffoermigen_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_ionisierten_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_koernigen_oder_pulverfoermigen_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_plastischen_Zustand> <http://www.w3id.org/hsu-aut/DIN8580#Urformen_aus_dem_span-_oder_faserfoermigen_Zustand> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Chemisches_Abtragen> <http://www.w3id.org/hsu-aut/DIN8580#Elektrochemisches_Abtragen> <http://www.w3id.org/hsu-aut/DIN8580#Thermisches_Abtragen> ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( <http://www.w3id.org/hsu-aut/DIN8580#Pressen> <http://www.w3id.org/hsu-aut/DIN8580#Sandformen> <http://www.w3id.org/hsu-aut/DIN8580#Urformen_durch_thermisches_Spritzen> ) .
+

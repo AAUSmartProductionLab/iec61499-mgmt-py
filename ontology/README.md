@@ -20,16 +20,31 @@ What the AASs hold as built is in
 | --- | --- | --- |
 | `AAS/` | AAS v3.1 RDF ontology | The metamodel (unchanged) |
 | `CSS/` | CSS 2.0.2 | Capability, Skill, Service reference model (updated from 2.0.1 on 30 Sep 2026: fixes the domain of `behaviorConformsTo`) |
+| `VDI2860/`, `DIN8580/` | HSU's VDI 2860 2.0.0 and DIN 8580 2.0.0 | The standards' taxonomies of handling functions (VDI 2860) and manufacturing processes (DIN 8580), as ontology design patterns of Helmut Schmidt University: what the lab's capabilities are kinds of (vocabulary 0.9) |
 | `APSO/` | APSO 0.2 | Product AAS: BatchInformation, BoM, Requirements, Bill of Process. Not the product AAS that is built (aas-model's `Product`, [docs/ppr-model.md](../docs/ppr-model.md)); to be remade from it (F5 in [docs/next-steps.md](../docs/next-steps.md)) |
 | `ARSO/` | ARSO 0.14 | Resource AAS of a line, a module and a component: Nameplate, Hierarchical Structures, AID, AIMC, Skills, Capabilities, Variables (aas-model's, with the coordinates; Operational Data until 0.13), Parameters, Technical Data, Control Configuration (since 0.10 the schema of the integrator's record, outside the AAS). The templates of its own submodels and their classes are in aas-model (`templates/arso`) |
 | `AProSO/` | AProSO 0.1 (30 Sep) | Process AAS: ProcessInformation, ProcessStructure (process map with flow), CapabilityBindings, Validation, Policy. Not the process AAS that is built since 28 Oct (aas-model's `Process`: Process Information, Bindings, Validation); to be remade from it (F5) |
 | `PPRL/` | PPRL 0.2 | What lies between them: the CSS concept an AAS element describes, process decomposition and order, resource parts, required and offered capabilities and matching, skill composition, occupation, binding, parameter value flow, derived candidates, change classes; since 0.2 (28 Oct) what a capability needs, does and keeps, for planning (`pre`, `post`, `invariant`, `ProductProperty`); since 30 Oct `writtenFor`, the narrower capability a composite skill was written for. `projection.ttl` and `projection/*.rq`: how an AAS becomes RDF and which individuals and relations its elements describe (`modreg graph`, `aas61499-tools/modreg/projection.py`) |
-| `Vocabulary/` | Lab vocabulary 0.7 | What the elements of the AASs mean (their supplemental semantic ids): capabilities, of two kinds (process: a product can require it; auxiliary: it serves other skills), their properties and, since 0.2 (28 Oct), what each needs, does and keeps; since 0.3 the meanings of a module's points of interest, since 0.4 Transporting and the planar table's Flyway, since 0.5 what a coordinate is of, since 0.6 (30 Oct) BottomUpFilling and Transporting's targets, since 0.7 (30 Oct) custody: Receiving, Releasing, Holding, HeldBy, Occupancy, Capacity (`capabilities.ttl`); the commands and kinds of a skill (`commands.ttl`); the skill types of the components, the capability each contributes and the one of its component it realizes (`skills.ttl`) |
+| `Vocabulary/` | Lab vocabulary 0.9 | What the elements of the AASs mean (their supplemental semantic ids): capabilities, of two kinds (process: a product can require it; auxiliary: it serves other skills), their properties and, since 0.2 (28 Oct), what each needs, does and keeps; since 0.3 the meanings of a module's points of interest, since 0.4 Transporting and the planar table's Flyway, since 0.5 what a coordinate is of, since 0.6 (30 Oct) BottomUpFilling and Transporting's targets, since 0.7 (30 Oct) custody: Receiving, Releasing, Holding, HeldBy, Occupancy, Capacity, since 0.8 CrimpPosition, since 0.9 (6 Nov) the capabilities placed below DIN 8580 and VDI 2860 (`capabilities.ttl`); the commands and kinds of a skill (`commands.ttl`); the skill types of the components, the capability each contributes and the one of its component it realizes (`skills.ttl`) |
 
-`AAS/` and `CSS/` are unchanged copies of ontologies published by others (the AAS v3.1 RDF
-ontology of the IDTA, `https://admin-shell.io/aas/3/1/`; the CSS ontology of Helmut Schmidt
-University, `http://www.w3id.org/hsu-aut/css`), kept here so the imports resolve offline; their
-own terms apply.
+`AAS/`, `CSS/`, `VDI2860/` and `DIN8580/` are unchanged copies of ontologies published by others
+(the AAS v3.1 RDF ontology of the IDTA, `https://admin-shell.io/aas/3/1/`; the CSS ontology of
+Helmut Schmidt University, `http://www.w3id.org/hsu-aut/css`; HSU's VDI 2860 and DIN 8580 ontology
+design patterns, `http://www.w3id.org/hsu-aut/VDI2860` and `.../DIN8580`, MIT, converted from OWL/XML
+to Turtle with their triples unchanged), kept here so the imports resolve offline; their own terms
+apply.
+
+**What the capabilities are kinds of (vocabulary 0.9).** A lab capability class is also a subclass
+of the class of the standard it is a kind of: what changes the product of DIN 8580 (Filling and
+Dosing are pouring, 4.2.1; Stoppering and Pressing press fitting, 4.3.4; Crimping joining by forming
+sheet metal, 4.5.2; Capping joining), what moves or checks it of VDI 2860 (Positioning; Transporting
+as conveying; Weighing as measuring; Imaging and Inspection as checking). The standards' classes
+state no constraints, so a class inherits nothing that planning reads; the lab's split into process
+and auxiliary capabilities (what a product can require, what serves other skills) stays its own and
+runs across both standards. Not placed: Referencing and Taring, Receiving and Releasing (custody;
+VDI 2860's holding and releasing are clamping), Loading, Unloading, Unpacking and Packing. VDI 3682
+(formalised process description) was read too: its states, inputs and outputs say what our pre- and
+postconditions say, with no time or rates, so it is not imported.
 
 ## Why a link ontology rather than more in APSO and ARSO
 

@@ -20,6 +20,23 @@ A running log of design considerations made while building, for writing the pape
 
 ## 6 Nov 2026
 
+- **The capabilities placed below DIN 8580 and VDI 2860, as HSU's ontology design patterns state
+  them (vocabulary 0.9).** *CIRP* (a sentence and a citation) and *Journal* (the ontologies).
+  - A capability class of the lab is also a subclass of the standard's class it is a kind of: DIN 8580
+    for what changes the product (Filling and Dosing pouring, 4.2.1; Stoppering and Pressing press
+    fitting, 4.3.4; Crimping joining by forming sheet metal, 4.5.2; Capping joining, as a cap may be
+    crimped or screwed), VDI 2860 for what moves or checks it (Positioning, Transporting as conveying,
+    Weighing as measuring, Imaging and Inspection as checking). Copies of both are in `ontology/`.
+  - Why: the split between what a product can require and what only serves other skills (load a
+    magazine, turn a vial, move an axis) then rests on standard classes a reader knows, and CaSk and
+    Köcher's planning use the same two. The standards' classes carry no constraints, so nothing that
+    planning reads is inherited; our process/auxiliary split stays ours and runs across both standards.
+    Instead of: our own classes under each other (the caution of 0.2), or no taxonomy at all.
+  - Not placed, rather than guessed: Referencing and Taring (they set a component up), Receiving and
+    Releasing (custody; VDI 2860's holding and releasing mean clamping), Loading, Unloading, Unpacking
+    and Packing. VDI 3682 was read and not imported: its states, inputs and outputs say what pre and
+    post say, with no time or rates.
+
 - **The effort of a reconfiguration measured in the UI's own inputs, against 4diac counted from the
   generated program.** *CIRP* (E1, a table).
   - The skill editor and the planner are driven in a browser (`cell/eval/ui/effort-ui.cjs`, Playwright)

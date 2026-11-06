@@ -1,0 +1,218 @@
+# An unchanged copy of https://github.com/hsu-aut/IndustrialStandard-ODP-VDI2860 (MIT licence, see LICENSE next to this file),
+# converted from OWL/XML to Turtle so that the imports of the lab's vocabulary resolve offline.
+
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://www.w3id.org/hsu-aut/VDI2860> a owl:Ontology ;
+    owl:versionIRI <http://www.w3id.org/hsu-aut/VDI2860/2.0.0> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Abteilen> a owl:Class ;
+    rdfs:label "Abteilen"@de,
+        "Separating"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#MengenVeraendern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#AnwesenheitPruefen> a owl:Class ;
+    rdfs:label "AnwesenheitPruefen"@de,
+        "CheckingPresence"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Pruefen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Drehen> a owl:Class ;
+    rdfs:label "Drehen"@de,
+        "Rotating"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Bewegen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Entspannen> a owl:Class ;
+    rdfs:label "Entspannen"@de,
+        "Slackening"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Loesen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#FarbePruefen> a owl:Class ;
+    rdfs:label "FarbePruefen"@de,
+        "CheckingColor"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Pruefen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Foerdern> a owl:Class ;
+    rdfs:label "Foerdern"@de,
+        "Conveying"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Bewegen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#FormPruefen> a owl:Class ;
+    rdfs:label "FormPruefen"@de,
+        "CheckingForm"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Pruefen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Fuehren> a owl:Class ;
+    rdfs:label "Fuehren"@de,
+        "Guiding"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Bewegen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#GewichtPruefen> a owl:Class ;
+    rdfs:label "GewichtPruefen"@de,
+        "CheckingWeight"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Pruefen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#GroessePruefen> a owl:Class ;
+    rdfs:label "GroessePruefen"@de,
+        "CheckingSize"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Pruefen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#IdentitaetPruefen> a owl:Class ;
+    rdfs:label "IdentitaetPruefen"@de,
+        "CheckingIdentity"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Pruefen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Ordnen> a owl:Class ;
+    rdfs:label "Ordnen"@de,
+        "Arranging"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Bewegen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Orientieren> a owl:Class ;
+    rdfs:label "Orientieren"@de,
+        "Orienting"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Bewegen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#OrientierungMessen> a owl:Class ;
+    rdfs:label "OrientierungMessen"@de,
+        "MeasuringOrientation"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Messen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#OrientierungPruefen> a owl:Class ;
+    rdfs:label "OrientierungPruefen"@de,
+        "CheckingOrientation"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Pruefen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#PositionMessen> a owl:Class ;
+    rdfs:label "PositionMessen"@de,
+        "MeasuringPosition"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Messen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#PositionPruefen> a owl:Class ;
+    rdfs:label "PositionPruefen"@de,
+        "CheckingPosition"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Pruefen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Positionieren> a owl:Class ;
+    rdfs:label "Positionieren"@de,
+        "Positioning"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Bewegen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Schwenken> a owl:Class ;
+    rdfs:label "Schwenken"@de,
+        "Pivoting"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Bewegen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Sortieren> a owl:Class ;
+    rdfs:label "Sortieren"@de,
+        "Sorting"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#MengenVeraendern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Spannen> a owl:Class ;
+    rdfs:label "Spannen"@de,
+        "Tensioning"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Halten> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Teilen> a owl:Class ;
+    rdfs:label "Teilen"@de,
+        "Dividing"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#MengenVeraendern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Vereinigen> a owl:Class ;
+    rdfs:label "Vereinigen"@de,
+        "Pooling"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#MengenVeraendern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Verschieben> a owl:Class ;
+    rdfs:label "Verschieben"@de,
+        "Translating"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Bewegen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Verzweigen> a owl:Class ;
+    rdfs:label "Verzweigen"@de,
+        "Forking"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#MengenVeraendern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Weitergeben> a owl:Class ;
+    rdfs:label "Weitergeben"@de,
+        "Forwarding"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Bewegen> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Zaehlen> a owl:Class ;
+    rdfs:label "Zaehlen"@de,
+        "Counting"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Kontrollieren> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Zusammenfuehren> a owl:Class ;
+    rdfs:label "Zusammenfuehren"@de,
+        "Merging"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#MengenVeraendern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Zuteilen> a owl:Class ;
+    rdfs:label "Zuteilen"@de,
+        "Allocating"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#MengenVeraendern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#geordnetesSpeichern> a owl:Class ;
+    rdfs:label "GeordnetesSpeichern"@de,
+        "SortedStoring"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Speichern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#teilgeordnetesSpeichern> a owl:Class ;
+    rdfs:label "TeilgeordnetesSpeichern"@de,
+        "PartiallySortedStoring"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Speichern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#ungeordnetesSpeichern> a owl:Class ;
+    rdfs:label "UngeordnetesSpeichern"@de,
+        "UnsortedStoring"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Speichern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Halten> a owl:Class ;
+    rdfs:label "Halten"@de,
+        "Holding"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Sichern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Loesen> a owl:Class ;
+    rdfs:label "Loesen"@de,
+        "Releasing"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Sichern> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Messen> a owl:Class ;
+    rdfs:label "Messen"@de,
+        "Measuring"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Kontrollieren> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Sichern> a owl:Class ;
+    rdfs:label "Sichern"@de,
+        "Securing"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Handhaben> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Kontrollieren> a owl:Class ;
+    rdfs:label "Kontrollieren"@de,
+        "Testing"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Handhaben> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Speichern> a owl:Class ;
+    rdfs:label "Speichern"@de,
+        "Storing"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Handhaben> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Handhaben> a owl:Class ;
+    rdfs:label "Handhaben"@de,
+        "Handling"@en .
+
+<http://www.w3id.org/hsu-aut/VDI2860#MengenVeraendern> a owl:Class ;
+    rdfs:label "MengenVeraendern"@de,
+        "AlteringQuantities"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Handhaben> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Pruefen> a owl:Class ;
+    rdfs:label "Pruefen"@de,
+        "Checking"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Kontrollieren> .
+
+<http://www.w3id.org/hsu-aut/VDI2860#Bewegen> a owl:Class ;
+    rdfs:label "Bewegen"@de,
+        "Moving"@en ;
+    rdfs:subClassOf <http://www.w3id.org/hsu-aut/VDI2860#Handhaben> .
+
