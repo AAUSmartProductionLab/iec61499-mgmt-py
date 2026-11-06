@@ -242,6 +242,39 @@ tables in `q1-2026-11-04T0028.md`, the figure in `docs/paper/cirp/figures/activa
   to 0.41 s in such a process, but none inside a reading in 300, so the cause is not established. They
   are kept; every run stayed below 1 s.
 
+**Re-run after the type refactor (5 to 6 Nov).** The runs of 4 Nov used the block types from before
+the refactor of 4 Nov (contracts, `SKILL_Run`, `EP_`, `SKILL_Gate`, adapters). The application program
+did not change (the same instances, connections and values per step), but the types did, so the
+evaluation's FORTE was rebuilt with them, two pilots passed every check (42 of 42 runs), and the
+full run was made again: 1,260 runs and 5 warm-up runs in 4 h 29 min, commit `6173417`, the runs in
+`cell/eval/results/q1-2026-11-05T2357.jsonl`, the tables in `q1-2026-11-05T2357.md`. The paper
+reports this run, and its figures (`activation.pdf`, `unavailable.pdf`) are drawn from it.
+
+- *Every counted run passed every check* again; in 10 runs the OPC UA server failed to register with
+  a discovery server (counted apart).
+- *Every hypothesis has the same answer.* What changed:
+  - *H1.1:* 32 steps in a program of 20 composites take 0.396 s [0.387, 0.414] (was 0.352), the
+    slowest of the 780 runs 0.664 s (was 0.582). Activation is 3 to 13 % slower for 32 steps and
+    14 to 28 % slower for 1 step. Applying costs a constant 6 ms more (the fit's intercept
+    7.2 ms, was 0.4 ms) for the same commands, 0.139 ms per command (was 0.141). Reading and
+    verifying cost 0.214 ms per connection of the program (was 0.188). The fit of both explains the
+    activation time with R² 0.86 (was 0.87).
+  - *The reconciler's reading* has more requests: 62 to 450 (was 57 to 407). All of the extra
+    requests are READs of values, 5 more at 1 composite and 43 more at 20: the new types have more
+    inputs to read back. The comparison, in Python, takes longer with them (at 20 composites 77 ms,
+    was 57 ms); reading the program itself takes as long as before (44 ms at 20 composites).
+  - *H1.2:* unchanged. The commands are those the generator's boot files call for in 1,020 of 1,020
+    runs, the same counts and bytes as before (73 commands for 1 step to 716 for 32).
+  - *H1.3:* Dispensing took -0.02 % [-0.08, 0.04] longer with a composite added meanwhile (was
+    +0.01 %).
+  - *H1.4:* a restart leaves the module unavailable 3.30 to 3.32 s (load 0.57 s, reset 2.60 s, start
+    0.08 s), as before. A value from Execute costs 2.34 to 2.56 s online (x1.3 to x1.4, fails), from
+    Idle 0.03 to 0.24 s (x13 to x123, holds).
+  - *Outliers:* 53 activation times beyond three interquartile ranges (was 49), up to 0.27 s above
+    their cell's median, spread over the session, as before.
+- The runtime's speed is what moved. The counts did not: no command, check, verdict or restart time
+  depends on the refactor.
+
 ## Q3: does the program stay what its AAS says?
 
 **Question.** When the running program and the module's AAS come apart, does the reconciler notice it,
@@ -380,6 +413,15 @@ failed to register with a discovery server (counted apart, V10).
 - *The baseline,* the AAS compared with the boot file that was deployed instead of with the running
   program, detected the 220 drifts where the AAS is ahead of the program (P4, A1 to A4) and none of the
   937 made in the program (P1 to P3, P5).
+
+**Re-run after the type refactor (6 Nov).** With the evaluation's FORTE rebuilt with the new types
+(see Q1), after a pilot of 30 runs that passed every check: 1,258 runs in 2 h 23 min, commit
+`6173417`, the runs in `cell/eval/results/q3-2026-11-06T0426.jsonl`, the tables in
+`q3-2026-11-06T0426.md`. Every run passed R1 to R3 the first time, so no drift was repeated. Every
+number is the same as on 4 Nov: the audit detected and located all 1,157 drifts, with 0 of 101 false
+alarms; 572 were removed online and 577 refused; the 8 interface values were reported as a restart;
+every cut change was completed (135 of 135); the baseline detected 220. The paper reports this run,
+and `detection.pdf` is drawn from it.
 
 ## Q4: are the skills right for the product?
 

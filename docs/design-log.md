@@ -18,6 +18,23 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 6 Nov 2026
+
+- **Q1 and Q3 run again on the refactored types; the paper reports the new runs.** *CIRP* (Q1, Q3).
+  - The runs of 4 Nov ran on block types from before the 4 Nov refactor. The application program is
+    the same, but the program the paper describes runs on the new types, so the evaluation's FORTE
+    was rebuilt with them and both full runs were made again. Instead of: keeping the 4 Nov runs and
+    stating that the types changed since, which would leave the paper's numbers measured on code it
+    does not describe.
+  - Every count and verdict is the same. Activation is 3 to 28 % slower (0.396 s instead of 0.352 s
+    at 32 steps and 20 composites): the new types have more inputs that the reconciler reads back and
+    compares. The 4 Nov runs stay in `cell/eval/results`, and the differences are in
+    [cirp-evaluation.md](cirp-evaluation.md).
+  - New figures: the time a module cannot take a product, per kind of change and split into its
+    parts (`unavailable.pdf`), and detection per kind of drift against the baseline
+    (`detection.pdf`). Instead of tables only: the first shows at a glance that a value changed
+    during an order costs almost a restart, as both re-home the axis.
+
 ## 5 Nov 2026
 
 - **Q4 judged by a process model of the filling station, not by the AAS's own conditions.** *CIRP*
