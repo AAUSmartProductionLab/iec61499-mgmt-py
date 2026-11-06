@@ -3,7 +3,10 @@
 - pipeline-planning: Fig. 1 (the page "pipeline") with the planning spelled out: Match and plan, a Plan
   card with its four steps, the capabilities that feed it, a planned skill S' with a parallel block;
 - planned-bottom-up: how the planner makes BottomUpFilling for the syringe from the module's primitives
-  (one column, 440 px = 8.4 cm, no text below 12 px), the needle rising with the liquid in time.
+  (one column, 440 px = 8.4 cm, no text below 12 px), the needle rising with the liquid in time;
+- primitives-to-composite: how a module's offered capabilities follow from its primitives' and the
+  vocabulary (realizes, contributes, process or auxiliary, means, characterizes, narrower), or are
+  planned from the classes' constraints (two columns, 206 mm).
 
     python planning_pages.py <cirp-figures.drawio>      # replaces the two pages if they are there
 """
@@ -267,11 +270,120 @@ def planned_bottom_up() -> ET.Element:
     return P.diagram
 
 
+
+# ---- page 3: from primitives' capabilities to a composite's, and the vocabulary that says how ----------
+SHELL = None                                    # the AAS shell icon, taken from the page "pipeline"
+
+
+def primitives_to_composite() -> ET.Element:
+    """Two columns, 780 px (206 mm): the AAS elements on the left, the vocabulary's relations they rest on
+    on the right; four rows: a primitive realizes its component's capability, a composite's steps
+    contribute capabilities, the process ones are offered and specified, and without a skill one is
+    planned from the classes' constraints."""
+    P = Page("primitives-to-composite", 780, 356)
+    small, body, head = 10, 11, 12
+    chip = lambda fill, stroke, dashed=False: (f"rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor={fill};"   # noqa: E731
+                                               f"strokeColor={stroke};strokeWidth=1;fontFamily=Arial;fontSize={body};"
+                                               f"fontColor={INK};spacingLeft=3;spacingRight=3;" + ("dashed=1;" if dashed else ""))
+    card = f"rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor={LINE};strokeWidth=1;"
+    band = "rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#F3F4F5;strokeColor=none;"
+    badge = (f"ellipse;html=1;fillColor={INK};strokeColor=none;fontColor=#FFFFFF;fontFamily=Arial;fontSize=9;fontStyle=1;")
+    SKILL = chip(FB, FB_LINE)                   # a skill type, or a step
+    AUX = chip(BLUE_FILL, BLUE)                 # an auxiliary capability
+    PROC = chip(RUN, GREEN)                     # a process capability
+    PROP = chip(PURPLE_FILL, PURPLE)            # a property
+    PRIM = chip(RUN, GREEN)                     # a primitive skill in a component's AAS
+    LATER = chip(PINK, PINK_LINE, dashed=True)  # after a reconfiguration
+    PLAIN = chip("#FFFFFF", LINE)
+
+    def note(x, y, w, h, s, color=GREY, size=small):
+        P.vertex(x, y, w, h, s, label(size, color, valign="top"))
+
+    def aas(x, y, w, h, name):
+        """An AAS card: the shell icon and the name."""
+        P.vertex(x, y, w, h, "", card)
+        P.vertex(x + 6, y + 5, 15, 12, "", SHELL)
+        P.vertex(x + 25, y + 3, w - 30, 16, name, label(body, INK, bold=True))
+
+    def triple(x, y, parts, h=18):
+        """Chips joined by labelled arrows: (text, style, width) for a chip, (label, width) for an arrow."""
+        for part in parts:
+            if len(part) == 3:
+                s, style, w = part
+                P.vertex(x, y, w, h, s, style)
+            else:
+                said, w = part
+                P.edge([(x, y + h / 2), (x + w, y + h / 2)], arrow(INK, 1, size=small) + "verticalAlign=bottom;spacingBottom=2;", said)
+            x += part[-1]
+
+    P.vertex(22, 0, 400, 14, "AAS: the module and its components", label(small, GREY, bold=True))
+    P.vertex(470, 0, 300, 14, "Vocabulary: what the elements mean, and how they relate", label(small, GREY, bold=True))
+    rows = ((16, 80, "A primitive realizes a capability of its component"),
+            (102, 84, "A composite's steps contribute capabilities"),
+            (192, 80, "The process capabilities are offered, specified by what the skill sets"),
+            (278, 74, "No skill yet: planned from the classes' constraints"))
+    for k, (y, h, title) in enumerate(rows):
+        P.vertex(14, y, 762, h, "", band)
+        P.vertex(20, y + 5, 14, 14, str(k + 1), badge)
+        P.vertex(40, y + 3, 420, 17, title, label(head, INK, bold=True))
+        if k < 2:
+            P.edge([(233, y + h), (233, rows[k + 1][0])], arrow(INK, 1.2))
+
+    # 1: Dispense in the pump's AAS realizes Dosing, the pump's capability in the module's description.
+    y = 16
+    aas(22, y + 24, 122, 48, "Pump")
+    P.vertex(30, y + 48, 106, 17, "Dispense", PRIM)
+    P.edge([(144, y + 56), (170, y + 56)], arrow(INK, 1.2))
+    aas(170, y + 24, 274, 48, "Module: Capability Description")
+    P.vertex(178, y + 48, 258, 17, "Dosing, realized by Dispense", AUX)
+    triple(470, y + 26, [("Dispense", SKILL, 74), ("realizes", 64), ("Dosing", AUX, 70)])
+    note(682, y + 22, 92, 40, "of the pump; never offered alone")
+    note(470, y + 48, 300, 30, "Dosing: auxiliary, DIN 8580 pouring; its pre, post and keep,<br>and FlowRate the rate of the content")
+
+    # 2: Dispensing's steps, and what each one's type contributes.
+    y = 102
+    aas(22, y + 24, 422, 54, "Module: Skills, Dispensing")
+    steps = (("MoveAxis", 30, 74), ("Dispense", 118, 74), ("Home", 206, 58), ("Weigh", 278, 62))
+    for s, x, w in steps:
+        P.vertex(x, y + 50, w, 17, s, SKILL)
+    for (_, xa, wa), (_, xb, _) in zip(steps, steps[1:]):
+        P.edge([(xa + wa, y + 58.5), (xb, y + 58.5)], arrow(GREEN, 1.2))
+    note(346, y + 46, 94, 28, "Volume means<br>FillVolume")
+    for k, (s, cls, style, said, color) in enumerate((("MoveAxis, Home", "Positioning", AUX, "not offered", GREY),
+                                                       ("Dispense", "Filling", PROC, "offered", GREEN),
+                                                       ("Tare, Weigh", "Weighing", AUX, "not offered", GREY))):
+        triple(470, y + 22 + 20 * k, [(s, SKILL, 96), ("contributes" if k == 0 else "", 58), (cls, style, 82)], h=17)
+        P.vertex(710, y + 22 + 20 * k, 66, 17, said, label(small, color, bold=color == GREEN))
+
+    # 3: Filling offered, by Dispensing, its FillVolume from the skill's Volume.
+    y = 192
+    aas(22, y + 24, 422, 48, "Module: Capability Description, offered")
+    P.vertex(30, y + 48, 142, 17, "Filling, by Dispensing", PROC)
+    P.vertex(178, y + 48, 136, 17, "FillVolume 0.5 to 10 mL", PROP)
+    P.vertex(320, y + 48, 116, 17, "ContainerType: stated", PLAIN)
+    triple(470, y + 24, [("Volume", SKILL, 54), ("means", 42), ("FillVolume", PROP, 74), ("characterizes", 76), ("Filling", PROC, 54)])
+    triple(470, y + 55, [("BottomUpFilling", PROC, 104), ("⊑", 30), ("Filling", PROC, 54)])
+    note(662, y + 51, 112, 28, "a skill written for it<br>offers it instead")
+
+    # 4: no skill: planned from the class's constraints over row 1's capabilities.
+    y = 278
+    P.vertex(22, y + 26, 118, 32, "Filling 15 mL:<br>no skill covers it", PLAIN)
+    P.edge([(140, y + 42), (168, y + 42)], arrow(INK, 1.2) + "verticalAlign=bottom;spacingBottom=2;fontSize=10;", "plan")
+    P.vertex(168, y + 26, 152, 32, "MoveAxis, Dispense 7.5 ×2,<br>Home, Weigh: <i>Described</i>", LATER)
+    P.edge([(320, y + 42), (334, y + 42)], arrow(INK, 1.2))
+    P.vertex(334, y + 26, 110, 32, "offered after a<br>reconfiguration", LATER)
+    triple(470, y + 24, [("Filling", PROC, 54)])
+    note(530, y + 22, 244, 22, "pre: empty;  post: content = FillVolume", INK, body)
+    note(470, y + 46, 304, 26, "regressed over the capabilities of row 1, their pre, post, keep<br>and rates; a narrower class keeps what it adds (BottomUpFilling)")
+    return P.diagram
+
+
 text = open(PATH, encoding="utf-8", newline="").read()
-for name in ("pipeline-planning", "planned-bottom-up"):          # run again: the pages replaced
+for name in ("pipeline-planning", "planned-bottom-up", "primitives-to-composite"):          # run again: the pages replaced
     text = re.sub(r'\s*<diagram id="' + name + r'-0".*?</diagram>', "", text, flags=re.S)
 source = next(d for d in ET.fromstring(text).findall("diagram") if d.get("name") == "pipeline")
-pages = "".join("\n  " + ET.tostring(p, encoding="unicode") for p in (pipeline_planning(source), planned_bottom_up()))
+SHELL = next(c.get("style") for c in source.iter("mxCell") if (c.get("style") or "").startswith("shape=stencil("))
+pages = "".join("\n  " + ET.tostring(p, encoding="unicode") for p in (pipeline_planning(source), planned_bottom_up(), primitives_to_composite()))
 end = text.rindex("</mxfile>")
 newline = "\r\n" if "\r\n" in text else "\n"
 open(PATH, "w", encoding="utf-8", newline="").write(text[:end].rstrip() + pages.replace("\n", newline) + newline + text[end:])
