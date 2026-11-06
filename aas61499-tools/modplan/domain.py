@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .expression import Expression, WORDS
+from .expression import Expression, Formula, WORDS
 
 PRODUCT = "product"
 DIGITS = 9                                     # values are kept to this many decimals
@@ -72,6 +72,13 @@ class Capability:
     invariant: list[Constraint] = field(default_factory=list)
     compositions: list[list[str]] = field(default_factory=list)    # its parts, by name (an offered one)
     results: dict[str, list[Constraint]] = field(default_factory=dict)   # a result and the state it needs
+    variables: dict[str, Var] = field(default_factory=dict)        # a property that is a state, and which
+    rates: dict[Var, str] = field(default_factory=dict)            # a state it changes at the rate a property says
+    after: Expression | None = None                                # how long it takes, if no rate says (seconds)
+
+    def __post_init__(self):
+        for c in (*self.pre, *self.post, *self.invariant):
+            self.variables.setdefault(c.prop, c.var)
 
     @property
     def action(self) -> bool:
@@ -81,17 +88,48 @@ class Capability:
     def defaults(self) -> dict:
         return {name: p.default for name, p in self.parameters.items() if p.default is not None}
 
-    def operand(self, expression: Expression, args: dict):
-        """What an expression compares with: its value, or the value of the property it names (the
-        argument it was given, a named value, a parameter's default); None if not known."""
-        name = expression.named
-        if name is None:
-            return expression.operand
+    def lookup(self, name: str, args: dict, state: dict | None = None):
+        """The value of the property ``name``: the argument it was given, a named value, a parameter's
+        default, or, for a state, its value in ``state``; None if not known."""
         if name in args:
             return args[name]
         if name in self.values:
             return self.values[name]
-        return self.defaults().get(name)
+        if name in self.parameters and self.parameters[name].default is not None:
+            return self.parameters[name].default
+        if state is not None and name in self.variables:
+            found = state.get(self.variables[name])
+            return found if known(found) else None
+        return None
+
+    def operand(self, expression: Expression, args: dict, state: dict | None = None):
+        """What an expression compares with: its value, the value of the property it names, or what
+        its formula comes to (``lookup``); None if not known."""
+        if isinstance(expression.operand, Formula):
+            return expression.operand.value(lambda name: self.lookup(name, args, state))
+        name = expression.named
+        if name is None:
+            return expression.operand
+        return self.lookup(name, args, state)
+
+    def duration(self, state: dict, args: dict) -> float | None:
+        """How long it runs from ``state`` with ``args``, in seconds: the longest of the changes it makes
+        at a rate (a move's way at its speed, a dose at its flow rate), else what its skill's Completion
+        says (``after``); None if neither tells."""
+        found = None
+        if self.rates:
+            end = effect(self, state, args)
+            for var, rate in self.rates.items():
+                before, after, speed = state.get(var), end.get(var), self.lookup(rate, args, state)
+                if not all(_number(v) for v in (before, after, speed)) or speed == 0:
+                    return None
+                found = max(found or 0.0, abs(after - before) / abs(speed))
+        if self.after is not None:
+            took = self.operand(self.after, args, state)
+            if not _number(took):
+                return found
+            found = max(found or 0.0, float(took))
+        return found
 
 
 def same(a, b) -> bool:
@@ -106,13 +144,17 @@ def known(value) -> bool:
     return value is not None and not isinstance(value, Measured)
 
 
+def _number(value) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
 def holds(cap: Capability, constraint: Constraint, state: dict, args: dict) -> bool | None:
     """Whether a precondition (or an invariant's comparison) holds in ``state``; None when it cannot
     be told yet (a value not known)."""
     e = constraint.expression
     if e.op in WORDS:
         return True
-    value, wanted = state.get(constraint.var), cap.operand(e, args)
+    value, wanted = state.get(constraint.var), cap.operand(e, args, state)
     if not known(value) or not known(wanted):
         return None
     if e.op == "=":
@@ -130,9 +172,9 @@ def effect(cap: Capability, state: dict, args: dict) -> dict:
     for c in cap.post:
         e = c.expression
         if e.op == "=":
-            new[c.var] = cap.operand(e, args)
+            new[c.var] = cap.operand(e, args, state)
         elif e.op == "+=":
-            before, added = state.get(c.var, 0.0), cap.operand(e, args)
+            before, added = state.get(c.var, 0.0), cap.operand(e, args, state)
             new[c.var] = round(before + added, DIGITS) if known(before) and known(added) else None
         elif e.op == "given":
             new[c.var] = args.get(c.prop, cap.defaults().get(c.prop))
@@ -156,6 +198,22 @@ class Domain:
     def realizing(self, skill: str) -> Capability | None:
         """The capability of a component a primitive realizes."""
         return next((c for c in self.actions() if c.skill == skill), None)
+
+    def changed(self) -> set[Var]:
+        """The states a capability's Post changes; the others are constants of a run (a container's
+        diameter, a named value)."""
+        return {c.var for cap in self.capabilities.values() for c in cap.post}
+
+    def nonlinear(self) -> list[str]:
+        """The constraints whose formula is not linear in the states the capabilities change: a
+        checker that looks at events only could not tell whether they hold in between."""
+        changed, found = self.changed(), []
+        for cap in self.capabilities.values():
+            varying = {name for name, var in cap.variables.items() if var in changed}
+            for c in (*cap.pre, *cap.post, *cap.invariant):
+                if isinstance(c.expression.operand, Formula) and c.expression.operand.degree(varying) > 1:
+                    found.append(f"{cap.name}: {c} is not linear in {', '.join(sorted(varying & set(c.expression.names)))}")
+        return found
 
     def setting(self, var: Var) -> list[tuple[Capability, Constraint]]:
         """The actions whose Post sets ``var``: the specific ones (``= value``) first, then those set
