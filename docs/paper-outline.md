@@ -311,8 +311,18 @@ and enough runs for intervals (medians with 95 % bootstrap intervals, rates with
 the PC and the Pi (log scale), with Q2 in one sentence. Table 2 gives the rates of Q3 and Q4. The
 effort (E1) and the planners' times become a sentence each.
 
+**Q4 with the time model (6 Nov):** check recall 90 % (123/136, the 13 Tare insertions left), precision
+88 %; matching 104/104 with nothing offered the module cannot do; 23/23 planned skills right; and, added,
+15/15 bottom-up fills planned by tracking (the needle rising with the liquid at a flow rate the planner
+sets) right in the oracle ([cirp-evaluation.md](cirp-evaluation.md), Q4). For the paper's planner
+story: a required capability that bounds how something moves in time (BottomUpFilling) is planned from
+the module's primitives, with the parallel move and its rates derived, and found by one press (Match and
+plan) on the module that offers what it narrows.
+
 **Validity:** the oracle of Q4 must not reuse the capability constraints the checker reads, or Q4
-measures the model against itself. Simulated IO on the PC, one module type and synthetic flows are the
+measures the model against itself. Since 6 Nov the syringe's least immersion (2 mm) is the product's
+requirement and O5's number both: the check and the oracle say the same of it, the oracle by its own
+10 ms simulation; its greatest immersion (3 mm, Q4t) no rule of the oracle checks. Simulated IO on the PC, one module type and synthetic flows are the
 other limits to state.
 
 **Setup, decided 4 Nov:** of the FORTE patches only 0008 goes into the paper (a note in paper.tex's
