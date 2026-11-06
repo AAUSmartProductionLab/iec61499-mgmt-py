@@ -93,12 +93,22 @@ which would be a parallel block; not used yet.
 
 | Set | Capability | Realized by | Properties | Pre | Post | Invariant |
 | --- | --- | --- | --- | --- | --- | --- |
-| LinearAxis | Referencing | Home | Position, Referenced | – | Referenced `= true`, Position `= 0.0` | – |
-| LinearAxis | Positioning | MoveAxis | Position (0–60 mm), Referenced | Referenced `= true` | Position `given` | – |
-| Pump | Dosing | Dispense | Volume (0.5–10 mL), FlowRate, FillPosition (40.0 mm), LinearAxisPosition, ContentVolume, Weighed | LinearAxisPosition `>= FillPosition` | ContentVolume `+= Volume`, Weighed `= false` | LinearAxisPosition `>= FillPosition` |
+| LinearAxis | Referencing | Home | Position, Referenced, Speed (12.5 mm/s) | – | Referenced `= true`, Position `= 0.0` | – |
+| LinearAxis | Positioning | MoveAxis | Position (0–60 mm), Referenced, Speed (12.5 mm/s), NestPosition (70.0 mm), BottomClearance (1.0 mm), InnerBottomHeight | Referenced `= true` | Position `given` | Position `<= NestPosition - InnerBottomHeight - BottomClearance` |
+| Pump | Dosing | Dispense | Volume (0.5–10 mL), FlowRate, FillPosition (40.0 mm), NestPosition (70.0 mm), InsertDepth (5.0 mm), LinearAxisPosition, ContentVolume, Weighed, RimHeight, InnerBottomHeight, InnerDiameter, OutletImmersion | LinearAxisPosition `>= FillPosition` | ContentVolume `+= Volume`, Weighed `= false` | LinearAxisPosition `>= NestPosition - RimHeight + InsertDepth`; OutletImmersion `= LinearAxisPosition - NestPosition + InnerBottomHeight + 1000 * ContentVolume / (pi * InnerDiameter * InnerDiameter / 4)` |
 | Scale | Taring | Tare | Tared | – | Tared `= true` | – |
 | Scale | Weighing | Weigh | Tared, Weight, LinearAxisPosition, Weighed | Tared `= true`, LinearAxisPosition `= 0.0` | Weight `measured`, Weighed `= true` | LinearAxisPosition `unchanged` |
 | Offered | Filling | Dispensing | FillVolume, FillWeight (a result), ContainerType, GraspDiameter, AbsoluteFillError, ContentVolume | ContentVolume `= 0.0` | ContentVolume `= FillVolume` | – |
+
+**Time and the container (6 Nov, vocabulary 0.10).** Speed is the rate of Position, FlowRate the rate
+of ContentVolume (`lab:rateOf`): MoveAxis and Home change the needle's position steadily at 12.5 mm/s,
+Dispense the content at its flow rate, and each runs as long as its change takes; Tare and Weigh take
+what their Completion says (2.0 s, 0.2 s). The container's geometry is the product's (InnerDiameter,
+InnerBottomHeight and RimHeight above the face it stands on), where that face is on the axis the
+module's (NestPosition): the needle never goes nearer than 1 mm to the inner bottom, stays 5 mm below
+the rim while it doses (in place of the fill position, which it starts from: a syringe filled from the
+bottom has the needle rise above it), and OutletImmersion is how deep its tip is in the liquid while it
+doses. Without a product none of this is known, and the checker says nothing of it.
 
 Position and LinearAxisPosition (the needle's height, named after the item the spec's condition is
 about) name `LinearAxis_ActualPosition`, Referenced names `LinearAxis_Homed`,

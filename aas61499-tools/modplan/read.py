@@ -12,10 +12,13 @@
 - The results a task can give: the vocabulary's properties of its class that say when they are
   known (a fill weight: once the container is weighed).
 - The rest state: what the module's Reset procedure leaves (``Domain.after`` its steps).
+- Time (vocabulary 0.10): a property whose meaning is the rate of another (a Speed, a FlowRate) makes
+  the capability change the state of that meaning at that rate; a primitive's Completion ``After``
+  (its skill in the component's Skills submodel) says how long it takes if no rate does.
 """
 from __future__ import annotations
 
-from modsync.aasjson import at, children, submodel
+from modsync.aasjson import at, children, skills_in, submodel
 from modsync.described import described
 
 from .domain import PRODUCT, Capability, Constraint, Domain, Parameter, Var
@@ -45,11 +48,13 @@ def read(module: dict, components: list[dict], vocabulary: Vocabulary | None = N
     voc = vocabulary or Vocabulary()
     spec = described(module, components)
     shell = module["assetAdministrationShells"][0]
+    completions = {skill["idShort"]: after for env in components for skill in skills_in(submodel(env, "Skills"))
+                   if (after := (at(skill, "Completion", "After") or {}).get("value")) not in (None, "")}
     caps = {}
     for capability_set in children(submodel(module, "CapabilityDescription")):
         component = None if capability_set["idShort"] == OFFERED_SET else capability_set["idShort"]
         for container in children(capability_set):
-            cap = _capability(container, component, spec, voc)
+            cap = _capability(container, component, spec, voc, completions)
             if cap is not None:
                 caps[cap.name if cap.name not in caps else f"{component}{cap.name}"] = cap
     domain = Domain(shell["idShort"], caps)
@@ -58,7 +63,7 @@ def read(module: dict, components: list[dict], vocabulary: Vocabulary | None = N
     return domain
 
 
-def _capability(container: dict, component: str | None, spec, voc: Vocabulary) -> Capability | None:
+def _capability(container: dict, component: str | None, spec, voc: Vocabulary, completions: dict | None = None) -> Capability | None:
     element = at(container, "Capability")
     if element is None:
         return None
@@ -68,11 +73,13 @@ def _capability(container: dict, component: str | None, spec, voc: Vocabulary) -
     cap = Capability(name=container["idShort"], meaning=_meaning(element) or container["idShort"], skill=skill, component=component)
     decl = spec.skills.get(skill) or spec.composites.get(skill)
     variables: dict[str, Var] = {}
+    meanings: dict[str, str] = {}
     for prop in children(at(container, "PropertySet")):
         value = at(prop, "Value")
         if value is None:
             continue
         name, meant = prop["idShort"], _meaning(value) or prop["idShort"]
+        meanings[name] = meant
         if value.get("modelType") == "Range":
             given = decl.parameters.get(name) if decl is not None else None
             cap.parameters[name] = Parameter(_number(value.get("min")), _number(value.get("max")),
@@ -93,6 +100,15 @@ def _capability(container: dict, component: str | None, spec, voc: Vocabulary) -
         prop = has["second"]["keys"][-2]["value"]
         constraint = Constraint(prop, variables[prop], expression)
         {"Pre": cap.pre, "Post": cap.post, "Invariant": cap.invariant}[kind].append(constraint)
+    cap.variables = {**variables, **cap.variables}
+    # A property that is the rate of what a Post changes: the change goes at that rate (0.10).
+    for name, meant in meanings.items():
+        of = voc.rate_of(meant)
+        for c in cap.post:
+            if of is not None and c.var.meaning == of and c.expression.op in ("=", "+=", "given"):
+                cap.rates[c.var] = name
+    if skill is not None and (completions or {}).get(skill) is not None:
+        cap.after = parse(f"= {completions[skill]}")
     if component is None:
         for result in voc.results(cap.meaning):
             cap.results[result] = [Constraint(s.prop, Var(PRODUCT if voc.product(s.prop) else "module", s.prop), s.expression)

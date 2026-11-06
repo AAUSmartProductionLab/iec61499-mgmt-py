@@ -12,6 +12,7 @@ SameProperty, so that the capabilities naming one data point talk about one stat
 from __future__ import annotations
 
 import functools
+import re
 
 from aas_pydantic import Capability, ModelReference, Qualifier
 from aas_pydantic.submodel_templates import capability_description as cd
@@ -27,6 +28,7 @@ NOT_ASSIGNED = "https://admin-shell.io/idta/CapabilityDescription/CapabilityRole
 # What an item with a position publishes of its state (the signals modgen gives it).
 SIGNALS = {"Position": "ActualPosition", "Referenced": "Homed"}
 XSD = {"number": "xs:double", "boolean": "xs:boolean", "string": "xs:string"}
+DOTTED = re.compile(r"\b([A-Za-z][A-Za-z0-9_]*)\.([A-Za-z][A-Za-z0-9_]*)\b")
 
 
 @functools.cache
@@ -141,20 +143,36 @@ def component_capability(spec: ModuleSpec, item: str, skill: str, decl: Skill, c
                                           derived=False), state_field(spec, item, meant))
     for name, value in (use.values.items() if use else ()):
         box.add(name, capability_property(name, meaning(name, value.semantic_id), value, derived=False))
+    # An item with a position moves at its speed: the rate of its Position (vocabulary 0.10).
+    eq = spec.equipment.get(item)
+    if eq is not None and eq.position is not None:
+        for rate in (p for p in voc.describing(cls) if voc.rate_of(p) == "Position"):
+            box.add(rate, capability_property(rate, meaning(rate), CapabilityProperty(value=eq.position.speed, unit=f"{eq.position.unit}/s"),
+                                              derived=False))
     stated = voc.constraints(cls)
     for s in stated:
-        for name in filter(None, (s.prop, s.expression.named)):
+        for name in filter(None, (s.prop, *s.expression.names)):
             box.state(name, name, None if voc.product(name) else state_field(spec, item, name))
-    conditions = []
-    for kind, about, expression in (use.conditions() if use else ()):
+
+    def named(about: str) -> str:
+        """The property a condition names: ``<Item>.<meaning>``, the state of an item, becomes the
+        property ``<Item><meaning>`` with its data point; a property of the product is a state."""
         other, _, meant = about.rpartition(".")
         if other:
             point = state_point(spec, other, meant)
             if point is None:
                 raise ValueError(f"{spec.module}.{skill}: {other} publishes no {meant}, so {cls} cannot be about it")
-            about = f"{other}{meant}"
-            box.state(about, meant, field_ref(spec, point))
-        conditions.append((kind, about, expression))
+            box.state(f"{other}{meant}", meant, field_ref(spec, point))
+            return f"{other}{meant}"
+        if about not in box.properties and voc.product(about):
+            box.state(about, about)
+        return about
+    conditions = []
+    for kind, about, expression in (use.conditions() if use else ()):
+        expression = DOTTED.sub(lambda m: named(m.group(0)), expression)
+        for name in parse(expression, kind).names:
+            named(name)
+        conditions.append((kind, named(about), expression))
     for s in stated:
         box.constrain(s.kind, s.prop, str(s.expression))
     for kind, about, expression in conditions:
@@ -177,7 +195,7 @@ def constrain_offer(container: model.ModuleCapabilityContainer, set_name: str, c
     box = Container(set_name, container.id_short, sets.PropertyContainer if sets else {})
     stated = vocabulary().constraints(cls)
     for s in stated:
-        for name in filter(None, (s.prop, s.expression.named)):
+        for name in filter(None, (s.prop, *s.expression.names)):
             box.state(name, name)
     for s in stated:
         box.constrain(s.kind, s.prop, str(s.expression))

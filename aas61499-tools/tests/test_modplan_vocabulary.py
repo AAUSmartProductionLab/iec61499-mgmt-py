@@ -36,10 +36,11 @@ def test_every_constraint_is_about_the_capabilitys_own_properties(vocabulary):
     capabilities = {local(c) for kind in (PPRL.pre, PPRL.post, PPRL.invariant) for c in vocabulary.graph.subjects(kind)}
     assert len(capabilities) >= 12
     for name in capabilities:
+        lineage = set(vocabulary.lineage(name))                  # what describes Filling describes BottomUpFilling
         for stated in vocabulary.constraints(name):              # parsed: of the language, and of its kind
-            assert name in vocabulary.characterizes(stated.prop), f"{name}: {stated.prop} does not characterize it"
-            if stated.expression.named:
-                assert name in vocabulary.characterizes(stated.expression.named), f"{name}: {stated.expression.named}"
+            assert lineage & vocabulary.characterizes(stated.prop), f"{name}: {stated.prop} does not characterize it"
+            for named in stated.expression.names:
+                assert lineage & vocabulary.characterizes(named), f"{name}: {named}"
 
 
 def test_the_products_state_and_what_a_result_needs(vocabulary):

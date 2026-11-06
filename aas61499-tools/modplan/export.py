@@ -29,7 +29,9 @@ per action that sets it, the action's own preconditions reached first (goal regr
 task network: the capability, the needs of the results, the rest state.
 
 Not expressed: invariants (``unchanged`` matters only when a plan is lifted; a comparison is a
-precondition here; in HDDL a comparison with a constant is reached at its bound), properties that are neither numbers nor truth values, and in HDDL the
+precondition here; in HDDL a comparison with a constant is reached at its bound), constraints whose
+operand is a formula (they say how a state follows in time, from the product's geometry and the
+rates, which a sequential plan does not see: the checker's), properties that are neither numbers nor truth values, and in HDDL the
 compositions (a method for them would need actions restricted to their parts). A property not known
 is false (a predicate) or undefined (a function) in PDDL, where GTPyhop does not apply an action.
 """
@@ -41,6 +43,7 @@ import math
 import re
 
 from .domain import DIGITS, Capability, Constraint, Domain, Measured, Var, known
+from .expression import Formula
 from .plan import Planned, goals, start_state
 
 COMPARE = {"=": "=", "<": "<", "<=": "<=", ">": ">", ">=": ">="}
@@ -64,8 +67,15 @@ def number(value) -> str:
     return repr(round(float(value), DIGITS))
 
 
+def kept(*groups: list[Constraint]) -> list[Constraint]:
+    """The constraints of ``groups`` the export says: those without a formula."""
+    return [c for group in groups for c in group if not isinstance(c.expression.operand, Formula)]
+
+
 def constraints(cap: Capability) -> list[Constraint]:
-    return [*cap.pre, *cap.post, *cap.invariant, *(c for cs in cap.results.values() for c in cs)]
+    """What the export says of a capability: its constraints but those with a formula."""
+    return [c for c in (*cap.pre, *cap.post, *cap.invariant, *(c for cs in cap.results.values() for c in cs))
+            if not isinstance(c.expression.operand, Formula)]
 
 
 def kinds(domain: Domain) -> dict[Var, str]:
@@ -162,7 +172,7 @@ class _Writer:
 
     def action(self, cap: Capability) -> str:
         params = parameters(cap)
-        conditions = [self.condition(cap, c, params) for c in (*cap.pre, *cap.invariant)]
+        conditions = [self.condition(cap, c, params) for c in kept(cap.pre, cap.invariant)]
         for name in params:
             p = cap.parameters.get(name)
             if p is not None and p.minimum is not None:
@@ -208,7 +218,7 @@ class _Writer:
             if self.kinds.get(var) == "number" and known(value):
                 targets.setdefault(var, set()).add(round(float(value), DIGITS))
         for cap in self.domain.actions():
-            for c in cap.pre:
+            for c in kept(cap.pre):
                 value = cap.operand(c.expression, {})
                 if (c.expression.op in ("=", "<=", ">=") and self.kinds.get(c.var) == "number"     # a comparison: its bound
                         and isinstance(value, (int, float))):
@@ -339,7 +349,7 @@ class _Hddl:
                 if c.expression.op == "+=":
                     found.append(f"?new_{fluent(c.var)}")
         assigned = {c.var for c in cap.post}
-        for c in (*cap.pre, *cap.invariant):
+        for c in kept(cap.pre, cap.invariant):
             if (self.kinds.get(c.var) == "number" and c.expression.op in ("!=", *TESTS)
                     and not (c.expression.op in ("<=", ">=") and c.expression.named not in parameters(cap))
                     and c.var not in assigned and f"?cur_{fluent(c.var)}" not in found):
@@ -375,7 +385,7 @@ class _Hddl:
                 if e.op == "+=":
                     pre.append(f"(sum {old} {self.term(cap, c)} {new})")
                 eff += [f"(not ({f} {old}))", f"({f} {new})"]
-        for c in (*cap.pre, *cap.invariant):
+        for c in kept(cap.pre, cap.invariant):
             f, e, kind = fluent(c.var), c.expression, self.kinds.get(c.var)
             if e.op in ("unchanged", "given", "measured"):
                 continue
@@ -417,7 +427,7 @@ class _Hddl:
         """The tasks that reach the action's own preconditions (``=``; a comparison by its bound), then
         the action."""
         found = []
-        for c in cap.pre:
+        for c in kept(cap.pre):
             if c.expression.op in ("<=", ">=") and self.kinds.get(c.var) == "number" and c.expression.named not in parameters(cap):
                 found.append(self.task(c.var, self.term(cap, c)))
                 continue
