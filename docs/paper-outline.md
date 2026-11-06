@@ -156,6 +156,17 @@ words, now in [paper/cirp/paper.tex](paper/cirp/paper.tex). Fig. 1 was redrawn t
 and flat (no use case, little text; 206 by 65 mm instead of 256 by 138); Fig. 3 is the page
 product-to-process.
 
+Two candidates of 6 Nov for the planner's place in the paper (pages of
+[figures/cirp-figures.drawio](figures/cirp-figures.drawio), made by `figures/planning_pages.py`, PDFs in
+`paper/cirp/figures/`): **pipeline-planning**, Fig. 1 with the planning spelled out (Match and plan; Plan:
+the task from the vocabulary, regression to the primitives, tracking a bound with rates set, the check in
+time; the capabilities feeding it; S′ with a parallel block), 206 by 78 mm, to replace Fig. 1; and
+**planned-bottom-up**, one column (8.4 cm wide, 13.6 cm tall), BottomUpFilling for the syringe planned from
+the module's primitives: requirement, task, actions, the regression with the dose alone refused and the
+tracking that sets 0.396 mL/s and starts the needle at 57.5 mm, the needle's depth in the liquid over time
+(the dose alone through the bounds, tracking flat inside them), the parallel block, described and offered.
+It can replace planned-skill (plain Filling).
+
 ### 3.1 Concept (200 words, Fig. 1)
 
 1. **The AAS is the desired state of the module's IEC 61499 program** [jensen2026ontology]. An engineer
