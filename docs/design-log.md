@@ -18,6 +18,17 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 8 Nov 2026
+
+- **The planner described as built: GTPyhop with goals only; reuse out of Fig. 2.** *CIRP*. Checked
+  against the code and the 81 tests of modplan: sequence (goal methods), repetition (the `+=` method's
+  equal doses) and matched rates (the tracking method and its paired action) are GTPyhop; parallel
+  blocks come after it, from `lift.py`. There are no task methods, so "hierarchical task networks"
+  and "three methods tried in order" overstated it. Stated compositions are not read from the AAS and
+  existing composites are not reused (designed, not built), so the Reuse case left the figure; its
+  place says that every flow is checked in time and then described. Building them (read
+  `ComposedOf` in `read.py`, inline an existing composite's steps) would put the case back.
+
 ## 7 Nov 2026
 
 - **Fig. 2 shows what the planner builds, in six cases, not one parallel example.** *CIRP*. The
