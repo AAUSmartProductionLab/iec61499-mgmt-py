@@ -193,7 +193,7 @@ def pipeline_planning(source: ET.Element) -> ET.Element:
     line([(152, 163.5), (170, 163.5)], thin), line([(240, 163.5), (258, 163.5)], thin)
     # The Plan card's steps (relative to it).
     left = chip + "align=left;spacingLeft=6;"
-    for k, s in enumerate(("task C from the vocabulary", "regress to the primitives", "track a bound: ∥, rates set",
+    for k, s in enumerate(("task C from the vocabulary", "regress to the primitives", "coordinate steps: ∥, rates set",
                            "check it in time")):
         add("pp-n45", 6, 20 + 16 * k, 152, 14, s, left)
     # The planner reads the module's capabilities.
@@ -406,77 +406,95 @@ def primitives_to_composite() -> ET.Element:
 
 # ---- page 4: planning, generic (the paper's Fig. 2 since the review of 7 Nov) ---------------------------
 def planning_generic() -> ET.Element:
-    """Fig. 2 (as built, 8 Nov): what the planner builds from a requirement and a module's primitives, as
-    numbered cases in BPMN: (1) a sequence, by goal regression; (2) a repetition; (3) a parallel block of
-    independent steps; (4) steps in parallel at a matched rate; (5) a decision, greyed: drawn by hand and
-    checked, not planned. The last cell: every flow is checked in time, then described. Reuse of a stated
-    composition or an existing composite is left out: it is not read from the AAS (8 Nov). One column,
-    440 by 346 px (8.4 by 6.6 cm), no text below 12 px."""
-    P = Page("planning-generic", 440, 346)
+    """Fig. 2 (8 Nov): the four kinds of flow the planner builds, one row each, drawn in BPMN with what
+    makes the planner build them: (1) a sequence, B giving what A needs; (2) a repetition, a goal beyond
+    one step, x filled in two halves; (3) a parallel block, steps on different components; (4) coordinated
+    steps, A and B together at rates set so that h stays within its bounds. One column, 440 by 412 px
+    (8.4 by 7.9 cm), no text below 12 px."""
+    P = Page("planning-generic", 440, 412)
     badge = (f"ellipse;html=1;fillColor={INK};strokeColor=none;fontColor=#FFFFFF;fontFamily=Arial;fontSize=10;"
              "fontStyle=1;align=center;verticalAlign=middle;")
     task = box(RUN, GREEN, 12, arc=24, extra="spacingLeft=2;spacingRight=2;")
-    grey_task = box("#FFFFFF", LINE, 12, arc=24, extra=f"dashed=1;fontColor={GREY};spacingLeft=2;spacingRight=2;")
     flow = arrow(INK) + "endSize=5;"
-    grey_flow = arrow(GREY) + "endSize=5;"
-    left = lambda fill, stroke: box(fill, stroke, 12, extra="align=left;verticalAlign=top;spacingLeft=8;spacingTop=2;")  # noqa: E731
+    gate = (f"rhombus;html=1;fillColor=#FFFFFF;strokeColor={INK};strokeWidth=1.2;fontFamily=Arial;fontSize=13;"
+            f"fontStyle=1;fontColor={INK};")
+    note = lambda x, y, w, s, align="center": P.vertex(x, y, w, 16, s, label(12, GREY, align=align))  # noqa: E731
 
-    # The inputs: the product's requirement and the module's primitives.
-    P.vertex(4, 4, 208, 66, "<b>Product</b> requires C<br>goal: x = v<br>keep: l ≤ h ≤ u", left(PURPLE_FILL, PURPLE))
-    P.vertex(228, 4, 208, 66, "<b>Module</b>: primitives A, B, C<br>pre, post, invariants, rates<br>h = a·x + b·y",
-             left(BLUE_FILL, BLUE))
-    P.edge([(108, 70), (108, 80), (210, 80), (210, 90)], arrow())
-    P.edge([(332, 70), (332, 80), (230, 80), (230, 90)], arrow())
+    def start(x, y):
+        P.vertex(x, y - 8, 16, 16, "", f"ellipse;html=1;fillColor=#FFFFFF;strokeColor={INK};strokeWidth=1.2;")
 
-    # The planner and what it builds.
-    P.vertex(4, 90, 432, 252, "", box("#F7F8F9", LINE, 16))
-    P.vertex(12, 93, 416, 18, "<b>Planner</b>: flows built from the goal back to the start", label(12))
+    def end(x, y):
+        P.vertex(x, y - 7, 14, 14, "", f"ellipse;html=1;fillColor=#FFFFFF;strokeColor={INK};strokeWidth=3;")
 
-    def cell(k, col, row, title, when, planned=True):
-        cx, cy = 10 + 216 * col, 114 + 76 * row
-        P.vertex(cx, cy, 204, 70, "", box("#FFFFFF", LINE if planned else "#C9CED1", 16,
-                                         extra="" if planned else "dashed=1;"))
-        P.vertex(cx + 6, cy + 5, 15, 15, str(k), badge if planned else badge.replace(INK, GREY))
-        P.vertex(cx + 26, cy + 3, 176, 18, f"<b>{title}</b>", label(12, INK if planned else GREY))
-        P.vertex(cx + 8, cy + 19, 194, 16, when, label(12, GREY))
-        return cx, cy
+    def row(k, y, h, title, when):
+        P.vertex(4, y, 432, h, "", box("#FFFFFF", LINE, 16))
+        P.vertex(10, y + 6, 15, 15, str(k), badge)
+        P.vertex(30, y + 4, 112, 18, f"<b>{title}</b>", label(12))
+        P.vertex(10, y + 24, 128, h - 28, when, label(12, GREY, valign="top"))
 
-    def chain(cx, cy, names, style=task, w=40, gap=22, start=8):
-        """Steps one after the other, centred on the cell's diagram row."""
-        x = cx + start
-        for i, s in enumerate(names):
-            P.vertex(x, cy + 44, w, 16, s, style)
-            if i < len(names) - 1:
-                P.edge([(x + w, cy + 52), (x + w + gap, cy + 52)], flow)
-            x += w + gap
+    P.vertex(6, 2, 428, 32, "<b>Planner</b>: from the product's goal x = v, with l ≤ h ≤ u, and the module's "
+             "primitives A, B and C, it builds four kinds of flow:", label(12))
 
-    def block(cx, cy, top, bottom, symbol="+", style=task, edges=flow, w=60):
-        """A gateway, two branches, a gateway (BPMN)."""
-        gate = (f"rhombus;html=1;fillColor=#FFFFFF;strokeColor={INK if style == task else GREY};strokeWidth=1.2;"
-                f"fontFamily=Arial;fontSize=13;fontStyle=1;fontColor={INK if style == task else GREY};")
-        P.vertex(cx + 8, cy + 42, 20, 20, symbol, gate)
-        tx = cx + 50
-        P.vertex(tx, cy + 36, w, 15, top, style)
-        P.vertex(tx, cy + 53, w, 15, bottom, style)
-        jx = tx + w + 22
-        P.vertex(jx, cy + 42, 20, 20, symbol, gate)
-        for y in (cy + 43.5, cy + 60.5):
-            P.edge([(cx + 28, cy + 52), (tx, y)], edges)
-            P.edge([(tx + w, y), (jx, cy + 52)], edges)
+    # 1: a sequence. B's postcondition is A's precondition, so B goes first.
+    row(1, 40, 70, "Sequence", "B gives what<br>A needs")
+    y = 70
+    start(146, y), P.edge([(162, y), (180, y)], flow)
+    P.vertex(180, y - 10, 56, 20, "B", task)
+    P.edge([(236, y), (300, y)], flow + "verticalAlign=bottom;spacingBottom=4;", "y = p<sub>0</sub>")
+    P.vertex(300, y - 10, 56, 20, "A", task)
+    P.edge([(356, y), (374, y)], flow), end(374, y)
+    note(164, y + 14, 88, "sets y = p<sub>0</sub>"), note(284, y + 14, 88, "needs y = p<sub>0</sub>")
 
-    cx, cy = cell(1, 0, 0, "Sequence", "A needs what B gives: B first")
-    chain(cx, cy, ("B", "A"))
-    cx, cy = cell(2, 1, 0, "Repetition", "a goal beyond one step's range")
-    chain(cx, cy, ("A", "A"))
-    cx, cy = cell(3, 0, 1, "Parallel", "steps share no part or state")
-    block(cx, cy, "A", "C")
-    cx, cy = cell(4, 1, 1, "Matched rates", "a bound links two moving states")
-    block(cx, cy, "A", "B, matched", w=76)
-    cx, cy = cell(5, 0, 2, "Decision", "drawn by hand, then checked", planned=False)
-    block(cx, cy, "A", "B", symbol="×", style=grey_task, edges=grey_flow)
-    # What follows every flow, planned or drawn.
-    P.vertex(226, 266, 204, 70, "<b>Every flow</b><br>checked over time against C,<br>then described in the AAS",
-             box("#FFFFFF", AAS, 12, extra="strokeWidth=1.25;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;"))
+    # 2: a repetition. One step adds at most half of what the goal needs: two steps, x in two halves.
+    row(2, 116, 86, "Repetition", "the goal needs<br>more than one<br>step can give")
+    y = 142
+    start(146, y), P.edge([(162, y), (178, y)], flow)
+    P.vertex(178, y - 10, 80, 20, "A: x += v/2", task)
+    P.edge([(258, y), (276, y)], flow)
+    P.vertex(276, y - 10, 80, 20, "A: x += v/2", task)
+    P.edge([(356, y), (374, y)], flow), end(374, y)
+    P.vertex(160, 162, 16, 16, "x", label(12, GREY))
+    P.vertex(178, 165, 89, 10, "", f"rounded=0;html=1;fillColor={RUN};strokeColor={GREEN};strokeWidth=1;")
+    P.vertex(267, 165, 89, 10, "", f"rounded=0;html=1;fillColor={RUN};strokeColor={GREEN};strokeWidth=1;")
+    note(163, 178, 30, "0"), note(252, 178, 30, "v/2"), note(341, 178, 30, "v")
+
+    # 3: a parallel block. A and C use different components and no common state.
+    row(3, 208, 80, "Parallel", "the steps share<br>no component<br>or state")
+    y = 248
+    start(146, y), P.edge([(162, y), (176, y)], flow)
+    P.vertex(176, y - 11, 22, 22, "+", gate)
+    P.edge([(187, y - 11), (187, y - 20), (218, y - 20)], flow)
+    P.edge([(187, y + 11), (187, y + 20), (218, y + 20)], flow)
+    P.vertex(218, y - 30, 92, 20, "A, component 1", task)
+    P.vertex(218, y + 10, 92, 20, "C, component 2", task)
+    P.edge([(310, y - 20), (341, y - 20), (341, y - 11)], flow)
+    P.edge([(310, y + 20), (341, y + 20), (341, y + 11)], flow)
+    P.vertex(330, y - 11, 22, 22, "+", gate)
+    P.edge([(352, y), (374, y)], flow), end(374, y)
+
+    # 4: coordinated steps. A alone would move h out of its bounds: B moves along at a rate set for it.
+    row(4, 294, 114, "Coordinated steps", "a bound links<br>two changing<br>states")
+    y = 326
+    start(146, y), P.edge([(162, y), (172, y)], flow)
+    P.vertex(172, y - 10, 46, 20, "B: y<sub>0</sub>", task)
+    P.edge([(218, y), (232, y)], flow)
+    P.vertex(232, y - 11, 22, 22, "+", gate)
+    P.edge([(243, y - 11), (243, y - 18), (268, y - 18)], flow)
+    P.edge([(243, y + 11), (243, y + 18), (268, y + 18)], flow)
+    P.vertex(268, y - 27, 96, 18, "A: x at rate r", task)
+    P.vertex(268, y + 9, 96, 18, "B: y at speed s", task)
+    P.edge([(364, y - 18), (391, y - 18), (391, y - 11)], flow)
+    P.edge([(364, y + 18), (391, y + 18), (391, y + 11)], flow)
+    P.vertex(380, y - 11, 22, 22, "+", gate)
+    P.edge([(402, y), (414, y)], flow), end(414, y)
+    # How h runs: inside its bounds with both, out of them with A alone.
+    x0, x1, top, bottom = 150, 236, 356, 394
+    P.vertex(x0, 368, x1 - x0, 14, "", f"rounded=0;html=1;fillColor={RUN};strokeColor=none;")
+    P.edge([(x0, top), (x0, bottom), (x1, bottom)], f"html=1;rounded=0;strokeColor={LINE};strokeWidth=1;endArrow=none;")
+    P.edge([(x0 + 4, 390), (x0 + 64, 358)], f"html=1;rounded=0;strokeColor={PINK_LINE};strokeWidth=2;dashed=1;endArrow=none;")
+    P.edge([(x0 + 4, 375), (x1 - 4, 375)], f"html=1;rounded=0;strokeColor={GREEN};strokeWidth=2;endArrow=none;")
+    P.vertex(244, 352, 188, 52, "r is set so that h = a·x + b·y<br>stays within [l, u] (band);<br>A alone leaves it (dashed)",
+             label(12, GREY, valign="top"))
     return P.diagram
 
 
