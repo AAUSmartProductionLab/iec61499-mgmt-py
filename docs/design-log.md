@@ -20,6 +20,36 @@ A running log of design considerations made while building, for writing the pape
 
 ## 7 Nov 2026
 
+- **The CIRP paper restructured after the co-authors' review: generic method, use case in the
+  evaluation, related work verified.** *CIRP*.
+  - Framing: modules are exchanged when products change, but a module often has the primitives a
+    product needs and only the composite skill is missing; the work sits one level below the
+    orchestration of a product's process (a single required capability, inside a module). The value
+    is engineering and integration, not changing skills on the fly in production: an engineer still
+    reviews a planned skill, and the check is a helper, not proof. Online deployment and read-back are
+    therefore results, not claims of uniqueness; Table 1 drops the Online and Read columns and adds
+    Time (durations or parallel steps planned) and New (a new skill or orchestration).
+  - Sections 3 to 5, one per contribution, with subsections instead of italic run-in labels; the
+    method is written without the filling case (Fig. 2 made generic, page `planning-generic`), the
+    filling module, the syringe and the depth formula are in 6.1. Abbreviations spelled out where they
+    occur once (computer-aided design, Module Type Package kept as MTP for the table).
+  - The related-work check (sources read, 7 Nov) changed three statements: Nabizada et al. (CASE
+    2026) use standard AAS submodels, not planning-specific ones, and leave durations and numbers to
+    future work; Terzimehić et al. also generate a network of function blocks (SMT decides only where
+    services run); Lindorfer and Froschauer's rules are a tool expert's and the engine is their own.
+    Dorofeev et al.'s factor is of user actions, and the 2^n states for n parallel skills is their own
+    statement. No code of their generator was found, and no paper names a reason against instance
+    networks; the price named here is more blocks and events per skill.
+  - Two sources added (19 in all): PDDL2.1 and COLIN, as temporal planning with linear continuous
+    change is what the planner's time model restricts to one module. Rooker's year and Lindorfer's DOI
+    added. IDTA's Control Component templates are named without a source.
+  - Answers to the review's questions, now in the text: Deployment (Built/Described) is a property of
+    each skill in the Skills submodel; read-back loses that subapplications are flattened into dotted
+    names (the naming rules restore them) and whether a step's value was written or left at its
+    default (steps are read with all their constants); Q1's steps are the dose cycle (MoveAxis,
+    Dispense, Home, Weigh) and 8 steps in two or three parallel branches; the planner produces
+    sequences and parallel blocks, decisions only come from flows drawn by hand.
+
 - **Fig. 3 (activation) in the paper's gold, not teal.** *CIRP*. Gold is the colour of a change over
   the management protocol in Fig. 1, and an online activation is one; the program size stays a
   light-to-dark ramp with a marker per size, the restart line in the figures' grey.
