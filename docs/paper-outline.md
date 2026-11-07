@@ -48,6 +48,14 @@ words of text beside three figures, two tables and 17 references):
 | 5 Conclusion | 0 | 180 | |
 | Text | 2,850 | about 4,000 | 3 figures, 2 tables |
 
+**Drafted 7 Nov** in [paper/cirp/paper.tex](paper/cirp/paper.tex), with the title "From product
+requirements to running skills: AAS-driven planning and reconfiguration of IEC 61499 modules":
+abstract 201 words, introduction 466, related work 385, method 1,496, evaluation 710, conclusion 183;
+3,243 words of text and 280 in captions, so about 750 to spare for what Overleaf shows is needed
+(the Pi's numbers, a sentence the authors miss). Figs. 1 to 3 are pipeline-planning, planned-bottom-up
+(trimmed to 10.2 cm in a column) and activation; Table 2 holds Q3, Q4 and E1. The Pi's Q1 run is to come
+this week: the evaluation reports the PC and says so.
+
 **What goes, so that it fits:**
 - Figs. aas-to-blocks and product-to-process leave the paper: Fig. 1 carries the PPR flow, the mapping
   takes two sentences. primitives-to-composite stays for slides and the journal.

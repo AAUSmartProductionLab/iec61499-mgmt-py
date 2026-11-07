@@ -18,6 +18,27 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 7 Nov 2026
+
+- **The CIRP paper rescoped to three contributions on one pipeline: the PPR model in the AAS, the
+  planner, the deployment.** *CIRP*.
+  - Claim: a product's requirement, stated in its AAS, becomes a new skill running in a module's IEC
+    61499 program, from the AASs alone. C1 the product-process-resource model (required capabilities
+    with values and bounds, skills down to the primitives, capabilities derived and constrained, the
+    vocabulary); C2 the planner (a composite from the requirement and the components' capabilities,
+    parallel steps at set rates, checked in time); C3 the deployment (composites as networks of
+    instances, the reconciler). Each has its evaluation already: C3 by Q1 and Q3, C1 and C2 by Q4 and E1.
+  - Why: the skill editor is close to what Dorofeev et al. have; planning a skill from a product's
+    requirement, with what must happen at the same time, is what no related work does, and it is what
+    makes the AAS and the capabilities necessary rather than convenient (the user, 6 Nov). Instead of:
+    four contributions led by the module architecture (3 Nov), or a paper on the planner alone, which
+    would drop the deployment the evaluation measures most.
+  - What went to fit six pages: the figures aas-to-blocks and product-to-process, the shell's details,
+    the comparison of state machines, BPMN and the editor (a sentence), Q2 from the abstract;
+    stolze2024proactive for koecher2024smt (planning on a capability model, no durations). No new
+    experiments: the Pi's Q1 runs are added when made. Title chosen by the user: "From product
+    requirements to running skills: AAS-driven planning and reconfiguration of IEC 61499 modules".
+
 ## 6 Nov 2026
 
 - **Found by Q4b's re-run: the tracking planned a dose the pump cannot give; the checker now says an

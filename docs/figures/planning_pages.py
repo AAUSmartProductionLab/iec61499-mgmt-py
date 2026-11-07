@@ -179,46 +179,42 @@ def pipeline_planning(source: ET.Element) -> ET.Element:
 
 # ---- page 2: BottomUpFilling planned ----------------------------------------------------------------
 def planned_bottom_up() -> ET.Element:
-    P = Page("planned-bottom-up", 440, 700)
+    """The paper's Fig. 2 (7 Nov): one column, 440 px wide and 528 tall (8.4 by 10.2 cm), no text below 12 px."""
+    P = Page("planned-bottom-up", 440, 528)
     W = 432
-    # The requirement.
-    P.vertex(4, 4, W, 58, "<b>Required</b> by the syringe's filling step: <b>BottomUpFilling</b>, 1.0 mL;<br>"
-             "the needle at most 2 mm above, 3 mm below the liquid;<br>the barrel 6.35 mm wide, its bottom 11 mm above the nest",
-             box(PURPLE_FILL, PURPLE, extra="align=left;spacingLeft=10;"))
-    P.edge([(220, 62), (220, 72)], arrow())
-    # The task, from the vocabulary.
-    P.vertex(4, 72, W, 62, "", box("#F7F8F9", LINE, 16))
-    P.vertex(12, 76, 416, 18, "<b>Task</b> from the vocabulary: BottomUpFilling ⊑ Filling", label(13))
-    P.vertex(12, 102, 100, 22, "pre: empty", box(RUN, GREEN, arc=30))
-    P.vertex(118, 102, 150, 22, "post: content 1.0 mL", box(RUN, GREEN, arc=30))
-    P.vertex(274, 102, 154, 22, "keep: −2 ≤ immersion ≤ 3", box(PURPLE_FILL, PURPLE, arc=30))
-    P.edge([(220, 134), (220, 144)], arrow())
+    # The requirement, and the task the vocabulary makes of it.
+    P.vertex(4, 4, W, 78, "", box(PURPLE_FILL, PURPLE, 16))
+    P.vertex(12, 7, 416, 36, "<b>Required</b>: BottomUpFilling ⊑ Filling, 1.0 mL; the barrel<br>"
+             "6.35 mm wide, its bottom 11 mm above the nest", label(12))
+    P.vertex(12, 50, 100, 22, "pre: empty", box("#FFFFFF", GREEN, arc=30))
+    P.vertex(118, 50, 150, 22, "post: content 1.0 mL", box("#FFFFFF", GREEN, arc=30))
+    P.vertex(274, 50, 154, 22, "keep: −2 ≤ immersion ≤ 3", box("#FFFFFF", PURPLE, arc=30))
+    P.edge([(220, 82), (220, 92)], arrow())
     # The actions, from the module's Capability Description (the module's nest, the product's bottom).
-    P.vertex(4, 144, W, 98, "", box("#F7F8F9", LINE, 16))
-    P.vertex(12, 148, 416, 18, "<b>Actions</b> from the Capability Description", label(13))
-    P.vertex(12, 170, 416, 36, "<b>Dosing</b>: content += V at a rate r, 0.1 to 5 mL/s;<br>"
+    P.vertex(4, 92, W, 88, "", box("#F7F8F9", LINE, 16))
+    P.vertex(12, 95, 416, 18, "<b>Actions</b> from the Capability Description", label(13))
+    P.vertex(12, 116, 416, 34, "<b>Dosing</b>: content += V at a rate r, 0.1 to 5 mL/s;<br>"
              "immersion = y − (70 − 11) + 31.6 · content", box(BLUE_FILL, BLUE, arc=4, extra="align=left;spacingLeft=8;"))
-    P.vertex(12, 212, 416, 22, "<b>Positioning</b>: the needle to y at 12.5 mm/s; y ≤ 70 − 11 − 1",
+    P.vertex(12, 154, 416, 20, "<b>Positioning</b>: the needle to y at 12.5 mm/s; y ≤ 70 − 11 − 1",
              box(BLUE_FILL, BLUE, arc=4, extra="align=left;spacingLeft=8;"))
-    P.edge([(220, 242), (220, 254)], arrow())
+    P.edge([(220, 180), (220, 190)], arrow())
     # The goal regression: the dose alone refused, then tracking.
-    P.vertex(4, 254, W, 124, "", box("#F7F8F9", LINE, 16))
-    P.vertex(12, 258, 416, 18, "<b>Goal regression</b>: content = 1.0 mL", label(13))
-    P.vertex(12, 282, 176, 44, "<b>Dosing alone</b> at 40 mm:<br>immersion −19 → +12.6",
+    P.vertex(4, 190, W, 112, "", box("#F7F8F9", LINE, 16))
+    P.vertex(12, 193, 416, 18, "<b>Goal regression</b>: content = 1.0 mL", label(13))
+    P.vertex(12, 215, 176, 40, "<b>Dosing alone</b> at 40 mm:<br>immersion −19 → +12.6",
              box(PINK, PINK_LINE, arc=4, extra="dashed=1;align=left;spacingLeft=8;"))
-    P.vertex(12, 330, 176, 44, "broken at its start and its end, so not applied: the next method",
-             label(12, GREY, valign="top"))
-    P.edge([(188, 304), (204, 304)], arrow(GREY))
-    P.vertex(204, 282, 224, 88, "", box(RUN, GREEN, arc=4))
-    P.vertex(212, 284, 212, 18, "<b>Tracking</b>: Dosing ∥ Positioning", label(12))
+    P.vertex(12, 258, 176, 40, "breaks the bound at its start and end: not applied", label(12, GREY, valign="top"))
+    P.edge([(188, 235), (204, 235)], arrow(GREY))
+    P.vertex(204, 215, 224, 82, "", box(RUN, GREEN, arc=4))
+    P.vertex(212, 216, 212, 18, "<b>Tracking</b>: Dosing ∥ Positioning", label(12))
     for k, s in enumerate(("31.6 · r = 12.5, so r = 0.396 mL/s", "starts at y<sub>0</sub> in [57, 58]: 57.5",
                            "rises 31.6 mm in 2.53 s, to 25.9")):
-        P.vertex(212, 304 + 21 * k, 208, 19, s, box("#FFFFFF", LINE, arc=4, extra="align=left;spacingLeft=6;"))
-    P.edge([(316, 378), (316, 390)], arrow())
+        P.vertex(212, 236 + 20 * k, 208, 18, s, box("#FFFFFF", LINE, arc=4, extra="align=left;spacingLeft=6;"))
+    P.edge([(316, 302), (316, 312)], arrow())
     # In time: how deep the needle is in the liquid, the dose alone against the tracking.
-    P.vertex(4, 390, W, 160, "", box("#FFFFFF", LINE, 16))
-    P.vertex(12, 394, 416, 18, "<b>In time</b>: how deep the needle is in the liquid", label(13))
-    x0, x1, t1, y0, y1, top, bottom = 60, 280, 2.75, 440, 524, 15, -20      # 0 to 2.75 s, +15 to -20 mm
+    P.vertex(4, 312, W, 128, "", box("#FFFFFF", LINE, 16))
+    P.vertex(12, 315, 416, 18, "<b>In time</b>: how deep the needle is in the liquid", label(13))
+    x0, x1, t1, y0, y1, top, bottom = 60, 280, 2.75, 352, 418, 15, -20      # 0 to 2.75 s, +15 to -20 mm
 
     def X(t):
         return x0 + (x1 - x0) * t / t1
@@ -229,46 +225,37 @@ def planned_bottom_up() -> ET.Element:
     area = math.pi * 6.35 ** 2 / 4
     rise, took = 1000 / area, 1.0 / 0.396
     P.vertex(x0, Y(3), x1 - x0, Y(-2) - Y(3), "", f"rounded=0;html=1;fillColor={RUN};strokeColor=none;")   # the bounds
-    axes = f"html=1;rounded=0;strokeColor={LINE};strokeWidth=1;endArrow=none;"
-    P.edge([(x0, y0), (x0, y1), (x1, y1)], axes)
+    P.edge([(x0, y0), (x0, y1), (x1, y1)], f"html=1;rounded=0;strokeColor={LINE};strokeWidth=1;endArrow=none;")
     P.edge([(x0, Y(0)), (x1, Y(0))], f"html=1;rounded=0;strokeColor={LINE};strokeWidth=0.75;dashed=1;endArrow=none;")
     for mm, s in ((15, "+15"), (0, "0"), (-20, "−20")):
         P.vertex(20, Y(mm) - 8, 36, 16, s, label(12, GREY, align="right"))
     for tick in (0, 1, 2):
-        P.vertex(X(tick) - 15, y1 + 2, 30, 16, str(tick), label(12, GREY, align="center"))
-    P.vertex(X(2.6) - 10, y1 + 2, 30, 16, "s", label(12, GREY))
-    P.vertex(12, 412, 200, 16, "mm, + in the liquid", label(12, GREY))
+        P.vertex(X(tick) - 15, y1 + 1, 30, 16, str(tick), label(12, GREY, align="center"))
+    P.vertex(X(2.6) - 10, y1 + 1, 30, 16, "s", label(12, GREY))
+    P.vertex(12, 333, 200, 16, "mm, + in the liquid", label(12, GREY))
     line = lambda color, dashed=False: (f"html=1;rounded=0;strokeColor={color};strokeWidth=2;endArrow=none;"  # noqa: E731
                                         + ("dashed=1;" if dashed else ""))
     P.edge([(X(0), Y(40 - 59)), (X(1.0), Y(40 - 59 + rise))], line(PINK_LINE, True))     # the dose alone: 1 mL/s
     P.edge([(X(0), Y(-1.5)), (X(took), Y(-1.5))], line(GREEN))                           # tracked: as it started
     for k, (style, s) in enumerate(((line(PINK_LINE, True), "the dose alone"), (line(GREEN), "tracking"))):
-        y = 440 + 24 * k
+        y = 352 + 22 * k
         P.edge([(296, y), (320, y)], style)
         P.vertex(326, y - 9, 104, 18, s, label(12))
-    P.vertex(296, 479, 24, 12, "", f"rounded=0;html=1;fillColor={RUN};strokeColor=none;")
-    P.vertex(326, 476, 104, 18, "the bounds", label(12))
-    P.vertex(296, 500, 134, 34, "the dose takes 1 s alone, 2.53 s tracked", label(12, GREY, valign="top"))
-    P.edge([(220, 550), (220, 562)], arrow())
-    # The planned skill, lifted.
-    P.vertex(4, 562, W, 82, "", box("#FFFFFF", LINE, 16))
-    P.vertex(12, 566, 416, 18, "<b>The planned skill</b>: the pair a parallel block", label(13))
-    P.vertex(12, 602, 100, 24, "MoveAxis 57.5", box(FB, FB_LINE, arc=4))
-    P.vertex(124, 588, 206, 52, "", "rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=none;dashed=1;"
+    P.vertex(296, 390, 24, 12, "", f"rounded=0;html=1;fillColor={RUN};strokeColor=none;")
+    P.vertex(326, 387, 104, 18, "the bounds", label(12))
+    P.vertex(296, 408, 134, 30, "1 s alone, 2.53 s tracked", label(12, GREY, valign="top"))
+    P.edge([(220, 440), (220, 450)], arrow())
+    # The planned skill, lifted, checked in time and described.
+    P.vertex(4, 450, W, 74, "", box("#FFFFFF", AAS, 16, extra="strokeWidth=1.25;"))
+    P.vertex(12, 453, 416, 18, "<b>The planned skill</b>, checked in time, <i>Described</i>", label(13))
+    P.vertex(12, 484, 100, 24, "MoveAxis 57.5", box(FB, FB_LINE, arc=4))
+    P.vertex(124, 474, 206, 46, "", "rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=none;dashed=1;"
                                      f"strokeColor={FB_LINE};strokeWidth=1;")
-    P.vertex(130, 592, 194, 20, "Dispense 1.0 at 0.396 mL/s", box(FB, FB_LINE, arc=4))
-    P.vertex(130, 616, 194, 20, "MoveAxis 25.9", box(FB, FB_LINE, arc=4))
-    P.vertex(342, 602, 86, 24, "Home", box(FB, FB_LINE, arc=4))
-    P.edge([(112, 614), (124, 614)], arrow(GREEN, 1.25)), P.edge([(330, 614), (342, 614)], arrow(GREEN, 1.25))
-    P.edge([(107, 644), (107, 656)], arrow())
-    # Described, and offered.
-    P.vertex(4, 656, 206, 46, "<b>Checked in time</b>, described:<br>Skills, <i>Described</i>",
-             box("#FFFFFF", AAS, extra="strokeWidth=1.25;align=left;spacingLeft=8;"))
-    P.edge([(210, 679), (230, 679)], arrow())
-    P.vertex(230, 656, 206, 46, "<b>Offered</b> BottomUpFilling<br>after a reconfiguration",
-             box(PINK, PINK_LINE, extra="align=left;spacingLeft=8;"))
+    P.vertex(130, 477, 194, 19, "Dispense 1.0 at 0.396 mL/s", box(FB, FB_LINE, arc=4))
+    P.vertex(130, 498, 194, 19, "MoveAxis 25.9", box(FB, FB_LINE, arc=4))
+    P.vertex(342, 484, 86, 24, "Home", box(FB, FB_LINE, arc=4))
+    P.edge([(112, 496), (124, 496)], arrow(GREEN, 1.25)), P.edge([(330, 496), (342, 496)], arrow(GREEN, 1.25))
     return P.diagram
-
 
 
 # ---- page 3: from primitives' capabilities to a composite's, and the vocabulary that says how ----------
