@@ -364,10 +364,8 @@ def figure(by_cell, cells, restart, folder: Path) -> None:
     plt.rcParams.update({"font.family": "Arial", "font.size": 7, "axes.linewidth": 0.6})
     fig, ax = plt.subplots(figsize=(3.4, 2.2))
     # The program's size is a magnitude: one hue, light to dark, and a marker of its own for each size
-    # (the light step is pale on white, so the shape carries it too). The hue is the paper's gold, the
-    # colour of a change over the management protocol in its other figures; ink and grey as there.
-    shades = {1: "#E2C36E", 5: "#C99B2E", 10: "#9C7414", 20: "#5E4508"}
-    INK, GREY = "#252B2D", "#6E777B"
+    # (the light step is pale on white, so the shape carries it too).
+    shades = {1: "#86CFC6", 5: "#3A9C92", 10: "#1C6560", 20: "#0B2F2C"}
     markers = {1: "o", 5: "s", 10: "^", 20: "D"}
     for m in (1, 5, 10, 20):
         xs, ys, lo, hi = [], [], [], []
@@ -383,9 +381,9 @@ def figure(by_cell, cells, restart, folder: Path) -> None:
     flows = [v[0] for (change, _), v in restart.items() if change == "flow"]
     if flows:
         level = float(np.median(flows))
-        ax.axhline(level, color=GREY, lw=0.9, ls=(0, (4, 2)))
+        ax.axhline(level, color="#5E676B", lw=0.9, ls=(0, (4, 2)))
         ax.text(1.0, level * 1.13, f"Unavailable by a restart: {level:.1f} s, at every program size", fontsize=6,
-                color=INK)
+                color="#3E4447")
     ax.set_xscale("log", base=2)
     ax.set_yscale("log")
     ax.set_xticks([1, 2, 4, 8, 16, 32], ["1", "2", "4", "8", "16", "32"])
