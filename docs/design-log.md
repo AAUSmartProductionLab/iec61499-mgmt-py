@@ -20,6 +20,15 @@ A running log of design considerations made while building, for writing the pape
 
 ## 7 Nov 2026
 
+- **Fig. 2 shows what the planner builds, in six cases, not one parallel example.** *CIRP*. The
+  planner builds sequences (goal regression orders the steps), repetitions (a goal beyond one step's
+  range in equal steps), parallel blocks (lifting: steps that share no component or state), steps at
+  matched rates (tracking) and reused compositions or composites. It does not plan decisions: a plan
+  has no branches, so decisions come only from flows drawn by hand, which the checker covers (both
+  branches). The figure shows the five as small BPMN flows and the decision greyed, "drawn by hand,
+  then checked", so that it does not claim more than the planner does. Planning decisions on a
+  measured result (conditional planning) would be the next step, not attempted.
+
 - **Fig. 2 made simple: the two inputs, three regression steps with the plan growing beside them, the
   skill in BPMN.** *CIRP*. The five-part version (methods, regression tree, time plot) was hard to
   follow. Now the product's requirement and the module's primitives sit side by side, the planner's
