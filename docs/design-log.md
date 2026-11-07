@@ -20,6 +20,14 @@ A running log of design considerations made while building, for writing the pape
 
 ## 7 Nov 2026
 
+- **Fig. 2 made simple: the two inputs, three regression steps with the plan growing beside them, the
+  skill in BPMN.** *CIRP*. The five-part version (methods, regression tree, time plot) was hard to
+  follow. Now the product's requirement and the module's primitives sit side by side, the planner's
+  steps read as sentences with the plan drawn next to each (A; B then A; B then A with B alongside),
+  and the result is the BPMN skill. The time model and the order of the methods are in the text only.
+  The figure is 312 px tall instead of 480. Fig. 1's short arrows (Match and plan to Plan, OPC UA, the
+  arrows in S's flow) were only heads: the module row moved 14 px down and S's steps apart.
+
 - **The CIRP paper restructured after the co-authors' review: generic method, use case in the
   evaluation, related work verified.** *CIRP*.
   - Framing: modules are exchanged when products change, but a module often has the primitives a
@@ -50,9 +58,9 @@ A running log of design considerations made while building, for writing the pape
     Dispense, Home, Weigh) and 8 steps in two or three parallel branches; the planner produces
     sequences and parallel blocks, decisions only come from flows drawn by hand.
 
-- **Fig. 3 (activation) in the paper's gold, not teal.** *CIRP*. Gold is the colour of a change over
-  the management protocol in Fig. 1, and an online activation is one; the program size stays a
-  light-to-dark ramp with a marker per size, the restart line in the figures' grey.
+- **Fig. 3 (activation) stays teal.** *CIRP*. It was recoloured in the paper's gold (the colour of a
+  change over the management protocol in Fig. 1) and set back the same day: the co-authors keep the
+  green ramp it had.
 
 - **In the papers, the reconciler is called the synchroniser, and the CIRP text is written in plainer
   sentences.** *CIRP*, *Journal*.
