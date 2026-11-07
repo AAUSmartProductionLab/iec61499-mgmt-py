@@ -20,6 +20,10 @@ A running log of design considerations made while building, for writing the pape
 
 ## 7 Nov 2026
 
+- **Fig. 3 (activation) in the paper's gold, not teal.** *CIRP*. Gold is the colour of a change over
+  the management protocol in Fig. 1, and an online activation is one; the program size stays a
+  light-to-dark ramp with a marker per size, the restart line in the figures' grey.
+
 - **In the papers, the reconciler is called the synchroniser, and the CIRP text is written in plainer
   sentences.** *CIRP*, *Journal*.
   - "Reconciler" is a term from Kubernetes-style controllers and reads as jargon to a manufacturing
