@@ -103,19 +103,26 @@ def pipeline_planning(source: ET.Element) -> ET.Element:
     def value(cid, v):
         cells[cid].set("value", v)
 
-    # Bands: the module band taller, the components below it.
-    geo("c7", h=140), geo("c8", x=-56, y=149, w=140)
-    geo("c9", y=232), geo("c10", y=253)
-    # Line: the requirement states its bounds; Match plans what nothing matches.
-    value("c17", "Required C: p, bounds")
+    # Bands: the module band taller (it holds the Skills submodel), the components below it.
+    model.set("pageHeight", "310"), model.set("dy", "310")
+    geo("c7", h=158), geo("c8", x=-65, y=158, w=158)
+    geo("c9", y=250), geo("c10", y=271)
+    # Line: the product names the submodels it uses (review of 7 Nov): the required capabilities with
+    # their values and bounds are in its Capability Description, the recipe in its Production Sequence.
+    value("c17", "Capability Description"), value("c18", "Production Sequence")
     value("c21", "Match and plan")
-    # Module: S' planned, with a parallel block; S and its steps above the components.
-    geo("n31", h=128), geo("c32", h=128)
-    geo("c39", x=6, y=56, w=96)
-    geo("c38", x=6, y=88)
+    # Module: its three submodels; the Skills submodel holds S' (planned, a parallel block) and S with its
+    # steps above the components.
+    geo("n31", h=146), geo("c32", h=146)
+    geo("c36", x=6, w=140), geo("c37", x=152, w=146)
+    value("c37", "Asset Interfaces Description")
+    cells["c37"].set("style", cells["c37"].get("style").replace("fontSize=10", "fontSize=9")
+                     .replace("spacingLeft=8;spacingRight=8", "spacingLeft=2;spacingRight=2"))
+    geo("c39", x=12, y=66, w=92)
+    geo("c38", x=12, y=102)
     for cid in ("c40", "c41", "c42"):
-        geo(cid, y=108)
-    points("c43", (94.5, 205), (141.5, 205)), points("c44", (197.5, 205), (244.5, 205))
+        geo(cid, y=122)
+    points("c43", (94.5, 219), (141.5, 219)), points("c44", (197.5, 219), (244.5, 219))
     # Author becomes Plan: its four steps.
     geo("n45", h=86), geo("c46", h=86)
     value("c47", "Plan"), geo("c47", w=34)
@@ -123,15 +130,19 @@ def pipeline_planning(source: ET.Element) -> ET.Element:
     geo("n50", y=182)
     # Reconcile becomes Synchronise, the paper's plainer word for it.
     value("c52", "Synchronise"), cells["n50"].set("style", "group;tooltip=Synchronise;")
-    geo("n55", h=128), geo("c56", h=128)
+    geo("n55", h=146), geo("c56", h=146)
+    # In the runtime, S' is created online by the synchroniser: drawn in the management protocol's gold.
+    value("c62", "S′ created online"), geo("c62", w=104)
+    cells["c62"].set("style", cells["c62"].get("style").replace("fillColor=#F6DDD6", "fillColor=#FBF3DF")
+                     .replace("strokeColor=#C47A68", f"strokeColor={GOLD}"))
     # Arrows between the AAS, the tools and the running system.
     points("c88", (362, 152), (322, 152))
     points("c89", (322, 196), (362, 196)), points("c90", (362, 214), (322, 214))
     points("c91", (526, 196), (566, 196)), points("c92", (566, 214), (526, 214))
     for cid, x in (("c95", 66.5), ("c96", 169.5), ("c97", 272.5)):
-        points(cid, (x, 212), (x, 236))
+        points(cid, (x, 226), (x, 254))
     for cid in ("n63", "n69", "n75", "n81"):
-        geo(cid, y=236)
+        geo(cid, y=254)
     # Every id of the page made its own, so that nothing clashes with the page it was copied from.
     for c in root.iter("mxCell"):
         for k in ("id", "parent"):
@@ -158,15 +169,26 @@ def pipeline_planning(source: ET.Element) -> ET.Element:
         ET.SubElement(g, "mxPoint", x=f"{pts[0][0]:g}", y=f"{pts[0][1]:g}", **{"as": "sourcePoint"})
         ET.SubElement(g, "mxPoint", x=f"{pts[1][0]:g}", y=f"{pts[1][1]:g}", **{"as": "targetPoint"})
 
+    # The Skills submodel, drawn like the module's other submodels (a grey chip as its title) around the
+    # skills, behind them: inserted before S's chip so that it is drawn first.
+    grey = cells["c36"].get("style")
+    first = list(root).index(cells["c38"])
+    for k, (x, y, w, h, v, style) in enumerate((
+            (6, 44, 292, 96, "", "rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#F4F5F6;strokeColor=#A7ACB6;"
+                                 "strokeWidth=1;"),
+            (6, 44, 292, 16, "Skills", grey))):
+        c = ET.Element("mxCell", id=f"pp-skills{k}", value=v, style=style, vertex="1", parent="pp-n31")
+        ET.SubElement(c, "mxGeometry", x=f"{x:g}", y=f"{y:g}", width=f"{w:g}", height=f"{h:g}", **{"as": "geometry"})
+        root.insert(first + k, c)
     # S' in the module: P1, then P2 beside P1, then P1 (relative to the module's card).
-    add("pp-n31", 110, 56, 30, 15, "P1", pink)
-    add("pp-n31", 148, 44, 74, 39, "", "rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=none;dashed=1;"
-                                        f"strokeColor={PINK_LINE};strokeWidth=1;")
-    add("pp-n31", 154, 47, 62, 14, "P2", pink)
-    add("pp-n31", 154, 66, 62, 14, "P1", pink)
-    add("pp-n31", 230, 56, 30, 15, "P1", pink)
+    add("pp-n31", 110, 66, 30, 15, "P1", pink)
+    add("pp-n31", 148, 62, 74, 36, "", "rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=none;dashed=1;"
+                                       f"strokeColor={PINK_LINE};strokeWidth=1;")
+    add("pp-n31", 154, 64, 62, 14, "P2", pink)
+    add("pp-n31", 154, 81, 62, 14, "P1", pink)
+    add("pp-n31", 230, 66, 30, 15, "P1", pink)
     thin = f"html=1;rounded=1;strokeColor={PINK_LINE};strokeWidth=1.2;endArrow=block;endFill=1;endSize=6;"
-    line([(158, 153.5), (166, 153.5)], thin), line([(240, 153.5), (248, 153.5)], thin)
+    line([(158, 163.5), (166, 163.5)], thin), line([(240, 163.5), (248, 163.5)], thin)
     # The Plan card's steps (relative to it).
     left = chip + "align=left;spacingLeft=6;"
     for k, s in enumerate(("task C from the vocabulary", "regress to the primitives", "track a bound: ∥, rates set",
