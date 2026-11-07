@@ -20,6 +20,55 @@ conclusion and references the last. The scope is wider again than on 28 Oct: the
 hierarchies, both routes to a new skill (handcrafted, or planned from a product's requirement), the
 check against the product's need, and planning in brief.
 
+## Rescoped 7 Nov: three contributions on one pipeline
+
+The planner moves in beside the model and the deployment, not in place of them. **Claim:** a
+product's requirement, stated in its AAS, becomes a new skill running in a module's IEC 61499 program,
+from the AASs alone: modelled (C1), planned (C2), deployed (C3).
+
+| | Contribution | Section | Figure | Evaluated by |
+| --- | --- | --- | --- | --- |
+| C1 | **The PPR model in the AAS**: a product requires a capability with values and bounds; the process AAS binds its steps; the module and component AASs describe the skills down to the primitives; offered capabilities are derived from the skills, and capabilities carry pre, post, keep and rates on a vocabulary placed under DIN 8580 and VDI 2860 | 3.2 | Fig. 1 | Q4b matching (104/104, nothing offered that the module cannot do); E1 |
+| C2 | **The planner**: a composite skill derived from the requirement and the components' capabilities, steps run in parallel at rates it sets where a bound requires it, checked in time; requested by Match and plan in the process planner | 3.3 | Fig. 2 (planned-bottom-up) | Q4a check (recall 90 %, precision 88 %); Q4b planning (23/23 right); Q4t (15/15 tracked fills right); E1 (6 inputs planned) |
+| C3 | **The deployment**: a composite is a network of instances, so the reconciler creates it online, verifies it by reading the program back and records it | 3.4 | (Eq. 1) | Q1 (activation, commands, unavailability against redeployment); Q3 (drift) |
+
+**Budget** (about 1,000 words a page, page 1 about 550 below the abstract; six pages leave about 4,000
+words of text beside three figures, two tables and 17 references):
+
+| Section | Words on 7 Nov | Target | Figures, tables |
+| --- | --- | --- | --- |
+| Abstract | 191 | 180 | |
+| 1 Introduction | 790 | 600 | |
+| 2 Related work | 495 | 420 | Table 1, a column "Planned" added |
+| 3.1 Overview | about 220 | 180 | Fig. 1: pipeline-planning (two columns) |
+| 3.2 The PPR model in the AAS (C1) | about 450 | 500 | |
+| 3.3 Planning a composite from a requirement (C2) | about 330 | 600 | Fig. 2: planned-bottom-up (one column, trimmed to about 10 cm) |
+| 3.4 Deploying it on the module (C3) | about 650 | 550 | |
+| 4 Evaluation | 0 | 800 | Fig. 3: activation (Q1); Table 2: Q3, Q4, E1 |
+| 5 Conclusion | 0 | 180 | |
+| Text | 2,850 | about 4,000 | 3 figures, 2 tables |
+
+**What goes, so that it fits:**
+- Figs. aas-to-blocks and product-to-process leave the paper: Fig. 1 carries the PPR flow, the mapping
+  takes two sentences. primitives-to-composite stays for slides and the journal.
+- The shell (occupation, PackML, one holder per item) becomes one sentence; the comparisons of state
+  machines with [dorofeev2021orchestrator, huang2026plug] go; the change classes take two sentences.
+- BPMN, the skill editor and the handcrafted route: a sentence each. The abstract loses BPMN and the
+  disturbance (Q2 was not run).
+- Not in this paper: agents, orchestration, Q2, Q5, the time model beyond a paragraph (journal and
+  orchestration paper).
+- References: stolze2024proactive out, koecher2024smt in (capability planning with SMT, no durative
+  actions: the gap the time model fills).
+
+**Evaluation: no new experiments.** Q1 on the Pi (B3) if run at the bench, else the PC only, and said
+so. Possibly one more E1 row at no cost: Match and plan, one press.
+
+**Coping with the scope:** from 7 Nov nothing new is built for this paper, only the Pi runs and what
+writing turns up as wrong. Every paragraph serves C1, C2, C3 or their evaluation; the rest goes to
+[journal-paper.md](journal-paper.md) or [orchestration-paper.md](orchestration-paper.md). Order: the
+method (3.2 to 3.4) first, then the evaluation, then introduction, related work, abstract and
+conclusion against them, then cut to six pages in Overleaf.
+
 ## The argument
 
 1. Modular production makes changeovers frequent, but a module's behaviour is its vendor's control
