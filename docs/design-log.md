@@ -20,6 +20,14 @@ A running log of design considerations made while building, for writing the pape
 
 ## 8 Nov 2026
 
+- **Fig. 2: the four kinds of flow, one annotated row each; "coordinated steps" for the tracking.**
+  *CIRP*. The decision and the closing cell left the figure; what remains is what the planner builds,
+  drawn bigger in BPMN with why it builds it: the sequence's arrow carries the condition (B sets
+  y = p0, A needs it), the repetition fills x in two halves, the parallel block names a component per
+  branch, and the coordinated steps show h kept in its band where A alone leaves it. "Matched rates"
+  read oddly; "synchronised steps" would clash with the synchroniser (the deployment), so the paper,
+  Fig. 2 and Fig. 1's Plan card say coordinated steps. The code keeps "tracking".
+
 - **The planner described as built: GTPyhop with goals only; reuse out of Fig. 2.** *CIRP*. Checked
   against the code and the 81 tests of modplan: sequence (goal methods), repetition (the `+=` method's
   equal doses) and matched rates (the tracking method and its paired action) are GTPyhop; parallel
