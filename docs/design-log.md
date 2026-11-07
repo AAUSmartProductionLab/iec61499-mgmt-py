@@ -27,8 +27,10 @@ A running log of design considerations made while building, for writing the pape
     the tool's name, modsync. Fig. 1's box says Synchronise. The code keeps its names.
   - The wording pass splits colon and semicolon chains into sentences, replaces stacked possessives
     ("the module's components' primitives") with "of" phrases and keeps every number and source. It
-    costs about 250 words (sections 4,170 against 3,920); cut the method's comparisons with related
-    work first if the page overflows.
+    costs about 250 words (sections 4,170 against 3,920). Two references then fell onto page 7, so
+    the repetition went first: the method's comparisons with Albus, Köcher and Lindorfer shrank to
+    one clause each or none (related work and Table 1 hold them), the three levels became one
+    sentence, and Fig. 3's caption no longer repeats the restart time (sections 4,084).
 
 - **The CIRP paper rescoped to three contributions on one pipeline: the PPR model in the AAS, the
   planner, the deployment.** *CIRP*.
