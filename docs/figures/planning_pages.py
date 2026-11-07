@@ -389,12 +389,111 @@ def primitives_to_composite() -> ET.Element:
     return P.diagram
 
 
+# ---- page 4: planning, generic (the paper's Fig. 2 since the review of 7 Nov) ---------------------------
+def planning_generic() -> ET.Element:
+    """Fig. 2 without the filling case: one column, 440 by 480 px (8.4 by 9.2 cm), no text below 12 px.
+    Numbered parts the text refers to: (1) the required capability, (2) the primitives' capabilities,
+    (3) the methods and the goal regression, (4) the bound in time, (5) the planned skill in BPMN."""
+    P = Page("planning-generic", 440, 480)
+    W = 432
+    badge = (f"ellipse;html=1;fillColor={INK};strokeColor=none;fontColor=#FFFFFF;fontFamily=Arial;fontSize=10;"
+             "fontStyle=1;align=center;verticalAlign=middle;")
+    chip = lambda stroke, fill="#FFFFFF", extra="": box(fill, stroke, 12, arc=30, extra=extra)  # noqa: E731
+
+    def part(k, y, h, title, source, frame=LINE, fill="#F7F8F9"):
+        P.vertex(4, y, W, h, "", box(fill, frame, 16))
+        P.vertex(10, y + 5, 15, 15, str(k), badge)
+        P.vertex(30, y + 3, 398, 18, f"<b>{title}</b>" + (f" <font color='{GREY}'>{source}</font>" if source else ""),
+                 label(12))
+
+    def down(y):
+        P.edge([(220, y), (220, y + 10)], arrow())
+
+    # 1: what the product requires.
+    part(1, 4, 52, "Required capability C", "in the product's Capability Description", PURPLE, PURPLE_FILL)
+    P.vertex(30, 28, 150, 20, "post: x = v", chip(GREEN))
+    P.vertex(188, 28, 170, 20, "keep: l ≤ h ≤ u", chip(PURPLE))
+    down(56)
+    # 2: what the module's primitives can do.
+    part(2, 66, 88, "Capabilities of the primitives", "in the module's Capability Description", BLUE, "#F5F8FB")
+    for k, s in enumerate(("<b>A</b>: pre y = p<sub>0</sub>; post x += Δ at rate r",
+                           "<b>B</b>: post y = p, at speed s",
+                           "<b>h</b> = a·x + b·y + c, defined while A runs")):
+        P.vertex(30, 90 + 20 * k, 398, 18, s, box(BLUE_FILL, BLUE, 12, arc=4, extra="align=left;spacingLeft=8;"))
+    down(154)
+    # 3: the task refined by methods; the generated one regresses the goal to the actions.
+    part(3, 164, 132, "Task C: methods, then goal regression", "")
+    for k, (s, ok) in enumerate((("1 stated composition", False), ("2 existing composite", False),
+                                 ("3 regress the goals", True))):
+        P.vertex(12, 190 + 22 * k, 150, 18, s, box("#FFFFFF", GREEN if ok else LINE, 12, arc=30,
+                                                     extra="align=left;spacingLeft=6;" + ("" if ok else f"fontColor={GREY};")))
+    P.vertex(12, 258, 160, 32, "tried in this order;<br>the first plan is taken", label(12, GREY, valign="top"))
+    P.edge([(162, 243), (171, 243), (171, 199), (182, 199)], arrow(GREEN))
+    # The regression: goal x = v is achieved by A; A's precondition y = p0 becomes a goal, achieved by B.
+    P.vertex(182, 190, 76, 18, "goal x = v", chip(GREEN))
+    P.edge([(258, 199), (282, 199)], arrow())
+    P.vertex(282, 190, 52, 18, "A", box(RUN, GREEN, 12, arc=30))
+    P.vertex(340, 190, 90, 18, "achieves it", label(12, GREY))
+    P.edge([(300, 208), (300, 215), (220, 215), (220, 222)], arrow())
+    P.vertex(182, 222, 76, 18, "goal y = p<sub>0</sub>", chip(GREEN))
+    P.edge([(258, 231), (282, 231)], arrow())
+    P.vertex(282, 222, 52, 18, "B", box(RUN, GREEN, 12, arc=30))
+    P.vertex(340, 222, 90, 18, "A's pre", label(12, GREY))
+    P.vertex(182, 248, 246, 20, "A alone: h leaves [l, u], not applied",
+             box(PINK, PINK_LINE, 12, arc=4, extra="dashed=1;align=left;spacingLeft=6;"))
+    P.vertex(182, 272, 246, 20, "A ∥ B, rate set: a·r + b·s = 0",
+             box(RUN, GREEN, 12, arc=4, extra="align=left;spacingLeft=6;"))
+    down(296)
+    # 4: the bound in time: between two events every rate is constant, so h is checked at the events.
+    part(4, 306, 74, "In time", "h between the events")
+    x0, x1, yt, yb = 30, 210, 330, 374
+    lo, hi = 356, 344
+    P.vertex(x0, hi, x1 - x0, lo - hi, "", f"rounded=0;html=1;fillColor={RUN};strokeColor=none;")
+    P.edge([(x0, yt), (x0, yb), (x1, yb)], f"html=1;rounded=0;strokeColor={LINE};strokeWidth=1;endArrow=none;")
+    stroke = lambda color, dashed=False: (f"html=1;rounded=0;strokeColor={color};strokeWidth=2;endArrow=none;"  # noqa: E731
+                                          + ("dashed=1;" if dashed else ""))
+    P.edge([(x0 + 6, 368), (x0 + 90, 334)], stroke(PINK_LINE, True))
+    P.edge([(x0 + 6, 350), (x1 - 8, 350)], stroke(GREEN))
+    for t in (x0 + 6, x1 - 8):
+        P.vertex(t - 3, 347, 6, 6, "", f"ellipse;html=1;fillColor={INK};strokeColor=none;")
+    for k, (style, s) in enumerate(((stroke(PINK_LINE, True), "A alone"), (stroke(GREEN), "A ∥ B"))):
+        P.edge([(226, 333 + 18 * k), (248, 333 + 18 * k)], style)
+        P.vertex(254, 324 + 18 * k, 80, 18, s, label(12))
+    P.vertex(226, 360, 18, 10, "", f"rounded=0;html=1;fillColor={RUN};strokeColor=none;")
+    P.vertex(254, 356, 172, 18, "[l, u]; • events", label(12))
+    down(380)
+    # 5: the planned skill as the skill editor draws it (BPMN): B to p0, then A and B in parallel, then rest.
+    part(5, 390, 86, "Planned skill, checked, Described", "", AAS, "#FFFFFF")
+    y = 446
+    task = box(RUN, GREEN, 12, arc=20)
+    gate = (f"rhombus;html=1;fillColor=#FFFFFF;strokeColor={INK};strokeWidth=1.2;fontFamily=Arial;fontSize=14;"
+            f"fontStyle=1;fontColor={INK};")
+    P.vertex(14, y - 8, 16, 16, "", f"ellipse;html=1;fillColor=#FFFFFF;strokeColor={INK};strokeWidth=1.2;")
+    P.edge([(30, y), (42, y)], arrow())
+    P.vertex(42, y - 10, 64, 20, "B: p<sub>0</sub>", task)
+    P.edge([(106, y), (118, y)], arrow())
+    P.vertex(118, y - 11, 22, 22, "+", gate)
+    P.edge([(129, y - 11), (129, y - 18), (154, y - 18)], arrow())
+    P.edge([(129, y + 11), (129, y + 18), (154, y + 18)], arrow())
+    P.vertex(154, y - 27, 92, 18, "A: x += Δ", task)
+    P.vertex(154, y + 9, 92, 18, "B: y moves", task)
+    P.edge([(246, y - 18), (271, y - 18), (271, y - 11)], arrow())
+    P.edge([(246, y + 18), (271, y + 18), (271, y + 11)], arrow())
+    P.vertex(260, y - 11, 22, 22, "+", gate)
+    P.edge([(282, y), (294, y)], arrow())
+    P.vertex(294, y - 10, 64, 20, "rest", task)
+    P.edge([(358, y), (370, y)], arrow())
+    P.vertex(370, y - 8, 16, 16, "", f"ellipse;html=1;fillColor=#FFFFFF;strokeColor={INK};strokeWidth=3;")
+    return P.diagram
+
+
 text = open(PATH, encoding="utf-8", newline="").read()
-for name in ("pipeline-planning", "planned-bottom-up", "primitives-to-composite"):          # run again: the pages replaced
+for name in ("pipeline-planning", "planned-bottom-up", "primitives-to-composite", "planning-generic"):  # replaced
     text = re.sub(r'\s*<diagram id="' + name + r'-0".*?</diagram>', "", text, flags=re.S)
 source = next(d for d in ET.fromstring(text).findall("diagram") if d.get("name") == "pipeline")
 SHELL = next(c.get("style") for c in source.iter("mxCell") if (c.get("style") or "").startswith("shape=stencil("))
-pages = "".join("\n  " + ET.tostring(p, encoding="unicode") for p in (pipeline_planning(source), planned_bottom_up(), primitives_to_composite()))
+pages = "".join("\n  " + ET.tostring(p, encoding="unicode") for p in (pipeline_planning(source), planned_bottom_up(), primitives_to_composite(),
+                                                                   planning_generic()))
 end = text.rindex("</mxfile>")
 newline = "\r\n" if "\r\n" in text else "\n"
 open(PATH, "w", encoding="utf-8", newline="").write(text[:end].rstrip() + pages.replace("\n", newline) + newline + text[end:])
