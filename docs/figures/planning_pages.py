@@ -406,11 +406,12 @@ def primitives_to_composite() -> ET.Element:
 
 # ---- page 4: planning, generic (the paper's Fig. 2 since the review of 7 Nov) ---------------------------
 def planning_generic() -> ET.Element:
-    """Fig. 2 (third version, 7 Nov): what the planner builds from a requirement and a module's primitives,
-    as six numbered cases in BPMN: (1) a sequence, by goal regression; (2) a repetition; (3) a parallel
-    block of independent steps; (4) steps in parallel at a matched rate; (5) a stated or existing composite
-    reused; (6) a decision, greyed: drawn by hand and checked, not planned. One column, 440 by 346 px
-    (8.4 by 6.6 cm), no text below 12 px."""
+    """Fig. 2 (as built, 8 Nov): what the planner builds from a requirement and a module's primitives, as
+    numbered cases in BPMN: (1) a sequence, by goal regression; (2) a repetition; (3) a parallel block of
+    independent steps; (4) steps in parallel at a matched rate; (5) a decision, greyed: drawn by hand and
+    checked, not planned. The last cell: every flow is checked in time, then described. Reuse of a stated
+    composition or an existing composite is left out: it is not read from the AAS (8 Nov). One column,
+    440 by 346 px (8.4 by 6.6 cm), no text below 12 px."""
     P = Page("planning-generic", 440, 346)
     badge = (f"ellipse;html=1;fillColor={INK};strokeColor=none;fontColor=#FFFFFF;fontFamily=Arial;fontSize=10;"
              "fontStyle=1;align=center;verticalAlign=middle;")
@@ -471,12 +472,11 @@ def planning_generic() -> ET.Element:
     block(cx, cy, "A", "C")
     cx, cy = cell(4, 1, 1, "Matched rates", "a bound links two moving states")
     block(cx, cy, "A", "B, matched", w=76)
-    cx, cy = cell(5, 0, 2, "Reuse", "a stated or existing composite")
-    P.vertex(cx + 8, cy + 44, 36, 16, "S", task)
-    P.edge([(cx + 44, cy + 52), (cx + 70, cy + 52)], arrow(GREY, dashed=True) + "endSize=5;")
-    chain(cx, cy, ("A", "B"), start=70)
-    cx, cy = cell(6, 1, 2, "Decision", "drawn by hand, then checked", planned=False)
+    cx, cy = cell(5, 0, 2, "Decision", "drawn by hand, then checked", planned=False)
     block(cx, cy, "A", "B", symbol="×", style=grey_task, edges=grey_flow)
+    # What follows every flow, planned or drawn.
+    P.vertex(226, 266, 204, 70, "<b>Every flow</b><br>checked over time against C,<br>then described in the AAS",
+             box("#FFFFFF", AAS, 12, extra="strokeWidth=1.25;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;"))
     return P.diagram
 
 

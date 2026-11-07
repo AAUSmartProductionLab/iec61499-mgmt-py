@@ -192,6 +192,16 @@ one can be written from the other.
 
    A goal ("ContentVolume = 2.0") is reached by "it already holds" or by a capability whose Post makes
    it hold, after its own Pre (goal regression).
+
+   **As built (checked 8 Nov).** GTPyhop runs with goals only: no task methods. The goal lists are
+   multigoals split by `m_split_multigoal`; each unigoal method (`plan._method`) picks a capability
+   whose Post reaches the goal and puts its Pre before it, and the `+=` method splits an amount into
+   equal doses (puts the goal back); the tracking method (`plan._tracking`) and its paired action
+   (`plan._paired`) are a unigoal method and an action too. Method 1 is an outer loop in `plan.plan`
+   (the search restricted to a composition's parts first), but `read.py` reads no `ComposedOf`, so
+   `Capability.compositions` is always empty and nothing tests it. Method 2 (an existing composite's
+   steps) is not built. Parallel blocks come after GTPyhop, from `lift.py`. The paper (CIRP, Fig. 2)
+   claims the four that work: sequence, repetition, parallel block, matched rates.
 4. **The plan is lifted** to a partial order: steps on different components with no state between them
    become a parallel block, unless an invariant forbids it (Weigh keeps the needle still, so Home and
    Weigh stay apart). The flow is written in the planner's elements; the derivation checks that the new
