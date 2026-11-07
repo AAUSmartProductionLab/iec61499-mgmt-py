@@ -121,6 +121,8 @@ def pipeline_planning(source: ET.Element) -> ET.Element:
     value("c47", "Plan"), geo("c47", w=34)
     value("c49", "or written by hand"), geo("c49", x=40, y=1, w=102, h=17)
     geo("n50", y=182)
+    # Reconcile becomes Synchronise, the paper's plainer word for it.
+    value("c52", "Synchronise"), cells["n50"].set("style", "group;tooltip=Synchronise;")
     geo("n55", h=128), geo("c56", h=128)
     # Arrows between the AAS, the tools and the running system.
     points("c88", (362, 152), (322, 152))

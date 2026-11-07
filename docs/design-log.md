@@ -20,6 +20,16 @@ A running log of design considerations made while building, for writing the pape
 
 ## 7 Nov 2026
 
+- **In the papers, the reconciler is called the synchroniser, and the CIRP text is written in plainer
+  sentences.** *CIRP*, *Journal*.
+  - "Reconciler" is a term from Kubernetes-style controllers and reads as jargon to a manufacturing
+    reader; "synchroniser" says what it does (makes the running program equal to the AAS) and matches
+    the tool's name, modsync. Fig. 1's box says Synchronise. The code keeps its names.
+  - The wording pass splits colon and semicolon chains into sentences, replaces stacked possessives
+    ("the module's components' primitives") with "of" phrases and keeps every number and source. It
+    costs about 250 words (sections 4,170 against 3,920); cut the method's comparisons with related
+    work first if the page overflows.
+
 - **The CIRP paper rescoped to three contributions on one pipeline: the PPR model in the AAS, the
   planner, the deployment.** *CIRP*.
   - Claim: a product's requirement, stated in its AAS, becomes a new skill running in a module's IEC
