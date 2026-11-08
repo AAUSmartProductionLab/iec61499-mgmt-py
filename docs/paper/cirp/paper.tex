@@ -47,7 +47,7 @@ IEC~61499 makes this possible on the device itself. A program is a network of fu
 \item a planner that derives a composite skill from a required capability and the capabilities of the primitives, including steps in parallel, and checks it over time against the requirement;
 \item a module architecture in IEC~61499, implemented with Eclipse 4diac and its runtime FORTE, in which composite skills are networks of instances of primitive function blocks, and a synchroniser that deploys them and keeps the program consistent with the AAS.
 \end{enumerate}
-Section~\ref{sec:related} reviews related work, Sections~\ref{sec:model} to~\ref{sec:module} present the three contributions, Section~\ref{sec:evaluation} evaluates them on a pharmaceutical filling module, and Sections~\ref{sec:discussion} and~\ref{sec:conclusion} discuss the results and conclude.
+Section~\ref{sec:related} reviews related work, Sections~\ref{sec:model} to~\ref{sec:module} present the three contributions, Section~\ref{sec:evaluation} evaluates them on a pharmaceutical filling module, and Section~\ref{sec:conclusion} discusses the results and concludes.
 
 \section{Related work}
 \label{sec:related}
@@ -199,19 +199,16 @@ Drift (1,258 runs) & detected and located & 1,157 of 1,157 \\
 \end{tabular}
 \end{table}
 
-\section{Discussion}
-\label{sec:discussion}
-
-The approach is meant for engineering and integration, not for changing skills on the fly in production. A new skill is planned, checked and deployed in seconds, but an engineer still reviews and tests it, and the validated version is kept like any other. What the approach removes is the manual composition of the skill, from the requirement to a flow ready to test. The planner is also what makes the AAS necessary: turning a drawn flow into a composite resembles generating an orchestrator from a sequence, whereas deriving the flow needs the requirement's bounds, the primitives' conditions and rates, and the vocabulary.
-
-Nothing in the planner, the check or the synchroniser is specific to filling, as the needle, the liquid and the container are data in the vocabulary and the AASs. Matching rates applies wherever one motion must follow another, such as laying adhesive along a path, but it was evaluated on filling only.
-
-The process model was written independently of the AAS's constraints, though by the same authors. Its rule against foaming uses the syringe's 2\,mm bound, so agreement there shows that the bound is kept over time, not that it is right. The check's misses and excess refusals point to the module's model rather than to the method: a condition on taring could catch the 13 misses, and a condition for weighing relative to the rim could remove 14 of the 17 refusals. Networks of instances cost more blocks and events than one generated block, reading back depends on the runtime's management protocol, which needed two patches, and a value changed during an order or a removed composite still needs a stop or a restart.
-
-\section{Conclusion}
+\section{Conclusion and outlook}
 \label{sec:conclusion}
 
-This paper showed how a capability that a product requires becomes a new skill in a module's IEC~61499 program when the module's primitives can do it but no skill combines them. A PPR model in the AAS links the requirement to the module's skills and capabilities, a planner derives the composite skill from the primitives' capabilities, with parallel steps where a bound demands it, and a synchroniser deploys it and keeps the program consistent with the AAS. On a filling module, matching and planning were right in every case, the check found 90\,\% of the flows that would spoil a product, and a new skill was active within 0.7\,s while the module kept running. The evaluation used simulated inputs and outputs and one type of module, a planned skill holds the values it was planned for, and one quantity is tracked at a time. Next, the line's agents will request such plans themselves.
+This paper showed how a capability that a product requires becomes a new skill in a module's IEC~61499 program when the module's primitives can do it but no skill combines them. A PPR model in the AAS links the requirement to the module's skills and capabilities, a planner derives the composite skill from the primitives' capabilities, with coordinated steps where a bound demands them, and a synchroniser deploys it and keeps the program consistent with the AAS. On a filling module, matching and planning were right in every case, the check found 90\,\% of the flows that would spoil a product, and a new skill was active within 0.7\,s while the module kept running.
+
+The approach is meant for engineering and integration, not for changing skills on the fly in production. A new skill is planned, checked and deployed in seconds, but an engineer still reviews and tests it, and the validated version is kept like any other. What the approach removes is the manual composition of the skill, from the requirement to a flow ready to test. The planner is also what makes the AAS necessary: turning a drawn flow into a composite resembles generating an orchestrator from a sequence, whereas deriving the flow needs the requirement's bounds, the primitives' conditions and rates, and the vocabulary. Nothing in the planner, the check or the synchroniser is specific to filling, as the needle, the liquid and the container are data in the vocabulary and the AASs. Coordinated steps apply wherever one motion must follow another, such as laying adhesive along a path, but they were evaluated on filling only.
+
+The process model was written independently of the AAS's constraints, though by the same authors. Its rule against foaming uses the syringe's 2\,mm bound, so agreement there shows that the bound is kept over time, not that it is right. The check's misses and excess refusals point to the module's model rather than to the method: a condition on taring could catch the 13 misses, and a condition for weighing relative to the rim could remove 14 of the 17 refusals. The evaluation used simulated inputs and outputs and one type of module, a planned skill holds the values it was planned for, and one quantity is tracked at a time. Networks of instances cost more blocks and events than one generated block, reading back depends on the runtime's management protocol, which needed two patches, and a value changed during an order or a removed composite still needs a stop or a restart.
+
+Next, the line's agents will request such plans themselves, decisions on measured results will be planned, and the approach will be tested with the module's real inputs and outputs.
 
 \bibliographystyle{elsarticle-num}
 \bibliography{references}
