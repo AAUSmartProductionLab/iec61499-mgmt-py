@@ -20,6 +20,9 @@ A running log of design considerations made while building, for writing the pape
 
 ## 8 Nov 2026
 
+- **Title case for the title and every heading.** *CIRP*. Major words capitalised, minor words (and,
+  of, to, on, in, the) in lower case, both parts of a hyphenated compound capitalised ("AAS-Driven").
+
 - **One Method section with a subsection per contribution.** *CIRP*. Sections 3 to 5 (modelling,
   planning, deploying) were three sections with eight subsections between them, which read as
   separate topics. They are now Section 3, Method, with a two-line lead naming its three parts and

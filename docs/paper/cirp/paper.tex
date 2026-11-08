@@ -17,7 +17,7 @@
 
 \dochead{60th CIRP Conference on Manufacturing Systems (CIRP CMS 2027)}%
 
-\title{From product requirements to running skills: AAS-driven planning and reconfiguration of IEC 61499 modules}
+\title{From Product Requirements to Running Skills: AAS-Driven Planning and Reconfiguration of IEC 61499 Modules}
 
 \author[a]{Martin B. Jensen\corref{cor1}}
 \author[a]{Tristan Schwörer}
@@ -49,7 +49,7 @@ IEC~61499 makes this possible on the device itself. A program is a network of fu
 \end{enumerate}
 Section~\ref{sec:related} reviews related work, Section~\ref{sec:method} presents the three contributions, Section~\ref{sec:evaluation} evaluates them on a pharmaceutical filling module, and Section~\ref{sec:conclusion} discusses the results and concludes.
 
-\section{Related work}
+\section{Related Work}
 \label{sec:related}
 
 Deriving a new skill from a product's requirement touches four fields, and Table~\ref{tab:related} compares the closest works in them. In the AAS, Blumhofer et al. describe offered capabilities with their constraints and skills with their endpoints, and match the capabilities a product requires against them~\cite{blumhofer2025enhancing}. Albus et al. derive a bill of process from a product's computer-aided design model, match it against the resources' capabilities and let agents orchestrate the resources' skills~\cite{albus2025automated}. Both select skills that already exist, and how a skill is composed stays inside the machine.
@@ -89,7 +89,7 @@ Ours & product's requirement & \checkmark & \checkmark & \checkmark & \checkmark
 
 The method takes a capability that a product requires to a running skill in three parts, one per contribution (Fig.~\ref{fig:concept}): the AASs describe what the product requires and what the module can do (Section~\ref{sec:model}), a planner derives and checks the missing skill (Section~\ref{sec:plan}), and a synchroniser deploys it in the module's program (Section~\ref{sec:module}).
 
-\subsection{Modelling skills and capabilities in the AAS}
+\subsection{Modelling Skills and Capabilities in the AAS}
 \label{sec:model}
 
 The approach follows the PPR paradigm with three kinds of AAS (Fig.~\ref{fig:concept}). A product AAS holds its recipe in the Production Sequence submodel and, in its Capability Description~\cite{idta02020}, the capability that each step requires, with values, bounds and the product's own facts, such as a container's dimensions. A process AAS binds each step of the recipe to a module and one of its skills, with the values the skill is given. A module AAS describes the module: its components (Hierarchical Structures), its skills (Skills), the capabilities it offers (Capability Description) and how its skills are called (Asset Interfaces Description). As the product AAS names no equipment and the module AAS names no product, a new skill needs only two pieces of information: what the product requires and what the module's primitives can do.
@@ -107,7 +107,7 @@ The second, the Capability Description, says what the skills achieve, as each sk
 
 The meaning of every capability and property is a supplemental semantic identifier from a vocabulary built for the modules of the line. It separates process capabilities, which change the product and can be required, from auxiliary capabilities, such as moving an axis, which only serve other skills and never appear in a recipe. It places capabilities below the classes of DIN~8580 and VDI~2860 where these fit, states which primitive contributes which capability and which property is the rate of which, and defines narrower capabilities by constraints. Through the vocabulary, a composite offers the process capabilities that its steps contribute, with ranges found by running it through the module's states. Matching compares required and offered capabilities by meaning, and each value with the offered range in the same unit. It answers offered, offered after a reconfiguration (by a Described skill or a plan), or not offered.
 
-\subsection{Planning composite skills}
+\subsection{Planning Composite Skills}
 \label{sec:plan}
 
 If no skill offers a required capability, the planner tries the modules that matching names as offering it after a reconfiguration, and those that offer a broader class of it. For each, it returns a composite skill or reports that none exists. The planning domain is read from the module's Capability Description: every property is a state variable, and every capability of a primitive is an action with its conditions, invariants and rates (Fig.~\ref{fig:plan}, top). The problem comes from the product: the start state holds the product's facts, the goals are the required capability's postconditions and the module's rest state, and the requirement's bounds must hold throughout.
@@ -130,7 +130,7 @@ Every flow, planned or drawn in the skill editor, is checked before it is descri
 \label{fig:plan}
 \end{figure}
 
-\subsection{Deploying skills on IEC 61499 modules}
+\subsection{Deploying Skills on IEC 61499 Modules}
 \label{sec:module}
 
 A checked skill is deployed in the module's program, which follows the same rules on every module. A base application, unchanged by any reconfiguration, holds what IDTA's Control Component templates describe: an occupation that lets one client at a time command the module, a PackML state machine, and one function block per equipment item that owns its inputs and outputs, on general-purpose pins, Modbus or a simulation. A primitive skill is a function block type built into the runtime once. All skills share one small state machine and the OPC~UA methods Start, Stop, Abort and Reset, and the arguments of Start are checked against their limits before anything moves. A composite skill has no type of its own. It is a subapplication of instances: a control block for its state machine and methods, a latch for each parameter, and an instance of a primitive for each step, named like the step and holding the step's constants. The success event of one step starts the next, and parallel blocks and decisions add join and merge blocks. Skill blocks reach the equipment and the occupation over the runtime's local publish/subscribe channels instead of connections, and clients reach the skills over OPC~UA. As the rules derive all wiring from the flow, a skill, a step and a parameter in the AAS are a subapplication, an instance and a latch of the same name in the program.
@@ -144,11 +144,11 @@ The synchroniser carries out these changes and keeps the program consistent with
 \section{Evaluation}
 \label{sec:evaluation}
 
-\subsection{Use case and setup}
+\subsection{Use Case and Setup}
 
 The approach was evaluated on the filling module of a pharmaceutical line, which has a needle on a linear axis, a pump and a scale, with the primitives Home and MoveAxis on the axis, Dispense on the pump, and Tare and Weigh on the scale. Its Dispensing skill fills a vial with the needle at a fixed position. A prefilled syringe, in contrast, is filled from the bottom up, with the needle kept close to the rising liquid, which no skill of the module does. An invariant of dosing defines how deep the needle is in the liquid, as a linear formula of the needle's position, the container's bottom and cross-section $A$, and the volume in it. The module's program was generated by the rules and runs on Eclipse 4diac FORTE 3.3.0 on a PC with simulated inputs and outputs. Two patches to the runtime were needed: it answers large queries in parts, as one answer is limited to 64\,KiB, and its event queue holds 1,024 events. The ground truth was a process model of the station that uses none of the constraints in the AAS and simulates the needle's depth, the liquid, spills and the weight in steps of 10\,ms. Medians are given with 95\,\% intervals, and Table~\ref{tab:results} summarises the results.
 
-\subsection{Matching, planning and checking}
+\subsection{Matching, Planning and Checking}
 
 Matching and planning were tested for 26 products, vials and a syringe of 0.25 to 25\,mL, on four variants of the module. In all 104 cases, the answer offered, offered after a reconfiguration or not offered was the same as the process model's, and all 23 planned skills made the product right the first time. For the syringe filled from the bottom up, with the needle at most 2\,mm above and 3\,mm below the liquid's surface, 15 of 24 cases were planned and all were right; the other 9 are exactly those that the module cannot do. In these plans, Dispense runs in parallel with MoveAxis at the flow rate $Av$ that keeps the depth constant: 0.396\,mL/s for the syringe's 31.7\,mm$^2$ at the axis's speed $v$ of 12.5\,mm/s. Planning took 2.4\,ms (median) for the vials and 39\,ms for the syringe.
 
@@ -188,7 +188,7 @@ Drift (1,258 runs) & detected and located & 1,157 of 1,157 \\
 \end{tabular}
 \end{table}
 
-\section{Conclusion and outlook}
+\section{Conclusion and Outlook}
 \label{sec:conclusion}
 
 This paper showed how a capability that a product requires becomes a new skill in a module's IEC~61499 program when the module's primitives can do it but no skill combines them. A PPR model in the AAS links the requirement to the module's skills and capabilities, a planner derives the composite skill from the primitives' capabilities, with coordinated steps where a bound demands them, and a synchroniser deploys it and keeps the program consistent with the AAS. On a filling module, matching and planning were right in every case, the check found 90\,\% of the flows that would spoil a product, and a new skill was active within 0.7\,s while the module kept running.
