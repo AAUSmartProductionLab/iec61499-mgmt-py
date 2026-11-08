@@ -20,6 +20,11 @@ A running log of design considerations made while building, for writing the pape
 
 ## 8 Nov 2026
 
+- **Fig. 2's coordinated steps without the plot of h.** *CIRP*. The small plot (a band, the dose alone
+  leaving it) came from the bottom-up filling and was hard to read without it. The link between the two
+  primitives is now a dashed tie between their tasks, "linked", and one line says how: r is set so that
+  a·r + b·s = 0, which keeps h = a·x + b·y within its bounds while both run. The figure is 306 px tall.
+
 - **Repetition and the 15 mL example out of the CIRP paper.** *CIRP*. A dose above 10 mL was split
   in two only because Dispense's Volume parameter stops at 10 mL; a pump dosed by time runs longer, so
   the case is a parameter limit, not a planning problem. Repetition pays off where a step is limited
