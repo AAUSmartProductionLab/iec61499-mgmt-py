@@ -410,8 +410,8 @@ def planning_generic() -> ET.Element:
     makes the planner build them: (1) a sequence, B giving what A needs; (2) a parallel block, steps on
     different components; (3) coordinated steps, A and B together at rates set so that h stays within its
     bounds. Repetition (a goal split into equal steps) is left out: the planner can, but few modules need
-    it. One column, 440 by 320 px (8.4 by 6.1 cm), no text below 12 px."""
-    P = Page("planning-generic", 440, 320)
+    it. One column, 440 by 306 px (8.4 by 5.8 cm), no text below 12 px."""
+    P = Page("planning-generic", 440, 306)
     badge = (f"ellipse;html=1;fillColor={INK};strokeColor=none;fontColor=#FFFFFF;fontFamily=Arial;fontSize=10;"
              "fontStyle=1;align=center;verticalAlign=middle;")
     task = box(RUN, GREEN, 12, arc=24, extra="spacingLeft=2;spacingRight=2;")
@@ -468,20 +468,18 @@ def planning_generic() -> ET.Element:
     P.edge([(out, y), (374, y)], flow), end(374, y)
 
     # 3: coordinated steps. A alone would move h out of its bounds: B moves along at a rate set for it.
-    row(3, 202, 114, "Coordinated steps", "a bound links<br>two changing<br>states")
+    row(3, 202, 100, "Coordinated steps", "a bound links<br>two changing<br>states")
     y = 234
     start(146, y), P.edge([(162, y), (176, y)], flow)
     P.vertex(176, y - 10, 42, 20, "B: y<sub>0</sub>", task)
     P.edge([(218, y), (234, y)], flow)
     out = split(234, y, "A: x, rate r", "B: y, speed s", 88, gap=19)
     P.edge([(out, y), (420, y)], flow), end(420, y)
-    # How h runs: inside its bounds with both, out of them with A alone.
-    x0, x1, top, bottom = 150, 236, 264, 302
-    P.vertex(x0, 276, x1 - x0, 14, "", f"rounded=0;html=1;fillColor={RUN};strokeColor=none;")
-    P.edge([(x0, top), (x0, bottom), (x1, bottom)], f"html=1;rounded=0;strokeColor={LINE};strokeWidth=1;endArrow=none;")
-    P.edge([(x0 + 4, 298), (x0 + 64, 266)], f"html=1;rounded=0;strokeColor={PINK_LINE};strokeWidth=2;dashed=1;endArrow=none;")
-    P.edge([(x0 + 4, 283), (x1 - 4, 283)], f"html=1;rounded=0;strokeColor={GREEN};strokeWidth=2;endArrow=none;")
-    P.vertex(244, 260, 188, 52, "r is set so that h = a·x + b·y<br>stays within [l, u] (band);<br>A alone leaves it (dashed)",
+    # The link between the two primitives: their rates are set together (a dashed tie, dots at its ends).
+    P.edge([(320, y - 10), (320, y + 10)], f"html=1;rounded=0;strokeColor={INK};strokeWidth=1.2;dashed=1;"
+                                            "startArrow=oval;endArrow=oval;startFill=1;endFill=1;startSize=4;endSize=4;")
+    P.vertex(326, y - 8, 60, 16, "linked", label(12, GREY))
+    P.vertex(146, y + 32, 284, 34, "r is set so that a·r + b·s = 0, which keeps<br>h = a·x + b·y within [l, u] while both run",
              label(12, GREY, valign="top"))
     return P.diagram
 
