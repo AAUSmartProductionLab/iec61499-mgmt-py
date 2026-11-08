@@ -20,6 +20,14 @@ A running log of design considerations made while building, for writing the pape
 
 ## 8 Nov 2026
 
+- **One Method section with a subsection per contribution.** *CIRP*. Sections 3 to 5 (modelling,
+  planning, deploying) were three sections with eight subsections between them, which read as
+  separate topics. They are now Section 3, Method, with a two-line lead naming its three parts and
+  Fig. 1, and three subsections; the former subsections are paragraphs, each opening with a sentence
+  that joins it to the one before ("What the module can do is described in two of its submodels",
+  "The second, the Capability Description, …", "A checked skill is deployed …", "How a change reaches
+  the running program …", "The synchroniser carries out these changes …"). No subsubsections.
+
 - **Discussion and Conclusion merged into "Conclusion and outlook".** *CIRP*. One closing section:
   what the paper showed, what the approach is for (engineering, not changes on the fly) and why it
   generalises, its limits (the process model's authors, the check's misses, simulated inputs and
