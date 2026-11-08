@@ -20,6 +20,17 @@ A running log of design considerations made while building, for writing the pape
 
 ## 8 Nov 2026
 
+- **The abstract opens with why and closes with what it means.** *CIRP*. 247 words (limit about 250).
+  It starts where the introduction does (small batches and personalised medicines; modules exchanged
+  although their components could already do the job), keeps the submitted abstract's framing (IEC 61499
+  as "a key enabler of software-defined manufacturing", the AAS "in a standardised, interoperable way",
+  "how AAS content can drive such … remains open", the three AASs, primitives as fixed function blocks,
+  changes applied online, read back and recorded, Eclipse 4diac on a pharmaceutical filling module),
+  and states the evaluation in broad terms ("shows promise": plans agree with the process model, the
+  check catches most spoiling flows, new skills in under a second with the module running) instead of
+  the figures, which are in Section 4 and Table 2. It ends on the consequence for a line: new products
+  through software instead of new modules.
+
 - **Title case for the title and every heading.** *CIRP*. Major words capitalised, minor words (and,
   of, to, on, in, the) in lower case, both parts of a hyphenated compound capitalised ("AAS-Driven").
 
