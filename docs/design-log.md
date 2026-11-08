@@ -20,6 +20,15 @@ A running log of design considerations made while building, for writing the pape
 
 ## 8 Nov 2026
 
+- **Broad opening, pharma as the clearest case; the title stays general.** *CIRP*. The abstract and the
+  introduction began with pharmaceutical production, which the title never named. Both now open with
+  manufacturing in general (small batches of varied and personalised products). The introduction then
+  brings pharma in as the domain where the trend is clearest ("as medicines become personalised, batches
+  shrink, sometimes to single units, and modular factories are proposed to keep pace", Schwörer et al.
+  2025), and returns to modular lines in general ("In such lines, the AAS …"). The abstract names pharma
+  only where the evaluation does, so the filling module reads as the case, not the scope. Instead of
+  putting pharma in the title, which would narrow a method that is not specific to filling.
+
 - **The abstract opens with why and closes with what it means.** *CIRP*. 247 words (limit about 250).
   It starts where the introduction does (small batches and personalised medicines; modules exchanged
   although their components could already do the job), keeps the submitted abstract's framing (IEC 61499
