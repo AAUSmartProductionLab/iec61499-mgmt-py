@@ -20,6 +20,16 @@ A running log of design considerations made while building, for writing the pape
 
 ## 8 Nov 2026
 
+- **Repetition and the 15 mL example out of the CIRP paper.** *CIRP*. A dose above 10 mL was split
+  in two only because Dispense's Volume parameter stops at 10 mL; a pump dosed by time runs longer, so
+  the case is a parameter limit, not a planning problem. Repetition pays off where a step is limited
+  for real (a pipette tip, a piston's stroke, a gripper's capacity, a peck's depth), and there the
+  repeated unit has a step between (aspirate, return, retract), which the planner would add by
+  regression but which no module here models or tests. The planner still splits such a goal; the paper
+  shows the three kinds of flow that matter (sequence, parallel block, coordinated steps). The 15 mL
+  product's input counts (6, 14, 71) leave the text and Table 2, and with them the Discussion's effort
+  comparison with Dorofeev et al.; E1's data stay in the repository.
+
 - **Fig. 2: the four kinds of flow, one annotated row each; "coordinated steps" for the tracking.**
   *CIRP*. The decision and the closing cell left the figure; what remains is what the planner builds,
   drawn bigger in BPMN with why it builds it: the sequence's arrow carries the condition (B sets

@@ -406,12 +406,12 @@ def primitives_to_composite() -> ET.Element:
 
 # ---- page 4: planning, generic (the paper's Fig. 2 since the review of 7 Nov) ---------------------------
 def planning_generic() -> ET.Element:
-    """Fig. 2 (8 Nov): the four kinds of flow the planner builds, one row each, drawn in BPMN with what
-    makes the planner build them: (1) a sequence, B giving what A needs; (2) a repetition, a goal beyond
-    one step, x filled in two halves; (3) a parallel block, steps on different components; (4) coordinated
-    steps, A and B together at rates set so that h stays within its bounds. One column, 440 by 412 px
-    (8.4 by 7.9 cm), no text below 12 px."""
-    P = Page("planning-generic", 440, 412)
+    """Fig. 2 (8 Nov): the three kinds of flow the planner builds, one row each, drawn in BPMN with what
+    makes the planner build them: (1) a sequence, B giving what A needs; (2) a parallel block, steps on
+    different components; (3) coordinated steps, A and B together at rates set so that h stays within its
+    bounds. Repetition (a goal split into equal steps) is left out: the planner can, but few modules need
+    it. One column, 440 by 320 px (8.4 by 6.1 cm), no text below 12 px."""
+    P = Page("planning-generic", 440, 320)
     badge = (f"ellipse;html=1;fillColor={INK};strokeColor=none;fontColor=#FFFFFF;fontFamily=Arial;fontSize=10;"
              "fontStyle=1;align=center;verticalAlign=middle;")
     task = box(RUN, GREEN, 12, arc=24, extra="spacingLeft=2;spacingRight=2;")
@@ -432,8 +432,23 @@ def planning_generic() -> ET.Element:
         P.vertex(30, y + 4, 112, 18, f"<b>{title}</b>", label(12))
         P.vertex(10, y + 24, 128, h - 28, when, label(12, GREY, valign="top"))
 
+    def split(x, y, top, bottom, w, gap=20):
+        """A parallel gateway, two branches of width w, a parallel gateway; x is the first gateway's left."""
+        P.vertex(x, y - 11, 22, 22, "+", gate)
+        tx = x + 11 + 31
+        P.edge([(x + 11, y - 11), (x + 11, y - gap), (tx, y - gap)], flow)
+        P.edge([(x + 11, y + 11), (x + 11, y + gap), (tx, y + gap)], flow)
+        h = 2 * gap - 20
+        P.vertex(tx, y - gap - h / 2, w, h, top, task)
+        P.vertex(tx, y + gap - h / 2, w, h, bottom, task)
+        jx = tx + w + 31
+        P.edge([(tx + w, y - gap), (jx, y - gap), (jx, y - 11)], flow)
+        P.edge([(tx + w, y + gap), (jx, y + gap), (jx, y + 11)], flow)
+        P.vertex(jx - 11, y - 11, 22, 22, "+", gate)
+        return jx + 11
+
     P.vertex(6, 2, 428, 32, "<b>Planner</b>: from the product's goal x = v, with l ≤ h ≤ u, and the module's "
-             "primitives A, B and C, it builds four kinds of flow:", label(12))
+             "primitives A, B and C, it builds three kinds of flow:", label(12))
 
     # 1: a sequence. B's postcondition is A's precondition, so B goes first.
     row(1, 40, 70, "Sequence", "B gives what<br>A needs")
@@ -445,55 +460,28 @@ def planning_generic() -> ET.Element:
     P.edge([(356, y), (374, y)], flow), end(374, y)
     note(164, y + 14, 88, "sets y = p<sub>0</sub>"), note(284, y + 14, 88, "needs y = p<sub>0</sub>")
 
-    # 2: a repetition. One step adds at most half of what the goal needs: two steps, x in two halves.
-    row(2, 116, 86, "Repetition", "the goal needs<br>more than one<br>step can give")
-    y = 142
-    start(146, y), P.edge([(162, y), (178, y)], flow)
-    P.vertex(178, y - 10, 80, 20, "A: x += v/2", task)
-    P.edge([(258, y), (276, y)], flow)
-    P.vertex(276, y - 10, 80, 20, "A: x += v/2", task)
-    P.edge([(356, y), (374, y)], flow), end(374, y)
-    P.vertex(160, 162, 16, 16, "x", label(12, GREY))
-    P.vertex(178, 165, 89, 10, "", f"rounded=0;html=1;fillColor={RUN};strokeColor={GREEN};strokeWidth=1;")
-    P.vertex(267, 165, 89, 10, "", f"rounded=0;html=1;fillColor={RUN};strokeColor={GREEN};strokeWidth=1;")
-    note(163, 178, 30, "0"), note(252, 178, 30, "v/2"), note(341, 178, 30, "v")
-
-    # 3: a parallel block. A and C use different components and no common state.
-    row(3, 208, 80, "Parallel", "the steps share<br>no component<br>or state")
-    y = 248
+    # 2: a parallel block. A and C use different components and no common state.
+    row(2, 116, 80, "Parallel", "the steps share<br>no component<br>or state")
+    y = 156
     start(146, y), P.edge([(162, y), (176, y)], flow)
-    P.vertex(176, y - 11, 22, 22, "+", gate)
-    P.edge([(187, y - 11), (187, y - 20), (218, y - 20)], flow)
-    P.edge([(187, y + 11), (187, y + 20), (218, y + 20)], flow)
-    P.vertex(218, y - 30, 92, 20, "A, component 1", task)
-    P.vertex(218, y + 10, 92, 20, "C, component 2", task)
-    P.edge([(310, y - 20), (341, y - 20), (341, y - 11)], flow)
-    P.edge([(310, y + 20), (341, y + 20), (341, y + 11)], flow)
-    P.vertex(330, y - 11, 22, 22, "+", gate)
-    P.edge([(352, y), (374, y)], flow), end(374, y)
+    out = split(176, y, "A, component 1", "C, component 2", 92)
+    P.edge([(out, y), (374, y)], flow), end(374, y)
 
-    # 4: coordinated steps. A alone would move h out of its bounds: B moves along at a rate set for it.
-    row(4, 294, 114, "Coordinated steps", "a bound links<br>two changing<br>states")
-    y = 326
-    start(146, y), P.edge([(162, y), (172, y)], flow)
-    P.vertex(172, y - 10, 46, 20, "B: y<sub>0</sub>", task)
-    P.edge([(218, y), (232, y)], flow)
-    P.vertex(232, y - 11, 22, 22, "+", gate)
-    P.edge([(243, y - 11), (243, y - 18), (268, y - 18)], flow)
-    P.edge([(243, y + 11), (243, y + 18), (268, y + 18)], flow)
-    P.vertex(268, y - 27, 96, 18, "A: x at rate r", task)
-    P.vertex(268, y + 9, 96, 18, "B: y at speed s", task)
-    P.edge([(364, y - 18), (391, y - 18), (391, y - 11)], flow)
-    P.edge([(364, y + 18), (391, y + 18), (391, y + 11)], flow)
-    P.vertex(380, y - 11, 22, 22, "+", gate)
-    P.edge([(402, y), (414, y)], flow), end(414, y)
+    # 3: coordinated steps. A alone would move h out of its bounds: B moves along at a rate set for it.
+    row(3, 202, 114, "Coordinated steps", "a bound links<br>two changing<br>states")
+    y = 234
+    start(146, y), P.edge([(162, y), (176, y)], flow)
+    P.vertex(176, y - 10, 42, 20, "B: y<sub>0</sub>", task)
+    P.edge([(218, y), (234, y)], flow)
+    out = split(234, y, "A: x, rate r", "B: y, speed s", 88, gap=19)
+    P.edge([(out, y), (420, y)], flow), end(420, y)
     # How h runs: inside its bounds with both, out of them with A alone.
-    x0, x1, top, bottom = 150, 236, 356, 394
-    P.vertex(x0, 368, x1 - x0, 14, "", f"rounded=0;html=1;fillColor={RUN};strokeColor=none;")
+    x0, x1, top, bottom = 150, 236, 264, 302
+    P.vertex(x0, 276, x1 - x0, 14, "", f"rounded=0;html=1;fillColor={RUN};strokeColor=none;")
     P.edge([(x0, top), (x0, bottom), (x1, bottom)], f"html=1;rounded=0;strokeColor={LINE};strokeWidth=1;endArrow=none;")
-    P.edge([(x0 + 4, 390), (x0 + 64, 358)], f"html=1;rounded=0;strokeColor={PINK_LINE};strokeWidth=2;dashed=1;endArrow=none;")
-    P.edge([(x0 + 4, 375), (x1 - 4, 375)], f"html=1;rounded=0;strokeColor={GREEN};strokeWidth=2;endArrow=none;")
-    P.vertex(244, 352, 188, 52, "r is set so that h = a·x + b·y<br>stays within [l, u] (band);<br>A alone leaves it (dashed)",
+    P.edge([(x0 + 4, 298), (x0 + 64, 266)], f"html=1;rounded=0;strokeColor={PINK_LINE};strokeWidth=2;dashed=1;endArrow=none;")
+    P.edge([(x0 + 4, 283), (x1 - 4, 283)], f"html=1;rounded=0;strokeColor={GREEN};strokeWidth=2;endArrow=none;")
+    P.vertex(244, 260, 188, 52, "r is set so that h = a·x + b·y<br>stays within [l, u] (band);<br>A alone leaves it (dashed)",
              label(12, GREY, valign="top"))
     return P.diagram
 
