@@ -20,6 +20,16 @@ A running log of design considerations made while building, for writing the pape
 
 ## 8 Nov 2026
 
+- **Pharma enters through validation (GAMP 5); the approach is said to carry over.** *CIRP*. "Pharma
+  shows this most clearly" overstated it, and "sometimes to single units" rested on a source not
+  checked here. What sets pharma apart is that every change of a line must be validated: GAMP 5 (ISPE,
+  2nd ed., 2022) scales validation with risk and treats configured software (category 4) as less risky
+  than bespoke software (category 5), so reconfiguring proven parts instead of engineering new ones
+  lowers the risk and shortens validation. That is why building a skill from fixed primitives matters
+  there. GAMP 5 is the 19th source. The conclusion now says nothing is specific to filling or to
+  pharmaceuticals, so the approach carries over to discrete production in other domains, with the
+  coordinated steps as the example and the caveat that only filling was evaluated.
+
 - **Broad opening, pharma as the clearest case; the title stays general.** *CIRP*. The abstract and the
   introduction began with pharmaceutical production, which the title never named. Both now open with
   manufacturing in general (small batches of varied and personalised products). The introduction then
