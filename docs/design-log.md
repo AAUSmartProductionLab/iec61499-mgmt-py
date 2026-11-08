@@ -20,6 +20,14 @@ A running log of design considerations made while building, for writing the pape
 
 ## 8 Nov 2026
 
+- **Discussion and Conclusion merged into "Conclusion and outlook".** *CIRP*. One closing section:
+  what the paper showed, what the approach is for (engineering, not changes on the fly) and why it
+  generalises, its limits (the process model's authors, the check's misses, simulated inputs and
+  outputs, one quantity tracked), and an outlook: the line's agents request plans, decisions on
+  measured results are planned (the gap to Schwörer et al.'s planning submodel that matters inside a
+  module), and the module's real inputs and outputs. The Discussion's "Matching rates" is now
+  "Coordinated steps", and the Introduction's roadmap names one closing section.
+
 - **Related work checked against the sources; Rooker out.** *CIRP*. Every statement in Section 2 and
   every cell of Table 1 was checked against the papers themselves. The planners of Nabizada et al. and
   Köcher et al. sequence capabilities, not skills ("skill-level details are not needed here"; "valid
