@@ -20,6 +20,18 @@ A running log of design considerations made while building, for writing the pape
 
 ## 8 Nov 2026
 
+- **Related work checked against the sources; Rooker out.** *CIRP*. Every statement in Section 2 and
+  every cell of Table 1 was checked against the papers themselves. The planners of Nabizada et al. and
+  Köcher et al. sequence capabilities, not skills ("skill-level details are not needed here"; "valid
+  capability sequences"), so the Introduction and Section 2 say so. Nabizada's four submodels are their
+  own schema built on VDI 3682, IEC 61360 and IDTA 02011/02016, not standard submodels. Lindorfer and
+  Froschauer run their own workflow engine (4diac FORTE is their future work), so the paragraph opens
+  "For composing skills" instead of "In IEC 61499". Dorofeev's user actions are weighted. Huang's timed
+  test replaced a whole network, so "applies it" instead of "applies the differences". "None of these
+  approaches" instead of "No approach". Table 1: Albus generate the PFDL their agents run (New (✓)),
+  and Nabizada's plans are checked like Köcher's (Check (✓)). Rooker et al. (2007) could not be read and
+  backed only what IEC 61499-1 states, so it left; the paper cites 18 sources.
+
 - **Fig. 2's coordinated steps without the plot of h.** *CIRP*. The small plot (a band, the dose alone
   leaving it) came from the bottom-up filling and was hard to read without it. The link between the two
   primitives is now a dashed tie between their tasks, "linked", and one line says how: r is set so that
