@@ -32,6 +32,14 @@ HTTP (JSON):
                                 capability may be one the module does not offer, narrower than one it
                                 does (BottomUpFilling): planned as the vocabulary defines it, and every
                                 plan checked in time against the requirement first
+    POST   /match               which resources offer what a step requires (modreg.match): {"requirements":
+                                [{"name", "reference"}], "parameters": [the recipe's], "aasIds": [...]};
+                                a reference is a model reference to a product's required capability on
+                                the AAS server, or an external one naming its meaning. Per resource
+                                (default: every AAS offering a capability) match, mismatch or unknown
+                                with the reasons (matches), the AASs a skill can be planned on
+                                (candidates), and the capability and values a plan or a check is asked
+                                with (requirement)
     GET    /vocabulary/<name>   a capability class of the lab's vocabulary: its label, whether a product
                                 can require it, the classes it narrows, itself first (lineage), and the
                                 results it can give (FillWeight)
@@ -61,7 +69,7 @@ import urllib.request
 
 from modsync import desired
 
-from . import model
+from . import match as matching, model
 from .offer import at as offer_at, capabilities, children as offer_children
 from .ontology import Blueprint, check
 from .profile import OFFERED_SET
@@ -131,6 +139,30 @@ class AasServer:
             raise RuntimeError(f"{method} {self.url}/{path}: HTTP {e.code} {e.read()[:300]!r}") from e
         except OSError as e:
             raise RuntimeError(f"{method} {self.url}/{path}: {e}") from e
+
+    def get(self, path: str, query: dict | None = None):
+        """What the server holds at ``path`` (JSON); None if it holds nothing there."""
+        url = f"{self.url}/{path}" + (f"?{urllib.parse.urlencode(query)}" if query else "")
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers={"Accept": "application/json"}),
+                                        timeout=self.timeout) as response:
+                return json.loads(response.read())
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None
+            raise RuntimeError(f"GET {url}: HTTP {e.code} {e.read()[:300]!r}") from e
+        except (OSError, ValueError) as e:
+            raise RuntimeError(f"GET {url}: {e}") from e
+
+    def listing(self, kind: str, query: dict | None = None) -> list[dict]:
+        """Every item of a kind (shells, submodels) the server holds, page by page."""
+        found, cursor = [], None
+        while True:
+            page = self.get(kind, {"limit": 200, **(query or {}), **({"cursor": cursor} if cursor else {})}) or {}
+            found += page.get("result") or []
+            cursor = (page.get("paging_metadata") or {}).get("cursor")
+            if not cursor:
+                return found
 
     def put(self, kind: str, item: dict) -> str:
         """Replace the item, or create it if the server does not have it."""
@@ -235,6 +267,45 @@ class Registry:
                           **{q["type"]: q["value"] for q in capability.get("qualifiers", [])
                              if q["type"] in ("Derived", "Availability")}})
         return {"shell": derived["assetAdministrationShells"][0]["idShort"], "stored": stored, "capabilities": found}
+
+    def match(self, request: dict) -> dict:
+        """How the resources on the AAS server answer a step's required capabilities (``modreg.match``):
+        per resource match, mismatch or unknown with the reasons, the capabilities it answers with and
+        whether a reconfiguration builds their skills first; with one requirement the AASs a skill can
+        be planned on, and the capability and values a plan or a check is asked with. ``request``:
+        {"requirements": [{"name", "reference"}], "parameters": [the recipe's, as the web UI holds
+        them], "aasIds": [the resources; default every AAS that offers a capability]}."""
+        if self.server is None:
+            raise Refused(400, "match", ["the service has no AAS server (--basyx) to read the resources from"])
+        wanted, ids = request.get("requirements"), request.get("aasIds")
+        if not isinstance(wanted, list) or not all(isinstance(r, dict) for r in wanted) or not isinstance(ids, (list, type(None))):
+            raise Refused(400, "match", ["requirements: a list of {name, reference}; aasIds: a list of AAS ids"])
+        try:
+            shells = self.server.listing("shells")
+            held = {s["id"]: s for s in self.server.listing("submodels", {"semanticId": b64(matching.DESCRIPTION)})}
+            # A requirement in a submodel not marked a Capability Description is read by its id.
+            for keys in [(r.get("reference") or {}).get("keys") or [] for r in wanted]:
+                if keys and keys[0].get("type") == "Submodel" and keys[0].get("value") not in held:
+                    found = self.server.get(f"submodels/{b64(str(keys[0]['value']))}")
+                    if found is not None:
+                        held[found["id"]] = found
+        except RuntimeError as e:
+            raise Refused(502, "match", [f"the AAS server was not read: {e}"]) from e
+        envs = [{"assetAdministrationShells": [shell],
+                 "submodels": [held[ref["keys"][0]["value"]] for ref in shell.get("submodels") or [] if ref["keys"][0]["value"] in held]}
+                for shell in shells]
+        owned = {s["id"] for env in envs for s in env["submodels"]}
+        envs += [{"assetAdministrationShells": [{}], "submodels": [s]} for k, s in held.items() if k not in owned]
+        requirements = [matching.required(r.get("reference"), envs, str(r.get("name") or "")) for r in wanted]
+        parameters = [matching.Parameter.from_json(p) for p in request.get("parameters") or [] if isinstance(p, dict)]
+        by_id = {env["assetAdministrationShells"][0].get("id"): env for env in envs}
+        resources = [by_id[i] for i in dict.fromkeys(ids) if i in by_id] if ids is not None else envs
+        matches = matching.match(requirements, resources, parameters)
+        one = requirements[0] if len(requirements) == 1 and requirements[0].meanings else None
+        return {"matches": [m.json() for m in matches],
+                "candidates": matching.candidates(one, matches, resources) if one else [],
+                "requirement": {"capability": matching.local(one.meanings[0]), "values": matching.values(one, parameters)}
+                if one else None}
 
     def module(self, shell: str, step: str) -> tuple[dict, list[dict]]:
         """A module's AAS and its components' from the AAS server."""
@@ -421,6 +492,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.answer(200, self.registry.check_skills(urllib.parse.unquote(parts[1]), given.get("skill"), requirement))
             if method == "GET" and parts[:1] == ["vocabulary"] and len(parts) == 2:
                 return self.answer(200, self.registry.vocabulary(urllib.parse.unquote(parts[1])))
+            if method == "POST" and parts == ["match"]:
+                return self.answer(200, self.registry.match(self.body()))
             if method == "POST" and parts[:1] == ["plan"] and len(parts) == 2:
                 return self.answer(200, self.registry.plan(urllib.parse.unquote(parts[1]), self.body()))
             if method == "POST" and parts[:1] == ["process"] and len(parts) == 2:

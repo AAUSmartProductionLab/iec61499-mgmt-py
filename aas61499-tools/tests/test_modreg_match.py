@@ -61,7 +61,8 @@ def container(aas: str, name: str, meaning: str, props: list[dict], role: str = 
 
 
 def aas(name: str, *containers: dict, held_in: str = "OfferedCapabilities") -> dict:
-    return {"assetAdministrationShells": [{"id": name, "idShort": name}], "submodels": [{
+    described = {"type": "ModelReference", "keys": [{"type": "Submodel", "value": f"{name}/submodels/CapabilityDescription"}]}
+    return {"assetAdministrationShells": [{"id": name, "idShort": name, "submodels": [described]}], "submodels": [{
         "id": f"{name}/submodels/CapabilityDescription", "idShort": "CapabilityDescription",
         "semanticId": ref(f"{IDTA}/SubmodelTemplate/CapabilityDescription/1/0"),
         "submodelElements": [{"modelType": "SubmodelElementCollection", "idShort": held_in, "semanticId": sem("CapabilitySet"),

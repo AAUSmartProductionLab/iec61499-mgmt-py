@@ -307,6 +307,40 @@ def test_the_skill_editor_has_a_flow_checked_and_a_skill_planned(service, aas_se
                                                  "results": ["Nothing"]})[0] == 422
 
 
+def test_the_web_ui_asks_which_resources_offer_what_a_step_requires(service, aas_server):
+    """Match resources and Match and plan ask the service (modreg.match) with the step's required
+    capability, a model reference into the product's AAS, and the recipe's parameters: per resource
+    whether it matches and why, where a skill can be planned, and what a plan is asked with."""
+    from test_modreg_match import LAB, aas, container, element
+    url, registry = service
+    for profile in profiles.describe_all(load(SPECS / "filling.yaml"), "pi"):
+        assert send(url, profile)[0] == 201
+    module = profiles.identity(load(SPECS / "filling.yaml"))[1]
+    vial = aas("vial", container("vial", "Filling", "Filling", [element("FillVolume", 2.0, "mL"), element("ContainerType", "vial", kind="xs:string")],
+                                 role="Required", held_in="RequiredCapabilities"), held_in="RequiredCapabilities")
+    registry.server.publish(vial)
+    step = {"name": "Filling", "reference": {"type": "ModelReference", "keys": [
+        {"type": "Submodel", "value": "vial/submodels/CapabilityDescription"}, {"type": "SubmodelElementCollection", "value": "RequiredCapabilities"},
+        {"type": "SubmodelElementCollection", "value": "Filling"}, {"type": "Capability", "value": "Capability"}]}}
+    status, answer = post(f"{url}/match", {"requirements": [step]})
+    assert status == 200, answer
+    [found] = answer["matches"]                              # the product offers nothing: not answered
+    assert (found["aasId"], found["availability"], found["reconfigure"]) == (module, "Now", [])
+    assert found["capabilities"][0]["realizedBy"][0]["keys"][-1]["value"] == "Dispensing"
+    assert "FillVolume: required 2.0, offered 0.5–10.0 mL" in found["reasons"]
+    assert answer["candidates"] == [module]
+    assert answer["requirement"] == {"capability": "Filling", "values": {"FillVolume": 2.0, "ContainerType": "vial"}}
+    # The recipe's 12 mL in place of the required 2: Dispensing does not take it.
+    twelve = {"name": "FillVolume", "semanticIds": [f"{LAB}/FillVolume"], "value": "12", "unit": "mL", "dataType": "xs:double"}
+    status, answer = post(f"{url}/match", {"requirements": [step], "parameters": [twelve], "aasIds": [module, "nowhere"]})
+    assert answer["matches"][0]["status"] == "mismatch" and answer["requirement"]["values"]["FillVolume"] == 12.0
+    # A requirement named by its meaning alone; none asked of no resource; a request that is not one.
+    status, answer = post(f"{url}/match", {"requirements": [{"name": "F", "reference": {"type": "ExternalReference", "keys": [
+        {"type": "GlobalReference", "value": f"{LAB}/Filling"}]}}], "aasIds": []})
+    assert (status, answer["matches"], answer["requirement"]) == (200, [], {"capability": "Filling", "values": {}})
+    assert post(f"{url}/match", {"requirements": "Filling"})[0] == 400
+
+
 SYRINGE = {"FillVolume": 1.0, "InnerDiameter": 6.35, "InnerBottomHeight": 11.0, "RimHeight": 66.0,
            "MinImmersion": -2.0, "MaxImmersion": 3.0}
 
