@@ -20,6 +20,22 @@ A running log of design considerations made while building, for writing the pape
 
 ## 9 Nov 2026
 
+- **The paper cut back to six pages: the PDDL comparison down to one sentence, every paragraph
+  tightened, two sources out.** *CIRP*. Compiled at 5,462 words it ran onto a seventh page (about 18
+  lines of text and all the references); the body before the day's additions, 4,624 words, had fit.
+  Estimated from the PDF at about nine words a line, the body had to lose some 650 words; it is now
+  4,726. Kept: the product, process and resource AASs with their IDTA numbers, the vocabulary and its
+  link to the AAS, how the AAS becomes a GTPyhop domain with the vial, the coordinated steps and their
+  one pattern, the refused bounds, the shortcomings in the conclusion. Cut: the PDDL 2.1 and HDDL
+  comparison and the export to standard planners (one sentence says why GTPyhop: numbers and formulas
+  directly, a method computes a rate, milliseconds in the process that reads the AAS); the roadmap at
+  the end of the introduction; the deployment tests' opening question; implementation details of
+  Section 3.3 (the publish/subscribe channels, what the management protocol reports, the arguments
+  checked against limits); the sentence that composites offer what their steps contribute; repeats
+  (decisions drawn by hand, said in the conclusion; networks of instances costing blocks, said in
+  3.3). Sources: PDDL 2.1 (Fox and Long) went with the comparison, and Terzimehic et al., one sentence
+  and one row of Table 1, went as the least needed; Schwörer et al. stay. 18 sources.
+
 - **One capability matcher, in Python, for the web UI, the agents, the plan check and Q4.** *Journal*,
   *CIRP* where the matching rules are described. Matching was written four times in two languages
   (the web UI's `capabilityMatching.ts`, `lineagents.aas`, `modreg.plancheck.covers`, `cell/eval/q4.py`),
