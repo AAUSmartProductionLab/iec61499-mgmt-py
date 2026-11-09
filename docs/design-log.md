@@ -20,6 +20,26 @@ A running log of design considerations made while building, for writing the pape
 
 ## 9 Nov 2026
 
+- **The paper says where the vocabulary comes from, how the AAS links to it, how simple the planner
+  is and what it cannot do.** *CIRP*. Asked for by the co-author after tracing each fact of the
+  planning to its source. Section 3.1: the vocabulary is an OWL ontology of our own on the CSS
+  ontology; each capability, property and skill parameter names a class of it as a supplemental
+  semantic id, the semantic id staying the template's; it states what holds of a class everywhere,
+  the AASs what holds of one product or module; it is an ontology because narrowing and rates are
+  relations between classes that tools follow by inference; a module's Capability Description
+  restates its classes' constraints. Corrected: the rate relation is the vocabulary's (`rateOf`), not
+  an element of the template; a composite's decisions may be on a parameter, not only a result.
+  Section 3.2: the planner is deliberately simple; the rate set is the one the module states as a
+  range; the one pattern of coordinated steps is spelled out; a bound on a quantity with no formula,
+  or a nonlinear one, is refused (the fix of the same day). Conclusion: the shortcomings that matter
+  most, each checked: first plan, success and exact rates assumed (the planned filling keeps the
+  needle 0.5 mm within its bound; with the checker, a pump 1.7 % slow breaks it, 15 % fast does
+  not); decisions drawn by hand; the recipe's conditional steps modelled and bound but skipped by the
+  agents (`lineagents.aas.steps` reads the top-level steps only); the vocabulary the lab's own and
+  restated in each module. To make room: Section 3.3's two details of reading back (dotted names,
+  constants), Related Work's 2^n sentence (Section 3.3 says it with the citation) and Section 4.1's
+  two runtime patches (the conclusion still names them). The paper is about 290 words longer.
+
 - **A requirement's bound is kept or refused, never assumed; the rate rule completed; ComposedOf
   out of the planner.** *CIRP*, *Journal*. Three gaps found while tracing where each fact of the
   planning comes from. (1) The checker skipped a bound whose quantity no running step defines, which
