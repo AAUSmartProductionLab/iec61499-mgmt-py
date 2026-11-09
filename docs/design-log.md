@@ -20,6 +20,22 @@ A running log of design considerations made while building, for writing the pape
 
 ## 9 Nov 2026
 
+- **The paper says why GTPyhop and not a planner for PDDL 2.1 or HDDL.** *CIRP*, *Journal*. Asked by
+  the co-author. Three reasons, each from what was built: GTPyhop works on the AAS's numbers and
+  formulas directly, which HDDL 1.0 lacks (the export makes every value an object and every sum a
+  fact, and Aries grew from 0.08 s to 6.8 s from 1 to 20 doses on it); a method computes the rate of
+  coordinated steps by one equation, where a PDDL action takes only objects, so rates would have to
+  be discretised and left to a temporal planner's search (OPTIC, COLIN, PDDL+: hard to bound in time,
+  6 Nov); and it plans in milliseconds in the process that reads the AAS and runs the checker (1 to
+  2 ms, against about 300 ms for ENHSP and 40 to 60 ms for Aries through unified-planning, which
+  starts the planner for each problem). That the domain is not tied to GTPyhop rests on the export:
+  the four sequential cases of `cell/eval/planners.py`, re-run today on the current tools, are planned
+  by ENHSP on the PDDL and Aries on the HDDL, every plan valid (results of 28 Oct kept; today's run
+  the same). HDDL, ENHSP and Aries are named without a reference: the paper is at its 19 sources.
+  GTPyhop is used for goals only (hierarchical goal networks), not for HTN tasks: the methods are
+  generated from the capabilities, one per postcondition, and the same methods are what the HDDL
+  export writes as compound tasks.
+
 - **The paper says where the vocabulary comes from, how the AAS links to it, how simple the planner
   is and what it cannot do.** *CIRP*. Asked for by the co-author after tracing each fact of the
   planning to its source. Section 3.1: the vocabulary is an OWL ontology of our own on the CSS
