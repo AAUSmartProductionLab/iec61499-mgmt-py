@@ -93,6 +93,9 @@ def prop(kind="value", value="", low="", high="", unit="mL", value_type="xs:doub
 @pytest.mark.parametrize("wanted, given, status", [
     (prop(value="2.0"), prop("range", low="0.5", high="10.0"), "match"),          # a value in an offered range
     (prop(value="12"), prop("range", low="0.5", high="10.0"), "mismatch"),
+    (prop(value="0.5"), prop("range", low="0.5", high="10.0"), "match"),            # the bounds belong to it
+    (prop(value="10.0"), prop("range", low="0.5", high="10.0"), "match"),
+    (prop(value="2"), prop("range", low="0.5", high=""), "unknown"),                # a bound missing
     (prop("range", low="0", high="0.1"), prop(value="0.05"), "match"),              # at most so much fill error
     (prop("range", low="0", high="0.01"), prop(value="0.05"), "mismatch"),
     (prop(value="2"), prop(value="2.0", value_type="xs:float"), "match"),           # numbers as numbers
