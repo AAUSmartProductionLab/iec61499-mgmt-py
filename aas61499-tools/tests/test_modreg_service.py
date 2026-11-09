@@ -296,11 +296,14 @@ def test_the_skill_editor_has_a_flow_checked_and_a_skill_planned(service, aas_se
     [finding] = answer["skills"]["Dispensing"]
     assert finding["step"] == "Dispense" and finding["what"] == "needs LinearAxis_ActualPosition.Position >= 40.0, but it is 0.0"
     assert finding["fix"] == ["MoveAxis(Position=40.0)"]
-    # A skill planned and described on the server, then checked there with the others.
-    status, answer = post(f"{url}/plan/FillingModuleAAS", {"capability": "Filling", "values": {"FillVolume": 2.0},
-                                                          "results": ["FillWeight"], "name": "FillTwo", "write": True})
+    # A skill planned and described on the server, then checked there with the others. Its values as
+    # the skill editor may send them (text; one not given); what the module offers is derived anew.
+    status, answer = post(f"{url}/plan/FillingModuleAAS", {"capability": "Filling", "results": ["FillWeight"], "name": "FillTwo",
+                                                          "values": {"FillVolume": "2.0", "ContainerType": "vial", "GraspDiameter": None},
+                                                          "write": True})
     assert status == 200 and [s["skill"] for s in answer["steps"]] == ["MoveAxis", "Dispense", "Home", "Weigh"]
     assert answer["name"] == "FillTwo" and answer["stored"].endswith("Skills")
+    assert ("FillTwo", "AfterReconfiguration") in [(c["skill"], c.get("Availability")) for c in answer["derived"]["capabilities"]]
     status, answer = post(f"{url}/check/FillingModuleAAS")
     assert answer["skills"] == {"Dispensing": [], "FillTwo": []}
     assert post(f"{url}/plan/FillingModuleAAS", {"capability": "Filling", "values": {"FillVolume": 2.0},

@@ -28,10 +28,13 @@ HTTP (JSON):
                                 against what the capability keeps (its bounds the values give)
     POST   /plan/<shell>        plan a skill: {"capability": "Filling", "values": {"FillVolume": 2.0},
                                 "results": ["FillWeight"], "name": "FillTwo", "write": true}; the steps
-                                and the flow, and with write the skill described on the AAS server. The
-                                capability may be one the module does not offer, narrower than one it
-                                does (BottomUpFilling): planned as the vocabulary defines it, and every
-                                plan checked in time against the requirement first
+                                and the flow, and with write the skill described on the AAS server and
+                                the module's offered capabilities derived anew. The capability may be
+                                one the module does not offer, narrower than one it does
+                                (BottomUpFilling): planned as the vocabulary defines it, and every plan
+                                checked in time against the requirement first. A value may be text: a
+                                number written as text is a number, other text the planner ignores
+                                where it uses none
     POST   /match               which resources offer what a step requires (modreg.match): {"requirements":
                                 [{"name", "reference"}], "parameters": [the recipe's], "aasIds": [...]};
                                 a reference is a model reference to a product's required capability on
@@ -61,6 +64,7 @@ from datetime import datetime, timezone
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import math
 from pathlib import Path
 import threading
 import urllib.error
@@ -118,6 +122,20 @@ def mapped_last(items: list[dict]) -> list[dict]:
         return (any(sm.get("idShort") == "AssetInterfacesMappingConfiguration" for sm in item.get("submodels", []))
                 or bool(item.get("asset_interfaces_mapping_configuration")))
     return sorted(items, key=holds)
+
+
+def given(values) -> dict:
+    """The values a plan is asked with, as the planner takes them: a number written as text is a
+    number, a value not given (null, NaN, empty) is left out, other text stays text (the planner
+    ignores what it does not use)."""
+    found = {}
+    for name, value in (values.items() if isinstance(values, dict) else ()):
+        if isinstance(value, str):
+            value = matching.typed(value)
+        if value is None or (isinstance(value, float) and math.isnan(value)):
+            continue
+        found[name] = value
+    return found
 
 
 class AasServer:
@@ -353,12 +371,13 @@ class Registry:
     def plan(self, shell: str, request: dict) -> dict:
         """A new module level skill planned for a capability of a module on the AAS server
         (``modplan``): its steps and its flow; with ``write`` the skill described on the server, as
-        the skill editor saves one (``modsync reconfigure`` builds it)."""
+        the skill editor saves one (``modsync reconfigure`` builds it), and the module's offered
+        capabilities derived anew (``derived``, as ``derive`` answers)."""
         from modplan.compose import compose, planned        # the planning extra
         from modplan.lift import flow, parts
         from modplan.plan import NoPlan
         from modplan.read import read
-        capability, values = request.get("capability"), request.get("values") or {}
+        capability, values = request.get("capability"), given(request.get("values"))
         results = tuple(request.get("results") or ())
         if not capability:
             raise Refused(400, "plan", ["name the capability to plan"])
@@ -377,6 +396,12 @@ class Registry:
             raise Refused(422, "plan", [str(e)]) from e
         except (desired.NotDescribed, ValueError) as e:
             raise Refused(422, "plan", [str(e)]) from e
+        if request.get("write"):
+            # Whoever planned it (the skill editor, Match and plan) is told what the module offers now.
+            try:
+                found["derived"] = self.derive(shell)
+            except Refused as e:
+                found["derived"] = {"error": str(e), "reasons": e.reasons}
         return found
 
     @staticmethod
