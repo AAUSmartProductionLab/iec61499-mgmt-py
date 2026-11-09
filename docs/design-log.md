@@ -20,6 +20,26 @@ A running log of design considerations made while building, for writing the pape
 
 ## 9 Nov 2026
 
+- **The paper describes how the AAS becomes a GTPyhop domain, with GTPyhop's use in production
+  cited.** *CIRP*. The co-author found the conversion under-described. As `modplan.plan` builds it
+  (dumped for the filling module on 9 Nov): a state variable per meaning a constraint is about
+  (`v_Position`, `v_ContentVolume`, each subject to value); an action per capability of a component
+  (Positioning, Dosing, Referencing, Taring, Weighing), a Python function that applies the Post if
+  the Pre holds and every invariant and the requirement's bounds hold at its start and its end; a
+  unigoal method per postcondition (`m_Dosing_ContentVolume`; `m_Referencing_Position` before
+  `m_Positioning_Position`, as a Post `=` comes before `given`), which returns the action's unmet
+  preconditions as goals and then the action; GTPyhop's `m_split_multigoal` for the two goal lists
+  (the required capability's Post, then the rest state); depth-first refinement with a verification
+  of each goal after its method (`_verify_g`), backtracking otherwise. The trace for 2 mL into a vial
+  (Dosing, its precondition a goal reached by Positioning, Referencing for the rest state) is the
+  paper's example. Source: Belcamino et al. (RO-MAN 2024), GTPyhop for HTN planning of collaborative
+  assembly, whose plans are built by hand from primitive actions and whose conclusion names automating
+  that as what would make it more versatile, which is what the generated methods do. Searched for
+  GTPyhop or Pyhop in production systems: none other peer-reviewed; Parashar et al. (arXiv 2103.07544)
+  use Pyhop for robotic assembly, "sufficient" for tasks of low complexity, but their venue is unclear,
+  so not cited. The paper now has 20 sources, one above the 19 it had; the memory note of 17 is out
+  of date.
+
 - **The paper says why GTPyhop and not a planner for PDDL 2.1 or HDDL.** *CIRP*, *Journal*. Asked by
   the co-author. Three reasons, each from what was built: GTPyhop works on the AAS's numbers and
   formulas directly, which HDDL 1.0 lacks (the export makes every value an object and every sum a
