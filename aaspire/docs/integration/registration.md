@@ -33,7 +33,8 @@ The service keeps each profile, its AAS and the integrator's record in its store
 | --- | --- |
 | `POST /profiles`, `GET /profiles`, `GET /profiles/<id>[/profile\|/aas\|/registration]`, `DELETE /profiles/<id>` | Registering, reading and removing a resource |
 | `POST /check/<module>` | The Skill Editor: is this skill buildable on this module? |
-| `POST /plan/<module>` | The Skill Editor: plan a skill for a requirement ([modplan](../planning/modplan.md)) |
+| `POST /plan/<module>` | The Skill Editor and the Planner's Match and plan: plan a skill for a requirement ([modplan](../planning/modplan.md)); written, the offered capabilities derived anew |
+| `POST /match` | The Planner's Match resources and Match and plan: which resources offer what a step requires, with the one matcher the agents, the plan check and the evaluation use (`modreg.match`) |
 | `POST /capabilities/<module>` | The offered capabilities derived from the skills |
 | `POST /process/<product>` | The Planner and the Configurator: the product's process AAS on a line, from the bindings, with the plan check's result |
 | `GET /build/<id>`, `PUT /build/<id>` | The integrator's record of what was built |
