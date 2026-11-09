@@ -1,19 +1,22 @@
 """What an agent reads from the AAS server: environments, a product's steps, a resource's offer.
 
 Everything here works on the JSON an AAS server holds (an environment: one shell and its submodels),
-whoever built it, with the helpers of the plan check (``modreg.plancheck``).
+whoever built it, with the helpers of the plan check (``modreg.plancheck``) and the lab's one matcher
+(``modreg.match``).
 
 - A **step** of a product is a step of its Production Sequence, in its order, with the required
   capability it names: a capability container of the product's Capability Description (the
   capability, its meaning as a supplemental id, and the values the product needs in its property
   set). The container is what a call for proposals carries.
 - An **offer** is what a resource answers with: the offered capability of the same meaning (or of
-  a narrower one: a module that fills bottom-up fills) whose properties cover the required values,
-  the skill that realizes it, whether that skill is built (``Deployment``: it runs now) or only
-  described (a reconfiguration creates it first), and the skill's arguments: each input of its Start
-  command given the required value of the same meaning. Of several, one of the same meaning before a
-  narrower one, and a built skill before one a reconfiguration creates. A module's offer also says
-  where a shuttle hands it the product (its station).
+  a narrower one: a module that fills bottom-up fills) whose properties meet the required values
+  (``modreg.match``; a property it says nothing about is not asked, and its constraints the agent
+  checks against the state, below), the skill that realizes it, whether that skill is built
+  (``Deployment``: it runs now) or only described (a reconfiguration creates it first), and the
+  skill's arguments: each input of its Start command given the required value of the same meaning.
+  Of several, one of the same meaning before a narrower one, and a built skill before one a
+  reconfiguration creates. A module's offer also says where a shuttle hands it the product (its
+  station).
 - A module's **station** is its transfer point (the coordinate meaning TransferPoint) in the planar
   table's frame, through the coordinates the AASs of the module, the line and the table give.
 - A **transport** is asked for as a product asks for a step: a required Transporting with the
@@ -30,13 +33,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import base64
-import functools
 import json
 import operator
 import urllib.parse
 import urllib.request
 
-from modreg.plancheck import at, children, covers, number, resolve, semantic_ids, shell_of, unit_of
+from modreg.match import Capability, evaluate, offered, read
+from modreg.plancheck import at, children, number, resolve, semantic_ids, shell_of
 
 MEANS = "https://smartproductionlab.aau.dk/semantics"
 MODULE_TYPE = "Resource/Module"          # the end of a module's assetType
@@ -47,21 +50,6 @@ HELD_BY, HOLDING, OCCUPANCY = f"{MEANS}/HeldBy", f"{MEANS}/Holding", f"{MEANS}/O
 CUSTODY = {HOLDING}                      # what a capability no skill realizes may change
 IDTA = "https://admin-shell.io/idta"
 COMPARE = {"=": operator.eq, "!=": operator.ne, "<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge}
-
-
-@functools.cache
-def _vocabulary():
-    from modplan.vocabulary import Vocabulary
-    return Vocabulary()
-
-
-def narrows(offered: str, wanted: str) -> bool:
-    """The capability ``offered`` is ``wanted`` or a narrower one (both meanings, IRIs)."""
-    if offered == wanted:
-        return True
-    if not (offered.startswith(MEANS) and wanted.startswith(MEANS)):
-        return False
-    return wanted.rsplit("/", 1)[-1] in _vocabulary().lineage(offered.rsplit("/", 1)[-1])
 
 
 def b64(identifier: str) -> str:
@@ -140,16 +128,6 @@ def steps(product: dict) -> list[Step]:
                 found.append(Step(at(step, "Name")["value"] if at(step, "Name") else step["idShort"],
                                   int(number((at(step, "Order") or {}).get("value")) or 0), container))
     return sorted(found, key=lambda s: s.order)
-
-
-def required_values(required: dict) -> dict[str, dict]:
-    """The values a required capability asks for, by meaning: the property's Value element."""
-    found = {}
-    for container in children(at(required, "PropertySet")):
-        value = at(container, "Value")
-        for meaning in meanings(value):
-            found[meaning] = value
-    return found
 
 
 # A resource's offer ---------------------------------------------------------------------------------
@@ -236,20 +214,12 @@ def offer(module: dict, required: dict, state: dict[str, object] | None = None,
     the Pre constraints are checked against, by meaning; ``changing``: those of its meanings that
     change by themselves (a refusal only for them is busy)."""
     name = shell_of(module)["idShort"]
-    wanted = meanings(at(required, "Capability"))
-    asked = required_values(required)
+    requirement = read(required) or Capability("", [])
     reasons, found, waiting = Refusal(), [], []
-    containers = [c for capability_set in children(submodel(module, "CapabilityDescription")) for c in children(capability_set)]
-    for container in containers:
-        offered = meanings(at(container, "Capability"))
-        exact = bool(wanted & offered)
-        if not exact and not any(narrows(o, w) for o in offered for w in wanted):
-            continue
-        given = {m: at(c, "Value") for c in children(at(container, "PropertySet"))
-                 for m in meanings(at(c, "Value"))}
-        missing = [f"{container['idShort']}: {meaning.rsplit('/', 1)[-1]} = {_shown(value)} is not offered"
-                   for meaning, value in asked.items()
-                   if meaning in given and (unit_of(given[meaning]) != unit_of(value) or not covers(given[meaning], value))]
+    for candidate in evaluate(requirement, offered(module), narrower=True):
+        container = candidate.capability.container
+        missing = [f"{container['idShort']}: {check.reason}" for check in candidate.checks
+                   if check.status != "match" and check.why != "undescribed"]
         if missing:
             reasons += missing
             waiting.append(False)
@@ -260,22 +230,22 @@ def offer(module: dict, required: dict, state: dict[str, object] | None = None,
             waiting.append(all(about in changing for about, _ in broken))
             continue
         effects = {about: operand for kind, about, op, operand in constraints(container) if kind == "Post" and op == "="}
-        skills = [s for r in children(at(container, "CapabilityRelations")) if (s := resolve([module], r.get("second")))]
+        skills = [s for r in candidate.capability.realized_by if (s := resolve([module], r))]
         if not skills and effects and set(effects) <= CUSTODY and _available(container):
-            found.append((not exact, False, Offer(name, container["idShort"], "", True, effects=effects)))
+            found.append((not candidate.exact, False, Offer(name, container["idShort"], "", True, effects=effects)))
             continue
         if not skills:
             reasons.append(f"{container['idShort']}: no skill realizes it")
             waiting.append(False)
             continue
-        found.append((not exact, not _built(skills[0]),
-                      Offer(name, container["idShort"], skills[0]["idShort"], _built(skills[0]), _arguments(skills[0], asked),
-                            effects=effects)))
+        found.append((not candidate.exact, not _built(skills[0]),
+                      Offer(name, container["idShort"], skills[0]["idShort"], _built(skills[0]),
+                            _arguments(skills[0], requirement), effects=effects)))
     if found:
         return min(found, key=lambda f: f[:2])[2]
     reasons.busy = bool(waiting) and all(waiting)
     if not reasons:
-        reasons.append(f"{name} offers no capability of the meaning {', '.join(sorted(wanted)) or '(none)'}")
+        reasons.append(f"{name} offers no capability of the meaning {', '.join(sorted(requirement.meanings)) or '(none)'}")
     return reasons
 
 
@@ -302,14 +272,14 @@ def _built(skill: dict) -> bool:
     return deployment is None or deployment.get("value") != "Described"
 
 
-def _arguments(skill: dict, asked: dict[str, dict]) -> dict[str, float]:
+def _arguments(skill: dict, requirement: Capability) -> dict[str, float]:
     """Each input of the skill's Start command given the required value of the same meaning."""
+    asked = {p.meaning: number(p.value) for p in requirement.properties if p.kind == "value"}
     found = {}
     for variable in children(at(skill, "Start", "Start")):
         for meaning in meanings(variable):
-            value = number((asked.get(meaning) or {}).get("value"))
-            if value is not None:
-                found[variable["idShort"]] = value
+            if asked.get(meaning) is not None:
+                found[variable["idShort"]] = asked[meaning]
     return found
 
 
@@ -378,7 +348,3 @@ def state_of(elements: list[dict]) -> dict[str, object]:
     """The state among interaction elements, by meaning (empty if there is none)."""
     return {meaning: _typed(prop) for element in elements if element.get("idShort") == "State"
             for prop in children(element) for meaning in semantic_ids(prop)[:1]}
-
-
-def _shown(value: dict) -> str:
-    return value.get("value") if "value" in value else f"{value.get('min')} to {value.get('max')}"
