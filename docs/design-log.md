@@ -20,6 +20,22 @@ A running log of design considerations made while building, for writing the pape
 
 ## 9 Nov 2026
 
+- **Section 3.2 in plain words, walked along the filling case; the equation out.** *CIRP*. The
+  co-author asked what "lifted to a partial order" and the COLIN sentence meant, so a reader would
+  too. The section now names the planner's three inputs (the task from the vocabulary, a narrower
+  class inheriting the broader one's conditions; the primitives' capabilities; the module at rest
+  and the product's Process Parameters), says that it works backwards from the goal with
+  Dispense, MoveAxis and Home as the example, and says instead of "lifted" that only the orders
+  that matter are kept (the planning term is deordering, Bäckström 1998, not cited for the limit of
+  19 sources). Equation (1) became a sentence: constant rates between events make a weighted sum of
+  states a straight line, so a bound that holds at both ends holds in between. GTPyhop is said to be
+  used with goals only and with methods generated from the capabilities, not written by hand, as
+  a reader who knows HTN planning would ask; COLIN is named for the shared assumption, with the
+  difference (a linear program over all events, against one equation and a domain read from the
+  AAS). Section 3.1 points to case 3 of Fig. 2 for the three additions instead of its "top", which
+  does not show them. About as long as before: 79 words more, the display equation gone. Not said,
+  as the paper has no room: IDTA 02020's ComposedOf, which the planner would try first, is not read
+  from the AAS yet, so it plays no part.
 - **Fig. 1 and Section 3.1 name every AAS with the submodels the approach uses, as on the lab's AAS
   server.** *CIRP*. The figure showed two of the product's submodels and no process AAS, while the
   approach follows a step of the Production Sequence to its process in Process Parameters (IDTA
