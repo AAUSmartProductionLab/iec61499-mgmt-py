@@ -20,6 +20,39 @@ A running log of design considerations made while building, for writing the pape
 
 ## 9 Nov 2026
 
+- **One capability matcher, in Python, for the web UI, the agents, the plan check and Q4.** *Journal*,
+  *CIRP* where the matching rules are described. Matching was written four times in two languages
+  (the web UI's `capabilityMatching.ts`, `lineagents.aas`, `modreg.plancheck.covers`, `cell/eval/q4.py`),
+  with the broader-class route only in the UI. Now `modreg/match.py`, behind the skill service's
+  `POST /match`; the UI is its client (commits c94af1a to 437236f; the fork's 8e9a0a7 to 7c96c87,
+  local, not pushed). Instead of keeping the matchers alike, or a shared rule specification: the
+  agents, the plan check and Q4 are Python, and the service already plans and checks.
+  - The UI's strict rules, not `covers`: units and value types must agree (the unit read from the Unit
+    qualifier first, then the IEC 61360 data specification); where no rule compares, the answer is
+    unknown, never yes. Extended: a property listing the values a module takes (ContainerType) is
+    matched as "one of"; an offered property without a value (a state) is unknown.
+  - Each property comparison carries a reason code (`why`: unit, undescribed, state, ...), and each
+    caller keeps its own decision: the agents ignore an undescribed property, the plan check writes a
+    finding, Q4 needs every property. Instead of forcing one decision on all.
+  - Constraints are flagged in matching, not evaluated there: the checker evaluates them in time.
+  - Narrower classes count as an option (`narrower=`), on for the agents only: unknown ranks above
+    mismatch, so a narrower offer could otherwise win where it should not (a syringe skill for a vial).
+  - Only capabilities of role Offered count (the agents and the plan check looked at the components'
+    sets too); the plan check takes the offer the bound skill realizes, not the first of its meaning.
+  - The service computes the values a plan or check is asked with, text included (ContainerType =
+    syringe), and `/plan` with write derives the module's offered capabilities, so the Skills plugin
+    and Match and plan behave alike. Differences found and fixed between them: the Skills plugin sent
+    the capability's display name, keyed values by display names, turned text into NaN, suggested
+    property names as results and never derived. Left, as right: its default name `Planned<Capability>`
+    (no product there), and planning without a requirement check (it has no requirement).
+  - A constant a planned skill sets is written as a number (`xs:double`), not as text; the strict rules
+    showed it.
+  - Q4 re-run on the matcher: every verdict and answer as in the paper's run (373 rows, 0 differ). The
+    agents' offers on the example line: 1,134 calls, all as before.
+  - Data fixed with it: `cell/examples/bottom_up_syringe.py` set mm in the Unit qualifier of the bounds
+    and the barrel's geometry but left FillVolume's mL in their data specification; both now say mm
+    (the product on the server keeps the old until the script is run again).
+
 - **The paper describes how the AAS becomes a GTPyhop domain, with GTPyhop's use in production
   cited.** *CIRP*. The co-author found the conversion under-described. As `modplan.plan` builds it
   (dumped for the filling module on 9 Nov): a state variable per meaning a constraint is about

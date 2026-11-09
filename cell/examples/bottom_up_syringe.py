@@ -50,6 +50,18 @@ required = at(submodel("CapabilityDescription"), "RequiredCapabilities", "Fillin
 capability = at(required, "Capability")
 capability["supplementalSemanticIds"][0]["keys"][0]["value"] = f"{LAB}/BottomUpFilling"
 capability["displayName"] = [{"language": "en", "text": "Bottom-up filling"}]
+def in_mm(element):
+    """The element's unit made mm wherever it is stated: its Unit qualifier and its data specification
+    (both are copied from FillVolume's, in mL; the matcher reads the qualifier first, 9 Nov)."""
+    for q in element.get("qualifiers", []):
+        if q.get("type") == "Unit" or q.get("type", "").endswith("Unit"):
+            q["value"] = "mm"
+    for spec in element.get("embeddedDataSpecifications") or []:
+        content = spec.get("dataSpecificationContent") or {}
+        if "unit" in content:
+            content["unit"] = "mm"
+
+
 properties = at(required, "PropertySet")
 volume = at(properties, "FillVolume")
 for name, value in (("MinImmersion", "-2.0"), ("MaxImmersion", "3.0")):
@@ -59,9 +71,7 @@ for name, value in (("MinImmersion", "-2.0"), ("MaxImmersion", "3.0")):
     inner["displayName"] = [{"language": "en", "text": name}]
     inner["supplementalSemanticIds"][0]["keys"][0]["value"] = f"{LAB}/{name}"
     inner["value"] = value
-    for q in inner.get("qualifiers", []):
-        if q.get("type") == "Unit":
-            q["value"] = "mm"
+    in_mm(inner)
     properties["value"].append(made)
 parameters = at(submodel("ProcessParameters"), "Processes", "Filling", "ProductParameters") if any(
     c.get("idShort") == "Processes" for c in submodel("ProcessParameters")["submodelElements"]) else \
@@ -72,9 +82,7 @@ for name, value in (("InnerDiameter", "6.35"), ("InnerBottomHeight", "11.0"), ("
     made["idShort"] = name
     made["semanticId"]["keys"][0]["value"] = f"{LAB}/{name}"
     made["value"] = value
-    for q in made.get("qualifiers", []):
-        if q.get("type") == "Unit" or q.get("type", "").endswith("Unit"):
-            q["value"] = "mm"
+    in_mm(made)
     parameters["value"].append(made)
 json.dump(env, open(f"{FOLDER}/{NEW}AAS.json", "w", encoding="utf-8"), indent=1)
 done = AasServer(REPO).publish(env)
