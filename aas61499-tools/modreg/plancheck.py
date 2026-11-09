@@ -7,9 +7,12 @@ A parameter of a skill is an input variable of the Operation of its Start comman
 the process AAS's (``check_process``), or, as the process sequence planner writes them today, the
 recipe's own (``check``).
 
-Works on AAS environments (the JSON an AAS server holds), whoever built them.
+The required capability is compared with what the resource offers by the lab's one matcher
+(``modreg.match``). Works on AAS environments (the JSON an AAS server holds), whoever built them.
 """
 from __future__ import annotations
+
+from .match import evaluate, number, offered, read, unit_of
 
 
 # What an AAS environment holds ------------------------------------------------------------------
@@ -53,39 +56,6 @@ def shell_of(env: dict) -> dict:
 
 # Checking ---------------------------------------------------------------------------------------
 
-def number(value) -> float | None:
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def unit_of(element: dict) -> str | None:
-    """An element's unit: its ``Unit`` qualifier, else its IEC 61360 data specification."""
-    for qualifier in element.get("qualifiers") or []:
-        if qualifier.get("type") == "Unit":
-            return qualifier.get("value")
-    for spec in element.get("embeddedDataSpecifications") or []:
-        if spec.get("dataSpecificationContent", {}).get("unit"):
-            return spec["dataSpecificationContent"]["unit"]
-    return None
-
-
-def covers(offered: dict, wanted: dict) -> bool:
-    """An offered value, list of values or range covers what a product asks for: a value, or a range
-    the offered value has to lie in (at most so much fill error)."""
-    if offered.get("modelType") == "SubmodelElementList":
-        return any(covers(item, wanted) for item in offered.get("value") or [])
-    if wanted.get("modelType") == "Range" and offered.get("modelType") != "Range":
-        value = number(offered.get("value"))
-        return value is not None and number(wanted.get("min")) <= value <= number(wanted.get("max"))
-    if offered.get("modelType") == "Range":
-        value = number(wanted.get("value"))
-        return value is not None and number(offered.get("min")) <= value <= number(offered.get("max"))
-    a, b = number(offered.get("value")), number(wanted.get("value"))
-    return a == b if a is not None and b is not None else str(offered.get("value")) == str(wanted.get("value"))
-
-
 def step_fits(name: str, envs: list[dict], process: dict | None, resource: dict | None, skill: dict | None,
               bindings: list[dict]) -> list[str]:
     """What does not hold of one step bound to ``resource`` and its ``skill``, ``bindings`` handing
@@ -95,30 +65,34 @@ def step_fits(name: str, envs: list[dict], process: dict | None, resource: dict 
         return [f"{name}: no such {' or '.join(missing)}"]
     found = []
 
-    # The capability the process requires is one the resource offers, realized by this skill.
-    wanted = resolve(envs, at(process, "RequiredCapability")["value"])
-    needs = resolve(envs, {**at(process, "RequiredCapability")["value"],
-                           "keys": at(process, "RequiredCapability")["value"]["keys"][:-1]})
-    meaning = set(semantic_ids(wanted or {})[1:])
-    offers = [container for capability_set in children(next((s for s in resource["submodels"] if s["idShort"] == "CapabilityDescription"), None))
-              for container in children(capability_set) if meaning & set(semantic_ids(at(container, "Capability") or {})[1:])]
-    if wanted is None or not offers:
+    # The capability the process requires is one the resource offers (modreg.match), realized by this
+    # skill: of several of its meaning, the one this skill realizes.
+    reference = at(process, "RequiredCapability")["value"]
+    needs = resolve(envs, {**reference, "keys": reference["keys"][:-1]})
+    requirement = read(needs) if needs is not None else None
+    offers = evaluate(requirement, offered(resource)) if requirement is not None and requirement.meanings else []
+    if not offers:
         return [f"{name}: {shell_of(resource)['idShort']} offers no capability with the meaning the process requires"]
-    offer = offers[0]
-    realized = [resolve(envs, relation.get("second")) for relation in children(at(offer, "CapabilityRelations"))]
-    if skill not in realized:
+
+    def realizes(candidate) -> bool:
+        return skill in [resolve(envs, r) for r in candidate.capability.realized_by]
+    candidate = next((c for c in offers if realizes(c)), offers[0])
+    offer = candidate.capability.container
+    if not realizes(candidate):
         found.append(f"{name}: the capability {offer['idShort']} is not realized by {skill['idShort']}")
-    for asked in children(at(needs, "PropertySet")):
-        value = at(asked, "Value")
-        given = next((at(c, "Value") for c in children(at(offer, "PropertySet"))
-                      if set(semantic_ids(at(c, "Value"))[1:]) & set(semantic_ids(value)[1:])), None)
-        if given is None:
-            found.append(f"{name}: {offer['idShort']} says nothing about {asked['idShort']}")
-        elif unit_of(given) != unit_of(value):
-            found.append(f"{name}: {asked['idShort']} is asked in {unit_of(value)} and offered in {unit_of(given)}")
-        elif not covers(given, value):
-            asked_for = value.get("value", f"{value.get('min')} to {value.get('max')}")
-            found.append(f"{name}: {asked['idShort']} = {asked_for} is not covered by {offer['idShort']}")
+    for asked, check in zip(requirement.properties, candidate.checks):
+        given = next((p for p in candidate.capability.properties if p.meaning == asked.meaning), None)
+        asked_for = {"range": f"{asked.min} to {asked.max}", "values": ", ".join(asked.values)}.get(asked.kind, asked.value)
+        if check.status == "match":
+            continue
+        if check.why == "undescribed":
+            found.append(f"{name}: {offer['idShort']} says nothing about {asked.name}")
+        elif check.why == "unit":
+            found.append(f"{name}: {asked.name} is asked in {asked.unit or None} and offered in {given.unit or None}")
+        elif check.status == "mismatch":
+            found.append(f"{name}: {asked.name} = {asked_for} is not covered by {offer['idShort']}")
+        else:
+            found.append(f"{name}: {asked.name} = {asked_for} cannot be compared with {offer['idShort']}: {check.detail}")
 
     # What is bound reaches a parameter of the skill, within its limits.
     for binding in bindings:
