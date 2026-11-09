@@ -20,6 +20,15 @@ A running log of design considerations made while building, for writing the pape
 
 ## 9 Nov 2026
 
+- **Second cut: half a column more.** *CIRP*. At 4,726 words the paper was still half a column over
+  (with the taller Fig. 1 and its references), so about 290 words more had to go; the body is now
+  4,468 words. Out: Albus et al. (one sentence and one row of Table 1; Blumhofer et al. stay as the
+  closer AAS work), 17 sources; the Method section's roadmap paragraph (its subsections and Fig. 1
+  carry it); the Control Component comparison in the Skills paragraph (the templates are now named,
+  with their IDTA numbers, in Section 3.3, where the base application holds what they describe); the
+  placement below DIN 8580 and VDI 2860; the conclusion's limits said in fewer words, every point kept;
+  shorter captions of Fig. 1, Fig. 2 and Table 1.
+
 - **The paper cut back to six pages: the PDDL comparison down to one sentence, every paragraph
   tightened, two sources out.** *CIRP*. Compiled at 5,462 words it ran onto a seventh page (about 18
   lines of text and all the references); the body before the day's additions, 4,624 words, had fit.
