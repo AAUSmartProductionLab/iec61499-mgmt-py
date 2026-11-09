@@ -20,6 +20,32 @@ A running log of design considerations made while building, for writing the pape
 
 ## 9 Nov 2026
 
+- **A requirement's bound is kept or refused, never assumed; the rate rule completed; ComposedOf
+  out of the planner.** *CIRP*, *Journal*. Three gaps found while tracing where each fact of the
+  planning comes from. (1) The checker skipped a bound whose quantity no running step defines, which
+  is right between doses (the needle's depth is defined only while it doses) but also let a module
+  that states no formula for the depth have plain Filling planned and checked as BottomUpFilling
+  (tried: without Dosing's formula the planner returned MoveAxis 40, Dispense, Home). Now the
+  planner refuses a bound on a quantity the module neither defines by a formula, changes, nor
+  starts with, and the checker reports a bound of the requirement that no step made known.
+  (2) `Domain.nonlinear` existed but nothing used it, although checking bounds at the events only is
+  exact for linear formulas alone: a requirement with bounds over time is now refused by the planner
+  and reported by the checker when a formula is not linear in what changes. (3) The coordinated steps
+  set a rate only if exactly one of the pair's rates was a parameter (a Range in the Capability
+  Description); with both settable the pair was refused unless the defaults matched. Now the rate of
+  the step that would break the bound is set to follow its partner's, else the partner's to follow
+  it, whichever stays within its range. Which rate can be set is the module's to say (a Range or
+  one value: the pump's FlowRate is a Dispense input with limits, the axis's Speed its equipment's
+  one value); the vocabulary says only what a rate is the rate of. The FlowRate input's description
+  in `filling.yaml` said "calibration", which the planner contradicts: now "a planned skill may set
+  it within these limits". (4) IDTA 02020's ComposedOf (an optional relation of a capability, beside
+  RealizedBy, GeneralizedBy and the constraints) was an outer loop of the search that nothing fed:
+  `read.py` never read it. Removed rather than wired, as a module's few primitives need no hint and
+  a composite's parts are already its Skills flow; it could return as a search hint for large
+  domains. The paper never mentioned it. Tests: `tests/test_modplan_bounds.py`. Q4 re-run on these
+  changes before they were committed (`cell/eval/results/q4-2026-11-09T1348.jsonl`): every mutant's
+  verdict and every answer as in the run behind the paper (`q4-2026-11-06T1253`), so its numbers stand.
+
 - **Section 3.2 in plain words, walked along the filling case; the equation out.** *CIRP*. The
   co-author asked what "lifted to a partial order" and the COLIN sentence meant, so a reader would
   too. The section now names the planner's three inputs (the task from the vocabulary, a narrower

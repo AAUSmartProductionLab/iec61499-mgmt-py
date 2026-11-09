@@ -86,7 +86,7 @@ skills:
     parameters:
       Volume: {unit: mL, minimum: 0.5, maximum: 10.0, default: 1.0, meaning: FillVolume, description: Volume to dispense}
       FlowRate: {unit: mL/s, minimum: 0.1, maximum: 5.0, default: 1.0, meaning: FlowRate,
-                 description: Flow rate of the station (calibration)}
+                 description: How fast the pump doses; a planned skill may set it within these limits}
     after: Volume / FlowRate
     # What holds on this module of the Dosing it realizes (the vocabulary says the rest): the pump
     # doses through the needle on the axis, so a dose starts with the needle at the fill position or

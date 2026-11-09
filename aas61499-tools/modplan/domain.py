@@ -70,7 +70,6 @@ class Capability:
     pre: list[Constraint] = field(default_factory=list)
     post: list[Constraint] = field(default_factory=list)
     invariant: list[Constraint] = field(default_factory=list)
-    compositions: list[list[str]] = field(default_factory=list)    # its parts, by name (an offered one)
     results: dict[str, list[Constraint]] = field(default_factory=dict)   # a result and the state it needs
     variables: dict[str, Var] = field(default_factory=dict)        # a property that is a state, and which
     rates: dict[Var, str] = field(default_factory=dict)            # a state it changes at the rate a property says

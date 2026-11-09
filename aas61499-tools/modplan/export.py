@@ -31,8 +31,9 @@ task network: the capability, the needs of the results, the rest state.
 Not expressed: invariants (``unchanged`` matters only when a plan is lifted; a comparison is a
 precondition here; in HDDL a comparison with a constant is reached at its bound), constraints whose
 operand is a formula (they say how a state follows in time, from the product's geometry and the
-rates, which a sequential plan does not see: the checker's), properties that are neither numbers nor truth values, and in HDDL the
-compositions (a method for them would need actions restricted to their parts). A property not known
+rates, which a sequential plan does not see: the checker's), the coordinated steps (the tracking:
+a step paired with another at a rate set for it), and properties that are neither numbers nor truth
+values. A property not known
 is false (a predicate) or undefined (a function) in PDDL, where GTPyhop does not apply an action.
 """
 from __future__ import annotations
