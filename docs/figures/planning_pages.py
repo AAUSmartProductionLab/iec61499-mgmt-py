@@ -2,6 +2,7 @@
 
 - pipeline-planning: Fig. 1 (the page "pipeline") with the planning spelled out: Match and plan, a Plan
   card with its four steps, the capabilities that feed it, a planned skill S' with a parallel block;
+  every AAS with the submodels the approach uses, the process AAS among them (9 Nov);
 - planned-bottom-up: how the planner makes BottomUpFilling for the syringe from the module's primitives
   (one column, 440 px = 8.4 cm, no text below 12 px), the needle rising with the liquid in time;
 - primitives-to-composite: how a module's offered capabilities follow from its primitives' and the
@@ -213,7 +214,102 @@ def pipeline_planning(source: ET.Element) -> ET.Element:
                 p.set("y", f"{float(p.get('y')) + 14:g}")
     opc = next(c for c in root.iter("mxCell") if c.get("id") == "pp-c94").find("mxGeometry")
     opc.set("y", "83")
+    levels(model, root, add, line)
     return d
+
+
+def levels(model: ET.Element, root: ET.Element, add, line):
+    """Every AAS with the submodels the approach uses (review of 9 Nov): the product its Process
+    Parameters, Production Sequence and Capability Description; the process AAS, new, its Process
+    Information, Bindings and Validation, which matching writes; the module also its Hierarchical
+    Structures and what else it holds; a component its Skills, which hold its primitive. The line row
+    13 px and the module card 11 px taller; everything below moves down."""
+    cell = {c.get("id"): c for c in root.iter("mxCell")}
+
+    def geo(cid, x=None, y=None, w=None, h=None):
+        g = cell[cid].find("mxGeometry")
+        for k, v in (("x", x), ("y", y), ("width", w), ("height", h)):
+            if v is not None:
+                g.set(k, f"{v:g}")
+
+    def points(cid, a, b):
+        for p, (x, y) in zip(cell[cid].find("mxGeometry").findall("mxPoint"), (a, b)):
+            p.set("x", f"{x:g}"), p.set("y", f"{y:g}")
+
+    def moved(threshold, dy, parent="pp-n1"):
+        for c in root.iter("mxCell"):
+            if c.get("parent") != parent:
+                continue
+            g = c.find("mxGeometry")
+            if c.get("vertex") == "1" and float(g.get("y", 0)) >= threshold:
+                g.set("y", f"{float(g.get('y')) + dy:g}")
+            for p in g.iter("mxPoint"):
+                if float(p.get("y", 0)) >= threshold:
+                    p.set("y", f"{float(p.get('y')) + dy:g}")
+
+    # Below the line row 13 px lower, then below the module's chips 11 px more (the Plan card and the
+    # arrows into it stay with the module's top); the module's Skills box 11 px lower in its card.
+    moved(94, 13)
+    moved(185, 11)
+    moved(44, 11, "pp-n31")
+    sub ="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#A7ACB6;strokeColor=none;fontFamily=Arial;fontSize=9;" \
+          "fontColor=#FFFFFF;align=center;spacingLeft=2;spacingRight=2;fontStyle=1;"
+    note = label(9, GREY)
+
+    # Bands and their names.
+    geo("pp-c5", h=93), geo("pp-c6", y=53.5)
+    geo("pp-c7", h=169), geo("pp-c8", y=190.5)
+    geo("pp-c10", y=309)
+    # The product: three submodels, the required capability last, beside the arrow that takes it to
+    # matching under the process AAS.
+    geo("pp-n11", w=148, h=71), geo("pp-c12", w=148, h=71), geo("pp-c15", w=100), geo("pp-c16", x=129)
+    for cid, (y, v) in zip(("pp-c17", "pp-c18"), ((21, "Process Parameters"), (37, "Production Sequence"))):
+        cell[cid].set("value", v), cell[cid].set("style", sub), geo(cid, 6, y, 136, 14)
+    add("pp-n11", 6, 53, 136, 14, "Capability Description", sub)
+    # The process AAS: the product's recipe bound to the line, which matching writes and the
+    # orchestrator runs.
+    process = "pp-proc"
+    c = ET.SubElement(root, "mxCell", id=process, value="", style="group;tooltip=Process;", vertex="1", parent="pp-n1")
+    ET.SubElement(c, "mxGeometry", x="174", y="18", width="148", height="55", **{"as": "geometry"})
+    add(process, 0, 0, 148, 55, "", cell["pp-c12"].get("style"))
+    shell = ET.SubElement(root, "mxCell", id="pp-proc-shell", value="", style="group;tooltip=AAS shell;", vertex="1",
+                          parent=process)
+    ET.SubElement(shell, "mxGeometry", x="6", y="4", width="15", height="12", **{"as": "geometry"})
+    add("pp-proc-shell", 0, 0, 15, 12, "", cell["pp-c14"].get("style"))
+    add(process, 25, 1, 100, 17, "Process", cell["pp-c15"].get("style"))
+    add(process, 6, 21, 136, 14, "Process Information", sub)
+    add(process, 6, 37, 66, 14, "Bindings", sub)
+    add(process, 76, 37, 66, 14, "Validation", sub)
+    # Matching: as tall as the product; it binds the steps, back into the process AAS.
+    geo("pp-n19", h=71), geo("pp-c20", h=71)
+    add("pp-n19", 6, 56, 152, 14, "binds each step to a skill", note)
+    points("pp-c85", (166, 79), (362, 79))
+    line([(362, 42), (322, 42)], cell["pp-c88"].get("style"), "Bindings")
+    cell["pp-c86"].set("value", "")
+    points("pp-c87", (444, 89), (444, 117))
+    # The orchestrator runs the process AAS's plan.
+    geo("pp-n26", h=71), geo("pp-c27", h=71)
+    cell["pp-c30"].set("value", "runs the plan in the process AAS: occupies each module and calls its skills")
+    geo("pp-c30", h=44)
+    points("pp-c93", (671, 89), (671, 117)), geo("pp-c94", y=96)
+    # The module: a second row of submodels, the chips in one size; the runtime as tall as the module.
+    geo("pp-n31", h=157), geo("pp-c32", h=157)
+    geo("pp-n55", h=157), geo("pp-c56", h=157)
+    geo("pp-c36", 6, 21, 140, 14), geo("pp-c37", 152, 21, 146, 14)
+    cell["pp-c36"].set("style", sub), cell["pp-c37"].set("style", sub)
+    add("pp-n31", 6, 37, 140, 14, "Hierarchical Structures", sub)
+    add("pp-n31", 156, 37, 142, 14, "and Nameplate, Variables, AIMC", note)
+    # A component: its Skills submodel holds its primitive (drawn before the primitive's chip).
+    for group, p in (("pp-n63", "pp-c68"), ("pp-n69", "pp-c74"), ("pp-n75", "pp-c80")):
+        at = list(root).index(cell[p])
+        for k, (x, w, v, style) in enumerate((
+                (6, 86, "", "rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#F4F5F6;strokeColor=#A7ACB6;strokeWidth=1;"),
+                (6, 36, "Skills", sub))):
+            box_ = ET.Element("mxCell", id=f"{group}-skills{k}", value=v, style=style, vertex="1", parent=group)
+            ET.SubElement(box_, "mxGeometry", x=f"{x:g}", y="22", width=f"{w:g}", height="20", **{"as": "geometry"})
+            root.insert(at + k, box_)
+        geo(p, 48, 25, 38, 14)
+    model.set("pageHeight", "348"), model.set("dy", "348")
 
 
 # ---- page 2: BottomUpFilling planned ----------------------------------------------------------------

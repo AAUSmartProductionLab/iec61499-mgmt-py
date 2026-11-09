@@ -18,6 +18,27 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 9 Nov 2026
+
+- **Fig. 1 and Section 3.1 name every AAS with the submodels the approach uses, as on the lab's AAS
+  server.** *CIRP*. The figure showed two of the product's submodels and no process AAS, while the
+  approach follows a step of the Production Sequence to its process in Process Parameters (IDTA
+  02031-1) and from there to the required capability in the Capability Description (IDTA 02020); and
+  the product's facts that the planner starts from (a container's diameter, bottom and rim) are
+  Process Parameters' product parameters, not the Capability Description's, as the text had said.
+  Now the product shows all three; a process AAS card of its own shows Process Information,
+  Bindings and Validation, which matching writes (an arrow back from Match and plan) and the
+  orchestrator runs; the module adds Hierarchical Structures and notes Nameplate, Variables and
+  AIMC; a component shows its Skills holding its primitive. The product's requirement reaches
+  matching under the process card, so no arrow crosses a card. The line row grows by 13 px and
+  the module card by 11 px (Fig. 1 is 18 pt taller). The text says that one resource type describes
+  line, module and component alike, a component holding only its primitives' Skills and a module
+  what it needs as the unit the line calls, connects and reconfigures, and that the process AAS
+  holds the full plan, authored by hand or written by matching, into which a planned and deployed
+  skill is bound like any other. The IDTA numbers stand in the text (02006, 02011, 02017, 02020,
+  02027, 02031-1; Control Components 02015 and 02016) instead of as references, which would break
+  the limit of 19 sources; the lab's own submodels are named as such.
+
 ## 8 Nov 2026
 
 - **Pharma enters through validation (GAMP 5); the approach is said to carry over.** *CIRP*. "Pharma
