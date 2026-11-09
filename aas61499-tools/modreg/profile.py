@@ -109,6 +109,15 @@ def text(value) -> str:
     return str(value).lower() if isinstance(value, bool) else str(value)
 
 
+def constant(written: str) -> float | str:
+    """A value a skill sets (a constant of one of its steps, as the derivation reads it): the number it
+    is, if it reads as one, so that the capability states it as a number; else its text."""
+    try:
+        return float(written)
+    except ValueError:
+        return written
+
+
 def prop(value, value_type: str = "xs:string", description: str = "") -> dict:
     """A Property as the content of the field it goes into: the class aas-model's generator made for
     that field adds its semantic id (its description is the one given here)."""
@@ -1000,7 +1009,7 @@ def capability_description(found: list[Offer], stated: dict[str, tuple[str, Capa
             put(properties, prop, capability_property(prop, meaning(prop, value.semantic_id), value, derived=False))
         for found_prop in offer.properties:
             prop = local(found_prop.meaning)
-            value = (CapabilityProperty(value=found_prop.value, unit=found_prop.unit) if found_prop.value is not None else
+            value = (CapabilityProperty(value=constant(found_prop.value), unit=found_prop.unit) if found_prop.value is not None else
                      CapabilityProperty(minimum=float(found_prop.minimum), maximum=float(found_prop.maximum), unit=found_prop.unit))
             put(properties, prop, capability_property(prop, found_prop.meaning, value, derived=True))
         # A capability only a plan would realize has no skill yet (``offer.planned_offers``).

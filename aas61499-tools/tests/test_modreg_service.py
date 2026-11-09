@@ -304,6 +304,12 @@ def test_the_skill_editor_has_a_flow_checked_and_a_skill_planned(service, aas_se
     assert status == 200 and [s["skill"] for s in answer["steps"]] == ["MoveAxis", "Dispense", "Home", "Weigh"]
     assert answer["name"] == "FillTwo" and answer["stored"].endswith("Skills")
     assert ("FillTwo", "AfterReconfiguration") in [(c["skill"], c.get("Availability")) for c in answer["derived"]["capabilities"]]
+    # The volume it is planned for, a constant of the skill, is stated as the number it is.
+    described = aas_server.items[("submodels", b64(f"{profiles.identity(load(SPECS / 'filling.yaml'))[1]}/submodels/CapabilityDescription"))]
+    two = next(c for c in described["submodelElements"][0]["value"] if c["idShort"] == "Filling_FillTwo")
+    volume = next(v for p in next(c for c in two["value"] if c["idShort"] == "PropertySet")["value"] if p["idShort"] == "FillVolume"
+                  for v in p["value"] if v["idShort"] == "Value")
+    assert (volume["modelType"], volume.get("valueType"), volume.get("value")) == ("Property", "xs:double", "2.0")
     status, answer = post(f"{url}/check/FillingModuleAAS")
     assert answer["skills"] == {"Dispensing": [], "FillTwo": []}
     assert post(f"{url}/plan/FillingModuleAAS", {"capability": "Filling", "values": {"FillVolume": 2.0},
