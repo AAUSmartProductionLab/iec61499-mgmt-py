@@ -41,9 +41,8 @@ from modplan.domain import PRODUCT, Var                                      # n
 from modplan.lift import composite as lifted                                 # noqa: E402
 from modplan.plan import NoPlan, start_state                                 # noqa: E402
 from modplan.read import read                                                # noqa: E402
+from modreg.match import LAB, Capability, Property, evaluate, offered        # noqa: E402
 from modreg.offer import capabilities, described_skill                       # noqa: E402
-from modreg.plancheck import covers                                          # noqa: E402
-from modsync.aasjson import at, children, submodel                           # noqa: E402
 from modsync.described import described                                      # noqa: E402
 from process_model import CONTAINERS, HOME_HEIGHT, NEST, Hardware, Product, run  # noqa: E402
 from test_modsync import DOUBLE_DOSE                                         # noqa: E402
@@ -398,31 +397,15 @@ def variant_spec(variant: str) -> tuple[dict, Composite, Hardware]:
     return spec, Composite(**bottom), hw
 
 
-def offers(module: dict, components: list[dict]) -> list[dict]:
-    """The module's offered capabilities: meaning, availability, properties, realizing skill."""
-    out = []
-    cd = submodel(module, "CapabilityDescription")
-    for cset in children(cd):
-        if cset.get("idShort") != "OfferedCapabilities":
-            continue
-        for box in children(cset):
-            cap = at(box, "Capability")
-            meaning = cap["supplementalSemanticIds"][0]["keys"][0]["value"].rsplit("/", 1)[-1]
-            quals = {q["type"]: q["value"] for q in cap.get("qualifiers") or []}
-            props = {p["idShort"]: at(p, "Value") for p in children(at(box, "PropertySet"))}
-            skills = [r["second"]["keys"][-1]["value"] for r in children(at(box, "CapabilityRelations"))
-                      if r.get("modelType") == "RelationshipElement"]
-            out.append({"meaning": meaning, "after": quals.get("Availability") == "AfterReconfiguration",
-                        "props": props, "skills": skills})
-    return out
-
-
-def requirement(product: Product) -> dict:
+def requirement(product: Product) -> Capability:
+    """The capability the product requires, as its AAS states it: the filling its container takes,
+    with its volume, container type and grasp diameter, each of its meaning, unit and type."""
+    def prop(name: str, value, unit: str = "", value_type: str = "xs:double") -> Property:
+        return Property(name, f"{LAB}{name}", unit, value_type, value=str(value))
     kind = "syringe" if product.container.startswith("syringe") else "vial"
-    return {"meaning": meaning_of(product),
-            "props": {"FillVolume": {"modelType": "Property", "value": str(product.volume)},
-                      "ContainerType": {"modelType": "Property", "value": kind},
-                      "GraspDiameter": {"modelType": "Property", "value": str(GRASP[product.container])}}}
+    return Capability(meaning_of(product), [f"{LAB}{meaning_of(product)}"], role="Required", properties=[
+        prop("FillVolume", product.volume, "mL"), prop("ContainerType", kind, value_type="xs:string"),
+        prop("GraspDiameter", GRASP[product.container], "mm")])
 
 
 def gives_weight(composites: dict, skill: str) -> bool:
@@ -442,31 +425,31 @@ def keeps(domain, composites: dict, skill: str, product: Product) -> list[str]:
 
 def answer(module, components, domain, product: Product) -> dict:
     """The method's answer: offered, after a reconfiguration (a described skill, or a plan), not offered.
-    A skill whose offer matches is checked in time against the requirement first (6 Nov)."""
+    An offered capability whose properties meet the product's (the lab's matcher, modreg.match) has a
+    skill of it checked in time against the requirement first (6 Nov)."""
     req = requirement(product)
     composites = described(module, components).composites
     fits, refused = [], {}
-    for o in offers(module, components):
-        if o["meaning"] != req["meaning"]:
+    for found in evaluate(req, offered(module)):
+        if not found.fits:
             continue
-        if all(name in o["props"] and o["props"][name] is not None and covers(o["props"][name], want)
-               for name, want in req["props"].items()):
-            if not product.weight or any(gives_weight(composites, s) for s in o["skills"]):
-                broken = {s: keeps(domain, composites, s, product) for s in o["skills"]}
-                if any(not b for b in broken.values()):
-                    fits.append(o)
-                else:
-                    refused.update(broken)
-    if any(not o["after"] for o in fits):
-        return {"answer": "offered", "by": [s for o in fits if not o["after"] for s in o["skills"]]}
+        skills = [r["keys"][-1]["value"] for r in found.capability.realized_by]
+        if not product.weight or any(gives_weight(composites, s) for s in skills):
+            broken = {s: keeps(domain, composites, s, product) for s in skills}
+            if any(not b for b in broken.values()):
+                fits.append((found.capability.availability != "Now", skills))
+            else:
+                refused.update(broken)
+    if any(not after for after, _ in fits):
+        return {"answer": "offered", "by": [s for after, skills in fits if not after for s in skills]}
     if fits:
-        return {"answer": "after", "by": [s for o in fits for s in o["skills"]], "route": "described"}
+        return {"answer": "after", "by": [s for _, skills in fits for s in skills], "route": "described"}
     results = ("FillWeight",) if product.weight else ()
     times, steps, planned_on = [], None, domain
     for _ in range(5):
         t = time.perf_counter()
         try:
-            planned_on, steps = planned(domain, req["meaning"], facts(product), results)
+            planned_on, steps = planned(domain, req.name, facts(product), results)
         except NoPlan as e:
             return {"answer": "not", "why": f"no plan: {e}"[:200], "plan_s": time.perf_counter() - t,
                     **({"refused": refused} if refused else {})}
