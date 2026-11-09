@@ -12,7 +12,8 @@ ends at the module's rest state, or that is reported.
 and a linear one that holds at both holds in between, as everything it changes changes steadily. An
 Invariant ``=`` a formula about a property nothing else sets defines it while the step runs (how deep
 the needle is in the liquid); a requirement's invariants (``task``: BottomUpFilling's bounds on it)
-are checked wherever what they are about is defined.
+are checked wherever what they are about is defined, and one that no step ever defines is reported
+(9 Nov): it was never checked, so it is not known to hold.
 
 A parallel block whose steps all say how long they take (a rate, a Completion) is **run in time**:
 each branch starts its next step when the one before has ended, every state a step changes moves at
@@ -56,6 +57,17 @@ def check(domain: Domain, skill: Composite, given: dict | None = None, start: di
         if var in state and not same(state[var], value):
             checker.report(Finding("end", f"ends with {var} = {_text(state[var])}, not at rest ({_text(value)})",
                                    _fixes(domain, var, value)))
+    # A bound of the requirement on something no step ever says (the module states no formula for
+    # it) was never checked, so it is not known to hold (9 Nov).
+    for c in (task.invariant if task is not None else ()):
+        if c.var not in checker.told:
+            wanted = task.operand(c.expression, checker.task_values, {})
+            checker.report(Finding("end", f"{task.name} keeps {c.var} {c.expression.op} {_text(wanted)}, "
+                                          f"but no step says what {c.var} is"))
+    # The bounds are checked at the events only, which is exact for linear formulas alone.
+    if task is not None and task.invariant:
+        for what in domain.nonlinear():
+            checker.report(Finding("domain", f"{what}: a bound over time is checked at the events only"))
     return checker.found
 
 
@@ -133,6 +145,7 @@ class _Checker:
     def __init__(self, domain: Domain, values: dict, task: Capability | None = None, task_values: dict | None = None):
         self.domain, self.values, self.found = domain, values, []
         self.task, self.task_values = task, dict(task_values or {})
+        self.told: set[Var] = set()               # what a bound of the requirement was checked on
         self.time: float | None = 0.0
         self.defined = {c.var for cap in domain.capabilities.values() for c in cap.invariant
                         if c.expression.op == "=" and isinstance(c.expression.operand, Formula)} - domain.changed()
@@ -207,6 +220,8 @@ class _Checker:
                     self.report(Finding(name, what), into)
         if self.task is not None:
             for c in self.task.invariant:
+                if known(seen.get(c.var)):
+                    self.told.add(c.var)
                 if not known(seen.get(c.var)) or holds(self.task, c, seen, self.task_values) is not False:
                     continue
                 wanted = self.task.operand(c.expression, self.task_values, seen)

@@ -4,9 +4,9 @@ A hybrid of HTN and goal regression, on GTPyhop (Nau, 2021): the task is a capab
 offers with the values a requirement asks for; its goals are what its Post says (the product's
 state), what the results asked for need, and then the module's rest state. A goal is reached by an
 action whose Post sets the variable (to a value, to what it is given, or by adding to it), after
-the action's own preconditions, which become goals in turn. Where the module states compositions
-of the capability (IDTA 02020 ComposedOf), the planner first tries with their parts only: the
-integrator's way. The first plan found is taken; optimality is not a goal.
+the action's own preconditions, which become goals in turn. The first plan found is taken;
+optimality is not a goal. (Until 9 Nov the search first tried a capability's IDTA 02020 ComposedOf
+parts only; nothing read them from the AAS, so the path was removed.)
 
 The result is a sequence of steps (capability, arguments); ``lift`` makes a flow of it.
 
@@ -96,17 +96,25 @@ def plan(domain: Domain, capability: str, values: dict, results: tuple[str, ...]
             raise NoPlan(f"{capability} needs {c.var} {c.expression}, and it is {state.get(c.var)}")
     wanted = goals(domain, capability, values, results)
     keeping = _Keeping(domain, cap, values)
-    for only in [*(set(parts) for parts in cap.compositions), None]:
-        found = _search(domain, state, [wanted, list(domain.rest.items())], only, timeout_ms, keeping)
-        if found is not None:
-            return found
+    # A bound of the requirement on something the module never states (no capability defines it by a
+    # formula, changes it or starts with it) cannot be kept: refused, not planned as if it held (9 Nov).
+    stated = keeping.defined | domain.changed() | set(state)
+    unstated = sorted({c.var.meaning for c in cap.invariant if c.var not in stated})
+    if unstated:
+        raise NoPlan(f"{capability} bounds {', '.join(unstated)}, which {domain.module} states nothing about")
+    # Bounds are checked at the events only, which is exact for linear formulas alone.
+    if cap.invariant and domain.nonlinear():
+        raise NoPlan(f"{capability} sets bounds over time, and {'; '.join(domain.nonlinear())}")
+    found = _search(domain, state, [wanted, list(domain.rest.items())], timeout_ms, keeping)
+    if found is not None:
+        return found
     raise NoPlan(f"{domain.module} has no way to {capability} with {values}" + (f" and {', '.join(results)}" if results else ""))
 
 
 def reach(domain: Domain, wanted: list[tuple[Var, object]], start: dict | None = None,
           timeout_ms: int = TIMEOUT_MS) -> list[Planned]:
     """The steps that reach ``wanted`` from ``start`` (nothing known): how the module gets to rest."""
-    found = _search(domain, dict(start or {}), [wanted], None, timeout_ms)
+    found = _search(domain, dict(start or {}), [wanted], timeout_ms)
     if found is None:
         raise NoPlan(f"{domain.module} cannot reach {', '.join(f'{v} = {x}' for v, x in wanted)}")
     return found
@@ -197,9 +205,9 @@ def _trackers(domain: Domain, actions: list[Capability], keeping: _Keeping) -> l
 # GTPyhop --------------------------------------------------------------------------------------
 
 def _search(domain: Domain, state: dict, goal_lists: list[list[tuple[Var, object]]],
-            only: set[str] | None, timeout_ms: int, keeping: _Keeping | None = None) -> list[Planned] | None:
+            timeout_ms: int, keeping: _Keeping | None = None) -> list[Planned] | None:
     keeping = keeping or _Keeping(domain)
-    actions = [cap for cap in domain.actions() if only is None or cap.name in only]
+    actions = domain.actions()
     meanings = sorted({c.var.meaning for cap in domain.actions() for c in (*cap.pre, *cap.post, *cap.invariant)}
                       | {var.meaning for goals_ in goal_lists for var, _ in goals_} | {var.meaning for var in state}
                       | {var.meaning for cap in domain.actions() for var in cap.variables.values()})
@@ -350,22 +358,22 @@ def _tracking(s: Capability, a: Capability, x: Var, y: Var, adding: Constraint, 
         gx, gy = g({**state, x: before + 1.0}) - base, g({**state, y: state[y] + 1.0}) - base
         if abs(gx) < 10 ** -DIGITS or abs(gy) < 10 ** -DIGITS:
             return False
-        # The rates: x at s's, y at a's; one of them is set so that gx * rate_x + gy * rate_y = 0.
+        # The rates: x at s's, y at a's, so that gx * rate_x + gy * rate_y = 0. A rate can be set if the
+        # module states it as a range (a parameter: the pump's FlowRate), not as one value (the axis's
+        # Speed). If they do not match already, s's rate is set to follow a's, else a's to follow s's,
+        # whichever can be set and stays within its range (9 Nov; before, a pair whose rates could both
+        # be set was refused).
         x_rate, y_rate = s.rates[x], a.rates[y]
-        fixed_x, fixed_y = x_rate not in s.parameters, y_rate not in a.parameters
         rx, ry = s.lookup(x_rate, s_args, state), a.lookup(y_rate, a_args, state)
-        if fixed_y and not fixed_x and ry:
-            rx = round(abs(ry * gy / gx), ROUND)
-            if not s.parameters[x_rate].admits(rx):
+        if not (rx and ry and math.isclose(abs(rx * gx), abs(ry * gy), rel_tol=1e-6)):
+            set_x = round(abs(ry * gy / gx), ROUND) if ry and x_rate in s.parameters else None
+            set_y = round(abs(rx * gx / gy), ROUND) if rx and y_rate in a.parameters else None
+            if set_x is not None and s.parameters[x_rate].admits(set_x):
+                rx = s_args[x_rate] = set_x
+            elif set_y is not None and a.parameters[y_rate].admits(set_y):
+                ry = a_args[y_rate] = set_y
+            else:
                 return False
-            s_args[x_rate] = rx
-        elif fixed_x and not fixed_y and rx:
-            ry = round(abs(rx * gx / gy), ROUND)
-            if not a.parameters[y_rate].admits(ry):
-                return False
-            a_args[y_rate] = ry
-        elif not (rx and ry and math.isclose(abs(rx * gx), abs(ry * gy), rel_tol=1e-6)):
-            return False
         took = s_args[amount] / rx
         way = -math.copysign(1.0, gx * gy) * abs(ry) * took                             # where y goes meanwhile
         # Where y has to start: every bound of s, of a and of the requirement, at the start and at the end.

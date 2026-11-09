@@ -197,10 +197,12 @@ one can be written from the other.
    multigoals split by `m_split_multigoal`; each unigoal method (`plan._method`) picks a capability
    whose Post reaches the goal and puts its Pre before it, and the `+=` method splits an amount into
    equal doses (puts the goal back); the tracking method (`plan._tracking`) and its paired action
-   (`plan._paired`) are a unigoal method and an action too. Method 1 is an outer loop in `plan.plan`
-   (the search restricted to a composition's parts first), but `read.py` reads no `ComposedOf`, so
-   `Capability.compositions` is always empty and nothing tests it. Method 2 (an existing composite's
-   steps) is not built. Parallel blocks come after GTPyhop, from `lift.py`. The paper (CIRP, Fig. 2)
+   (`plan._paired`) are a unigoal method and an action too. Method 1 was an outer loop in `plan.plan`
+   (the search restricted to a composition's parts first), but `read.py` read no `ComposedOf`, so
+   `Capability.compositions` was always empty and nothing tested it: removed on 9 Nov. It could come
+   back as a hint that narrows the search if a module's domain grows large and its integrator states
+   compositions; a module's few primitives do not need it. Method 2 (an existing composite's steps) is
+   not built. Parallel blocks come after GTPyhop, from `lift.py`. The paper (CIRP, Fig. 2)
    claims the four that work: sequence, repetition, parallel block, matched rates.
 4. **The plan is lifted** to a partial order: steps on different components with no state between them
    become a parallel block, unless an invariant forbids it (Weigh keeps the needle still, so Home and
@@ -222,8 +224,7 @@ one can be written from the other.
    action takes the value it replaces as a parameter and deletes it. Two lessons from Aries: its
    server stops on conditional effects (a `forall`/`when` delete), so the replaced value is a
    parameter; and a method must not bind that parameter in its precondition, since the method's first
-   subtasks may change it, so the action's own precondition binds it. The compositions are left out of
-   the HDDL (a method for one would need actions restricted to its parts). ENHSP plans from the PDDL
+   subtasks may change it, so the action's own precondition binds it. ENHSP plans from the PDDL
    and Aries from the HDDL, both through unified-planning, whose validator checks every plan; T1 to T12
    stay with GTPyhop, and the four cases of `cell/eval/planners.py` run through all three.
 
@@ -279,7 +280,7 @@ planning-specific is modelled:
 | Preconditions, effects | Inputs and outputs; delete effects written by hand | Pre and Post constraints; deletes generated |
 | Invariants | – | Invariant constraints |
 | Initial state, goal | Instances (the goal in a component's AAS) | The rest state or the live values; the requirement |
-| Tasks, methods | – | Process capabilities; compositions, existing composites, generated methods |
+| Tasks, methods | – | Process capabilities; generated methods (compositions and existing composites not built) |
 | Numbers | Future work | Ranges, values, `+=` |
 
 Their model is general where this one is not: many interchangeable objects and relations between them
