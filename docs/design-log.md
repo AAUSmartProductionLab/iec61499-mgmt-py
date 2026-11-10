@@ -20,6 +20,16 @@ A running log of design considerations made while building, for writing the pape
 
 ## 10 Nov 2026
 
+- **A balanced voice: "this paper", "the approach", "the planner", "we" only for choices and
+  experiments.** *CIRP*. The rewrite of the same day used "we" 50 times. Now: "this paper" where the
+  work is positioned (abstract, introduction, related work, conclusion); the approach, the planner or
+  the synchroniser as subject, or the passive, where the system is explained; "we" kept where the
+  authors chose or did something (the extended constraints, GTPyhop over PDDL, constant rates assumed,
+  composites as subapplications, the evaluation, the reference model, the expectation that it carries
+  over): eight left. The reviewer's second version was not pasted in, as it brought back its content
+  errors (units converted, submodel identifiers, the depth range, postconditions checked, the
+  application rebuilt) and three display equations.
+
 - **The paper rewritten for readers: the workflow and the filling example first, the planner in named
   steps, "we" and shorter sentences.** *CIRP*. A review (ChatGPT, passed on by the co-author) found the
   paper precise but dense: Section 3 catalogued submodels before saying what the system does, and the
