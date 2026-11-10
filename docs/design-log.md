@@ -20,6 +20,12 @@ A running log of design considerations made while building, for writing the pape
 
 ## 10 Nov 2026
 
+- **The resource hierarchy nests as deep as needed; the paper considers two levels.** *CIRP*. The
+  co-author's point: a component may have components of its own, and composite skills over their
+  primitives, as Hierarchical Structures nests to any depth. The paper says so first, then that it
+  considers the module and its components only, which is what the planner and the synchroniser were
+  evaluated on.
+
 - **A balanced voice: "this paper", "the approach", "the planner", "we" only for choices and
   experiments.** *CIRP*. The rewrite of the same day used "we" 50 times. Now: "this paper" where the
   work is positioned (abstract, introduction, related work, conclusion); the approach, the planner or
