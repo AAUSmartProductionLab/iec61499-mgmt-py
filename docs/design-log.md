@@ -18,6 +18,29 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 10 Nov 2026
+
+- **The paper rewritten for readers: the workflow and the filling example first, the planner in named
+  steps, "we" and shorter sentences.** *CIRP*. A review (ChatGPT, passed on by the co-author) found the
+  paper precise but dense: Section 3 catalogued submodels before saying what the system does, and the
+  planner mixed goal regression, parallel execution and coordination in long sentences. Its rewrites
+  were taken, checked against what is built, and corrected where they were wrong: units are never
+  converted in matching (a unit that differs gives unknown); the primitives' capabilities are in the
+  module's Capability Description, one set per component, not in the components' AASs; the elements
+  keep the templates' semantic identifiers (not "submodel identifiers"); the needle starts at the
+  middle of the positions all bounds allow (the bottom clearance included), not of the depth window;
+  the checker applies postconditions and checks preconditions, invariants, the bounds and the end at
+  rest; a new primitive needs a new build of the runtime, not of the application; the check takes
+  1.8 ms as a median, not a mean; the validation requirement is GAMP 5's, not the modular-pharma
+  paper's. Added, as the review asked: a Method opening that walks the workflow; the bottom-up example
+  in the introduction; GAMP 5 softened (reuse is attractive, but a composition must still be verified);
+  the planner's goal regression, parallel execution, coordinated execution and checking as named
+  steps, with h = ax + by and ar + bs = 0 inline; the two evaluation tests said to be separate (104
+  matching cases and 24 bottom-up cases; 1,260 deployment runs and 1,258 drift runs); what the rule
+  baseline is (six sequence rules as a tool expert writes them). The conclusion follows in the same
+  tone. 4,574 body words, about 80 more than before (the room the co-author said was left); 17 sources.
+  Not done: Fig. 1's simplification, which the review also asked for.
+
 ## 9 Nov 2026
 
 - **Second cut: half a column more.** *CIRP*. At 4,726 words the paper was still half a column over
