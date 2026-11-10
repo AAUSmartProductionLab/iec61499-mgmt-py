@@ -20,6 +20,15 @@ A running log of design considerations made while building, for writing the pape
 
 ## 10 Nov 2026
 
+- **Section 3.3 lists what the base application contains instead of naming the Control Component
+  templates.** *CIRP*. "It holds what IDTA's Control Component templates describe" read as if the
+  program held those templates (or the registration manifest, the profile sent to the registration
+  service, which is outside the IEC 61499 program). As generated (`modgen/module.py`), the base
+  application has the occupation block, the PackML state manager, one block per equipment item, an
+  instance of each offered primitive skill and the Resetting and Stopping procedures; every skill
+  is called through Start, Stop, Abort and Reset over OPC UA. The paragraph now says that. IDTA
+  02015 and 02016 left the paper: no submodel of them is used.
+
 - **The resource hierarchy nests as deep as needed; the paper considers two levels.** *CIRP*. The
   co-author's point: a component may have components of its own, and composite skills over their
   primitives, as Hierarchical Structures nests to any depth. The paper says so first, then that it
