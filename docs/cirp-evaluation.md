@@ -619,6 +619,17 @@ still finds it its own way, by running the flow in 10 ms steps.
   cannot give (it doses from 0.5 mL); the oracle refused it. Fixed in the planner and the checker before
   the run reported here (design log).
 
+**Re-run with products up to 10 mL (11 Nov).** `cell/eval/results/q4-2026-11-11T1318.jsonl`, commit
+`8e7239e`, the tools clean. The 20R vial of 15 to 25 mL is out: 10 mL, a multi-dose vial, is the most a
+product here holds. Q4a and Q4t are unchanged (their products are 1 mL and the syringe).
+
+- *Q4b, H4.4 holds.* 80 of 80 (100 % [95, 100]): 40 offered, 12 after a reconfiguration (10 by the
+  described BottomUpFilling, 2 planned), 28 not offered.
+- *H4.5 holds, on two skills only.* The planned skills were the doses split because Dispense stops at
+  10 mL (design log, 8 Nov: a parameter limit, not a planning problem); what is left of them is 10 mL on
+  the small pump (two doses of 5 mL), both right. Planning is now shown by Q4t: 15 of 15 right, the 9
+  others those the module cannot do, 17 ms median.
+
 ## E1: the effort of a reconfiguration, in user inputs
 
 **Question.** How many inputs does a person make to change the module: by hand in the 4diac IDE, in the
