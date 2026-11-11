@@ -20,6 +20,13 @@ A running log of design considerations made while building, for writing the pape
 
 ## 11 Nov 2026
 
+- **Q1 on the module's Pi: 12 cells of 10 runs (120) instead of 42 of 30 (1,260).** *CIRP*. The paper's
+  evaluation runs on the real module (the Pi 5 with FORTE, the scale simulated in FORTE), where a run
+  takes seconds of the axis's motion. What the 1,260 runs on the PC showed (linear growth with the
+  steps and the program, no effect on a running skill, the restart's downtime) needs the corners of
+  the grid, not every point: 1, 8 and 32 steps in programs of 1, 10 and 20, one parallel case, a value
+  and a restart. Instead of the full grid with fewer runs, which would keep cells that add nothing.
+
 - **Q4b's products up to 10 mL.** *CIRP*. 25 mL is not a product the line fills; the largest found is a
   multi-dose vial of 10 mL, so the 20R vial of 15 to 25 mL left Q4b (20 products, 80 cases, from 26 and
   104). With it went 21 of the 23 planned skills: they split a dose only because Dispense stops at

@@ -63,6 +63,14 @@ the change and of the program; and how do they compare with a full redeployment?
 | C, parameter | 4 program sizes by 2 starts = 8 |
 | D, restart | the flow change of 8 steps, and the parameter change, at each program size = 8 |
 
+**On the module's Raspberry Pi (11 Nov).** The paper's runs are made on the real module: `--pi` runs
+12 of the cells, 10 runs each (120 runs): a new composite of 1, 8 and 32 steps in programs of 1, 10
+and 20 composites (Dispensing's duration measured alongside in the four cells of 8 and 32 steps in
+programs of 1 and 20), 8 steps in three branches, a value changed between orders, and the restart with
+the new composite of 8 steps. The 30 runs of 42 cells on the PC showed intervals within about 3 % of
+the median, so 10 runs give a median and its interval; the cells left out (2, 4 and 16 steps, programs
+of 5, two branches, a value from Execute, the restart for a value) added no finding.
+
 **The synthetic composites.** A sequence of n steps repeats a dose cycle on the module's own
 primitives: MoveAxis to the fill position (40 mm), Dispense the skill's parameter Volume at 1 mL/s,
 Home, Weigh. Step names are unique (`S01`, `S02`, ...). In a parallel block each branch uses its own
