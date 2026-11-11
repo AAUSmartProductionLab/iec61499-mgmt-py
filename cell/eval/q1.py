@@ -4,6 +4,7 @@ change, online and by a restart, and how they scale with the change's and the pr
     python cell/eval/q1.py --forte runtime/fbe/build/modules-win/forte/build/forte/forte.exe
     python cell/eval/q1.py --forte ... --runs 1 --warmup 0 -v         # the pilot: one run per cell
     python cell/eval/q1.py --forte ... --resume cell/eval/results/q1-<when>.jsonl
+    python cell/eval/q1.py --pi                                       # on the module's Pi: PI_CELLS, 10 runs each
 
 Every run starts a fresh FORTE (cell/eval/scenarios.py's Bench, the filling module's IO simulated)
 and appends one JSON line to cell/eval/results/q1-<when>.jsonl: the cell, the measurements, the
@@ -47,10 +48,12 @@ PROGRAMS = (1, 5, 10, 20)
 STARTS = ("execute", "idle")  # a value changed while an order runs, or between two orders
 DISTURB = {(8, 1), (8, 20), (32, 1), (32, 20)}       # (steps, program size): Dispensing's d0 measured too
 NEW = "Synthetic"
-# On the Raspberry Pi (--pi), at the bench: the filling module as delivered (program size 1), a new
-# composite of 1 and of 8 steps, a value from Execute and from Idle, and the two restarts.
-PI_CELLS = ("A-flow-n1-k1-m1", "A-flow-n8-k1-m1", "C-parameter-n0-k0-m1-execute", "C-parameter-n0-k0-m1-idle",
-            "D-flow-n8-k1-m1", "D-parameter-n0-k0-m1")
+# On the Raspberry Pi (--pi), at the bench, 10 runs each (120 runs; 11 Nov): a new composite of 1, 8 and
+# 32 steps in programs of 1, 10 and 20 composites (Dispensing's duration measured alongside in the four of
+# DISTURB), 8 steps in three branches, a value between orders, and a restart with the new composite.
+PI_CELLS = tuple(f"A-flow-n{n}-k1-m{m}" for n in (1, 8, 32) for m in (1, 10, 20)) + (
+    "B-flow-n8-k3-m1", "C-parameter-n0-k0-m1-idle", "D-flow-n8-k1-m1")
+PI_RUNS = 10
 CACHE = sc.RESULTS / "q1-cache"
 VERBOSE = False
 
@@ -613,7 +616,7 @@ def main() -> None:
     ap.add_argument("--forte", type=Path, help="FORTE on the PC (not with --pi)")
     ap.add_argument("--pi", action="store_true",
                     help="the module on its Raspberry Pi (the spec's target pi), someone at the bench: PI_CELLS")
-    ap.add_argument("--runs", type=int, default=30)
+    ap.add_argument("--runs", type=int, help="runs per cell: 30, or PI_RUNS with --pi")
     ap.add_argument("--warmup", type=int, default=5)
     ap.add_argument("--seed", type=int, default=20261103)
     ap.add_argument("--only", nargs="*", help="cell sets (A B C D) or cell ids")
@@ -627,7 +630,8 @@ def main() -> None:
     chosen = [c for c in cells() if (not a.only or c["set"] in a.only or c["id"] in a.only)
               and (not a.programs or c["program"] in a.programs) and (not a.pi or c["id"] in PI_CELLS)]
     rng = random.Random(a.seed)
-    order = [(c, r) for c in chosen for r in range(a.runs)]
+    runs = a.runs or (PI_RUNS if a.pi else 30)
+    order = [(c, r) for c in chosen for r in range(runs)]
     rng.shuffle(order)
     order = [(rng.choice(chosen), -1 - i) for i in range(a.warmup)] + order
     out = a.resume or sc.RESULTS / f"q1-{datetime.now():%Y-%m-%dT%H%M}.jsonl"
