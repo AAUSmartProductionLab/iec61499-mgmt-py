@@ -4,6 +4,7 @@ program the oracle.
 
     python cell/eval/q3.py --forte runtime/fbe/build/modules-win-eval/output/bin/forte.exe
     python cell/eval/q3.py --forte ... --pilot -v          # three runs of each kind
+    python cell/eval/q3.py --forte ... --per-kind 10       # the paper's: 10 of each kind, 20 clean (110 runs)
     python cell/eval/q3.py --forte ... --only P1 P4 --resume cell/eval/results/q3-<when>.jsonl
 
 Every run starts a fresh FORTE with the test program, the module Idle and free, and appends a JSON
@@ -401,6 +402,8 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=20261104)
     ap.add_argument("--only", nargs="*", help="kinds (P1 ... A4, clean)")
     ap.add_argument("--pilot", action="store_true", help="three runs of each kind")
+    ap.add_argument("--per-kind", type=int, help="a random sample of this many drifts of each kind")
+    ap.add_argument("--clean", type=int, help="clean runs with --per-kind (default twice --per-kind)")
     ap.add_argument("--resume", type=Path)
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args()
@@ -429,6 +432,10 @@ def main() -> None:
             order = [d for d in drifts(base, boots["base"], record_, rng) if not a.only or d["kind"] in a.only]
             if a.pilot:
                 order = [d for k in KINDS for d in [x for x in order if x["kind"] == k][:3]]
+            elif a.per_kind:
+                of = {k: [x for x in order if x["kind"] == k] for k in KINDS}
+                order = [d for k in KINDS if k != "clean" for d in rng.sample(of[k], min(a.per_kind, len(of[k])))]
+                order += of["clean"][:a.clean if a.clean is not None else 2 * a.per_kind]
             rng.shuffle(order)
             log(f"{len(order)} runs; building the AASs of the A kinds")
             for d in order:
