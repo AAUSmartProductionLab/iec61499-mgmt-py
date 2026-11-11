@@ -63,10 +63,9 @@ INSERTED = [("Home", {}), ("Tare", {}), ("Weigh", {}), ("MoveAxis", {"Position":
             ("Dispense", {"Volume": 1.0, "FlowRate": 1.0})]
 EQUIPMENT = {"Home": "LinearAxis", "MoveAxis": "LinearAxis", "Dispense": "Pump", "Tare": "Scale", "Weigh": "Scale"}
 
-# Q4b.
-VOLUMES = {"vial 2R": (0.25, 0.5, 1.0, 2.0), "vial 10R": (2.0, 5.0, 10.0), "vial 20R": (15.0, 20.0, 25.0),
-           "syringe 1 mL": (0.25, 0.5, 1.0)}
-GRASP = {"vial 2R": 16.0, "vial 10R": 24.0, "vial 20R": 30.0, "syringe 1 mL": 8.15}   # outer diameter, mm
+# Q4b. Up to 10 mL, the largest a product here holds (a multi-dose vial of 10 mL; 11 Nov).
+VOLUMES = {"vial 2R": (0.25, 0.5, 1.0, 2.0), "vial 10R": (2.0, 5.0, 10.0), "syringe 1 mL": (0.25, 0.5, 1.0)}
+GRASP = {"vial 2R": 16.0, "vial 10R": 24.0, "syringe 1 mL": 8.15}   # outer diameter, mm
 VARIANTS = ("full", "no scale", "small pump", "raised")
 NEST_FACE = HOME_HEIGHT - NEST                            # mm down the stroke: the face a container stands on
 

@@ -509,8 +509,10 @@ a rule was written for the case (none for the needle rising while the pump doses
 
 ### Q4b: matching and planning, on products and module variants
 
-**Products,** 26: a vial 2R of 0.25, 0.5, 1 or 2 mL; a 10R of 2, 5 or 10 mL; a 20R of 15, 20 or 25 mL;
-a prefilled syringe of 0.25, 0.5 or 1 mL; each with its weight required or not. A vial asks for
+**Products,** 20: a vial 2R of 0.25, 0.5, 1 or 2 mL; a 10R of 2, 5 or 10 mL; a prefilled syringe of
+0.25, 0.5 or 1 mL; each with its weight required or not. Up to 10 mL since 11 Nov, the most a product
+here holds (a multi-dose vial); the 20R of 15 to 25 mL left, and with it the doses split only because
+Dispense stops at 10 mL. A vial asks for
 Filling, the syringe for BottomUpFilling (the vocabulary's narrower capability).
 
 **Module variants,** 4, each built by modreg from a changed spec: *full* (as delivered); *no scale*
