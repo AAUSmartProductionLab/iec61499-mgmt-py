@@ -382,8 +382,8 @@ def figure(by_cell, cells, restart, folder: Path) -> None:
     if flows:
         level = float(np.median(flows))
         ax.axhline(level, color="#5E676B", lw=0.9, ls=(0, (4, 2)))
-        ax.text(1.0, level * 1.13, f"Unavailable by a restart: {level:.1f} s, at every program size", fontsize=6,
-                color="#3E4447")
+        every = ", at every program size" if len(flows) > 1 else ""
+        ax.text(1.0, level * 1.13, f"Unavailable by a restart: {level:.1f} s{every}", fontsize=6, color="#3E4447")
     ax.set_xscale("log", base=2)
     ax.set_yscale("log")
     ax.set_xticks([1, 2, 4, 8, 16, 32], ["1", "2", "4", "8", "16", "32"])
