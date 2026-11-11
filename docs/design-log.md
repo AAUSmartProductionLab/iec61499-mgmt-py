@@ -18,6 +18,14 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 11 Nov 2026
+
+- **Q4b's products up to 10 mL.** *CIRP*. 25 mL is not a product the line fills; the largest found is a
+  multi-dose vial of 10 mL, so the 20R vial of 15 to 25 mL left Q4b (20 products, 80 cases, from 26 and
+  104). With it went 21 of the 23 planned skills: they split a dose only because Dispense stops at
+  10 mL, which the paper already set aside as a parameter limit (8 Nov). Instead of other products made
+  up to keep planned cases in Q4b, planning is shown where it matters, by the bottom-up filling of Q4t.
+
 ## 10 Nov 2026
 
 - **Section 3.3 lists what the base application contains instead of naming the Control Component
