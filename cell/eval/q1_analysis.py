@@ -363,7 +363,7 @@ def figure(by_cell, cells, restart, folder: Path) -> None:
     from matplotlib.ticker import FixedLocator, FuncFormatter, NullLocator
     plt.rcParams.update({"font.family": "Arial", "font.size": 7, "axes.linewidth": 0.6})
     fig, ax = plt.subplots(figsize=(3.4, 2.2))
-    # The program's size is a magnitude: one hue, light to dark, and a marker of its own for each size
+    # The application's size is a magnitude: one hue, light to dark, and a marker of its own for each size
     # (the light step is pale on white, so the shape carries it too).
     shades = {1: "#86CFC6", 5: "#3A9C92", 10: "#1C6560", 20: "#0B2F2C"}
     markers = {1: "o", 5: "s", 10: "^", 20: "D"}
@@ -382,7 +382,7 @@ def figure(by_cell, cells, restart, folder: Path) -> None:
     if flows:
         level = float(np.median(flows))
         ax.axhline(level, color="#5E676B", lw=0.9, ls=(0, (4, 2)))
-        every = ", at every program size" if len(flows) > 1 else ""
+        every = ", at every application size" if len(flows) > 1 else ""
         ax.text(1.0, level * 1.13, f"Unavailable by a restart: {level:.1f} s{every}", fontsize=6, color="#3E4447")
     ax.set_xscale("log", base=2)
     ax.set_yscale("log")
@@ -395,7 +395,7 @@ def figure(by_cell, cells, restart, folder: Path) -> None:
     ax.set_ylabel("Seconds")
     ax.grid(axis="y", color="#E4E7E8", lw=0.5)
     ax.set_axisbelow(True)
-    ax.legend(title="Activated online, in a program of", frameon=False, fontsize=6, title_fontsize=6,
+    ax.legend(title="Activated online, in an application of", frameon=False, fontsize=6, title_fontsize=6,
               loc="upper left", bbox_to_anchor=(0.0, 0.84), alignment="left")
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
