@@ -71,6 +71,13 @@ the new composite of 8 steps. The 30 runs of 42 cells on the PC showed intervals
 the median, so 10 runs give a median and its interval; the cells left out (2, 4 and 16 steps, programs
 of 5, two branches, a value from Execute, the restart for a value) added no finding.
 
+**The reduced cells on the PC (11 Nov), until the runs on the Pi.** `cell/eval/results/q1-2026-11-11T1413.jsonl`,
+commit `49b2c51`, the evaluation's FORTE with the IO simulated, the 12 cells of `PI_CELLS` with 10 runs
+each (`--only` the cells, `--runs 10`): 120 runs and 5 warm-up, every one passed every check. 32 steps in
+a program of 20 composites became active in 0.334 s [0.320, 0.362], the slowest of the 100 additions in
+0.419 s; Dispensing, running meanwhile, took 0.03 % [-0.07, 0.32] longer; a restart left the module
+unavailable for 3.25 s, 2.54 s of them resetting (homing); a value between orders took 0.021 s.
+
 **The synthetic composites.** A sequence of n steps repeats a dose cycle on the module's own
 primitives: MoveAxis to the fill position (40 mm), Dispense the skill's parameter Volume at 1 mL/s,
 Home, Weigh. Step names are unique (`S01`, `S02`, ...). In a parallel block each branch uses its own
@@ -430,6 +437,14 @@ number is the same as on 4 Nov: the audit detected and located all 1,157 drifts,
 alarms; 572 were removed online and 577 refused; the 8 interface values were reported as a restart;
 every cut change was completed (135 of 135); the baseline detected 220. The paper reports this run,
 and `detection.pdf` is drawn from it.
+
+**Reduced, on the PC (11 Nov), until the runs on the Pi.** `--per-kind 10`: 10 drifts of each kind drawn
+at random (the 5 skills for A4) and 20 clean runs, 105 runs, `cell/eval/results/q3-2026-11-11T1451.jsonl`,
+commit `49b2c51`. Every run passed R1 to R3. The audit detected and located all 85 drifts and sorted each
+as its kind calls for; 30 were removed online (P1, P4, A1) and 55 refused (P2, P3, P5, A2 to A4); no false
+alarm in the 20 clean runs. The boot-file baseline detected the 45 where the AAS is ahead (P4, A1 to A4)
+and none of the 40 made in the program. The reading before a change detected none of the 10 values (P1),
+which only the audit reads, as in the full run.
 
 ## Q4: are the skills right for the product?
 
