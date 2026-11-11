@@ -20,6 +20,16 @@ A running log of design considerations made while building, for writing the pape
 
 ## 11 Nov 2026
 
+- **Q3 sampled: 10 drifts of each kind and 20 clean runs (105) instead of every drift (1,258).** *CIRP*.
+  Detection is reading the program and comparing it with the generator's from the AAS, the same answer
+  for the same drift; the full run showed it for every value and connection of the test program, and
+  on the Pi a sample of each kind shows that it holds there. `--per-kind` draws the sample at random
+  from every drift the full run would make. Instead of fewer kinds or only the program's kinds, which
+  would leave out the AAS side or the cut reconfiguration.
+- **The reduced Q1 and Q3 run on the PC first (simulated IO), their numbers in the paper until the
+  Pi's.** *CIRP*. 120 and 105 runs, every check passed; 0.33 s for 32 steps in 20 composites, 3.3 s
+  down for a restart, all 85 drifts found. The paper marks them in red until the runs at the bench.
+
 - **Q1 on the module's Pi: 12 cells of 10 runs (120) instead of 42 of 30 (1,260).** *CIRP*. The paper's
   evaluation runs on the real module (the Pi 5 with FORTE, the scale simulated in FORTE), where a run
   takes seconds of the axis's motion. What the 1,260 runs on the PC showed (linear growth with the
