@@ -328,13 +328,16 @@ def same(found: dict) -> bool:
 # the FORTE of the run before, still announced while it stops: a registration that fails, and its
 # connection, are logged as errors of the OPC UA library, and do not touch the module's program.
 REGISTERING = ("Discovery server", "RegisterServer", "[OPC UA LOGGER] error/network")
+# FORTE on Linux logs a management client closing its connection, as the reconciler does after each
+# change, as an error of its socket layer (recv() returned 0 bytes, errno 0): the end of a connection.
+CLOSED = ("recv() Unexpected: nRetVal: 0, ERR: 0",)
 
 
 def forte_errors(log_: str) -> list[str]:
     """The ERROR lines of a FORTE's log (an event dropped from a full queue, a block that failed): a run
     is right only without them. The OPC UA server's failed registrations with a discovery server are
-    not among them (``registering_errors``)."""
-    return [ln for ln in _errors(log_) if not any(r in ln for r in REGISTERING)]
+    not among them (``registering_errors``), nor a client closing its connection on Linux (``CLOSED``)."""
+    return [ln for ln in _errors(log_) if not any(r in ln for r in REGISTERING + CLOSED)]
 
 
 def registering_errors(log_: str) -> list[str]:
