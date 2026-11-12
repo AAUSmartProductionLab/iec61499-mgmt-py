@@ -71,6 +71,14 @@ the new composite of 8 steps. The 30 runs of 42 cells on the PC showed intervals
 the median, so 10 runs give a median and its interval; the cells left out (2, 4 and 16 steps, programs
 of 5, two branches, a value from Execute, the restart for a value) added no finding.
 
+**The Pi's FORTE for the runs (12 Nov).** The lab's FORTE on the Pi cannot read back or boot programs
+of 10 and 20 composites, as on the PC, so the runs use the evaluation's build for the Pi:
+`cell/eval/forte/build.ps1 -Config eval/modules-pi-eval`, the lab's Pi configuration with patch 0008 and
+event lists of 1024, from the same exports as the PC's (4 Nov), stripped (`baac82f9`). Installed in the
+Pi's container for the runs only; the lab's binary and boot file are kept beside it (`forte.lab`,
+`forte.fboot.lab`) and put back after. The reconciler runs on the PC, the Pi 2.1 ms away (wired, 1 Gbps),
+and amends the module's boot file over SSH (`persist`), which the PC's runs did in a local folder.
+
 **The reduced cells on the PC (11 Nov), until the runs on the Pi.** `cell/eval/results/q1-2026-11-11T1413.jsonl`,
 commit `49b2c51`, the evaluation's FORTE with the IO simulated, the 12 cells of `PI_CELLS` with 10 runs
 each (`--only` the cells, `--runs 10`): 120 runs and 5 warm-up, every one passed every check. 32 steps in

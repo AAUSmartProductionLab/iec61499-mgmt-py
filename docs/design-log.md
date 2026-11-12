@@ -18,6 +18,19 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 12 Nov 2026
+
+- **Q1 on the Pi with the evaluation's FORTE built for the Pi, not the lab's.** *CIRP*. The lab's Pi
+  FORTE (3 Nov) cannot read back or boot programs of 10 and 20 composites (one answer of at most 64 KiB,
+  event lists of 256) and predates the 4 Nov block types; the evaluation's build is the lab's Pi
+  configuration with patch 0008 and event lists of 1024, from the PC run's exports, so the PC and the Pi
+  differ only in the machine and the network. Installed for the runs only, the lab's put back after,
+  instead of changing the lab's FORTE for a test.
+- **A client closing its management connection is no error in Q1's V10.** *CIRP*. FORTE on Linux logs
+  `recv() Unexpected: nRetVal: 0, ERR: 0` as an error whenever the reconciler closes its connection;
+  Windows does not. Counted as the end of a connection, as the failed discovery registrations are,
+  instead of failing every run on the Pi.
+
 ## 11 Nov 2026
 
 - **Q3 sampled: 10 drifts of each kind and 20 clean runs (105) instead of every drift (1,258).** *CIRP*.

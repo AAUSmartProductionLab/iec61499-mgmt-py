@@ -1,0 +1,8 @@
+// For the CIRP paper's evaluation only (docs/cirp-evaluation.md, Q1 on the module's Pi), not the lab's
+// FORTE: the lab's FORTE for the Pi (pi/modules-pi.txt), built by cell/eval/forte/build.ps1 with the
+// evaluation's patch (cell/eval/forte/0008-connection-query-by-part.patch), into build/modules-pi-eval.
+include=../pi/modules-pi.txt
+// As modules-win-eval.txt: with 20 skills of Dispensing's size the module's mode is more than 256
+// events at once, and FORTE drops the rest at boot. Room for about 70.
+FORTE_EventChainEventListSize:STRING=1024
+FORTE_EventChainExternalEventListSize:STRING=1024
