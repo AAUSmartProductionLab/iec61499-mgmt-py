@@ -26,7 +26,7 @@
       <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
       <VarDeclaration Name="UaPath" Type="WSTRING" Comment="This skill's OPC UA folder below UaRoot, e.g. /Skills/Dispensing" />
       <VarDeclaration Name="Volume" Type="LREAL" Comment="Parameter Volume mL, 0.5 to 10.0: Volume to dispense" />
-      <VarDeclaration Name="FlowRate" Type="LREAL" Comment="Parameter FlowRate mL/s, 0.1 to 5.0: Flow rate of the station (calibration)" />
+      <VarDeclaration Name="FlowRate" Type="LREAL" Comment="Parameter FlowRate mL/s, 0.1 to 5.0: How fast the pump doses; a planned skill may set it within these limits" />
       <VarDeclaration Name="EqHolder" Type="WSTRING" Comment="Who holds the equipment now (empty: free), passed on to the run" />
     </InputVars>
     <OutputVars>
