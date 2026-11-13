@@ -709,13 +709,13 @@
         <Parameter Name="StopTimeout" Value="T#10000ms" />
         <Attribute Name="GroupName" Type="STRING" Value="ModuleLevel" />
       </FB>
-      <FB Name="LinearAxis" Type="filling::EQ_LinearAxis" x="1700" y="493.33" Comment="Equipment LinearAxis: Needle lift, a stepper motor through a step and direction driver, with a limit switch at the top (home). The only block that touches its pins (AtHome = gpio[0:23:pull_up:active_low], Enable = gpio[0:17:active_low], Down = gpio[0:27], Step = pwm[0:2:500000:/hostsys/class/pwm]). Skills send it what to switch on loc[Filling/LinearAxis/cmd]; it reports its inputs on loc[Filling/LinearAxis/state] and at /Objects/Filling/Equipment/LinearAxis.">
+      <FB Name="LinearAxis" Type="filling::EQ_LinearAxis" x="1700" y="493.33" Comment="Equipment LinearAxis: Needle lift, a stepper motor through a step and direction driver, with a limit switch at the top (home). The only block that touches its pins (AtHome = gpio[0:23:pull_up], Enable = gpio[0:17:active_low], Down = gpio[0:27:active_low], Step = pwm[0:2:500000:/hostsys/class/pwm]). Skills send it what to switch on loc[Filling/LinearAxis/cmd]; it reports its inputs on loc[Filling/LinearAxis/state] and at /Objects/Filling/Equipment/LinearAxis.">
         <Parameter Name="Module" Value="&quot;Filling&quot;" />
         <Parameter Name="UaRoot" Value="&quot;/Objects/Filling&quot;" />
         <Parameter Name="UaEnable" Value="TRUE" />
-        <Parameter Name="AtHome_Address" Value="'gpio[0:23:pull_up:active_low]'" />
+        <Parameter Name="AtHome_Address" Value="'gpio[0:23:pull_up]'" />
         <Parameter Name="Enable_Address" Value="'gpio[0:17:active_low]'" />
-        <Parameter Name="Down_Address" Value="'gpio[0:27]'" />
+        <Parameter Name="Down_Address" Value="'gpio[0:27:active_low]'" />
         <Parameter Name="Step_Address" Value="'pwm[0:2:500000:/hostsys/class/pwm]'" />
         <Attribute Name="GroupName" Type="STRING" Value="EquipmentIO" />
       </FB>

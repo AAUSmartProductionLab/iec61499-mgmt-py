@@ -758,6 +758,6 @@ def test_a_module_names_its_pwm_channels_as_its_board_does():
     # Channel 2 of the PWM chip, 2 kHz, the PWM folder as the FORTE container sees it.
     assert written["LinearAxis.Step_Address"] == "'pwm[0:2:500000:/hostsys/class/pwm]'"
     assert written["LinearAxis.Enable_Address"] == "'gpio[0:17:active_low]'"
-    assert written["LinearAxis.Down_Address"] == "'gpio[0:27]'"
-    assert written["LinearAxis.AtHome_Address"] == "'gpio[0:23:pull_up:active_low]'"     # a switch to GND
+    assert written["LinearAxis.Down_Address"] == "'gpio[0:27:active_low]'"     # the switch at the other end
+    assert written["LinearAxis.AtHome_Address"] == "'gpio[0:23:pull_up]'"     # normally closed, to GND
     assert flat("StopperingModule", "Stoppering_pi")[2]["LinearAxis.Step_Address"].startswith("'pwm[0:2:")  # a Pi 5 too

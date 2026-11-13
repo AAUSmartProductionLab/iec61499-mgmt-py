@@ -18,6 +18,17 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 13 Nov 2026
+
+- **The axes home at the other end of their stage, onto a normally closed switch (filling, capping,
+  stoppering).** *CIRP*. The switch moved to the other end of the stage and is now normally closed: a
+  broken wire reads as home, so homing stops instead of driving into the end of the stage. Done in the
+  pins' polarity on the Pi (the switch active high, DIR inverted), so Up and Down still name the way
+  towards and away from the switch and the skills, the block types and the evaluation's FORTE stay as
+  they were; the PC's simulation is unchanged. Instead of renaming the commands, which would change the
+  types. Positions are still measured from the switch, so the nest's and the fill position are to be
+  measured again; Q1 on the Pi is run again with it, its timing including homing.
+
 ## 12 Nov 2026
 
 - **Q1 on the Pi with the evaluation's FORTE built for the Pi, not the lab's.** *CIRP*. The lab's Pi

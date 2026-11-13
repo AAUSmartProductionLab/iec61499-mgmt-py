@@ -23,12 +23,16 @@ equipment:
     # As the filling module's axis: a TB6600, PUL+, DIR+ and ENA+ straight to the Pi's pins, PUL-, DIR-
     # and ENA- on GND.
     inputs:
-      # An ordinary limit switch at the top, between the line and GND, closing when pressed.
-      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up, active_low: true}}   # Pi pin 16
+      # As the filling module's since 13 Nov: a normally closed limit switch at the other end of the
+      # stage, between the line and GND, opening when pressed (the pull-up pulls the line high at home;
+      # a broken wire reads as home too).
+      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up}}        # Pi pin 16
     outputs:
       # ENA+ high switches the TB6600 off: the motor is on while the line is low.
       Enable: {modbus: c0, gpio: {line: 17, active_low: true}}     # Pi pin 11
-      Down:   {modbus: c1, gpio: 27}                               # Pi pin 13, DIR: on is down, away from the switch
+      # Pi pin 13, DIR, inverted since 13 Nov as the filling module's: Up (homing) and Down name the way
+      # towards and away from the switch, now at the other end of the stage.
+      Down:   {modbus: c1, gpio: {line: 27, active_low: true}}
       # PUL: PWM0 on GPIO18 (Pi pin 12; channel 2 on a Pi 5), one step per period at 2 kHz; 50 % duty
       # while it moves.
       Step:   {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 500000}, gain: 655.35,

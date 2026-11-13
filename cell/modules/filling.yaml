@@ -23,13 +23,17 @@ equipment:
     # to GND: its optocouplers take the Pi's 3.3 V (homing and moves ran so on 21 Oct; on 20 Oct a 3.3 V
     # to 5 V level converter was in between, which is not needed).
     inputs:
-      # An ordinary limit switch at the top, straight to the Pi: between the line and GND, closing when
-      # pressed (the Pi's pull-up holds the line high otherwise).
-      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up, active_low: true}}   # Pi pin 16
+      # Since 13 Nov a normally closed limit switch at the other end of the stage, straight to the Pi:
+      # between the line and GND, opening when pressed, so the Pi's pull-up pulls the line high at home.
+      # A broken wire reads as home too, and homing stops instead of running on.
+      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up}}        # Pi pin 16
     outputs:
       # ENA+ high switches the TB6600 off: the motor is on while the line is low.
       Enable: {modbus: c0, gpio: {line: 17, active_low: true}}     # Pi pin 11
-      Down:   {modbus: c1, gpio: 27}                               # Pi pin 13, DIR: on is down, away from the switch
+      # Pi pin 13, DIR. Up and Down name the way towards and away from the switch; since 13 Nov the switch
+      # is at the other end of the stage, so the line is inverted: Down (away) drives it low, Up (homing)
+      # high, the opposite of before.
+      Down:   {modbus: c1, gpio: {line: 27, active_low: true}}
       # PUL: PWM0 on GPIO18 (Pi pin 12; channel 2 on a Pi 5), one step per period (2 kHz since 20 Oct: at
       # 1 kHz the axis was too slow to home in 8 s); 50 % duty while it moves.
       Step:   {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 500000}, gain: 655.35,
