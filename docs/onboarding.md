@@ -1,9 +1,9 @@
 # Starting on this repository
 
 For a new working session (a person, or an AI coding agent) that picks up the work here. It says
-what the work is for, what is where, the rules the work follows, the state on 31 Oct 2026 and what
-comes next. The details are in the documents it links; read [next-steps.md](next-steps.md) and
-[pipeline.md](pipeline.md) before planning anything.
+what the work is for, what is where, the rules the work follows, the state on 17 Nov 2026 and what
+comes next. The details are in the documents it links; read [pipeline.md](pipeline.md) and, for the
+demo, [framework-plan.md](framework-plan.md) section 7 before planning anything.
 
 ## What the work is for
 
@@ -20,12 +20,15 @@ module specs (`cell/modules/*.yaml`) and the generator `modgen` are one vendor-s
 a conforming module, not something the integrator has. When designing, ask: could this be done
 for a vendor's module with only its AAS and its FORTE?
 
-**The paper.** CIRP CMS full paper, due **18 Nov 2026**. Its claim: *a module that is delivered
-with an IEC 61499 program and an AAS can be verified, operated and changed online from those two
-alone, without the files it was generated from.* The evaluation (the same changes online and by a
-full redeployment, timed) is built and run on this PC (28 Oct); its runs on a Raspberry Pi (B3) are
-open and the most urgent part.
-Agents (product and resource agents bidding for process steps) are the paper's future work.
+**The paper.** The CIRP CMS full paper, *From Product Requirements to Running Skills: AAS-Driven
+Planning and Reconfiguration of IEC 61499 Modules*, was **submitted on 17 Nov 2026**. Its code, AASs
+and results are in the companion repository https://github.com/MartinJensen37/aas-driven-recon-iec61499
+(public); its source (`docs/paper/cirp/`) stays local and is never committed. Its evaluation: matching
+on 80 cases against a separate process simulation, planned BottomUpFilling skills (15 of 15 fill
+right), the checker (90 % of incorrect skills rejected), new skills deployed and verified on the
+filling module's Pi (32 steps in 20 composites in 2.06 s, Q1 of 17 Nov) and drift (on the PC).
+**Now: the demo in January** (below). Agents (product and resource agents bidding for process steps)
+are the paper's future work and one of the demo's two orchestrators.
 
 ## What is where
 
@@ -141,9 +144,10 @@ runtime/build-pi.ps1 -SkipValidate                            # FORTE for the Pi
   (as stand-ins on Windows), and it has the flow blocks of rule set 2 and announces its OPC UA
   server (mDNS). Install it (rerun `runtime/build-modules.ps1`) once the demo is stopped.
 - The local AAS stack (`deploy/aas.py up`, `lab-*` containers: AAS environment :8081, web UI :3000,
-  DMP :8085, InfluxDB :8086, Mosquitto :1883, Prosody (XMPP, for the agents) :5222) holds the example
-  line's AASs (`cell/examples/example_line.py --publish`).
-  Its AAS environment is in memory: publish again after a restart. Its secrets are in
+  DMP :8085, InfluxDB :8086, skill service (`modreg serve`) :8090, Mosquitto :1883, Prosody (XMPP, for
+  the agents) :5222; with `up --agents` the agents, orders at :8095) holds the example line's AASs
+  (`cell/examples/example_line.py --publish`). Since 17 Nov BaSyx (pinned to 2.0.0-milestone-16) keeps
+  them in MongoDB, so they survive a restart (volume `lab-aas_aas-data`). Its secrets are in
   `deploy/aas/.env` (not committed). The planner's demo stack (`ps-*`) uses the same ports and is
   stopped.
 
@@ -152,22 +156,29 @@ runtime/build-pi.ps1 -SkipValidate                            # FORTE for the Pi
 All are reached with this PC's SSH key; `sudo` needs a password that is never written down: ask
 the user for it when needed and pass it only for that command.
 
-| Pi | Address, login | Runs | State on 26 Oct |
+| Pi | Address, login | Runs | State |
 | --- | --- | --- | --- |
-| Pi 5 `filling-module` | 192.168.0.203, `admin` | Filling module: TB6600 stepper driver on GPIO18 (PWM channel 2), 27, 17; limit switch on GPIO23, not mounted (pressed by hand) | Program and runtime of 21 Oct morning. **To do, with the user at the bench:** `deploy/pi.py install --forte runtime/bin/forte-aarch64`, then `deploy/pi.py module`, then Occupy and Reset (homes) |
-| Pi 5 `stoppering-module` | 192.168.0.134, `admin` | Stoppering module since 22 Oct (spec `cell/modules/stoppering.yaml`, board `pi5`); wiring not known | Renamed from filling-module on 26 Oct (kept across reboots); the runtime is copied and its image built, but the new container could not start: the running one (from 20 Oct, old filling program) was created outside the compose project and holds the name `forte`. **To do, with the user's go:** `docker rm -f forte && cd ~/forte && docker compose up -d` on the Pi, then `deploy/pi.py module --spec cell/modules/stoppering.yaml`. Its old program is saved as `~/forte/boot/forte.fboot.before-stoppering` |
+| Pi 5 `filling-module` | 192.168.0.203, `admin` | Filling module: TB6600 stepper driver on GPIO18 (PWM channel 2), GPIO27 (DIR, inverted since 13 Nov), GPIO17 (enable); a normally closed home switch on GPIO23 at the far end of the stage (since 13 Nov); the pump not wired, the scale simulated | **17 Nov:** the lab's FORTE (`~/forte/forte`; the paper's evaluation build kept as `~/forte/forte.eval`) and the filling program with the new polarity (`deploy/pi.py module`); switch, homing and two moves checked at the bench. **To do with the user:** the new `deploy/pi/compose.yaml` onto the Pi (`docker compose up -d` in `~/forte`), so the PWM goes off whenever FORTE ends; the positions (NestPosition, FillPosition) measured again from the new home end (`deploy/bench.py move --to <mm> --stay`). Not reachable on the evening of 17 Nov |
+| Pi 5 `stoppering-module` | 192.168.0.134, `admin` | Stoppering module since 22 Oct (spec `cell/modules/stoppering.yaml`, board `pi5`, the new pins of 13 Nov); the hardware is not wired | As on 26 Oct, as far as known: the runtime is copied and its image built, but the new container could not start: the running one (from 20 Oct, old filling program) was created outside the compose project and holds the name `forte`. **To do, with the user's go:** `docker rm -f forte && cd ~/forte && docker compose up -d` on the Pi, then `deploy/pi.py module --spec cell/modules/stoppering.yaml`. Its old program is saved as `~/forte/boot/forte.fboot.before-stoppering` |
 | Pi 4 `stoppering-module` | 192.168.0.191, `iiot_gateway` | Nothing: **no longer used** (since 26 Oct). It ran the stoppering module 9 to 22 Oct and is in no spec | Do not deploy to it or use it in tests. Its old host name equals the Pi 5's above: address the Pis by IP. Older docs and examples that name 192.168.0.191 are out of date |
 
 FORTE runs in Docker on each Pi (`~/forte`, `docker compose ps | logs -f`); the program is the boot
 file `~/forte/boot/forte.fboot`. A program runs only on a FORTE built with its block types: after a
 change of block types, build for the Pi and package (`runtime/build-pi.ps1`), commit, install. The
-runtime in `runtime/bin` (30 Oct) also has the flow blocks of rule set 2 and announces its OPC UA
-server (mDNS), so discovery finds it; neither Pi runs it yet. The module starts Stopped and
-unoccupied; a client occupies it and sends Reset.
+runtime in `runtime/bin` (4 Nov) has the flow blocks of rule set 2, the module architecture of 4 Nov
+and announces its OPC UA server (mDNS), so discovery finds it. The module starts Stopped and
+unoccupied; a client occupies it and sends Reset. Two traps on the Pis: FORTE 3.3.0 segfaults when it
+is stopped, so its own PWM clean-up never runs (since 17 Nov the container's entrypoint turns the PWM
+off; a Pi installed earlier needs the new `compose.yaml`), and an OPC UA discovery server (LDS) on the
+network, such as the Windows service `UALDS` on this PC, freezes FORTE's OPC UA server for 5 s about
+every minute (FORTE registers at it under a `.local` name it cannot resolve): stop it while a module
+runs. `deploy/bench.py` checks a module's switch, homing and moves under a watchdog.
 
 ## State and next steps
 
-The state per area and the timeline are in [next-steps.md](next-steps.md); this is the short form.
+The plan to 18 Nov and the state per area are in [next-steps.md](next-steps.md) (history now); the
+demo's plan is in [framework-plan.md](framework-plan.md), [agents.md](agents.md) and
+[demo-modules.md](demo-modules.md), section 7 of each. This is the short form.
 
 **Built:** the module library and rules (D1); the information model in ARSO 0.14 (D2); verify,
 reconfigure (a value, a new skill), record, operate from the AAS alone, on FORTE on the PC and on
@@ -214,47 +225,69 @@ the IEC 61499 module architecture that makes skills, and updating a running modu
   leaves for them.
   Design considerations go into [design-log.md](design-log.md) as they are made.
 
+**Built since 31 Oct** (details in [design-log.md](design-log.md), newest first):
+
+- **The paper's method finished and evaluated** (Q1 to Q4 in `cell/eval`; the numbers in
+  [cirp-evaluation.md](cirp-evaluation.md)): vocabulary 0.10 (the capabilities below DIN 8580 and
+  VDI 2860; rates and the container's geometry), BottomUpFilling planned by tracking the needle's
+  depth while the pump doses, the checker run in time, one capability matcher (`modreg.match`) for the
+  web UI, the agents, the plan check and the evaluation.
+- **The module architecture of 4 Nov**: a primitive is its contract (`SC_`), one shared run, one port
+  per equipment, `SKILL_Gate`, adapters; FORTE patches 0004 to 0007; the students' kit and the guide
+  to the filling program ([filling-program.md](filling-program.md)).
+- **The demo's modules**: capping (spec and program, run against the simulator), loading and
+  unloading in Python (`modpy`, their robots simulated); the axes home onto a normally closed switch at
+  the other end of the stage (13 Nov), checked on the filling Pi on 17 Nov.
+- **The web UI fork**: Match and plan binds every step and plans a skill where none matches, matching
+  by the skill service, the BPMN editors (18 commits not pushed); a Configurator (products, the line
+  on the planar table's grid, shuttle routing, process assignments, orders) is in its working tree,
+  not committed.
+- **17 Nov**: the Pi's container turns the PWM off whenever FORTE ends; `deploy/bench.py`; the lab
+  stack keeps its AASs in MongoDB (BaSyx pinned to 2.0.0-milestone-16), runs the skill service, and
+  the agents with `--agents`.
+
+**The demo.** One line run by two orchestrators (decided 31 Oct, [framework-plan.md](framework-plan.md),
+section 1): centralized, FOND-AAS's policy planned with PDDL and run as a behaviour tree (the
+colleagues' part, as is D1's simple orchestrator), and multi-agent, our agents ([agents.md](agents.md));
+everything below the orchestration is the same for both. The timeline
+(`docs/presentation/demo-plan/README.md`, not committed): D1 Fri 20 Nov, one station and the planar
+table; M1 Tue 1 Dec, the stations in the lab; D2 4 Dec, a new sensor; D3 11 Dec, capping plugged in;
+D4 18 Dec, centralized; D5 8 Jan, the agents bid; D6 15 Jan, a module fails and production goes on;
+D7 22 Jan, the full line with the robots; the partner day on 28 Jan and the demo day at AAU on
+10 Feb 2027.
+
 **Next, in this order:**
 
-1. **B3, on the Pi**: the runtime and program on both Pi 5s (see the table; needs the user), then
-   the scenarios on the Pi with the axis moving (`cell/eval/scenarios.py` against the Pi).
-2. **Writing** from 2 Nov, on the outline; the figures redrawn as needed.
-3. **The code citable** ([framework-plan.md](framework-plan.md), section 7.3): `ap2030-project`
-   created (by a lab member) and a first `aaspire` that pins today's repositories as submodules,
-   tagged `2026.11` with a DOI; the web UI fork's commits pushed and aas-model's pull request opened
-   (the user's go). The split itself waits until after 18 Nov.
-4. Open modelling points: when the scale may be tared ([skill-planning.md](skill-planning.md),
-   section 9); a model of the liquid level, so that BottomUpFilling is planned and not only written.
+1. **D1**: the filling module's positions measured again from the new home end and its transfer
+   point in the table's frame (the user at the bench); the planar controller on the real table (only
+   its simulated driver has run; the line mode the Configurator routes for is on the controller's
+   branch `planner-queue-idle-orientation`, not merged); the filling module's AAS on the AAS server D1
+   uses.
+2. **The DMP**: an Operation of the filling module on FORTE on this PC fails in the DMP ("OPC UA
+   Method invocation failed", 502) on the old stack and the new, while the same method called over
+   OPC UA from the PC succeeds; after the DMP's upstream merge of 3 Nov only its Maven tests ran
+   (design log, 17 Nov). Needed wherever a skill runs through the AAS.
+3. **M1**: the stoppering module wired and on its Pi; capping on a Pi of its own; inspection (a spec
+   only: the camera service, SeaweedFS in the lab stack).
+4. **The agents** (agents.md, section 7): A1 (MoveToPosition on the planar controller, loading and
+   unloading as steps), A2 on the filling Pi, A3 (a planned skill in a bid), A6 (failures), A7 (the
+   order screen); the Configurator's orders (`production-order/1.0`) are not read by the order agent.
+5. **Polish**: the web UI fork pushed and the Configurator committed (the user's); one editor per
+   kind for the demo; the HMI (Python, its 0.8 reader not committed, 7 tests failing) or its web UI
+   version (C5); FORTE's crash on stop; the LDS stalls.
 
-If time runs short, cut C (clients), E4 and E5, then B3 on real hardware (keep the Pi with
-simulated IO), then A3. Not to be cut: A1, A2, B1, B2.
+The other four modules of the line (capping, inspection, loading and unloading with the KUKA robots)
+are planned in [demo-modules.md](demo-modules.md) (1 Nov), steps M0 to M6.
 
-**After the paper: the demo in January.** It runs one line with two orchestrators (decided 31 Oct,
-[framework-plan.md](framework-plan.md), section 1): centralized, FOND-AAS's policy planned with PDDL
-and run as a behaviour tree (the colleagues' part), and multi-agent, our agents; everything below the
-orchestration is the same for both. What the demo still needs is section 7.2 there. Our agents are
-in [agents.md](agents.md) (started 30 Oct; the literature in
-[agents-literature.md](agents-literature.md)). Built: discovery (FORTE announces itself,
-`modreg serve --discover`), resource and product agents bidding in the I4.0 language, started by the AAS
-server's events, skills run over OPC UA or through the DMP, Prosody in the lab stack; on 30 Oct also
-orders to an order agent, transport by the shuttles (custody, on simulated shuttles) and a step that
-needs a reconfiguration (the syringe's BottomUpFilling created online). Next: the plan in section 7
-of agents.md (A1: MoveToPosition on the planar controller, loading and unloading; A2 on the filling
-Pi; A3: a planned skill in a bid). The other four modules of the line (capping, inspection, loading
-and unloading with the KUKA robots) are planned in [demo-modules.md](demo-modules.md) (1 Nov), steps
-M0 to M6; capping's program is generated and runs against the simulator since 3 Nov (M2 but its
-Pi), and the loading and unloading modules run in Python (modpy, 3 Nov; M3 but the agents' custody),
-their robots simulated until the robots' interface is known. The centralized orchestrator is the colleagues' to build (1 Nov); ours is to keep what both
-share compatible.
-
-**Waiting for the user** (do not decide these yourself): the go for the two Pis above; the eleven open
-decisions of [state-and-parameters.md](state-and-parameters.md); opening aas-model's pull request
-from the fork's `lab-ppr-models`; the go to push the web UI fork's commits and to commit the
-generation project's ARSO 0.8; whether module level skills become typed subapplications in the IDE;
-when to commit the HMI's 0.8 reader; the open decisions of the framework plan
-([framework-plan.md](framework-plan.md), section 10) and of the demo's modules
-([demo-modules.md](demo-modules.md), section 8); what the KUKA controllers have (M0 there); how
-taring and the liquid level are to be modelled.
+**Waiting for the user** (do not decide these yourself): the positions at the bench and the new
+`compose.yaml` on the filling Pi; the go for the stoppering Pi; the eleven open decisions of
+[state-and-parameters.md](state-and-parameters.md); opening aas-model's pull request from the fork's
+`lab-ppr-models`; the go to push the web UI fork's commits and to commit the generation project's
+ARSO 0.8; merging the planar controller's line mode; whether the order agent takes the Configurator's
+orders; whether module level skills become typed subapplications in the IDE; when to commit the HMI's
+0.8 reader; the open decisions of the framework plan ([framework-plan.md](framework-plan.md),
+section 10) and of the demo's modules ([demo-modules.md](demo-modules.md), section 8); what the KUKA
+controllers have (M0 there); how taring is to be modelled.
 
 ## Outside this repository
 
