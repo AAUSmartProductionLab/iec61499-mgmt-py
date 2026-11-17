@@ -1019,6 +1019,7 @@ toolchains, 4diac IDE 3.2.x.
 | F10 | `func_LIMIT.h` calls `func_MIN`/`func_MAX` without including their headers, so an ST algorithm using `LIMIT` does not compile unless something else pulled them in (`'func_MAX' was not declared in this scope`) | Exported `IO_RouteAO` | Clamp with IF. Fix: include `func_MIN.h`/`func_MAX.h` in `func_LIMIT.h` |
 | F13 | A local OPC UA object path that passes through a method node (`/Skills/X/Stop/Y` next to method `/Skills/X/Stop`) is created below the method node without an error | Browsing the filling module | Stop sequences publish below `.../Stopping`. Fix: refuse (or report) an object below a method |
 | F9 | FORTE's threads use the libc default stack; musl's 128 KiB is too small for open62541 | SIGSEGV on the first OPC UA FB on aarch64-linux-musl | `-Wl,-z,stack-size=8388608`. Fix: give `CThread` a sane default size, or set it in the FBE musl toolchains |
+| F14 | FORTE segfaults when it is stopped (SIGTERM), so the IO modules' deinit never runs: a pwmsysfs channel stays enabled and a stepper keeps turning | The Pi's container exits with 139 after `docker compose stop`; the channel's `enable` still 1 (17 Nov) | The container's entrypoint turns every PWM channel off after FORTE ends (`deploy/pi/compose.yaml`). Fix: find the crash on shutdown |
 
 **FORTE features**
 

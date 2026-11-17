@@ -141,3 +141,10 @@ What `runtime/build-pi.ps1` does, and how to run each step alone.
   `runtime/fbe/build/modules-pi/cget/pkg/open62541`.
 - **FORTE on the Pi refuses to create a block** ("unknown type" or a hash mismatch): the Pi runs an
   older FORTE than the program's types. Build, commit, and install again.
+- **The stepper keeps turning after FORTE has stopped.** FORTE 3.3.0 segfaults when it is stopped
+  (the container exits with 139), so its PWM clean-up never runs. Since 17 Nov the container's
+  entrypoint (`deploy/pi/compose.yaml`) turns every PWM channel off once FORTE has ended and before
+  it starts; a Pi installed earlier gets it with `python deploy/pi.py install` or
+  `cd ~/forte && docker compose up -d` after copying the new `compose.yaml`. By hand, on the Pi:
+  `docker run --rm -v /sys/class/pwm:/hostsys/class/pwm -v /sys/devices/platform:/hostsys/devices/platform busybox:1.36 sh -c 'echo 0 > /hostsys/class/pwm/pwmchip0/pwm2/enable'`.
+  The motor then stays without pulses until FORTE starts again, which enables the channel itself.

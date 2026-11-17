@@ -6,6 +6,24 @@ services:
     image: forte-pi:3.3.0
     container_name: forte
     restart: unless-stopped          # comes back after a reboot unless stopped by hand
+    # FORTE runs under a shell that turns every PWM channel off (duty 0, disabled) once FORTE has
+    # ended, however it ended: FORTE 3.3.0 segfaults when it is stopped, so its own clean-up never
+    # ran and the stepper kept turning. Also once before FORTE starts, for a container that was
+    # killed with the motor running; FORTE sets up and enables its channels itself at its start.
+    # Only a SIGKILL of this shell (docker kill, a stop that outlasts stop_grace_period) skips it.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        off() { for c in /hostsys/class/pwm/pwmchip*/pwm[0-9]*; do [ -d "$$c" ] && { echo 0 > "$$c/duty_cycle"; echo 0 > "$$c/enable"; }; done 2>/dev/null; }
+        off
+        /usr/local/bin/forte -c 0.0.0.0:61499 &
+        forte=$$!
+        trap 'kill -TERM $$forte 2>/dev/null' TERM INT
+        wait $$forte; status=$$?
+        while kill -0 $$forte 2>/dev/null; do wait $$forte; status=$$?; done
+        off
+        exit $$status
     # Host network: OPC UA advertises the Pi's own address in its endpoints, and the management
     # port (61499, no authentication: lab network only) and Modbus clients need no mapping.
     network_mode: host

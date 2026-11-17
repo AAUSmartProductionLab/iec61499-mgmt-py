@@ -20,6 +20,16 @@ A running log of design considerations made while building, for writing the pape
 
 ## 17 Nov 2026
 
+- **The Pi's FORTE container turns the PWM off when FORTE ends, however it ends.** *Orchestration*.
+  FORTE 3.3.0 segfaults when it is stopped (exit 139), so the pwmsysfs module's clean-up never runs
+  and the stepper's PWM stayed enabled: the axis kept turning after `docker compose stop`. The
+  container's entrypoint is now a small shell that starts FORTE, passes a stop on to it and, once
+  FORTE has ended, writes duty 0 and disabled to every exported channel; it does the same before FORTE
+  starts, for a container that was killed with the motor running. Chosen instead of a FORTE patch:
+  the crash's cause is not found yet, and a clean-up outside FORTE also covers a FORTE that dies any
+  other way. In `compose.yaml` instead of a script in the image, so every way a Pi is installed
+  (`pi.py install`, `install.sh`, the kit) takes it without a new file and without rebuilding the
+  image. A SIGKILL of the container (after the 5 s grace period) still skips it.
 - **Q1 on the Pi: the paper reports the time to the verified application; storing the boot file
   is given apart.** *CIRP*. On the Pi the reconciler runs on the PC and stores the boot file over
   SSH, which takes 1.1 s however large the change; the skill is active and verified before that.
