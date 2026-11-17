@@ -163,11 +163,13 @@ class DmpExecutor(Executor):
     module's OPC UA method; the state read from the series the DMP writes to InfluxDB. The series are
     named as the DMP names them today: ``state_module`` (``PackMLState``), ``state_<skill>``
     (``<Skill>_State``, ``<Skill>_Result_<name>``); the Variables submodel says which (to be read from
-    there)."""
+    there). InfluxDB is ``influx``, else ``INFLUX_URL`` (the lab stack's container sets it), else this
+    computer's."""
 
-    def __init__(self, module: dict, server: str, influx: str = "http://localhost:8086", token: str | None = None,
+    def __init__(self, module: dict, server: str, influx: str | None = None, token: str | None = None,
                  org: str = "ap2030", bucket: str = "ap2030", timeout: float = 180.0, poll: float = 0.5):
-        self.module, self.server, self.influx = module, server.rstrip("/"), influx.rstrip("/")
+        self.module, self.server = module, server.rstrip("/")
+        self.influx = (influx or os.environ.get("INFLUX_URL") or "http://localhost:8086").rstrip("/")
         self.token = token or os.environ.get("INFLUX_TOKEN") or self._token()
         self.org, self.bucket, self.timeout, self.poll = org, bucket, timeout, poll
         self.asset = module["assetAdministrationShells"][0]["idShort"]
