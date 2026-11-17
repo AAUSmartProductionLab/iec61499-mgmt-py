@@ -194,6 +194,12 @@ python -m modsync pull --host 192.168.0.134                      # check what ru
   `board: pi5`. GPIO is `/dev/gpiochip0` on the current kernels.
 - After a deployment the module is Stopped and free. **Occupy and Reset, Home and every skill move
   the axis: only with the user at the bench and their go.**
+- **The bench check** (`deploy/bench.py`, any module spec with one linear axis): `status` and
+  `switch` move nothing (the module, the axis and the PWM channels; the home switch as it is pressed
+  by hand); `home`, `move --to <mm>` and `move --to <mm> --stay` (to measure a position) move the
+  axis under a watchdog that turns the PWM off over SSH and aborts the module when a motion takes
+  too long or OPC UA fails. Since 17 Nov the container also turns the PWM off whenever FORTE ends
+  (`deploy/pi/compose.yaml`; FORTE segfaults when it is stopped).
 - sudo on a Pi needs a password the user gives when needed; it is never written to a file.
 - **Discovery.** FORTE announces its OPC UA server by mDNS (the container uses the host's network).
   `pi.py module` also writes the module's manifest (its profiles) to `~/forte/manifest` and starts the

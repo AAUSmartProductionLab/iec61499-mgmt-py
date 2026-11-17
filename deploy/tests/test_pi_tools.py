@@ -3,6 +3,8 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from bench import Axis  # noqa: E402
+from modgen import SPECS, load  # noqa: E402
 from pi import ONBOARD_LED, blink_commands  # noqa: E402
 
 
@@ -24,3 +26,10 @@ def test_blink_toggles_one_gpio_line_after_it_is_claimed():
 
 def test_default_led_is_the_onboard_act_led():
     assert ONBOARD_LED == 42
+
+
+def test_the_bench_check_takes_each_modules_axis_from_its_spec():
+    for name, speed in [("filling", 12.5), ("stoppering", 20.0), ("capping", 12.5)]:
+        axis = Axis(load(SPECS / f"{name}.yaml"))
+        assert (axis.name, axis.home, axis.speed) == ("LinearAxis", "AtHome", speed)
+        assert axis.seconds(-25.0) == 25.0 / speed + 1.5        # a move's watchdog, either way

@@ -9,10 +9,14 @@ when it is told to stop. Needs Docker; skipped without it.
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import time
 
 import pytest
 import yaml
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from bench import OFF  # noqa: E402
 
 COMPOSE = Path(__file__).resolve().parents[1] / "pi" / "compose.yaml"
 CONTAINER = "forte-entrypoint-test"
@@ -55,10 +59,10 @@ def test_the_pwm_is_off_after_forte_crashes_on_stop_and_before_it_starts(docker,
     (tmp_path / "bin/forte").write_bytes(FAKE_FORTE.encode())       # LF line ends, for sh
     shell, flag, script = entrypoint()
     # The fake FORTE is installed executable first; the entrypoint's shell then takes over as PID 1.
+    setup = f'install -m 755 /fake/forte /usr/local/bin/forte && exec {shell} {flag} "$ENTRYPOINT"'
     subprocess.run(["docker", "run", "-d", "--name", CONTAINER, "-v", f"{tmp_path / 'pwm'}:/hostsys/class/pwm",
                     "-v", f"{tmp_path / 'bin'}:/fake:ro", "-e", f"ENTRYPOINT={script}", "--entrypoint", shell,
-                    "alpine:3.20", flag, f'install -m 755 /fake/forte /usr/local/bin/forte && exec {shell} {flag} "$ENTRYPOINT"'],
-                   capture_output=True, check=True)
+                    "alpine:3.20", flag, setup], capture_output=True, check=True)
     deadline = time.monotonic() + 30
     while "fake forte" not in (log := logs()):
         assert time.monotonic() < deadline, f"FORTE did not start: {log}"
@@ -71,6 +75,10 @@ def test_the_pwm_is_off_after_forte_crashes_on_stop_and_before_it_starts(docker,
     exit_code = subprocess.run(["docker", "inspect", "-f", "{{.State.ExitCode}}", CONTAINER],
                                capture_output=True, text=True, check=True).stdout.strip()
     assert exit_code == "139"                                    # FORTE's own exit status is kept
+
+
+def test_the_bench_check_turns_off_what_the_entrypoint_turns_off():
+    assert OFF in entrypoint()[-1]                 # deploy/bench.py's watchdog, the same loop
 
 
 def logs() -> str:
