@@ -407,7 +407,7 @@ def figure(by_cell, cells, restart, folder: Path) -> None:
     ax.set_ylabel("Seconds")
     ax.grid(axis="y", color="#E4E7E8", lw=0.5)
     ax.set_axisbelow(True)
-    ax.legend(title="Activated at runtime, in an application of", frameon=False, fontsize=6, title_fontsize=6,
+    ax.legend(title="Added and verified at runtime, in an application of", frameon=False, fontsize=6, title_fontsize=6,
               loc="upper left", bbox_to_anchor=(0.0, 0.84), alignment="left")
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
