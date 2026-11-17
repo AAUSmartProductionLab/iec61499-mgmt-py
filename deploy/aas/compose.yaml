@@ -74,6 +74,9 @@ services:
     container_name: lab-xmpp
     ports:
       - "5222:5222"
+      - "8095:8095"      # the agents' orders over HTTP: the agents service shares this network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"     # for the agents: modules simulated on this computer
     volumes:
       - ./prosody.cfg.lua:/etc/prosody/prosody.cfg.lua:ro
       - prosody-data:/var/lib/prosody
@@ -98,6 +101,11 @@ services:
       MQTT_CLIENTID: aas-environment
       MQTT_HOSTNAME: mosquitto
       MQTT_PORT: 1883
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8081/shells"]
+      interval: 3s
+      timeout: 2s
+      retries: 40
     depends_on:
       aas-registry:
         condition: service_healthy
@@ -178,7 +186,53 @@ services:
     depends_on:
       - aas-environment
 
+  # The skill service (modreg serve): matching, checking and planning for the web UI (Match resources,
+  # Match and plan, Check, Plan a skill) and the process AAS it writes once the planner has saved; what
+  # is registered with it is checked against ARSO and published here. Without --discover: the modules'
+  # mDNS does not reach a container on Docker Desktop (run modreg serve --discover on the host for it).
+  skill-service:
+    image: lab-services:1.0
+    build:
+      context: ../..
+      dockerfile: deploy/aas/services.Dockerfile
+    container_name: lab-skill-service
+    command: ["modreg", "serve", "--basyx", "http://aas-environment:8081", "--ontology", "ontology/ARSO",
+              "--store", "/data/registry"]
+    ports:
+      - "8090:8090"
+    volumes:
+      - skill-registry:/data      # the registrations: the service's own state
+    depends_on:
+      aas-environment:
+        condition: service_healthy
+
+  # The line's agents (python -m lineagents, docs/agents.md), the multi-agent orchestrator: only with
+  # the profile agents (python deploy/aas.py up --agents). An agent connects to its JID's domain,
+  # localhost, so the agents share the XMPP server's network (their orders' port 8095 is published
+  # there). Their passwords are made from LINEAGENTS_SECRET, the one lineagents uses on this computer.
+  agents:
+    image: lab-services:1.0
+    pull_policy: never            # built for skill-service
+    container_name: lab-agents
+    profiles: [agents]
+    network_mode: service:xmpp
+    command: ["python", "-m", "lineagents", "--aas", "http://aas-environment:8081", "--mqtt", "mosquitto:1883",
+              "--http", "8095"]
+    environment:
+      LINEAGENTS_SECRET: ${LINEAGENTS_SECRET:-}
+      INFLUX_URL: http://influxdb:8086              # for --executor dmp
+      INFLUX_TOKEN: ${INFLUX_TOKEN:-}
+    restart: unless-stopped
+    depends_on:
+      xmpp:
+        condition: service_started
+      mosquitto:
+        condition: service_started
+      aas-environment:
+        condition: service_healthy
+
 volumes:
   influxdb-data:
   prosody-data:
   influxdb-config:
+  skill-registry:

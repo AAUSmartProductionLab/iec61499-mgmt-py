@@ -1,0 +1,15 @@
+*
+!pyproject.toml
+!iec61499-mgmt-py/iec61499_mgmt
+!iec61499-skill-lib/modgen
+!iec61499-skill-lib/ModLib
+!iec61499-skill-lib/stdtypes
+!aas61499-tools/modsync
+!aas61499-tools/modreg
+!aas61499-tools/modplan
+!line-agents/lineagents
+!module-py/modpy
+!ontology
+!cell/modules
+!iec61499-opcua-hmi/modlink
+**/__pycache__

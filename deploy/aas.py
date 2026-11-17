@@ -1,6 +1,7 @@
-"""The lab's AAS stack on this computer (deploy/aas/compose.yaml): BaSyx, the DMP, InfluxDB.
+"""The lab's AAS stack on this computer (deploy/aas/compose.yaml): BaSyx, the DMP, InfluxDB, the skill service.
 
     python deploy/aas.py up          # write the secrets to deploy/aas/.env if there are none, start it all
+    python deploy/aas.py up --agents # ... with the line's agents (the multi-agent orchestrator)
     python deploy/aas.py status      # the containers, and what the DMP made of the AIMCs
     python deploy/aas.py status FillingModuleAAS    # ... and why each of its mappings that does not run does not
     python deploy/aas.py rows FillingModuleAAS      # the latest row of each of a module's time series
@@ -8,7 +9,9 @@
     python deploy/aas.py down        # stop it (InfluxDB keeps its data in a volume)
 
 Web UI http://localhost:3000, AAS environment http://localhost:8081, DMP http://localhost:8085,
-InfluxDB http://localhost:8086 (user admin; password and token in deploy/aas/.env, never committed).
+InfluxDB http://localhost:8086 (user admin; password and token in deploy/aas/.env, never committed),
+skill service http://localhost:8090 (the web UI's matching and planning), with --agents their orders
+at http://localhost:8095/orders and XMPP on 5222.
 
 The DMP builds its routes from the AIMCs in the AAS environment and follows its submodel events, so
 an AAS published there (modreg serve --basyx http://localhost:8081, or cell/examples/example_line.py)
@@ -19,6 +22,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 from pathlib import Path
 import secrets
 import subprocess
@@ -38,6 +42,25 @@ def compose(*args: str) -> None:
     subprocess.run(["docker", "compose", "-f", str(STACK / "compose.yaml"), *args], check=True)
 
 
+def agents_secret() -> str:
+    """The secret the agents' XMPP passwords are made from, as lineagents takes it on this computer
+    (lineagents.manager.agents_secret: LINEAGENTS_SECRET, else ~/.lineagents-secret), so that agents
+    run here and in the stack's container log in to the same accounts."""
+    if os.environ.get("LINEAGENTS_SECRET"):
+        return os.environ["LINEAGENTS_SECRET"]
+    kept = Path.home() / ".lineagents-secret"
+    if not kept.exists():
+        kept.write_text(secrets.token_urlsafe(32), encoding="utf-8")
+    return kept.read_text(encoding="utf-8").strip()
+
+
+def keep(name: str, value: str) -> None:
+    """Add ``name=value`` to the stack's .env unless it has the name already."""
+    lines = ENV.read_text(encoding="utf-8").splitlines()
+    if not any(line.startswith(f"{name}=") for line in lines):
+        ENV.write_text("\n".join([*lines, f"{name}={value}"]) + "\n", encoding="utf-8")
+
+
 def secret(name: str) -> str:
     for line in ENV.read_text(encoding="utf-8").splitlines():
         key, _, value = line.partition("=")
@@ -52,11 +75,12 @@ def up(args) -> None:
         ENV.write_text(f"INFLUX_PASSWORD={secrets.token_urlsafe(18)}\nINFLUX_TOKEN={secrets.token_urlsafe(32)}\n",
                        encoding="utf-8")
         print(f"Wrote new secrets to {ENV}")
-    compose("up", "-d", "--build")
+    keep("LINEAGENTS_SECRET", agents_secret())
+    compose(*(["--profile", "agents"] if args.agents else []), "up", "-d", "--build")
 
 
 def down(args) -> None:
-    compose("down")
+    compose("--profile", "agents", "down")          # the agents too, if they run
 
 
 def logs(args) -> None:
@@ -116,6 +140,8 @@ def main():
     for name, fn in [("up", up), ("down", down), ("status", status), ("logs", logs), ("rows", rows)]:
         sub = commands.add_parser(name)
         sub.set_defaults(fn=fn)
+        if name == "up":
+            sub.add_argument("--agents", action="store_true", help="also start the line's agents (profile agents)")
         if name == "status":
             sub.add_argument("asset", nargs="?", help="an AAS idShort (or its AIMC's id): why its mappings do not run")
         if name == "logs":
