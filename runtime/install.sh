@@ -137,7 +137,7 @@ fi
 
 # --- files -----------------------------------------------------------------------------------
 say "Installing FORTE in $FORTE_DIR"
-mkdir -p "$FORTE_DIR/boot"
+mkdir -p "$FORTE_DIR/boot" "$FORTE_DIR/manifest"     # before compose, which makes a missing one as root's
 [ -e "$FORTE_DIR/boot/forte.fboot" ] || : > "$FORTE_DIR/boot/forte.fboot"
 printf 'GPIOCHIP=%s\n' "$gpiochip" > "$FORTE_DIR/.env"
 
