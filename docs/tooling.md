@@ -271,12 +271,20 @@ templates no longer match the ontology) and `cell/tests/test_example_line.py`.
 
 **Publishing.** The local AAS server is the lab's AAS stack on this PC (`deploy/aas/compose.yaml`,
 `lab-*` containers): the AAS environment `http://localhost:8081`, the web UI `http://localhost:3000`,
-the DMP (aas-camel-dmp, the submodule) `http://localhost:8085` and InfluxDB `http://localhost:8086`.
-The DMP runs what the published AASs say: an Operation invoked at the AAS environment calls the
-module's OPC UA method, and the module's values are written to the time series its Variables name.
+the DMP (aas-camel-dmp, the submodule) `http://localhost:8085`, InfluxDB `http://localhost:8086` and
+the skill service (`modreg serve`, since 17 Nov a container of the stack) `http://localhost:8090`,
+which the web UI's matching, checking and planning need. The DMP runs what the published AASs say: an
+Operation invoked at the AAS environment calls the module's OPC UA method, and the module's values are
+written to the time series its Variables name. With `--agents` the line's agents run in the stack too
+(`lab-agents`, orders at `http://localhost:8095/orders`); they log in to Prosody with passwords made
+from the same secret as agents run on this PC (`LINEAGENTS_SECRET` in `deploy/aas/.env`, written from
+`~/.lineagents-secret`). The skill service and the agents are one image of this repository
+(`deploy/aas/services.Dockerfile`), rebuilt by `aas.py up`. Discovery (`--discover`) is not in the
+container: the modules' mDNS does not reach Docker Desktop's containers; run it on the host.
 
 ```powershell
 python deploy/aas.py up                  # start it (the first time: secrets to deploy/aas/.env, the DMP image built)
+python deploy/aas.py up --agents         # ... with the line's agents
 python deploy/aas.py status              # the containers, and every DMP mapping that does not run, with why
 python deploy/aas.py rows FillingModuleAAS   # the latest value of each field of the module's series
 python -m pytest cell/tests/test_dmp_live.py --module-forte-exe <forte.exe>   # a skill through the AAS, the rows in InfluxDB
@@ -299,7 +307,7 @@ The planner's demo stack (`ps-*`, in the web UI fork) uses the same ports: it is
 ```powershell
 python cell/examples/example_line.py --out aas --publish http://localhost:8081   # the example line's AASs (created or replaced)
 python cell/examples/describe.py                                                 # docs/aas-examples.md from them
-python -m modreg serve --ontology ontology/ARSO --basyx http://localhost:8081   # the registration service on :8090
+python -m modreg serve --ontology ontology/ARSO --basyx http://localhost:8081   # on :8090 on the host (docker stop lab-skill-service first)
 python -m modsync pull --host 192.168.0.203 --register http://localhost:8090    # a running module's AAS through it
 python -m modreg serve ... --discover                                            # also find the modules on the network and register them
 curl http://localhost:8090/discovered                                            # what it found

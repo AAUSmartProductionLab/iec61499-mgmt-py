@@ -20,6 +20,18 @@ A running log of design considerations made while building, for writing the pape
 
 ## 17 Nov 2026
 
+- **The skill service and the agents run in the lab's AAS stack, from one image of this repository.**
+  *Orchestration*. The web UI's Match resources, Match and plan, Check and Plan a skill call the skill
+  service (`modreg serve`), which had to be started by hand on the host; when it was not, those
+  buttons failed. It is now a container of the stack (port 8090, its registrations in a volume), and
+  the agents a second one in the profile `agents` (A4 of agents.md), so a demo starts with one command
+  and either orchestrator. One image (`deploy/aas/services.Dockerfile`), installed editable so that
+  the tools find the ontology and modlink where the repository keeps them, instead of an image per tool
+  before the repository is split. The agents share the XMPP server's network: SPADE connects to its
+  JID's domain, `localhost`, and a domain of the container's own would have needed a second virtual
+  host that agents run on the host do not reach. Their passwords come from the secret the agents on
+  this PC use, so both log in to the same accounts. Discovery stays on the host: the modules' mDNS does
+  not reach Docker Desktop's containers.
 - **The Pi's FORTE container turns the PWM off when FORTE ends, however it ends.** *Orchestration*.
   FORTE 3.3.0 segfaults when it is stopped (exit 139), so the pwmsysfs module's clean-up never runs
   and the stepper's PWM stayed enabled: the axis kept turning after `docker compose stop`. The
