@@ -87,9 +87,10 @@ def install(args):
     forte = Path(args.forte)
     if not forte.is_file():
         sys.exit(f"{forte} not found; build it with build-modules.ps1 -Config pi/modules-pi first")
-    # Earlier installs ran FORTE as a systemd user service; it would hold the ports.
+    # Earlier installs ran FORTE as a systemd user service; it would hold the ports. The folders the
+    # containers mount are made first: docker compose makes a missing one as root's.
     ssh(args, "systemctl --user disable --now forte 2>/dev/null; rm -f ~/.config/systemd/user/forte.service; "
-              "mkdir -p ~/forte/boot && touch ~/forte/boot/forte.fboot")
+              "mkdir -p ~/forte/boot ~/forte/manifest && touch ~/forte/boot/forte.fboot")
     # The image takes the binary as "forte", whatever the file is called here (runtime/bin/forte-aarch64).
     subprocess.run(["scp", "-q", str(forte), f"{args.user}@{args.host}:forte/forte"], check=True)
     files = [DOCKER / f for f in ("Dockerfile", "compose.yaml", ".dockerignore")]
@@ -194,7 +195,11 @@ def manifest(args, spec):
         return
     found = {"module": spec.opcua_root.rstrip("/").rsplit("/", 1)[-1],
              "profiles": profiles.describe_all(spec, args.target)}
-    ssh(args, "mkdir -p ~/forte/manifest && cat > ~/forte/manifest/manifest.json", stdin=json.dumps(found))
+    # A folder that docker compose made (for a missing bind mount) is root's: it is given back to the
+    # login through a container, since the login may run containers but has no sudo without a password.
+    ssh(args, 'mkdir -p ~/forte/manifest && { [ -w ~/forte/manifest ] || docker run --rm -v "$HOME/forte/manifest:/m" '
+              'busybox:1.36 chown -R "$(id -u):$(id -g)" /m; } && cat > ~/forte/manifest/manifest.json',
+        stdin=json.dumps(found))
     compose(args, "up -d manifest")
     print(f"manifest: http://{args.host}:8088/manifest.json")
 
