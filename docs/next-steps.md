@@ -1,5 +1,9 @@
 # Next steps
 
+**History since 17 Nov 2026:** the paper was submitted that day. What comes next, for the demo in
+January, is in [onboarding.md](onboarding.md) (State and next steps) and in section 7 of
+[framework-plan.md](framework-plan.md), [agents.md](agents.md) and [demo-modules.md](demo-modules.md).
+
 Plan of 8 Oct 2026, reviewed and updated on 21, 26, 27 and 31 Oct; it replaces the plan of 6 Oct
 ([archive](archive/next-steps-2026-10-06.md)). The whole pipeline in one place is
 [pipeline.md](pipeline.md); what is built and how is in [work.md](work.md); what each AAS holds in
