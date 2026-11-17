@@ -18,6 +18,27 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 17 Nov 2026
+
+- **Q1 on the Pi: the paper reports the time to the verified application; storing the boot file
+  is given apart.** *CIRP*. On the Pi the reconciler runs on the PC and stores the boot file over
+  SSH, which takes 1.1 s however large the change; the skill is active and verified before that.
+  So Fig. 4 and the headline give the time from the AAS to the verified application (2.06 s for 32
+  steps in 20 composites) and the text adds the boot file's 1.1 s. Instead of the activation time
+  with the SSH write, which would make the result mostly a measure of the test setup.
+- **The OPC Foundation's discovery server on the PC stopped for the runs.** *CIRP*. FORTE is built
+  to announce itself and register with discovery servers it finds by mDNS. It found the PC's
+  `UALDS` service, could not resolve `MartinPC.local` in its container, and froze its OPC UA server
+  for 5 s once a minute. The service was stopped for Q1 (0 of 120 runs had a registration error).
+  Instead of changing the Pi's FORTE between runs; a lasting fix (name resolution in the container,
+  or no registration) is still open.
+- **The run's drift came from the PC, not from the Pi.** *CIRP*. Over the 125 runs the phases over
+  the management connection grew by about 18 % per 100 runs, and the PC-only compile phase by more,
+  while the boot file's write and the running skill's duration stayed flat and the Pi stayed at
+  54 °C. The PC run of 11 Nov had none. The order is random, so it widens the intervals but
+  does not bias the cells; the headline cell's runs show no trend (1.95 to 2.14 s, one outlier).
+  Kept rather than run again.
+
 ## 13 Nov 2026
 
 - **The axes home at the other end of their stage, onto a normally closed switch (filling, capping,
