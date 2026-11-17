@@ -52,6 +52,12 @@ def fmt(t: tuple[float, float, float], scale: float = 1.0, digits: int = 3) -> s
     return f"{m:.{digits}f} [{lo:.{digits}f}, {hi:.{digits}f}]"
 
 
+def verified(out: dict) -> float:
+    """The time from the AAS to the verified program: the activation time without persisting the boot
+    file, which follows the verification (a local file on the PC, over SSH on the Pi)."""
+    return out["t_act_s"] - out.get("persist_s", 0.0)
+
+
 def fit(x, y) -> tuple[float, float, float]:
     """Least squares y = a + b x; returns (a, b, R²)."""
     x, y = np.asarray(x, float), np.asarray(y, float)
@@ -123,17 +129,20 @@ def main() -> None:
     # A: flow changes, sequences.
     md += ["", "## A: a new composite (sequence), online", "",
            "Seconds, median [95 % interval]; commands and bytes as in every run of the cell.", "",
-           "| Steps | Program | Runs | Activation | read | compile | apply | verify | Commands | Bytes |",
-           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+           "Verified: from the AAS to the program read back and verified; activation: and the boot file "
+           "persisted as well.", "",
+           "| Steps | Program | Runs | Verified | Activation | read | compile | apply | verify | persist | Commands | Bytes |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     xs_cmd, ys_act, xs_inst, ys_read, steps_cmd = [], [], [], [], []
     for c, rs in cell_rows("A"):
         if not rs:
-            md.append(f"| {c['steps']} | {c['program']} | 0 | | | | | | | |")
+            md.append(f"| {c['steps']} | {c['program']} | 0 | | | | | | | | | |")
             continue
         o = [r["out"] for r in rs]
         cmds = sorted({x["commands"] for x in o})
-        md.append(f"| {c['steps']} | {c['program']} | {len(rs)} | {fmt(ci([x['t_act_s'] for x in o]))} | "
-                  + " | ".join(fmt(ci([x[p] for x in o])) for p in ("read_s", "compile_s", "apply_s", "verify_s"))
+        md.append(f"| {c['steps']} | {c['program']} | {len(rs)} | {fmt(ci([verified(x) for x in o]))} | "
+                  f"{fmt(ci([x['t_act_s'] for x in o]))} | "
+                  + " | ".join(fmt(ci([x[p] for x in o])) for p in ("read_s", "compile_s", "apply_s", "verify_s", "persist_s"))
                   + f" | {cmds} | {sorted({x['bytes'] for x in o})} |")
         for x in o:
             xs_cmd.append(x["commands"]), ys_act.append(x["t_act_s"])
@@ -227,7 +236,8 @@ def main() -> None:
                   f"{coef[2] * 1000:.4f} ms per connection of the program, R² = {r2:.3f}")
     if flows:
         worst = max(flows, key=lambda f: f["t_act_s"])
-        md.append(f"- The slowest activation of all {len(flows)} runs: {worst['t_act_s']:.3f} s")
+        md.append(f"- The slowest activation of all {len(flows)} runs: {worst['t_act_s']:.3f} s; "
+                  f"the slowest to the verified program: {max(verified(f) for f in flows):.3f} s")
     if len(set(xs_inst)) > 1:
         a0, b0, r2 = fit(xs_inst, ys_read)
         md.append(f"- Read phase on the program's instances: {a0 * 1000:.1f} ms + {b0 * 1000:.3f} ms per instance, R² = {r2:.3f}")
@@ -252,8 +262,9 @@ def main() -> None:
     big = by_cell.get("A-flow-n32-k1-m20", [])
     if big:
         m = ci([r["out"]["t_act_s"] for r in big])
-        md.append(f"- H1.1: 32 steps in a program of 20 composites: {fmt(m)} s; below 1 s: {'yes' if m[2] < 1 else 'no'} (upper bound). "
-                  "Linearity: see the fits.")
+        mv = ci([verified(r["out"]) for r in big])
+        md.append(f"- H1.1: 32 steps in a program of 20 composites: {fmt(m)} s ({fmt(mv)} s to the verified program); "
+                  f"below 1 s: {'yes' if m[2] < 1 else 'no'} (upper bound). Linearity: see the fits.")
     v4 = checks.get("V4")
     if v4:
         md.append(f"- H1.2: the commands, by operation, equal what the generator's boot files call for in {v4[0]} of "
@@ -372,7 +383,7 @@ def figure(by_cell, cells, restart, folder: Path) -> None:
         for n in (1, 2, 4, 8, 16, 32):
             rs = by_cell.get(f"A-flow-n{n}-k1-m{m}", [])
             if rs:
-                c = ci([r["out"]["t_act_s"] for r in rs])
+                c = ci([verified(r["out"]) for r in rs])
                 xs.append(n), ys.append(c[0]), lo.append(c[0] - c[1] if not np.isnan(c[1]) else 0), hi.append(c[2] - c[0] if not np.isnan(c[2]) else 0)
         if xs:
             ax.errorbar(xs, ys, yerr=[lo, hi], marker=markers[m], ms=3.2, lw=1.2, capsize=1.5, color=shades[m],
@@ -387,15 +398,16 @@ def figure(by_cell, cells, restart, folder: Path) -> None:
     ax.set_xscale("log", base=2)
     ax.set_yscale("log")
     ax.set_xticks([1, 2, 4, 8, 16, 32], ["1", "2", "4", "8", "16", "32"])
-    ax.yaxis.set_major_locator(FixedLocator([0.03, 0.1, 0.3, 1, 3]))
+    ax.yaxis.set_major_locator(FixedLocator([0.03, 0.1, 0.3, 1, 3, 10]))
     ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
     ax.yaxis.set_minor_locator(NullLocator())
-    ax.set_ylim(0.025, 6.5)
+    low, high = ax.get_ylim()
+    ax.set_ylim(max(0.025, low * 0.8), max(6.5, (float(np.median(flows)) if flows else 0) * 1.6, high))
     ax.set_xlabel("Steps of the new composite")
     ax.set_ylabel("Seconds")
     ax.grid(axis="y", color="#E4E7E8", lw=0.5)
     ax.set_axisbelow(True)
-    ax.legend(title="Activated online, in an application of", frameon=False, fontsize=6, title_fontsize=6,
+    ax.legend(title="Activated at runtime, in an application of", frameon=False, fontsize=6, title_fontsize=6,
               loc="upper left", bbox_to_anchor=(0.0, 0.84), alignment="left")
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
