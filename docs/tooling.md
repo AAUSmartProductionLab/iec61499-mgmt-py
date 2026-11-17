@@ -281,6 +281,10 @@ from the same secret as agents run on this PC (`LINEAGENTS_SECRET` in `deploy/aa
 `~/.lineagents-secret`). The skill service and the agents are one image of this repository
 (`deploy/aas/services.Dockerfile`), rebuilt by `aas.py up`. Discovery (`--discover`) is not in the
 container: the modules' mDNS does not reach Docker Desktop's containers; run it on the host.
+Since 17 Nov BaSyx keeps the AASs, the registries' descriptors and discovery in MongoDB (`lab-mongo`,
+volume `lab-aas_aas-data`): what was published is still there after a restart; to start empty,
+`aas.py down` and `docker volume rm lab-aas_aas-data`. BaSyx is pinned to `2.0.0-milestone-16`, which
+refuses to delegate an Operation to a private address unless its host is allowlisted (the DMP is).
 
 ```powershell
 python deploy/aas.py up                  # start it (the first time: secrets to deploy/aas/.env, the DMP image built)

@@ -20,6 +20,21 @@ A running log of design considerations made while building, for writing the pape
 
 ## 17 Nov 2026
 
+- **The lab's AAS server keeps what was published, in MongoDB, on one pinned BaSyx release.**
+  *Orchestration*. The AAS environment, the two registries and discovery were in memory, so every
+  restart of the stack lost the line's AASs, the planner's process AASs and the Configurator's products
+  until someone published them again; for a demo that is a risk on every restart. They now use BaSyx's
+  MongoDB backends (a `mongo` service in the stack, not published to the host, so without a password).
+  All four are pinned to `2.0.0-milestone-16` instead of `2.0.0-SNAPSHOT`: the cached SNAPSHOT of the
+  environment was from 28 Jan 2026, and a new computer would have pulled whatever was built last,
+  never tried here; milestone-16 is what the companion repository's stack runs with the web UI. Tried
+  in a stack of its own: the example line published, the stack restarted, its 24 shells, 91 submodels,
+  their descriptors and discovery's links still there, the DMP's 182 mappings installed again, the
+  agents back for every module. milestone-16 refuses to delegate an Operation to a private address
+  (HTTP 424, "resolves to blocked address"): only the DMP's host is allowlisted, rather than allowing
+  every private target. Found on the way, on the old stack as well, so not caused by this: an Operation
+  of the filling module on FORTE on this PC fails in the DMP ("OPC UA Method invocation failed", 502),
+  while the same method called over OPC UA from the PC succeeds; to be looked into for D1.
 - **The skill service and the agents run in the lab's AAS stack, from one image of this repository.**
   *Orchestration*. The web UI's Match resources, Match and plan, Check and Plan a skill call the skill
   service (`modreg serve`), which had to be started by hand on the host; when it was not, those

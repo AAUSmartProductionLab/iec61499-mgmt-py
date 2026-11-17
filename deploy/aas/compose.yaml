@@ -8,17 +8,44 @@
 #   aas-environment --submodel events (MQTT)--> dmp: it builds its routes from the AIMCs it reads
 name: lab-aas
 
+# Where BaSyx keeps its data: the MongoDB below. BaSyx 2.0.0-milestone-16 runs on Spring Boot 4,
+# which reads spring.mongodb.*; Spring Boot 3 (older BaSyx images) read spring.data.mongodb.*.
+x-mongo: &mongo
+  SPRING_MONGODB_HOST: mongo
+  SPRING_DATA_MONGODB_HOST: mongo
+
 services:
+  # The AASs, their submodels and the registries' descriptors are kept in MongoDB, so a restart of
+  # the stack keeps what was published (until 17 Nov they were in memory). Not published to the host,
+  # hence no password: only the stack's containers reach it. To start empty: aas.py down, then
+  # docker volume rm lab-aas_aas-data. BaSyx is pinned to one release (the SNAPSHOT tags of before
+  # gave whatever was built last, on a new computer something never tried here).
+  mongo:
+    image: mongo:7.0
+    container_name: lab-mongo
+    command: ["--wiredTigerCacheSizeGB", "0.5"]
+    volumes:
+      - aas-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
   aas-registry:
-    image: eclipsebasyx/aas-registry-log-mem:2.0.0-SNAPSHOT
+    image: eclipsebasyx/aas-registry-log-mongodb:2.0.0-milestone-16
     container_name: lab-aas-registry
     ports:
       - "8082:8080"
     environment:
+      <<: *mongo                               # database aasregistry, as the image sets it
       SERVER_PORT: 8080
       SERVER_SERVLET_CONTEXT_PATH: /
       BASYX_CORS_ALLOWED_ORIGINS: '*'
       BASYX_CORS_ALLOWED_METHODS: GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
+    depends_on:
+      mongo:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/shell-descriptors"]
       interval: 3s
@@ -26,15 +53,19 @@ services:
       retries: 20
 
   sm-registry:
-    image: eclipsebasyx/submodel-registry-log-mem:2.0.0-SNAPSHOT
+    image: eclipsebasyx/submodel-registry-log-mongodb:2.0.0-milestone-16
     container_name: lab-sm-registry
     ports:
       - "8083:8080"
     environment:
+      <<: *mongo                               # database submodelregistry, as the image sets it
       SERVER_PORT: 8080
       SERVER_SERVLET_CONTEXT_PATH: /
       BASYX_CORS_ALLOWED_ORIGINS: '*'
       BASYX_CORS_ALLOWED_METHODS: GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
+    depends_on:
+      mongo:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/submodel-descriptors"]
       interval: 3s
@@ -42,15 +73,21 @@ services:
       retries: 20
 
   aas-discovery:
-    image: eclipsebasyx/aas-discovery:2.0.0-SNAPSHOT
+    image: eclipsebasyx/aas-discovery:2.0.0-milestone-16
     container_name: lab-aas-discovery
     ports:
       - "8084:8081"
     environment:
+      <<: *mongo
+      SPRING_MONGODB_DATABASE: aasdiscovery
+      SPRING_DATA_MONGODB_DATABASE: aasdiscovery
       SERVER_PORT: 8081
-      BASYX_BACKEND: InMemory
+      BASYX_BACKEND: MongoDB
       BASYX_CORS_ALLOWED_ORIGINS: '*'
       BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
+    depends_on:
+      mongo:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8081/lookup/shells"]
       interval: 3s
@@ -82,13 +119,16 @@ services:
       - prosody-data:/var/lib/prosody
 
   aas-environment:
-    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
+    image: eclipsebasyx/aas-environment:2.0.0-milestone-16
     container_name: lab-aas-environment
     ports:
       - "8081:8081"
     environment:
+      <<: *mongo
+      SPRING_MONGODB_DATABASE: aasenvironments
+      SPRING_DATA_MONGODB_DATABASE: aasenvironments
       SERVER_PORT: 8081
-      BASYX_BACKEND: InMemory
+      BASYX_BACKEND: MongoDB
       BASYX_CORS_ALLOWED_ORIGINS: '*'
       BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
       BASYX_AASREPOSITORY_FEATURE_DISCOVERYINTEGRATION: http://aas-discovery:8081
@@ -97,6 +137,9 @@ services:
       BASYX_EXTERNALURL: http://localhost:8081
       # An Operation with an invocationDelegation qualifier is invoked at that URL (the DMP's).
       BASYX_SUBMODELREPOSITORY_FEATURE_OPERATION_DELEGATION_ENABLED: "true"
+      # Since BaSyx 2.0.0-milestone-16 a delegation to a private address is refused (HTTP 424) unless its
+      # host is allowlisted: only the DMP is.
+      BASYX_SUBMODELREPOSITORY_FEATURE_OPERATION_DELEGATION_SECURITY_ALLOWLIST_HOSTS: dmp
       BASYX_FEATURE_MQTT_ENABLED: "true"
       MQTT_CLIENTID: aas-environment
       MQTT_HOSTNAME: mosquitto
@@ -236,3 +279,4 @@ volumes:
   prosody-data:
   influxdb-config:
   skill-registry:
+  aas-data:
