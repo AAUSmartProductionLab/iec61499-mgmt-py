@@ -86,6 +86,17 @@ a program of 20 composites became active in 0.334 s [0.320, 0.362], the slowest 
 0.419 s; Dispensing, running meanwhile, took 0.03 % [-0.07, 0.32] longer; a restart left the module
 unavailable for 3.25 s, 2.54 s of them resetting (homing); a value between orders took 0.021 s.
 
+**The runs on the Pi (17 Nov), the paper's.** `cell/eval/results/q1-2026-11-17T1115.jsonl` and `.md`,
+commit `dd38c2a` (the axis homing at the other end, onto a normally closed switch), FORTE `baac82f9`,
+the PC's discovery server (`UALDS`) stopped: 120 runs and 5 warm-up, every one passed every check. 32
+steps in a program of 20 composites were verified 2.063 s [2.011, 2.109] after the AAS changed; storing
+the boot file over SSH took another 1.1 s (activation 3.187 s [3.118, 3.423]); the slowest to the
+verified program 3.275 s. 1 step in a program of 1: 0.226 s. Dispensing, running meanwhile, took
+0.65 % [0.01, 0.66] longer (about 50 ms of 7.6 s; its duration is read at 25 ms steps); a restart
+left the module unavailable for 5.76 s, 3.57 s of them loading and 2.11 s resetting; a value between
+orders took 1.00 s, nearly all of it the boot file's write. The run of 12 Nov (21 runs, the old
+homing) is superseded and not committed.
+
 **The synthetic composites.** A sequence of n steps repeats a dose cycle on the module's own
 primitives: MoveAxis to the fill position (40 mm), Dispense the skill's parameter Volume at 1 mL/s,
 Home, Weigh. Step names are unique (`S01`, `S02`, ...). In a parallel block each branch uses its own
