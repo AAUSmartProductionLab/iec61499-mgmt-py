@@ -199,7 +199,18 @@ without the robot.
 (pins, PWM channel, `board: pi5`). Its program is generated (`cell/control/CappingModule`) and runs on
 FORTE against the simulator (`test_capping_module_homes_and_crimps`). The new primitive is `Crimp`:
 the crimper's `Close` for `Duration`, with the head at `CrimpPosition` and kept there, as stoppering's
-`PressStopper` needs the press at `PressPosition`. Next: its Pi.
+`PressStopper` needs the press at `PressPosition`.
+
+**Its Pi (23 Nov):** a Pi 5 with Ubuntu 26.10 at 192.168.0.243 (`capping-module`, login `admin`).
+Docker from Ubuntu's packages, `admin` in `docker` and `dialout`, `dtoverlay=pwm-2chan` in
+`/boot/firmware/config.txt` (GPIO18 is `pwmchip0` channel 2), the header on `gpiochip0`. FORTE is the
+packaged `runtime/bin/forte-aarch64` (`deploy/pi.py install --spec cell/modules/capping.yaml --forte
+runtime/bin/forte-aarch64`) and the capping program its boot file (`deploy/pi.py module --spec
+cell/modules/capping.yaml`); OPC UA at `opc.tcp://192.168.0.243:4840/Objects/Capping`. Read without
+moving (`deploy/bench.py status`): the module Stopped, `AtHome` false (the normally closed switch wired
+and not pressed), the PWM channel enabled at duty 0. Nothing has been sent to it. Next, at the bench:
+the switch pressed by hand (`bench.py switch`), homing (`bench.py home`), then the travel and
+`CrimpPosition` measured.
 
 The hardware: a Pi 5, a TB6600, a stepper on a stage and a limit switch. A real crimper later is an
 output on a pin (a valve or a relay) or a servo; the skill stays.

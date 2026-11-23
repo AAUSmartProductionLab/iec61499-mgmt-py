@@ -2,7 +2,7 @@
 # linear axis that lowers the crimping head onto the cap (a stepper motor through a TB6600 with a limit
 # switch, moved to a position, as filling's) and a crimper that closes around the cap. The crimper is
 # simulated until it is chosen: a valve, a relay or a servo is then an output on a pin, and the skill
-# stays. Its Raspberry Pi 5 is still to come; the pi target is wired as filling's.
+# stays. Its Raspberry Pi 5 (Ubuntu, 192.168.0.243) is set up since 23 Nov; the pins are filling's.
 # Regenerate: python -m modgen
 module: Capping
 project: CappingModule
@@ -12,8 +12,7 @@ modbus: {host: 127.0.0.1, port: 1504, unit: 1, poll_ms: 10}   # cell/sim/module_
 
 targets:
   pc: {host: localhost, io: modbus}
-  # Its address once the Pi is there; the pins are filling's.
-  pi: {host: capping-module.local, user: admin, io: gpio, board: pi5,
+  pi: {host: 192.168.0.243, user: admin, io: gpio, board: pi5,
        pwm_root: /hostsys/class/pwm}   # the capping Pi, a Raspberry Pi 5
 
 equipment:

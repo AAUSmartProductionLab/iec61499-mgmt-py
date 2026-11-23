@@ -93,6 +93,8 @@ def install(args):
               "mkdir -p ~/forte/boot ~/forte/manifest && touch ~/forte/boot/forte.fboot")
     # The image takes the binary as "forte", whatever the file is called here (runtime/bin/forte-aarch64).
     subprocess.run(["scp", "-q", str(forte), f"{args.user}@{args.host}:forte/forte"], check=True)
+    # From Windows the file arrives without its executable bit, and the image keeps the file's mode.
+    ssh(args, "chmod 755 ~/forte/forte")
     files = [DOCKER / f for f in ("Dockerfile", "compose.yaml", ".dockerignore")]
     subprocess.run(["scp", "-q", *map(str, files), f"{args.user}@{args.host}:forte/"], check=True)
     compose(args, "up -d --build --force-recreate && docker compose ps")
