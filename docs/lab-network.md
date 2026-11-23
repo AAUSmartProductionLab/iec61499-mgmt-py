@@ -78,7 +78,7 @@ Module by module:
 | Module | Spec | State (23 Nov) | Besides the steps above |
 | --- | --- | --- | --- |
 | Filling | `cell/modules/filling.yaml` | Runs on its Pi; positions to measure again | — |
-| Filling 2 | `cell/modules/filling-2.yaml` | Runs on its Pi (192.168.0.173, set up 23 Nov as capping's); found by mDNS; nothing sent yet | Switch test, homing and its positions measured at the bench |
+| Filling 2 | `cell/modules/filling-2.yaml` | Runs on its Pi (192.168.0.173, set up 23 Nov as capping's); found by mDNS; switch and homing work (after its DIR wire was replaced twice) | Its positions measured at the bench |
 | Stoppering | `cell/modules/stoppering.yaml` | Runs on its Pi | — |
 | Capping | `cell/modules/capping.yaml` | Runs on its Pi: homes, Capping ran once (23 Nov) | Its travel and `CrimpPosition` measured |
 | Inspection | `cell/modules/planned/inspection.yaml` | Planned | Its equipment service (Python beside FORTE) to build first (`docs/demo-modules.md`, section 5) |
