@@ -1562,7 +1562,7 @@ into one `FAILED` (section 7.8).
 ## 9. The stoppering and capping modules
 
 The stoppering module (the project `cell/control/StopperingModule`, its Pi 5 at 192.168.0.134) and
-the capping module (`cell/control/CappingModule`, its Pi at `capping-module.local`) are built in
+the capping module (`cell/control/CappingModule`, its Pi at 192.168.0.243) are built in
 the same way as the filling module. Everything in section 7 is the same, block for block. Their own
 types, what section 8 describes for the filling module, are in their own packages, `stoppering::`
 and `capping::`: some are like the filling ones, others are new.
@@ -2348,7 +2348,7 @@ calls through the blocks.
 skill moves the head and the piston.
 
 1. In the IDE: the device `FORTE_PI` has the Pi's address in `MGR_ID` (the stoppering Pi
-   `"192.168.0.134:61499"`, the capping Pi `"capping-module.local:61499"`), and `Stoppering_pi` is
+   `"192.168.0.134:61499"`, the capping Pi `"192.168.0.243:61499"`), and `Stoppering_pi` is
    mapped to it. Save.
 2. In PowerShell:
 
