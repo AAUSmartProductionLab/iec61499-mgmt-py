@@ -69,6 +69,16 @@ class Bench:
     def value(self, item: str):
         return self.ua.value(f"Equipment/{self.axis.name}/{item}")
 
+    def referenced(self):
+        """Refuse a move when the axis was moved without the program: it counts its position by time (no
+        encoder), so a carriage moved by hand off the switch still reads 0 mm, and a move to 40 mm would
+        start from wherever it is. At 0 mm the switch must be pressed."""
+        if not self.value("Homed"):
+            sys.exit("Not referenced: home it first (python deploy/bench.py home)")
+        if abs(self.value("ActualPosition")) < 0.5 and not self.value(self.axis.home):
+            sys.exit(f"The axis reads 0 mm but {self.axis.home} is free: it was moved by hand. Home it first "
+                     "(python deploy/bench.py home)")
+
     def show(self) -> str:
         home, homed, position = (self.value(i) for i in (self.axis.home, "Homed", "ActualPosition"))
         return f"{self.axis.home}={home!s:5} Homed={homed!s:5} Position={position:.1f} mm"
@@ -166,6 +176,7 @@ def home(bench, args):
 
 def move(bench, args):
     """MoveAxis to ``--to`` mm from the switch, then Home unless ``--stay``."""
+    bench.referenced()
     if bench.ua.value("Module/State") != STATES["Execute"]:
         print("Start ->", bench.ua.call("Module/Start", SESSION))
         bench.ua.expect("Module/State", STATES["Execute"], timeout=10)
@@ -186,6 +197,7 @@ def run(bench, args):
     """A module level skill (``--skill``) once, with its parameters' defaults, until it succeeds."""
     if args.skill not in bench.spec.composites:
         sys.exit(f"{bench.spec.module} has no module level skill {args.skill}: {', '.join(bench.spec.composites)}")
+    bench.referenced()
     if bench.ua.value("Module/State") != STATES["Execute"]:
         print("Start ->", bench.ua.call("Module/Start", SESSION))
         bench.ua.expect("Module/State", STATES["Execute"], timeout=10)
