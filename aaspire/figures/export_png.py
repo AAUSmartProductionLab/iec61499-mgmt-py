@@ -3,7 +3,7 @@
     python export_png.py <file.drawio> <out-dir> [--page NAME ...] [--scale 2]
 
 Renders with the draw.io viewer that the VS Code draw.io extension ships and headless Chrome, like
-docs/figures/export_pdf.py: no draw.io desktop and no network. Each page is drawn twice: once to
+AASPIRE-material/figures/export_pdf.py: no draw.io desktop and no network. Each page is drawn twice: once to
 measure the drawing, once to take the picture at that size.
 """
 import argparse

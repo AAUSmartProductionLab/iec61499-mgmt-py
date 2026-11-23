@@ -2,7 +2,7 @@
 
 Proposal of 31 Oct 2026, revised the same day with the user's decisions:
 - the framework is called **AASPIRE**;
-- one GitHub organization, `ap2030-project`, holds the **AP2030** project, with the framework as its
+- one GitHub organization, `AAU-AASPIRE`, holds the **AP2030** project, with the framework as its
   main repository;
 - AP2030-UNS, the project's first stack, is its predecessor and is archived;
 - the demo runs one line with two orchestrators, and only the orchestration differs between them.
@@ -79,11 +79,11 @@ What it takes (section 4, items 7 and 8; section 7.2):
 
 | What | Name |
 | --- | --- |
-| The organization | `ap2030-project` (`github.com/ap2030-project`), for the AP2030 project; `ap2030` is a personal account |
+| The organization | `AAU-AASPIRE` (`github.com/AAU-AASPIRE`), for the AP2030 project; `ap2030` is a personal account |
 | The main repository | `aaspire` |
 | The documentation | `aaspire.readthedocs.io` |
 | Python distributions | `aaspire-<tool>` (`aaspire-modsync`); import and command names stay (`modsync`) |
-| Container images | `ghcr.io/ap2030-project/<repository>` |
+| Container images | `ghcr.io/aau-aaspire/<repository>` |
 
 Rules for the rest:
 
@@ -196,7 +196,7 @@ And two that let either orchestrator run the line (section 1):
 
 ## 5. The repositories
 
-**23 repositories in `ap2030-project`**, by pillar:
+**23 repositories in `AAU-AASPIRE`**, by pillar:
 
 | Pillar | Repository | Holds | Comes from |
 | --- | --- | --- | --- |
@@ -282,7 +282,7 @@ papers' drafts) stay in `aseptic-line`'s `notes/` and are not on the site.
 | B3: the runtime and program on both Pi 5s; the switch mounted; a move measured; the scenarios on the Pi with the axis moving | The user at the bench |
 | A model of the liquid level, so that BottomUpFilling is planned and not only written | A decision on how it is modelled |
 | Writing from 2 Nov, the figures redrawn as needed | – |
-| The code citable: the fork's 9 commits pushed, aas-model's pull request opened; `ap2030-project` created and a first `aaspire` that pins today's repositories as submodules, tagged `2026.11` with a DOI | The user's go; the organization created by a lab member |
+| The code citable: the fork's 9 commits pushed, aas-model's pull request opened; `AAU-AASPIRE` created and a first `aaspire` that pins today's repositories as submodules, tagged `2026.11` with a DOI | The user's go; the organization created by a lab member |
 
 ### 7.2 The demo (to January)
 
@@ -314,10 +314,10 @@ papers' drafts) stay in `aseptic-line`'s `notes/` and are not on the site.
 
 ## 8. Icons and figures
 
-[figures/framework-icons.drawio](figures/framework-icons.drawio) has an icon for each repository and
+`framework-icons.drawio` has an icon for each repository and
 app (page *Icons*) and the organization's map (page *Organization*). The icons are also a draw.io
-library, [figures/library/tools.xml](figures/library/tools.xml), in the shape panel in VS Code.
-`docs/presentation/source/build_icons.py` draws both.
+library, `tools.xml`, in the shape panel in VS Code.
+`AASPIRE-material/presentations/source/build_icons.py` draws both.
 
 The logo is the AAS shell standing on four pillars in the colours of Planning, Integration,
 Reconfiguration and Execution; the name is written with its letters in the same colours. Each icon
@@ -354,7 +354,7 @@ Resolving section 3 depends on the colleagues and is not counted.
 
 Decided on 31 Oct:
 - the name AASPIRE;
-- one organization, `ap2030-project`, holds the AP2030 project's repositories;
+- one organization, `AAU-AASPIRE`, holds the AP2030 project's repositories;
 - the main repository is the framework (`aaspire`);
 - AP2030-UNS is the predecessor, archived once what is still of use is copied out;
 - the demo runs one line with two orchestrators, centralized (PDDL and behaviour trees) and
@@ -367,6 +367,13 @@ Decided on 1 Nov:
   the filling module's axis and a simulated crimper; inspection triggered over OPC UA, its images
   straight to a store; a Pi per KUKA robot that starts the robot's jobs over a network protocol. How
   they are built: [demo-modules.md](demo-modules.md), with its own open questions.
+
+Decided on 23 Nov:
+- the organization is `AAU-AASPIRE` (it was to be `ap2030-project`);
+- presentations, figure sources and the papers stay outside git, in a local `AASPIRE-material`
+  folder; the CIRP paper's files and the papers' notes are removed from this repository's history;
+- the split starts with our parts; aas-model, the DMP, the web UI fork and the planar controller stay
+  where they are, as submodules of `aaspire`.
 
 | # | Open question | Recommendation |
 | --- | --- | --- |

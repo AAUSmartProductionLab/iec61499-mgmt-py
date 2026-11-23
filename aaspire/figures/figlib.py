@@ -48,7 +48,7 @@ AAS_SHELL = ("shape=stencil(zVXbboMwDP0aHpECESV9rHr5gX1BRg1ESwlKskL/fkHuNhKNqA+r
              "DnLqm4/HlI/CpFpZboXq5nmI5LqB1OVJa8kbL2QGgH7mzu7Zgtr5h/0pIeSybFlE4WsonihhW/i32iwrYCxCXU0Ao5GyBgJ8KmXLApgvgP2rA"
              "OIJKP0XoJF/KI9RVxOQlZGyBk1QvmIPZPnDPVC8YguQhzsgNq5WnaPL472SysAPcsbvNqmFlLiM5vFw+zgXbkN6/AI=);")
 
-LIBRARY = Path(__file__).resolve().parents[2] / "docs" / "figures" / "library" / "tools.xml"
+LIBRARY = Path(__file__).resolve().parent / "tools.xml"            # a copy of the lab's figure library's icons
 
 
 def style(**kv) -> str:
@@ -85,7 +85,7 @@ def label(text: str) -> str:
 
 
 def icons() -> dict[str, ET.Element]:
-    """The framework's icons (docs/figures/library/tools.xml) by name: each an mxGraphModel."""
+    """The framework's icons (``tools.xml``, from the figure library in AASPIRE-material) by name: each an mxGraphModel."""
     text = LIBRARY.read_text(encoding="utf-8")
     found = {}
     for item in json.loads(re.search(r"<mxlibrary>(.*)</mxlibrary>", text, re.S).group(1)):

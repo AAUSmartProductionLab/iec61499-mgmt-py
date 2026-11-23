@@ -1,6 +1,6 @@
 """The evaluation's figures for the CIRP paper, from the newest results in cell/eval/results.
 
-    python cell/eval/figures.py                 # -> docs/paper/cirp/figures/downtime.pdf and effort.pdf
+    python cell/eval/figures.py                 # -> AASPIRE-material/papers/cirp/figures/downtime.pdf and effort.pdf
     python cell/eval/figures.py --png out-dir   # ... and PNGs to look at
 
 downtime: how long the module is down for each change, made online (modsync reconfigure) and by a
@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import statistics
@@ -24,8 +25,10 @@ from matplotlib.patches import PathPatch                                     # n
 from matplotlib.path import Path as Shape                                    # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
-RESULTS, FIGURES = ROOT / "cell" / "eval" / "results", ROOT / "docs" / "paper" / "cirp" / "figures"
-# The palette of docs/figures (ours: the method's green; the usual way: blue; planned: berry), checked
+# The paper's figures are kept outside the repository, in the AASPIRE-material folder beside the repos.
+MATERIAL = Path(os.environ.get("AASPIRE_MATERIAL", ROOT.parents[1] / "AASPIRE-material"))
+RESULTS, FIGURES = ROOT / "cell" / "eval" / "results", MATERIAL / "papers" / "cirp" / "figures"
+# The palette of the lab's figures (ours: the method's green; the usual way: blue; planned: berry), checked
 # as a set, all pairs, with the dataviz validator.
 ONLINE, RESTART, PLANNED = "#5B963B", "#3B78B0", "#B8336A"
 TEXT, MUTED, GRID = "#252B2D", "#6E777B", "#E3E6E8"

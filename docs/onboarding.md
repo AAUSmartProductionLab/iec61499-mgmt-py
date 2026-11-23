@@ -23,7 +23,7 @@ for a vendor's module with only its AAS and its FORTE?
 **The paper.** The CIRP CMS full paper, *From Product Requirements to Running Skills: AAS-Driven
 Planning and Reconfiguration of IEC 61499 Modules*, was **submitted on 17 Nov 2026**. Its code, AASs
 and results are in the companion repository https://github.com/MartinJensen37/aas-driven-recon-iec61499
-(public); its source (`docs/paper/cirp/`) stays local and is never committed. Its evaluation: matching
+(public); its source (`AASPIRE-material/papers/cirp/`) stays local and is never committed. Its evaluation: matching
 on 80 cases against a separate process simulation, planned BottomUpFilling skills (15 of 15 fill
 right), the checker (90 % of incorrect skills rejected), new skills deployed and verified on the
 filling module's Pi (32 steps in 20 composites in 2.06 s, Q1 of 17 Nov) and drift (on the PC).
@@ -33,7 +33,7 @@ are the paper's future work and one of the demo's two orchestrators.
 ## What is where
 
 The map of the folders is in the [README](../README.md); each top-level folder goes to one or more
-repositories of the `ap2030-project` organization ([framework-plan.md](framework-plan.md), section 5;
+repositories of the `AAU-AASPIRE` organization ([framework-plan.md](framework-plan.md), section 5;
 nothing is split yet). In short:
 
 | Folder | What |
@@ -71,11 +71,11 @@ engineers), [filling-program.md](filling-program.md) (the filling program block 
 [agents.md](agents.md) and [agents-literature.md](agents-literature.md) (the agents),
 [demo-modules.md](demo-modules.md) (capping, inspection, and loading and unloading with the KUKA
 robots: how the demo's other four modules are built, Python beside FORTE),
-[paper-outline.md](paper-outline.md), [journal-paper.md](journal-paper.md) and
-[orchestration-paper.md](orchestration-paper.md) (the papers),
+the papers' notes (`paper-outline.md`, `journal-paper.md`, `orchestration-paper.md`; kept outside
+git in the local `AASPIRE-material/papers` folder since 23 Nov, see CLAUDE.md),
 [design-log.md](design-log.md) (design considerations, newest first),
 [framework-plan.md](framework-plan.md) (AASPIRE: the framework that
-holds the lab's AAS work, one line run by two orchestrators, its repositories in the `ap2030-project`
+holds the lab's AAS work, one line run by two orchestrators, its repositories in the `AAU-AASPIRE`
 organization, documentation site and icons, and what the January demo still needs).
 
 ## How the work is done
@@ -216,12 +216,12 @@ the IEC 61499 module architecture that makes skills, and updating a running modu
   prefilled syringe of 1 mL, a cartridge of 3 mL) and the process of each on the line are written out
   in `cell/examples/products` and `cell/examples/processes`; `cell/examples/example_line.py` builds
   every AAS of the line and checks each process.
-- **The paper's outline and figure drafts**: [paper-outline.md](paper-outline.md) (narrowed on
+- **The paper's outline and figure drafts**: `paper-outline.md` (narrowed on
   28 Oct to restructuring a module through its AAS; 17 references from
-  [paper-references.bib](paper-references.bib)), `docs/figures`; the effort count
-  `cell/eval/effort.py`.
-- **The journal papers**: [journal-paper.md](journal-paper.md), the models (since 3 Nov), and
-  [orchestration-paper.md](orchestration-paper.md), planning and orchestration: what the CIRP paper
+  `references.bib`), the figure sources; all in `AASPIRE-material` (local, not in git); the
+  effort count `cell/eval/effort.py`.
+- **The journal papers**: `journal-paper.md`, the models (since 3 Nov), and
+  `orchestration-paper.md`, planning and orchestration: what the CIRP paper
   leaves for them.
   Design considerations go into [design-log.md](design-log.md) as they are made.
 
@@ -250,7 +250,7 @@ the IEC 61499 module architecture that makes skills, and updating a running modu
 section 1): centralized, FOND-AAS's policy planned with PDDL and run as a behaviour tree (the
 colleagues' part, as is D1's simple orchestrator), and multi-agent, our agents ([agents.md](agents.md));
 everything below the orchestration is the same for both. The timeline
-(`docs/presentation/demo-plan/README.md`, not committed): D1 Fri 20 Nov, one station and the planar
+(`AASPIRE-material/presentations/demo-plan/README.md`, not committed): D1 Fri 20 Nov, one station and the planar
 table; M1 Tue 1 Dec, the stations in the lab; D2 4 Dec, a new sensor; D3 11 Dec, capping plugged in;
 D4 18 Dec, centralized; D5 8 Jan, the agents bid; D6 15 Jan, a module fails and production goes on;
 D7 22 Jan, the full line with the robots; the partner day on 28 Jan and the demo day at AAU on
@@ -298,7 +298,7 @@ controllers have (M0 there); how taring is to be modelled.
 - The DMP: the user's fork https://github.com/MartinJensen37/aas-camel-dmp, branch `lab-modules`
   (submodule here). The planar table's controller: https://github.com/AAUSmartProductionLab/planar-controller
   (submodule here).
-- The organization `ap2030-project` and the main repository `aaspire`
+- The organization `AAU-AASPIRE` and the main repository `aaspire`
   ([framework-plan.md](framework-plan.md)) do not exist yet.
 - The process planner and skill editor: the user's fork https://github.com/MartinJensen37/basyx-aas-web-ui,
   branch `feat/process-sequence-pharma`; a submodule here since 26 Oct (`basyx-aas-web-ui/`). The

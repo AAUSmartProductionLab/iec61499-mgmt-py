@@ -2,7 +2,7 @@
 
 All of AASPIRE's parts that the lab builds still share one repository,
 [iec61499-mgmt-py](https://github.com/AAUSmartProductionLab/iec61499-mgmt-py). Each top-level folder
-there is a future repository of the GitHub organization `ap2030-project`, or part of one. The split
+there is a future repository of the GitHub organization `AAU-AASPIRE`, or part of one. The split
 waits until after the CIRP paper (18 November 2026); until then the folder is where the code is.
 
 <figure markdown="span">

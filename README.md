@@ -6,7 +6,7 @@ Shells, and are reconfigured from product, process and resource models.
 
 The work is part of AASPIRE (AAS-based Planning, Integration, Reconfiguration and Execution), the
 framework of the AP2030 project. Its plan, [docs/framework-plan.md](docs/framework-plan.md) (31 Oct
-2026), puts every part into one GitHub organization, `ap2030-project`, with `aaspire` as the main
+2026), puts every part into one GitHub organization, `AAU-AASPIRE`, with `aaspire` as the main
 repository; this repository becomes the line's, `aseptic-line`. Nothing is split yet: the top-level
 folders share this repository, with one Python project (`pyproject.toml`) for the six packages, and
 the map says which repository each folder goes to. The files in `docs/` are working documents

@@ -10,13 +10,13 @@ Figures (draw.io; open them at app.diagrams.net or in the draw.io desktop app, a
 
 | File | Page | Shows |
 | --- | --- | --- |
-| [figures/ppr-models.drawio](figures/ppr-models.drawio) | Models and ontologies | The three AASs with their submodels and references, and the ontologies their ids point into |
+| `ppr-models.drawio` | Models and ontologies | The three AASs with their submodels and references, and the ontologies their ids point into |
 | | Applications | Which application reads and writes which AAS, and which acts on the running module |
-| [figures/reconfiguration-pipeline.drawio](figures/reconfiguration-pipeline.drawio) | Reconfiguration pipeline | From a product's recipe through a changed skill to a changed IEC 61499 program, and back to the plan |
-| [figures/skill-hierarchies.drawio](figures/skill-hierarchies.drawio) | Hierarchies | The line's, a module's and its components' AASs as the web UI's tree shows them: the bill of material names the module and its components; Dispensing's steps run the components' primitives |
+| `reconfiguration-pipeline.drawio` | Reconfiguration pipeline | From a product's recipe through a changed skill to a changed IEC 61499 program, and back to the plan |
+| `skill-hierarchies.drawio` | Hierarchies | The line's, a module's and its components' AASs as the web UI's tree shows them: the bill of material names the module and its components; Dispensing's steps run the components' primitives |
 | | Recipe to process | The product's, the line's and the modules' AASs feed a process sequence (one card per step: what comes from which AAS); kept as the process AAS, whose rows are coloured by where they come from |
 | | Hierarchies (paper), Recipe to process (paper) | The same two, cut down for the paper: no title, only the rows the argument needs |
-| [figures/module-tools.drawio](figures/module-tools.drawio) | Tools and FORTE | The tools (spec, modgen, 4diac project, build, deployment, AAS, modsync, modlink) above the filling module's program drawn as its function block network (as in the module architecture figure): the INIT chain, Dispensing with its wiring, and create, read, update and delete on it (the boot file; DoubleDose created online and appended; a step's constant written; deleting only by a new boot file); the OPC UA nodes the blocks serve |
+| `module-tools.drawio` | Tools and FORTE | The tools (spec, modgen, 4diac project, build, deployment, AAS, modsync, modlink) above the filling module's program drawn as its function block network (as in the module architecture figure): the INIT chain, Dispensing with its wiring, and create, read, update and delete on it (the boot file; DoubleDose created online and appended; a step's constant written; deleting only by a new boot file); the OPC UA nodes the blocks serve |
 | | Tools and FORTE (paper) | The same, as small cards and Dispensing's network with the online change |
 | | Production system | The line as it stands, drawn isometrically (the ACOPOS 6D table and its shuttles, the four stations each with a Pi running FORTE, the Kuka robots at loading and unloading, the vial filled, stoppered and capped on its way), the inside of the filling module (the Pi, its program, the equipment on GPIO and PWM, its ports), and the server: the AAS environment with the product, process and resource AASs, the web UI, modreg, modsync, modlink, the transport control, and the agents and time series database still planned |
 | | Concept (isometric) | The idea in four layers floating above each other, drawn isometrically: the assets (the line), control (a Pi with FORTE per module, the transport controller), information (the AAS server with the product, process and resource AASs) and the applications (planner, skill editor, modreg, modsync, modlink, agents); dashed lines say what connects them |
@@ -24,8 +24,8 @@ Figures (draw.io; open them at app.diagrams.net or in the draw.io desktop app, a
 | | Layers (programs) | The same, with each program drawn as its window standing on its layer |
 | | Layers (illustrated) | The same layers drawn further: the stations open in front and reach over the vial with their tools, shuttles with black rims, names on signs above the stations; the programs as windows with the server they run on at the side; the agents as a product and miniature modules, the AASs as stacks, people at the planner and the HMI; the HMI with a state machine and buttons per module, a trend and alarms. Only the lines that matter, along x, y and z |
 | | Layers (slide) | The same layers for a slide: a few objects with a word or two on each, the layers apart, big cards naming them on the right |
-| [figures/mapping.drawio](figures/mapping.drawio) | AAS skill to IEC 61499, Flow kinds as blocks, The AAS as the target | Dispensing's AAS elements beside the blocks, values and connections they are (numbered to match), with its OPC UA nodes and the names that join them; each kind of step as its pattern of library blocks, and groups of conditions as chains; modsync's loop from the AAS and the running program to the commands, the check and the record ([mapping.md](mapping.md)) |
-| [figures/slides.drawio](figures/slides.drawio) | 01 to 19, 06b | One figure per slide of the first deck (27 Oct; the slides are now made from `presentation/deck.drawio`, [presentation/deck-guide.md](presentation/deck-guide.md)): 16:9 pages, big type, few elements, no title of their own; 01 is the line alone, for the title slide; 06b the layers across a whole slide, drawn dimetrically so each layer is a long shelf |
+| `mapping.drawio` | AAS skill to IEC 61499, Flow kinds as blocks, The AAS as the target | Dispensing's AAS elements beside the blocks, values and connections they are (numbered to match), with its OPC UA nodes and the names that join them; each kind of step as its pattern of library blocks, and groups of conditions as chains; modsync's loop from the AAS and the running program to the commands, the check and the record ([mapping.md](mapping.md)) |
+| `slides.drawio` | 01 to 19, 06b | One figure per slide of the first deck (27 Oct; the slides are now made from `presentation/deck.drawio`, `deck-guide.md`): 16:9 pages, big type, few elements, no title of their own; 01 is the line alone, for the title slide; 06b the layers across a whole slide, drawn dimetrically so each layer is a long shelf |
 
 They follow the style of the module architecture figure (Arial, grey panels, white cards, rounded
 pills, small blue tags, dashed for what is not built yet).
@@ -209,7 +209,7 @@ its elements in the form of IDTA's specifications written from the template (`do
 
 ## 8. The pipeline
 
-From [figures/reconfiguration-pipeline.drawio](figures/reconfiguration-pipeline.drawio):
+From `reconfiguration-pipeline.drawio`:
 
 | # | Step | Application | Built |
 | --- | --- | --- | --- |

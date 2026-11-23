@@ -8,7 +8,7 @@ process orders. It describes version 4.0 of the Production Sequence:
 - one sequence per archetype (Assembly, Disassembly) in an AAS.
 
 The rest of the product, process and resource model ([ppr-model.md](ppr-model.md)) stays as it is.
-The figure is the page `production-sequence` of [figures/journal-figures.drawio](figures/journal-figures.drawio),
+The figure is the page `production-sequence` of `journal-figures.drawio`,
 with `-battery` and `-pharma` beside it. The design decisions are in
 [design-log.md](design-log.md) (2 Nov). Nothing of this is built yet.
 

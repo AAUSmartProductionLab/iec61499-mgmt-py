@@ -1,6 +1,6 @@
 # The CIRP paper's evaluation: protocols and results
 
-Three experiments, decided on 3 Nov 2026 (Q1, Q3 and Q4 of [paper-outline.md](paper-outline.md),
+Three experiments, decided on 3 Nov 2026 (Q1, Q3 and Q4 of `paper-outline.md`,
 section 4): how fast a change takes effect and how that scales (Q1), whether the program stays what its
 AAS says (Q3), and whether the skills are right for the product (Q4). They are done one at a time. Each
 gets a protocol before any data is taken (this file), a harness, a pilot that checks the measurements
@@ -248,7 +248,7 @@ with these numbers. Outliers (beyond three interquartile ranges) are listed and 
 
 **Results (4 Nov).** 1,260 runs and 5 warm-up runs, 30 per cell in random order, the evaluation's FORTE,
 commit `4ab503c` with the tools unchanged; the runs in `cell/eval/results/q1-2026-11-04T0028.jsonl`, the
-tables in `q1-2026-11-04T0028.md`, the figure in `docs/paper/cirp/figures/activation.pdf`.
+tables in `q1-2026-11-04T0028.md`, the figure in `AASPIRE-material/papers/cirp/figures/activation.pdf`.
 
 - *Every counted run passed every check*, V1 to V10 and the oracle's (V1g, V3g, V7g; up to 342
   instances, 1,604 connections and 1,377 values compared). In 12 runs the OPC UA server failed to
@@ -591,7 +591,7 @@ check and the match come before anything is built, and are deterministic, so eac
 run once (the plan's time five times).
 
 **Results (5 Nov).** `cell/eval/results/q4-2026-11-05T2346.jsonl`, commit `2ed3c87` with the tools
-unchanged; the tables in `q4-2026-11-05T2346.md`, the figures `docs/paper/cirp/figures/check.pdf` and
+unchanged; the tables in `q4-2026-11-05T2346.md`, the figures `AASPIRE-material/papers/cirp/figures/check.pdf` and
 `match.pdf`. The first runs, before the harness was committed, gave the same numbers and are not kept.
 
 - *Q4a, the population:* 245 distinct mutants (Dispensing 62, DoubleDose 84, BottomUpFilling 99), of

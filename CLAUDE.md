@@ -20,4 +20,13 @@ the rules, the state of the work and the next steps.
 - While building, add every design consideration to [docs/design-log.md](docs/design-log.md),
   newest first and dated: what was chosen, why, instead of what, and for which paper (CIRP, the
   CIRP CMS paper; Journal, the journal paper). Commit it with the change it explains.
-- What belongs in the journal paper also goes into [docs/journal-paper.md](docs/journal-paper.md).
+- What belongs in the journal paper also goes into the journal notes, `papers/journal/journal-paper.md`
+  in the local material folder (below).
+
+## Material outside git
+
+Presentations, figure sources (draw.io), the papers and their notes are kept in
+`AASPIRE-material` beside the repos folder (`../../AASPIRE-material` from here), never in git:
+`presentations/`, `figures/` (with the shape library), `papers/` (`cirp/`, `journal/`,
+`orchestration/`, `literature/`, `references.bib`) and `misc/`. The papers are under a
+publisher's copyright; nothing of them is committed.

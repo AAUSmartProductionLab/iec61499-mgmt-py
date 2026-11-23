@@ -123,7 +123,7 @@ def repository_map():
     ]
     p = Page("repository-map", 960, 70 + 30 * len(rows) + 50)
     p.head(20, 10, 300, "Folders of this repository today")
-    p.head(400, 10, 540, "Repositories of ap2030-project after the split")
+    p.head(400, 10, 540, "Repositories of AAU-AASPIRE after the split")
     for i, (folder, note, repos) in enumerate(rows):
         y = 40 + i * 30
         f = p.pill(20, y, 250, f"**{folder}**" + (f"  *{note}*" if note else ""), "plain", h=22, size=12)

@@ -1,6 +1,6 @@
 """The analysis of Q4 (docs/cirp-evaluation.md) from the rows of cell/eval/q4.py.
 
-    python cell/eval/q4_analysis.py cell/eval/results/q4-<when>.jsonl [--figure docs/paper/cirp/figures]
+    python cell/eval/q4_analysis.py cell/eval/results/q4-<when>.jsonl [--figure AASPIRE-material/papers/cirp/figures]
 
 Writes q4-<when>.md beside the rows: Q4a, the method's check and the two baselines against the
 oracle on every mutant (precision and recall with 95 % Wilson intervals, per operator, every

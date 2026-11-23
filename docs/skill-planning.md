@@ -5,7 +5,7 @@ AAS says about capabilities, instead of having it written by hand. The planner i
 hierarchical task networks (HTN) and goal regression, as GTPyhop (Nau, 2021) supports; the same
 domain is also generated as HDDL and PDDL for standard planners. The plan becomes a flow in the AAS
 like any skill the editor makes, and the rules of rule set 2 make it a program ([mapping.md](mapping.md),
-[figures/skill-blocks.drawio](figures/skill-blocks.drawio)).
+`skill-blocks.drawio`).
 
 The same model **checks** a flow written by hand: it runs the state through every path and reports a
 condition that does not hold, with the step that would make it hold. The editor shows that as a

@@ -1,6 +1,6 @@
 """The analysis of Q1 (docs/cirp-evaluation.md) from the runs of cell/eval/q1.py.
 
-    python cell/eval/q1_analysis.py cell/eval/results/q1-<when>.jsonl [--figure docs/paper/cirp/figures]
+    python cell/eval/q1_analysis.py cell/eval/results/q1-<when>.jsonl [--figure AASPIRE-material/papers/cirp/figures]
 
 Writes q1-<when>.md beside the runs: the runs and their checks, per cell the medians with 95 %
 bootstrap intervals, the fits, the disturbance, the outliers and the hypotheses H1.1 to H1.4 answered.

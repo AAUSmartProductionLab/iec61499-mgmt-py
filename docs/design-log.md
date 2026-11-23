@@ -6,10 +6,11 @@ A running log of design considerations made while building, for writing the pape
 - what was chosen;
 - why;
 - what it was chosen instead of;
-- which paper it serves: *CIRP* ([paper-outline.md](paper-outline.md)), *Journal*, the models
-  ([journal-paper.md](journal-paper.md)), or *Orchestration*
-  ([orchestration-paper.md](orchestration-paper.md); since 3 Nov, earlier entries say *Journal*), or
-  more than one.
+- which paper it serves: *CIRP* (`paper-outline.md`), *Journal*, the models
+  (`journal-paper.md`), or *Orchestration*
+  (`orchestration-paper.md`; since 3 Nov, earlier entries say *Journal*), or
+  more than one. The papers' notes are kept outside git, in the local `AASPIRE-material/papers`
+  folder (since 23 Nov).
 
 **Rules:**
 - Newest entries first, dated.
@@ -1162,11 +1163,11 @@ A running log of design considerations made while building, for writing the pape
       API alone: the agents' executor through the AAS server (`DmpExecutor`), without the agents;
     - IEC 61499 and online reconfiguration, the HTN and standard planners, FOND and behaviour trees,
       the agents and the comparison of orchestrators go to
-      [orchestration-paper.md](orchestration-paper.md), which takes those parts of journal-paper.md;
+      `orchestration-paper.md`, which takes those parts of journal-paper.md;
     - the elements of the models that serve reconfiguration and planning (`Deployment`, `RuleSet`,
       `Availability`, `Conditions`, `Completion`, the components' constraints) stay in the blueprints,
       counted and checked, and are named in one paragraph;
-    - [journal-rationale.md](journal-rationale.md) gains a section on what real systems demand of
+    - `journal-rationale.md` gains a section on what real systems demand of
       the models (R1 to R12: derived ids, generated shells, stable interface names, the order of
       publication, the metamodel's limits, strict consumers, security, versions side by side, one
       writer, a module's own description, large data by reference, commands not repeated). Its
@@ -1210,7 +1211,7 @@ A running log of design considerations made while building, for writing the pape
 ## 2 Nov 2026
 
 - **The journal method rebuilt around the blueprints (proposed,
-  [journal-method.md](journal-method.md)).** *Journal*.
+  `journal-method.md`).** *Journal*.
   - What:
     - a blueprint per asset class in four parts (composition, structure, relations, constraints),
       built by one procedure; a submodel's three origins (as published, with additions, ours);
@@ -1240,7 +1241,7 @@ A running log of design considerations made while building, for writing the pape
     - a record template of our own.
 
 - **The evaluation of the two cases, planned per research question
-  ([journal-evaluation.md](journal-evaluation.md)).** *Journal*.
+  (`journal-evaluation.md`).** *Journal*.
   - What:
     - E1 composition by origin, and who reads and writes which submodel, measured on the AAS server
       (RQ1);
@@ -1265,7 +1266,7 @@ A running log of design considerations made while building, for writing the pape
     announces; the replay alone, where the models would decide nothing.
 
 - **The design decisions, set against the alternatives
-  ([journal-rationale.md](journal-rationale.md)).** *Journal*.
+  (`journal-rationale.md`).** *Journal*.
   - What:
     - seventeen decisions of the blueprints (M), five of the ontologies and checks (O);
     - eight things left out on purpose (X);
@@ -1409,8 +1410,8 @@ A running log of design considerations made while building, for writing the pape
 ## 1 Nov 2026
 
 - **Candidate figures for the journal paper on the product, process and resource AASs.** *Journal*.
-  - What: eleven pages of [figures/journal-figures.drawio](figures/journal-figures.drawio), listed in
-    [journal-paper.md](journal-paper.md) ("Candidate figures"). There is an overview, the submodels
+  - What: eleven pages of `journal-figures.drawio`, listed in
+    `journal-paper.md` ("Candidate figures"). There is an overview, the submodels
     with their references, the bills of material of products and line, the skill hierarchy, a map
     from parts to components through the process AAS, the capability match, ISA-88's levels, two
     BPMN figures and a matrix of which activity reads and writes which submodel.
@@ -1480,10 +1481,10 @@ A running log of design considerations made while building, for writing the pape
   - Instead of: the shell's architecture as the sixth (the pipeline's program box shows the shell
     and the composites); a figure of the test setup (one sentence covers it).
 - **The paper's diagrams are drawn at print size in one draw.io file, exported to PDF.** *CIRP*.
-  - What: [figures/cirp-figures.drawio](figures/cirp-figures.drawio), one page per diagram. The
+  - What: `cirp-figures.drawio`, one page per diagram. The
     pipeline is 960 px wide for two columns (17.4 cm); the others are 440 px for one (8.4 cm). No
     text is below 12 px, so none prints below about 6.5 pt.
-    [figures/export_pdf.py](figures/export_pdf.py) writes each page as a cropped vector PDF with
+    `export_pdf.py` writes each page as a cropped vector PDF with
     Arial embedded, into `paper/cirp/figures/`, beside the section that includes them.
   - Why: the slide drafts are 1,100 to 2,300 px wide, so their text would print at 3 to 4 pt.
     A PDF keeps text and lines sharp at any zoom.

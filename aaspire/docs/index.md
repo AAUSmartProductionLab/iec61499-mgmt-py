@@ -65,4 +65,4 @@ they share.
     This is the first version of AASPIRE's documentation, written in November 2026 from the working
     notes in the repository's `docs/` folder. The parts still share one repository,
     [iec61499-mgmt-py](https://github.com/AAUSmartProductionLab/iec61499-mgmt-py); the organization
-    `ap2030-project` and its repositories are planned. Each page says what is built and what is not.
+    `AAU-AASPIRE` and its repositories are planned. Each page says what is built and what is not.

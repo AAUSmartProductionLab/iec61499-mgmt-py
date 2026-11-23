@@ -25,7 +25,7 @@ python -m mkdocs build --strict          # into aaspire/site/ (not committed); f
 ## The figures
 
 The figures are draw.io pages in `aaspire/figures/aaspire.drawio`, one page per figure, shown on the
-site as PNGs from `aaspire/docs/figures/`. They follow the style of the figures in `docs/figures`:
+site as PNGs from `aaspire/docs/figures/`. They follow the style of the lab's figures (in the local `AASPIRE-material/figures`):
 Arial, grey lanes, white cards, coloured pills and tags, black step numbers, the framework's icons.
 
 | Colour | Means |
@@ -50,7 +50,7 @@ python export_png.py aaspire.drawio ../docs/figures             # every page; --
 `build_figures.py` drew the first version of every page with the kit in `figlib.py`; it adds a page the
 file does not have yet and leaves the others as they are (`--force <page>` draws one again, which
 discards what was edited in draw.io). The PNG export uses the draw.io viewer of the VS Code extension
-and headless Chrome, like `docs/figures/export_pdf.py`. The logo is the page `logo`, exported to
+and headless Chrome, like `AASPIRE-material/figures/export_pdf.py`. The logo is the page `logo`, exported to
 `docs/assets/logo.png`.
 
 ## Later

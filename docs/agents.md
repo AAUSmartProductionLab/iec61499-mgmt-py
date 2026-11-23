@@ -181,7 +181,7 @@ From [agents-literature.md](agents-literature.md) (survey of 30 Oct, every refer
 | IEEE 2660.1-2020; Leitão et al. 2023 | How agents interface with devices | Our interface is the recommended "hybrid, tightly coupled, OPC UA" |
 
 **What is new here** (for the orchestration journal paper,
-[orchestration-paper.md](orchestration-paper.md)): a resource agent that, having no skill for a
+`orchestration-paper.md`): a resource agent that, having no skill for a
 required capability, plans one from the module's Capability Description and
 creates it online in the running IEC 61499 program before it carries the step out; the cost of that
 in the bid; one chain from LDS-ME discovery to an agent's start (IDTA 02020, AID, AIMC, VDI/VDE 2193,
