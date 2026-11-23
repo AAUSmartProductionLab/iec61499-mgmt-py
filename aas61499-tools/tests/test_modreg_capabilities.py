@@ -1,6 +1,6 @@
-"""The capabilities a module's planner reads (ARSO 0.11; docs/skill-planning.md, section 4): a set
-per component with the capabilities its primitives realize, and the constraints of every capability,
-as the vocabulary and the module spec state them."""
+"""The capabilities a module's planner reads (ARSO 0.11; docs/skill-planning.md, section 4): in each
+component's AAS the capabilities its primitives realize, in the module's the offered ones composed of
+them, and the constraints of every capability, as the vocabulary and the module spec state them."""
 from pathlib import Path
 
 import pytest
@@ -12,6 +12,7 @@ from modsync.aasjson import at, children, submodel
 
 from modreg import model, profile as profiles
 from modreg.capabilities import state_point
+from modreg.offer import capabilities as derive_anew
 
 SPECS = Path(__file__).resolve().parents[2] / "cell" / "modules"
 BASE = "https://smartproductionlab.aau.dk"
@@ -44,12 +45,21 @@ def filling() -> list[dict]:
     return [model.build(p) for p in profiles.describe_all(load(SPECS / "filling.yaml"), "pi")]
 
 
-def test_each_component_has_the_capabilities_its_primitives_realize(filling):
+def capabilities_of(envs: list[dict], item: str) -> dict:
+    """The capability container ``item``/name of a component's AAS: its Capability Description holds
+    one set, named after the component."""
+    return {"value": [s for env in envs for s in children(submodel(env, "CapabilityDescription")) if s["idShort"] == item]}
+
+
+def test_each_component_has_the_capabilities_its_primitives_realize_in_its_own_aas(filling):
     module = filling[0]
-    description = submodel(module, "CapabilityDescription")
-    sets = {s["idShort"]: [c["idShort"] for c in children(s)] for s in children(description)}
-    assert sets == {"OfferedCapabilities": ["Filling"], "LinearAxis": ["Referencing", "Positioning"],
-                    "Pump": ["Dosing"], "Scale": ["Taring", "Weighing"]}
+    assert [s["idShort"] for s in children(submodel(module, "CapabilityDescription"))] == ["OfferedCapabilities"]
+    sets = {env["assetAdministrationShells"][0]["idShort"]: {s["idShort"]: [c["idShort"] for c in children(s)]
+                                                             for s in children(submodel(env, "CapabilityDescription"))}
+            for env in filling[1:]}
+    assert sets == {"FillingLinearAxisAAS": {"LinearAxis": ["Referencing", "Positioning"]},
+                    "FillingPumpAAS": {"Pump": ["Dosing"]}, "FillingScaleAAS": {"Scale": ["Taring", "Weighing"]}}
+    description = capabilities_of(filling, "Pump")
     dosing = at(description, "Pump", "Dosing")
     capability = at(dosing, "Capability")
     assert {q["type"]: q["value"] for q in capability["qualifiers"]} == {"CapabilityRoleQualifier/NotAssigned": "true"}
@@ -60,10 +70,36 @@ def test_each_component_has_the_capabilities_its_primitives_realize(filling):
     assert skill["idShort"] == "Dispense" and realized["second"]["keys"][0]["value"].endswith("FillingPumpAAS/submodels/Skills")
 
 
+def test_an_offered_capability_is_composed_of_what_its_skills_steps_realize(filling):
+    """Filling, realized by Dispensing: its steps home and move the axis, dose and weigh; each a
+    capability of a component, in that component's AAS (IDTA 02020 CapabilityComposedOf)."""
+    offered = at(submodel(filling[0], "CapabilityDescription"), "OfferedCapabilities", "Filling")
+    (composition,) = children(at(offered, "CapabilityRelations", "ComposedOfSet"))
+    assert composition["idShort"] == "Dispensing"
+    parts = {r["idShort"]: resolve(filling, r["second"]) for r in children(composition)}
+    assert sorted(parts) == ["LinearAxisPositioning", "LinearAxisReferencing", "PumpDosing", "ScaleWeighing"]
+    assert all(found is not None and found["modelType"] == "Capability" for found in parts.values())
+    (relation,) = [r for r in children(composition) if r["idShort"] == "PumpDosing"]
+    assert relation["second"]["keys"][0]["value"].endswith("FillingPumpAAS/submodels/CapabilityDescription")
+    assert resolve(filling, relation["first"]) is at(offered, "Capability")
+
+
+def test_offers_derived_anew_are_composed_as_built(filling):
+    """After the skill editor saved the skills, the offers are derived from the AASs alone
+    (``modreg.offer.capabilities``): the same composition, read from the components' descriptions."""
+    module = {**filling[0], "submodels": [s for s in filling[0]["submodels"] if s["idShort"] != "CapabilityDescription"]}
+    derived = derive_anew(module, filling[1:])
+    composition = at(submodel(derived, "CapabilityDescription"), "OfferedCapabilities", "Filling", "CapabilityRelations", "ComposedOfSet",
+                     "Dispensing")
+    built = at(submodel(filling[0], "CapabilityDescription"), "OfferedCapabilities", "Filling", "CapabilityRelations", "ComposedOfSet",
+               "Dispensing")
+    assert [(r["idShort"], r["second"]) for r in children(composition)] == [(r["idShort"], r["second"]) for r in children(built)]
+
+
 def test_a_capability_says_what_it_needs_does_and_keeps(filling):
     """The vocabulary's (Dosing adds to the content, the vial is no longer weighed) and the module's
     (the needle in the vial, below its rim, and how deep it is in the liquid; and still)."""
-    dosing = at(submodel(filling[0], "CapabilityDescription"), "Pump", "Dosing")
+    dosing = at(capabilities_of(filling, "Pump"), "Pump", "Dosing")
     assert sorted(constraints(dosing).values()) == [
         ("Invariant", "LinearAxisPosition", ">= NestPosition - RimHeight + InsertDepth"),
         ("Invariant", "OutletImmersion", "= LinearAxisPosition - NestPosition + InnerBottomHeight + 1000 * ContentVolume / "
@@ -73,12 +109,12 @@ def test_a_capability_says_what_it_needs_does_and_keeps(filling):
     # The container's geometry is the product's: states of it with no value here, no data point.
     diameter = at(dosing, "PropertySet", "InnerDiameter")
     assert at(diameter, "Value").get("value") is None and at(diameter, "SameProperty") is None
-    positioning = at(submodel(filling[0], "CapabilityDescription"), "LinearAxis", "Positioning")
+    positioning = at(capabilities_of(filling, "LinearAxis"), "LinearAxis", "Positioning")
     assert at(positioning, "PropertySet", "Speed", "Value")["value"] == "12.5"           # the axis's, its rate
     volume = at(dosing, "PropertySet", "Volume", "Value")
     assert (volume["modelType"], volume["min"], volume["max"]) == ("Range", "0.5", "10.0")
     assert volume["supplementalSemanticIds"][0]["keys"][0]["value"] == f"{BASE}/semantics/Volume"   # a dose
-    weighing = at(submodel(filling[0], "CapabilityDescription"), "Scale", "Weighing")
+    weighing = at(capabilities_of(filling, "Scale"), "Scale", "Weighing")
     assert sorted(constraints(weighing).values()) == [
         ("Invariant", "LinearAxisPosition", "unchanged"), ("Post", "Weighed", "= true"), ("Post", "Weight", "measured"),
         ("Pre", "LinearAxisPosition", "= 0.0"), ("Pre", "Tared", "= true")]
@@ -87,13 +123,14 @@ def test_a_capability_says_what_it_needs_does_and_keeps(filling):
 
 
 def test_a_state_of_the_module_names_its_data_point(filling):
-    """The axis's position is one state, whichever capability names it: the data point it is."""
-    module = filling[0]
-    description = submodel(module, "CapabilityDescription")
+    """The axis's position is one state, whichever capability names it: the data point it is, in the
+    module's AAS, also from a component's."""
+    description = {"value": [s for item in ("LinearAxis", "Pump", "Scale") for s in capabilities_of(filling, item)["value"]]}
     points = {}
     for path_ in (("LinearAxis", "Positioning", "PropertySet", "Position"), ("LinearAxis", "Referencing", "PropertySet", "Position"),
                   ("Pump", "Dosing", "PropertySet", "LinearAxisPosition"), ("Scale", "Weighing", "PropertySet", "LinearAxisPosition")):
         same = at(description, *path_, "SameProperty")
+        assert same["second"]["keys"][0]["value"].endswith("FillingModuleAAS/submodels/Variables")
         points[path_] = resolve(filling, same["second"])["idShort"]
     assert set(points.values()) == {"LinearAxis_ActualPosition"}
     assert resolve(filling, at(description, "Scale", "Weighing", "PropertySet", "Weight", "SameProperty")["second"])["idShort"] == "Scale_Weight"

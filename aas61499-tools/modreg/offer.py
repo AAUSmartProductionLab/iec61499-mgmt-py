@@ -227,6 +227,26 @@ def stated_facts(description: dict | None) -> tuple[dict, dict, list[dict]]:
     return stated, named, by_hand
 
 
+def has_capabilities(module: dict, components: list[dict]) -> bool:
+    """Whether the module or one of its components has a Capability Description."""
+    return any(submodel(env, "CapabilityDescription") is not None for env in (module, *components))
+
+
+def composed(module: dict, components: list[dict]) -> dict[str, dict]:
+    """What each module level skill is composed of (``capabilities.composition``), as the components'
+    Capability Descriptions say which capability each primitive realizes (a set named after its item)."""
+    from .capabilities import composition
+    realized, aas_ids = {}, {}
+    for env in components:
+        for held in children(submodel(env, "CapabilityDescription")):
+            aas_ids[held["idShort"]] = env["assetAdministrationShells"][0]["id"]
+            for box in children(held):
+                for relation in children(at(box, "CapabilityRelations")):
+                    if relation.get("modelType") == "RelationshipElement" and (relation.get("second") or {}).get("keys"):
+                        realized[relation["second"]["keys"][-1]["value"]] = (held["idShort"], held["idShort"], box["idShort"])
+    return composition(described(module, components), realized, aas_ids) if realized else {}
+
+
 def reached_offers(module: dict, components: list[dict], found: list[Offer]) -> list[Offer]:
     """The derived offers with the ranges their skills reach (``modplan.discover.reached``): a property
     the capability's Post compares with is what the skill leaves at the ends of its parameters'
@@ -234,7 +254,7 @@ def reached_offers(module: dict, components: list[dict], found: list[Offer]) -> 
     from modplan.discover import reached
     from modplan.read import read
     from .capabilities import vocabulary
-    if submodel(module, "CapabilityDescription") is None or not found:
+    if not has_capabilities(module, components) or not found:
         return found
     domain = read(module, components, vocabulary())
     if not domain.actions():
@@ -255,7 +275,7 @@ def planned_offers(module: dict, components: list[dict], derived: set[str]) -> l
     from modplan.discover import discover
     from modplan.read import read
     from .capabilities import vocabulary
-    if submodel(module, "CapabilityDescription") is None:
+    if not has_capabilities(module, components):
         return []
     found = []
     for d in discover(read(module, components), vocabulary()):
@@ -278,10 +298,11 @@ def capabilities(module: dict, components: list[dict]) -> dict:
     stated, named, by_hand = stated_facts(old)
     found = reached_offers(module, components, derived_offers(project([module, *components], structure=False)))
     found += planned_offers(module, components, {o.capability for o in found})
-    description = capability_description(found, stated, named)
+    description = capability_description(found, stated, named, composed(module, components))
     derived = {o.capability for o in found}
     kept = [box for box in by_hand if at(box, "Capability")["supplementalSemanticIds"][0]["keys"][0]["value"] not in derived]
-    # The components' capabilities (a set per component) are not derived: they stay as they are.
+    # Sets the module's own description holds besides (its components', in an AAS written before the
+    # components had descriptions of their own) are not derived: they stay as they are.
     others = [s for s in children(old) if s.get("idShort") != OFFERED_SET]
     if description is None and not kept and not others:
         module["submodels"] = [s for s in module["submodels"] if s is not old]

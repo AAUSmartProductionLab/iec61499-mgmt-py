@@ -24,10 +24,11 @@ from aas_model.process_template import Process
 from aas_model.product_template import Product
 from aas_model.resource_template import Resource
 from aas_model.resource_template.modules import (                      # noqa: F401 (the types, here too)
-    RESOURCE, Component, LocatedEntryNode, LocatedNode, LocatedStructures, Module, ModuleCapabilityContainer,
-    ModuleCapabilityDescription, ModuleCapabilityRelations, ModuleCapabilitySet, ModuleConstraintSet,
-    ModuleControlConfiguration, ModuleInterfaces, ModuleSkill, ModuleSkills, ProductionSystem, RealizedBySkill,
-    SameAs, StatedProperty, StatedPropertySet, BasicConstraintContainer, structure,
+    RESOURCE, Component, ComposedOf, LocatedEntryNode, LocatedNode, LocatedStructures, Module,
+    ModuleCapabilityContainer, ModuleCapabilityDescription, ModuleCapabilityRelations, ModuleCapabilitySet,
+    ModuleComposedOfContainer, ModuleComposedOfSet, ModuleConstraintSet, ModuleControlConfiguration, ModuleInterfaces,
+    ModuleSkill, ModuleSkills, ProductionSystem, RealizedBySkill, SameAs, StatedProperty, StatedPropertySet,
+    BasicConstraintContainer, structure,
 )
 from aas_model.submodel_templates import SkillOperation
 from aas_pydantic import AAS, Qualifier, convert_model_to_aas

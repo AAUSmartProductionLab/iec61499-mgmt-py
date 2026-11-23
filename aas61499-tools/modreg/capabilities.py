@@ -1,13 +1,14 @@
-"""What a module's planner reads in its Capability Description (IDTA 02020, ARSO 0.11;
-docs/skill-planning.md): a CapabilitySet per component with the capabilities its primitives realize
-(role NotAssigned: no product asks for them), and the constraints of every capability, the offered
-ones included.
+"""The capabilities a module's planner reads (IDTA 02020, ARSO 0.11; docs/skill-planning.md): each
+component's in its own AAS, a Capability Description with one set named after it holding the
+capabilities its primitives realize (role NotAssigned: no product asks for them); the module's
+offered ones composed of them (``composition``); and the constraints of every capability.
 
 A capability's constraints are what the vocabulary says of its class wherever it is used and, for a
 component's capability, what the module spec says holds on this module (a skill's ``capability``:
 named values, conditions on another item's state). Each is a BasicConstraint about a property of the
 capability. A property that is a state of the module names its data point in Operational Data with
-SameProperty, so that the capabilities naming one data point talk about one state.
+SameProperty, so that the capabilities naming one data point talk about one state. The data points
+are the module's (its Variables), so a component's capability names them in the module's AAS.
 """
 from __future__ import annotations
 
@@ -17,12 +18,13 @@ import re
 from aas_pydantic import Capability, ModelReference, Qualifier
 from aas_pydantic.submodel_templates import capability_description as cd
 
-from modgen.spec import CapabilityProperty, ModuleSpec, Skill
+from modgen.spec import CapabilityProperty, ModuleSpec, Skill, walk
 from modplan.expression import parse
 from modplan.vocabulary import Vocabulary
 
 from . import model
-from .profile import CAPABILITIES, CAPABILITY, SMC, capability_property, component_identity, field_ref, meaning, path
+from .profile import (CAPABILITIES, CAPABILITY, SKILLS, SMC, capability_property, component_identity, field_ref, identity, meaning,
+                      path)
 
 NOT_ASSIGNED = "https://admin-shell.io/idta/CapabilityDescription/CapabilityRoleQualifier/NotAssigned/1/0"
 # What an item with a position publishes of its state (the signals modgen gives it).
@@ -49,9 +51,9 @@ def state_point(spec: ModuleSpec, item: str, meant: str) -> str | None:
 
 
 def state_field(spec: ModuleSpec, item: str, meant: str) -> ModelReference | None:
-    """The record field of ``state_point``, if the module publishes one."""
+    """The record field of ``state_point`` in the module's Variables, if the module publishes one."""
     point = state_point(spec, item, meant)
-    return field_ref(spec, point) if point else None
+    return field_ref(spec, point, identity(spec)[1]) if point else None
 
 
 class Container:
@@ -129,6 +131,39 @@ def component_sets(spec: ModuleSpec) -> dict[str, model.ModuleCapabilitySet]:
     return sets
 
 
+def component_descriptions(spec: ModuleSpec) -> dict[str, model.ModuleCapabilityDescription]:
+    """The Capability Description of each component that has capabilities: its set (``component_sets``)."""
+    return {item: model.ModuleCapabilityDescription(id_short="CapabilityDescription", CapabilitySet={item: held})
+            for item, held in component_sets(spec).items()}
+
+
+def realized_in(descriptions: dict[str, model.ModuleCapabilityDescription]) -> dict[str, tuple[str, str, str]]:
+    """Of the component Capability Descriptions built here (item -> description): which capability
+    each primitive realizes, skill -> (item, set, container)."""
+    return {container.CapabilityRelations.CapabilityRealizedBy["RealizedBy"].second.key[-1].value: (item, held, name)
+            for item, description in descriptions.items() for held, found in description.CapabilitySet.items()
+            for name, container in found.CapabilityContainer.items()}
+
+
+def composition(spec: ModuleSpec, realized: dict[str, tuple[str, str, str]], aas_ids: dict[str, str]) -> dict[str, dict[str, ModelReference]]:
+    """What each module level skill of ``spec`` is composed of: the capabilities the primitives of its
+    steps realize, in step order, each a reference into its component's Capability Description,
+    named ``<item><capability>``. ``realized``: skill -> (item, set, container) as the components'
+    descriptions say; ``aas_ids``: item -> the id of its AAS. A step whose primitive realizes no
+    capability (RetractPiston) adds nothing."""
+    found = {}
+    for name, composite in spec.composites.items():
+        parts: dict[str, ModelReference] = {}
+        for step in walk(composite.execute):
+            if step.skill not in realized or realized[step.skill][0] not in aas_ids:
+                continue
+            item, held, container = realized[step.skill]
+            parts.setdefault(f"{item}{container}", path(f"{aas_ids[item]}/submodels/CapabilityDescription", (SMC, held),
+                                                         (SMC, container), ("Capability", "Capability")))
+        found[name] = parts
+    return found
+
+
 def component_capability(spec: ModuleSpec, item: str, skill: str, decl: Skill, cls: str) -> model.ModuleCapabilityContainer:
     """The capability ``cls`` of ``item``, realized by its primitive ``skill``."""
     voc, box, use = vocabulary(), Container(item, cls), decl.capability
@@ -162,7 +197,7 @@ def component_capability(spec: ModuleSpec, item: str, skill: str, decl: Skill, c
             point = state_point(spec, other, meant)
             if point is None:
                 raise ValueError(f"{spec.module}.{skill}: {other} publishes no {meant}, so {cls} cannot be about it")
-            box.state(f"{other}{meant}", meant, field_ref(spec, point))
+            box.state(f"{other}{meant}", meant, field_ref(spec, point, identity(spec)[1]))
             return f"{other}{meant}"
         if about not in box.properties and voc.product(about):
             box.state(about, about)
@@ -181,8 +216,7 @@ def component_capability(spec: ModuleSpec, item: str, skill: str, decl: Skill, c
         id_short="Capability", semantic_id=CAPABILITY, supplemental_semantic_ids=[meaning(cls)], display_name={"en": cls},
         description=f"{voc.label(cls) or cls} of {item}, realized by {skill}",
         qualifiers=[Qualifier(type_="CapabilityRoleQualifier/NotAssigned", value="true", semantic_id=NOT_ASSIGNED, kind="ConceptQualifier")])
-    skills = f"{component_identity(spec, item)[1]}/submodels/Skills"
-    realized = model.RealizedBySkill(id_short="RealizedBy", first=box.at(("Capability", "Capability")), second=path(skills, (SMC, skill)))
+    realized = model.RealizedBySkill(id_short="RealizedBy", first=box.at(("Capability", "Capability")), second=path(SKILLS, (SMC, skill)))
     return model.ModuleCapabilityContainer(
         id_short=cls, Capability=capability, PropertySet=box.property_set(),
         CapabilityRelations=model.ModuleCapabilityRelations(id_short="CapabilityRelations", CapabilityRealizedBy={"RealizedBy": realized},

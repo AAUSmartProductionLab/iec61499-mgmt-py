@@ -146,12 +146,13 @@ class PlanarDescriber(Describer):
                     variable.id_short = f"Reached{variable.id_short}"
         return made
 
-    def capabilities(self) -> model.ModuleCapabilityDescription | None:
+    def capabilities(self) -> tuple[model.ModuleCapabilityDescription | None, dict]:
         """A shuttle offers Transporting, realized by MoveToPosition, to any pose on the table (no
         program to derive it from: it is the controller's); and Receiving and Releasing a container,
-        one at a time, which no skill realizes: they change only what the shuttle has in its custody."""
+        one at a time, which no skill realizes: they change only what the shuttle has in its custody.
+        It has no components."""
         if "MoveToPosition" not in self.spec.skills:
-            return None
+            return None, {}
         reach = {"X": (0.0, self.table.columns * self.table.flyway), "Y": (0.0, self.table.rows * self.table.flyway),
                  "Rz": POSE["Rz"][1:3]}
         skills = f"{identity(self.spec)[1]}/submodels/Skills"
@@ -160,7 +161,7 @@ class PlanarDescriber(Describer):
                       [("Submodel", skills), ("SubmodelElementCollection", "MoveToPosition")])
         custody = [Offer(meaning("Receiving"), "", True, [Property(meaning("Capacity"), value=1.0)]),
                    Offer(meaning("Releasing"), "", True)]
-        return capability_description([offer, *custody], {})
+        return capability_description([offer, *custody], {}), {}
 
     def errors(self, held: arso.Errors) -> None:
         super().errors(held)

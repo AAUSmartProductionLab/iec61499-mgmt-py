@@ -293,24 +293,27 @@ values over OPC UA (C6 in [next-steps.md](next-steps.md)).
 
 ### 3.9 A module's Capability Description is what it plans from (Model)
 
-**Decision.** One Capability Description per module (IDTA 02020) holds its process capabilities
-(Offered) and, in a set per component, its components' capabilities (NotAssigned), each realized by
-a primitive. Pre- and postconditions and invariants are 02020 property constraints, written as a
-`BasicConstraint` expression over the capability's own properties (`= 40.0`, `+= Volume`,
-`unchanged`); a property names the state it is with `SameProperty` (a data point of the module's
+**Decision.** The module's Capability Description (IDTA 02020) holds its process capabilities
+(Offered); each component's AAS holds its own, the capabilities its primitives realize (NotAssigned),
+in one set named after it; an offered capability is `ComposedOf` the components' capabilities its
+skill's steps run (since 23 Nov; until then the component sets were in the module's description).
+Pre- and postconditions and invariants are 02020 property constraints, written as a `BasicConstraint`
+expression over the capability's own properties (`= 40.0`, `+= Volume`, `unchanged`); a property names the state it is with `SameProperty` (a data point of the module's
 Variables; Operational Data until 28 Oct). A primitive's `Conditions` and `Completion` (ARSO 0.11)
 are the run-time form of the same.
 
-**Why.** 02020 already has the constraints a planner needs, and keeps its relations inside one
-submodel, so the module's description is the whole planning domain; nothing planning-specific is
-added. A module has a fixed cast (its components and the product in it), so its state is a handful
+**Why.** 02020 already has the constraints a planner needs, and its composition relation says which
+components' capabilities a module's capability is made of, so the descriptions of the module and its
+components are the whole planning domain; nothing planning-specific is added. Each capability sits
+beside the skill realizing it, so a component's AAS is whole on its own. A module has a fixed cast (its components and the product in it), so its state is a handful
 of property values: no types, objects, predicates or delete effects to model. The planner's state and
 the run-time checks name the same data points.
 
 **Instead of.** Planning submodels per component that mirror PDDL (types, predicates, actions,
 instances), as AAS2PDDL does (Nabizada et al., 2026): general, but the engineer still thinks in
-PDDL, and the goal sits in a component's AAS. A capability description in each component's AAS
-(02020's relations would have to reach across AASs). Free expressions in a language of their own.
+PDDL, and the goal sits in a component's AAS. The component sets in the module's description (28 Oct
+to 23 Nov), which kept 02020's relations inside one submodel but split each primitive from its
+capability. Free expressions in a language of their own.
 
 ## 4. The tools and the method
 

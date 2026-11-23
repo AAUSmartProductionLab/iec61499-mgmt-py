@@ -226,7 +226,7 @@ def test_a_primitive_is_in_the_aas_of_its_component(stoppering, stoppering_all):
     # What kind of component it is, every axis shares; which one it is, is its own.
     assert shell["assetInformation"]["assetType"] == f"{BASE}/Resource/Component/LinearAxis"
     assert shell["assetInformation"]["globalAssetId"] == f"{BASE}/assets/StopperingLinearAxis"
-    assert [s["idShort"] for s in axis["submodels"]] == ["Skills"]
+    assert sorted(s["idShort"] for s in axis["submodels"]) == ["CapabilityDescription", "Skills"]
     assert names(submodel(axis, "Skills")) == ["Home", "MoveAxis", "Errors"]
     move, decl = at(submodel(axis, "Skills"), "MoveAxis"), spec.skills["MoveAxis"]
     assert ids(move) == [f"{BASE}/skill", f"{BASE}/skill/Primitive", f"{BASE}/skills/MoveAxis"] and "Steps" not in names(at(move, "Start"))

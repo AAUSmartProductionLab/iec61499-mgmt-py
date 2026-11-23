@@ -18,6 +18,42 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 23 Nov 2026
+
+- **A component's capabilities are in its own AAS; the module's offered capability is composed of
+  them.** *Journal*, *Orchestration*. Each component AAS now has a Capability Description with one set,
+  named after the component, holding the capabilities its primitives realize, each `RealizedBy` the
+  primitive in the same AAS. The module's description keeps only the offered capabilities. Each of
+  them gets a `ComposedOfSet` (IDTA 02020), with one `ComposedOfContainer` per realizing skill: Filling,
+  through Dispensing, is composed of the axis's Referencing and Positioning, the pump's Dosing and the
+  scale's Weighing.
+  - **The composition is worked out from the skill's steps, never written by hand**
+    (`modreg.capabilities.composition`), both when a module is described and when offers are derived
+    again after the skill editor saved.
+  - **Why.** Since 27 Oct the component sets were in the module's description, so that 02020's
+    relations stayed inside one submodel. That split each primitive (in the component's AAS) from its
+    capability (in the module's). A component was then not whole on its own, could not go into another
+    module with what it can do, and the web UI could not offer a component's capabilities as building
+    blocks. It is also what the colleagues' CSS work needs: capabilities at every level of the resource
+    hierarchy, each beside the skill that realizes it.
+  - **Instead of.** Keeping the sets in the module, as before. Or composing capabilities by hand in the
+    UI: two sources, the steps and the composition, would drift apart.
+  - **What it costs.** 02020 draws both ends of `ComposedOf` from one submodel; here the second end is
+    a model reference into the component's AAS, as `RealizedBy` already reached a component's skill. A
+    state a component's capability names (the axis position) is a data point of the module's Variables,
+    so its `SameProperty` crosses AASs too.
+  - **Composition is not generalization.** A capability that uses others (Filling uses Positioning and
+    Dosing) is `ComposedOf` them. A narrower kind of a capability (BottomUpFilling is a Filling, Dosing a
+    kind of pouring in DIN 8580) is generalization, which stays in the vocabulary's class hierarchy
+    rather than being repeated in every AAS with `GeneralizedBy`.
+  - **Not yet moved.** The module-specific constraints are still on the component's capabilities, also
+    those that name another component's state (Dosing's `LinearAxisPosition >= FillPosition`). They
+    belong to the composition rather than the component, together with the question of whether effects
+    belong on the capability or on the primitive skill. The colleagues are looking at that next
+    (CSS and the Capability Description).
+  - aas-model: `Component.capability_description`, `ComposedOf`, `ModuleComposedOfSet` (fork,
+    `lab-ppr-models`).
+
 ## 17 Nov 2026
 
 - **The lab's AAS server keeps what was published, in MongoDB, on one pinned BaSyx release.**

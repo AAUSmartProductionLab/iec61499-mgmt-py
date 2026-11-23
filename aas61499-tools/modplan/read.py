@@ -1,8 +1,9 @@
 """A module's planning domain from its AAS alone (ARSO 0.11; docs/skill-planning.md, sections 2 to 4).
 
-- Its Capability Description: the set of each component holds the component's capabilities, the
-  actions; the OfferedCapabilities hold the tasks. A capability is realized by the skill its
-  CapabilityRealizedBy names.
+- The Capability Descriptions: each component's, in its own AAS, holds in a set named after it the
+  component's capabilities, the actions; the module's OfferedCapabilities hold the tasks. A
+  capability is realized by the skill its CapabilityRealizedBy names. (A module's AAS written before
+  the components had their own holds their sets itself; those are read as well.)
 - A capability's properties: one with a Range is a parameter (its default the realizing skill's);
   one with a value is a named value; one a constraint is about is a state variable: the data point
   its SameProperty names, else the product's if its meaning is a property of the product, else the
@@ -51,7 +52,8 @@ def read(module: dict, components: list[dict], vocabulary: Vocabulary | None = N
     completions = {skill["idShort"]: after for env in components for skill in skills_in(submodel(env, "Skills"))
                    if (after := (at(skill, "Completion", "After") or {}).get("value")) not in (None, "")}
     caps = {}
-    for capability_set in children(submodel(module, "CapabilityDescription")):
+    held = [s for env in (module, *components) for s in children(submodel(env, "CapabilityDescription"))]
+    for capability_set in held:
         component = None if capability_set["idShort"] == OFFERED_SET else capability_set["idShort"]
         for container in children(capability_set):
             cap = _capability(container, component, spec, voc, completions)

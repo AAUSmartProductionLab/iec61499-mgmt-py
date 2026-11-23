@@ -29,23 +29,28 @@ A module answers a requirement in one of three ways: a built skill realizes it; 
 or can be planned (offered "after a reconfiguration"); or it cannot. The planner turns the second
 answer into a skill.
 
-## 2. The module's Capability Description is its planning domain
+## 2. The Capability Descriptions of the module and its components are its planning domain
 
-Everything the planner reads is in one submodel, the module's Capability Description (IDTA 02020).
-02020 keeps its relations (`ComposedOf`, `ConstraintHasProperty`, `TransitionConstrainedBy`) inside one
-submodel (its section 1.8.1); only `CapabilityRealizedBy` and `SameProperty` point outside. Its own
-painting-station example does the same: "paint" is composed of spray, dosing, store and pressure
-adjust.
+What the planner reads is in the Capability Descriptions (IDTA 02020) of the module and of its
+components, each capability beside the skill that realizes it (since 23 Nov):
 
-| CapabilitySet | Capabilities | Role | Realized by |
-| --- | --- | --- | --- |
-| `OfferedCapabilities` (exists) | Process capabilities: Filling | Offered | A composite skill of the module, if one exists |
-| One per component (`LinearAxis`, `Pump`, `Scale`), as 02020's best practice has a set per asset | The component's capabilities: Referencing, Positioning; Dosing; Taring, Weighing | NotAssigned (neither offered nor required) | The component's primitive |
+| AAS | CapabilitySet | Capabilities | Role | Realized by |
+| --- | --- | --- | --- | --- |
+| The module's | `OfferedCapabilities` | Process capabilities: Filling | Offered | A composite skill of the module, if one exists; `ComposedOf` the components' capabilities its steps' primitives realize |
+| Each component's (`FillingLinearAxisAAS`, ...) | One, named after the component (`LinearAxis`, `Pump`, `Scale`) | The component's capabilities: Referencing, Positioning; Dosing; Taring, Weighing | NotAssigned (neither offered nor required) | The component's primitive, in its own Skills submodel |
 
-A component capability is a part of module capabilities, never offered to a product. It belongs to the
-component (its set, its primitive) but is described in the module, where the constraints that involve
-the other components and the product can refer to it. A component's own AAS keeps only its skills, as
-now.
+A component capability is a part of module capabilities, never offered to a product. A component's
+AAS holds its primitives and the capabilities they realize, so it is whole on its own and goes with
+the component into another module. The module's offered capability names what it is composed of
+with 02020's `CapabilityComposedOf`, one `ComposedOfContainer` per realizing skill, a model reference
+into the component's description; it is worked out from the skill's steps (`capabilities.composition`),
+never written by hand, so the steps stay the one source. 02020 draws the ends of its relations from
+one submodel (its section 1.8.1); here the second end is in the component's AAS, as `RealizedBy`
+already reaches a component's skill. A state a component's capability names (the axis position) is a
+data point of the module's Variables, named across AASs with `SameProperty`.
+
+Until 23 Nov the component sets were in the module's own description, so that all relations stayed in
+one submodel as in 02020's painting-station example; that split each primitive from its capability.
 
 ARSO 0.11 (27 Oct) allows it: `CapabilityRealizedBy` may point to a skill of a component, in the
 words ARSO already uses for the skill of a step, "of the same AAS or of an AAS that is a part of it in
@@ -306,7 +311,7 @@ All done: 1 to 6 on 27 and 28 Oct, 7 on 28 and 29 Oct (the plan's G0 to G7,
    constraint elements and conventions. modreg writes them, modsync also reads a 0.10 `Contract`; the
    module specs use the same words (`precondition`, `postcondition`, `invariant`, `after`, `timeout`).
 3. **modreg** (`modreg/capabilities.py`): a set per component with its capabilities and their
-   constraints, from the vocabulary and the spec (a skill's `capability`), `SameProperty` to the data
+   constraints (since 23 Nov in the component's own AAS, the offered ones `ComposedOf` them), from the vocabulary and the spec (a skill's `capability`), `SameProperty` to the data
    points; the offered capabilities with their Pre and Post.
 4. **modplan** (`read`, `check`): the domain from the AAS alone, the checker.
 5. **modplan** (`plan`, `lift`, `compose`, `discover`): GTPyhop, the lifting, the skill described in the

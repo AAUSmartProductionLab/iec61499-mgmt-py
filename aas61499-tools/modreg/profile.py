@@ -186,9 +186,10 @@ def record_field_ref(group: str, series: str, name: str, aas_id: str | None = No
                 (SMC, "Metadata"), (SMC, "Record"), ("Property", name))
 
 
-def field_ref(spec: ModuleSpec, name: str) -> ModelReference:
-    """The record field of the value the module publishes as ``name``."""
-    return record_field_ref(*series_of(spec, name), name)
+def field_ref(spec: ModuleSpec, name: str, aas_id: str | None = None) -> ModelReference:
+    """The record field of the value the module publishes as ``name``, from this AAS (``aas_id``
+    None) or from the AAS ``aas_id`` (a component's, naming the module's)."""
+    return record_field_ref(*series_of(spec, name), name, aas_id)
 
 
 def coordinate_ref(name: str, aas_id: str | None = None) -> ModelReference:
@@ -834,22 +835,21 @@ class Describer:
         return Aimc(id_short="AssetInterfacesMappingConfiguration",
                     MappingConfigurations=AimcMappingConfigurations(value=mappings))
 
-    def capabilities(self) -> model.ModuleCapabilityDescription | None:
-        """The capabilities the module offers (IDTA 02020), derived from its skills (``offers``),
-        with the facts of the machine the spec states for each. A capability the spec states that
-        no skill offers is refused."""
+    def capabilities(self) -> tuple[model.ModuleCapabilityDescription | None, dict[str, model.ModuleCapabilityDescription]]:
+        """The Capability Descriptions (IDTA 02020): the module's, with the capabilities it offers,
+        derived from its skills (``offers``), the facts of the machine the spec states for each, and
+        what each is composed of; and each component's (item -> description), with the capabilities
+        its primitives realize. A capability the spec states that no skill offers is refused."""
         if not self.derive:
-            return None
-        from .capabilities import component_sets          # it builds on this module's helpers
+            return None, {}
+        from .capabilities import component_descriptions, composition, realized_in   # they build on this module's helpers
         found = offers(self.spec)
         stated = {meaning(name, cap.semantic_id): (name, cap) for name, cap in self.spec.capabilities.items()}
         if unknown := sorted(name for iri, (name, _) in stated.items() if iri not in {o.capability for o in found}):
             raise ValueError(f"{self.spec.module} states the capabilities {unknown}, which none of its skills offers")
-        description, sets = capability_description(found, stated), component_sets(self.spec)
-        if sets:
-            description = description or model.ModuleCapabilityDescription(id_short="CapabilityDescription", CapabilitySet={})
-            description.CapabilitySet.update(sets)
-        return description
+        components = component_descriptions(self.spec)
+        parts = composition(self.spec, realized_in(components), {item: component_identity(self.spec, item)[1] for item in components})
+        return capability_description(found, stated, parts=parts), components
 
     def control_configuration(self) -> model.ModuleControlConfiguration:
         snap, drift, t = self.snap, self.drift, self.spec.targets[self.target]
@@ -943,7 +943,9 @@ class Describer:
         # Beside the measurement series, where the module and its points are.
         asset.variables.Measurements = asset.variables.Measurements or MeasurementsGroup()
         asset.variables.Measurements.value["Coordinates"] = self.coordinates()
-        asset.capability_description = self.capabilities()
+        asset.capability_description, described = self.capabilities()
+        for item, part in parts.items():
+            part.capability_description = described.get(item)
         asset.asset_interfaces_mapping_configuration = self.mappings()
         return [(Module.model_validate(asset.model_dump()), asset_id),
                 *[(Component.model_validate(part.model_dump()), component_identity(spec, item)[2])
@@ -971,14 +973,17 @@ def capability_property(name: str, iri: str, value: CapabilityProperty, derived:
 
 
 def capability_description(found: list[Offer], stated: dict[str, tuple[str, CapabilitySpec]],
-                           named: dict[tuple[str, str], str] | None = None) -> model.ModuleCapabilityDescription | None:
+                           named: dict[tuple[str, str], str] | None = None,
+                           parts: dict[str, dict[str, ModelReference]] | None = None) -> model.ModuleCapabilityDescription | None:
     """The capabilities ``found`` (derived from the skills), each with its meaning (marked Derived),
     the properties its skill sets (marked Derived), the facts ``stated`` for its class (meaning ->
     (name, what is stated)), and the skill realizing it (CapabilityRealizedBy, a reference into the
     Skills submodel; the skill does not refer back). A skill that is described but not built offers
     it only after a reconfiguration (Availability). Two skills offering one capability: each gets a
     container of its own, named after the capability and the skill, unless ``named`` (capability,
-    skill element) -> idShort keeps the name it has."""
+    skill element) -> idShort keeps the name it has. ``parts``: what the skill of each is composed
+    of (``capabilities.composition``), a ComposedOfSet when it is two capabilities or more (IDTA 02020's
+    least)."""
     from .capabilities import constrain_offer, vocabulary            # it builds on this module's helpers
     containers, count, named = {}, Counter(o.capability for o in found), named or {}
     # A name stays taken while the skill it names still offers its capability.
@@ -1015,10 +1020,15 @@ def capability_description(found: list[Offer], stated: dict[str, tuple[str, Capa
         # A capability only a plan would realize has no skill yet (``offer.planned_offers``).
         realized = {"RealizedBy": model.RealizedBySkill(id_short="RealizedBy", first=capability_path(id_short),
                                                         second=path(offer.keys[0][1], *offer.keys[1:]))} if offer.keys else {}
+        used = (parts or {}).get(offer.skill_name, {}) if offer.keys else {}
+        composed = model.ModuleComposedOfSet(id_short="ComposedOfSet", ComposedOfContainer={offer.skill_name: model.ModuleComposedOfContainer(
+            id_short=offer.skill_name, CapabilityComposedOf={n: model.ComposedOf(id_short=n, first=capability_path(id_short), second=r)
+                                                             for n, r in used.items()})}) if len(used) >= 2 else None
         containers[id_short] = model.ModuleCapabilityContainer(
             id_short=id_short, Capability=capability,
             PropertySet={"PropertySet": model.StatedPropertySet(id_short="PropertySet", PropertyContainer=properties)} if properties else {},
-            CapabilityRelations=model.ModuleCapabilityRelations(id_short="CapabilityRelations", CapabilityRealizedBy=realized))
+            CapabilityRelations=model.ModuleCapabilityRelations(id_short="CapabilityRelations", CapabilityRealizedBy=realized,
+                                                                ComposedOfSet=composed))
         constrain_offer(containers[id_short], OFFERED_SET, local(offer.capability))
     if not containers:
         return None

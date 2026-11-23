@@ -36,15 +36,18 @@
 # the same AAS or of an AAS that is a part of it in HierarchicalStructures (downward only), as a
 # step's Skill does (v0.11).
 #
-# How a resource uses it (v0.11; docs/skill-planning.md): a module's Capability Description is
-# what new skills of it are planned from, so everything the planner reads is in this one
-# submodel (IDTA 02020 keeps ComposedOf, ConstraintHasProperty and TransitionConstrainedBy inside
-# one submodel).
-# - CapabilitySet OfferedCapabilities: the module's process capabilities, role Offered, each
-#   realized by a composite skill of the module if one exists.
-# - One CapabilitySet per component, named like it: the component's capabilities, role
-#   NotAssigned (no product asks for them), each realized by one of its primitives. They are parts
-#   of the module's capabilities (ComposedOf), never offered on their own.
+# How a resource uses it (v0.11; docs/skill-planning.md): the Capability Descriptions of a module
+# and of its components are what new skills of it are planned from. Since 23 Nov 2026 a
+# component's capabilities are in its own AAS (before, in a set of the module's description, to
+# keep IDTA 02020's relations inside one submodel).
+# - The module's CapabilitySet OfferedCapabilities: its process capabilities, role Offered, each
+#   realized by a composite skill of the module if one exists, and ComposedOf the components'
+#   capabilities the primitives of that skill's steps realize (one ComposedOfContainer per skill,
+#   named like it; second: a model reference into the component's Capability Description).
+# - A component's Capability Description: one CapabilitySet, named like the component, with its
+#   capabilities, role NotAssigned (no product asks for them), each realized by one of its
+#   primitives in its own Skills submodel. They are parts of the module's capabilities, never
+#   offered on their own.
 # - A property constraint is a BasicConstraint: an expression over the properties of its own
 #   capability, about the property its ConstraintHasProperty names. "<op> <operand>", op one of
 #   = != < <= > >= +=, the operand a value or the idShort of another property of the capability;
@@ -52,7 +55,7 @@
 #   measured), unchanged (Invariant: nothing else changes it meanwhile). A planner achieves = and
 #   +=; it checks the others.
 # - A property is a state: the data point its SameProperty names (second: a Property of the
-#   module's Operational Data), the same for every capability that names it; without one, the
+#   module's Variables, also from a component's capability), the same for every capability that names it; without one, the
 #   product's if its meaning is a property of the product, else the component's whose set holds it.
 # - A transition constraint orders capabilities where no state does; its Invariant means the other
 #   capability runs at the same time (IDTA 02020: "supplying lubricant during a milling operation").
