@@ -11,7 +11,8 @@ modbus: {host: 127.0.0.1, port: 1508, unit: 1, poll_ms: 10}   # cell/sim/module_
 
 targets:
   pc: {host: localhost, io: modbus}
-  pi: {host: filling-module-2, user: admin, io: gpio, board: pi5,
+  # 192.168.0.173 until the lab network (its Wi-Fi; Ethernet .172), then its name filling-module-2.
+  pi: {host: 192.168.0.173, user: admin, io: gpio, board: pi5,
        pwm_root: /hostsys/class/pwm}   # its Pi, a Raspberry Pi 5, by its name on the lab network
 
 equipment:
