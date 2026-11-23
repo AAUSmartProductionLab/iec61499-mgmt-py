@@ -74,7 +74,8 @@ robots: how the demo's other four modules are built, Python beside FORTE),
 the papers' notes (`paper-outline.md`, `journal-paper.md`, `orchestration-paper.md`; kept outside
 git in the local `AASPIRE-material/papers` folder since 23 Nov, see CLAUDE.md),
 [design-log.md](design-log.md) (design considerations, newest first),
-[framework-plan.md](framework-plan.md) (AASPIRE: the framework that
+[lab-network.md](lab-network.md) (the lab network from 23 Nov: addresses, names, what to do per
+module), [framework-plan.md](framework-plan.md) (AASPIRE: the framework that
 holds the lab's AAS work, one line run by two orchestrators, its repositories in the `AAU-AASPIRE`
 organization, documentation site and icons, and what the January demo still needs).
 

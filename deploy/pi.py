@@ -7,6 +7,7 @@
     python deploy/pi.py module                   # run the module (cell/modules/filling.yaml) on its Pi
     python deploy/pi.py module --spec cell/modules/stoppering.yaml --print   # show the boot file
     python deploy/pi.py log
+    python deploy/pi.py pools                    # Docker's own networks out of the lab network (172.20.0.0/15)
 
 The Pi's address and login are the ``pi`` target's ``host`` and ``user`` in the module spec
 (cell/modules/filling.yaml), or ``--host``/``--user``. Any 64-bit Linux on the Pi works (Raspberry
@@ -77,6 +78,14 @@ def sudo(args, command):
         ssh(args, f"sudo -S -p '' sh -c '{command}'", stdin=password + "\n")
 
 
+def pools(args):
+    """Docker's own networks out of the lab network (deploy/docker_pools.py), as root on the Pi."""
+    import getpass
+    password = os.environ.get("PI_SUDO_PASSWORD") or getpass.getpass(f"sudo password of {args.user}@{args.host}: ")
+    script = (TOOLS / "docker_pools.py").read_text(encoding="utf-8")
+    ssh(args, "sudo -S -p '' python3 -", stdin=f"{password}\n{script}")
+
+
 def compose(args, command):
     """Run ``docker compose <command>`` in ~/forte on the Pi."""
     ssh(args, f"cd ~/forte && docker compose {command}")
@@ -97,6 +106,11 @@ def install(args):
     ssh(args, "chmod 755 ~/forte/forte")
     files = [DOCKER / f for f in ("Dockerfile", "compose.yaml", ".dockerignore")]
     subprocess.run(["scp", "-q", *map(str, files), f"{args.user}@{args.host}:forte/"], check=True)
+    if args.lds:
+        # The discovery server FORTE registers at (compose.yaml, extra_hosts); other lines of .env are kept.
+        name, _, address = args.lds.partition("=")
+        ssh(args, "touch ~/forte/.env && sed -i '/^LDS_HOST=/d; /^LDS_IP=/d; /^FORTE_LDS_REGISTER=/d' ~/forte/.env && "
+                  f"printf 'LDS_HOST=%s\nLDS_IP=%s\nFORTE_LDS_REGISTER=1\n' {name} {address} >> ~/forte/.env")
     compose(args, "up -d --build --force-recreate && docker compose ps")
 
 
@@ -231,7 +245,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     commands = parser.add_subparsers(dest="command", required=True)
     for name, fn in [("install", install), ("blink", blink), ("module", module), ("log", log),
-                     ("stop", stop), ("start", start), ("status", status)]:
+                     ("stop", stop), ("start", start), ("status", status), ("pools", pools)]:
         sub = commands.add_parser(name)
         sub.set_defaults(fn=fn)
         sub.add_argument("--spec", default=str(SPEC), help="Module spec (its target names the Pi)")
@@ -241,6 +255,8 @@ def main():
         sub.add_argument("--port", type=int, default=61499, help="FORTE management port")
         if name == "install":
             sub.add_argument("--forte", default=str(FORTE))
+            sub.add_argument("--lds", metavar="HOST=IP", help="the OPC UA discovery server FORTE registers at, "
+                             "e.g. labpc.local=172.20.100.187 (its name as it announces itself by mDNS)")
         if name == "blink":
             sub.add_argument("--line", type=int, help=f"GPIO (BCM) line; default: on-board ACT LED ({ONBOARD_LED})")
             sub.add_argument("--chip", type=int, default=0)

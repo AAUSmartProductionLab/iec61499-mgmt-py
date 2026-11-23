@@ -27,6 +27,16 @@ services:
     # Host network: OPC UA advertises the Pi's own address in its endpoints, and the management
     # port (61499, no authentication: lab network only) and Modbus clients need no mapping.
     network_mode: host
+    # FORTE announces its OPC UA server by mDNS (LDS-ME), which is how modreg serve --discover finds it.
+    # Registering at an OPC UA discovery server (LDS) besides is only done when FORTE_LDS_REGISTER is 1
+    # (forte-patches/0008): an LDS announces itself as opc.tcp://<host>.local:4840, which the static musl
+    # binary cannot resolve, and each try froze the OPC UA server for 5 s, every minute. With the LDS's
+    # name and address in .env (LDS_HOST, LDS_IP; deploy/pi.py install --lds HOST=IP) it registers there;
+    # without them the host entry is a harmless dummy.
+    environment:
+      FORTE_LDS_REGISTER: "${FORTE_LDS_REGISTER:-0}"
+    extra_hosts:
+      - "${LDS_HOST:-lds.invalid}:${LDS_IP:-127.0.0.1}"
     devices:
       # GPIO lines for GPIOChip (the container runs as root): the chip of the 40-pin header, as
       # chip 0. runtime/install.sh writes which one it is to .env (4 on a Pi 5 with an older kernel).

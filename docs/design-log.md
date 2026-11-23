@@ -21,6 +21,31 @@ A running log of design considerations made while building, for writing the pape
 
 ## 23 Nov 2026
 
+- **Every new capability names what it is composed of, also a planned one and one of a single
+  part.** *Journal*, *Orchestration*. A capability a plan would realize (offered after a
+  reconfiguration, no skill yet) now gets a `ComposedOfSet` too, from the plan's steps (those running
+  alongside included): the planning domain says which component's capability each step uses. A skill
+  described in the skill editor gets it from its steps as a built one does (DoubleDose: the axis's
+  Referencing and Positioning, the pump's Dosing, the scale's Weighing). One part is named as well,
+  where IDTA 02020 has two at least: the user asked for every capability a new one uses, and a
+  composition of one says which component it runs on. Instead of: compositions only for skills that
+  exist, and only from two parts.
+- **FORTE registers at an OPC UA discovery server only when asked to.** *Orchestration*. FORTE 3.3.0
+  registers its OPC UA server at every LDS it hears announced by mDNS, on the server's own thread. An
+  LDS announces itself as `opc.tcp://<host>.local:4840`, which FORTE (a static musl binary) cannot
+  resolve, and each attempt froze the OPC UA server for 5 s, every minute: the PC's UALDS (installed
+  with UaExpert) did this to the filling and capping modules. Patch 0008 registers only with
+  `FORTE_LDS_REGISTER=1`, and then with a 2 s timeout; the Pi's compose file sets it, and the LDS's name
+  and address, from `.env` (`deploy/pi.py install --lds HOST=IP`). The mDNS announcement (LDS-ME) stays:
+  it is how `modreg serve --discover` finds the modules, and an LDS with the multicast extension learns
+  of them from it without a registration. Instead of: a short timeout alone (the 5 s were the name
+  lookup, which a client timeout may not bound), or switching mDNS off (the discovery the line uses).
+- **Docker's own networks out of the lab network.** *Orchestration*. The new lab network is
+  172.20.0.0/15, inside the 172.16.0.0/12 Docker hands out to its bridge and Compose networks; a network
+  on 172.20.x or 172.21.x cuts its host off from the lab. Every Docker host uses 10.250.0.0/24 and
+  10.251.0.0/16 (`deploy/docker_pools.py`, `deploy/pi.py pools`), keeping other keys of its
+  `daemon.json`. The move itself: `docs/lab-network.md`.
+
 - **A component's capabilities are in its own AAS; the module's offered capability is composed of
   them.** *Journal*, *Orchestration*. Each component AAS now has a Capability Description with one set,
   named after the component, holding the capabilities its primitives realize, each `RealizedBy` the

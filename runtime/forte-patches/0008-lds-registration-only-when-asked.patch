@@ -1,0 +1,42 @@
+Fix for FORTE 3.3.0 on the lab network: FORTE registers at an OPC UA discovery server (LDS) only when
+FORTE_LDS_REGISTER=1, and then with a 2 s timeout. The registration runs on the OPC UA server's thread;
+an LDS announced as <host>.local (which the static musl binary cannot resolve) froze the server for
+5 s every minute. The mDNS announcement (LDS-ME) still makes the server known. Applied by build-runtime.ps1.
+
+diff --git a/com/opc_ua/src/detail/lds_me_handler.cpp b/com/opc_ua/src/detail/lds_me_handler.cpp
+index 7f69230..8fc10e6 100644
+--- a/com/opc_ua/src/detail/lds_me_handler.cpp
++++ b/com/opc_ua/src/detail/lds_me_handler.cpp
+@@ -6,6 +6,9 @@
+ #include <open62541/client_config_default.h>
+ #include <open62541/server.h>
+ 
++#include <cstdlib>
++#include <cstring>
++
+ namespace forte::com_infra::opc_ua::detail {
+   LdsMeHandler::LdsMeHandler(UA_Server &paUaServer) : mUaServer{paUaServer} {
+     UA_Server_setServerOnNetworkCallback(&mUaServer, serverOnNetworkCallback, this);
+@@ -34,6 +37,14 @@ namespace forte::com_infra::opc_ua::detail {
+       return; // we wait until the corresponding TXT record is announced.
+     }
+ 
++    // Registering at an LDS is a call on the OPC UA server's own thread: while it waits (a name it cannot
++    // resolve, a host that does not answer) the server serves no one. The mDNS announcement already
++    // makes the server known to an LDS-ME and to clients that browse, so it registers only if asked to.
++    const char *registerAtLds = std::getenv("FORTE_LDS_REGISTER");
++    if (registerAtLds == nullptr || std::strcmp(registerAtLds, "1") != 0) {
++      return;
++    }
++
+     DEVLOG_DEBUG("[OPC UA LDS ME]: mDNS %s '%.*s' with url '%.*s'\n", paIsServerAnnounce ? "announce" : "remove",
+                  paServerOnNetwork->serverName.length, paServerOnNetwork->serverName.data,
+                  paServerOnNetwork->discoveryUrl.length, paServerOnNetwork->discoveryUrl.data);
+@@ -81,6 +92,7 @@ namespace forte::com_infra::opc_ua::detail {
+     UA_ClientConfig clientConfig;
+     memset(&clientConfig, 0, sizeof(UA_ClientConfig));
+     UA_ClientConfig_setDefault(&clientConfig);
++    clientConfig.timeout = 2000; // ms: the server stands still while it waits
+     auto retVal = UA_Server_registerDiscovery(&mUaServer, &clientConfig, paDiscoveryUrl, UA_STRING_NULL);
+     if (UA_STATUSCODE_GOOD != retVal) {
+       DEVLOG_ERROR("[OPC UA LDSME]: Could not register with LDS. Error: %s\n", UA_StatusCode_name(retVal));
