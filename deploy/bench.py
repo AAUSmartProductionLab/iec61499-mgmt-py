@@ -6,6 +6,7 @@ motion under a watchdog. Only with someone at the bench: Reset and Home drive th
     python deploy/bench.py home                       # Reset, which homes the axis; stopped if not home in time
     python deploy/bench.py move --to 10               # MoveAxis 10 mm away from the switch, then Home
     python deploy/bench.py move --to 40 --stay        # ... and stay there, e.g. to measure a position
+    python deploy/bench.py run --skill Capping --spec cell/modules/capping.yaml   # a module level skill
     python deploy/bench.py home --spec cell/modules/stoppering.yaml --limit 12
 
 The module, its Pi, its axis (the equipment with a position), the axis's home switch and its speed
@@ -181,9 +182,25 @@ def move(bench, args):
                   lambda: bench.value(bench.axis.home), "Home (the switch reached)")
 
 
+def run(bench, args):
+    """A module level skill (``--skill``) once, with its parameters' defaults, until it succeeds."""
+    if args.skill not in bench.spec.composites:
+        sys.exit(f"{bench.spec.module} has no module level skill {args.skill}: {', '.join(bench.spec.composites)}")
+    if bench.ua.value("Module/State") != STATES["Execute"]:
+        print("Start ->", bench.ua.call("Module/Start", SESSION))
+        bench.ua.expect("Module/State", STATES["Execute"], timeout=10)
+    params = [p.default for p in bench.spec.composites[args.skill].parameters.values()]
+    state = f"Skills/{args.skill}/State"
+    succeeded = lambda: bench.ua.value(state) == SKILL_STATES["Succeeded"]      # noqa: E731
+    # Down the whole travel and back, plus what the skill waits for (a crimp, a dose).
+    limit = args.limit or 2 * bench.axis.seconds(bench.axis.maximum) + 10
+    bench.guarded(limit, lambda: bench.ua.call(f"Skills/{args.skill}/Start", SESSION, *params), succeeded,
+                  f"{args.skill} (done within {limit:.1f} s)")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("stage", choices=["status", "switch", "home", "move"])
+    parser.add_argument("stage", choices=["status", "switch", "home", "move", "run"])
     parser.add_argument("--spec", default=str(SPECS / "filling.yaml"), help="module spec (its target names the Pi)")
     parser.add_argument("--target", default="pi")
     parser.add_argument("--host", help="default: the target's host in the spec")
@@ -192,10 +209,11 @@ def main():
                                                     "(default: the axis's whole travel at its speed, plus 2.5 s)")
     parser.add_argument("--to", type=float, default=10.0, help="move: the position in mm from the switch")
     parser.add_argument("--stay", action="store_true", help="move: do not home afterwards")
+    parser.add_argument("--skill", help="run: the module level skill to run (its parameters at their defaults)")
     args = parser.parse_args()
     bench = Bench(args)
-    stage = {"status": status, "switch": switch, "home": home, "move": move}[args.stage]
-    occupy = args.stage in ("home", "move")
+    stage = {"status": status, "switch": switch, "home": home, "move": move, "run": run}[args.stage]
+    occupy = args.stage in ("home", "move", "run")
     try:
         if occupy:
             print("Occupy ->", bench.ua.call("Occupation/Occupy", SESSION))
