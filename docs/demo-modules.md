@@ -208,9 +208,14 @@ packaged `runtime/bin/forte-aarch64` (`deploy/pi.py install --spec cell/modules/
 runtime/bin/forte-aarch64`) and the capping program its boot file (`deploy/pi.py module --spec
 cell/modules/capping.yaml`); OPC UA at `opc.tcp://192.168.0.243:4840/Objects/Capping`. Read without
 moving (`deploy/bench.py status`): the module Stopped, `AtHome` false (the normally closed switch wired
-and not pressed), the PWM channel enabled at duty 0. Nothing has been sent to it. Next, at the bench:
-the switch pressed by hand (`bench.py switch`), homing (`bench.py home`), then the travel and
-`CrimpPosition` measured.
+and not pressed), the PWM channel enabled at duty 0.
+
+At the bench the same day: the switch registered 8 of 8 presses (`bench.py switch`). Homing first ran
+away from the switch with either polarity of DIR: the DIR wire (IO27 to the TB6600's DIR+) did not
+conduct once clamped; with a new wire the spec's polarity (inverted, as filling's) homes. From the
+bottom of the stage to the switch took 13.3 s, about 165 mm at 12.5 mm/s (the spec's 60 mm travel is a
+placeholder). `bench.py run --skill Capping` ran the skill once in 7.1 s: down to 40 mm, the simulated
+crimp for 1.5 s, home. Still to do: the travel and `CrimpPosition` measured on the station.
 
 The hardware: a Pi 5, a TB6600, a stepper on a stage and a limit switch. A real crimper later is an
 output on a pin (a valve or a relay) or a servo; the skill stays.

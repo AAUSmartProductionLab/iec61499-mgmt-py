@@ -80,7 +80,7 @@ Module by module:
 | Filling | `cell/modules/filling.yaml` | Runs on its Pi; positions to measure again | — |
 | Filling 2 | `cell/modules/filling-2.yaml` (new) | Spec written; its Pi set up by hand | A fresh Pi first: Docker, `dtoverlay=pwm-2chan`, groups (as `docs/demo-modules.md` says for capping); its positions measured |
 | Stoppering | `cell/modules/stoppering.yaml` | Runs on its Pi | — |
-| Capping | `cell/modules/capping.yaml` | Pi set up, switch works; its stepper does not change direction | Check DIR+ on pin 13 (GPIO27) and DIR- on GND, then home and measure |
+| Capping | `cell/modules/capping.yaml` | Runs on its Pi: homes, Capping ran once (23 Nov) | Its travel and `CrimpPosition` measured |
 | Inspection | `cell/modules/planned/inspection.yaml` | Planned | Its equipment service (Python beside FORTE) to build first (`docs/demo-modules.md`, section 5) |
 | KUKA infeed, outfeed | `cell/modules/python/loading.yaml`, `unloading.yaml` | Run in Python (`modpy`) | The same network steps for the Pi that runs `python -m modpy serve`; the robots' own addresses in their specs |
 
