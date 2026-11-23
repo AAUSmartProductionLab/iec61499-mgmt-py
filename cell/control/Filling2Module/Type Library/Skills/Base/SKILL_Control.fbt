@@ -1,0 +1,244 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_Control" Comment="The skill's state machine inside SKILL_Core: what Start, Stop, Abort and Reset do in each state. A client's command reaches it only once SKILL_Gate has accepted it, so here a command is the same from a client or from a parent. Technical: Skill state machine: START, HALT, ABORT, RESET (a client's already decided by SKILL_Gate); Idle 0, Running 1, Stopping 2, Succeeded 3, Failed 4, Aborted 5; RUN starts the execution (CalledByClient: with the Start arguments, else with the parent's values)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
+        <With Var="Module" />
+        <With Var="UaRoot" />
+        <With Var="UaPath" />
+      </Event>
+      <Event Name="START" Type="Event" Comment="Start a run: a client's Start that SKILL_Gate accepted, or the parent's (ByClient says which)">
+        <With Var="ByClient" />
+      </Event>
+      <Event Name="HALT" Type="Event" Comment="Stop the run: a client's accepted Stop, or the parent's" />
+      <Event Name="ABORT" Type="Event" Comment="Abort, everything off at once: a client's accepted Abort, or the parent's" />
+      <Event Name="RESET" Type="Event" Comment="Reset from Aborted to Idle: a client's accepted Reset, or the parent's" />
+      <Event Name="EXECUTE_DONE" Type="Event" Comment="The execution ended successfully" />
+      <Event Name="EXECUTE_FAILED" Type="Event" Comment="The execution failed (ExecuteError)">
+        <With Var="ExecuteError" />
+      </Event>
+      <Event Name="STOPPING_DONE" Type="Event" Comment="The stop sequence ended" />
+      <Event Name="TO_IDLE" Type="Event" Comment="Succeeded long enough: back to Idle" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
+        <With Var="StartMethodId" />
+        <With Var="StopMethodId" />
+        <With Var="AbortMethodId" />
+        <With Var="ResetMethodId" />
+        <With Var="StateId" />
+        <With Var="ActivityId" />
+        <With Var="ReleaseId" />
+      </Event>
+      <Event Name="PUB" Type="Event" Comment="Publish State and ErrorID">
+        <With Var="State" />
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="RUN" Type="Event" Comment="Run: latch the parameters, start the execution">
+        <With Var="CalledByClient" />
+      </Event>
+      <Event Name="HALT_SEQ" Type="Event" Comment="Halt the execute sequence" />
+      <Event Name="ABORT_SEQ" Type="Event" Comment="Abort the sequences" />
+      <Event Name="RESET_SEQ" Type="Event" Comment="Reset the sequences" />
+      <Event Name="RUN_STOPPING" Type="Event" Comment="Run the stop sequence (the skill was stopped)" />
+      <Event Name="SUCCESS" Type="Event" Comment="The run succeeded (the results are set)" />
+      <Event Name="FAILURE" Type="Event" Comment="The run failed (ErrorID)">
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="RELEASE" Type="Event" Comment="A run ended: give up what the skill holds (published if ReleaseAll)" />
+      <Event Name="ACT" Type="Event" Comment="Count the module's activity (ActivityDelta)">
+        <With Var="ActivityDelta" />
+      </Event>
+      <Event Name="TO_IDLE_START" Type="Event" Comment="Start the timer back to Idle" />
+      <Event Name="TO_IDLE_STOP" Type="Event" Comment="Stop the timer back to Idle" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+      <VarDeclaration Name="UaPath" Type="WSTRING" Comment="This skill's OPC UA folder below UaRoot, e.g. /Skills/Dispensing" />
+      <VarDeclaration Name="ByClient" Type="BOOL" Comment="The start came from a client over OPC UA (TRUE), or from the parent (FALSE)" />
+      <VarDeclaration Name="ExecuteError" Type="UINT" Comment="Why the execution failed" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="StartMethodId" Type="WSTRING" Comment="OPC UA ID of the Start method, for its SERVER block" />
+      <VarDeclaration Name="StopMethodId" Type="WSTRING" Comment="OPC UA ID of the Stop method" />
+      <VarDeclaration Name="AbortMethodId" Type="WSTRING" Comment="OPC UA ID of the Abort method" />
+      <VarDeclaration Name="ResetMethodId" Type="WSTRING" Comment="OPC UA ID of the Reset method" />
+      <VarDeclaration Name="StateId" Type="WSTRING" Comment="OPC UA ID of the published State and ErrorID" />
+      <VarDeclaration Name="ActivityId" Type="WSTRING" Comment="Local channel of the module's activity count" />
+      <VarDeclaration Name="ReleaseId" Type="WSTRING" Comment="Local channel the module's equipment is released on" />
+      <VarDeclaration Name="State" Type="USINT" Comment="Skill state: 0 Idle, 1 Running, 2 Stopping, 3 Succeeded, 4 Failed, 5 Aborted" />
+      <VarDeclaration Name="ErrorID" Type="UINT" Comment="Error code: 0 none, 1 PreconditionViolated, 2 InvariantViolated, 3 Timeout, 4 NotReady, 5 NotPermitted, 6 Busy, 7 Interrupted, 8 OutOfRange" />
+      <VarDeclaration Name="ActivityDelta" Type="INT" Comment="+1 when the run starts, -1 when it ends" />
+      <VarDeclaration Name="CalledByClient" Type="BOOL" Comment="Started over OPC UA (take the Start arguments), not by a parent (take the defaults)" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Active" Type="BOOL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="2198" y="0" />
+      <ECState Name="Init" x="1828" y="1260">
+        <ECAction Algorithm="Alg_Init" Output="INITO" />
+      </ECState>
+      <ECState Name="Idle" x="1872" y="2520">
+        <ECAction Algorithm="Alg_Idle" Output="PUB" />
+      </ECState>
+      <ECState Name="Running" x="1738" y="5240">
+        <ECAction Algorithm="Alg_Running" Output="PUB" />
+      </ECState>
+      <ECState Name="Stopping" x="405" y="7960">
+        <ECAction Algorithm="Alg_Stopping" Output="PUB" />
+      </ECState>
+      <ECState Name="StopProc" x="1692" y="10580">
+        <ECAction Algorithm="Alg_StopProc" Output="PUB" />
+      </ECState>
+      <ECState Name="Succeeded" x="2440" y="7960">
+        <ECAction Algorithm="Alg_Succeeded" Output="PUB" />
+        <ECAction Output="TO_IDLE_START" />
+      </ECState>
+      <ECState Name="Failed" x="1782" y="13300">
+        <ECAction Algorithm="Alg_Failed" Output="PUB" />
+      </ECState>
+      <ECState Name="Aborted" x="1738" y="17280">
+        <ECAction Algorithm="Alg_Aborted" Output="PUB" />
+      </ECState>
+      <ECState Name="Go" x="1760" y="3780">
+        <ECAction Algorithm="Alg_Go" Output="ACT" />
+        <ECAction Output="TO_IDLE_STOP" />
+        <ECAction Output="RUN" />
+      </ECState>
+      <ECState Name="Halt" x="0" y="6500">
+        <ECAction Output="HALT_SEQ" />
+      </ECState>
+      <ECState Name="RunStop" x="1832" y="9320">
+        <ECAction Output="RUN_STOPPING" />
+      </ECState>
+      <ECState Name="Succeed" x="1440" y="6500">
+        <ECAction Algorithm="Alg_Succeed" Output="ACT" />
+        <ECAction Output="RELEASE" />
+        <ECAction Output="SUCCESS" />
+      </ECState>
+      <ECState Name="Fail" x="3565" y="6500">
+        <ECAction Algorithm="Alg_Fail" Output="ACT" />
+        <ECAction Output="RELEASE" />
+        <ECAction Output="FAILURE" />
+      </ECState>
+      <ECState Name="Interrupted" x="1468" y="11840">
+        <ECAction Algorithm="Alg_Interrupted" Output="ACT" />
+        <ECAction Output="RELEASE" />
+        <ECAction Output="FAILURE" />
+      </ECState>
+      <ECState Name="AbortChk" x="2130" y="14560" />
+      <ECState Name="AbortActive" x="568" y="15820">
+        <ECAction Algorithm="Alg_AbortActive" Output="ABORT_SEQ" />
+        <ECAction Output="ACT" />
+        <ECAction Output="RELEASE" />
+      </ECState>
+      <ECState Name="AbortIdle" x="3142" y="15820">
+        <ECAction Output="ABORT_SEQ" />
+      </ECState>
+      <ECState Name="StartRefused" x="612" y="18540">
+        <ECAction Algorithm="Alg_StartRefused" Output="FAILURE" />
+      </ECState>
+      <ECState Name="ResetOk" x="3188" y="18540">
+        <ECAction Output="RESET_SEQ" />
+      </ECState>
+      <ECTransition Source="START" Destination="Init" Condition="INIT" x="2360" y="710" />
+      <ECTransition Source="Init" Destination="Idle" Condition="1" x="2360" y="1970" />
+      <ECTransition Source="Idle" Destination="Go" Condition="START" x="2360" y="3280" />
+      <ECTransition Source="Succeeded" Destination="Go" Condition="START" x="4269" y="6025" />
+      <ECTransition Source="Failed" Destination="Go" Condition="START" x="960" y="8670" />
+      <ECTransition Source="Aborted" Destination="StartRefused" Condition="START" x="1955" y="17990" />
+      <ECTransition Source="StartRefused" Destination="Aborted" Condition="1" x="2435" y="18150" />
+      <ECTransition Source="Running" Destination="Succeed" Condition="EXECUTE_DONE" x="2256" y="6000" />
+      <ECTransition Source="Running" Destination="Fail" Condition="EXECUTE_FAILED" x="3252" y="6000" />
+      <ECTransition Source="Running" Destination="Halt" Condition="HALT" x="1365" y="5950" />
+      <ECTransition Source="Stopping" Destination="RunStop" Condition="EXECUTE_DONE" x="1716" y="8720" />
+      <ECTransition Source="Stopping" Destination="RunStop" Condition="EXECUTE_FAILED" x="2196" y="8880" />
+      <ECTransition Source="StopProc" Destination="Interrupted" Condition="STOPPING_DONE" x="2360" y="11340" />
+      <ECTransition Source="Idle" Destination="AbortChk" Condition="ABORT" x="4260" y="8620" />
+      <ECTransition Source="Running" Destination="AbortChk" Condition="ABORT" x="460" y="9980" />
+      <ECTransition Source="Stopping" Destination="AbortChk" Condition="ABORT" x="4116" y="11340" />
+      <ECTransition Source="StopProc" Destination="AbortChk" Condition="ABORT" x="-40" y="12650" />
+      <ECTransition Source="Succeeded" Destination="AbortChk" Condition="ABORT" x="5769" y="11365" />
+      <ECTransition Source="Failed" Destination="AbortChk" Condition="ABORT" x="2360" y="14010" />
+      <ECTransition Source="Aborted" Destination="ResetOk" Condition="RESET" x="3004" y="17990" />
+      <ECTransition Source="ResetOk" Destination="Idle" Condition="1" x="104" y="10610" />
+      <ECTransition Source="Go" Destination="Running" Condition="1" x="2360" y="4640" />
+      <ECTransition Source="Halt" Destination="Stopping" Condition="1" x="721" y="7310" />
+      <ECTransition Source="RunStop" Destination="StopProc" Condition="1" x="2360" y="10030" />
+      <ECTransition Source="Succeed" Destination="Succeeded" Condition="1" x="2765" y="7385" />
+      <ECTransition Source="Succeeded" Destination="Idle" Condition="TO_IDLE" x="6268" y="5345" />
+      <ECTransition Source="Fail" Destination="Failed" Condition="1" x="-149" y="10030" />
+      <ECTransition Source="Interrupted" Destination="Failed" Condition="1" x="2360" y="12700" />
+      <ECTransition Source="AbortChk" Destination="AbortActive" Condition="[Active]" x="1933" y="15320" />
+      <ECTransition Source="AbortChk" Destination="AbortIdle" Condition="1" x="3004" y="15270" />
+      <ECTransition Source="AbortActive" Destination="Aborted" Condition="1" x="1933" y="16680" />
+      <ECTransition Source="AbortIdle" Destination="Aborted" Condition="1" x="3004" y="16630" />
+    </ECC>
+    <Algorithm Name="Alg_Init">
+      <ST>StartMethodId := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, UaPath)), "/Start"), "]");
+StopMethodId := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, UaPath)), "/Stop"), "]");
+AbortMethodId := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, UaPath)), "/Abort"), "]");
+ResetMethodId := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, UaPath)), "/Reset"), "]");
+StateId := CONCAT(CONCAT(CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, UaPath)), "/State;"), CONCAT(UaRoot, UaPath)), "/ErrorID"), "]");
+ActivityId := CONCAT(CONCAT("loc[", Module), "/activity]");
+ReleaseId := CONCAT(CONCAT("loc[", Module), "/release]");</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Idle">
+      <ST>State := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Running">
+      <ST>State := 1;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Stopping">
+      <ST>State := 2;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_StopProc">
+      <ST>State := 2;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Succeeded">
+      <ST>State := 3;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Failed">
+      <ST>State := 4;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Aborted">
+      <ST>State := 5;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Go">
+      <ST>Active := TRUE;
+ActivityDelta := 1;
+ErrorID := 0;
+CalledByClient := ByClient;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Succeed">
+      <ST>Active := FALSE;
+ActivityDelta := -1;
+ErrorID := 0;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Fail">
+      <ST>Active := FALSE;
+ActivityDelta := -1;
+ErrorID := ExecuteError;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_Interrupted">
+      <ST>Active := FALSE;
+ActivityDelta := -1;
+ErrorID := 7;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_AbortActive">
+      <ST>Active := FALSE;
+ActivityDelta := -1;
+ErrorID := 7;</ST>
+    </Algorithm>
+    <Algorithm Name="Alg_StartRefused">
+      <ST>ErrorID := 4;</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>

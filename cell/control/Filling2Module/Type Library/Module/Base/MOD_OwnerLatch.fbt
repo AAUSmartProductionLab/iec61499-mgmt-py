@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="MOD_OwnerLatch" Comment="Keeps the last owner heard on the owner channel. Technical: Local channel IDs of the occupation owner and its refresh query; types and forwards the received occupation owner">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
+        <With Var="Module" />
+      </Event>
+      <Event Name="REQ" Type="Event" Comment="The value arrived on the local channel">
+        <With Var="Received" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
+        <With Var="IdSub" />
+        <With Var="IdQuery" />
+      </Event>
+      <Event Name="CNF" Type="Event" Comment="Confirmation of REQ">
+        <With Var="Owner" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="Received" Type="WSTRING" Comment="The value as it arrived" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="IdSub" Type="WSTRING" Comment="Local channel the value arrives on" />
+      <VarDeclaration Name="IdQuery" Type="WSTRING" Comment="Local channel that asks for the current value (a block that starts later)" />
+      <VarDeclaration Name="Owner" Type="WSTRING" Comment="Session ID of the module's owner (empty: free)" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="INIT">
+      <ECAction Algorithm="INIT" Output="INITO" />
+    </ECState>
+    <ECState Name="REQ">
+      <ECAction Algorithm="REQ" Output="CNF" />
+    </ECState>
+    <Algorithm Name="INIT">
+      <ST>IdSub := CONCAT(CONCAT("loc[", Module), "/owner]");
+IdQuery := CONCAT(CONCAT("loc[", Module), "/owner/query]");</ST>
+    </Algorithm>
+    <Algorithm Name="REQ">
+      <ST>Owner := Received;</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

@@ -1,0 +1,165 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_Run" Comment="One run of a skill primitive, the same for every primitive: waits until the equipment is free, checks the precondition, sends the command, then watches the conditions (or a timer) until the skill is done, has failed or has timed out, and sends the closing command. What the skill is comes in from its contract (SC_). Technical: One run of a skill primitive, the same for every primitive: what the skill is comes in from its contract (socket Contract, AContract); the command goes out to the equipment (plug Equipment, AEquipment)">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise: take Holder and ReleaseAfter">
+        <With Var="Holder" />
+        <With Var="ReleaseAfter" />
+      </Event>
+      <Event Name="HALT" Type="Event" Comment="Stop the run (ErrorID Interrupted)" />
+      <Event Name="ABORT" Type="Event" Comment="Abort the run: the equipment off and given up" />
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on" />
+      <Event Name="DONE" Type="Event" Comment="The run succeeded" />
+      <Event Name="FAILED" Type="Event" Comment="The run failed (ErrorID)">
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="HALTED" Type="Event" Comment="The run was stopped">
+        <With Var="ErrorID" />
+      </Event>
+      <Event Name="EQ_FREE" Type="Event" Comment="EquipmentFree is updated">
+        <With Var="EquipmentFree" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Holder" Type="WSTRING" Comment="The name the equipment is held under: the skill's own, or for a step the skill it belongs to" />
+      <VarDeclaration Name="ReleaseAfter" Type="BOOL" Comment="Give up the equipment with the run's last command" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="ErrorID" Type="UINT" Comment="Error code: 0 none, 1 PreconditionViolated, 2 InvariantViolated, 3 Timeout, 4 NotReady, 5 NotPermitted, 6 Busy, 7 Interrupted, 8 OutOfRange" />
+      <VarDeclaration Name="EquipmentFree" Type="BOOL" Comment="The equipment is free, or held under Holder" />
+    </OutputVars>
+    <Sockets>
+      <AdapterDeclaration Name="Contract" Type="modlib::AContract" x="-2600" y="1000" Comment="From the skill's contract (AContract): what to do, and when it is done" />
+    </Sockets>
+    <Plugs>
+      <AdapterDeclaration Name="Equipment" Type="modlib::AEquipment" x="9945" y="1000" Comment="To the equipment's port (AEquipment): the commands, PLAYED back" />
+    </Plugs>
+  </InterfaceList>
+  <FBNetwork>
+    <Group Name="OneRun" Comment="One run: the contract's values in, the command out, until the end condition or the timer" x="1000" y="1000" width="8145" height="2980" locked="false" />
+    <FB Name="Logic" Type="modlib::SKILL_RunLogic" x="1190" y="150" Comment="The run's state machine (SKILL_RunLogic).">
+      <Attribute Name="GroupName" Type="STRING" Value="OneRun" />
+    </FB>
+    <FB Name="Timer" Type="iec61499::events::E_DELAY" x="4475" y="150" Comment="Ends a skill that runs for a time, or fails a skill that takes longer than its timeout.">
+      <Attribute Name="GroupName" Type="STRING" Value="OneRun" />
+    </FB>
+    <FB Name="WaitT" Type="iec61499::events::E_DELAY" x="6625" y="150" Comment="Waits up to half a second for the equipment to become free before giving up (Busy).">
+      <Parameter Name="DT" Value="T#500ms" />
+      <Attribute Name="GroupName" Type="STRING" Value="OneRun" />
+    </FB>
+    <EventConnections>
+      <Connection Source="INIT" Destination="INITO">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="HALT" Destination="Logic.HALT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="ABORT" Destination="Logic.ABORT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.START" Destination="Logic.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.SAMPLE" Destination="Logic.SAMPLE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.DONE" Destination="DONE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.FAILED" Destination="FAILED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.HALTED" Destination="HALTED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.EQ_FREE" Destination="EQ_FREE">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.CMD" Destination="Equipment.SEND">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Equipment.PLAYED" Destination="Logic.PLAYED">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.TIMER_START" Destination="Timer.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.TIMER_STOP" Destination="Timer.STOP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Timer.EO" Destination="Logic.TIMER">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.WAIT_START" Destination="WaitT.START">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.WAIT_STOP" Destination="WaitT.STOP">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="WaitT.EO" Destination="Logic.WAIT_OVER">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </EventConnections>
+    <DataConnections>
+      <Connection Source="Holder" Destination="Logic.Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="ReleaseAfter" Destination="Logic.ReleaseAfter">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.Pre" Destination="Logic.Pre">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.Post" Destination="Logic.Post">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.Timed" Destination="Logic.Timed">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.RunTime" Destination="Logic.RunTime">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.Command" Destination="Logic.Command">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.Arg" Destination="Logic.Arg">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.StopCommand" Destination="Logic.StopCommand">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.Inv" Destination="Logic.Inv">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Contract.EqHolder" Destination="Logic.EqHolder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.ErrorID" Destination="ErrorID">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.EquipmentFree" Destination="EquipmentFree">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.C_Holder" Destination="Equipment.Holder">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.C_Command" Destination="Equipment.Command">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.C_Arg" Destination="Equipment.Arg">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.C_Release" Destination="Equipment.Release">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+      <Connection Source="Logic.TimerDT" Destination="Timer.DT">
+        <Attribute Name="Visible" Value="false" />
+      </Connection>
+    </DataConnections>
+  </FBNetwork>
+</FBType>

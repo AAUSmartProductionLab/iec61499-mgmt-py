@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="MOD_StateIds" Comment="Builds the OPC UA addresses (Module/Reset ... Module/State) and the local channel names of the state manager. Technical: OPC UA and local channel IDs of the module state manager">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
+        <With Var="Module" />
+        <With Var="UaRoot" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
+        <With Var="IdReset" />
+        <With Var="IdStart" />
+        <With Var="IdStop" />
+        <With Var="IdAbort" />
+        <With Var="IdClear" />
+        <With Var="IdPub" />
+        <With Var="IdState" />
+        <With Var="IdQuery" />
+        <With Var="IdAct" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="UaRoot" Type="WSTRING" Comment="The module's OPC UA folder, e.g. /Objects/Filling" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="IdReset" Type="WSTRING" Comment="ID of the channel or OPC UA node of Reset" />
+      <VarDeclaration Name="IdStart" Type="WSTRING" Comment="ID of the channel or OPC UA node of Start" />
+      <VarDeclaration Name="IdStop" Type="WSTRING" Comment="ID of the channel or OPC UA node of Stop" />
+      <VarDeclaration Name="IdAbort" Type="WSTRING" Comment="ID of the channel or OPC UA node of Abort" />
+      <VarDeclaration Name="IdClear" Type="WSTRING" Comment="ID of the channel or OPC UA node of Clear" />
+      <VarDeclaration Name="IdPub" Type="WSTRING" Comment="OPC UA ID of the published value" />
+      <VarDeclaration Name="IdState" Type="WSTRING" Comment="Local channel of the module's state" />
+      <VarDeclaration Name="IdQuery" Type="WSTRING" Comment="Local channel that asks for the current value (a block that starts later)" />
+      <VarDeclaration Name="IdAct" Type="WSTRING" Comment="Local channel of the activity count" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="INIT">
+      <ECAction Algorithm="INIT" Output="INITO" />
+    </ECState>
+    <Algorithm Name="INIT">
+      <ST>IdReset := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, "/Module/")), "Reset"), "]");
+IdStart := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, "/Module/")), "Start"), "]");
+IdStop := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, "/Module/")), "Stop"), "]");
+IdAbort := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, "/Module/")), "Abort"), "]");
+IdClear := CONCAT(CONCAT(CONCAT("opc_ua[CREATE_METHOD;", CONCAT(UaRoot, "/Module/")), "Clear"), "]");
+IdPub := CONCAT(CONCAT(CONCAT("opc_ua[WRITE;", CONCAT(UaRoot, "/Module/")), "State"), "]");
+IdState := CONCAT(CONCAT("loc[", Module), "/state]");
+IdQuery := CONCAT(CONCAT("loc[", Module), "/state/query]");
+IdAct := CONCAT(CONCAT("loc[", Module), "/activity]");</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

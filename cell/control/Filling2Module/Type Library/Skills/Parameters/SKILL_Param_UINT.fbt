@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_Param_UINT" Comment="One parameter of a skill: keeps its default, checks a value a client sends with Start against the limits, and holds the value for the run. Technical: Skill parameter (UINT): default, range check of a Start argument, latching for one run">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Publish the default as the value">
+        <With Var="Default" />
+        <With Var="Lower" />
+        <With Var="Upper" />
+      </Event>
+      <Event Name="CHECK" Type="Event" Comment="Check Requested against Lower..Upper">
+        <With Var="Requested" />
+        <With Var="PreviousInRange" />
+      </Event>
+      <Event Name="LATCH" Type="Event" Comment="Take the value for this run: Requested if CalledByClient, else Default">
+        <With Var="CalledByClient" />
+        <With Var="Default" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: Value is the default">
+        <With Var="Value" />
+      </Event>
+      <Event Name="CHECKED" Type="Event" Comment="Checked: AllInRange">
+        <With Var="AllInRange" />
+      </Event>
+      <Event Name="LATCHED" Type="Event" Comment="Value holds this run's value">
+        <With Var="Value" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Default" Type="UINT" Comment="The value when the caller gives none; a parent's binding sets it" />
+      <VarDeclaration Name="Lower" Type="UINT" InitialValue="0" Comment="The smallest value accepted" />
+      <VarDeclaration Name="Upper" Type="UINT" InitialValue="65535" Comment="The largest value accepted" />
+      <VarDeclaration Name="Requested" Type="UINT" Comment="The value the caller asks for (an argument of Start)" />
+      <VarDeclaration Name="PreviousInRange" Type="BOOL" InitialValue="TRUE" Comment="The parameters checked before this one are all in range (TRUE for the first)" />
+      <VarDeclaration Name="CalledByClient" Type="BOOL" Comment="Started over OPC UA: take Requested, not the default" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="Value" Type="UINT" Comment="The value for this run" />
+      <VarDeclaration Name="AllInRange" Type="BOOL" Comment="This and every parameter before it are in range" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="INIT">
+      <ECAction Algorithm="INIT" Output="INITO" />
+    </ECState>
+    <ECState Name="CHECK">
+      <ECAction Algorithm="CHECK" Output="CHECKED" />
+    </ECState>
+    <ECState Name="LATCH">
+      <ECAction Algorithm="LATCH" Output="LATCHED" />
+    </ECState>
+    <Algorithm Name="INIT">
+      <ST>Value := Default;</ST>
+    </Algorithm>
+    <Algorithm Name="CHECK">
+      <ST>AllInRange := PreviousInRange AND (Requested &gt;= Lower) AND (Requested &lt;= Upper);</ST>
+    </Algorithm>
+    <Algorithm Name="LATCH">
+      <ST>IF CalledByClient THEN
+  Value := Requested;
+ELSE
+  Value := Default;
+END_IF;</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

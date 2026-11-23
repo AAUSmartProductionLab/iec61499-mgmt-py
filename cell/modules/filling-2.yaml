@@ -1,0 +1,164 @@
+# The second filling module (23 Nov 2026): the same station as filling.yaml, built the same way, so a copy
+# of its spec with a name, an OPC UA root, a simulator port and a Pi of its own. It keeps the package
+# `filling`: its blocks are the first module's, already in FORTE, so it needs no build of its own
+# (runtime/validate.ps1 compiles a package once). Its positions are the first module's until measured.
+# Regenerate: python -m modgen
+module: Filling2
+project: Filling2Module
+package: filling
+opcua_root: /Objects/Filling2
+modbus: {host: 127.0.0.1, port: 1508, unit: 1, poll_ms: 10}   # cell/sim/module_sim.py
+
+targets:
+  pc: {host: localhost, io: modbus}
+  pi: {host: filling-module-2, user: admin, io: gpio, board: pi5,
+       pwm_root: /hostsys/class/pwm}   # its Pi, a Raspberry Pi 5, by its name on the lab network
+
+equipment:
+  LinearAxis:
+    kind: LinearAxis
+    description: Needle lift, a stepper motor through a step and direction driver, with a limit switch at the top (home)
+    # The driver is a TB6600 (since 20 Oct; the RepRap Stepper Motor Driver v2.3 before it never energised
+    # the motor). Its inputs PUL+, DIR+ and ENA+ are wired straight to the Pi's pins, PUL-, DIR- and ENA-
+    # to GND: its optocouplers take the Pi's 3.3 V (homing and moves ran so on 21 Oct; on 20 Oct a 3.3 V
+    # to 5 V level converter was in between, which is not needed).
+    inputs:
+      # Since 13 Nov a normally closed limit switch at the other end of the stage, straight to the Pi:
+      # between the line and GND, opening when pressed, so the Pi's pull-up pulls the line high at home.
+      # A broken wire reads as home too, and homing stops instead of running on.
+      AtHome: {modbus: d0, gpio: {line: 23, bias: pull_up}}        # Pi pin 16
+    outputs:
+      # ENA+ high switches the TB6600 off: the motor is on while the line is low.
+      Enable: {modbus: c0, gpio: {line: 17, active_low: true}}     # Pi pin 11
+      # Pi pin 13, DIR. Up and Down name the way towards and away from the switch; since 13 Nov the switch
+      # is at the other end of the stage, so the line is inverted: Down (away) drives it low, Up (homing)
+      # high, the opposite of before.
+      Down:   {modbus: c1, gpio: {line: 27, active_low: true}}
+      # PUL: PWM0 on GPIO18 (Pi pin 12; channel 2 on a Pi 5), one step per period (2 kHz since 20 Oct: at
+      # 1 kHz the axis was too slow to home in 8 s); 50 % duty while it moves.
+      Step:   {type: LREAL, modbus: h0, pwm: {channel: 0, period_ns: 500000}, gain: 655.35,
+               minimum: 0, maximum: 100, unit: "%"}
+    commands:
+      Stop: {}
+      Up:   {Enable: true, Step: 50}
+      Down: {Enable: true, Down: true, Step: 50}
+    # No encoder: the controller counts the time it steps. The stage (RATTMMOTOR, 300 mm stroke) has an
+    # SFU1605 ball screw, 5 mm per turn, and a 1.8 degree Nema 23; the TB6600 is set to 4 microsteps (800
+    # pulses per turn, SW1 on, SW2 and SW3 off): 160 pulses per mm, so 12.5 mm/s at the 2 kHz above. The
+    # travel is still a placeholder. What error remains is taken out by homing after every operation.
+    position: {unit: mm, speed: 12.5, increase: Down, decrease: Up, home: AtHome, minimum: 0.0, maximum: 60.0}
+    location: {y: 60.0, z: 100.0, rx: 180.0}   # the needle's tip at home, over the transfer point; Z down the stroke
+    sim: {stepper: {step: Step, direction: Down, enable: Enable, speed: 12.5, travel: 60.0, start: 15.0,
+                    switches: {AtHome: 0.0}}}
+  Pump:
+    kind: FillingPump
+    description: Filling pump; none is wired yet, so it has no outputs and dispensing is a time at the station's flow rate
+    commands: {Idle: {}, Run: {}}
+  Scale:
+    kind: Scale
+    description: Scale; the hardware has none, so the weight is simulated
+    inputs:
+      Weight: {type: LREAL, modbus: i0, scale: 0.001, sim: 2.0, unit: g}
+    commands: {Idle: {}, Tare: {}, Measure: {}}
+    sim: {values: {Weight: 2.0}}
+
+skills:
+  Home:
+    description: Needle up to the limit switch; from there its position is known
+    equipment: LinearAxis
+    command: Up
+    postcondition: AtHome
+    # Ends on the switch; the timeout only stops the motor if the switch never closes.
+    timeout: 60s
+  MoveAxis:
+    description: Needle to Position, measured down from the limit switch; the direction follows from where it is
+    equipment: LinearAxis
+    move_to: Position
+    parameters:
+      Position: {unit: mm, minimum: 0.0, maximum: 60.0, default: 0.0, meaning: Position, description: Where to move to}
+    timeout: 30s
+    # The needle's tip stays BottomClearance above the inner bottom of the container in the nest: where
+    # that is follows from where the nest's face is on the axis and the container's geometry, which the
+    # product states (vocabulary 0.10). Without a product nothing is known of it, and nothing is said.
+    capability:
+      values: {NestPosition: {value: 70.0, unit: mm}, BottomClearance: {value: 1.0, unit: mm}}
+      invariant: {LinearAxis.Position: "<= NestPosition - InnerBottomHeight - BottomClearance"}
+  Dispense:
+    description: Dispense a volume at the station's flow rate (open loop, by time, until a pump is wired)
+    equipment: Pump
+    command: Run
+    parameters:
+      Volume: {unit: mL, minimum: 0.5, maximum: 10.0, default: 1.0, meaning: FillVolume, description: Volume to dispense}
+      FlowRate: {unit: mL/s, minimum: 0.1, maximum: 5.0, default: 1.0, meaning: FlowRate,
+                 description: How fast the pump doses; a planned skill may set it within these limits}
+    after: Volume / FlowRate
+    # What holds on this module of the Dosing it realizes (the vocabulary says the rest): the pump
+    # doses through the needle on the axis, so a dose starts with the needle at the fill position or
+    # deeper, and the needle stays InsertDepth below the container's rim meanwhile (it may rise as the
+    # liquid does, filling from the bottom). While it doses, the module states how deep the needle's
+    # tip is in the liquid (OutletImmersion): the tip's position less the liquid's surface, the surface
+    # the container's inner bottom less the content over its cross-section (vocabulary 0.10; the
+    # container's geometry is the product's). The fill position and the nest are placeholders until the
+    # station is measured; the nest's face is 70 mm down the stroke (the tip at home 100 mm above the
+    # table, the nest 30 mm).
+    capability:
+      values: {FillPosition: {value: 40.0, unit: mm}, NestPosition: {value: 70.0, unit: mm}, InsertDepth: {value: 5.0, unit: mm}}
+      precondition: {LinearAxis.Position: ">= FillPosition"}
+      invariant:
+        LinearAxis.Position: ">= NestPosition - RimHeight + InsertDepth"
+        OutletImmersion: "= LinearAxis.Position - NestPosition + InnerBottomHeight + 1000 * ContentVolume / (pi * InnerDiameter * InnerDiameter / 4)"
+  Tare:
+    description: Tare the scale
+    equipment: Scale
+    command: Tare
+    after: 2.0
+  Weigh:
+    description: Read the weight
+    equipment: Scale
+    command: Measure
+    after: 0.2
+    results: {Weight: Weight}
+    # The scale weighs the vial under the needle: with the needle out of it, and not moving.
+    capability:
+      precondition: {LinearAxis.Position: "= 0.0"}
+      invariant: {LinearAxis.Position: unchanged}
+
+composites:
+  Dispensing:
+    description: Needle down, dispense the volume, needle up, weigh (runFillingCycle)
+    parameters:
+      Volume: {unit: mL, minimum: 0.5, maximum: 10.0, default: 1.0, description: Fill volume}
+    # The filling position and the flow rate are the station's: constants of the steps, changed by
+    # reconfiguration. The needle goes back up by homing, so every cycle starts from the switch again.
+    execute: [{MoveAxis: {Position: 40.0}, as: NeedleDown}, {Dispense: {Volume: Volume, FlowRate: 1.0}}, Home, Weigh]
+    stop: [Home]                     # after an interruption the switch is what is certain
+    results: {Weight: Weigh.Weight}
+
+procedures:
+  Resetting: [Home, Tare]          # find the reference, tare the scale
+  Stopping: [Home]
+
+# Where things are (ARSO 0.12, docs/locations-and-layout.md): poses in the module's frame, its origin
+# at the middle of the module's front at the height of the planar table, Y out of the front towards
+# the table, Z up; mm and degrees. The module's front is at the table's edge in the line, so a shuttle
+# that serves it stands half its width (60 mm) in front of it. Placeholders until the module is
+# measured; the transfer point's RZ turns the shuttle as the simulated table's station of this module
+# does (planar-controller/tests/line_scenario.py).
+points:
+  Transfer: {meaning: TransferPoint, location: {y: 60.0, rz: 180.0}, description: Where a shuttle stands with the vial under the needle}
+  Fill: {meaning: ProcessingPoint, location: {y: 60.0, z: 60.0}, description: The needle's tip in the vial at the fill position (40 mm down)}
+
+# What the module offers to a product's processes: its AAS's Capability Description (IDTA 02020,
+# role Offered). Which capability a skill offers and the properties its parameters set are derived
+# from the skills (modreg.derive: Dispensing runs Dispense, which contributes Filling; its Volume
+# means FillVolume, so its limits are the offered range). Stated here are the facts of the machine
+# no skill sets. Meanings default to https://smartproductionlab.aau.dk/semantics/<Name>. The values
+# are illustrative (as the vial filling station of the process planner's pharma example) until the
+# station is measured.
+capabilities:
+  Filling:
+    description: Fill a liquid into an open container (vial, syringe, cartridge) under the needle and weigh it
+    properties:
+      ContainerType: {values: [vial, syringe, cartridge]}
+      GraspDiameter: {minimum: 6.0, maximum: 30.0, unit: mm}
+      AbsoluteFillError: {value: 0.05, unit: mL}

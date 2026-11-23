@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="MOD_StateLatch" Comment="Keeps the last module state heard on the state channel. Technical: Local channel IDs of the PackML state and its refresh query; types and forwards the received PackML state">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Type="EInit" Comment="Initialise, once at start-up (the INIT chain); takes the values given with it">
+        <With Var="Module" />
+      </Event>
+      <Event Name="REQ" Type="Event" Comment="The value arrived on the local channel">
+        <With Var="Received" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Type="EInit" Comment="Initialised: the next block of the INIT chain goes on">
+        <With Var="IdSub" />
+        <With Var="IdQuery" />
+      </Event>
+      <Event Name="CNF" Type="Event" Comment="Confirmation of REQ">
+        <With Var="State" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Module" Type="WSTRING" Comment="The module's name; its local channels are named after it (loc[&lt;Module&gt;/...])" />
+      <VarDeclaration Name="Received" Type="USINT" Comment="The value as it arrived" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="IdSub" Type="WSTRING" Comment="Local channel the value arrives on" />
+      <VarDeclaration Name="IdQuery" Type="WSTRING" Comment="Local channel that asks for the current value (a block that starts later)" />
+      <VarDeclaration Name="State" Type="USINT" Comment="PackML state: 1 Clearing, 2 Stopped, 3 Starting, 4 Idle, 6 Execute, 7 Stopping, 8 Aborting, 9 Aborted, 15 Resetting" />
+    </OutputVars>
+  </InterfaceList>
+  <SimpleFB>
+    <ECState Name="INIT">
+      <ECAction Algorithm="INIT" Output="INITO" />
+    </ECState>
+    <ECState Name="REQ">
+      <ECAction Algorithm="REQ" Output="CNF" />
+    </ECState>
+    <Algorithm Name="INIT">
+      <ST>IdSub := CONCAT(CONCAT("loc[", Module), "/state]");
+IdQuery := CONCAT(CONCAT("loc[", Module), "/state/query]");</ST>
+    </Algorithm>
+    <Algorithm Name="REQ">
+      <ST>State := Received;</ST>
+    </Algorithm>
+  </SimpleFB>
+</FBType>

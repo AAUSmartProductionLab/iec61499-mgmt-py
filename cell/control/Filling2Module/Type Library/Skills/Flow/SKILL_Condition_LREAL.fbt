@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FBType Name="SKILL_Condition_LREAL" Comment="One comparison in a decision of a skill (for example Weight greater than 1.9): answers YES or NO. Technical: Compares Operand with Expected by Operator (eq, ne, gt, gte, lt, lte): YES or NO">
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="AAU Smart Production Lab" Version="0.1" Author="Project contributors" Date="2026-09-28" />
+  <CompilerInfo packageName="modlib" />
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="EVAL" Type="Event" Comment="Evaluate the condition (the steps before it are done)">
+        <With Var="Operand" />
+        <With Var="Expected" />
+        <With Var="Operator" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="YES" Type="Event" Comment="The condition holds: the first branch" />
+      <Event Name="NO" Type="Event" Comment="The condition does not hold: the second branch, or past the conditional steps" />
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="Operand" Type="LREAL" Comment="What is compared: a parameter of the skill or a result of a step" />
+      <VarDeclaration Name="Expected" Type="LREAL" Comment="What it is compared with" />
+      <VarDeclaration Name="Operator" Type="STRING" InitialValue="'eq'" Comment="eq, ne, gt, gte, lt or lte: Operand &lt;op&gt; Expected" />
+    </InputVars>
+    <OutputVars />
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="Holds" Type="BOOL" />
+    </InternalVars>
+    <ECC>
+      <ECState Name="START" x="612" y="0" />
+      <ECState Name="Eval" x="405" y="1260">
+        <ECAction Algorithm="Alg_Eval" />
+      </ECState>
+      <ECState Name="Yes" x="0" y="2520">
+        <ECAction Output="YES" />
+      </ECState>
+      <ECState Name="No" x="1170" y="2520">
+        <ECAction Output="NO" />
+      </ECState>
+      <ECTransition Source="START" Destination="Eval" Condition="EVAL" x="775" y="710" />
+      <ECTransition Source="Eval" Destination="Yes" Condition="[Holds]" x="505" y="1970" />
+      <ECTransition Source="Eval" Destination="No" Condition="1" x="1068" y="1970" />
+      <ECTransition Source="Yes" Destination="START" Condition="1" x="1905" y="1340" />
+      <ECTransition Source="No" Destination="START" Condition="1" x="-333" y="1340" />
+    </ECC>
+    <Algorithm Name="Alg_Eval">
+      <ST>Holds := ((Operator = 'eq') AND (Operand = Expected)) OR ((Operator = 'ne') AND (Operand &lt;&gt; Expected)) OR ((Operator = 'gt') AND (Operand &gt; Expected)) OR ((Operator = 'gte') AND (Operand &gt;= Expected)) OR ((Operator = 'lt') AND (Operand &lt; Expected)) OR ((Operator = 'lte') AND (Operand &lt;= Expected));</ST>
+    </Algorithm>
+  </BasicFB>
+</FBType>
