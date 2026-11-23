@@ -42,6 +42,11 @@ def test_a_skill_offers_what_it_reaches():
     double = at(submodel(capabilities(module, components), "CapabilityDescription"), "OfferedCapabilities", "Filling_DoubleDose")
     volume = at(double, "PropertySet", "FillVolume", "Value")
     assert (volume["min"], volume["max"]) == ("1.0", "20.0")
+    # A skill described in the skill editor is composed of what its steps use, as a built one is.
+    (composition,) = children(at(double, "CapabilityRelations", "ComposedOfSet"))
+    assert composition["idShort"] == "DoubleDose"
+    # It doses and weighs twice with the needle down, and does not home.
+    assert sorted(r["idShort"] for r in children(composition)) == ["LinearAxisPositioning", "PumpDosing", "ScaleWeighing"]
     single = at(submodel(capabilities(module, components), "CapabilityDescription"), "OfferedCapabilities", "Filling")
     assert (at(single, "PropertySet", "FillVolume", "Value")["min"], at(single, "PropertySet", "FillVolume", "Value")["max"]) == ("0.5", "10.0")
 
@@ -59,6 +64,12 @@ def test_a_module_without_skills_offers_what_it_can_plan_after_a_reconfiguration
     marks = {q["type"]: q["value"] for q in at(offered, "Capability")["qualifiers"]}
     assert marks["Availability"] == "AfterReconfiguration" and marks["Derived"] == "true"
     assert not [r for r in children(at(offered, "CapabilityRelations")) if r.get("modelType") == "RelationshipElement"]
+    # No skill, but the plan says what it is composed of: the components' capabilities, in their AASs.
+    (composition,) = children(at(offered, "CapabilityRelations", "ComposedOfSet"))
+    assert composition["idShort"] == "Plan"
+    parts = {r["idShort"]: r["second"]["keys"][0]["value"] for r in children(composition)}
+    assert sorted(parts) == ["LinearAxisPositioning", "LinearAxisReferencing", "PumpDosing"]
+    assert parts["PumpDosing"].endswith("FillingPumpAAS/submodels/CapabilityDescription")
     volume = at(offered, "PropertySet", "FillVolume", "Value")
     assert (volume["min"], volume["max"]) == ("0.5", "10.0")
     takes = at(offered, "PropertySet", "ContainerType", "Value")["value"]              # the machine's facts stay

@@ -39,6 +39,8 @@ class Offer:
     built: bool                          # the program carries the skill out; else offered after a reconfiguration
     properties: list[Property] = field(default_factory=list)
     keys: list[tuple[str, str]] = field(default_factory=list)    # model reference to the skill: (type, value)
+    # What it is composed of when no skill's steps say it (a planned capability): (AAS id, set, container).
+    composed_of: list[tuple[str, str, str]] = field(default_factory=list)
 
     @property
     def name(self) -> str:

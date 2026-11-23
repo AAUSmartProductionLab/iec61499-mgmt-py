@@ -277,13 +277,25 @@ def planned_offers(module: dict, components: list[dict], derived: set[str]) -> l
     from .capabilities import vocabulary
     if not has_capabilities(module, components):
         return []
+    domain = read(module, components)
+    # Which AAS holds each component's set: the component's own, or (written earlier) the module's.
+    holder = {held["idShort"]: env["assetAdministrationShells"][0]["id"] for env in (module, *components)
+              for held in children(submodel(env, "CapabilityDescription")) if held["idShort"] != OFFERED_SET}
     found = []
-    for d in discover(read(module, components), vocabulary()):
+    for d in discover(domain, vocabulary()):
         iri = f"{BASE_URL}/semantics/{d.capability}"
         if iri in derived:
             continue
+        # What the plan's steps use, those running alongside included: the capabilities it is composed of.
+        parts, steps = [], list(d.steps)
+        while steps:
+            step = steps.pop(0)
+            steps[:0] = step.along
+            cap = domain.capabilities.get(step.capability)
+            if cap is not None and cap.component in holder and (made := (holder[cap.component], cap.component, cap.name)) not in parts:
+                parts.append(made)
         found.append(Offer(iri, "", False, [Property(f"{BASE_URL}/semantics/{name}", vocabulary().unit(name), str(lo), str(hi))
-                                             for name, (lo, hi) in d.ranges.items()]))
+                                             for name, (lo, hi) in d.ranges.items()], composed_of=parts))
     return found
 
 

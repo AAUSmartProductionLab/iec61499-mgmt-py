@@ -982,8 +982,9 @@ def capability_description(found: list[Offer], stated: dict[str, tuple[str, Capa
     it only after a reconfiguration (Availability). Two skills offering one capability: each gets a
     container of its own, named after the capability and the skill, unless ``named`` (capability,
     skill element) -> idShort keeps the name it has. ``parts``: what the skill of each is composed
-    of (``capabilities.composition``), a ComposedOfSet when it is two capabilities or more (IDTA 02020's
-    least)."""
+    of (``capabilities.composition``); a capability only a plan would realize says it itself
+    (``Offer.composed_of``). Every capability it uses is named, also a single one, where IDTA 02020 has
+    a composition of two at least."""
     from .capabilities import constrain_offer, vocabulary            # it builds on this module's helpers
     containers, count, named = {}, Counter(o.capability for o in found), named or {}
     # A name stays taken while the skill it names still offers its capability.
@@ -1021,9 +1022,13 @@ def capability_description(found: list[Offer], stated: dict[str, tuple[str, Capa
         realized = {"RealizedBy": model.RealizedBySkill(id_short="RealizedBy", first=capability_path(id_short),
                                                         second=path(offer.keys[0][1], *offer.keys[1:]))} if offer.keys else {}
         used = (parts or {}).get(offer.skill_name, {}) if offer.keys else {}
-        composed = model.ModuleComposedOfSet(id_short="ComposedOfSet", ComposedOfContainer={offer.skill_name: model.ModuleComposedOfContainer(
-            id_short=offer.skill_name, CapabilityComposedOf={n: model.ComposedOf(id_short=n, first=capability_path(id_short), second=r)
-                                                             for n, r in used.items()})}) if len(used) >= 2 else None
+        if offer.composed_of:
+            used = {f"{held}{name}": path(f"{aas}/submodels/CapabilityDescription", (SMC, held), (SMC, name), ("Capability", "Capability"))
+                    for aas, held, name in offer.composed_of}
+        how_made = offer.skill_name or "Plan"
+        composed = model.ModuleComposedOfSet(id_short="ComposedOfSet", ComposedOfContainer={how_made: model.ModuleComposedOfContainer(
+            id_short=how_made, CapabilityComposedOf={n: model.ComposedOf(id_short=n, first=capability_path(id_short), second=r)
+                                                     for n, r in used.items()})}) if used else None
         containers[id_short] = model.ModuleCapabilityContainer(
             id_short=id_short, Capability=capability,
             PropertySet={"PropertySet": model.StatedPropertySet(id_short="PropertySet", PropertyContainer=properties)} if properties else {},
