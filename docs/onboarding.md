@@ -249,33 +249,41 @@ the IEC 61499 module architecture that makes skills, and updating a running modu
 
 **The demo.** One line run by two orchestrators (decided 31 Oct, [framework-plan.md](framework-plan.md),
 section 1): centralized, FOND-AAS's policy planned with PDDL and run as a behaviour tree (the
-colleagues' part, as is D1's simple orchestrator), and multi-agent, our agents ([agents.md](agents.md));
-everything below the orchestration is the same for both. The timeline
-(`AASPIRE-material/presentations/demo-plan/README.md`, not committed): D1 Fri 20 Nov, one station and the planar
-table; M1 Tue 1 Dec, the stations in the lab; D2 4 Dec, a new sensor; D3 11 Dec, capping plugged in;
-D4 18 Dec, centralized; D5 8 Jan, the agents bid; D6 15 Jan, a module fails and production goes on;
-D7 22 Jan, the full line with the robots; the partner day on 28 Jan and the demo day at AAU on
-10 Feb 2027.
+colleagues' part), and multi-agent, our agents ([agents.md](agents.md)); everything below the
+orchestration is the same for both. The timeline (`AASPIRE-material/presentations/demo-plan/README.md`,
+not committed): D1 one station and the planar table (**done**); M1 the stations in the lab (all run;
+enclosures and end effectors still being 3D printed); D3 capping plugged in (11 Dec); D4 centralized
+(18 Dec, the colleagues'); D5 8 Jan, the agents bid; D6 15 Jan, a module fails and production goes
+on; D7 22 Jan, the full line with the robots; the partner day on 28 Jan and the demo day at AAU on
+10 Feb 2027. D2 (a new sensor) was dropped on 24 Nov.
+
+**State on 24 Nov** (the user's): D1 done; every station runs; the lab stack keeps its AASs in
+MongoDB and `deploy/publish.py` publishes all of them, the modules as they run on their Pis.
 
 **Next, in this order:**
 
-1. **D1**: the filling module's positions measured again from the new home end and its transfer
-   point in the table's frame (the user at the bench); the planar controller on the real table (only
-   its simulated driver has run; the line mode the Configurator routes for is on the controller's
-   branch `planner-queue-idle-orientation`, not merged); the filling module's AAS on the AAS server D1
-   uses.
-2. **The DMP**: an Operation of the filling module on FORTE on this PC fails in the DMP ("OPC UA
-   Method invocation failed", 502) on the old stack and the new, while the same method called over
-   OPC UA from the PC succeeds; after the DMP's upstream merge of 3 Nov only its Maven tests ran
-   (design log, 17 Nov). Needed wherever a skill runs through the AAS.
-3. **M1**: the stoppering module wired and on its Pi; capping on a Pi of its own; inspection (a spec
-   only: the camera service, SeaweedFS in the lab stack).
-4. **The agents** (agents.md, section 7): A1 (MoveToPosition on the planar controller, loading and
-   unloading as steps), A2 on the filling Pi, A3 (a planned skill in a bid), A6 (failures), A7 (the
-   order screen); the Configurator's orders (`production-order/1.0`) are not read by the order agent.
-5. **Polish**: the web UI fork pushed and the Configurator committed (the user's); one editor per
-   kind for the demo; the HMI (Python, its 0.8 reader not committed, 7 tests failing) or its web UI
-   version (C5); FORTE's crash on stop; the LDS stalls.
+1. **The lab network**: every module, the lab server and discovery moved to 172.20.100.x at once
+   ([lab-network.md](lab-network.md)); D3 (plug and produce) is then set up on all stations together.
+2. **The DMP**: an Operation invoked at the AAS server fails in the DMP ("OPC UA Method invocation
+   failed", 502), also on the modules on their Pis (24 Nov), while their values arrive. The agents
+   run skills through the DMP or over OPC UA (modlink): both are to stay, chosen per module and
+   switchable (today one `--executor` for all).
+3. **Locations**: every module's tool centre point and process points sampled at the bench into its
+   Coordinates (Variables, Measurements); with the table's base and the shuttles, each product's
+   process location follows and changes with the product, the point or a module swapped. Where a
+   module stands, by RFID: a proposal is due (tags at the slots or readers on the modules).
+4. **The planar controller**: its branch `planner-queue-idle-orientation` (line mode, blended motion,
+   to 10 Nov) checked and merged, then on the real table.
+5. **The agents for D5 and D6** (agents.md, section 7): beyond one step at a time and the first
+   proposal, how a product agent chooses (criteria), how far ahead it plans, and plans shared between
+   products, e.g. reservations on each resource's schedule with a dispatching rule (FIFO, round robin,
+   earliest deadline first); a proposal is due. Then A3 (a planned skill in a bid), A6 (failures), A7
+   (the order screen); all once the stations are up in the lab.
+6. **The robots (D7)**: programmed in WorkVisual; a TCP server on each KR C4 selects the program and
+   takes its positions (pick from the nest, place on a shuttle, pick from a shuttle, back into the
+   nest); `modpy`'s loading and unloading modules talk to it.
+7. **Polish**: the web UI fork pushed and the Configurator committed (the user's); the HMI; FORTE's
+   crash on stop.
 
 The other four modules of the line (capping, inspection, loading and unloading with the KUKA robots)
 are planned in [demo-modules.md](demo-modules.md) (1 Nov), steps M0 to M6.

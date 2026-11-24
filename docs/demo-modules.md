@@ -312,7 +312,7 @@ So the new modules need nothing for the BT controller that the filling module do
 | --- | --- | --- |
 | 1 | ~~Python beside FORTE~~ | Decided 1 Nov: the service over Modbus, as the start |
 | 2 | ~~The robot: one program with job numbers, or programs selected from outside~~ | Decided 1 Nov: one program |
-| 3 | The robot's interface | After M0 (2 Nov): EKI or OPC UA, whichever the KR C4s have; else KukaVarProxy; else digital IO |
+| 3 | ~~The robot's interface~~ | Decided 24 Nov (yours): the robots programmed in WorkVisual, a TCP server on each KR C4 that selects the program and takes its positions (nest pick, place on a shuttle, pick from a shuttle, back into the nest) |
 | 4 | ~~The image store~~ | Decided 1 Nov: SeaweedFS, beside the AAS server |
 | 5 | ~~The gripper~~ | Decided 1 Nov: on the robot's own IO, inside its jobs |
 | 6 | ~~A module stopped during a job~~ | Decided 1 Nov: the robot finishes the job |
