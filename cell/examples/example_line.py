@@ -1,7 +1,7 @@
 """Build the AASs of the example line, the lab's reference models: the line, the planar table and
 its shuttles, the modules and their components, three products and the process of each on the line.
 
-    python cell/examples/example_line.py --out <folder> [--publish http://<host>:8081]
+    python cell/examples/example_line.py --out <folder> [--publish http://<host>:8081] [--target pi]
 
 Every AAS is an instance of aas-model's types (``Module``, ``Component``, ``ProductionSystem``,
 ``Product``, ``Process``):
@@ -93,22 +93,23 @@ STATIONS = {"Infeed": (f"{LINE}AAS", "Infeed"), "Filling": ("FillingModuleAAS", 
 
 
 @functools.lru_cache(maxsize=None)
-def described(path: Path) -> tuple[dict, ...]:
-    """The AASs of a module and of its components, from its spec (for its first target; the module
-    is not read). The module's is the first."""
+def described(path: Path, target: str | None = None) -> tuple[dict, ...]:
+    """The AASs of a module and of its components, from its spec (for ``target``, else, or if the
+    spec has no such target, its first; the module is not read). The module's is the first."""
     spec = load(path)
-    found = profiles.describe_all(spec, next(iter(spec.targets)), spec_path=path.relative_to(HERE.parents[1]).as_posix())
+    target = target if target in spec.targets else next(iter(spec.targets))
+    found = profiles.describe_all(spec, target, spec_path=path.relative_to(HERE.parents[1]).as_posix())
     return tuple(model.build(profile) for profile in found)
 
 
-def resource(path: Path) -> dict:
+def resource(path: Path, target: str | None = None) -> dict:
     """The AAS of a module."""
-    return described(path)[0]
+    return described(path, target)[0]
 
 
-def components() -> dict[str, dict]:
+def components(target: str | None = None) -> dict[str, dict]:
     """The AASs of the components of every module of the line, by idShort."""
-    return {plan_check.shell_of(env)["idShort"]: env for path in RESOURCES for env in described(path)[1:]}
+    return {plan_check.shell_of(env)["idShort"]: env for path in RESOURCES for env in described(path, target)[1:]}
 
 
 @functools.lru_cache(maxsize=None)
@@ -194,11 +195,12 @@ def products() -> dict[str, dict]:
     return found
 
 
-def build() -> tuple[dict[str, dict], dict[str, dict]]:
-    """The resources and the products of the example line, each as an AAS environment by idShort."""
+def build(target: str | None = None) -> tuple[dict[str, dict], dict[str, dict]]:
+    """The resources and the products of the example line, each as an AAS environment by idShort;
+    the modules described for ``target`` where their spec has it (``pi``: the module on its Pi)."""
     resources = {}
     for path in RESOURCES:
-        env = resource(path)
+        env = resource(path, target)
         # Put on the line: the module reports where its base is on the table (later by RFID).
         name = plan_check.shell_of(env)["assetInformation"]["globalAssetId"].rsplit("/", 1)[-1]
         env = place(env, "ModuleBase", table_base(), LAYOUT[name])
@@ -232,19 +234,21 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", default="aas", help="folder the AASs are written to")
     parser.add_argument("--publish", metavar="URL", help="AAS server to send them to, e.g. http://localhost:8081")
+    parser.add_argument("--target", help="describe the modules for this target of their specs (pi: on their Pis); "
+                                         "default each spec's first (pc)")
     args = parser.parse_args(argv)
 
-    resources, made = build()
+    resources, made = build(args.target)
     system = line(resources)
     everything = {plan_check.shell_of(system)["idShort"]: system, **{plan_check.shell_of(env)["idShort"]: env for env in planar_table()},
-                  **resources, **components(), **made, **processes(resources, made)}
+                  **resources, **components(args.target), **made, **processes(resources, made)}
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     for name, env in everything.items():
         (out / f"{name}.json").write_text(json.dumps(env, indent=1), encoding="utf-8")
         print(f"{name}: {len(env['submodels'])} submodels -> {out / (name + '.json')}")
     print(f"every process fits the line ({len(PROCESSES)} processes of {len(made)} products; {len(resources)} modules, "
-          f"{len(components())} components, 1 line, 1 table, {len(SHUTTLES)} shuttles)")
+          f"{len(components(args.target))} components, 1 line, 1 table, {len(SHUTTLES)} shuttles)")
     if args.publish:
         server = AasServer(args.publish)
         names = {id(env): name for name, env in everything.items()}
