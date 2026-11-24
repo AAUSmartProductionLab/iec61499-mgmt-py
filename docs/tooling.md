@@ -309,7 +309,9 @@ The planner's demo stack (`ps-*`, in the web UI fork) uses the same ports: it is
 (`docker compose -p ps-demo start` brings it back, after `deploy/aas.py down`).
 
 ```powershell
+python deploy/publish.py                                                         # everything: aas-model's lab instances, the example line (modules on their Pis), the modules beside it
 python cell/examples/example_line.py --out aas --publish http://localhost:8081   # the example line's AASs (created or replaced)
+python cell/examples/example_line.py --out aas --publish http://localhost:8081 --target pi   # ... its modules as they run on their Pis
 python cell/examples/describe.py                                                 # docs/aas-examples.md from them
 python -m modreg serve --ontology ontology/ARSO --basyx http://localhost:8081   # on :8090 on the host (docker stop lab-skill-service first)
 python -m modsync pull --host 192.168.0.203 --register http://localhost:8090    # a running module's AAS through it

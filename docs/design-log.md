@@ -19,6 +19,20 @@ A running log of design considerations made while building, for writing the pape
 - What was decided, without the reasons, still goes into [decisions.md](decisions.md). The method's
   settled decisions are in [design-decisions.md](design-decisions.md).
 
+## 24 Nov 2026
+
+- **One command publishes every AAS the lab stack shows, the modules as they run on their Pis.**
+  *Journal*. `deploy/publish.py` sends aas-model's lab instances (the industrial line's stations,
+  its planar table, shuttles, line and software), the example line with its modules described for
+  their Pis (`example_line.py --target pi`) and the modules not on the line yet (the second filling
+  module). Before, the example line described the modules for the PC (`localhost`), so the DMP ran
+  their mappings against nothing, and aas-model's own instances were not published at all. Both
+  models side by side (aas-model's `planarTableAAS`, the controller's `PlanarTableAAS`) until the
+  aas-model repository merges them. The conversion's temporary idShorts are stripped before
+  publishing, as aas-model's export does: the DMP refuses a mapping that carries one. The stack
+  running until today was a start from before 17 Nov (BaSyx SNAPSHOT in memory); recreated, it keeps
+  all 41 shells and their descriptors across `down` and `up`.
+
 ## 23 Nov 2026
 
 - **Every new capability names what it is composed of, also a planned one and one of a single
